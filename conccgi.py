@@ -119,7 +119,7 @@ class ConcCGI (CGIPublisher):
     subcname = ''
     subcpath = []
     _conc_dir = ''
-    _home_url = '../index.html'
+    _home_url = '../run.cgi/first_form'
     files_path = '..'
     css_prefix = ''
     iquery = ''
@@ -1342,7 +1342,7 @@ class ConcCGI (CGIPublisher):
             try:
                 corp.get_attr(structname + ".wordcount")
                 normslist.append({'n':'wordcount', 'label':'Word counts'})
-            except conclib.manatee.AttrNotFound:
+            except:# conclib.manatee.AttrNotFound:
                 pass
         return normslist
 

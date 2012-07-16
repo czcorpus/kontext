@@ -244,7 +244,7 @@ $corp_sel
 #set $querytype = $getVar("query_type", '')
 #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
 #set $hidden = ('querytypeel' in $showhiddenlistsimple) and 'visible' or 'hidden'
-<tr class="required $hidden" id="querytypeel">
+<tr class="required" id="querytypeel">
   <th>$_("Query Type"):</th>
   <td><select id="queryselector" name="queryselector" onchange="cmdSwitchQuery();">
 #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''

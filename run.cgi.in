@@ -2,19 +2,81 @@
 # -*- Python -*-
 
 import cgitb; cgitb.enable()
+from db import MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB
 
 import sys, os
-if '@libdir@' not in sys.path:
-    sys.path.insert (0, '@libdir@')
+
+#if '/usr/local/lib64/python2.6/site-packages' not in sys.path:
+#    sys.path.insert (0, '/usr/local/lib64/python2.6/site-packages')
+
+if '/opt/noske/lib64/python2.6/site-packages' not in sys.path:
+    sys.path.insert (0, '/opt/noske/lib64/python2.6/site-packages')
+
+if '/opt/noske/lib64/python2.6/site-packages/bonito2' not in sys.path:
+    sys.path.insert (0, '/opt/noske/lib64/python2.6/site-packages/bonito2')
+
+MANATEE_REGISTRY = '/home/manatee/registry'
 
 from conccgi import ConcCGI
 from usercgi import UserCGI
+
+import manatee
 
 try:
     from wseval import WSEval
 except:
     class WSEval(ConcCGI):
         pass
+
+def get_corplist (user):
+    import MySQLdb
+    
+    #if not os.environ.has_key ('MANATEE_REGISTRY'):
+    #    os.environ['MANATEE_REGISTRY'] = MANATEE_REGISTRY
+
+    conn = MySQLdb.connect (host = MYSQL_HOST, user = MYSQL_USER, passwd = MYSQL_PASSWORD, db = MYSQL_DB)
+    cursor = conn.cursor ()
+    cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % user)
+    row = cursor.fetchone()
+    
+    if row[1] == 1:
+	os.environ['MANATEE_REGISTRY'] = MANATEE_REGISTRY
+    else:
+	os.environ['MANATEE_REGISTRY'] = '%s/no_sketches' % MANATEE_REGISTRY
+    
+    c = row[0].split()
+    corpus = []
+
+    for i in c:
+        if i[0] == '@':
+            i = i[1:len(i)]
+            cursor.execute("SELECT corpora.name FROM corplist,relation,corpora WHERE corplist.id=relation.corplist AND relation.corpora=corpora.id AND corplist.name='" + i + "'")
+            row = cursor.fetchall()
+
+            for y in row:
+                corpus.append(y[0])
+
+        else:
+            corpus.append(i)
+
+
+    cursor.close()
+    conn.close()
+    path_info =  os.getenv('PATH_INFO')
+
+    if path_info == '/wsketch_form' or path_info == '/wsketch' or path_info == '/thes_form' or path_info == '/thes' or path_info == '/wsdiff_form' or path_info == '/wsdiff':
+        r = []
+        for ws in range(len(corpus)):
+            c = manatee.Corpus(corpus[ws]).get_conf('WSBASE')
+            if c == 'none':
+                r.append(corpus[ws])
+    
+        for x in r:
+    		corpus.remove(x)
+
+    corpus.sort()
+    return corpus
+
 
 class BonitoCGI (WSEval, UserCGI):
 
@@ -27,9 +89,13 @@ class BonitoCGI (WSEval, UserCGI):
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
     # set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = ['susanne']
+    #corplist = ['susanne']
+    corplist = get_corplist (os.getenv('REMOTE_USER'))
     # set default corpus
-    corpname = 'susanne'
+    if 'syn2010' in corplist:
+	corpname = 'syn2010'
+    else:
+        corpname = 'omezeni/syn2010'
 
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
@@ -45,7 +111,17 @@ class BonitoCGI (WSEval, UserCGI):
 
 
 if __name__ == '__main__':
-    if not os.environ.has_key ('MANATEE_REGISTRY'):
-        os.environ['MANATEE_REGISTRY'] = '@MANATEE_REGISTRY@'
-    BonitoCGI().run_unprotected (selectorname='corpname')
-
+    #if not os.environ.has_key ('MANATEE_REGISTRY'):
+    #    os.environ['MANATEE_REGISTRY'] = '@MANATEE_REGISTRY@'
+    if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
+        import cProfile, pstats, tempfile
+        proffile = tempfile.NamedTemporaryFile()
+        cProfile.run('''BonitoCGI().run_unprotected (selectorname="corpname",
+                        outf=open(os.devnull, "w"))''', proffile.name)
+        profstats = pstats.Stats(proffile.name)
+        print "<pre>"
+        profstats.sort_stats('time','calls').print_stats(50)
+        profstats.sort_stats('cumulative').print_stats(50)
+        print "</pre>"
+    else:
+        BonitoCGI().run_unprotected (selectorname='corpname')
