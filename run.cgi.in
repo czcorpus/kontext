@@ -1,0 +1,51 @@
+#!@pythonpath@
+# -*- Python -*-
+
+import cgitb; cgitb.enable()
+
+import sys, os
+if '@libdir@' not in sys.path:
+    sys.path.insert (0, '@libdir@')
+
+from conccgi import ConcCGI
+from usercgi import UserCGI
+
+try:
+    from wseval import WSEval
+except:
+    class WSEval(ConcCGI):
+        pass
+
+class BonitoCGI (WSEval, UserCGI):
+
+    # UserCGI options
+    _options_dir = '@datapath@/options'
+
+    # ConcCGI options
+    cache_dir = '@datapath@/cache'
+    subcpath = ['@datapath@/subcorp/GLOBAL']
+    gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
+
+    # set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
+    corplist = ['susanne']
+    # set default corpus
+    corpname = 'susanne'
+
+    helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
+
+    def __init__ (self, user=None):
+        UserCGI.__init__ (self, user)
+        ConcCGI.__init__ (self)
+
+    def _user_defaults (self, user):
+        if user is not self._default_user:
+            self.subcpath.append ('@datapath@/subcorp/%s' % user)
+        self._conc_dir = '@datapath@/conc/%s' % user
+        self._wseval_dir = '@datapath@/wseval/%s' % user
+
+
+if __name__ == '__main__':
+    if not os.environ.has_key ('MANATEE_REGISTRY'):
+        os.environ['MANATEE_REGISTRY'] = '@MANATEE_REGISTRY@'
+    BonitoCGI().run_unprotected (selectorname='corpname')
+

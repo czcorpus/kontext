@@ -1,0 +1,40 @@
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Sample form")#slurp
+#end def
+
+#attr $focus = "'number'"
+
+#def helpblock
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}sampleconc" rel="help">$_("? Help on Sample form")</a></li>
+  #end if
+#end def
+
+#def sampleblock
+#end def
+
+#def main
+#filter WebSafe
+<h3>$_("Random sample")</h3>
+
+<form action="reduce">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+  $_("Make a random sample from the concordance").
+  <br/>  
+  $_("Number of lines in the sample"): <input type="text" name="rlines"
+  value="$rlines" size="7" id="number" /><br/>
+
+<div class="buttons">
+  <input type="submit" value="$_("Create Sample")" />
+</div>
+</fieldset>
+</form>
+
+#end filter
+#end def
