@@ -549,7 +549,7 @@ def get_conc (corp, q=[], save=0, cache_dir='cache'):
         action = q[0][0]
         logging.getLogger(__name__).info('%s\t%s\t%s\t%s\t%s\t%s\n' % (date, user, "noske", corp.corpname, action, q[0][1:]))
     except:
-        logging.error('%s\t%s\t%s\t%s\n' % (date, user, corp.corpname, q))
+        logging.getLogger(__name__).error('%s\t%s\t%s\t%s\n' % (date, user, corp.corpname, q))
     if not q:
         return None
     q = tuple (q)
