@@ -47,7 +47,7 @@ def get_corplist (user, config):
     #if not os.environ.has_key ('MANATEE_REGISTRY'):
     #    os.environ['MANATEE_REGISTRY'] = MANATEE_REGISTRY
 
-    conn = MySQLdb.connect (host=config.get('database', 'host'), user=config.get('database', 'user'),
+    conn = MySQLdb.connect (host=config.get('database', 'host'), user=config.get('database', 'username'),
         passwd=config.get('database', 'password'), db=config.get('database', 'name'))
     cursor = conn.cursor ()
     cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % user)
