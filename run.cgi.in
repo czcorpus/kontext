@@ -2,7 +2,6 @@
 # -*- Python -*-
 
 import cgitb; cgitb.enable()
-from db import MYSQL_HOST, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB
 
 import sys, os
 
@@ -17,6 +16,20 @@ if '/opt/noske/lib64/python2.6/site-packages/bonito2' not in sys.path:
 
 MANATEE_REGISTRY = '/home/manatee/registry'
 
+# configuration
+import ConfigParser
+config = ConfigParser.ConfigParser()
+config.read('config.ini')
+
+# logging setup
+import logging
+logger = logging.getLogger('') # root logger
+hdlr = logging.FileHandler(config.get('logging', 'log_path'))
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
 from conccgi import ConcCGI
 from usercgi import UserCGI
 
@@ -28,13 +41,14 @@ except:
     class WSEval(ConcCGI):
         pass
 
-def get_corplist (user):
+def get_corplist (user, config):
     import MySQLdb
     
     #if not os.environ.has_key ('MANATEE_REGISTRY'):
     #    os.environ['MANATEE_REGISTRY'] = MANATEE_REGISTRY
 
-    conn = MySQLdb.connect (host = MYSQL_HOST, user = MYSQL_USER, passwd = MYSQL_PASSWORD, db = MYSQL_DB)
+    conn = MySQLdb.connect (host=config.get('database', 'host'), user=config.get('database', 'user'),
+        passwd=config.get('database', 'password'), db=config.get('database', 'name'))
     cursor = conn.cursor ()
     cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % user)
     row = cursor.fetchone()
@@ -90,7 +104,7 @@ class BonitoCGI (WSEval, UserCGI):
 
     # set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
     #corplist = ['susanne']
-    corplist = get_corplist (os.getenv('REMOTE_USER'))
+    corplist = get_corplist (os.getenv('REMOTE_USER'), config)
     # set default corpus
     if 'syn2010' in corplist:
 	corpname = 'syn2010'

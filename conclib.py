@@ -7,7 +7,8 @@ from urllib import urlencode
 import os, re
 from sys import stderr
 from datetime import datetime
-            
+import logging
+
 try:
     import fcntl
 except ImportError:
@@ -545,16 +546,10 @@ def get_conc (corp, q=[], save=0, cache_dir='cache'):
     user = os.getenv('REMOTE_USER')
     date = datetime.now()
     try:
-        logfile = "/var/log/ucnk/bonito2.log"
-        fp =open(logfile, 'a')
         action = q[0][0]
-        fp.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (date, user, "noske", corp.corpname, action, q[0][1:]))
-        fp.close()
+        logging.getLogger(__name__).info('%s\t%s\t%s\t%s\t%s\t%s\n' % (date, user, "noske", corp.corpname, action, q[0][1:]))
     except:
-        logfile = "/home/manatee/log/bonito2.err.log"
-        fp = open(logfile, 'a')
-        fp.write('%s\t%s\t%s\t%s\n' % (date, user, corp.corpname, q))
-        fp.close()
+        logging.error('%s\t%s\t%s\t%s\n' % (date, user, corp.corpname, q))
     if not q:
         return None
     q = tuple (q)
