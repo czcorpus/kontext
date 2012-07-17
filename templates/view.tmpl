@@ -41,9 +41,9 @@ $_("Concordance")#slurp
 #def viewblock
   <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_("Sort")</a>
     <ul class="submenu">
-      <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc;sicase=i">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
-        | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc;sicase=i">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
-      <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw;sicase=i">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
+      <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
+        | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
+      <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
       #set $mlsortref = ''
       #set $i = 0
       #for $r in $refs.split(',')
