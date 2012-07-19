@@ -184,10 +184,17 @@ class ConcCGI (CGIPublisher):
     add_vars['save_ws_options'] = ['LastSubcorp']
     add_vars['findx_upload'] = ['LastSubcorp']
     
-    def __init__ (self):
+    def __init__ (self, conf):
+        """
+        Parameters
+        ----------
+        conf : ConfigParser.ConfigParser
+          global app configuration
+        """
         self.cm = corplib.CorpusManager (self.corplist, self.subcpath, 
                                          self.gdexpath)
         self._curr_corpus = None
+        self.conf = conf
 
     def preprocess_values(self, form):
         if self._corpus_architect: return

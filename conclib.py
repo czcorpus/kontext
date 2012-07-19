@@ -71,6 +71,44 @@ def kwicpage (conc, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
               ctxattrs='word', refs='#', structs='p', pagesize=20,
               labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
               tbl_template='none'):
+    """
+    Generates template data for page displaying provided concordance
+
+    Parameters
+    ----------
+    conc : manatee.Concordance
+      a concordance object
+    fromp : int
+      page number
+    leftctx : str, optional (default is '40#')
+      TODO
+    rightctx : str, optional (default is '40#')
+      TODO
+    attrs : str, optional (default is 'word')
+      TODO
+    ctxattrs : str, optional (default is 'word')
+      TODO
+    refs : str, optional (default is '#')
+      TODO
+    structs : str, optional (default is 'p')
+      TODO
+    pagesize : int, optional (default is 20)
+      number of lines per page
+    labelmap : dict, optional (default is {})
+      TODO
+    righttoleft : bool, optional (default is False)
+      TODO
+    alignlist : list, optional (default is [])
+      TODO
+    copy_icon : int, optional (default is 0)
+      TODO
+    tbl_template : str, optional (default is 'none')
+      TODO
+
+    Returns
+    -------
+    custom dict containing data as required by related HTML template
+    """
     refs = refs.replace('.MAP_OUP', '') # to be removed ...
     try:
         fromp = int(fromp)
@@ -116,6 +154,19 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', structs='p',
                labelmap={}, righttoleft=False, alignlist=[],
                align_attrname='align', aattrs='word', astructs=''):
+    """
+    Generates list of 'kwic' (= keyword in context) lines according to
+    the provided Concordance object and additional parameters (like
+    page number, width of the left and right context etc.).
+
+    Parameters
+    ----------
+    TODO
+
+    Returns
+    -------
+    TODO
+    """
     def non1hitlen (hitlen):
         if hitlen == 1:
             return ''
@@ -215,6 +266,9 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
 
 
 def strkwiclines (conc, fromline, toline=None, leftctx='40#', rightctx='40#'):
+    """
+    TODO: no direct call found for this method
+    """
     def tokens2str (tokens):
         return ''.join ([tokens[i] for i in range(0, len(tokens), 2)])
     toline = toline or fromline +1
@@ -427,6 +481,9 @@ class PyConc (manatee.Concordance):
 
 
     def xdistribution (self, xrange, yrange):
+        """
+        TODO: no direct call found for this
+        """
         begs = manatee.IntVector (xrange)
         vals = manatee.IntVector (xrange)
         self.distribution (vals, begs, yrange)
