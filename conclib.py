@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # Copyright (c) 2003-2010  Pavel Rychly
 
-
-import manatee
 from urllib import urlencode
 import os, re
 from sys import stderr
 from datetime import datetime
 import logging
+
+import manatee
+import settings
 
 try:
     import fcntl
