@@ -59,7 +59,7 @@ if __name__ == '__main__':
     import logging
     logger = logging.getLogger('') # root logger
     hdlr = logging.FileHandler(settings.config.get('logging', 'log_path'))
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
