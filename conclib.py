@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 
 import manatee
+import settings
 
 try:
     import fcntl
@@ -111,7 +112,7 @@ def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', at
     -------
     custom dict containing data as required by related HTML template
     """
-    logging.getLogger().info("contains speech? %s" % speech)
+    logging.getLogger().info("structs: %s " % structs)
     refs = refs.replace('.MAP_OUP', '') # to be removed ...
     try:
         fromp = int(fromp)
@@ -152,7 +153,22 @@ def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', at
     #out['concarf'] = '%.2f' % arf
     return out
 
-    
+def postproc_kwicline(line):
+    """
+    """
+    import re
+    import simplejson
+    # TODO greedy stuff
+    srch_pattern = ".+<%s(\s+[^>]+)>" % settings.get_speech_structure()
+    for item in line:
+        srch = re.search(srch_pattern, item['str'])
+        if srch is not None:
+            logging.getLogger(__name__).warn('====> %s should be separated' % item['str'])
+        item['render_data'] = simplejson.dumps({
+            'link' : False
+        })
+    return line
+
 def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', structs='p',
                labelmap={}, righttoleft=False, alignlist=[],
@@ -206,8 +222,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords = tokens2strclass (kl.get_left())
-        rightwords = tokens2strclass (kl.get_right())
+        leftwords = postproc_kwicline(tokens2strclass (kl.get_left()))
+        rightwords = postproc_kwicline(tokens2strclass (kl.get_right()))
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())

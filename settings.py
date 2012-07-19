@@ -93,7 +93,7 @@ def has_configured_speech(corpus):
     """
     Tests whether the provided corpus contains
     structural attributes compatible with current application's configuration
-    (e.g. corpus contains struct. attribute seg.id and the configuration INI
+    (e.g. corpus contains structural attribute seg.id and the configuration INI
     file contains line speech_segment_struct_attr = seg.id).
 
     Parameters
@@ -102,3 +102,6 @@ def has_configured_speech(corpus):
       corpus object we want to test
     """
     return config.get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
+
+def get_speech_structure():
+    return config.get('corpora', 'speech_segment_struct_attr').split('.')[0]
