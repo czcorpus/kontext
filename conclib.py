@@ -8,7 +8,6 @@ from datetime import datetime
 import logging
 
 import manatee
-import settings
 
 try:
     import fcntl
@@ -68,7 +67,7 @@ def add_block_items (items, attr='class', val='even', block_size=3):
         items[i][attr] = val
     return items
         
-def kwicpage (conc, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
+def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
               ctxattrs='word', refs='#', structs='p', pagesize=20,
               labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
               tbl_template='none'):
@@ -79,6 +78,8 @@ def kwicpage (conc, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
     ----------
     conc : manatee.Concordance
       a concordance object
+    has_speech : bool
+      sets whether the corpus concordance is derived from contains speech files
     fromp : int
       page number
     leftctx : str, optional (default is '40#')
@@ -110,6 +111,7 @@ def kwicpage (conc, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
     -------
     custom dict containing data as required by related HTML template
     """
+    logging.getLogger().info("contains speech? %s" % speech)
     refs = refs.replace('.MAP_OUP', '') # to be removed ...
     try:
         fromp = int(fromp)

@@ -88,3 +88,17 @@ def get_corplist (user, config, registry_name):
             corpora.remove(x)
     corpora.sort()
     return corpora
+
+def has_configured_speech(corpus):
+    """
+    Tests whether the provided corpus contains
+    structural attributes compatible with current application's configuration
+    (e.g. corpus contains struct. attribute seg.id and the configuration INI
+    file contains line speech_segment_struct_attr = seg.id).
+
+    Parameters
+    ----------
+    corpus : manatee.Corpus
+      corpus object we want to test
+    """
+    return config.get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')

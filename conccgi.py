@@ -1,7 +1,7 @@
 # Copyright (c) 2003-2010  Pavel Rychly
 
 from CGIPublisher import CGIPublisher
-import corplib, conclib, version
+import corplib, conclib, version, settings
 import os, re
 from sys import stderr
 import time
@@ -437,7 +437,8 @@ class ConcCGI (CGIPublisher):
                 self._cookieattrs.append ('annotconc')
                 self.annotconc = ''
         #print >>stderr, 'view.labels:%s' % labelmap
-        out = self.call_function(conclib.kwicpage, (conc,), labelmap=labelmap,
+        contains_speech = settings.has_configured_speech(self._curr_corpus)
+        out = self.call_function(conclib.kwicpage, (conc, contains_speech), labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                         for c in self.align.split(',') if c],
                                  copy_icon=self.copy_icon,
@@ -1474,7 +1475,8 @@ class ConcCGI (CGIPublisher):
                 labelmap = anot.labelmap
             except conclib.manatee.FileAccessError:
                 pass
-        return self.call_function (conclib.kwicpage, (conc,), fromp=fromp,
+        contains_speech = settings.has_configured_speech(self._curr_corpus)
+        return self.call_function (conclib.kwicpage, (conc, contains_speech), fromp=fromp,
                                    pagesize=ps, labelmap=labelmap, align=[],
                                    leftctx=lctx, rightctx=rctx)
     add_vars['saveconc'] = ['Desc', 'concsize']
