@@ -6,7 +6,18 @@ import MySQLdb
 import ConfigParser
 
 config = ConfigParser.ConfigParser()
-config.read('config.ini')
+
+
+def load(conf_path='config.ini'):
+    """
+    Loads application's configuration from provided file
+
+    Parameters
+    ----------
+    conf_path : str, optional (default is 'config.ini')
+      path to the configuration INI file
+    """
+    config.read(conf_path)
 
 def get_default_corpus(corplist):
     """

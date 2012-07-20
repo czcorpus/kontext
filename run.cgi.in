@@ -19,6 +19,7 @@ from usercgi import UserCGI
 
 import manatee
 import settings
+settings.load()
 
 try:
     from wseval import WSEval
