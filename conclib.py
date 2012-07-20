@@ -153,21 +153,61 @@ def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', at
     #out['concarf'] = '%.2f' % arf
     return out
 
+def separate_speech_struct_from_tag(text):
+    """
+    Removes structural attribute related to speech file identification.
+    E.g. getting input "<seg foo=bar speechfile=1234.wav time=1234>lorem ipsum</seg>" and
+    having configuration directive "speech_segment_struct_attr = seg.speechfile" the function
+    returns "<seg foo=bar time=1234>lorem ipsum</seg>"
+
+    Parameters
+    ----------
+    text : str
+      string to be processed
+
+    Returns
+    -------
+    str
+      modified string
+    str
+      structural attribute value
+    """
+    import re
+
+    struct_attr = settings.config.get('corpora', 'speech_segment_struct_attr')
+    speech_struct, speech_struct_attr = struct_attr.split('.')
+    pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (speech_struct, speech_struct_attr)
+    srch = re.search(pattern, text)
+    if srch is not None:
+        return srch.group(1).rstrip() + srch.group(3), srch.group(2)
+    return text, ''
+    
+
 def postproc_kwicline(line):
     """
     """
     import re
-    import simplejson
-    # TODO greedy stuff
-    srch_pattern = ".+<%s(\s+[^>]+)>" % settings.get_speech_structure()
+
+    newline = []
+    speech_struct = settings.get_speech_structure()
+    fragment_separator = '<%s' % speech_struct
     for item in line:
-        srch = re.search(srch_pattern, item['str'])
-        if srch is not None:
-            logging.getLogger(__name__).warn('====> %s should be separated' % item['str'])
-        item['render_data'] = simplejson.dumps({
-            'link' : False
-        })
-    return line
+        fragments = item['str'].split(fragment_separator)
+        if len(fragments[0]):
+            newline.append({
+                'str' : fragments[0],
+                'class' : item['class'],
+                'speech_id' : None
+            })
+        for fragment in fragments[1:]:
+            frag_ext = fragment_separator + fragment
+            frag_ext, speech_id = separate_speech_struct_from_tag(frag_ext)
+            newline.append({
+                'str' : frag_ext,
+                'class' : item['class'],
+                'speech_id' : speech_id
+            })
+    return newline
 
 def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', structs='p',
@@ -195,7 +235,7 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
     def tokens2strclass (tokens):
         return [{'str': tokens[i], 'class': tokens[i+1].strip ('{}')}
                 for i in range(0, len(tokens), 2)]
-
+    structs='seg.time'
     lines = []
     if righttoleft:
         rightlabel, leftlabel = 'Left', 'Right'
@@ -222,8 +262,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords = postproc_kwicline(tokens2strclass (kl.get_left()))
-        rightwords = postproc_kwicline(tokens2strclass (kl.get_right()))
+        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()))
+        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()))
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())
