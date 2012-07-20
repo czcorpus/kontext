@@ -111,3 +111,7 @@ function wide_context(toknum, hitlen) {
 function full_ref(toknum) {
 	display_in_detail_frame("fullref", 'pos=' + toknum);
 }
+
+function open_speech(speechId) {
+    alert('TODO: open speech id: ' + speechId);
+}

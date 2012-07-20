@@ -41,7 +41,7 @@ class TestConclibModule(unittest.TestCase):
         """
         line = (
             {
-                'str' : 'lorem ipsum <seg speechfile=123.wav foo=bar>dolor sit</seg><seg> amet</seg> ...',
+                'str' : 'lorem ipsum <seg speechfile=123.wav foo=bar>dolor sit</seg><seg> amet ...',
                 'class' : 'foo'
             },
             {
@@ -50,7 +50,7 @@ class TestConclibModule(unittest.TestCase):
             }
         )
 
-        ans = conclib.postproc_kwicline(line)
+        ans = conclib.postproc_kwicline(line, False)
 
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         # second item has the string 'speechfile=123.wav' removed

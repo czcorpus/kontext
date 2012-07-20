@@ -183,7 +183,7 @@ def separate_speech_struct_from_tag(text):
     return text, ''
     
 
-def postproc_kwicline(line):
+def postproc_kwicline(line, append_close_link):
     """
     """
     import re
@@ -191,22 +191,40 @@ def postproc_kwicline(line):
     newline = []
     speech_struct = settings.get_speech_structure()
     fragment_separator = '<%s' % speech_struct
+    last_fragment = None
     for item in line:
         fragments = item['str'].split(fragment_separator)
         if len(fragments[0]):
             newline.append({
                 'str' : fragments[0],
                 'class' : item['class'],
-                'speech_id' : None
             })
+            last_fragment = newline[-1]
         for fragment in fragments[1:]:
             frag_ext = fragment_separator + fragment
             frag_ext, speech_id = separate_speech_struct_from_tag(frag_ext)
-            newline.append({
+            newline_item = {
                 'str' : frag_ext,
-                'class' : item['class'],
-                'speech_id' : speech_id
-            })
+                'class' : item['class']
+            }
+            if frag_ext.startswith(fragment_separator):
+                newline_item['open_link'] = { 'speech_id' : speech_id }
+            elif frag_ext.endswith('</%s>' % speech_struct):
+                newline_item['close_link'] = {}
+            newline.append(newline_item)
+            last_fragment = newline_item
+    if last_fragment is not None:
+        logging.getLogger(__name__).info('--- last fragment ---> %s' % last_fragment['str'])
+        if last_fragment['str'].startswith(fragment_separator):
+            last_fragment['open_link'] = { 'speech_id' : speech_id }
+        elif last_fragment['str'].endswith('</%s' % speech_struct):
+            last_fragment['close_link'] = {}
+
+        if not last_fragment['str'].endswith('</%s>' % speech_struct) and append_close_link:
+            logging.getLogger(__name__).info('--------------> HIT <--------------')
+            last_fragment['close_link'] = {}
+
+    logging.getLogger(__name__).info(newline)
     return newline
 
 def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
@@ -262,8 +280,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()))
-        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()))
+        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()), False) # False = do not close last link
+        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()), True) # True = close last link
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())

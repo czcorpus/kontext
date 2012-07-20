@@ -186,8 +186,8 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <td class="ref" onclick="full_ref($l['toknum'])"><div class="ref">$l['ref']</div></td>
     <td class="lc">
       #for $ll in $l['Left']
-        #if $ll.has_key('speech_id')
-        <a href="#">
+        #if $ll.has_key('open_link')
+        <a href="#" onclick="open_speech($ll['open_link']['speech_id'])">
         #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
@@ -196,7 +196,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
         #if $ll.has_key('class') and $ll['class']
 	    </i>
 	    #end if
-	    #if $ll.has_key('speech_id')
+	    #if $ll.has_key('close_link')
         </a>
         #end if
       #end for
@@ -217,13 +217,19 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
          >$l['linegroup']</span>
       #end if
       #for $rr in $l['Right']
+        #if $rr.has_key('open_link')
+        <a href="#" onclick="open_speech($rr['open_link']['speech_id'])">
+        #end if
         #if $rr.has_key('class') and $rr['class']
           <i class='$rr['class']'>
         #end if
         $rr['str']
         #if $rr.has_key('class') and $rr['class']
-	  </i>
-	#end if
+	    </i>
+	    #end if
+	    #if $rr.has_key('close_link')
+        </a>
+        #end if
       #end for
     </td>
     #if $copy_icon
