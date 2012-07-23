@@ -183,8 +183,33 @@ def separate_speech_struct_from_tag(text):
     return text, ''
     
 
-def postproc_kwicline(line, append_close_link):
+def remove_tag_from_line(line, tag_name):
     """
+    Parameters
+    ----------
+    line : list of dicts containing at least the key 'str'
+      line as used in postproc_kwicline
+    tag_name : str
+
+    Returns
+    -------
+    the same object as the 'line' parameter
+    """
+    import re
+
+    for item in line:
+        item['str'] = re.sub('<%s[^>]*>' % tag_name, '', re.sub('</%s>' % tag_name, '', item['str']))
+    return line
+
+
+def postproc_kwicline(line, filter_speech_tag):
+    """
+    Parameters
+    ----------
+    line : list of dicts
+      contains keys 'str', 'class'
+    filter_speech_tag : bool
+      if True then whole speech tag is removed else only its 'speech attribute'
     """
     import re
 
@@ -194,17 +219,11 @@ def postproc_kwicline(line, append_close_link):
     last_fragment = None
     last_speech_id = None
     for item in line:
-        logging.getLogger(__name__).info('line before: %s' , item['str'])
-        fragments = item['str'].split(fragment_separator)
-
-        for i in range(len(fragments)):
-            if i > 0:
-                frag_ext = fragment_separator + fragments[i]
-            elif fragments[i] == '':
+        fragments = re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str'])
+        for fragment in fragments:
+            if fragment == '':
                 continue
-            else:
-                frag_ext = fragments[i]
-            frag_ext, speech_id = separate_speech_struct_from_tag(frag_ext)
+            frag_ext, speech_id = separate_speech_struct_from_tag(fragment)
             if not speech_id:
                 speech_id = last_speech_id
             else:
@@ -213,7 +232,6 @@ def postproc_kwicline(line, append_close_link):
                 'str' : frag_ext,
                 'class' : item['class']
             }
-            logging.getLogger(__name__).info('>>> speech ID: %s' % speech_id)
             if frag_ext.startswith(fragment_separator):
                 newline_item['open_link'] = { 'speech_id' : speech_id }
             elif frag_ext.endswith('</%s>' % speech_struct):
@@ -222,16 +240,12 @@ def postproc_kwicline(line, append_close_link):
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the concordance line
     if last_fragment is not None:
-        logging.getLogger(__name__).info('--- last fragment ---> %s vs </%s>' % (last_fragment['str'], speech_struct))
         if last_fragment['str'].startswith(fragment_separator) and last_fragment['str'] <> '<%s>' % speech_struct:
             last_fragment['open_link'] = { 'speech_id' : last_speech_id}
         elif last_fragment['str'].endswith('</%s>' % speech_struct):
             last_fragment['close_link'] = { 'speech_id' : last_speech_id }
-        # TODO
-        #elif last_fragment['str'] <> '<%s>' % speech_struct and append_close_link:
-        #    last_fragment['close_link'] = { 'speech_id' : last_speech_id }
-
-    logging.getLogger(__name__).info(newline)
+    if filter_speech_tag:
+        remove_tag_from_line(newline, speech_struct)
     return newline
 
 def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
@@ -260,7 +274,16 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
     def tokens2strclass (tokens):
         return [{'str': tokens[i], 'class': tokens[i+1].strip ('{}')}
                 for i in range(0, len(tokens), 2)]
-    structs='seg.time'
+
+    # structs represent which structures are requested by user
+    # all_structs contain also internal structures needed to render
+    # additional information (like the speech links)
+    speech_struct = settings.config.get('corpora', 'speech_segment_struct_attr')
+    all_structs = structs
+    non_user_structs = (speech_struct,)
+    if not speech_struct in structs:
+        all_structs += ',' + ','.join(non_user_structs)
+    logging.getLogger(__name__).info('>>>>>> %s' % all_structs)
     lines = []
     if righttoleft:
         rightlabel, leftlabel = 'Left', 'Right'
@@ -278,7 +301,7 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
         align_struct = conc.corp.get_struct(align_attrname)
 
     kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
-                            structs, refs)
+                            all_structs, refs)
     labelmap = labelmap.copy()
     labelmap['_'] = '_'
     maxleftsize = 0
@@ -287,8 +310,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()), False) # False = do not close last link
-        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()), True) # True = close last link
+        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()), speech_struct in structs)
+        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()), speech_struct in structs)
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())

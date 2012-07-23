@@ -55,7 +55,6 @@ class TestConclibModule(unittest.TestCase):
         )
 
         ans = conclib.postproc_kwicline(line, False)
-        print(ans)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         # second item has the string 'speechfile=123.wav' removed
         self.assertEquals('<seg foo=bar>dolor sit</seg>', ans[1]['str'])
@@ -63,3 +62,22 @@ class TestConclibModule(unittest.TestCase):
         self.assertEquals('123.wav', ans[1]['open_link']['speech_id'])
         self.assertEquals('<seg> amet ...', ans[2]['str'])
         self.assertEquals('consectetur <x>adipisicing elit</x>, sed do eiusmod', ans[3]['str'])
+
+    def test_remove_tag_from_line(self):
+        """
+        """
+        line = [{}]
+        line[0]['str'] = "lorem ipsum <seg time=342 date=12.12.2012>dolor sit amet</seg> and stuff like that </seg>"
+        line.append({
+            'str' : '<seg>'
+            })
+        ans = conclib.remove_tag_from_line(line, 'seg')
+        self.assertEqual('lorem ipsum dolor sit amet and stuff like that ', ans[0]['str'])
+        self.assertEqual('', ans[1]['str'])
+
+        text = ''
+        ans = conclib.remove_tag_from_line(text, 'seg')
+        self.assertEqual('', ans)
+
+        text = None
+        self.assertRaises(TypeError, conclib.remove_tag_from_line, text)
