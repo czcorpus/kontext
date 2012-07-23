@@ -192,37 +192,44 @@ def postproc_kwicline(line, append_close_link):
     speech_struct = settings.get_speech_structure()
     fragment_separator = '<%s' % speech_struct
     last_fragment = None
+    last_speech_id = None
     for item in line:
+        logging.getLogger(__name__).info('line before: %s' , item['str'])
         fragments = item['str'].split(fragment_separator)
-        if len(fragments[0]):
-            newline.append({
-                'str' : fragments[0],
-                'class' : item['class'],
-            })
-            last_fragment = newline[-1]
-        for fragment in fragments[1:]:
-            frag_ext = fragment_separator + fragment
+
+        for i in range(len(fragments)):
+            if i > 0:
+                frag_ext = fragment_separator + fragments[i]
+            elif fragments[i] == '':
+                continue
+            else:
+                frag_ext = fragments[i]
             frag_ext, speech_id = separate_speech_struct_from_tag(frag_ext)
+            if not speech_id:
+                speech_id = last_speech_id
+            else:
+                last_speech_id = speech_id
             newline_item = {
                 'str' : frag_ext,
                 'class' : item['class']
             }
+            logging.getLogger(__name__).info('>>> speech ID: %s' % speech_id)
             if frag_ext.startswith(fragment_separator):
                 newline_item['open_link'] = { 'speech_id' : speech_id }
             elif frag_ext.endswith('</%s>' % speech_struct):
-                newline_item['close_link'] = {}
+                newline_item['close_link'] = { 'speech_id' : speech_id }
             newline.append(newline_item)
             last_fragment = newline_item
+    # we have to treat specific situations related to the end of the concordance line
     if last_fragment is not None:
-        logging.getLogger(__name__).info('--- last fragment ---> %s' % last_fragment['str'])
-        if last_fragment['str'].startswith(fragment_separator):
-            last_fragment['open_link'] = { 'speech_id' : speech_id }
-        elif last_fragment['str'].endswith('</%s' % speech_struct):
-            last_fragment['close_link'] = {}
-
-        if not last_fragment['str'].endswith('</%s>' % speech_struct) and append_close_link:
-            logging.getLogger(__name__).info('--------------> HIT <--------------')
-            last_fragment['close_link'] = {}
+        logging.getLogger(__name__).info('--- last fragment ---> %s vs </%s>' % (last_fragment['str'], speech_struct))
+        if last_fragment['str'].startswith(fragment_separator) and last_fragment['str'] <> '<%s>' % speech_struct:
+            last_fragment['open_link'] = { 'speech_id' : last_speech_id}
+        elif last_fragment['str'].endswith('</%s>' % speech_struct):
+            last_fragment['close_link'] = { 'speech_id' : last_speech_id }
+        # TODO
+        #elif last_fragment['str'] <> '<%s>' % speech_struct and append_close_link:
+        #    last_fragment['close_link'] = { 'speech_id' : last_speech_id }
 
     logging.getLogger(__name__).info(newline)
     return newline

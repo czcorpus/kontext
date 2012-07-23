@@ -3,7 +3,7 @@ import sys
 sys.path.append('./mocks')
 
 import settings
-settings.load('../config.ini')
+settings.load('../config.test.ini')
 import conclib
 
 class TestConclibModule(unittest.TestCase):
@@ -47,15 +47,19 @@ class TestConclibModule(unittest.TestCase):
             {
                 'str' : 'consectetur <x>adipisicing elit</x>, sed do eiusmod',
                 'class' : 'foo'
+            },
+            {
+                'str' : '<seg speechfile=937.341>',
+                'class' : 'foo'
             }
         )
 
         ans = conclib.postproc_kwicline(line, False)
-
+        print(ans)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         # second item has the string 'speechfile=123.wav' removed
         self.assertEquals('<seg foo=bar>dolor sit</seg>', ans[1]['str'])
         # but the removed value (not the key) is still accessible:
-        self.assertEquals('123.wav', ans[1]['speech_id'])
-        self.assertEquals('<seg> amet</seg> ...', ans[2]['str'])
+        self.assertEquals('123.wav', ans[1]['open_link']['speech_id'])
+        self.assertEquals('<seg> amet ...', ans[2]['str'])
         self.assertEquals('consectetur <x>adipisicing elit</x>, sed do eiusmod', ans[3]['str'])
