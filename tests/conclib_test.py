@@ -36,12 +36,12 @@ class TestConclibModule(unittest.TestCase):
         self.assertEquals('<seg>', t1)
         self.assertEquals('1234abc.wav', t2)
 
-    def test_postproc_kwicline(self):
+    def test_postproc_kwicline_part(self):
         """
         """
         line = (
             {
-                'str' : 'lorem ipsum <seg speechfile=123.wav foo=bar>dolor sit</seg><seg> amet ...',
+                'str' : 'lorem ipsum <seg speechfile=123.wav foo=bar>dolor sit</seg><seg> amet...',
                 'class' : 'foo'
             },
             {
@@ -54,14 +54,18 @@ class TestConclibModule(unittest.TestCase):
             }
         )
 
-        ans = conclib.postproc_kwicline(line, False)
+        ans, last_speech_id = conclib.postproc_kwicline_part(line, False)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
+        self.assertEquals('937.341', last_speech_id)
         # second item has the string 'speechfile=123.wav' removed
-        self.assertEquals('<seg foo=bar>dolor sit</seg>', ans[1]['str'])
+        self.assertEquals('<seg foo=bar>', ans[1]['str'])
         # but the removed value (not the key) is still accessible:
         self.assertEquals('123.wav', ans[1]['open_link']['speech_id'])
-        self.assertEquals('<seg> amet ...', ans[2]['str'])
-        self.assertEquals('consectetur <x>adipisicing elit</x>, sed do eiusmod', ans[3]['str'])
+        self.assertEquals('dolor sit', ans[2]['str'])
+        self.assertEquals('</seg>', ans[3]['str'])
+        self.assertEquals('<seg>', ans[4]['str'])
+        self.assertEquals(' amet...', ans[5]['str'])
+        self.assertEquals('consectetur <x>adipisicing elit</x>, sed do eiusmod', ans[6]['str'])
 
     def test_remove_tag_from_line(self):
         """

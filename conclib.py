@@ -202,7 +202,7 @@ def remove_tag_from_line(line, tag_name):
     return line
 
 
-def postproc_kwicline(line, filter_speech_tag):
+def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
     """
     Parameters
     ----------
@@ -210,6 +210,13 @@ def postproc_kwicline(line, filter_speech_tag):
       contains keys 'str', 'class'
     filter_speech_tag : bool
       if True then whole speech tag is removed else only its 'speech attribute'
+
+    Returns
+    -------
+    str
+      modified line
+    str
+      last speech id
     """
     import re
 
@@ -217,13 +224,14 @@ def postproc_kwicline(line, filter_speech_tag):
     speech_struct = settings.get_speech_structure()
     fragment_separator = '<%s' % speech_struct
     last_fragment = None
-    last_speech_id = None
+    last_speech_id = prev_speech_id
     for item in line:
         fragments = re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str'])
         for fragment in fragments:
             if fragment == '':
                 continue
             frag_ext, speech_id = separate_speech_struct_from_tag(fragment)
+            logging.getLogger(__name__).info('last ID: %s, new ID: %s' % (last_speech_id, speech_id))
             if not speech_id:
                 speech_id = last_speech_id
             else:
@@ -246,7 +254,7 @@ def postproc_kwicline(line, filter_speech_tag):
             last_fragment['close_link'] = { 'speech_id' : last_speech_id }
     if filter_speech_tag:
         remove_tag_from_line(newline, speech_struct)
-    return newline
+    return newline, last_speech_id
 
 def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', structs='p',
@@ -310,8 +318,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords = postproc_kwicline(tokens2strclass(kl.get_left()), speech_struct in structs)
-        rightwords = postproc_kwicline(tokens2strclass(kl.get_right()), speech_struct in structs)
+        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), speech_struct in structs)
+        rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), speech_struct in structs, last_left_speech_id)[0]
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())
