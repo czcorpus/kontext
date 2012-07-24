@@ -68,7 +68,7 @@ def add_block_items (items, attr='class', val='even', block_size=3):
         items[i][attr] = val
     return items
         
-def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
+def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
               ctxattrs='word', refs='#', structs='p', pagesize=20,
               labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
               tbl_template='none'):
@@ -77,6 +77,8 @@ def kwicpage (conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', at
 
     Parameters
     ----------
+    corpus : manatee.Corpus
+      corpus we are working with
     conc : manatee.Concordance
       a concordance object
     has_speech : bool

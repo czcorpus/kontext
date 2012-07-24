@@ -438,7 +438,7 @@ class ConcCGI (CGIPublisher):
                 self.annotconc = ''
         #print >>stderr, 'view.labels:%s' % labelmap
         contains_speech = settings.has_configured_speech(self._curr_corpus)
-        out = self.call_function(conclib.kwicpage, (conc, contains_speech), labelmap=labelmap,
+        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                         for c in self.align.split(',') if c],
                                  copy_icon=self.copy_icon,
@@ -1476,7 +1476,7 @@ class ConcCGI (CGIPublisher):
             except conclib.manatee.FileAccessError:
                 pass
         contains_speech = settings.has_configured_speech(self._curr_corpus)
-        return self.call_function (conclib.kwicpage, (conc, contains_speech), fromp=fromp,
+        return self.call_function (conclib.kwicpage, (self._curr_corpus, conc, contains_speech), fromp=fromp,
                                    pagesize=ps, labelmap=labelmap, align=[],
                                    leftctx=lctx, rightctx=rctx)
     add_vars['saveconc'] = ['Desc', 'concsize']
