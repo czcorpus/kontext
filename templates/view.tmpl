@@ -187,7 +187,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <td class="lc">
       #for $ll in $l['Left']
         #if $ll.has_key('open_link')
-        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech($ll['open_link']['speech_id'])">[</a>
+        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech('$ll['open_link']['speech_id']')">[</a>
         #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
@@ -197,7 +197,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 	    </i>
 	    #end if
         #if $ll.has_key('close_link')
-        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech($ll['close_link']['speech_id'])">]</a>
+        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech('$ll['close_link']['speech_id']')">]</a>
         #end if
       #end for
     </td><td class="kw" onclick="wide_context($l['toknum'],'$l['hitlen']');">
@@ -218,7 +218,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
       #end if
       #for $rr in $l['Right']
         #if $rr.has_key('open_link')
-        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech($rr['open_link']['speech_id'])">[</a>
+        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech('$rr['open_link']['speech_id']')">[</a>
         #end if
         #if $rr.has_key('class') and $rr['class']
           <i class='$rr['class']'>
@@ -228,7 +228,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 	    </i>
 	    #end if
         #if $rr.has_key('close_link')
-        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech($rr['close_link']['speech_id'])">]</a>
+        <a href="#" class="speech-link" title="$_("Click to play audio segment")" onclick="open_speech('$rr['close_link']['speech_id']')">]</a>
         #end if
       #end for
     </td>

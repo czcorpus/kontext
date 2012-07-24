@@ -114,7 +114,6 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='
     -------
     custom dict containing data as required by related HTML template
     """
-    logging.getLogger().info("structs: %s " % structs)
     refs = refs.replace('.MAP_OUP', '') # to be removed ...
     try:
         fromp = int(fromp)
@@ -123,7 +122,7 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='
     except:
         fromp = 1
     out = {'Lines': 
-           kwiclines (conc, (fromp -1) * pagesize, fromp * pagesize,
+           kwiclines(corpus, conc, (fromp -1) * pagesize, fromp * pagesize,
                       leftctx, rightctx, attrs, ctxattrs, refs, structs,
                       labelmap, righttoleft, alignlist)}
     if copy_icon:
@@ -131,7 +130,7 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
         sen_refs = sen_refs.replace('.MAP_OUP', '') # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(conc, (fromp -1) * pagesize, fromp * pagesize,
+        sen_lines = kwiclines(corpus, conc, (fromp -1) * pagesize, fromp * pagesize,
                              '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
@@ -183,7 +182,6 @@ def separate_speech_struct_from_tag(text):
     if srch is not None:
         return srch.group(1).rstrip() + srch.group(3), srch.group(2)
     return text, ''
-    
 
 def remove_tag_from_line(line, tag_name):
     """
@@ -203,7 +201,6 @@ def remove_tag_from_line(line, tag_name):
         item['str'] = re.sub('<%s[^>]*>' % tag_name, '', re.sub('</%s>' % tag_name, '', item['str']))
     return line
 
-
 def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
     """
     Parameters
@@ -212,6 +209,8 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
       contains keys 'str', 'class'
     filter_speech_tag : bool
       if True then whole speech tag is removed else only its 'speech attribute'
+    prev_speech_id : str
+      identifier of the previously processed speech segment
 
     Returns
     -------
@@ -257,7 +256,7 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
         remove_tag_from_line(newline, speech_struct)
     return newline, last_speech_id
 
-def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
+def kwiclines (corpus, conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', user_structs='p',
                labelmap={}, righttoleft=False, alignlist=[],
                align_attrname='align', aattrs='word', astructs=''):
@@ -268,6 +267,8 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
 
     Parameters
     ----------
+    corpus : manatee.Corpus
+        corpus we are working with
     TODO
 
     Returns
@@ -287,12 +288,12 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
     # structs represent which structures are requested by user
     # all_structs contain also internal structures needed to render
     # additional information (like the speech links)
-    speech_struct_attr = settings.config.get('corpora', 'speech_segment_struct_attr')
+    speech_struct_attr_name = settings.config.get('corpora', 'speech_segment_struct_attr')
+    speech_struct_attr = corpus.get_attr(speech_struct_attr_name)
     all_structs = user_structs
-    non_user_structs = (speech_struct_attr,)
-    if not speech_struct_attr in user_structs:
+    non_user_structs = (speech_struct_attr_name,)
+    if not speech_struct_attr_name in user_structs:
         all_structs += ',' + ','.join(non_user_structs)
-    logging.getLogger(__name__).info('>>>>>> %s' % all_structs)
     lines = []
     if righttoleft:
         rightlabel, leftlabel = 'Left', 'Right'
@@ -314,13 +315,14 @@ def kwiclines (conc, fromline, toline, leftctx='40#', rightctx='40#',
     labelmap = labelmap.copy()
     labelmap['_'] = '_'
     maxleftsize = 0
-    filter_out_speech_tag = settings.get_speech_structure() not in user_structs and speech_struct_attr in all_structs
+    filter_out_speech_tag = settings.get_speech_structure() not in user_structs and speech_struct_attr_name in all_structs
     for line in range (fromline, toline):
         if not kl.nextline (line):
             break
         linegroup = str (kl.get_linegroup() or '_')
         linegroup = labelmap.get (linegroup, '#' + linegroup)
-        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), filter_out_speech_tag)
+        leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
+        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), filter_out_speech_tag, leftmost_speech_id)
         rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), filter_out_speech_tag, last_left_speech_id)[0]
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
