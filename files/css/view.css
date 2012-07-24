@@ -134,10 +134,14 @@ tr.highlight td {
 
 a.speech-link {
     font-size: 120%;
-    color: #777;
+    color: #9ce;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 0 0.1em 0 0.1em;
 }
 
 a.speech-link:hover {
-    background-color: #777;
+    background-color: #9ce;
     color: #FFF;
 }
+
