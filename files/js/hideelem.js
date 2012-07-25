@@ -253,9 +253,11 @@ function targetedLinks() {
 }
 
 function focusEx(focus) {
-	elem = document.getElementById(focus)
-        elem.focus()
+	var elem = $(focus);
+    if (elem) {
+        elem.focus();
         if (elem.select) {
-        	elem.select()
+        	elem.select();
+        }
 	}
 }
