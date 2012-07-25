@@ -309,6 +309,11 @@ class CGIPublisher:
                     getattr (method, 'template', methodname + '.tmpl'),
                     self.call_method (method, pos_args, named_args))
         except Exception, e:
+            import logging
+            import traceback
+            err_type, err_value, err_trace = sys.exc_info()
+            err_out = traceback.format_exception(err_type, err_value, err_trace)
+            logging.getLogger(__name__).error(''.join(err_out))
             if self.format == 'json':
                 return (methodname, None,
                         {'error': self.rec_recode(e.message, 'utf-8', True)})
