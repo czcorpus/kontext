@@ -19,7 +19,7 @@ mostlyclean-local:
 DIRS  = css js img misc
 FILES = index.html
 FILES_CSS =	ca_bonito_common.css view.css bonito.css tables.css forms.css horizontal.css
-FILES_JS = hideelem.js annotconc.js controls.js effects.js prototype-1.3.1.js \
+FILES_JS = hideelem.js annotconc.js controls.js effects.js prototype-1.7.0.js \
 			util.js detail.js tblex.js
 FILES_IMG =	minus.png plus.png red.png grey.png edit-copy.png \
 			edit-copy-selected.png sortleft.png sortnode.png sortright.png \

@@ -145,3 +145,9 @@ a.speech-link:hover {
     color: #FFF;
 }
 
+#audio-wrapper {
+    position: absolute;
+    width: 460px;
+    left: 50%;
+    margin-left: -230px;
+}

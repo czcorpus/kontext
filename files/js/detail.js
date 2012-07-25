@@ -112,6 +112,35 @@ function full_ref(toknum) {
 	display_in_detail_frame("fullref", 'pos=' + toknum);
 }
 
-function open_speech(speechId) {
-    alert('TODO: open speech id: ' + speechId);
+/**
+ *
+ * @param linkElem
+ */
+function open_speech(linkElem) {
+    var speechURL = linkElem.readAttribute('href');
+    var triggerLink = Element.extend(linkElem);
+    var wrapper = $('audio-wrapper');
+    if (wrapper !== null) {
+        Element.remove(wrapper);
+    }
+    var player = Element.extend(document.createElement('audio'));
+    player.writeAttribute('id', 'audio-player');
+    player.writeAttribute('autoplay', '');
+    wrapper = Element.extend(document.createElement('div'));
+    wrapper.writeAttribute('id', 'audio-wrapper');
+    wrapper.insert(player);
+    wrapper.setStyle({
+        top : (triggerLink.cumulativeOffset()[1] - 30) + 'px'
+    });
+    $(document.body).insert(wrapper);
+    console.log('setting speech URL: ' + speechURL);
+    player.writeAttribute('src', speechURL);
+    audiojs.events.ready(function() { var as = audiojs.createAll(); });
+
+    if (triggerLink.preventDefault) {
+        triggerLink.preventDefault();
+
+    } else {
+        return false;
+    }
 }
