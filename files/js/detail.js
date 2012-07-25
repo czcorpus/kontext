@@ -147,7 +147,6 @@ function open_speech(linkElem) {
         if (wrapper) {
             wrapper.remove();
         }
-        event.stop();
     });
 
     if (triggerLink.preventDefault) {
