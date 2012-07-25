@@ -120,22 +120,35 @@ function open_speech(linkElem) {
     var speechURL = linkElem.readAttribute('href');
     var triggerLink = Element.extend(linkElem);
     var wrapper = $('audio-wrapper');
-    if (wrapper !== null) {
-        Element.remove(wrapper);
+    if (wrapper === null) {
+        wrapper = Element.extend(document.createElement('div'));
+        wrapper.writeAttribute('id', 'audio-wrapper');
+        wrapper.observe('click', function (event) {
+            event.stop();
+        });
+        $(document.body).insert(wrapper);
     }
-    var player = Element.extend(document.createElement('audio'));
-    player.writeAttribute('id', 'audio-player');
-    player.writeAttribute('autoplay', '');
-    wrapper = Element.extend(document.createElement('div'));
-    wrapper.writeAttribute('id', 'audio-wrapper');
-    wrapper.insert(player);
     wrapper.setStyle({
-        top : (triggerLink.cumulativeOffset()[1] - 30) + 'px'
+        top : (triggerLink.cumulativeOffset()[1] - 35) + 'px'
     });
-    $(document.body).insert(wrapper);
-    console.log('setting speech URL: ' + speechURL);
+
+    var player = $('audio-player');
+    if (player === null) {
+        player = Element.extend(document.createElement('audio'));
+        wrapper.insert(player);
+        player.writeAttribute('id', 'audio-player');
+        player.writeAttribute('autoplay', '');
+        audiojs.events.ready(function() { var as = audiojs.createAll(); });
+    }
     player.writeAttribute('src', speechURL);
-    audiojs.events.ready(function() { var as = audiojs.createAll(); });
+
+    Event.observe(document, 'click', function (event) {
+        wrapper = $('audio-wrapper');
+        if (wrapper) {
+            wrapper.remove();
+        }
+        event.stop();
+    });
 
     if (triggerLink.preventDefault) {
         triggerLink.preventDefault();
