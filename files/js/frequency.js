@@ -6,6 +6,7 @@
             $('kwic-alignment-box').setStyle({
                 display : 'block'
             });
+            freqFormTools.switchAlignment($('kwic-alignment').value);
             $('kwic-alignment').observe('change', function (event) {
                 freqFormTools.switchAlignment(event.target.value);
             });
