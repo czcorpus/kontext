@@ -368,7 +368,8 @@ class ConcCGI (CGIPublisher):
         if subcorpattrs != '#':
             fattrs.extend(subcorpattrs.replace('|',',').split(','))
         wsattr = corp.get_conf ('WSATTR')
-        fattrs.append(wsattr)
+        if wsattr:
+            fattrs.append(wsattr)
         fcrits = ['%s 0' % a for a in fattrs]
         self.q.append('r10000') # speeds-up computing frequency
         result['freqs'] = self.freqs(fcrit=fcrits, ml=1)
