@@ -186,7 +186,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <td class="lc">
       #for $ll in $l['Left']
         #if $ll.has_key('open_link')
-        <a href="$ll['open_link']['speech_id']" class="speech-link" title="$_("Click to play audio segment")">[</a>
+        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
         #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
@@ -196,7 +196,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 	    </i>
 	    #end if
         #if $ll.has_key('close_link')
-        <a href="$ll['close_link']['speech_id']" class="speech-link" title="$_("Click to play audio segment")">]</a>
+        <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
     </td><td class="kw" onclick="wide_context($l['toknum'],'$l['hitlen']');">
@@ -217,7 +217,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
       #end if
       #for $rr in $l['Right']
         #if $rr.has_key('open_link')
-        <a href="$rr['open_link']['speech_id']" class="speech-link" title="$_("Click to play audio segment")">[</a>
+        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
         #end if
         #if $rr.has_key('class') and $rr['class']
           <i class='$rr['class']'>
@@ -227,7 +227,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 	    </i>
 	    #end if
         #if $rr.has_key('close_link')
-        <a href="$rr['close_link']['speech_id']" class="speech-link" title="$_("Click to play audio segment")">]</a>
+        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
     </td>

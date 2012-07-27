@@ -60,7 +60,7 @@ class TestConclibModule(unittest.TestCase):
         # second item has the string 'speechfile=123.wav' removed
         self.assertEquals('<seg foo=bar>', ans[1]['str'])
         # but the removed value (not the key) is still accessible:
-        self.assertEquals('123.wav', ans[1]['open_link']['speech_id'])
+        self.assertEquals(settings.create_speech_url('123.wav'), ans[1]['open_link']['speech_url'])
         self.assertEquals('dolor sit', ans[2]['str'])
         self.assertEquals('</seg>', ans[3]['str'])
         self.assertEquals('<seg>', ans[4]['str'])

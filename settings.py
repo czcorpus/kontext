@@ -116,3 +116,9 @@ def has_configured_speech(corpus):
 
 def get_speech_structure():
     return config.get('corpora', 'speech_segment_struct_attr').split('.')[0]
+
+def create_speech_url(speech_id):
+    speech_url = config.get('corpora', 'speech_data_url')
+    if speech_url[-1] <> '/':
+        speech_url += '/'
+    return "%s%s" % (speech_url, speech_id)

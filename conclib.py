@@ -241,17 +241,17 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
                 'class' : item['class']
             }
             if frag_ext.startswith(fragment_separator):
-                newline_item['open_link'] = { 'speech_id' : speech_id }
+                newline_item['open_link'] = { 'speech_url' : settings.create_speech_url(speech_id) }
             elif frag_ext.endswith('</%s>' % speech_struct):
-                newline_item['close_link'] = { 'speech_id' : speech_id }
+                newline_item['close_link'] = { 'speech_url' : settings.create_speech_url(speech_id) }
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the concordance line
     if last_fragment is not None:
         if last_fragment['str'].startswith(fragment_separator) and last_fragment['str'] <> '<%s>' % speech_struct:
-            last_fragment['open_link'] = { 'speech_id' : last_speech_id}
+            last_fragment['open_link'] = { 'speech_url' : settings.create_speech_url(last_speech_id)}
         elif last_fragment['str'].endswith('</%s>' % speech_struct):
-            last_fragment['close_link'] = { 'speech_id' : last_speech_id }
+            last_fragment['close_link'] = { 'speech_url' : settings.create_speech_url(last_speech_id) }
     if filter_speech_tag:
         remove_tag_from_line(newline, speech_struct)
     return newline, last_speech_id
