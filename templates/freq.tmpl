@@ -111,15 +111,30 @@ $input_hidden
   #end for
   </select>
 </td></tr>
+<tr id="kwic-alignment-box" style="display: none">
+    <td>
+        $_("Start at"):<br />
+        <select class="kwic-alignment" name="kwic-alignment-1">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+    <td>
+        $_("Start at"):<br />
+        <select class="kwic-alignment" name="kwic-alignment-2">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+    <td>
+        $_("Start at"):<br />
+        <select class="kwic-alignment" name="kwic-alignment-3">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+</tr>
 </table>
-<div id="kwic-alignment-box" style="display: none">
-    <hr />
-    $_("First position at"):
-    <select id="kwic-alignment">
-        <option value="left">$_("leftmost KWIC word")</option>
-        <option value="right">$_("rightmost KWIC word")</option>
-    </select>
-</div>
 <div class="buttons">
   <input class="submit" type="submit" value="$_("Make Frequency List")" id="submit" />
 </div>

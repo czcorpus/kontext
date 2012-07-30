@@ -2,34 +2,60 @@
 
     var freqFormTools = {
 
+        /**
+         *
+         * @param element a Prototype Element object
+         * @return {String}
+         */
+        getColumnId : function (element) {
+            return element.readAttribute('name').substr(element.readAttribute('name').length - 1, 1);
+        },
+
+        /**
+         * Initializes "KWIC alignment" select-box event handlers and sets form values according to the state
+         * of these select-boxes.
+         */
         init : function () {
-            $('kwic-alignment-box').setStyle({
-                display : 'block'
+            $('kwic-alignment-box').setStyle({ display : 'table-row' });
+            $$('select.kwic-alignment').each(function (item) {
+                freqFormTools.switchAlignment(item.value, freqFormTools.getColumnId(item));
             });
-            freqFormTools.switchAlignment($('kwic-alignment').value);
-            $('kwic-alignment').observe('change', function (event) {
-                freqFormTools.switchAlignment(event.target.value);
+
+            $$('select.kwic-alignment').each( function (item) {
+                item.observe('change', function (event) {
+                    freqFormTools.switchAlignment(event.target.value, freqFormTools.getColumnId(item));
+                });
             });
         },
 
-        switchAlignment : function (state) {
-            var i, select, search, replace;
+        /**
+         *
+         * @param state one of {left, right}
+         * @param columnIdx column to update (indexing from 1 to 3)
+         */
+        switchAlignment : function (state, columnIdx) {
+            var srch, repl;
 
             if (state == 'left') {
-                search = '>';
-                replace = '<';
+                srch = '>';
+                repl = '<';
 
-            } else if (state == 'right') {
-                search = '<';
-                replace = '>';
+            } else {
+                srch = '<';
+                repl = '>';
             }
-            for (i = 1; i <= 3; i++ ) {
-                select = $$("select[name='ml" + i + "ctx']");
-                if (select.length == 1) {
-                    select[0].childElements().each(function (item) {
-                        item.value = item.value.replace(search, replace);
-                    });
-                }
+            select = $$("select[name='ml" + columnIdx + "ctx']");
+            if (select.length == 1) {
+                select[0].childElements().each(function (item) {
+                    if (item.value == '0~0>0') {
+                        // This resets the default behaviour which just displays all the KWIC words.
+                        // It should be executed only when the page is loaded.
+                        item.value = '0<0';
+
+                    } else {
+                        item.value = item.value.replace(srch, repl);
+                    }
+                });
             }
         }
     }
