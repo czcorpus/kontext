@@ -8,7 +8,7 @@
          * @return {String}
          */
         getColumnId : function (element) {
-            return element.readAttribute('name').substr(element.readAttribute('name').length - 1, 1);
+            return element.readAttribute('id').substr(element.readAttribute('id').length - 1, 1);
         },
 
         /**
