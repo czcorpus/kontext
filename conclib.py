@@ -201,6 +201,15 @@ def remove_tag_from_line(line, tag_name):
         item['str'] = re.sub('<%s[^>]*>' % tag_name, '', re.sub('</%s>' % tag_name, '', item['str']))
     return line
 
+def line_parts_contain_speech(line_left, line_right):
+    """
+    Tests whether the line's left and right parts contain speech information
+    """
+    for fragment in line_left + line_right:
+        if 'open_link' in fragment or 'close_link' in fragment:
+            return True
+    return False
+
 def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
     """
     Parameters
@@ -334,6 +343,13 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightc
             leftmost_speech_id = None
         leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), filter_out_speech_tag, leftmost_speech_id)
         rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), filter_out_speech_tag, last_left_speech_id)[0]
+
+        if leftmost_speech_id is not None and not line_parts_contain_speech(leftwords, rightwords):
+            leftwords[0]['open_link'] = {
+                'speech_url' : settings.create_speech_url(leftmost_speech_id),
+                'continued' : True
+            }
+
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())

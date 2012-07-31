@@ -186,7 +186,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <td class="lc">
       #for $ll in $l['Left']
         #if $ll.has_key('open_link')
-        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
         #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
@@ -289,12 +289,18 @@ $word['str']#slurp
          >$l['linegroup']</span>
       #end if
       #for $ll in $l['Left']
+        #if $ll.has_key('open_link')
+            <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
+        #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
         #end if
         $ll['str']
         #if $ll.has_key('class') and $ll['class']
           </i>
+        #end if
+        #if $ll.has_key('close_link')
+            <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
       <span  onclick="wide_context($l['toknum'],'$l['hitlen']');">
@@ -309,12 +315,18 @@ $word['str']#slurp
       #end for
       </span>
       #for $rr in $l['Right']
+        #if $rr.has_key('open_link')
+        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        #end if
         #if $rr.has_key('class') and $rr['class']
           <i class='$rr['class']'>
         #end if
         $rr['str']
         #if $rr.has_key('class') and $rr['class']
           </i>
+        #end if
+        #if $rr.has_key('close_link')
+        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
     </td>
