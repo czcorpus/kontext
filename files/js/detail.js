@@ -138,9 +138,9 @@ function open_speech(linkElem) {
         wrapper.insert(player);
         player.writeAttribute('id', 'audio-player');
         player.writeAttribute('autoplay', '');
-        audiojs.events.ready(function() { var as = audiojs.createAll(); });
     }
     player.writeAttribute('src', speechURL);
+    audiojs.events.ready(function() { var as = audiojs.createAll(); });
 
     Event.observe(document, 'click', function (event) {
         wrapper = $('audio-wrapper');
