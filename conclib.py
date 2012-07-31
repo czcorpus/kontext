@@ -344,12 +344,6 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightc
         leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), filter_out_speech_tag, leftmost_speech_id)
         rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), filter_out_speech_tag, last_left_speech_id)[0]
 
-        if leftmost_speech_id is not None and not line_parts_contain_speech(leftwords, rightwords):
-            leftwords[0]['open_link'] = {
-                'speech_url' : settings.create_speech_url(leftmost_speech_id),
-                'continued' : True
-            }
-
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
             n = align_struct.num_at_pos (kl.get_pos())

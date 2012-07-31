@@ -18,6 +18,18 @@ $_("Concordance")#slurp
 </style>
 #end if
 #end filter
+<script src="$files_path/misc/audiojs/audio.min.js" type="text/javascript"></script>
+<script src="$files_path/js/detail.js" type="text/javascript"></script>
+<script type="text/javascript">
+\$(document).observe("dom:loaded", function() {
+  \$\$('a.speech-link').each(function (item) {
+        item.observe('click', function (event) {
+            open_speech(item);
+            event.stop();
+        });
+  });
+});
+</script>
 #end def
 
 #def viewblock
@@ -63,12 +75,18 @@ id="bodytag"#slurp
     <tr class="$even">
     <td class="par">
       #for $ll in $l['Left']
+        #if $ll.has_key('open_link')
+        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        #end if
         #if $ll.has_key('class') and $ll['class']
           <i class='$ll['class']'>
         #end if
         $ll['str']
         #if $ll.has_key('class') and $ll['class']
           </i>
+        #end if
+        #if $ll.has_key('close_link')
+        <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
       #for $k in $l['Kwic']
@@ -81,12 +99,18 @@ id="bodytag"#slurp
         #end if
       #end for
       #for $rr in $l['Right']
+        #if $rr.has_key('open_link')
+        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        #end if
         #if $rr.has_key('class') and $rr['class']
           <i class='$rr['class']'>
         #end if
         $rr['str']
         #if $rr.has_key('class') and $rr['class']
           </i>
+        #end if
+        #if $rr.has_key('close_link')
+        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
     </td>
