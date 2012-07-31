@@ -236,10 +236,8 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
     last_fragment = None
     last_speech_id = prev_speech_id
     for item in line:
-        fragments = re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str'])
+        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str']) if x <> '']
         for fragment in fragments:
-            if fragment == '':
-                continue
             frag_ext, speech_id = separate_speech_struct_from_tag(fragment)
             if not speech_id:
                 speech_id = last_speech_id
@@ -256,14 +254,14 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the concordance line
-    if last_fragment is not None:
-        if last_fragment['str'].startswith(fragment_separator) and last_fragment['str'] <> '<%s>' % speech_struct:
-            last_fragment['open_link'] = { 'speech_url' : settings.create_speech_url(last_speech_id)}
-        elif last_fragment['str'].endswith('</%s>' % speech_struct):
-            last_fragment['close_link'] = { 'speech_url' : settings.create_speech_url(last_speech_id) }
+    if last_fragment is not None \
+            and re.search('^<%s(>|[^>]+>)$' % speech_struct, last_fragment['str']) \
+            and prev_speech_id is not None:
+        del(last_fragment['open_link'])
     if filter_speech_tag:
         remove_tag_from_line(newline, speech_struct)
     return newline, last_speech_id
+
 
 def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', user_structs='p',
