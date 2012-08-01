@@ -210,12 +210,14 @@ def line_parts_contain_speech(line_left, line_right):
             return True
     return False
 
-def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
+def postproc_kwicline_part(line, side, filter_speech_tag, prev_speech_id = None):
     """
     Parameters
     ----------
     line : list of dicts
       contains keys 'str', 'class'
+    side : str
+      one of {'left', 'right'}; specifies position according to KWIC
     filter_speech_tag : bool
       if True then whole speech tag is removed else only its 'speech attribute'
     prev_speech_id : str
@@ -255,8 +257,8 @@ def postproc_kwicline_part(line, filter_speech_tag, prev_speech_id = None):
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the concordance line
     if last_fragment is not None \
-            and re.search('^<%s(>|[^>]+>)$' % speech_struct, last_fragment['str']) \
-            and prev_speech_id is not None:
+            and re.search('^<%s(>|[^>]+>)$' % speech_struct, last_fragment['str'])\
+            and side == 'right':
         del(last_fragment['open_link'])
     if filter_speech_tag:
         remove_tag_from_line(newline, speech_struct)
@@ -339,8 +341,8 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightc
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), filter_out_speech_tag, leftmost_speech_id)
-        rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), filter_out_speech_tag, last_left_speech_id)[0]
+        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), 'left', filter_out_speech_tag, leftmost_speech_id)
+        rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag, last_left_speech_id)[0]
 
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:
