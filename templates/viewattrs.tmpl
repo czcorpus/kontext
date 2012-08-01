@@ -86,7 +86,11 @@ $input_hidden
   #set $gdexcnt = ''
 #end try
   $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
-  $_("KWIC Context size (number of characters)"): <input type="text" name="newctxsize" value='$newctxsize' size="4" /><br /><br />
+  $_("KWIC Context size"): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
+  <select name="ctxunit">
+    <option value="">$_("Positions")</option>
+  </select>
+  <br /><br />
   <input type="hidden" name="gdex_enabled" value="0" />
   <input type="checkbox" name="gdex_enabled" value="1"
 #if $gdex_enabled

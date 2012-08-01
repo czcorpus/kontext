@@ -68,7 +68,7 @@ def add_block_items (items, attr='class', val='even', block_size=3):
         items[i][attr] = val
     return items
         
-def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='40#', attrs='word',
+def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5', attrs='word',
               ctxattrs='word', refs='#', structs='p', pagesize=20,
               labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
               tbl_template='none'):
@@ -85,10 +85,10 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='40#', rightctx='
       sets whether the corpus concordance is derived from contains speech files
     fromp : int
       page number
-    leftctx : str, optional (default is '40#')
-      TODO
-    rightctx : str, optional (default is '40#')
-      TODO
+    leftctx : str, optional (default is '-5')
+      how many characters/positions/whatever_struct_attrs display on the left side
+    rightctx : str, optional (default is '5')
+      how many characters/positions/whatever_struct_attrs display on the right side
     attrs : str, optional (default is 'word')
       TODO
     ctxattrs : str, optional (default is 'word')
@@ -228,7 +228,10 @@ def postproc_kwicline_part(line, side, filter_speech_tag, prev_speech_id = None)
     str
       modified line
     str
-      last speech id
+      last speech id (which is necessary to obtain proper speech ID in case
+      of partial segment on the "left" left side of a KWIC line and similarly
+      in case of a partial segment on the "right" side of a KWIC line - because
+      the KWIC word itself separates left and right side).
     """
     import re
 
@@ -265,7 +268,7 @@ def postproc_kwicline_part(line, side, filter_speech_tag, prev_speech_id = None)
     return newline, last_speech_id
 
 
-def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightctx='40#',
+def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
                attrs='word', ctxattrs='word', refs='#', user_structs='p',
                labelmap={}, righttoleft=False, alignlist=[],
                align_attrname='align', aattrs='word', astructs=''):
@@ -404,7 +407,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='40#', rightc
     return lines
 
 
-def strkwiclines (conc, fromline, toline=None, leftctx='40#', rightctx='40#'):
+def strkwiclines (conc, fromline, toline=None, leftctx='-5', rightctx='5'):
     """
     TODO: no direct call found for this method
     """

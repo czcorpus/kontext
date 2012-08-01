@@ -341,8 +341,8 @@ class ConcCGI (CGIPublisher):
            if len(conc_desc) > 1:
                result['tourl'] = conc_desc[0][3]
 
-    kwicleftctx = '40#'
-    kwicrightctx = '40#'
+    kwicleftctx = '-5'
+    kwicrightctx = '5'
     senleftctx = '-1:s'
     senrightctx = '1:s'
     viewmode = 'kwic'
@@ -492,12 +492,12 @@ class ConcCGI (CGIPublisher):
                                ((('=' + n in reflist) and 'selected') or ''),
                                'label': (corp.get_conf (n+'.LABEL') or n)} 
                               for n in availref if n and n != '#']
-        out['newctxsize'] = self.kwicleftctx[:-1]
+        out['newctxsize'] = self.kwicrightctx
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
         return out
 
     def set_new_viewattrs (self, setattrs=[], allpos='', setstructs=[],
-                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf=''):
+                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
         self.attrs = ','.join(setattrs)
         self.structs = ','.join(setstructs)
         self.refs = ','.join(setrefs)
@@ -512,8 +512,8 @@ class ConcCGI (CGIPublisher):
                                    'pagesize', 'copy_icon', 'multiple_copy',
                                    'gdex_enabled', 'gdexcnt', 'gdexconf'])
         if newctxsize != self.kwicleftctx[:-1]:
-            self.kwicleftctx = newctxsize + '#'
-            self.kwicrightctx = newctxsize + '#'
+            self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
+            self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
             self._cookieattrs.extend (['kwicleftctx', 'kwicrightctx'])
 
     def viewattrsx (self, setattrs=[], allpos='', setstructs=[], setrefs=[],
