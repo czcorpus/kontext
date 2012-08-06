@@ -492,7 +492,13 @@ class ConcCGI (CGIPublisher):
                                ((('=' + n in reflist) and 'selected') or ''),
                                'label': (corp.get_conf (n+'.LABEL') or n)} 
                               for n in availref if n and n != '#']
-        out['newctxsize'] = self.kwicrightctx
+        ctx_elems = self.kwicrightctx.split(':')
+        out['newctxsize'] = ctx_elems[0]
+        if len(ctx_elems) > 1:
+            out['ctxunit'] = ctx_elems[1]
+        else:
+            out['ctxunit'] = ''
+
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
         return out
 
@@ -520,22 +526,22 @@ class ConcCGI (CGIPublisher):
             self._cookieattrs.extend (['kwicleftctx', 'kwicrightctx'])
 
     def viewattrsx (self, setattrs=[], allpos='', setstructs=[], setrefs=[],
-                    newctxsize='', gdexcnt=0, gdexconf=''):
+                    newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
-                    setrefs, newctxsize, gdexcnt, gdexconf)
+                    setrefs, newctxsize, gdexcnt, gdexconf, ctxunit)
         return self.view()
     
     viewattrsx.template = 'view.tmpl'
 
     def save_viewattrs (self, setattrs=[], allpos='', setstructs=[],
-                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf=''):
+                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
-                    setrefs, newctxsize, gdexcnt, gdexconf)
+                    setrefs, newctxsize, gdexcnt, gdexconf, ctxunit)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'pagesize',
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
                             'refs',
                             'kwicleftctx', 'kwicrightctx', 'multiple_copy',
-                            'tbl_template'],
+                            'tbl_template', 'ctxunit'],
                             self.corpname)
         out = self.viewattrs()
         out['saved_attrs'] = 1

@@ -329,8 +329,9 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                   manatee.CorpRegion (c, aattrs, astructs)) for c in alignlist]
         align_struct = conc.corp.get_struct(align_attrname)
 
+    max_ctx = int(settings.config.get('corpora', 'kwicline_max_context'))
     kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
-                            all_structs, refs)
+                            all_structs, refs, max_ctx)
     labelmap = labelmap.copy()
     labelmap['_'] = '_'
     maxleftsize = 0
