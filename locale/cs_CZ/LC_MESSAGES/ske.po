@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-06-17 15:38+0200\n"
-"PO-Revision-Date: 2012-08-01 11:17+0100\n"
+"PO-Revision-Date: 2012-08-06 10:03+0100\n"
 "Last-Translator: Tomas Machalek <tomas.machalek@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -775,4 +775,7 @@ msgstr "slova KWIC nejvíce vpravo"
 
 msgid "Sentences"
 msgstr "Věty"
+
+msgid "Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
+msgstr "Hodnotu [%s] nelze použít pro určení šírky kontextu. Použijte čísla 0,1,2,..."
 

@@ -511,7 +511,10 @@ class ConcCGI (CGIPublisher):
         self._cookieattrs.extend (['attrs', 'ctxattrs', 'structs',
                                    'pagesize', 'copy_icon', 'multiple_copy',
                                    'gdex_enabled', 'gdexcnt', 'gdexconf'])
-        if newctxsize != self.kwicleftctx[:-1]:
+        if newctxsize != self.kwicrightctx:
+            if not newctxsize.isdigit():
+                self.exceptmethod = 'viewattrs'
+                raise Exception(_('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
             self._cookieattrs.extend (['kwicleftctx', 'kwicrightctx'])
