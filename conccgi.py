@@ -343,8 +343,8 @@ class ConcCGI (CGIPublisher):
 
     kwicleftctx = '-5'
     kwicrightctx = '5'
-    senleftctx = '-1:s'
-    senrightctx = '1:s'
+    senleftctx_tpl = '-1:%s'
+    senrightctx_tpl = '1:%s'
     viewmode = 'kwic'
     changeviewmode = 0
     align = ''
@@ -402,8 +402,10 @@ class ConcCGI (CGIPublisher):
             if self._corp().get_conf ('RIGHTTOLEFT'):
                 self.righttoleft = True
         else:
-            self.leftctx = self.senleftctx
-            self.rightctx = self.senrightctx
+            # smallest structure detection is based on a convention used in registry files
+            smallest_struct = self._curr_corpus.get_conf('STRUCTLIST').split(',')[-1]
+            self.leftctx = self.senleftctx_tpl % smallest_struct
+            self.rightctx = self.senrightctx_tpl % smallest_struct
             # GDEX changing and turning on and off
         if self.gdex_enabled and self.gdexcnt:
             gdex_set = 0
