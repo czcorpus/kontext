@@ -3,7 +3,7 @@ import sys
 sys.path.append('./mocks')
 
 import settings
-settings.load('../config.test.ini')
+settings.load('../config.test.xml')
 import conclib
 
 class TestConclibModule(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestConclibModule(unittest.TestCase):
             }
         )
 
-        ans, last_speech_id = conclib.postproc_kwicline_part(line, False)
+        ans, last_speech_id = conclib.postproc_kwicline_part(line, 'left', False)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         self.assertEquals('937.341', last_speech_id)
         # second item has the string 'speechfile=123.wav' removed

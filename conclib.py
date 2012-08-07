@@ -175,7 +175,7 @@ def separate_speech_struct_from_tag(text):
     """
     import re
 
-    struct_attr = settings.config.get('corpora', 'speech_segment_struct_attr')
+    struct_attr = settings.get('corpora', 'speech_segment_struct_attr')
     speech_struct, speech_struct_attr = struct_attr.split('.')
     pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (speech_struct, speech_struct_attr)
     srch = re.search(pattern, text)
@@ -306,7 +306,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
     # additional information (like the speech links)
     all_structs = user_structs
     if has_speech:
-        speech_struct_attr_name = settings.config.get('corpora', 'speech_segment_struct_attr')
+        speech_struct_attr_name = settings.get('corpora', 'speech_segment_struct_attr')
         speech_struct_attr = corpus.get_attr(speech_struct_attr_name)
         if not speech_struct_attr_name in user_structs:
             all_structs += ',' + speech_struct_attr_name
@@ -329,7 +329,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                   manatee.CorpRegion (c, aattrs, astructs)) for c in alignlist]
         align_struct = conc.corp.get_struct(align_attrname)
 
-    max_ctx = int(settings.config.get('corpora', 'kwicline_max_context'))
+    max_ctx = int(settings.get('corpora', 'kwicline_max_context'))
     kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
                             all_structs, refs, max_ctx)
     labelmap = labelmap.copy()
