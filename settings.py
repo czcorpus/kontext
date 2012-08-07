@@ -39,7 +39,7 @@ def get_default_corpus(corplist):
     else:
         return config.get('corpora', 'alternative_corpus')
 
-def get_corplist (user, config, registry_name):
+def get_corplist (user, registry_name):
     """
     Fetches list of available corpora according to provided user
 

@@ -38,7 +38,7 @@ class BonitoCGI (WSEval, UserCGI):
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
     # set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = settings.get_corplist(os.getenv('REMOTE_USER'), settings.config, MANATEE_REGISTRY)
+    corplist = settings.get_corplist(os.getenv('REMOTE_USER'), MANATEE_REGISTRY)
     # set default corpus
     corpname = settings.get_default_corpus(corplist)
 
