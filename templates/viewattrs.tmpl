@@ -89,7 +89,7 @@ $input_hidden
   $_("KWIC Context size"): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
   <select name="ctxunit">
     <option value="">$_("Positions").lower()</option>
-    #for $a in $Availstructs
+    #for $a in [x for x in reversed($Availstructs) ]
     <option value=":$a['n']" #if $a['n'] == $ctxunit# selected="selected" #end if
         >&lt;$a['n']&gt;</option>
     #end for
