@@ -1,0 +1,18 @@
+.application input {
+    border: solid 1px #32427e;
+    padding: 1px
+}
+
+.application input[type="submit"] {
+     background-color: #d7d7d7;
+     border: outset 2px #d7d7d7
+}
+
+.application input[class="button"] {
+     background-color: #d7d7d7;
+     border: outset 2px #d7d7d7
+}
+
+.application select {
+     border: solid 1px #32427e
+}

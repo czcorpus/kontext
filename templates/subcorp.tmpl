@@ -1,0 +1,83 @@
+#from cmpltmpl.leftmenu import leftmenu
+#extends leftmenu
+
+#def title
+$_("Subcorpus Info")#slurp
+#end def
+
+#attr $focus = "'subcname'"
+
+#def bodyonload
+#filter WebSafe
+show_subcorpinfo();#slurp
+#end filter
+#end def
+
+#def main
+#filter WebSafe
+<form id="subcorpform" action="subcorp">
+<fieldset>
+<table class="form">
+#filter None
+$corp_sel_node
+#end filter
+## Subcorpora
+<tbody>
+<tr>
+<th valign="top">
+$_("Subcorpora"):<br/>
+#if $SubcorpList
+<select name="subcname" id="subcname" onchange="show_subcorpinfo();"
+        size="#if len($SubcorpList) == 1 then 2 else len($SubcorpList)#">
+  #for $s in $SubcorpList
+    #set $selected = ($s['n'] == $subcname) and 'selected="selected"' or ''
+    <option $selected>$s['n']</option>
+  #end for
+</select>
+#else
+<i>$_("no subcorpus")</i>
+#end if
+<br/>
+
+     <i>
+     #if not $_open_version
+     <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
+     #end if
+</th>
+
+## Subcorp Info
+<td valign="top">
+<div id="subcorpinfo" class="infobox">
+    #if $subcsize
+      <b>$subcname</b><br/>
+      $subcsize <i>$_("of")</i> $corpsize <i>$_("tokens")</i>
+    #end if
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+
+#if $SubcorpList and not $_open_version
+<div class="buttons">
+  <input type="submit" name="delete" value="$_("Delete Selected")" />
+</div>
+#end if
+</fieldset>
+</form>
+
+<script type="text/javascript"> 
+
+function update_subcorpinfo(request) {
+    \$('subcorpinfo').innerHTML = request.responseText;
+}
+
+function show_subcorpinfo() {
+    new Ajax.Request('subcorp_info', 
+                     {parameters: Form.serialize('subcorpform'), 
+		      method:'get', onComplete: update_subcorpinfo});
+}
+   
+</script>
+#end filter
+#end def

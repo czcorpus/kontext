@@ -1,0 +1,53 @@
+#from cmpltmpl.leftmenu import leftmenu
+#extends leftmenu
+
+#def title
+$_("Create Subcorpus")#slurp
+#end def
+
+#attr focus = "'subcname'"
+
+#def headers
+#filter WebSafe
+<script src="$files_path/js/util.js" type="text/javascript"></script>
+<script src="$files_path/js/effects.js" type="text/javascript"></script>
+<script src="$files_path/js/controls.js" type="text/javascript"></script>
+#end filter
+#end def
+
+
+#def main
+#filter WebSafe
+#if $_open_version
+<br /><br />$_("Sorry, creating user subcorpora is not available in the open version")
+#else
+
+<form action="subcorp">
+<fieldset>
+<table class="form">
+#filter None
+$corp_sel_node
+#end filter
+<tbody>
+<tr class="required">
+<th>$_("New subcorpus name"):</th>
+<td><input type="text" name="subcname" id="subcname" /></td>
+</tr>
+</tbody>
+</table>
+<input type="hidden" name="create" value="True" />
+#filter None
+$tt_sel
+#end filter
+
+<div class="buttons">
+  #unless $_open_version
+  <input type="submit" value="$_("Create Subcorpus")" />
+  #end unless
+</div>
+</fieldset>
+</form>
+
+#end if
+#end filter
+#end def

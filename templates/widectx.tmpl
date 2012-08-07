@@ -1,0 +1,21 @@
+#filter WebSafe
+
+
+#unless $getVar('no_display_links', '')
+  <a href="\#end" onclick="display_in_detail_frame('widectx','$leftlink')">$_("expand left")</a>
+#end unless
+#if $righttoleft
+  <span dir="rtl">
+#end if
+$left <b class="coll">$kwic</b> $right
+#if $righttoleft
+  </span>
+#end if
+#unless $getVar('no_display_links', '')
+  <a name="end" href="\#end" onclick="display_in_detail_frame('widectx', '$rightlink')">$_("expand right")</a>
+  #if $getVar('struct_ctx', '')
+    <br/>
+    <a href="\#end" onclick="display_in_detail_frame('structctx', 'corpname=$corpname;pos=$pos;struct=$struct_ctx')">$_("display whole document")</a>
+  #end if
+#end unless
+#end filter

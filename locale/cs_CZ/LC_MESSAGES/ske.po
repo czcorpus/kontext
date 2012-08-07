@@ -1,0 +1,796 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-06-17 15:38+0200\n"
+"PO-Revision-Date: 2012-08-06 10:20+0100\n"
+"Last-Translator: Tomas Machalek <tomas.machalek@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "---"
+msgstr "---"
+
+msgid "ARF"
+msgstr "ARF"
+
+msgid "Add next"
+msgstr "Přidat další"
+
+msgid "Advanced options"
+msgstr "Pokročilé možnosti"
+
+msgid "Align KWIC"
+msgstr "Zarovnat KWIC"
+
+msgid "All"
+msgstr "Všechny"
+
+msgid "Annotating"
+msgstr "Anotace"
+
+msgid "Any"
+msgstr "Některý"
+
+msgid "Attribute"
+msgstr "Atribut"
+
+msgid "Attributes"
+msgstr "Atributy"
+
+msgid "Back"
+msgstr "Zpět"
+
+msgid "Backward"
+msgstr "Pozpátku"
+
+msgid "CQL"
+msgstr "CQL"
+
+msgid "Change View Options"
+msgstr "Změnit možnosti zobrazení"
+
+msgid "Clear sel"
+msgstr "Zruš výběr"
+
+msgid "Cluster items"
+msgstr "Seskupovat položky"
+
+msgid "Collocation"
+msgstr "Kolokace"
+
+msgid "Collocation candidates"
+msgstr "Kandidáti na kolokace"
+
+msgid "Collocation form"
+msgstr "Kolokace - formulář"
+
+msgid "Collocations"
+msgstr "Kolokace"
+
+msgid "Complex sorting options"
+msgstr "Komplexní možnosti třídění"
+
+msgid "Compute patterns"
+msgstr "Vyhodnotit patterny"
+
+msgid "Concordance"
+msgstr "Konkordance"
+
+msgid "Concordance Filter"
+msgstr "Filtr konkordance"
+
+msgid "Concordance description"
+msgstr "Popis konkordance"
+
+msgid "Concordance name"
+msgstr "Jméno konkordance"
+
+msgid "Concordance stored"
+msgstr "Konkordance uložena"
+
+msgid "Context"
+msgstr "Kontext"
+
+msgid "Corpus"
+msgstr "Korpus"
+
+msgid "Corpus Query Language"
+msgstr "Korpusový dotazovací jazyk (Corpus Query Language)"
+
+msgid "Create Sample"
+msgstr "Vytvořit vzorek"
+
+msgid "Create Subcorpus"
+msgstr "Vytvořit subkorpus"
+
+msgid "Default attribute"
+msgstr "Implicitní atribut"
+
+msgid "Delete Selected"
+msgstr "Vymazat vybrané"
+
+msgid "Delete Selected Subcorpora"
+msgstr "Vymazat vybrané subkorpusy"
+
+msgid "Delete Subcorpora"
+msgstr "Smazat subkorpusy"
+
+msgid "Display attributes"
+msgstr "Zobrazit atributy"
+
+msgid "Doc IDs"
+msgstr "ID dokumentů"
+
+msgid "Filter"
+msgstr "Filtr"
+
+msgid "Filter Concordance"
+msgstr "Filtrovat konkordanci"
+
+msgid "Find Keywords"
+msgstr "Najít klíčová slova"
+
+msgid "Finish"
+msgstr "Dokončit"
+
+msgid "First"
+msgstr "První"
+
+msgid "First lemma"
+msgstr "První lemma"
+
+msgid "For each token"
+msgstr "Pro každý token"
+
+msgid "Freq"
+msgstr "Frekvence"
+
+msgid "Freq in"
+msgstr "Frekvence v"
+
+msgid "Freqs form"
+msgstr "Frekvence - formulář"
+
+msgid "Frequency"
+msgstr "Frekvence"
+
+msgid "Frequency info"
+msgstr "Informace o frekvenci"
+
+msgid "Frequency limit"
+msgstr "Frekvenční limit"
+
+msgid "Frequency list"
+msgstr "Frekvenční seznam"
+
+msgid "Go"
+msgstr "Jdi"
+
+msgid "Hits"
+msgstr "Výskytů"
+
+msgid "Home"
+msgstr "Hlavní strana"
+
+msgid "Ignore case"
+msgstr "Ignorovat velikost písmen"
+
+msgid "In the range from"
+msgstr "V rozsahu od"
+
+msgid "Include heading"
+msgstr "Přidat hlavičku"
+
+msgid "Info"
+msgstr "Info"
+
+msgid "KWIC Context size"
+msgstr "Velikost KWIC kontextu"
+
+msgid "KWIC tokens only"
+msgstr "Pouze KWIC"
+
+msgid "KWIC/Sentence"
+msgstr "KWIC/Věta"
+
+msgid "Keyword(s)"
+msgstr "Další možnosti"
+
+msgid "Keywords"
+msgstr "Klíčová slova"
+
+msgid "Last"
+msgstr "Poslední"
+
+msgid "Last Stored Concordances"
+msgstr "Poslední uložené konkordance"
+
+msgid "Left"
+msgstr "Levý kontext"
+
+msgid "Left context"
+msgstr "Levý kontext"
+
+msgid "Lemma"
+msgstr "Lemma"
+
+msgid "Line Group Info"
+msgstr "Skupina řádků - info"
+
+msgid "Line group sort"
+msgstr "Třídění podle čísel řádků"
+
+msgid "MI"
+msgstr "MI"
+
+msgid "MI3"
+msgstr "MI3"
+
+msgid "Make Candidate List"
+msgstr "Vytvořit seznam kandidátů"
+
+msgid "Make Concordance"
+msgstr "Vytvořit konkordanci"
+
+msgid "Make Frequency List"
+msgstr "Vytvořit frekvenční seznam"
+
+msgid "Make Word List"
+msgstr "Vytvořit seznam slov"
+
+msgid "Make a random sample from the concordance"
+msgstr "Vybere z konkordance náhodný vzorek"
+
+msgid "Match case"
+msgstr "Rozlišovat velikost písmen"
+
+msgid "Maximum number of displayed lines"
+msgstr "Maximální počet zobrazených řádků"
+
+msgid "Maximum number of items"
+msgstr "Maximální počet položek"
+
+msgid "Maximum number of lines"
+msgstr "Maximální počet řádků"
+
+msgid "Maximum number of patterns"
+msgstr "Maximální počet patternů"
+
+msgid "Minimum frequency"
+msgstr "Minimální frekvence"
+
+msgid "Minimum frequency in corpus"
+msgstr "Minimální frekvence v korpusu"
+
+msgid "Minimum frequency in given range"
+msgstr "Minimální frekvence v daném rozsahu"
+
+msgid "Minimum salience"
+msgstr "Minimální salience"
+
+msgid "Minimum similarity"
+msgstr "Minimální podobnost"
+
+msgid "Multilevel frequency distribution"
+msgstr "Víceúrovňové frekvenční rozložení"
+
+msgid "Multilevel sort"
+msgstr "Víceúrovňové třídění"
+
+msgid "New pattern"
+msgstr "Nový pattern"
+
+msgid "New query entry form"
+msgstr "Formulář pro nový dotaz"
+
+msgid "New subcorpus name"
+msgstr "Jméno nového subkorpusu"
+
+msgid "Next"
+msgstr "Další"
+
+msgid "Node"
+msgstr "Node"
+
+msgid "Node forms"
+msgstr "Slovní tvary"
+
+msgid "Node tags"
+msgstr "Značky (tags)"
+
+msgid "None"
+msgstr "Žádný"
+
+msgid "Nothing found."
+msgstr "Prázdný výsledek."
+
+msgid "Num of Hits"
+msgstr "Počet výskytů"
+
+msgid "Number globally"
+msgstr "Číslovat globálně"
+
+msgid "Number lines"
+msgstr "Číslování řádků"
+
+msgid "Number of lines in the sample"
+msgstr "Počet řádků vzorku"
+
+msgid "Number of tokens to sort"
+msgstr "Počet tokenů k třídění"
+
+msgid "Number selected"
+msgstr "Vybrané číslo"
+
+msgid ""
+"Once the list has been computed, it will be stored, so will be immediately "
+"available next time."
+msgstr ""
+"Po prvním výpočtu se výsledná data uloží, takže pro příští hledání budou již "
+"okamžitě dostupná."
+
+msgid "Only page"
+msgstr "Pouze stranu"
+
+msgid "Operation"
+msgstr "Operace"
+
+msgid "Page"
+msgstr "Strana"
+
+msgid "Page size (number of lines)"
+msgstr "Velikost strany (počet řádků)"
+
+msgid "Parameters"
+msgstr "Parametry"
+
+msgid "Part of speech"
+msgstr "Slovní druh (PoS)"
+
+msgid "Pattern"
+msgstr "Pattern"
+
+msgid "Phrase"
+msgstr "Fráze"
+
+msgid "PoS"
+msgstr "Slovní druh (PoS)"
+
+msgid "Position"
+msgstr "Pozice"
+
+msgid "Previous"
+msgstr "Předchozí"
+
+msgid "Query"
+msgstr "Dotaz"
+
+msgid "Query Type"
+msgstr "Typ dotazu"
+
+msgid "Random sample"
+msgstr "Náhodný vzorek"
+
+msgid "Reference corpus"
+msgstr "Referenční korpus"
+
+msgid "Reference subcorpus"
+msgstr "Referenční subkorpus"
+
+msgid "References"
+msgstr "Reference"
+
+msgid "Right"
+msgstr "Pravý kontext"
+
+msgid "Right context"
+msgstr "Pravý kontext"
+
+msgid "Sample"
+msgstr "Vzorek"
+
+msgid "Sample form"
+msgstr "Vzorek - formulář"
+
+msgid "Save"
+msgstr "Uložit"
+
+msgid "Save Collocation Candidates"
+msgstr "Uložit kandidáty na kolokace"
+
+msgid "Save Collocation candidates"
+msgstr "Uložit kandidáty na kolokace"
+
+msgid "Save Collocation candidates to a text file or XML"
+msgstr "Uložit kandidáty na kolokace do textového souboru nebo XML"
+
+msgid "Save Collocations"
+msgstr "Uložit kolokace"
+
+msgid "Save Concordance"
+msgstr "Uložit konkordanci"
+
+msgid "Save Concordance Form"
+msgstr "Uložení konkordance - formulář"
+
+msgid "Save Frequency List"
+msgstr "Uložit frekvenční seznam"
+
+msgid "Save Frequency list"
+msgstr "Uložit frekvenční seznam"
+
+msgid "Save Frequency list to a text file or XML"
+msgstr "Uložit frekvenční seznam do textového souboru nebo XML"
+
+msgid "Save Keywords"
+msgstr "Uložit klíčová slova"
+
+msgid "Save Thesaurus"
+msgstr "Uložit tezaurus"
+
+msgid "Save Thesaurus as"
+msgstr "Uložit tezaurus jako"
+
+msgid "Save Word List"
+msgstr "Uložit seznam"
+
+msgid "Save Word List/Keywords to a text file or XML"
+msgstr "Uložit výsledek do textového souboru nebo XML"
+
+msgid "Save Word Sketch"
+msgstr "Uložit Word Sketch"
+
+msgid "Save collocations as"
+msgstr "Uložit kolokace jako"
+
+msgid "Save concordance as"
+msgstr "Uložit konkordanci jako"
+
+msgid "Save concordance to a text file or xml"
+msgstr "Uložit konkordanci do textového souboru nebo XML"
+
+msgid "Save frequency list as"
+msgstr "Uložit frekvenční seznam jako"
+
+msgid "Save keywords as"
+msgstr "Uložit klíčová slova jako"
+
+msgid "Save pages"
+msgstr "Uložit strany"
+
+msgid "Save thesaurus to a text file or XML"
+msgstr "Uložit tezaurus do textového souboru nebo XML"
+
+msgid "Save word list as"
+msgstr "Uložit seznam jako"
+
+msgid "Save word sketch as"
+msgstr "Uložit Word Sketch jako"
+
+msgid "Save word sketch to a text file or XML"
+msgstr "Uložit word sketch do textového souboru nebo XML"
+
+msgid "Score"
+msgstr "Skóre"
+
+msgid "Search Span"
+msgstr "Rozsah hledání"
+
+msgid "Second lemma"
+msgstr "Druhé lemma"
+
+msgid "Select one or more PoS tags"
+msgstr "Vyberte jednu nebo více PoS značek"
+
+msgid "Select subcorpora"
+msgstr "Vybrat subkorpus"
+
+msgid "Selected"
+msgstr "Vybráno"
+
+msgid "Selected token"
+msgstr "Vybraný token"
+
+msgid "Separate blocks"
+msgstr "Rozlišení bloků"
+
+msgid "Set limit"
+msgstr "Nastavit limit"
+
+msgid "Show Diff"
+msgstr "Ukaž rozdíl"
+
+msgid "Show Similar Words"
+msgstr "Ukázat podobná slova"
+
+msgid "Show Word Sketch"
+msgstr "Ukaž word sketch"
+
+msgid "Show functions"
+msgstr "Zobrazit funkce"
+
+msgid "Simple Sort"
+msgstr "Jednoduché třídění"
+
+msgid "Sketch-Diff"
+msgstr "Sketch-Diff"
+
+msgid "Sort"
+msgstr "Třídění"
+
+msgid "Sort Concordance"
+msgstr "Třídit konkordanci"
+
+msgid "Sort by"
+msgstr "Třídit podle"
+
+msgid "Sort by node word"
+msgstr "Třídit podle klíčového slova"
+
+msgid "Sort form"
+msgstr "Třídění - formulář"
+
+msgid "Sort grammatical relations"
+msgstr "Setřídit gramatické relace"
+
+msgid "Sort key"
+msgstr "Třídící klíč"
+
+msgid "Sort to left"
+msgstr "Třídit vlevo"
+
+msgid "Sort to right"
+msgstr "Třídit vpravo"
+
+msgid "Store Concordance"
+msgstr "Uskladnit konkordanci"
+
+msgid "Store Concordance For Annotation"
+msgstr "Uskladnit konkordanci pro anotaci"
+
+msgid "Structures"
+msgstr "Struktury"
+
+msgid "Subcorpora"
+msgstr "Subkorpusy"
+
+msgid ""
+"Subcorpora operations need more preprocessing. It will take a while, please "
+"wait."
+msgstr ""
+"Operace nad subkorpusy jsou náročnější na předzpracování. To může trvat "
+"delší dobu, prosím čekejte."
+
+msgid "Subcorpus"
+msgstr "Subkorpus"
+
+msgid "Subcorpus Info"
+msgstr "Subkorpus - info"
+
+msgid "T-score"
+msgstr "T-score"
+
+msgid "Tagset summary"
+msgstr "Přehled značek"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Text Type 1"
+msgstr "1. typ textu"
+
+msgid "Text Type 2"
+msgstr "2. typ textu"
+
+msgid "Text Type frequency distribution"
+msgstr "Rozložení frekvencí podle typů textu"
+
+msgid "Text Types"
+msgstr "Typy textů"
+
+msgid "Thesaurus"
+msgstr "Tezaurus"
+
+msgid "Thesaurus Entry Form"
+msgstr "Tezaurus - formulář"
+
+msgid "View"
+msgstr "Zpět na zobrazení"
+
+msgid "View conc"
+msgstr "Zobrazit konkordanci"
+
+msgid "View current concordance"
+msgstr "Zobrazit aktuální konkordanci"
+
+msgid "View options"
+msgstr "Možnosti zobrazení"
+
+msgid "WS Diff Entry Form"
+msgstr "WS Diff - formulář"
+
+msgid "WS Text Type Diff Entry Form"
+msgstr "Word Sketch - rozdíly v typech textů - formulář"
+
+msgid "Window Size"
+msgstr "Velikost kontextu"
+
+msgid "Word Form"
+msgstr "Slovní tvar"
+
+msgid "Word List"
+msgstr "Seznamy slov"
+
+msgid "Word List Form"
+msgstr "Seznam slov - formulář"
+
+msgid "Word Sketch"
+msgstr "Word Sketch"
+
+msgid "Word Sketch Differences Entry Form"
+msgstr "Word Sketch - rozdíly - formulář"
+
+msgid "Word Sketch Entry Form"
+msgstr "Word Sketch - formulář"
+
+msgid "Word Sketch Patterns"
+msgstr "Word Sketch Patterns"
+
+msgid "Word Sketch Patterns Entry Form"
+msgstr "Word Sketch Patterns - formulář"
+
+msgid "Word Sketch Text Type Differences Entry Form"
+msgstr "Word Sketch - rozdíly v typech textů - formulář"
+
+msgid "Word list"
+msgstr "Seznam slov"
+
+msgid "Word sketch difference"
+msgstr "Word sketch - rozdíly"
+
+msgid "XML"
+msgstr "XML"
+
+msgid ""
+"You can close this window. Repeating wordlist or keywords queries on the "
+"same subcorpus will show you progress of the computation."
+msgstr ""
+"Toto okno můžete zavřít. Postup výpočtu se zobrazí při opakování dotazu nad "
+"tímto subkorpusem."
+
+msgid "adjective"
+msgstr "přídavné jméno"
+
+msgid "all in one block"
+msgstr "všechno v jednom bloku"
+
+msgid "between cluster items"
+msgstr "mezi sdruženými položkami"
+
+msgid "change options"
+msgstr "změnit parametry"
+
+msgid "common/exclusive blocks"
+msgstr "rozlišit společné a výhradní bloky"
+
+msgid "conc description"
+msgstr "popis konkordance"
+
+msgid "create new"
+msgstr "vytvořit nový"
+
+msgid "expand left"
+msgstr "rozšířit vlevo"
+
+msgid "expand right"
+msgstr "rozšířit vpravo"
+
+msgid "first"
+msgstr "první"
+
+msgid "first level"
+msgstr "první úroveň"
+
+msgid "first level (Sort by ...)"
+msgstr "první úroveň (třídit podle...)"
+
+msgid "freq"
+msgstr "frekvence"
+
+msgid "from"
+msgstr "od"
+
+msgid "in a grammatical relation"
+msgstr "v gramatické relaci"
+
+msgid "last"
+msgstr "poslední"
+
+msgid "log likelihood"
+msgstr "log likelihood"
+
+msgid "min. sensitivity"
+msgstr "min. senzitivita"
+
+msgid "multiple selection"
+msgstr "vícenásobný výběr"
+
+msgid "negative"
+msgstr "negativní"
+
+msgid "no subcorpus"
+msgstr "žádný subkorpus"
+
+msgid "noun"
+msgstr "podstatné jméno"
+
+msgid "of"
+msgstr "ze"
+
+msgid "of the common block"
+msgstr "ve společném bloku"
+
+msgid "of the exclusive block"
+msgstr "ve výhradním bloku"
+
+msgid "of these items"
+msgstr "z následujících"
+
+msgid "positive"
+msgstr "pozitivní"
+
+msgid "salience"
+msgstr "salience"
+
+msgid "second level"
+msgstr "druhá úroveň"
+
+msgid "second level (... then sort by ...)"
+msgstr "druhá úroveň (... pak třídit podle ...)"
+
+msgid "third level"
+msgstr "třetí úroveň"
+
+msgid "third level (... finally sort by)"
+msgstr "třetí úroveň (... nakonec setřídit podle)"
+
+msgid "to"
+msgstr "do"
+
+msgid "tokens"
+msgstr "tokenů"
+
+msgid "unspecified"
+msgstr "nespecifikováno"
+
+msgid "use Ctrl+click for"
+msgstr "Ctrl+click pro"
+
+msgid "verb"
+msgstr "sloveso"
+
+msgid "Click to play audio"
+msgstr "Klikněte pro přehrání audia"
+
+msgid "Start at"
+msgstr "Začít od"
+
+msgid "leftmost KWIC word"
+msgstr "slova KWIC nejvíce vlevo"
+
+msgid "rightmost KWIC word"
+msgstr "slova KWIC nejvíce vpravo"
+
+msgid "Sentences"
+msgstr "Věty"
+
+msgid ""
+"Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
+msgstr ""
+"Hodnotu [%s] nelze použít pro určení šírky kontextu. Použijte čísla 0,1,2,..."
+
+msgid "Empty result"
+msgstr "Žádný odpovídající výsledek"

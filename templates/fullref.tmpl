@@ -1,0 +1,15 @@
+#filter WebSafe
+
+
+<table id="full_ref">
+#for $r in $Refs
+  <tr><td><b>$_($r['name'])</b></td><td>
+  #if $r.val.startswith('http://')
+    <a href="$r.val">$r.val</a>
+  #else
+    $_($r.val)
+  #end if
+  </td></tr>
+#end for
+</table>
+#end filter
