@@ -506,6 +506,8 @@ class ConcCGI (CGIPublisher):
 
     def set_new_viewattrs (self, setattrs=[], allpos='', setstructs=[],
                     setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
+        if ctxunit == '@pos':
+            ctxunit = ''
         self.attrs = ','.join(setattrs)
         self.structs = ','.join(setstructs)
         self.refs = ','.join(setrefs)
@@ -519,13 +521,13 @@ class ConcCGI (CGIPublisher):
         self._cookieattrs.extend (['attrs', 'ctxattrs', 'structs',
                                    'pagesize', 'copy_icon', 'multiple_copy',
                                    'gdex_enabled', 'gdexcnt', 'gdexconf'])
-        if newctxsize != self.kwicrightctx:
+        if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
                 raise Exception(_('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
-            self._cookieattrs.extend (['kwicleftctx', 'kwicrightctx'])
+            self._cookieattrs.extend (['kwicleftctx', 'kwicrightctx', 'ctxunit'])
 
     def viewattrsx (self, setattrs=[], allpos='', setstructs=[], setrefs=[],
                     newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
