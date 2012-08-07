@@ -329,9 +329,14 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                   manatee.CorpRegion (c, aattrs, astructs)) for c in alignlist]
         align_struct = conc.corp.get_struct(align_attrname)
 
-    max_ctx = int(settings.config.get('corpora', 'kwicline_max_context'))
-    kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
-                            all_structs, refs, max_ctx)
+    if corpus.get_conf('MAXDETAIL') == '':
+        max_ctx = int(settings.config.get('corpora', 'kwicline_max_context'))
+        kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
+            all_structs, refs, max_ctx)
+    else:
+        kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
+            all_structs, refs)
+
     labelmap = labelmap.copy()
     labelmap['_'] = '_'
     maxleftsize = 0
@@ -383,7 +388,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                     nfollow += 1
                 moveright = rightwords[:nfollow]
                 del rightwords[:nfollow]
-                
+
                 leftwords = leftwords + moveright
                 rightwords = moveleft + rightwords
 
@@ -393,7 +398,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                 leftsize += len(w['str']) + 1
         if leftsize > maxleftsize:
             maxleftsize = leftsize
-                
+
         lines.append ({'toknum': kl.get_pos(),
                        'hitlen': non1hitlen (kl.get_kwiclen()),
                        'ref': kl.get_refs(),
