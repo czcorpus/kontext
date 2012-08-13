@@ -90,7 +90,7 @@ class CGIPublisher:
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
     _cookieattrs = []
-    _template_dir = 'cmpltmpl/'
+    _template_dir = 'cmpltmpl'
     _locale_dir = 'locale/'
     _tmp_dir = '/tmp'
     _corpus_architect = 0
