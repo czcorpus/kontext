@@ -88,10 +88,10 @@ $input_hidden
   $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
   $_("KWIC Context size"): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
   <select name="ctxunit">
-    <option value="">$_("Positions").lower()</option>
-    #for $a in $Availstructs
+    <option value="@pos">$_("Positions").lower()</option>
+    #for $a in [x for x in reversed($Availstructs) ]
     <option value=":$a['n']" #if $a['n'] == $ctxunit# selected="selected" #end if
-        >$a['n']</option>
+        >&lt;$a['n']&gt;</option>
     #end for
   </select>
   <br /><br />

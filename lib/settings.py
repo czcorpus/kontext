@@ -32,7 +32,7 @@ def parse_corplist(root, path='/', data=[]):
         elif item.tag == 'corplist':
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
-            reg_path = item.find('registry_path')
+            reg_path = item.find('registry')
             data.append(('%s%s' % (path, item.attrib['id']), reg_path.text))
 
 def parse_config(path):
@@ -40,9 +40,9 @@ def parse_config(path):
     TODO
     """
     xml = etree.parse(open(path))
-    _conf['logging'] = {}
-    for item in xml.find('logging'):
-        _conf['logging'][item.tag] = item.text
+    _conf['global'] = {}
+    for item in xml.find('global'):
+        _conf['global'][item.tag] = item.text
     _conf['database'] = {}
     for item in xml.find('database'):
         _conf['database'][item.tag] = item.text

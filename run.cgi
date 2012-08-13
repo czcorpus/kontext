@@ -1,18 +1,10 @@
-#!@pythonpath@
+#!/usr/bin/python
 # -*- Python -*-
 
 import cgitb; cgitb.enable()
-
 import sys, os
-#if '/usr/local/lib64/python2.6/site-packages' not in sys.path:
-#    sys.path.insert (0, '/usr/local/lib64/python2.6/site-packages')
 
-if '/opt/noske/lib64/python2.6/site-packages' not in sys.path:
-    sys.path.insert (0, '/opt/noske/lib64/python2.6/site-packages')
-if '/opt/noske/lib64/python2.6/site-packages/bonito2' not in sys.path:
-    sys.path.insert (0, '/opt/noske/lib64/python2.6/site-packages/bonito2')
-
-MANATEE_REGISTRY = '/home/manatee/registry'
+sys.path.insert(0, './lib')
 
 from conccgi import ConcCGI
 from usercgi import UserCGI
@@ -20,6 +12,8 @@ from usercgi import UserCGI
 import manatee
 import settings
 settings.load()
+
+MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
 try:
     from wseval import WSEval
@@ -30,17 +24,19 @@ except:
 class BonitoCGI (WSEval, UserCGI):
 
     # UserCGI options
-    _options_dir = '@datapath@/options'
+    _options_dir = settings.get('corpora', 'options_dir')
 
     # ConcCGI options
-    cache_dir = '@datapath@/cache'
-    subcpath = ['@datapath@/subcorp/GLOBAL']
+    cache_dir = settings.get('corpora', 'cache_dir')
+    subcpath = [ settings.get('corpora', 'subcpath') ]
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
-    # set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = settings.get_corplist(os.getenv('REMOTE_USER'), settings.config, MANATEE_REGISTRY)
+	# set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
+    corplist = settings.get_corplist(os.getenv('REMOTE_USER'), MANATEE_REGISTRY)
+
     # set default corpus
     corpname = settings.get_default_corpus(corplist)
+
 
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
@@ -50,23 +46,22 @@ class BonitoCGI (WSEval, UserCGI):
 
     def _user_defaults (self, user):
         if user is not self._default_user:
-            self.subcpath.append ('@datapath@/subcorp/%s' % user)
-        self._conc_dir = '@datapath@/conc/%s' % user
-        self._wseval_dir = '@datapath@/wseval/%s' % user
+            self.subcpath.append ('%s/%s' % (settings.get('corpora', 'users_subcpath'), user))
+        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user)
+        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
 
 if __name__ == '__main__':
+
     # logging setup
     import logging
     logger = logging.getLogger('') # root logger
-    hdlr = logging.FileHandler(settings.config.get('logging', 'log_path'))
+    hdlr = logging.FileHandler(settings.get('global', 'log_path'))
     formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
 
-    #if not os.environ.has_key ('MANATEE_REGISTRY'):
-    #    os.environ['MANATEE_REGISTRY'] = '@MANATEE_REGISTRY@'
     if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
         import cProfile, pstats, tempfile
         proffile = tempfile.NamedTemporaryFile()
