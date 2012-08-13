@@ -120,7 +120,7 @@ class ConcCGI (CGIPublisher):
     subcpath = []
     _conc_dir = ''
     _home_url = '../run.cgi/first_form'
-    files_path = '..'
+    files_path = '../files'
     css_prefix = ''
     iquery = ''
     queryselector = 'iqueryrow'

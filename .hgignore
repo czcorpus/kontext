@@ -2,3 +2,7 @@ syntax: glob
 
 .idea
 *.pyc
+
+syntax: regexp
+
+^cmpltmpl/[^_]{2}
