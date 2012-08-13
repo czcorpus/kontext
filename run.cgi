@@ -48,7 +48,7 @@ class BonitoCGI (WSEval, UserCGI):
         if user is not self._default_user:
             self.subcpath.append ('%s/%s' % (settings.config.get('corpora', 'users_subcpath'), user))
         self._conc_dir = '%s/%s' % (settings.config.get('corpora', 'conc_dir'), user)
-        self._wseval_dir = '@datapath@/wseval/%s' % user
+        self._wseval_dir = '%s/%s' % (settings.config.get('corpora', 'wseval_dir'), user)
 
 
 if __name__ == '__main__':
