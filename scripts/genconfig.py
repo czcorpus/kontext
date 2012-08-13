@@ -5,7 +5,7 @@ import os
 from optparse import OptionParser
 
 
-DEFAULT_OUTPUT_FILE = 'config.new.ini'
+DEFAULT_OUTPUT_FILE = 'config.new.xml'
 
 parser = OptionParser(usage='usage: %prog [options] corpus_directory')
 (options, args) = parser.parse_args()
@@ -19,7 +19,7 @@ try:
         print('WARNING: provided path "%s" does not appear to be existing' % corpus_root)
 
     conf = ''
-    sample_path = '%s/config.sample.ini' % os.path.dirname(__file__)
+    sample_path = '%s/config.sample.xml' % os.path.dirname(__file__)
     with open(sample_path) as f:
         conf = f.read()
         conf = conf % { 'corpus_root' : corpus_root }
