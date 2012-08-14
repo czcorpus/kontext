@@ -1,8 +1,8 @@
 (function (context) {
     'use strict';
 
-    var createTreeComponent = function (rootUlId, selectBoxId) {
-        console.log('id: ' + selectBoxId);
+    var createTreeComponent = function (selectBoxId) {
+
         var treeComponent = {
 
             hiddenInput : null,
@@ -19,8 +19,6 @@
             },
 
             switchSubtree : function (ulElement, expSymbolId) {
-                console.log('foo: ' + expSymbolId);
-                console.log('srch: ' + document.getElementById(expSymbolId));
                 var style = ulElement.getStyle('display');
                 if (style == 'block') {
                     ulElement.setStyle({ display : 'none' });
@@ -106,7 +104,6 @@
             parseSelectOptions : function () {
                 var i, j, splitPath;
                 var rootUl = Element.extend(document.createElement('ul'));
-                $(rootUlId).insert(rootUl);
                 $(selectBoxId).childElements('option').each(function (item) {
                     var path = item.readAttribute('value');
                     if (path.indexOf('/') === 0) {
@@ -115,20 +112,22 @@
                     splitPath = path.split('/');
                     treeComponent.findUlPath(splitPath, rootUl);
                 });
+                return rootUl;
             }
         };
 
         var inputName = $(selectBoxId).readAttribute('name');
+        var rootUl;
         treeComponent.hiddenInput = Element.extend(document.createElement('input'));
         treeComponent.hiddenInput.writeAttribute('type', 'hidden');
         treeComponent.hiddenInput.writeAttribute('name', inputName);
-        // '<input id="' + inputName +'-id" type="hidden" name="' + inputName + '" />'
+        rootUl = treeComponent.parseSelectOptions();
 
-        treeComponent.parseSelectOptions();
-        treeComponent.init(rootUlId);
+        Element.replace($(selectBoxId), rootUl);
+        rootUl.writeAttribute('id', selectBoxId);
 
-        Element.replace($(selectBoxId), $(rootUlId));
-        $(rootUlId).insert({ before : treeComponent.hiddenInput });
+        treeComponent.init(selectBoxId);
+        rootUl.getOffsetParent().insert({ before : treeComponent.hiddenInput });
         return treeComponent;
     };
 
