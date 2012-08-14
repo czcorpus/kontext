@@ -6,23 +6,32 @@
         <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
         <script type="text/javascript">
             document.observe("dom:loaded", function() {
-                var component = createTreeComponent('stuff', 'select-box');
+                var component = createTreeComponent('replace', 'select-box');
             });
         </script>
     </head>
     <body>
         <h1>Expandable tree component test</h1>
-        <select id="select-box">
-            <option>item 1</option>
-            <option>item 2</option>
-            <option>item 3</option>
-            <option>item 4</option>
-        </select>
-        <ul id="stuff">
+        <form action="" method="get">
+            <select name="corpus-name" id="select-box">
+                <option value="/folderA/item-1">item 1</option>
+                <option value="/folderA/item-2">item 2</option>
+                <option value="/folderB/item-1">item 1</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-1">item 1</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-2">item 2</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-3">item 3</option>
+                <option value="/folderD/folderD.1/folderD.1.I/item-1">item 1</option>
+                <option value="/folderD/folderD.1/folderD.1.I/item-2">item 2</option>
+            </select>
+        </form>
+
+        <div id="replace">test</div>
+
+        <ul id="stuff" style="display: none">
             <li><a href="#">item A</a></li>
             <li>item B
                 <ul>
-                    <li><a href="#">item B.1</a></li>
+                    <li><a href="">item B.1</a></li>
                     <li><a href="#">item B.2</a></li>
                     <li><a href="#">item B.3</a></li>
                 </ul>
