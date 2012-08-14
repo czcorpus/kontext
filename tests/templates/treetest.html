@@ -6,13 +6,25 @@
         <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
         <script type="text/javascript">
             document.observe("dom:loaded", function() {
-                var component = createTreeComponent('select-box');
+                createTreeComponent('select-box');
+                makeListExpandlable('stuff');
             });
         </script>
     </head>
     <body>
         <h1>Expandable tree component test</h1>
+        <h2>Transformation of a &lt;select&gt;</h2>
         <form action="" method="get">
+            <select name="corpus-name" id="select-box-orig">
+                <option value="/folderA/item-1">item 1</option>
+                <option value="/folderA/item-2">item 2</option>
+                <option value="/folderB/item-1">item 1</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-1">item 1</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-2">item 2</option>
+                <option value="/folderC/folderC.1/folderC.1.I/item-3">item 3</option>
+                <option value="/folderD/folderD.1/folderD.1.I/item-1">item 1</option>
+                <option value="/folderD/folderD.1/folderD.1.I/item-2">item 2</option>
+            </select>
             <select name="corpus-name" id="select-box">
                 <option value="/folderA/item-1">item 1</option>
                 <option value="/folderA/item-2">item 2</option>
@@ -25,7 +37,8 @@
             </select>
         </form>
 
-        <ul id="stuff" style="display: none">
+        <h2>Expandability of existing &lt;ul&gt;</h2>
+        <ul id="stuff">
             <li><a href="#">item A</a></li>
             <li>item B
                 <ul>
