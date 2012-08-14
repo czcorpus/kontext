@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script type="text/javascript" src="../../files/js/prototype-1.7.0.js"></script>
+        <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
+        <script type="text/javascript">
+            document.observe("dom:loaded", function() {
+                var component = createTreeComponent('stuff', 'select-box');
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Expandable tree component test</h1>
+        <select id="select-box">
+            <option>item 1</option>
+            <option>item 2</option>
+            <option>item 3</option>
+            <option>item 4</option>
+        </select>
+        <ul id="stuff">
+            <li><a href="#">item A</a></li>
+            <li>item B
+                <ul>
+                    <li><a href="#">item B.1</a></li>
+                    <li><a href="#">item B.2</a></li>
+                    <li><a href="#">item B.3</a></li>
+                </ul>
+            </li>
+            <li>item C
+                <ul>
+                    <li>item C.1
+                        <ul>
+                            <li><a href="#">item C.1.I</a></li>
+                            <li>item C.1.II
+                                <ul>
+                                    <li><a href="#">item C.1.II.&alpha;</a></li>
+                                </ul>
+
+                            </li>
+                            <li><a href="#">item C.1.III</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li>item D
+                <ul>
+                    <li><a href="#">item D.1</a></li>
+                    <li><a href="#">item D.2</a></li>
+                </ul>
+            </li>
+        </ul>
+    </body>
+</html>
