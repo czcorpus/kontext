@@ -26,15 +26,15 @@
             return null;
         },
 
-        switchSubtree : function (ulElement, expSymbolId) {
+        switchSubtree : function (ulElement, expSymbolWrapper) {
             var style = ulElement.getStyle('display');
             if (style === 'block') {
                 ulElement.setStyle({ display : 'none' });
-                $(expSymbolId).update('&#9654;&nbsp;');
+                expSymbolWrapper.update('&#9654;&nbsp;');
 
             } else {
                 ulElement.setStyle({ display : 'block' });
-                $(expSymbolId).update('&#9660;&nbsp;');
+                expSymbolWrapper.update('&#9660;&nbsp;');
             }
         },
 
@@ -52,25 +52,26 @@
             });
             rootUl.select('li').each(function (item, idx) {
                 var subtree = treeComponent.findSubtree(item),
-                    expSymbolId,
+                    newSpan,
                     newLink;
 
                 if (subtree !== null) {
-                    expSymbolId = 'exp-symbol-' + idx;
                     newLink = Element.extend(document.createElement('a'));
                     newLink.writeAttribute('class', 'tree-expand');
                     newLink.writeAttribute('href', '#');
-                    newLink.insert('<span id="' + expSymbolId + '">&#9654;&nbsp;</span>');
+                    newSpan = Element.extend(document.createElement('span'));
+                    newSpan.update('&#9654;&nbsp;');
+                    newLink.insert(newSpan);
                     item.insert({ top : newLink });
                     newLink.setStyle({
                         textDecoration : 'none'
                     });
                     newLink.observe('click', function () {
                         if (subtree !== null) {
-                            treeComponent.switchSubtree(subtree, expSymbolId);
+                            treeComponent.switchSubtree(subtree, newSpan);
                         }
                     });
-                    treeComponent.switchSubtree(subtree, expSymbolId);
+                    treeComponent.switchSubtree(subtree, newSpan);
                 }
             });
         }
