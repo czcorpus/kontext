@@ -89,7 +89,7 @@
 
         hiddenInput : null,
 
-        findUlPath : function (items, rootElm, button) {
+        findUlPath : function (items, rootElm, button, customCallback) {
             var srch = items.shift(),
                 foundElm,
                 newLi,
@@ -111,26 +111,30 @@
                     newUl = Element.extend(document.createElement('ul'));
                     newLi.insert(srch);
                     newLi.insert(newUl);
-                    selectParser.findUlPath(items, newUl, button);
+                    selectParser.findUlPath(items, newUl, button, customCallback);
 
                 } else {
                     newLink = Element.extend(document.createElement('a'));
                     newLink.writeAttribute('href', '#');
                     newLink.insert(srch);
-                    newLink.observe('click', function () {
+                    newLink.observe('click', function (event) {
                         selectParser.hiddenInput.setValue(srch);
                         button.update(srch);
                         button.click();
+                        if (customCallback !== undefined) {
+                            customCallback(event);
+                        }
+                        event.stop();
                     });
                     newLi.insert(newLink);
                 }
 
             } else {
-                selectParser.findUlPath(items, foundElm.firstDescendant(), button);
+                selectParser.findUlPath(items, foundElm.firstDescendant(), button, customCallback);
             }
         },
 
-        parseSelectOptions : function (selectBoxId, button) {
+        parseSelectOptions : function (selectBoxId, button, customCallback) {
             var splitPath,
                 rootUl = Element.extend(document.createElement('ul'));
             $(selectBoxId).childElements().each(function (item) {
@@ -139,7 +143,7 @@
                     path = path.substring(1);
                 }
                 splitPath = path.split('/');
-                selectParser.findUlPath(splitPath, rootUl, button);
+                selectParser.findUlPath(splitPath, rootUl, button, customCallback);
             });
             return rootUl;
         }
@@ -159,6 +163,7 @@
                 rootUl,
                 button,
                 wrapper,
+                selectValue,
                 switchComponentVisibility,
                 firstItemValue;
 
@@ -167,7 +172,8 @@
             selectParser.hiddenInput.writeAttribute('name', inputName);
 
             button = Element.extend(document.createElement('button'));
-            rootUl = selectParser.parseSelectOptions(selectBoxItem, button);
+            button.update(selectBoxItem.getValue());
+            rootUl = selectParser.parseSelectOptions(selectBoxItem, button, customCallback);
 
             wrapper = Element.extend(document.createElement('div'));
             wrapper.setStyle({
@@ -220,12 +226,9 @@
                 }
             };
             firstItemValue =  selectBoxItem.firstDescendant().readAttribute('value');
-            button.insert(title !== undefined && title !== null ? title : firstItemValue);
+            button.update(title !== undefined && title !== null ? title : firstItemValue);
             button.observe('click', function (event) {
                 switchComponentVisibility(rootUl);
-                if (customCallback !== undefined) {
-                    customCallback();
-                }
                 event.stop();
             });
             Event.observe(document, 'click', function () {
@@ -234,7 +237,7 @@
 
             switchComponentVisibility(rootUl);
             treeComponent.init(rootUl);
-            rootUl.getOffsetParent().insert({ before : selectParser.hiddenInput });
+            rootUl.parentNode.insert({ before : selectParser.hiddenInput });
 
         });
     };

@@ -117,6 +117,7 @@ $input_hidden
   #if not $getVar('CompatibleCorpora', [])
     #set $CompatibleCorpora = $Corplist
   #end if
+
   <select name="ref_corpname" id="ref_corpname"
     onchange="this.form.reload.value=1; if(this.form.ref_usesubcorp) this.form.ref_usesubcorp.value=''; this.form.submit();"
   >

@@ -32,8 +32,7 @@ def parse_corplist(root, path='/', data=[]):
         elif item.tag == 'corplist':
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
-            reg_path = item.find('registry')
-            data.append(('%s%s' % (path, item.attrib['id']), reg_path.text))
+            data.append(('%s%s' % (path, item.attrib['id']), None)) # TODO
 
 def parse_config(path):
     """
