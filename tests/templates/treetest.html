@@ -6,7 +6,31 @@
         <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
         <script type="text/javascript">
             document.observe("dom:loaded", function() {
-                createTreeComponent($$('select[name="corpus-name"]'), 'select item');
+                var tst = function (item) {
+                    var formAncestor,
+                        i,
+                        srch,
+                        ancestors = item.currentTarget.ancestors();
+                    for (i = 0; i < ancestors.length; i += 1) {
+                        if (ancestors[i].nodeName === 'FORM') {
+                            formAncestor = ancestors[i];
+                            break;
+                        }
+                    }
+                    if (formAncestor !== undefined) {
+                        //.reload.value = 1;
+                        srch = formAncestor.select('*[name="firstname"]');
+                        if (srch.length > 0) {
+                            srch[0].writeAttribute('value', '1');
+                        }
+                        srch = formAncestor.select('*[name="usesubcorp"]');
+                        if (srch.length > 0) {
+                            srch[0].writeAttribute('value', '');
+                        }
+                        formAncestor.submit();
+                    }
+                }
+                createTreeComponent($$('select[name="corpus-name"]'), null, tst);
                 makeListExpandable('stuff');
             });
         </script>
@@ -15,6 +39,7 @@
         <h1>Expandable tree component test</h1>
         <h2>Transformation of a &lt;select&gt;</h2>
         <form action="" method="get">
+            <input type="text" name="firstname" />
             <select name="corpus-name" id="select-box-orig" style="">
                 <option value="/folderA/item-1">/folderA/item-1</option>
                 <option value="/folderA/item-2">/folderA/item-2</option>
