@@ -1,3 +1,5 @@
+// Copyright (c) 2012 Institute of the Czech National Corpus
+
 (function (context) {
     'use strict';
 
@@ -5,6 +7,12 @@
         selectParser,
         createTreeComponent;
 
+    /**
+     * This object transforms any UL+LI tree so that it become a single level list
+     * expandable by mouse clicking.
+     *
+     * @type {Object}
+     */
     treeComponent = {
 
         findSubtree : function (elm) {
@@ -68,6 +76,13 @@
         }
     };
 
+    /**
+     * This object parses "/option/select" elements with specific value format where
+     * each value has form of a path (e.g. /foo/bar/value-1). These values are then
+     * transformed into a UL+LI tree.
+     *
+     * @type {Object}
+     */
     selectParser = {
 
         hiddenInput : null,
@@ -128,7 +143,13 @@
         }
     };
 
-
+    /**
+     * Transforms form select box into a tree-rendered selector
+     *
+     * @param selResult HTML SELECT element to be transformed into an expandable tree
+     * @param title if provided then the initial text label will be equal to this value
+     * @param customCallback custom code to be executed when an item is selected
+     */
     createTreeComponent = function (selResult, title, customCallback) {
         selResult.each(function (selectBoxItem) {
             var inputName = selectBoxItem.readAttribute('name'),
@@ -191,7 +212,7 @@
                 }
             };
             firstItemValue =  selectBoxItem.firstDescendant().readAttribute('value');
-            button.insert(title !== undefined ? title : firstItemValue);
+            button.insert(title !== undefined && title !== null ? title : firstItemValue);
             button.observe('click', function (event) {
                 switchComponentVisibility(rootUl);
                 if (customCallback !== undefined) {
@@ -206,7 +227,7 @@
     };
 
     context.createTreeComponent = createTreeComponent;
-    context.makeListExpandlable = function (rootId) {
+    context.makeListExpandable = function (rootId) {
         treeComponent.init(rootId);
     };
 
