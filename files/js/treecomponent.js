@@ -66,10 +66,11 @@
                     newLink.setStyle({
                         textDecoration : 'none'
                     });
-                    newLink.observe('click', function () {
+                    newLink.observe('click', function (event) {
                         if (subtree !== null) {
                             treeComponent.switchSubtree(subtree, newSpan);
                         }
+                        event.stop();
                     });
                     treeComponent.switchSubtree(subtree, newSpan);
                 }
