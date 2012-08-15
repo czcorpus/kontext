@@ -50,7 +50,7 @@
                     listStyleType : 'none'
                 });
             });
-            rootUl.select('li').each(function (item, idx) {
+            rootUl.select('li').each(function (item) {
                 var subtree = treeComponent.findSubtree(item),
                     newSpan,
                     newLink;
@@ -184,12 +184,18 @@
             wrapper.insert(button);
             wrapper.insert(rootUl);
 
-            switchComponentVisibility = function (elm) {
+            /**
+             *
+             * @param elm
+             * @param state one of {"show", "hide"}; if not provided then any state is changed to the other one
+             */
+            switchComponentVisibility = function (elm, state) {
                 var leftPos = 0;
-                if (elm.getStyle('display') === 'block') {
+
+                if (elm.getStyle('display') === 'block' || state === 'hide') {
                     elm.setStyle({ display : 'none'});
 
-                } else {
+                } else if (elm.getStyle('display') === 'none' || state === 'show') {
                     if (wrapper.getStyle('position') !== 'absolute') {
                         leftPos = wrapper.cumulativeOffset()[0];
                     }
@@ -221,9 +227,14 @@
                 }
                 event.stop();
             });
+            Event.observe(document, 'click', function () {
+                switchComponentVisibility(rootUl, 'hide');
+            });
+
             switchComponentVisibility(rootUl);
             treeComponent.init(rootUl);
             rootUl.getOffsetParent().insert({ before : selectParser.hiddenInput });
+
         });
     };
 
