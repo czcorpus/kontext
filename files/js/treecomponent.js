@@ -26,20 +26,25 @@
             }
         },
 
-        init : function (rootUlId) {
-            $(rootUlId).setStyle({
+        init : function (rootUl) {
+            if (typeof(rootUl) == 'string') { // assuming rootUl is ID
+                rootUl = $(rootUl);
+            }
+            rootUl.setStyle({
                 listStyleType : 'none'
             });
-            $$('#' + rootUlId + ' ul').each(function (item) {
+            rootUl.select('ul').each(function (item) {
                 item.setStyle({
                     listStyleType : 'none'
                 });
             });
-            $$('#' + rootUlId + ' li').each(function (item, idx) {
+            rootUl.select('li').each(function (item, idx) {
                 var subtree = treeComponent.findSubtree(item);
+                var expSymbolId, newLink;
+
                 if (subtree !== null) {
-                    var expSymbolId = 'exp-symbol-' + idx;
-                    var newLink = Element.extend(document.createElement('a'));
+                    expSymbolId = 'exp-symbol-' + idx;
+                    newLink = Element.extend(document.createElement('a'));
                     newLink.writeAttribute('class', 'tree-expand');
                     newLink.writeAttribute('href', '#');
                     newLink.insert('<span id="' + expSymbolId + '">&#9654;&nbsp;</span>');
@@ -62,7 +67,7 @@
 
         hiddenInput : null,
 
-        findUlPath : function (items, rootElm) {
+        findUlPath : function (items, rootElm, button) {
             var srch = items.shift();
             var foundElm, newLi, newUl, newLink;
 
@@ -81,7 +86,7 @@
                     newUl = Element.extend(document.createElement('ul'));
                     newLi.insert(srch);
                     newLi.insert(newUl);
-                    selectParser.findUlPath(items, newUl);
+                    selectParser.findUlPath(items, newUl, button);
 
                 } else {
                     newLink = Element.extend(document.createElement('a'));
@@ -89,52 +94,103 @@
                     newLink.insert(srch);
                     newLink.observe('click', function (event) {
                         selectParser.hiddenInput.setValue(srch);
+                        button.update(srch);
+                        button.click();
                     });
                     newLi.insert(newLink);
                 }
 
             } else {
-                selectParser.findUlPath(items, foundElm.firstDescendant());
+                selectParser.findUlPath(items, foundElm.firstDescendant(), button);
             }
         },
 
-        parseSelectOptions : function (selectBoxId) {
+        parseSelectOptions : function (selectBoxId, button) {
             var i, j, splitPath;
             var rootUl = Element.extend(document.createElement('ul'));
-            $(selectBoxId).childElements('option').each(function (item) {
+            $(selectBoxId).childElements().each(function (item) {
                 var path = item.readAttribute('value');
                 if (path.indexOf('/') === 0) {
                     path = path.substring(1);
                 }
                 splitPath = path.split('/');
-                selectParser.findUlPath(splitPath, rootUl);
+                selectParser.findUlPath(splitPath, rootUl, button);
             });
             return rootUl;
         }
     };
 
 
-    var createTreeComponent = function (selectBoxId) {
+    var createTreeComponent = function (selResult, title, customCallback) {
+        selResult.each(function(selectBoxItem) {
+            var inputName = selectBoxItem.readAttribute('name');
+            var menuWidth = 200;
+            var rootUl, button, wrapper, switchComponentVisibility, firstItemValue;
 
-        var inputName = $(selectBoxId).readAttribute('name');
-        var rootUl;
-        selectParser.hiddenInput = Element.extend(document.createElement('input'));
-        selectParser.hiddenInput.writeAttribute('type', 'hidden');
-        selectParser.hiddenInput.writeAttribute('name', inputName);
-        rootUl = selectParser.parseSelectOptions(selectBoxId);
+            selectParser.hiddenInput = Element.extend(document.createElement('input'));
+            selectParser.hiddenInput.writeAttribute('type', 'hidden');
+            selectParser.hiddenInput.writeAttribute('name', inputName);
 
+            button = Element.extend(document.createElement('button'));
+            rootUl = selectParser.parseSelectOptions(selectBoxItem, button);
 
-        Element.replace($(selectBoxId), rootUl);
-        rootUl.writeAttribute('id', selectBoxId);
+            wrapper = Element.extend(document.createElement('div'));
+            wrapper.setStyle({
+                position : selectBoxItem.getStyle('position'),
+                left : selectBoxItem.getStyle('left'),
+                top : selectBoxItem.getStyle('top'),
+                display : selectBoxItem.getStyle('display'),
+                float : selectBoxItem.getStyle('float'),
+                fontSize : selectBoxItem.getStyle('fontSize'),
+                color : selectBoxItem.getStyle('color'),
+                width : selectBoxItem.getStyle('width')
+            });
+            Element.replace(selectBoxItem, wrapper);
+            rootUl.writeAttribute('id', selectBoxItem.readAttribute('id'));
+            wrapper.insert(button);
+            wrapper.insert(rootUl);
 
-        treeComponent.init(selectBoxId);
-        rootUl.getOffsetParent().insert({ before : selectParser.hiddenInput });
-        return treeComponent;
+            switchComponentVisibility = function (elm) {
+                var leftPos = 0;
+                if (elm.getStyle('display') == 'block') {
+                    elm.setStyle({ display : 'none'});
+
+                } else {
+                    if (wrapper.getStyle('position') != 'absolute') {
+                        leftPos = wrapper.cumulativeOffset()[0];
+                    }
+                    if (wrapper.cumulativeOffset()[0] + menuWidth > document.viewport.getDimensions().width) {
+                        leftPos = leftPos - menuWidth;
+                    }
+                    elm.setStyle({
+                        display : 'block',
+                        position: 'absolute',
+                        left : leftPos + 'px',
+                        border : '1px solid #CCC',
+                        backgroundColor: '#eee',
+                        margin : '0',
+                        width : menuWidth + 'px',
+                        padding: '3px 5px',
+                        mozBorderRadius : '3px',
+                        webkitBorderRadius: '3px',
+                        khtmlborderRadius: '3px',
+                        borderRadius: '3px'
+                    });
+                }
+            };
+            firstItemValue =  selectBoxItem.firstDescendant().readAttribute('value');
+            button.insert(title !== undefined ? title : firstItemValue);
+            button.observe('click', function (event) {
+                switchComponentVisibility(rootUl);
+                event.stop();
+            });
+            switchComponentVisibility(rootUl);
+            treeComponent.init(rootUl);
+            rootUl.getOffsetParent().insert({ before : selectParser.hiddenInput });
+        });
     };
 
-
     context.createTreeComponent = createTreeComponent;
-
     context.makeListExpandlable = function (rootId) {
         treeComponent.init(rootId);
     }
