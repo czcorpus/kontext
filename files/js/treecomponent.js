@@ -138,10 +138,14 @@
                 var splitPath,
                     rootUl = Element.extend(document.createElement('ul'));
                 $(selectBoxId).childElements().each(function (item) {
-                    var path = item.readAttribute('value');
+                    var path = item.readAttribute('class');
                     if (path.indexOf('/') === 0) {
                         path = path.substring(1);
                     }
+                    if (path.substr(path.length - 1, 1) !== '/') {
+                        path += '/';
+                    }
+                    path += item.readAttribute('value');
                     splitPath = path.split('/');
                     selectParser.findUlPath(splitPath, rootUl, button, customCallback);
                 });
@@ -185,12 +189,12 @@
             } else {
                 selectBoxCurrValue =  selectBoxItem.firstDescendant().readAttribute('value');
             }
-            button.update(selectBoxItem.getValue());
+            button.update(selectBoxCurrValue);
             button.observe('click', function (event) {
                 switchComponentVisibility(rootUl);
                 event.stop();
             });
-            Event.observe(document, 'click', function (event) {
+            Event.observe(document, 'click', function () {
                 switchComponentVisibility(rootUl, 'hide');
             });
 

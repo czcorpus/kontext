@@ -11,7 +11,7 @@ from usercgi import UserCGI
 
 import manatee
 import settings
-settings.load()
+settings.load(os.getenv('REMOTE_USER'))
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
@@ -32,7 +32,7 @@ class BonitoCGI (WSEval, UserCGI):
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
 	# set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = settings.get_corplist(os.getenv('REMOTE_USER'), MANATEE_REGISTRY)
+    corplist = settings.get_corplist()
 
     # set default corpus
     corpname = settings.get_default_corpus(corplist)
