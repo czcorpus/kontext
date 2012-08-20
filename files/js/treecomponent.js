@@ -165,14 +165,32 @@
                 wrapper,
                 selectValue,
                 switchComponentVisibility,
-                firstItemValue;
+                selectBoxCurrValue;
 
             selectParser.hiddenInput = Element.extend(document.createElement('input'));
             selectParser.hiddenInput.writeAttribute('type', 'hidden');
             selectParser.hiddenInput.writeAttribute('name', inputName);
+            selectParser.hiddenInput.writeAttribute('value', selectBoxItem.getValue());
 
             button = Element.extend(document.createElement('button'));
+            if (title) {
+                selectBoxCurrValue = title;
+
+            } else if (selectBoxItem.getValue()) {
+                selectBoxCurrValue = selectBoxItem.getValue();
+
+            } else {
+                selectBoxCurrValue =  selectBoxItem.firstDescendant().readAttribute('value');
+            }
             button.update(selectBoxItem.getValue());
+            button.observe('click', function (event) {
+                switchComponentVisibility(rootUl);
+                event.stop();
+            });
+            Event.observe(document, 'click', function () {
+                switchComponentVisibility(rootUl, 'hide');
+            });
+
             rootUl = selectParser.parseSelectOptions(selectBoxItem, button, customCallback);
 
             wrapper = Element.extend(document.createElement('div'));
@@ -225,15 +243,7 @@
                     });
                 }
             };
-            firstItemValue =  selectBoxItem.firstDescendant().readAttribute('value');
-            button.update(title !== undefined && title !== null ? title : firstItemValue);
-            button.observe('click', function (event) {
-                switchComponentVisibility(rootUl);
-                event.stop();
-            });
-            Event.observe(document, 'click', function () {
-                switchComponentVisibility(rootUl, 'hide');
-            });
+
 
             switchComponentVisibility(rootUl);
             treeComponent.init(rootUl);
