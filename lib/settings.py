@@ -9,6 +9,10 @@ from lxml import etree
 
 _conf = {}
 
+_user = None
+
+_corplist = None
+
 def get(section, key=None, default=None):
     """
     TODO
@@ -21,22 +25,21 @@ def get(section, key=None, default=None):
 
 def parse_corplist(root, path='/', data=[]):
     """
-    TODO
     """
     if not hasattr(root, 'tag') or not root.tag == 'corplist':
         return data
-    path = "%s%s/" % (path, root.attrib['id'])
+    if root.attrib['title']:
+        path = "%s%s/" % (path, root.attrib['title'])
     for item in root:
         if not hasattr(item, 'tag'):
             continue
         elif item.tag == 'corplist':
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
-            data.append(('%s%s' % (path, item.attrib['id']), None)) # TODO
+            data.append((path, item.attrib['id'].lower()))
 
 def parse_config(path):
     """
-    TODO
     """
     xml = etree.parse(open(path))
     _conf['global'] = {}
@@ -54,16 +57,21 @@ def parse_config(path):
             parse_corplist(item, data=data)
             _conf['corplist'] = data
 
-def load(conf_path='config.xml'):
+def load(user, conf_path='config.xml'):
     """
     Loads application's configuration from provided file
 
     Parameters
     ----------
+    user : str
     conf_path : str, optional (default is 'config.xml')
       path to the configuration XML file
     """
+    global _user
+
+    _user = user
     parse_config(conf_path)
+    os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
 
 def get_default_corpus(corplist):
     """
@@ -85,66 +93,56 @@ def get_default_corpus(corplist):
     else:
         return get('corpora', 'alternative_corpus')
 
-def get_corplist (user, registry_name):
+def get_corplist():
     """
     Fetches list of available corpora according to provided user
-
-    Parameters
-    ----------
-    user : str
-      username to be used
-    config : ConfigParser.ConfigParser
-      application's configuration
-    registry_name : str
-      name of the registry file
 
     Returns
     -------
     list
       list of corpora names (sorted alphabetically)
     """
-    conn = MySQLdb.connect (host=get('database', 'host'), user=get('database', 'username'),
-        passwd=get('database', 'password'), db=get('database', 'name'))
-    cursor = conn.cursor ()
-    cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % user)
-    row = cursor.fetchone()
+    global _corplist
 
-    if row is not None and row[1] == 1:
-        os.environ['MANATEE_REGISTRY'] = registry_name
-    else:
-        os.environ['MANATEE_REGISTRY'] = '%s/no_sketches' % registry_name
+    if _corplist is None:
+        conn = MySQLdb.connect (host=get('database', 'host'), user=get('database', 'username'),
+            passwd=get('database', 'password'), db=get('database', 'name'))
+        cursor = conn.cursor ()
+        cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % _user)
+        row = cursor.fetchone()
 
-    c = row[0].split()
-    corpora = []
+        c = row[0].split()
+        corpora = []
 
-    for i in c:
-        if i[0] == '@':
-            i = i[1:len(i)]
-            cursor.execute("""SELECT corpora.name
-            FROM corplist,relation,corpora
-            WHERE corplist.id=relation.corplist
-              AND relation.corpora=corpora.id
-              AND corplist.name='""" + i + "'")
-            row = cursor.fetchall()
+        for i in c:
+            if i[0] == '@':
+                i = i[1:len(i)]
+                cursor.execute("""SELECT corpora.name
+                FROM corplist,relation,corpora
+                WHERE corplist.id=relation.corplist
+                  AND relation.corpora=corpora.id
+                  AND corplist.name='%s'""" % i)
+                row = cursor.fetchall()
 
-            for y in row:
-                corpora.append(y[0])
-        else:
-            corpora.append(i)
-    cursor.close()
-    conn.close()
-    path_info =  os.getenv('PATH_INFO')
+                for y in row:
+                    corpora.append(y[0])
+            else:
+                corpora.append(i)
+        cursor.close()
+        conn.close()
+        path_info =  os.getenv('PATH_INFO')
 
-    if path_info in ('/wsketch_form', '/wsketch', '/thes_form', '/thes', '/wsdiff_form', '/wsdiff'):
-        r = []
-        for ws in range(len(corpora)):
-            c = manatee.Corpus(corpora[ws]).get_conf('WSBASE')
-            if c == 'none':
-                r.append(corpora[ws])
-        for x in r:
-            corpora.remove(x)
-    corpora.sort()
-    return corpora
+        if path_info in ('/wsketch_form', '/wsketch', '/thes_form', '/thes', '/wsdiff_form', '/wsdiff'):
+            r = []
+            for ws in range(len(corpora)):
+                c = manatee.Corpus(corpora[ws]).get_conf('WSBASE')
+                if c == 'none':
+                    r.append(corpora[ws])
+            for x in r:
+                corpora.remove(x)
+        corpora.sort()
+        _corplist = corpora
+    return _corplist
 
 def has_configured_speech(corpus):
     """
