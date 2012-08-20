@@ -16,7 +16,6 @@ cmdSwitchQuery();loadHideElementStoreSimple();loadHideElementStore('${files_path
 <script src="$files_path/js/util.js" type="text/javascript"></script>
 <script src="$files_path/js/effects.js" type="text/javascript"></script>
 <script src="$files_path/js/controls.js" type="text/javascript"></script>
-<script src="$files_path/js/treecomponent.js" type="text/javascript"></script>
 <script type="text/javascript">
 document.observe("dom:loaded", function() {
     var updForm = function (item) {
@@ -42,7 +41,7 @@ document.observe("dom:loaded", function() {
             formAncestor.submit();
         }
     }
-    createTreeComponent(\$\$('select[name="corpname"]'), null, updForm);
+    createTreeComponent(\$\$('form[action="first"] select[name="corpname"]'), null, updForm);
 });
 </script>
 #end filter
