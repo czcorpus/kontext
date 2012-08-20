@@ -3,80 +3,79 @@
 (function (context) {
     'use strict';
 
-    var treeComponent,
-        selectParser,
-        createTreeComponent;
-
     /**
-     * This object transforms any UL+LI tree so that it become a single level list
+     * Creates object which transforms any UL+LI tree so that it become a single level list
      * expandable by mouse clicking.
      *
      * @type {Object}
      */
-    treeComponent = {
+    function createTreeComponentInstance() {
+        var treeComponent =  {
 
-        findSubtree : function (elm) {
-            var i,
-                children = elm.childElements();
-            for (i = 0; i < children.length; i += 1) {
-                if (children[i].tagName === 'UL') {
-                    return children[i];
+            findSubtree : function (elm) {
+                var i,
+                    children = elm.childElements();
+                for (i = 0; i < children.length; i += 1) {
+                    if (children[i].tagName === 'UL') {
+                        return children[i];
+                    }
                 }
-            }
-            return null;
-        },
+                return null;
+            },
 
-        switchSubtree : function (ulElement, expSymbolWrapper) {
-            var style = ulElement.getStyle('display');
-            if (style === 'block') {
-                ulElement.setStyle({ display : 'none' });
-                expSymbolWrapper.update('&#9654;&nbsp;');
+            switchSubtree : function (ulElement, expSymbolWrapper) {
+                var style = ulElement.getStyle('display');
+                if (style === 'block') {
+                    ulElement.setStyle({ display : 'none' });
+                    expSymbolWrapper.update('&#9654;&nbsp;');
 
-            } else {
-                ulElement.setStyle({ display : 'block' });
-                expSymbolWrapper.update('&#9660;&nbsp;');
-            }
-        },
+                } else {
+                    ulElement.setStyle({ display : 'block' });
+                    expSymbolWrapper.update('&#9660;&nbsp;');
+                }
+            },
 
-        init : function (rootUl) {
-            if (typeof (rootUl) === 'string') { // assuming rootUl is ID
-                rootUl = $(rootUl);
-            }
-            rootUl.setStyle({
-                listStyleType : 'none'
-            });
-            rootUl.select('ul').each(function (item) {
-                item.setStyle({
+            init : function (rootUl) {
+                if (typeof (rootUl) === 'string') { // assuming rootUl is ID
+                    rootUl = $(rootUl);
+                }
+                rootUl.setStyle({
                     listStyleType : 'none'
                 });
-            });
-            rootUl.select('li').each(function (item) {
-                var subtree = treeComponent.findSubtree(item),
-                    newSpan,
-                    newLink;
+                rootUl.select('ul').each(function (item) {
+                    item.setStyle({
+                        listStyleType : 'none'
+                    });
+                });
+                rootUl.select('li').each(function (item) {
+                    var subtree = treeComponent.findSubtree(item),
+                        newSpan,
+                        newLink;
 
-                if (subtree !== null) {
-                    newLink = Element.extend(document.createElement('a'));
-                    newLink.writeAttribute('class', 'tree-expand');
-                    newLink.writeAttribute('href', '#');
-                    newSpan = Element.extend(document.createElement('span'));
-                    newSpan.update('&#9654;&nbsp;');
-                    newLink.insert(newSpan);
-                    item.insert({ top : newLink });
-                    newLink.setStyle({
-                        textDecoration : 'none'
-                    });
-                    newLink.observe('click', function (event) {
-                        if (subtree !== null) {
-                            treeComponent.switchSubtree(subtree, newSpan);
-                        }
-                        event.stop();
-                    });
-                    treeComponent.switchSubtree(subtree, newSpan);
-                }
-            });
-        }
-    };
+                    if (subtree !== null) {
+                        newLink = Element.extend(document.createElement('a'));
+                        newLink.writeAttribute('class', 'tree-expand');
+                        newLink.writeAttribute('href', '#');
+                        newSpan = Element.extend(document.createElement('span'));
+                        newSpan.update('&#9654;&nbsp;');
+                        newLink.insert(newSpan);
+                        item.insert({ top : newLink });
+                        newLink.setStyle({
+                            textDecoration : 'none'
+                        });
+                        newLink.observe('click', function (event) {
+                            if (subtree !== null) {
+                                treeComponent.switchSubtree(subtree, newSpan);
+                            }
+                            event.stop();
+                        });
+                        treeComponent.switchSubtree(subtree, newSpan);
+                    }
+                });
+            }
+        };
+        return treeComponent;
+    }
 
     /**
      * This object parses "/option/select" elements with specific value format where
@@ -85,69 +84,72 @@
      *
      * @type {Object}
      */
-    selectParser = {
+    function createSelectParserInstance() {
+        var selectParser = {
 
-        hiddenInput : null,
+            hiddenInput : null,
 
-        findUlPath : function (items, rootElm, button, customCallback) {
-            var srch = items.shift(),
-                foundElm,
-                newLi,
-                newUl,
-                newLink;
+            findUlPath : function (items, rootElm, button, customCallback) {
+                var srch = items.shift(),
+                    foundElm,
+                    newLi,
+                    newUl,
+                    newLink;
 
-            rootElm.childElements().each(function (item) {
-                if (item.readAttribute('class') === srch) {
-                    foundElm = item;
-                    return;
-                }
-            });
-            if (foundElm === undefined) {
-                newLi = Element.extend(document.createElement('li'));
-                newLi.writeAttribute('class', srch);
-                rootElm.insert(newLi);
+                rootElm.childElements().each(function (item) {
+                    if (item.readAttribute('class') === srch) {
+                        foundElm = item;
+                        return;
+                    }
+                });
+                if (foundElm === undefined) {
+                    newLi = Element.extend(document.createElement('li'));
+                    newLi.writeAttribute('class', srch);
+                    rootElm.insert(newLi);
 
-                if (items.length > 0) {
-                    newUl = Element.extend(document.createElement('ul'));
-                    newLi.insert(srch);
-                    newLi.insert(newUl);
-                    selectParser.findUlPath(items, newUl, button, customCallback);
+                    if (items.length > 0) {
+                        newUl = Element.extend(document.createElement('ul'));
+                        newLi.insert(srch);
+                        newLi.insert(newUl);
+                        selectParser.findUlPath(items, newUl, button, customCallback);
+
+                    } else {
+                        newLink = Element.extend(document.createElement('a'));
+                        newLink.writeAttribute('href', '#');
+                        newLink.insert(srch);
+                        newLink.observe('click', function (event) {
+                            selectParser.hiddenInput.setValue(srch);
+                            button.update(srch);
+                            button.click();
+                            if (customCallback !== undefined) {
+                                customCallback(event);
+                            }
+                            event.stop();
+                        });
+                        newLi.insert(newLink);
+                    }
 
                 } else {
-                    newLink = Element.extend(document.createElement('a'));
-                    newLink.writeAttribute('href', '#');
-                    newLink.insert(srch);
-                    newLink.observe('click', function (event) {
-                        selectParser.hiddenInput.setValue(srch);
-                        button.update(srch);
-                        button.click();
-                        if (customCallback !== undefined) {
-                            customCallback(event);
-                        }
-                        event.stop();
-                    });
-                    newLi.insert(newLink);
+                    selectParser.findUlPath(items, foundElm.firstDescendant(), button, customCallback);
                 }
+            },
 
-            } else {
-                selectParser.findUlPath(items, foundElm.firstDescendant(), button, customCallback);
+            parseSelectOptions : function (selectBoxId, button, customCallback) {
+                var splitPath,
+                    rootUl = Element.extend(document.createElement('ul'));
+                $(selectBoxId).childElements().each(function (item) {
+                    var path = item.readAttribute('value');
+                    if (path.indexOf('/') === 0) {
+                        path = path.substring(1);
+                    }
+                    splitPath = path.split('/');
+                    selectParser.findUlPath(splitPath, rootUl, button, customCallback);
+                });
+                return rootUl;
             }
-        },
-
-        parseSelectOptions : function (selectBoxId, button, customCallback) {
-            var splitPath,
-                rootUl = Element.extend(document.createElement('ul'));
-            $(selectBoxId).childElements().each(function (item) {
-                var path = item.readAttribute('value');
-                if (path.indexOf('/') === 0) {
-                    path = path.substring(1);
-                }
-                splitPath = path.split('/');
-                selectParser.findUlPath(splitPath, rootUl, button, customCallback);
-            });
-            return rootUl;
-        }
-    };
+        };
+        return selectParser;
+    }
 
     /**
      * Transforms form select box into a tree-rendered selector
@@ -156,14 +158,15 @@
      * @param title if provided then the initial text label will be equal to this value
      * @param customCallback custom code to be executed when an item is selected
      */
-    createTreeComponent = function (selResult, title, customCallback) {
+    function createTreeComponent(selResult, title, customCallback) {
+        var selectParser = createSelectParserInstance();
+
         selResult.each(function (selectBoxItem) {
             var inputName = selectBoxItem.readAttribute('name'),
                 menuWidth = 200,
                 rootUl,
                 button,
                 wrapper,
-                selectValue,
                 switchComponentVisibility,
                 selectBoxCurrValue;
 
@@ -187,7 +190,7 @@
                 switchComponentVisibility(rootUl);
                 event.stop();
             });
-            Event.observe(document, 'click', function () {
+            Event.observe(document, 'click', function (event) {
                 switchComponentVisibility(rootUl, 'hide');
             });
 
@@ -244,17 +247,16 @@
                 }
             };
 
-
             switchComponentVisibility(rootUl);
-            treeComponent.init(rootUl);
+            createTreeComponentInstance().init(rootUl);
             rootUl.parentNode.insert({ before : selectParser.hiddenInput });
 
         });
-    };
+    }
 
     context.createTreeComponent = createTreeComponent;
     context.makeListExpandable = function (rootId) {
-        treeComponent.init(rootId);
+        createTreeComponentInstance().init(rootId);
     };
 
 }(window));
