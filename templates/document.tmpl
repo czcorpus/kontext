@@ -67,7 +67,7 @@ $corp_full_name</b><br>
 #else
 <input type="hidden" name="reload" />
 
-<select name="corpname" id="corpname-box"
+<select name="corpname"
   #if $onchange
     onchange="this.form.reload.value=1;if(this.form.usesubcorp)this.form.usesubcorp.value='';this.form.submit();"
   #end if

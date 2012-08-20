@@ -72,6 +72,9 @@
                         treeComponent.switchSubtree(subtree, newSpan);
                     }
                 });
+                rootUl.observe('click', function (event) {
+                    event.stop();
+                });
             }
         };
         return treeComponent;
