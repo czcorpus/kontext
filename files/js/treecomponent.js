@@ -1,17 +1,24 @@
 // Copyright (c) 2012 Institute of the Czech National Corpus
 
+// This library depends on Prototype.js version 1.7+.
+
 (function (context) {
     'use strict';
 
     /**
-     * Creates object which transforms any UL+LI tree so that it become a single level list
-     * expandable by mouse clicking.
+     * Creates object which transforms any UL+LI tree so that it becomes a single level list
+     * expandable to the original multi-level list by mouse clicking.
      *
-     * @type {Object}
+     * @return treeComponent object
      */
     function createTreeComponentInstance() {
         var treeComponent =  {
 
+            /**
+             * Searches for an UL subtree starting with elm
+             * @param elm the search starts from this element
+             * @return {*} first found UL element or null
+             */
             findSubtree : function (elm) {
                 var i,
                     children = elm.childElements();
@@ -23,6 +30,13 @@
                 return null;
             },
 
+            /**
+             * Switches visibility of already modified UL subtree plus it changes the state signalling triangle
+             * from vertical to horizontal position.
+             *
+             * @param ulElement
+             * @param expSymbolWrapper element where the state signalling symbol is
+             */
             switchSubtree : function (ulElement, expSymbolWrapper) {
                 var style = ulElement.getStyle('display');
                 if (style === 'block') {
@@ -35,6 +49,11 @@
                 }
             },
 
+            /**
+             * Modifies any UL tree into the shrinked, expandable version.
+             *
+             * @param rootUl root UL element. It could be either a prototype.js element or an ID
+             */
             init : function (rootUl) {
                 if (typeof (rootUl) === 'string') { // assuming rootUl is ID
                     rootUl = $(rootUl);
@@ -78,11 +97,11 @@
     }
 
     /**
-     * This object parses "/option/select" elements with specific value format where
-     * each value has form of a path (e.g. /foo/bar/value-1). These values are then
-     * transformed into a UL+LI tree.
+     * This function creates object which parses "/option/select" elements with additional path
+     * information stored in their 'class' attributes. These values are then transformed into an
+     * UL+LI tree.
      *
-     * @type {Object}
+     * @return selectParser object
      */
     function createSelectParserInstance() {
         var selectParser = {
@@ -232,7 +251,7 @@
 
             /**
              *
-             * @param elm
+             * @param elm element to be switched
              * @param state one of {"show", "hide"}; if not provided then any state is changed to the other one
              */
             switchComponentVisibility = function (elm, state) {
