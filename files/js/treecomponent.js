@@ -240,7 +240,7 @@
                 left : selectBoxItem.getStyle('left'),
                 top : selectBoxItem.getStyle('top'),
                 display : selectBoxItem.getStyle('display'),
-                float : selectBoxItem.getStyle('float'),
+                'float' : selectBoxItem.getStyle('float'),
                 fontSize : selectBoxItem.getStyle('fontSize'),
                 color : selectBoxItem.getStyle('color'),
                 width : selectBoxItem.getStyle('width')
