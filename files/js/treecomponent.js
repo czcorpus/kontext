@@ -211,6 +211,7 @@
                 selectBoxCurrValue =  selectBoxItem.firstDescendant().readAttribute('value');
             }
             button.update(selectBoxCurrValue);
+            button.writeAttribute('type', 'button');
             button.observe('click', function (event) {
                 switchComponentVisibility(rootUl);
                 event.stop();
@@ -258,14 +259,14 @@
                 var leftPos = 0;
 
                 if (elm.getStyle('display') === 'block' || state === 'hide') {
-                    elm.setStyle({ display : 'none'});
+                    elm.setStyle({ display : 'none', position: 'relative'});
 
                 } else if (elm.getStyle('display') === 'none' || state === 'show') {
                     if (wrapper.getStyle('position') !== 'absolute') {
                         leftPos = wrapper.cumulativeOffset()[0];
                     }
                     if (wrapper.cumulativeOffset()[0] + menuWidth > document.viewport.getDimensions().width) {
-                        leftPos = leftPos - menuWidth;
+                        leftPos = 2 * document.viewport.getDimensions().width - wrapper.cumulativeOffset()[0] - menuWidth;
                     }
                     elm.setStyle({
                         display : 'block',
@@ -279,11 +280,11 @@
                         mozBorderRadius : '3px',
                         webkitBorderRadius: '3px',
                         khtmlborderRadius: '3px',
-                        borderRadius: '3px'
+                        borderRadius: '3px',
+                        textAlign: 'left'
                     });
                 }
             };
-
             switchComponentVisibility(rootUl);
             createTreeComponentInstance().init(rootUl);
             rootUl.parentNode.insert({ before : selectParser.hiddenInput });
