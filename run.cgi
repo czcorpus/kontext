@@ -72,5 +72,7 @@ if __name__ == '__main__':
         profstats.sort_stats('time','calls').print_stats(50)
         profstats.sort_stats('cumulative').print_stats(50)
         print "</pre>"
+    elif os.getenv('PATH_INFO') is None:
+        print ('Status: 302 Found\nLocation: %s/first_form\n' % os.path.basename(__file__))
     else:
         BonitoCGI().run_unprotected (selectorname='corpname')
