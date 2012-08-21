@@ -64,25 +64,21 @@ class CorpusManager:
     def corpattrlist (self, corp):
         return dict (self.corpconf_pairs (corp, label)).get (item)
 
-    def corplist_with_names (self, paths = {}):
+    def corplist_with_names (self, paths):
         #subc = manatee.StrVector()
         #for s in self.subcpath:
         #    manatee.find_subcorpora (s, subc)
         #corpora = self.corplist + map (None, subc)
         #corpora.sort()
         cl = []
-        for c in self.corplist:
-            if c in paths:
-                path_id = paths[c]
-            else:
-                path_id = '/'
-            try:
-                cl.append ({'id': c,
-                            'name': manatee.Corpus(c).get_conf('NAME') or c,
-                            'path' : path_id})
-            except:
-                cl.append ({'id': c, 'name': c})
-        cl.sort()
+        for c, path in paths: # self.corplist
+            if c in self.corplist:
+                try:
+                    cl.append ({'id': c,
+                                'name': manatee.Corpus(c).get_conf('NAME') or c,
+                                'path' : path})
+                except:
+                    cl.append ({'id': c, 'name': c})
         return cl
 
     def subcorpora (self, corpname):

@@ -257,7 +257,7 @@ class ConcCGI (CGIPublisher):
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
         result['can_wseval'] = getattr(self, '_can_wseval', '')
         # these were in add_undefined
-        result['Corplist'] = self.cm.corplist_with_names(dict([ (i[1], i[0]) for i in settings.get('corplist')]))
+        result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'))
         result['corplist_size'] = min (len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)

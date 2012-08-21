@@ -36,7 +36,7 @@ def parse_corplist(root, path='/', data=[]):
         elif item.tag == 'corplist':
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
-            data.append((path, item.attrib['id'].lower()))
+            data.append((item.attrib['id'].lower(), path))
 
 def parse_config(path):
     """
@@ -55,7 +55,7 @@ def parse_config(path):
         else:
             data = []
             parse_corplist(item, data=data)
-            _conf['corplist'] = data
+            _conf['corpora_hierarchy'] = data
 
 def load(user, conf_path='config.xml'):
     """
