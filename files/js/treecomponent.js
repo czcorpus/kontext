@@ -72,9 +72,6 @@
                         treeComponent.switchSubtree(subtree, newSpan);
                     }
                 });
-                rootUl.observe('click', function (event) {
-                    event.stop();
-                });
             }
         };
         return treeComponent;
@@ -152,6 +149,7 @@
                     splitPath = path.split('/');
                     selectParser.findUlPath(splitPath, rootUl, button, customCallback);
                 });
+                rootUl.writeAttribute('class', 'tree-component');
                 return rootUl;
             }
         };
@@ -163,7 +161,8 @@
      *
      * @param selResult HTML SELECT element to be transformed into an expandable tree
      * @param title if provided then the initial text label will be equal to this value
-     * @param customCallback custom code to be executed when an item is selected
+     * @param customCallback custom code to be executed when an item is selected (an event
+     * object related to the "item click" action is passed to this function)
      */
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
@@ -197,8 +196,20 @@
                 switchComponentVisibility(rootUl);
                 event.stop();
             });
-            Event.observe(document, 'click', function () {
-                switchComponentVisibility(rootUl, 'hide');
+            Event.observe(document, 'click', function (event) {
+                var i,
+                    isWithinTreeComponent = false,
+                    ancestors = event.target.ancestors();
+
+                for (i = 0; i < ancestors.length; i += 1) {
+                    if (ancestors[i].readAttribute('class') === 'tree-component') {
+                        isWithinTreeComponent = true;
+                        break;
+                    }
+                }
+                if (!isWithinTreeComponent) {
+                    switchComponentVisibility(rootUl, 'hide');
+                }
             });
 
             rootUl = selectParser.parseSelectOptions(selectBoxItem, button, customCallback);
