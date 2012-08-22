@@ -186,6 +186,39 @@
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
 
+        function expandSelected(currentValue, rootElm) {
+            var rootDescendants = rootElm.descendants(),
+                itemAncestors,
+                srchItem = null,
+                i,
+                expandFunc;
+
+            for (i = 0; i < rootDescendants.length; i += 1) {
+                if (rootDescendants[i].nodeName === 'LI'
+                        && rootDescendants[i].readAttribute('class') === currentValue) {
+                    srchItem = rootDescendants[i];
+                    break;
+                }
+            }
+
+            expandFunc = function (item) {
+                if (item.readAttribute('class') === 'tree-expand') {
+                    item.click();
+                }
+            };
+            if (srchItem !== null) {
+                itemAncestors = srchItem.ancestors();
+                for (i = 0; i < itemAncestors.length; i += 1) {
+                    if (itemAncestors[i].nodeName === 'UL') {
+                        itemAncestors[i].siblings().each(expandFunc);
+                        if (itemAncestors[i].readAttribute('class') === 'tree-component') {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         selResult.each(function (selectBoxItem) {
             var inputName = selectBoxItem.readAttribute('name'),
                 menuWidth = 200,
@@ -288,6 +321,7 @@
             switchComponentVisibility(rootUl);
             createTreeComponentInstance().init(rootUl);
             rootUl.parentNode.insert({ before : selectParser.hiddenInput });
+            expandSelected(selectParser.hiddenInput.getValue(), rootUl);
 
         });
     }
