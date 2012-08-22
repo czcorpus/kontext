@@ -161,11 +161,11 @@
                     if (path.indexOf('/') === 0) {
                         path = path.substring(1);
                     }
-                    if (path.substr(path.length - 1, 1) !== '/') {
-                        path += '/';
+                    if (path.substr(path.length - 1, 1) === '/') {
+                        path = path.substr(0, path.length - 1);
                     }
-                    path += item.readAttribute('value');
                     splitPath = path.split('/');
+                    splitPath.push(item.readAttribute('value'));
                     selectParser.findUlPath(splitPath, rootUl, button, customCallback);
                 });
                 rootUl.writeAttribute('class', 'tree-component');
