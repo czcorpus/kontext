@@ -299,8 +299,10 @@
                         leftPos = wrapper.cumulativeOffset()[0];
                     }
                     if (wrapper.cumulativeOffset()[0] + menuWidth > document.viewport.getDimensions().width) {
-                        leftPos = 2 * document.viewport.getDimensions().width - wrapper.cumulativeOffset()[0] - menuWidth;
+                        leftPos = wrapper.cumulativeOffset()[0] + Math.min(0, document.viewport.getDimensions().width
+                            - wrapper.cumulativeOffset()[0] - rootUl.getWidth());
                     }
+
                     elm.setStyle({
                         display : 'block',
                         position: 'absolute',
