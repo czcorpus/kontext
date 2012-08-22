@@ -70,7 +70,6 @@ class CorpusManager:
         #    manatee.find_subcorpora (s, subc)
         #corpora = self.corplist + map (None, subc)
         #corpora.sort()
-
         simple_names = []
         subdir_map = {}
 
@@ -80,7 +79,7 @@ class CorpusManager:
                 simple_names.append(tmp[1])
                 subdir_map[tmp[1]] = '%s/' % tmp[0]
             else:
-                simple_names = tmp[0]
+                simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
         for c, path in paths: # self.corplist
@@ -90,7 +89,7 @@ class CorpusManager:
                                 'name': manatee.Corpus(c).get_conf('NAME') or c,
                                 'path' : path})
                 except:
-                    cl.append ({'id': c, 'name': c})
+                    cl.append ({'id': c, 'name': c, 'path' : ''})
         return cl
 
     def subcorpora (self, corpname):
