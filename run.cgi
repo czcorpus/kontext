@@ -9,9 +9,14 @@ sys.path.insert(0, './lib')
 from conccgi import ConcCGI
 from usercgi import UserCGI
 
-import manatee
 import settings
 settings.load(os.getenv('REMOTE_USER'))
+
+manatee_dir = settings.get('global', 'manatee_path')
+if manatee_dir and manatee_dir not in sys.path:
+    sys.path.insert(0, manatee_dir)
+
+import manatee
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
