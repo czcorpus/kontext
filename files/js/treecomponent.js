@@ -186,7 +186,7 @@
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
 
-        function expandSelected(currentValue, rootElm) {
+        function expandSelected(treeComponentInstance, currentValue, rootElm) {
             var rootDescendants = rootElm.descendants(),
                 itemAncestors,
                 srchItem = null,
@@ -203,7 +203,8 @@
 
             expandFunc = function (item) {
                 if (item.readAttribute('class') === 'tree-expand') {
-                    item.click();
+                    treeComponentInstance.switchSubtree(treeComponentInstance.findSubtree(item.parentElement),
+                        item.firstDescendant());
                 }
             };
             if (srchItem !== null) {
@@ -226,7 +227,8 @@
                 button,
                 wrapper,
                 switchComponentVisibility,
-                selectBoxCurrValue;
+                selectBoxCurrValue,
+                treeComponentInstance;
 
             selectParser.hiddenInput = Element.extend(document.createElement('input'));
             selectParser.hiddenInput.writeAttribute('type', 'hidden');
@@ -321,9 +323,10 @@
                 }
             };
             switchComponentVisibility(rootUl);
-            createTreeComponentInstance().init(rootUl);
+            treeComponentInstance = createTreeComponentInstance();
+            treeComponentInstance.init(rootUl);
             rootUl.parentNode.insert({ before : selectParser.hiddenInput });
-            expandSelected(selectParser.hiddenInput.getValue(), rootUl);
+            expandSelected(treeComponentInstance, selectParser.hiddenInput.getValue(), rootUl);
 
         });
     }
