@@ -206,7 +206,7 @@ class ConcCGI (CGIPublisher):
             if isinstance(cn, ListType):
                 cn = cn[-1]
             if not settings.user_has_access_to(cn):
-                raise Exception(_('Access to the corpus "%s" denied') % cn)
+                raise Exception(_('Access to this variant of the corpus "%s" denied') % cn)
             self.corpname = cn
 
     def self_encoding(self):
