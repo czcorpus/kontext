@@ -795,8 +795,8 @@ msgstr ""
 msgid "Empty result"
 msgstr "Žádný odpovídající výsledek"
 
-msgid "Access to the corpus \"%s\" denied"
-msgstr "Přístup ke korpusu \"%s\" zamítnut"
+msgid "Access to this variant of the corpus \"%s\" denied"
+msgstr "Nemáte přístup k této variantě korpusu \"%s\"."
 
 msgid "home page"
 msgstr "hlavní stránka"
