@@ -1,13 +1,16 @@
 #!/usr/bin/python
 # -*- Python -*-
 
-import cgitb; cgitb.enable()
+import cgitb
 import sys, os
 
 sys.path.insert(0, './lib')
 
 import settings
 settings.load(os.getenv('REMOTE_USER'))
+
+if settings.is_debug_mode():
+    cgitb.enable()
 
 manatee_dir = settings.get('global', 'manatee_path')
 if manatee_dir and manatee_dir not in sys.path:
@@ -77,5 +80,7 @@ if __name__ == '__main__':
         profstats.sort_stats('time','calls').print_stats(50)
         profstats.sort_stats('cumulative').print_stats(50)
         print "</pre>"
+    elif not settings.is_debug_mode():
+        BonitoCGI().run(selectorname='corpname')
     else:
-        BonitoCGI().run_unprotected (selectorname='corpname')
+        BonitoCGI().run_unprotected(selectorname='corpname')

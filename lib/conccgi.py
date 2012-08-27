@@ -1,13 +1,18 @@
 # Copyright (c) 2003-2010  Pavel Rychly
 
-from CGIPublisher import CGIPublisher
-import corplib, conclib, version, settings
 import os, re
 from sys import stderr
 import time
 import glob
 import locale
 from types import ListType
+from gettext import gettext as _
+
+from CGIPublisher import CGIPublisher
+import corplib
+import conclib
+import version
+import settings
 
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
@@ -200,6 +205,8 @@ class ConcCGI (CGIPublisher):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
+            if not settings.user_has_access_to(cn):
+                raise Exception(_('Access to the corpus "%s" denied') % cn)
             self.corpname = cn
 
     def self_encoding(self):

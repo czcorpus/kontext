@@ -100,7 +100,7 @@ def get_corplist():
     Returns
     -------
     list
-      list of corpora names (sorted alphabetically)
+      list of corpora names (sorted alphabetically) available to current user (specified in the _user variable)
     """
     global _corplist
 
@@ -143,6 +143,16 @@ def get_corplist():
         corpora.sort()
         _corplist = corpora
     return _corplist
+
+def user_has_access_to(corpname):
+    """
+    Tests whether the current user has access to provided corpus name
+    """
+    return corpname in get_corplist()
+
+def is_debug_mode():
+    value = get('global', 'debug')
+    return value is not None and value.lower() in ('true', '1')
 
 def has_configured_speech(corpus):
     """
