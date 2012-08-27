@@ -442,11 +442,27 @@ class CGIPublisher:
             outf.write(str(result))
 
 
-    def run (self, path=None):
+    def run (self, path=None, selectorname=None):
+        """
+        This method wraps run_unprotected by try-except and presents
+        only brief error messages to the user.
+        """
         try:
-            self.run_unprotected (path)
-        except:
-            cgi.print_exception()
+            self.run_unprotected (path, selectorname)
+
+        except Exception, e:
+            from Cheetah.Template import Template
+            from cmpltmpl import error_message
+            self.set_localisation()
+            self.output_headers()
+            tpl_data = {
+                'message' : '%s' % e,
+                'corp_full_name' : '?',
+                'corplist_size' : '?',
+                'Corplist' : []
+            }
+            error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
+
 
     def methods (self, params=0):
         """list all methods with a doc string"""

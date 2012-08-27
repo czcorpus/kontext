@@ -794,3 +794,12 @@ msgstr ""
 
 msgid "Empty result"
 msgstr "Žádný odpovídající výsledek"
+
+msgid "Access to the corpus \"%s\" denied"
+msgstr "Přístup ke korpusu \"%s\" zamítnut"
+
+msgid "home page"
+msgstr "hlavní stránka"
+
+msgid "Error"
+msgstr "Chyba"
