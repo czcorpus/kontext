@@ -1,6 +1,6 @@
 # Copyright (c) 2003-2009  Pavel Rychly
 
-import os, sys, cgi, re
+import os, sys, cgi
 from types import MethodType, TypeType, StringType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
@@ -8,7 +8,6 @@ import codecs
 import imp
 from urllib import urlencode
 import simplejson
-import gettext
 
 # According to Cheetag changelog, Cheetah should use Unicode in its internals since version 2.2.0
 # If you experience it also in any previous version, change it here:
@@ -91,28 +90,15 @@ class CGIPublisher:
     _keep_blank_values = 0
     _cookieattrs = []
     _template_dir = 'cmpltmpl'
-    _locale_dir = 'locale/'
     _tmp_dir = '/tmp'
     _corpus_architect = 0
     exceptmethod = None
     debug = None
     precompile_template = 1
     format = ''
-    uilang = ''
 
-    def __init__ (self):
-
-        
-        # correct _locale_dir
-        if not os.path.isdir (self._locale_dir):
-            p = os.path.join (os.path.dirname (__file__), self._locale_dir)
-            if os.path.isdir (p):
-                self._locale_dir = p
-            else:
-                # This will set the system default locale directory as a side-effect:
-                gettext.install(domain='ske', unicode=True)
-                # hereby we retrieve the system default locale directory back:
-                self._locale_dir = gettext.bindtextdomain('ske')
+    def __init__ (self, environ=os.environ):
+        self.environ = environ
 
         # correct _template_dir
         if not os.path.isdir (self._template_dir):
@@ -258,21 +244,6 @@ class CGIPublisher:
 #        self.corpname = 'desam'
         return named_args
 
-    def set_localisation(self):
-        "set up localisation"
-        import __builtin__
-        os.environ['LANG'] = self.get_uilang()
-        os.environ['LC_ALL'] = self.get_uilang()
-        CGIPublisher.l10n = gettext.translation('ske', self._locale_dir,
-                                                                 fallback=True)
-        try: CGIPublisher.l10n._catalog[''] = ''
-        except AttributeError: pass
-        if has_cheetah_unicode_internals:
-            # install _() as a builtin for ugettext() - Unicode gettext()
-            __builtin__.__dict__['_'] = CGIPublisher.l10n.ugettext
-        else: # install _() as a builtin for gettext()
-            __builtin__.__dict__['_'] = CGIPublisher.l10n.gettext
-
     def run_unprotected (self, path=None, selectorname=None):
         if path is None:
             path = os.getenv('PATH_INFO','').strip().split('/')[1:]
@@ -282,7 +253,6 @@ class CGIPublisher:
             if path[0].startswith ('_'):
                 raise Exception('access denied')
         named_args = self.parse_parameters (selectorname)
-        self.set_localisation()
         methodname, tmpl, result = self.process_method (path[0], path, named_args)
         self.output_headers()
         self.output_result (methodname, tmpl, result)
@@ -325,24 +295,6 @@ class CGIPublisher:
                 # may be localized
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method (em, pos_args, named_args)
-
-    def get_uilang(self):
-        if self.uilang:
-            return self.uilang
-        lgs_string = self.environ.get('HTTP_ACCEPT_LANGUAGE','')
-        if lgs_string == '':
-            return '' # english
-        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-        lgs = lgs_string.split(',')
-        lgdirs = os.listdir(self._locale_dir)
-        for lg in lgs:
-            lg = lg.replace('-', '_').lower()
-            if lg.startswith('en'): # english
-                return ''
-            for lgdir in lgdirs:
-                if lgdir.lower().startswith(lg):
-                    return lgdir
-        return ''
 
     def recode_input(self, x, decode=1): # converts query into corpencoding
         if self._corpus_architect and decode: return x
@@ -411,7 +363,6 @@ class CGIPublisher:
 
         # Template
         elif type(result) is DictType:
-            self.set_localisation() # in case run_protected has not ran (CA)
             self._add_globals (result)
             self.add_undefined (result, methodname)
             result = self.rec_recode(result)
@@ -453,10 +404,10 @@ class CGIPublisher:
         except Exception, e:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
-            self.set_localisation()
+
             self.output_headers()
             tpl_data = {
-                'message' : '%s' % e,
+                'message' : u'%s' % e,
                 'corp_full_name' : '?',
                 'corplist_size' : '?',
                 'Corplist' : []

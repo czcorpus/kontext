@@ -2,7 +2,9 @@
 # -*- Python -*-
 
 import cgitb
-import sys, os
+import sys
+import os
+import re
 
 sys.path.insert(0, './lib')
 
@@ -18,6 +20,7 @@ if manatee_dir and manatee_dir not in sys.path:
 
 import manatee
 
+import CGIPublisher
 from conccgi import ConcCGI
 from usercgi import UserCGI
 
@@ -48,9 +51,9 @@ class BonitoCGI (WSEval, UserCGI):
 
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
-    def __init__ (self, user=None):
+    def __init__ (self, user=None, environ=os.environ):
         UserCGI.__init__ (self, user)
-        ConcCGI.__init__ (self)
+        ConcCGI.__init__ (self, environ=environ)
 
     def _user_defaults (self, user):
         if user is not self._default_user:
@@ -59,16 +62,58 @@ class BonitoCGI (WSEval, UserCGI):
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
 
+def get_uilang(locale_dir):
+    lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE','')
+    if lgs_string == '':
+        return '' # english
+    lgs_string = re.sub(';q=[^,]*', '', lgs_string)
+    lgs = lgs_string.split(',')
+    lgdirs = os.listdir(locale_dir)
+    for lg in lgs:
+        lg = lg.replace('-', '_').lower()
+        if lg.startswith('en'): # english
+            return ''
+        for lgdir in lgdirs:
+            if lgdir.lower().startswith(lg):
+                return lgdir
+    return ''
+
+
 if __name__ == '__main__':
+    import logging
+    import __builtin__
+    import gettext
 
     # logging setup
-    import logging
     logger = logging.getLogger('') # root logger
     hdlr = logging.FileHandler(settings.get('global', 'log_path'))
     formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
+
+    # locale
+    locale_dir = 'locale/' # TODO
+    if not os.path.isdir (locale_dir):
+        p = os.path.join (os.path.dirname (__file__), locale_dir)
+        if os.path.isdir (p):
+            locale_dir = p
+        else:
+            # This will set the system default locale directory as a side-effect:
+            gettext.install(domain='ske', unicode=True)
+            # hereby we retrieve the system default locale directory back:
+            locale_dir = gettext.bindtextdomain('ske')
+
+    os.environ['LANG'] = get_uilang(locale_dir)
+    os.environ['LC_ALL'] = os.environ['LANG']
+    translat = gettext.translation('ske', locale_dir, fallback=True)
+    try: translat._catalog[''] = ''
+    except AttributeError: pass
+
+    if CGIPublisher.has_cheetah_unicode_internals:
+        __builtin__.__dict__['_'] = translat.ugettext
+    else:
+        __builtin__.__dict__['_'] = translat.gettext
 
     if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
         import cProfile, pstats, tempfile
@@ -81,6 +126,6 @@ if __name__ == '__main__':
         profstats.sort_stats('cumulative').print_stats(50)
         print "</pre>"
     elif not settings.is_debug_mode():
-        BonitoCGI().run(selectorname='corpname')
+        BonitoCGI(environ=os.environ).run(selectorname='corpname')
     else:
-        BonitoCGI().run_unprotected(selectorname='corpname')
+        BonitoCGI(environ=os.environ).run_unprotected(selectorname='corpname')

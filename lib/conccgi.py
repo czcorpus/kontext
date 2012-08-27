@@ -6,7 +6,6 @@ import time
 import glob
 import locale
 from types import ListType
-from gettext import gettext as _
 
 from CGIPublisher import CGIPublisher
 import corplib
@@ -189,7 +188,8 @@ class ConcCGI (CGIPublisher):
     add_vars['save_ws_options'] = ['LastSubcorp']
     add_vars['findx_upload'] = ['LastSubcorp']
     
-    def __init__ (self):
+    def __init__ (self, environ):
+        CGIPublisher.__init__(self, environ=environ)
         self.cm = corplib.CorpusManager (self.corplist, self.subcpath, 
                                          self.gdexpath)
         self._curr_corpus = None
