@@ -28,6 +28,12 @@ $ca_headers
 
 <script type="text/javascript">
     document.observe("dom:loaded", function() {
+        targetedLinks();
+        #block bodyonload
+        #end block
+        #if $focus
+            focusEx($focus);
+        #end if
         createTreeComponent(\$\$('form[action="simple_search"] select[name="corpname"]'));
     });
 
@@ -46,7 +52,7 @@ $ca_headers
 #end if
 </head>
 
-<body onload="targetedLinks();#block bodyonload##end block#;#if $focus#focusEx($focus);#end if#" #block bodyargs##end block#>
+<body #block bodyargs##end block#>
 $body
 </body>
 </html>
