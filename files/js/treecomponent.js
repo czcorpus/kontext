@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Institute of the Czech National Corpus
-
+//
 // This library depends on Prototype.js version 1.7+.
 
 (function (context) {
@@ -295,8 +295,7 @@
                 display : selectBoxItem.getStyle('display'),
                 'float' : selectBoxItem.getStyle('float'),
                 fontSize : selectBoxItem.getStyle('fontSize'),
-                color : selectBoxItem.getStyle('color'),
-                width : selectBoxItem.getStyle('width')
+                color : selectBoxItem.getStyle('color')
             });
             Element.replace(selectBoxItem, wrapper);
             rootUl.writeAttribute('id', selectBoxItem.readAttribute('id'));
