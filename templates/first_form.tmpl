@@ -8,23 +8,16 @@ $_("Concordance - First query form")#slurp
 #attr $focus = "cmdGetFocusedId()"
 
 #def bodyonload
-cmdSwitchQuery();
-loadHideElementStoreSimple();
-loadHideElementStore('${files_path}');
-#end def
+    cmdSwitchQuery();
+    loadHideElementStoreSimple();
+    loadHideElementStore('${files_path}');
 
-#def headers
-#filter WebSafe
-<script src="$files_path/js/util.js" type="text/javascript"></script>
-<script src="$files_path/js/effects.js" type="text/javascript"></script>
-<script src="$files_path/js/controls.js" type="text/javascript"></script>
-<script type="text/javascript">
-document.observe("dom:loaded", function() {
     var updForm = function (item) {
         var formAncestor,
             i,
             srch,
             ancestors = item.currentTarget.ancestors();
+
         for (i = 0; i < ancestors.length; i += 1) {
             if (ancestors[i].nodeName === 'FORM') {
                 formAncestor = ancestors[i];
@@ -44,8 +37,14 @@ document.observe("dom:loaded", function() {
         }
     }
     createTreeComponent(\$\$('form[action="first"] select[name="corpname"]'), null, updForm);
-});
-</script>
+
+#end def
+
+#def headers
+#filter WebSafe
+<script src="$files_path/js/util.js" type="text/javascript"></script>
+<script src="$files_path/js/effects.js" type="text/javascript"></script>
+<script src="$files_path/js/controls.js" type="text/javascript"></script>
 #end filter
 #end def
 
