@@ -74,7 +74,7 @@ $corp_full_name</b><br>
   >
   #for $c in $Corplist
     #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-    <option class="$c['path']" value="$c['id']" $selected>$c['name']</option>
+    <option data-path="$c['path']" value="$c['id']" $selected>$c['name']</option>
   #end for
 </select>
 #end if

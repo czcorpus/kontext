@@ -98,7 +98,7 @@
 
     /**
      * This function creates object which parses "/option/select" elements with additional path
-     * information stored in their 'class' attributes. These values are then transformed into an
+     * information stored in their 'data-path' attributes. These values are then transformed into an
      * UL+LI tree.
      *
      * @return selectParser object
@@ -116,14 +116,14 @@
                     newLink;
 
                 rootElm.childElements().each(function (item) {
-                    if (item.readAttribute('class') === currPathItem) {
+                    if (item.readAttribute('data-path') === currPathItem) {
                         foundElm = item;
                         return;
                     }
                 });
                 if (foundElm === undefined) {
                     newLi = Element.extend(document.createElement('li'));
-                    newLi.writeAttribute('class', currPathItem);
+                    newLi.writeAttribute('data-path', currPathItem);
                     rootElm.insert(newLi);
 
                     if (pathItems.length > 0) {
@@ -158,7 +158,7 @@
                 var splitPath,
                     rootUl = Element.extend(document.createElement('ul'));
                 $(selectBoxId).childElements().each(function (item) {
-                    var path = item.readAttribute('class');
+                    var path = item.readAttribute('data-path');
                     if (path.indexOf('/') === 0) {
                         path = path.substring(1);
                     }
@@ -216,7 +216,7 @@
 
             for (i = 0; i < rootDescendants.length; i += 1) {
                 if (rootDescendants[i].nodeName === 'LI'
-                        && rootDescendants[i].readAttribute('class') === currentValue) {
+                        && rootDescendants[i].readAttribute('data-path') === currentValue) {
                     srchItem = rootDescendants[i];
                     break;
                 }
