@@ -108,37 +108,38 @@
 
             hiddenInput : null,
 
-            findUlPath : function (items, rootElm, button, customCallback) {
-                var srch = items.shift(),
+            findUlPath : function (pathItems, itemTitle, rootElm, button, customCallback) {
+                var currPathItem = pathItems.shift(),
                     foundElm,
                     newLi,
                     newUl,
                     newLink;
 
                 rootElm.childElements().each(function (item) {
-                    if (item.readAttribute('class') === srch) {
+                    if (item.readAttribute('class') === currPathItem) {
                         foundElm = item;
                         return;
                     }
                 });
                 if (foundElm === undefined) {
                     newLi = Element.extend(document.createElement('li'));
-                    newLi.writeAttribute('class', srch);
+                    newLi.writeAttribute('class', currPathItem);
                     rootElm.insert(newLi);
 
-                    if (items.length > 0) {
+                    if (pathItems.length > 0) {
                         newUl = Element.extend(document.createElement('ul'));
-                        newLi.insert(srch);
+                        newLi.insert(currPathItem);
                         newLi.insert(newUl);
-                        selectParser.findUlPath(items, newUl, button, customCallback);
+                        selectParser.findUlPath(pathItems, itemTitle, newUl, button, customCallback);
 
                     } else {
                         newLink = Element.extend(document.createElement('a'));
                         newLink.writeAttribute('href', '#');
-                        newLink.insert(srch);
+                        newLink.writeAttribute('data-id', currPathItem);
+                        newLink.insert(itemTitle);
                         newLink.observe('click', function (event) {
-                            selectParser.hiddenInput.setValue(srch);
-                            button.update(srch);
+                            selectParser.hiddenInput.setValue(currPathItem);
+                            button.update(itemTitle);
                             button.click();
                             if (customCallback !== undefined) {
                                 customCallback(event);
@@ -149,7 +150,7 @@
                     }
 
                 } else {
-                    selectParser.findUlPath(items, foundElm.firstDescendant(), button, customCallback);
+                    selectParser.findUlPath(pathItems, itemTitle, foundElm.firstDescendant(), button, customCallback);
                 }
             },
 
@@ -166,7 +167,7 @@
                     }
                     splitPath = path.split('/');
                     splitPath.push(item.readAttribute('value'));
-                    selectParser.findUlPath(splitPath, rootUl, button, customCallback);
+                    selectParser.findUlPath(splitPath, item.textContent, rootUl, button, customCallback);
                 });
                 rootUl.writeAttribute('class', 'tree-component');
                 return rootUl;
@@ -185,6 +186,26 @@
      */
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
+
+        function getTitleOfSelectedItem(selectBoxElement) {
+            var descendants,
+                currValue = null,
+                i;
+
+            if (selectBoxElement.getValue()) {
+                currValue = selectBoxElement.getValue();
+
+            } else {
+                currValue = selectBoxElement.firstDescendant().readAttribute('value');
+            }
+            descendants = selectBoxElement.descendants();
+            for (i = 0; i < descendants.length; i += 1) {
+                if (descendants[i].readAttribute('value') === currValue) {
+                    return descendants[i].textContent;
+                }
+            }
+            return null;
+        }
 
         function expandSelected(treeComponentInstance, currentValue, rootElm) {
             var rootDescendants = rootElm.descendants(),
@@ -227,7 +248,7 @@
                 button,
                 wrapper,
                 switchComponentVisibility,
-                selectBoxCurrValue,
+                titleOfSelectedItem,
                 treeComponentInstance;
 
             selectParser.hiddenInput = Element.extend(document.createElement('input'));
@@ -237,15 +258,12 @@
 
             button = Element.extend(document.createElement('button'));
             if (title) {
-                selectBoxCurrValue = title;
-
-            } else if (selectBoxItem.getValue()) {
-                selectBoxCurrValue = selectBoxItem.getValue();
+                titleOfSelectedItem = title;
 
             } else {
-                selectBoxCurrValue =  selectBoxItem.firstDescendant().readAttribute('value');
+                titleOfSelectedItem = getTitleOfSelectedItem(selectBoxItem);
             }
-            button.update(selectBoxCurrValue);
+            button.update(titleOfSelectedItem);
             button.writeAttribute('type', 'button');
             button.observe('click', function (event) {
                 switchComponentVisibility(rootUl);
