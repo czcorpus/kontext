@@ -30,8 +30,9 @@ $_ca_topbar
     <td id="toolbar-info">
     <ul>
       <li>$_("User"): <strong>$_user</strong></li>
-      <li>$_("Corpus"): <strong>$corp_full_name</strong> #if $corp_description and $corp_size # | $corp_description | $corp_size #end if#
-      </li>
+      <li>$_("Corpus"): <strong>$corp_full_name</strong></li>
+      #if $corp_description#<li>$_('Description'): <strong>$corp_description</strong></li>#end if#
+      #if $corp_size#<li>$_('Size'): <strong>$corp_size</strong></li> #end if#
       #if $usesubcorp
       <li>$_("Subcorpus"): <strong>$usesubcorp</strong></li>
       #end if
