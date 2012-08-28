@@ -823,3 +823,8 @@ msgstr "Změnit pozici nabídky"
 msgid "%s positions"
 msgstr "%s pozic"
 
+msgid "Description"
+msgstr "Popis"
+
+msgid "Size"
+msgstr "Velikost"

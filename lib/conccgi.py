@@ -1,6 +1,7 @@
 # Copyright (c) 2003-2010  Pavel Rychly
 
-import os, re
+import os
+import re
 import locale
 from sys import stderr
 import time
