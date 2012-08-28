@@ -108,7 +108,7 @@
 
             hiddenInput : null,
 
-            findUlPath : function (pathItems, itemTitle, rootElm, button, customCallback) {
+            findUlPath : function (pathItems, itemTitle, itemDesc, rootElm, button, customCallback) {
                 var currPathItem = pathItems.shift(),
                     foundElm,
                     newLi,
@@ -130,12 +130,15 @@
                         newUl = Element.extend(document.createElement('ul'));
                         newLi.insert(currPathItem);
                         newLi.insert(newUl);
-                        selectParser.findUlPath(pathItems, itemTitle, newUl, button, customCallback);
+                        selectParser.findUlPath(pathItems, itemTitle, itemDesc, newUl, button, customCallback);
 
                     } else {
                         newLink = Element.extend(document.createElement('a'));
                         newLink.writeAttribute('href', '#');
                         newLink.writeAttribute('data-id', currPathItem);
+                        if (itemDesc) {
+                            newLink.writeAttribute('title', itemDesc);
+                        }
                         newLink.insert(itemTitle);
                         newLink.observe('click', function (event) {
                             selectParser.hiddenInput.setValue(currPathItem);
@@ -150,7 +153,7 @@
                     }
 
                 } else {
-                    selectParser.findUlPath(pathItems, itemTitle, foundElm.firstDescendant(), button, customCallback);
+                    selectParser.findUlPath(pathItems, itemTitle, itemDesc, foundElm.firstDescendant(), button, customCallback);
                 }
             },
 
@@ -167,7 +170,7 @@
                     }
                     splitPath = path.split('/');
                     splitPath.push(item.readAttribute('value'));
-                    selectParser.findUlPath(splitPath, item.textContent, rootUl, button, customCallback);
+                    selectParser.findUlPath(splitPath, item.textContent, item.readAttribute('title'), rootUl, button, customCallback);
                 });
                 rootUl.writeAttribute('class', 'tree-component');
                 return rootUl;
