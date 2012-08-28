@@ -781,12 +781,42 @@ msgstr "Hodnotu [%s] nelze použít pro určení šírky kontextu. Použijte č�
 msgid "Empty result"
 msgstr "Žádný odpovídající výsledek"
 
-msgid "Access to this variant of the corpus \"%s\" denied"
-msgstr "Nemáte přístup k této variantě korpusu \"%s\"."
+msgid "Access to the corpus \"%s\" or its requested variant denied"
+msgstr "Nemáte přístup ke korpusu \"%s\" nebo k jeho požadované variantě."
 
 msgid "home page"
 msgstr "hlavní stránka"
 
 msgid "Error"
 msgstr "Chyba"
+
+msgid "No query entered."
+msgstr "Nebyl zadán žádný dotaz."
+
+msgid "Expert options"
+msgstr "Pokročilé volby"
+
+msgid "Search"
+msgstr "Hledat"
+
+msgid "in"
+msgstr "v"
+
+msgid "User"
+msgstr "Uživatel"
+
+msgid "Help on main menu"
+msgstr "Nápověda k hlav. nabídce"
+
+msgid "positions"
+msgstr "pozice"
+
+msgid "Help on Conc. menu"
+msgstr "Nápověda ke konkordanci"
+
+msgid "Help on Expert Options"
+msgstr "Nápověda k pokroč. funkcím"
+
+msgid "Switch menu position"
+msgstr "Změnit pozici nabídky"
 
