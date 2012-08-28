@@ -1,6 +1,7 @@
 # Copyright (c) 2003-2010  Pavel Rychly
 
 import os, re
+import locale
 from sys import stderr
 import time
 import glob
@@ -268,6 +269,8 @@ class ConcCGI (CGIPublisher):
         result['corplist_size'] = min (len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)
+        result['corp_description'] = thecorp.get_info()
+        result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'

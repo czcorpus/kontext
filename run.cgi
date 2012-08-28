@@ -107,7 +107,8 @@ if __name__ == '__main__':
 
     os.environ['LANG'] = get_uilang(locale_dir)
     os.environ['LC_ALL'] = os.environ['LANG']
-    locale.setlocale(locale.LC_ALL, '%s.utf-8' % os.environ['LANG'])
+    formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
+    locale.setlocale(locale.LC_ALL, formatting_lang)
     translat = gettext.translation('ske', locale_dir, fallback=True)
     try: translat._catalog[''] = ''
     except AttributeError: pass
