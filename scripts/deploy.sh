@@ -12,8 +12,15 @@ if [ -z $yuiloc ]; then
 fi
 
 for f in `find . -name "*.js"`; do
-  echo $f
   if echo $f | grep -Eqv '/[^/]+min[^/]+$'; then
     java -jar $yuiloc $f -o $f
+    echo "Minified [$f]"
+  else
+    echo "Ignored  [$f]"
   fi
+done
+
+for f in `find . -name "*.css"`; do
+  java -jar $yuiloc $f -o $f
+  echo "Minified [$f]"
 done
