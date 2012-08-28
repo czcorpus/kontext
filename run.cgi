@@ -83,6 +83,7 @@ if __name__ == '__main__':
     import logging
     import __builtin__
     import gettext
+    import locale
 
     # logging setup
     logger = logging.getLogger('') # root logger
@@ -106,6 +107,7 @@ if __name__ == '__main__':
 
     os.environ['LANG'] = get_uilang(locale_dir)
     os.environ['LC_ALL'] = os.environ['LANG']
+    locale.setlocale(locale.LC_ALL, '%s.utf-8' % os.environ['LANG'])
     translat = gettext.translation('ske', locale_dir, fallback=True)
     try: translat._catalog[''] = ''
     except AttributeError: pass

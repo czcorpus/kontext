@@ -1,6 +1,8 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 # Copyright (c) 2003-2010  Pavel Rychly
 
+import locale
 import manatee
 import os.path, sys, glob
 from types import StringType
@@ -85,11 +87,17 @@ class CorpusManager:
         for c, path in paths: # self.corplist
             if c in simple_names:
                 try:
+                    import logging
+                    corp = manatee.Corpus(c)
+                    size = locale.format('%d', corp.size(), grouping=True)
+                    size = _('%s positions')  % size.decode('utf-8')
                     cl.append ({'id': '%s%s' % (subdir_map[c], c),
-                                'name': manatee.Corpus(c).get_conf('NAME') or c,
+                                'name': corp.get_conf('NAME') or c,
+                                'desc' : corp.get_info(),
+                                'size' : size,
                                 'path' : path})
                 except:
-                    cl.append ({'id': c, 'name': c, 'path' : ''})
+                    cl.append ({'id': c, 'name': c, 'path' : '', 'desc' : '', 'size' : ''})
         return cl
 
     def subcorpora (self, corpname):

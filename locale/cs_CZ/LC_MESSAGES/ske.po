@@ -820,3 +820,6 @@ msgstr "Nápověda k pokroč. funkcím"
 msgid "Switch menu position"
 msgstr "Změnit pozici nabídky"
 
+msgid "%s positions"
+msgstr "%s pozic"
+

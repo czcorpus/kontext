@@ -75,11 +75,10 @@ $corp_full_name</b><br>
 <select name="corpname"
   #if $onchange
     onchange="this.form.reload.value=1;if(this.form.usesubcorp)this.form.usesubcorp.value='';this.form.submit();"
-  #end if
-  >
+  #end if#>
   #for $c in $Corplist
     #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-    <option data-path="$c['path']" value="$c['id']" $selected>$c['name']</option>
+    <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
   #end for
 </select>
 #end if
