@@ -1,9 +1,8 @@
 """
-This module contains UCNK's specific functionality.
+This module wraps application's configuration (as specified in config.xml) and provides some additional helper
+methods.
 """
 import os
-import re
-import glob
 import MySQLdb
 from lxml import etree
 
@@ -177,41 +176,23 @@ def create_speech_url(speech_id):
         speech_url += '/'
     return "%s%s" % (speech_url, speech_id)
 
-def list_registry_files(root_dir, level=1):
-    """
-    """
-    xml = ''
-    indent = ' ' * level * 4
-    for item in glob.glob('%s/*' % root_dir):
-        if os.path.isdir(item):
-            subcontents = list_registry_files(item, level + 1)
-            if len(subcontents.strip()) > 0:
-                xml += indent + '<corplist id="%s">\n%s' % (os.path.basename(item), subcontents)
-                xml += indent + '</corplist>\n'
-        elif file_is_registry(item):
-            xml += indent + '<corpus id="%s"><registry>%s</registry></corpus>\n' % (os.path.basename(item), item)
-    return xml
-
-def file_is_registry(file_path):
-    """
-    """
-    with open(file_path) as f:
-        line = f.readline()
-        if re.search('^[A-Z]+\s+\w+', line):
-            return True
-    return False
-
 if __name__ == '__main__':
-    from optparse import OptionParser
+    import sys
 
-    try:
-        parser = OptionParser(usage='usage: %prog [options] directory1 [,directory2, ...]')
-        (options, args) = parser.parse_args()
-        if len(args) < 1:
-            raise Exception('At least one directory must be specified to search for corpora registries')
-        xml = ''
-        for directory in args:
-            xml += '<corplist id="%s">\n%s</corplist>\n' % (os.path.basename(directory.strip('/')), list_registry_files(directory))
-        print(xml)
-    except Exception, e:
-        print('ERROR: %s' % e)
+    if len(sys.argv) > 1:
+        parse_config(sys.argv[1])
+        corplist = _conf['corpora_hierarchy']
+        del(_conf['corpora_hierarchy'])
+        for block in _conf:
+            print('\n[%s]' % block)
+            for key in _conf[block]:
+                if key.find('passw') == -1:
+                    value = _conf[block][key]
+                else:
+                    value = '******'
+                print('%s: %s' % (key, value))
+        print('\n[corpora hierarchy]')
+        for corpname, path in corplist:
+            print('%s%s' % (path, corpname))
+    else:
+        print('No config XML specified')
