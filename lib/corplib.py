@@ -87,13 +87,16 @@ class CorpusManager:
         for c, path in paths: # self.corplist
             if c in simple_names:
                 try:
-                    import logging
                     corp = manatee.Corpus(c)
                     size = locale.format('%d', corp.size(), grouping=True)
                     size = _('%s positions')  % size.decode('utf-8')
+                    if corp.get_conf('ENCODING') and corp.get_conf('ENCODING').lower() != 'utf-8':
+                        desc = corp.get_info().decode(corp.get_conf('ENCODING'))
+                    else:
+                        desc = corp.get_info()
                     cl.append ({'id': '%s%s' % (subdir_map[c], c),
                                 'name': corp.get_conf('NAME') or c,
-                                'desc' : corp.get_info(),
+                                'desc' : desc,
                                 'size' : size,
                                 'path' : path})
                 except:
