@@ -20,11 +20,12 @@ document.observe('dom:loaded', function () {
             newElem.setStyle({
                 padding : '5px 8px',
                 position : 'absolute',
-                left : (event.element().cumulativeOffset()[0] - 10) + 'px',
+                left : (event.element().cumulativeOffset()[0] - 50) + 'px',
                 top : (event.element().cumulativeOffset()[1] - 82) + 'px',
                 border : '1px solid #DDD',
+                color : '#333',
                 backgroundColor : '#FFF',
-                width : '500px',
+                width : '620px',
                 height: '70px'
             });
             \$('toolbar-info').insert({ after : newElem });
