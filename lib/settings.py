@@ -35,7 +35,8 @@ def parse_corplist(root, path='/', data=[]):
         elif item.tag == 'corplist':
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
-            data.append((item.attrib['id'].lower(), path))
+            web_url = item.attrib['web'] if 'web' in item.attrib else None
+            data.append((item.attrib['id'].lower(), path, web_url))
 
 def parse_config(path):
     """
@@ -72,6 +73,29 @@ def load(user, conf_path='config.xml'):
     parse_config(conf_path)
     os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
 
+def get_corpus_info(corp_name):
+    """
+    Returns information related to provided corpus name and contained within
+    the configuration XML file (i.e. not the data from the registry file).
+
+    Parameters
+    ----------
+    corp_name : str, name of the corpus
+
+    Returns
+    -------
+    a dictionary containing following keys:
+    path, web
+    or None if no such item is found
+    """
+    for item in _conf['corpora_hierarchy']:
+        if item[0] == corp_name:
+            return {
+                'path' : item[1],
+                'web' : item[2]
+            }
+    return None
+
 def get_default_corpus(corplist):
     """
     Returns name of the default corpus to be offered to a user
@@ -89,8 +113,9 @@ def get_default_corpus(corplist):
     # set default corpus
     if get('corpora', 'default_corpus') in corplist:
         return get('corpora', 'default_corpus')
-    else:
+    elif get('corpora', 'alternative_corpus') in corplist:
         return get('corpora', 'alternative_corpus')
+    return None
 
 def get_corplist():
     """
