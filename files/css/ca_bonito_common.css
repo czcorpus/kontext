@@ -154,6 +154,14 @@ p.footer {
     white-space: nowrap;
 }
 
+#toolbar-info a.corpus-desc {
+    color : inherit;
+    text-decoration: none;
+}
+
+#toolbar-info a.corpus-desc:hover {
+    text-decoration: underline;
+}
 
 #help-search-form,
 #corpus-search-form {

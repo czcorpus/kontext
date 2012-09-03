@@ -20,8 +20,9 @@ document.observe('dom:loaded', function () {
             newElem.setStyle({
                 padding : '5px 8px',
                 position : 'absolute',
-                left : (event.element().cumulativeOffset()[0] - 50) + 'px',
-                top : (event.element().cumulativeOffset()[1] - 82) + 'px',
+                left : '100%',
+                marginLeft : '-638px',
+                top : 0,
                 border : '1px solid #DDD',
                 color : '#333',
                 backgroundColor : '#FFF',
@@ -66,8 +67,8 @@ document.observe('dom:loaded', function () {
       <li>$_("User"): <strong>$_user</strong></li>
       <li>$_("Corpus"): <strong>$corp_full_name</strong></li>
       #if $corp_description
-        <li>$_('Description'): <strong>$corp_description</strong>
-        #if $corp_web# (<a href="$corp_web" target="_blank">$_('details')</a>)#end if#
+        <li>$_('Description'): #if $corp_web# <a class="corpus-desc" href="$corp_web" target="_blank">#end if#
+            <strong>$corp_description</strong>#if $corp_web#</a>#end if#
         </li>
       #end if
       #if $corp_size
