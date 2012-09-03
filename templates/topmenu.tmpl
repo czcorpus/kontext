@@ -5,6 +5,39 @@
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else
+<script type="text/javascript">
+var msg = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
+document.observe('dom:loaded', function () {
+    \$('positions-help-link').observe('click', function (event) {
+        var newElem;
+        if (\$('positions-help')) {
+            \$('positions-help').remove();
+
+        } else {
+            newElem = Element.extend(document.createElement('div'));
+            newElem.writeAttribute('id', 'positions-help');
+            newElem.update(msg);
+            newElem.setStyle({
+                padding : '5px 8px',
+                position : 'absolute',
+                left : (event.element().cumulativeOffset()[0] - 10) + 'px',
+                top : (event.element().cumulativeOffset()[1] - 82) + 'px',
+                border : '1px solid #DDD',
+                backgroundColor : '#FFF',
+                width : '500px',
+                height: '70px'
+            });
+            \$('toolbar-info').insert({ after : newElem });
+        }
+        event.stop();
+    });
+    Event.observe(document, 'click', function (event) {
+        if (\$('positions-help')) {
+            \$('positions-help').remove();
+        }
+    });
+});
+</script>
 #filter WebSafe
 <form id="help-search-form" action="" onsubmit="cmdHelp('https://trac.sketchengine.co.uk/');">
 <table id="topbar">
@@ -31,8 +64,14 @@ $_ca_topbar
     <ul>
       <li>$_("User"): <strong>$_user</strong></li>
       <li>$_("Corpus"): <strong>$corp_full_name</strong></li>
-      #if $corp_description#<li>$_('Description'): <strong>$corp_description</strong></li>#end if#
-      #if $corp_size#<li>$_('Size'): <strong>$corp_size</strong></li> #end if#
+      #if $corp_description
+        <li>$_('Description'): <strong>$corp_description</strong>
+        #if $corp_web# (<a href="$corp_web" target="_blank">$_('details')</a>)#end if#
+        </li>
+      #end if
+      #if $corp_size
+        <li>$_('Size'): <strong>$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
+      #end if
       #if $usesubcorp
       <li>$_("Subcorpus"): <strong>$usesubcorp</strong></li>
       #end if

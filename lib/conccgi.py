@@ -6,7 +6,6 @@ import locale
 from sys import stderr
 import time
 import glob
-import locale
 from types import ListType
 
 from CGIPublisher import CGIPublisher
@@ -271,6 +270,11 @@ class ConcCGI (CGIPublisher):
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)
         result['corp_description'] = thecorp.get_info()
+        corp_conf_info = settings.get_corpus_info(thecorp.get_conf ('NAME'))
+        if corp_conf_info is not None:
+            result['corp_web'] = corp_conf_info['web']
+        else:
+            result['corp_web'] = ''
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
