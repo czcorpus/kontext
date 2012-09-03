@@ -84,7 +84,7 @@ class CorpusManager:
                 simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
-        for c, path in paths: # self.corplist
+        for c, path, web in paths: # self.corplist
             if c in simple_names:
                 try:
                     corp = manatee.Corpus(c)
@@ -98,7 +98,8 @@ class CorpusManager:
                                 'name': corp.get_conf('NAME') or c,
                                 'desc' : desc,
                                 'size' : size,
-                                'path' : path})
+                                'path' : path
+                    })
                 except:
                     cl.append ({'id': c, 'name': c, 'path' : '', 'desc' : '', 'size' : ''})
         return cl
