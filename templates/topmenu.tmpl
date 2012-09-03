@@ -9,7 +9,13 @@ $_ca_topbar
 var msg = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
 document.observe('dom:loaded', function () {
     \$('positions-help-link').observe('click', function (event) {
-        var newElem;
+        var newElem,
+            pageWidth = document.viewport.getDimensions().width,
+            horizPadding = 8,
+            totalBoxWidth = 638,
+            boxWidth = 620,
+            borderWidth = 1;
+
         if (\$('positions-help')) {
             \$('positions-help').remove();
 
@@ -18,17 +24,26 @@ document.observe('dom:loaded', function () {
             newElem.writeAttribute('id', 'positions-help');
             newElem.update(msg);
             newElem.setStyle({
-                padding : '5px 8px',
+                padding : '5px ' + horizPadding + 'px',
                 position : 'absolute',
-                left : '100%',
-                marginLeft : '-638px',
                 top : 0,
-                border : '1px solid #DDD',
+                border : borderWidth + 'px solid #DDD',
                 color : '#333',
                 backgroundColor : '#FFF',
-                width : '620px',
+                width : boxWidth + 'px',
                 height: '70px'
             });
+            if (pageWidth - totalBoxWidth > event.element().cumulativeOffset()[0]) {
+                newElem.setStyle({
+                    left : event.element().cumulativeOffset()[0] + 'px'
+                });
+            } else {
+                newElem.setStyle({
+                    left : '100%',
+                    marginLeft : '-' + (boxWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+                });
+            }
+            document.viewport.getDimensions();
             \$('toolbar-info').insert({ after : newElem });
         }
         event.stop();
@@ -67,7 +82,7 @@ document.observe('dom:loaded', function () {
       <li>$_("User"): <strong>$_user</strong></li>
       <li>$_("Corpus"): <strong>$corp_full_name</strong></li>
       #if $corp_description
-        <li>$_('Description'): #if $corp_web# <a class="corpus-desc" href="$corp_web" target="_blank">#end if#
+        <li>$_('Description'): #if $corp_web# <a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for details')">#end if#
             <strong>$corp_description</strong>#if $corp_web#</a>#end if#
         </li>
       #end if
