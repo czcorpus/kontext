@@ -410,7 +410,9 @@ class CGIPublisher:
                 'message' : u'%s' % e,
                 'corp_full_name' : '?',
                 'corplist_size' : '?',
-                'Corplist' : []
+                'Corplist' : [],
+                'corp_description' : '',
+                'corp_size' : ''
             }
             error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
