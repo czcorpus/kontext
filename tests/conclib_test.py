@@ -1,9 +1,7 @@
-import unittest
-import sys
-sys.path.append('./mocks')
-
+# -*- coding: utf-8 -*-
+import conf
 import settings
-settings.load('../config.test.xml')
+import unittest
 import conclib
 
 class TestConclibModule(unittest.TestCase):
@@ -13,7 +11,7 @@ class TestConclibModule(unittest.TestCase):
     def test_remove_speech_struct_from_tag(self):
         """
         """
-        s = '<seg foo=123 bar=value speechfile=13035.wav key=value>this <x>is</x> it'
+        s = '<seg foo=123 bar=value soundfile=13035.wav key=value>this <x>is</x> it'
         t1, t2 = conclib.separate_speech_struct_from_tag(s)
         self.assertEquals('<seg foo=123 bar=value key=value>this <x>is</x> it', t1)
         self.assertEquals('13035.wav', t2)
@@ -31,7 +29,7 @@ class TestConclibModule(unittest.TestCase):
         self.assertEquals('<seg>', t1)
         self.assertEquals('', t2)
 
-        s = '<seg speechfile=1234abc.wav>'
+        s = '<seg soundfile=1234abc.wav>'
         t1, t2 = conclib.separate_speech_struct_from_tag(s)
         self.assertEquals('<seg>', t1)
         self.assertEquals('1234abc.wav', t2)
@@ -41,7 +39,7 @@ class TestConclibModule(unittest.TestCase):
         """
         line = (
             {
-                'str' : 'lorem ipsum <seg speechfile=123.wav foo=bar>dolor sit</seg><seg> amet...',
+                'str' : 'lorem ipsum <seg soundfile=123.wav foo=bar>dolor sit</seg><seg> amet...',
                 'class' : 'foo'
             },
             {
@@ -49,7 +47,7 @@ class TestConclibModule(unittest.TestCase):
                 'class' : 'foo'
             },
             {
-                'str' : '<seg speechfile=937.341>',
+                'str' : '<seg soundfile=937.341>',
                 'class' : 'foo'
             }
         )
@@ -57,7 +55,7 @@ class TestConclibModule(unittest.TestCase):
         ans, last_speech_id = conclib.postproc_kwicline_part(line, 'left', False)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         self.assertEquals('937.341', last_speech_id)
-        # second item has the string 'speechfile=123.wav' removed
+        # second item has the string 'soundfile=123.wav' removed
         self.assertEquals('<seg foo=bar>', ans[1]['str'])
         # but the removed value (not the key) is still accessible:
         self.assertEquals(settings.create_speech_url('123.wav'), ans[1]['open_link']['speech_url'])
