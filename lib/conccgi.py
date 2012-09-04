@@ -404,7 +404,7 @@ class ConcCGI (CGIPublisher):
                 result ['Sketches'] = []
         return result
     
-    def view (self):
+    def view (self, tpl_params={}):
         "kwic view"
         if self.changeviewmode:
             self.viewmode = {'sen':'kwic',
@@ -469,7 +469,7 @@ class ConcCGI (CGIPublisher):
                               self._corp().get_conf ('ALIGNED').split(',')]
             #if self.align:
             #    self._cookieattrs.append ('align')
-                
+        out.update(tpl_params)
         return out
     add_vars['view'] = ['orig_query']
     
@@ -841,7 +841,7 @@ class ConcCGI (CGIPublisher):
     def reduce (self, rlines='250'):
         "random sample"
         self.q.append ('r' + rlines)
-        return self.view()
+        return self.view({ 'rlines_info' : _('random <strong>%s</strong> displayed') % rlines })
        
     reduce.template = 'view.tmpl'
 
