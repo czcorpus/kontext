@@ -142,6 +142,12 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 </script>
 #end if
 #end if
+<div id="result-info">
+    $_('Hits'): <strong>$concsize</strong>
+     ($result_relative_freq</strong> <acronym title="$_('instances per million')">i.p.m.</acronym>) |
+    <acronym title="$_('Average Reduced Frequency')">$_('ARF')</acronym>: <strong>$result_arf</strong>
+    #if $varExists('rlines_info')# | #filter None# $rlines_info #end filter# #end if#
+</div>
 #block navigation($navid="navigation_form", $nextid="next")
 ## navigation
 #if $numofpages

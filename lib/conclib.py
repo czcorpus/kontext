@@ -150,6 +150,8 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
             out['nextlink'] = 'fromp=%i' % (fromp +1)
             out['lastlink'] = 'fromp=%i' % numofpages
     out['concsize'] = conc.size()
+    out['result_arf'] = round(conc.compute_ARF(), 2)
+    out['result_relative_freq'] = round(conc.size() / (float(corpus.size()) / 1e6), 2)
     #arf = conc.compute_ARF()
     #out['concarf'] = '%.2f' % arf
     return out
