@@ -138,6 +138,10 @@ table.envelope ul ul{
     background-color: #8f8;
 }
 
+#result-info {
+    margin-bottom: 7px;
+}
+
 /* Navigation panel in Concordance view */
 
 div.bonito-pagination-left {
