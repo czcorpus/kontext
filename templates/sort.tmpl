@@ -13,6 +13,10 @@ $_("Sort form")#slurp
   #end if
 #end def
 
+#def bodyonload
+multiLevelKwicFormUtil.init();
+#end def
+
 #def main
 #filter WebSafe
 <h3>$_("Simple Sort")</h3>
@@ -224,7 +228,36 @@ $input_hidden
   </select></td>
   </tr>
 </table>
-</td></tr></table>
+</td></tr>
+
+
+    <tr id="kwic-alignment-box" style="display: none">
+        <td>
+            $_("Start at"):<br />
+            <select class="kwic-alignment" id="kwic-alignment-1">
+                <option value="left">$_("leftmost KWIC word")</option>
+                <option value="right">$_("rightmost KWIC word")</option>
+            </select>
+        </td>
+        <td>
+            $_("Start at"):<br />
+            <select class="kwic-alignment" id="kwic-alignment-2">
+                <option value="left">$_("leftmost KWIC word")</option>
+                <option value="right">$_("rightmost KWIC word")</option>
+            </select>
+        </td>
+        <td>
+            $_("Start at"):<br />
+            <select class="kwic-alignment" id="kwic-alignment-3">
+                <option value="left">$_("leftmost KWIC word")</option>
+                <option value="right">$_("rightmost KWIC word")</option>
+            </select>
+        </td>
+    </tr>
+
+
+
+</table>
 
 <div class="buttons">
   <input class="submit" type="submit" value="$_("Sort Concordance")" />

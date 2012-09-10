@@ -1,6 +1,6 @@
 (function (context) {
 
-    var freqFormTools = {
+    var mlkfu = {
 
         /**
          *
@@ -18,12 +18,11 @@
         init : function () {
             $('kwic-alignment-box').setStyle({ display : 'table-row' });
             $$('select.kwic-alignment').each(function (item) {
-                freqFormTools.switchAlignment(item.value, freqFormTools.getColumnId(item));
+                mlkfu.switchAlignment(item.value, mlkfu.getColumnId(item));
             });
-
             $$('select.kwic-alignment').each( function (item) {
                 item.observe('change', function (event) {
-                    freqFormTools.switchAlignment(event.target.value, freqFormTools.getColumnId(item));
+                    mlkfu.switchAlignment(event.target.value, mlkfu.getColumnId(item));
                 });
             });
         },
@@ -60,6 +59,6 @@
         }
     }
 
-    context.freqFormTools = freqFormTools;
+    context.multiLevelKwicFormUtil = mlkfu;
 
 }(window));
