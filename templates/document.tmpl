@@ -34,7 +34,6 @@ document.observe("dom:loaded", function() {
     #if $focus
         focusEx($focus);
     #end if
-    createTreeComponent(\$\$('form[action="simple_search"] select[name="corpname"]'));
 });
 
 #if $getVar('ga_identifier', '')
