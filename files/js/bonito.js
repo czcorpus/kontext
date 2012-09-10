@@ -57,8 +57,68 @@
                 });
             }
         }
+    };
+
+    var popupBox = {
+
+        open : function (event, boxId, whereElementId, contents, options) {
+            var newElem,
+                pageWidth = document.viewport.getDimensions().width,
+                horizPadding = 8,
+                totalBoxWidth = 638,
+                boxWidth = '620px',
+                borderWidth = 1,
+                boxHeight = '70px';
+
+            if ($(boxId)) {
+                $(boxId).remove();
+
+            } else {
+
+                if (options !== undefined) {
+                    if (options.hasOwnProperty('height')) {
+                        boxHeight = options.height;
+                    }
+                    if (options.hasOwnProperty('width')) {
+                        boxWidth = options.width;
+                    }
+                }
+
+                newElem = Element.extend(document.createElement('div'));
+                newElem.writeAttribute('id', boxId);
+                if (typeof(contents) === 'function') {
+                    contents(newElem);
+
+                } else {
+                    newElem.update(contents);
+                }
+                newElem.setStyle({
+                    padding : '5px ' + horizPadding + 'px',
+                    position : 'absolute',
+                    top : 0,
+                    border : borderWidth + 'px solid #DDD',
+                    color : '#333',
+                    backgroundColor : '#FFF',
+                    width : boxWidth,
+                    height: boxHeight
+                });
+                if (pageWidth - totalBoxWidth > event.element().cumulativeOffset()[0]) {
+                    newElem.setStyle({
+                        left : event.element().cumulativeOffset()[0] + 'px'
+                    });
+                } else {
+                    newElem.setStyle({
+                        left : '100%',
+                        marginLeft : '-' + (boxWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+                    });
+                }
+                document.viewport.getDimensions();
+                $(whereElementId).insert({ after : newElem });
+            }
+        }
     }
 
     context.multiLevelKwicFormUtil = mlkfu;
+    context.popupBox = popupBox;
 
 }(window));
