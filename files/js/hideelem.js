@@ -207,26 +207,38 @@ function redirect_to_save(form, save_function) {
   form.submit();
 }
 
+function selectAllCheckBoxes(initiator, name) {
+    var i,
+        form,
+        ancestors = initiator.ancestors(),
+        chkStatus,
+        tmp;
 
-function deselect_all_chboxes(formname, name) {
-  var form = document.getElementById(formname);
-  for (var i = 0; i < form.elements.length; i++) {
-    var e = form.elements[i];
-	 if ((e.name == name) && (e.type == 'checkbox')) {
-      e.checked = false;
+    for (i = 0; i < ancestors.length; i += 1) {
+        if (ancestors[i].nodeName === 'FORM') {
+            form = ancestors[i];
+            break;
+        }
     }
-  }
-}
+    if (initiator.readAttribute('data-action-type') == '1') {
+        chkStatus = true;
+        initiator.writeAttribute('data-action-type', 2);
+        tmp = initiator.readAttribute('value');
+        initiator.writeAttribute('value', initiator.readAttribute('data-alt-value'));
+        initiator.writeAttribute('data-alt-value', tmp);
 
-
-function select_all_chboxes(formname, name) {
-  var form = document.getElementById(formname);
-  for (var i = 0; i < form.elements.length; i++) {
-    var e = form.elements[i];
-	 if ((e.name == name) && (e.type == 'checkbox')) {
-      e.checked = true;
+    } else if (initiator.readAttribute('data-action-type') == '2') {
+        chkStatus = false;
+        initiator.writeAttribute('data-action-type', 1);
+        tmp = initiator.readAttribute('value');
+        initiator.writeAttribute('value', initiator.readAttribute('data-alt-value'));
+        initiator.writeAttribute('data-alt-value', tmp);
     }
-  }
+    if (form !== undefined) {
+        form.select('input[type="checkbox"][name="' + name + '"]').each(function (item) {
+            item.checked = chkStatus;
+        });
+    }
 }
 
 function cmdHelp(generic) {
