@@ -1,6 +1,6 @@
 #from cmpltmpl.document import document
+#from templating.filters import *
 #extends document
-
 #def body
 #if $varExists('_ca_topbar')
 $_ca_topbar
@@ -90,10 +90,10 @@ document.observe('dom:loaded', function () {
         <li>$_('Size'): <strong>$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
       #end if
       #if $usesubcorp
-      <li>$_("Subcorpus"): <strong>$usesubcorp</strong></li>
+      <li>$_('Subcorpus'): <strong>$usesubcorp</strong></li>
       #end if
     #if $concsize
-      <li>$_("Hits"): <strong>$concsize</strong></li>
+      <li>$_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong></li>
       #if $concarf
         <li>($concarf)</li>
       #end if

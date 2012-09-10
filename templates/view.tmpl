@@ -1,4 +1,5 @@
 #from cmpltmpl.conc import conc
+#from templating.filters import *
 #extends conc
 
 #def title
@@ -143,9 +144,10 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 #end if
 #end if
 <div id="result-info">
-    $_('Hits'): <strong>$concsize</strong>
-     ($result_relative_freq</strong> <acronym title="$_('instances per million')">i.p.m.</acronym>) |
-    <acronym title="$_('Average Reduced Frequency')">$_('ARF')</acronym>: <strong>$result_arf</strong>
+    $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
+     (#filter $FloatFormatter# $result_relative_freq #end filter#</strong> <acronym title="$_('instances per million')">i.p.m.</acronym>) |
+    <acronym title="$_('Average Reduced Frequency')">$_('ARF')</acronym>:
+    <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
 </div>
 #block navigation($navid="navigation_form", $nextid="next")
 ## navigation
