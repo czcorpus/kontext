@@ -18,4 +18,4 @@ class FloatFormatter(Filter):
     """
 
     def filter(self, val, **kw):
-        return locale.format('01.2f%', val, True)
+        return locale.format('%01.2f', val, True)
