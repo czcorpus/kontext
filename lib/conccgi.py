@@ -1760,3 +1760,24 @@ class ConcCGI (CGIPublisher):
         return self.lngroupinfo(newname)
 
     rename_annot.template = 'lngroupinfo.tmpl'
+
+    def ajax_get_corp_details(self):
+        """
+        """
+        #self.format = 'json'
+        ans = {
+            'corpus': self._curr_corpus.get_info(),
+            'size': self._curr_corpus.size(),
+            'attrlist' : [],
+            'structlist' : []
+        }
+        try:
+            ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).size()) for item in self._curr_corpus.get_conf('ATTRLIST').split(',')]
+        except RuntimeError, e:
+            import logging
+            logging.getLogger(__name__).warn('%s' % e)
+            ans['attrlist'] = [(_('Failed to load'), '')]
+        ans['structlist'] = [(item, self._curr_corpus.get_struct(item).size()) for item in self._curr_corpus.get_conf('STRUCTLIST').split(',')]
+
+        return ans
+    ajax_get_corp_details.template = 'corpus_details.tmpl'

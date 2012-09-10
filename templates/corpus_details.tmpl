@@ -1,0 +1,31 @@
+$corpus
+<table border="0" style="border-collapse: collapse">
+    <tr>
+        <td style="vertical-align: top">
+            <table>
+                <tr>
+                    <th colspan="2">$_('Attributes')</th>
+                </tr>
+                #for item, freq in $attrlist
+                <tr>
+                    <td>$item</td>
+                    <td style="text-align: right">$freq</td>
+                </tr>
+                #end for
+            </table>
+        </td>
+        <td style="padding-left: 4em; vertical-align: top">
+            <table>
+                <tr>
+                    <th colspan="2">$_('Structures')</th>
+                </tr>
+                #for item, freq in $structlist
+                <tr>
+                    <td>$item</td>
+                    <td style="text-align: right">$freq</td>
+                </tr>
+                #end for
+            </table>
+        </td>
+    </tr>
+</table>
