@@ -1766,13 +1766,14 @@ class ConcCGI (CGIPublisher):
         """
         #self.format = 'json'
         ans = {
+            'corpname' : self._curr_corpus.corpname,
             'corpus': self._curr_corpus.get_info(),
             'size': self._curr_corpus.size(),
             'attrlist' : [],
             'structlist' : []
         }
         try:
-            ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).size()) for item in self._curr_corpus.get_conf('ATTRLIST').split(',')]
+            ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).id_range()) for item in self._curr_corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError, e:
             import logging
             logging.getLogger(__name__).warn('%s' % e)
