@@ -912,3 +912,6 @@ msgstr "Všechna lemmata"
 
 msgid "Help on Word Lists"
 msgstr "Nápověda k seznamům slov"
+
+msgid "Include non-words"
+msgstr "Včetně číslic a interpunkce"
