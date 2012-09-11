@@ -869,28 +869,28 @@ msgid "Character"
 msgstr "Podřetězec"
 
 msgid "left"
-msgstr "levý"
+msgstr "vlevo"
 
 msgid "right"
-msgstr "pravý"
+msgstr "vpravo"
 
 msgid "both"
-msgstr "oba"
+msgstr "vlevo i vpravo"
 
 msgid "all"
 msgstr "všechny"
 
 msgid "any"
-msgstr "některé"
+msgstr "kteroukoli"
 
 msgid "none"
-msgstr "žádné"
+msgstr "žádnou"
 
 msgid "Lemma(s)"
-msgstr "Lemmata"
+msgstr "Lemma(ta)"
 
 msgid "Window"
-msgstr "Okno"
+msgstr "Velikost kontextu"
 
 msgid "Search attribute"
 msgstr "Hledaný atribut"
@@ -915,3 +915,9 @@ msgstr "Nápověda k seznamům slov"
 
 msgid "Include non-words"
 msgstr "Včetně číslic a interpunkce"
+
+msgid "Lemma filter"
+msgstr "Filtrovat podle lemmatu"
+
+msgid "PoS filter"
+msgstr "Filtrovat podle slovního druhu"
