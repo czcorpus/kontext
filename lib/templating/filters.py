@@ -11,7 +11,7 @@ class IntegerFormatter(Filter):
     def filter(self, val, **kw):
         if val:
             return locale.format('%d', val, True).decode('UTF-8')
-        return val
+        return str(val)
 
 
 class FloatFormatter(Filter):
@@ -22,4 +22,4 @@ class FloatFormatter(Filter):
     def filter(self, val, **kw):
         if val:
             return locale.format('%01.2f', val, True).decode('UTF-8')
-        return val
+        return str(val)
