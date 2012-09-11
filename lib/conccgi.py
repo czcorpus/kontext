@@ -956,8 +956,6 @@ class ConcCGI (CGIPublisher):
                 fcrit += onelevelcrit (' ', ml3attr, ml3ctx, ml3pos,
                                        ml3fcode, ml3icase)
         result = self.freqs ([fcrit], flimit, '', 1)
-        import logging
-        logging.getLogger(__name__).info('stuff: %s' % (result, ))
         result['ml'] = 1
         #result['concsize'] = self.
         return result
