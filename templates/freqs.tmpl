@@ -80,8 +80,10 @@ $input_hidden
 
 
 <table class="result">
+#set $rowNum = 1
 #for $b in $Blocks
   <tr>
+  <th></th>
   <th></th>
   #for $h in $b['Head']
     <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h['s'];ftt_include_empty=$ftt_include_empty">
@@ -99,6 +101,8 @@ $input_hidden
       class="$i['class']"
     #end if
   >
+    <td style="text-align: right">$rowNum.</td>
+    #set $rowNum += 1
     <td>
     #if $i.get('pfilter', '')
 <a href='view?$q;$globals;$i.get('pfilter')'>p</a>/#slurp
