@@ -863,12 +863,15 @@ class ConcCGI (CGIPublisher):
             return attrs, ranges
 
         conc = self.call_function (conclib.get_conc, (self._corp(),))
-        result = {'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
+        result = {
+            'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
                                             for cr in fcrit]),
-                  'FCrit': [{'fcrit': cr} for cr in fcrit],
-                  'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
+            'FCrit': [{'fcrit': cr} for cr in fcrit],
+            'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
                                    self.ftt_include_empty) for cr in fcrit],
-                  'paging': 0 }
+            'paging': 0,
+            'concsize' : conc.size()
+        }
         if not result['Blocks'][0]: raise ConcError(_('Empty list'))
         if len(result['Blocks']) == 1: # paging
             fstart = (self.fpage - 1) * self.fmaxitems
@@ -952,7 +955,10 @@ class ConcCGI (CGIPublisher):
                 fcrit += onelevelcrit (' ', ml3attr, ml3ctx, ml3pos,
                                        ml3fcode, ml3icase)
         result = self.freqs ([fcrit], flimit, '', 1)
+        import logging
+        logging.getLogger(__name__).info('stuff: %s' % (result, ))
         result['ml'] = 1
+        #result['concsize'] = self.
         return result
     freqml.template = 'freqs.tmpl'
 
