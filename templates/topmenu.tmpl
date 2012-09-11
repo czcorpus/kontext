@@ -20,23 +20,15 @@ var msg2 = function (updatedElement) {
 }
 document.observe('dom:loaded', function () {
     \$('positions-help-link').observe('click', function (event) {
-        popupBox.open(event, 'positions-help', 'toolbar-info', msg1);
+        createPopupBox(event, 'positions-help', 'toolbar-info', msg1);
         event.stop();
     });
     \$('corpus-desc-link').observe('click', function (event) {
-       popupBox.open(event, 'corpus-details-box', 'corpus-desc-link', msg2, {
+        createPopupBox(event, 'corpus-details-box', 'corpus-desc-link', msg2, {
            'height' : 'auto',
            'width' : 'auto'
-       });
+        });
         event.stop();
-    });
-    Event.observe(document, 'click', function (event) {
-        if (\$('positions-help')) {
-            \$('positions-help').remove();
-        }
-        if (\$('corpus-details-box')) {
-            \$('corpus-details-box').remove();
-        }
     });
 });
 </script>
