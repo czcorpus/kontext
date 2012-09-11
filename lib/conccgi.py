@@ -871,7 +871,8 @@ class ConcCGI (CGIPublisher):
             'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
                                    self.ftt_include_empty) for cr in fcrit],
             'paging': 0,
-            'concsize' : conc.size()
+            'concsize' : conc.size(),
+            'fmaxitems' : self.fmaxitems
         }
         if not result['Blocks'][0]: raise ConcError(_('Empty list'))
         if len(result['Blocks']) == 1: # paging
