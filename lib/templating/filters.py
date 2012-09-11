@@ -9,7 +9,9 @@ class IntegerFormatter(Filter):
     Formats integer numbers according to the locales currently set
     """
     def filter(self, val, **kw):
-        return locale.format('%d', val, True).decode('UTF-8')
+        if val:
+            return locale.format('%d', val, True).decode('UTF-8')
+        return val
 
 
 class FloatFormatter(Filter):
@@ -18,4 +20,6 @@ class FloatFormatter(Filter):
     """
 
     def filter(self, val, **kw):
-        return locale.format('%01.2f', val, True).decode('UTF-8')
+        if val:
+            return locale.format('%01.2f', val, True).decode('UTF-8')
+        return val
