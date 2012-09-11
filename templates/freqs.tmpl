@@ -1,4 +1,5 @@
 #from cmpltmpl.conc import conc
+#from templating.filters import *
 #extends conc
 
 #def title
@@ -115,7 +116,7 @@ $input_hidden
     #for $w in $i['Word']
       <td>$w['n']</td>
     #end for
-    <td align="right">$i['freq']</td>
+    <td align="right">#filter $IntegerFormatter# $i['freq'] #end filter#</td>
     #if $i.has_key('rel')
       <td align="right">$i['rel']</td>
     #end if
@@ -131,7 +132,7 @@ $input_hidden
   <tr>
       <td>$_('Total'):</td>
       <td colspan="2"></td>
-      <td style="text-align: right">$concsize</td>
+      <td style="text-align: right">#filter $IntegerFormatter# $concsize #end filter#</td>
       <td></td>
   </tr>
 </table>
