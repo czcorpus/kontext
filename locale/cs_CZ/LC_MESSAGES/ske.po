@@ -763,8 +763,11 @@ msgstr "sloveso"
 msgid "Click to play audio"
 msgstr "Klikněte pro přehrání audia"
 
-msgid "Start at"
-msgstr "Začít od"
+msgid "(Node) start at"
+msgstr "(Node) začít od"
+
+msgid "This counts only for multi-word KWICs"
+msgstr "Platí pouze pro víceslovná KWIC"
 
 msgid "leftmost KWIC word"
 msgstr "slova KWIC nejvíce vlevo"

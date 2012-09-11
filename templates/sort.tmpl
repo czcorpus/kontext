@@ -15,6 +15,17 @@ $_("Sort form")#slurp
 
 #def bodyonload
 multiLevelKwicFormUtil.init();
+\$\$('a.kwic-alignment-help').each(function (item) {
+    item.observe('click', function (event) {
+        var msg = "$_('This counts only for multi-word KWICs')";
+        createPopupBox(event, 'kwic-alignment-help-box', 'toolbar-info', msg, {
+            'top' : 'attached-bottom',
+            'width' : 'auto',
+            'height' : 'auto'
+        });
+        event.stop();
+    });
+});
 #end def
 
 #def main
@@ -228,35 +239,31 @@ $input_hidden
   </select></td>
   </tr>
 </table>
-</td></tr>
-
-
+</td>
+    </tr>
     <tr id="kwic-alignment-box" style="display: none">
         <td>
-            $_("Start at"):<br />
+            $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
             <select class="kwic-alignment" id="kwic-alignment-1">
                 <option value="left">$_("leftmost KWIC word")</option>
                 <option value="right">$_("rightmost KWIC word")</option>
             </select>
         </td>
         <td>
-            $_("Start at"):<br />
+            $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
             <select class="kwic-alignment" id="kwic-alignment-2">
                 <option value="left">$_("leftmost KWIC word")</option>
                 <option value="right">$_("rightmost KWIC word")</option>
             </select>
         </td>
         <td>
-            $_("Start at"):<br />
+            $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
             <select class="kwic-alignment" id="kwic-alignment-3">
                 <option value="left">$_("leftmost KWIC word")</option>
                 <option value="right">$_("rightmost KWIC word")</option>
             </select>
         </td>
     </tr>
-
-
-
 </table>
 
 <div class="buttons">
