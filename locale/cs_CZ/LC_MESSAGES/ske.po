@@ -860,7 +860,7 @@ msgid "Select All"
 msgstr "Vybrat vše"
 
 msgid "Clear All"
-msgstr "Odznačit vše"
+msgstr "Vyčistit formulář"
 
 msgid "Simple"
 msgstr "Jednoduchý"
