@@ -1,28 +1,29 @@
-$corpus
-<table border="0" style="border-collapse: collapse">
+<h2>$corpname</h2>
+<p>$corpus</p>
+<table class="wrapper" border="0" style="border-collapse: collapse">
     <tr>
-        <td style="vertical-align: top">
-            <table>
+        <td>
+            <table class="attrib-list">
                 <tr>
-                    <th colspan="2">$_('Attributes')</th>
+                    <th class="attrib-heading" colspan="2">$_('Attributes')</th>
                 </tr>
                 #for item, freq in $attrlist
                 <tr>
-                    <td>$item</td>
-                    <td style="text-align: right">$freq</td>
+                    <th>$item</th>
+                    <td class="numeric">$freq</td>
                 </tr>
                 #end for
             </table>
         </td>
-        <td style="padding-left: 4em; vertical-align: top">
-            <table>
+        <td style="padding-left: 4em">
+            <table class="attrib-list">
                 <tr>
-                    <th colspan="2">$_('Structures')</th>
+                    <th class="attrib-heading" colspan="2">$_('Structures')</th>
                 </tr>
                 #for item, freq in $structlist
                 <tr>
-                    <td>$item</td>
-                    <td style="text-align: right">$freq</td>
+                    <th>$item</th>
+                    <td class="numeric">$freq</td>
                 </tr>
                 #end for
             </table>

@@ -372,3 +372,42 @@ table.data td.actions img {
 div.buttons {
     padding-top: 1em;
 }
+
+
+#corpus-details-box h2 {
+    margin: 0;
+    text-align: center;
+}
+
+#corpus-details-box td.numeric {
+    text-align: right;
+    padding-left: 10px;
+}
+
+#corpus-details-box table.wrapper {
+    margin: 0 auto;
+}
+
+#corpus-details-box table.wrapper td {
+    vertical-align: top;
+}
+
+#corpus-details-box table.attrib-list {
+    border-collapse: collapse;
+}
+
+#corpus-details-box table.attrib-list th.attrib-heading {
+    background-color: transparent;
+    text-align: center;
+    color: #444;
+    font-size: 120%;
+}
+
+#corpus-details-box table.attrib-list th {
+    text-align: center;
+    padding: 2px 10px;
+    border-color: #FFF;
+    border-style: solid;
+    border-width: 0 0 2px 0;
+    background-color: #99CCEE;
+}
