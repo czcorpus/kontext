@@ -271,6 +271,11 @@ class ConcCGI (CGIPublisher):
                                    or self.corpname)
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
+        corp_conf_info = settings.get_corpus_info(thecorp.get_conf ('NAME'))
+        if corp_conf_info is not None:
+            result['corp_web'] = corp_conf_info['web']
+        else:
+            result['corp_web'] = ''
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
@@ -1760,14 +1765,14 @@ class ConcCGI (CGIPublisher):
         """
         """
         #self.format = 'json'
-        corp_conf_info = settings.get_corpus_info(thecorp.get_conf ('NAME'))
+        corp_conf_info = settings.get_corpus_info(self._curr_corpus.corpname)
         ans = {
             'corpname' : self._curr_corpus.corpname,
             'corpus': self._curr_corpus.get_info(),
             'size': self._curr_corpus.size(),
             'attrlist' : [],
             'structlist' : [],
-            'corp_web' : corp_conf_info['web'] if 'web' in corp_conf_info else ''
+            'corp_web' : corp_conf_info['web'] if corp_conf_info is not None else ''
         }
         try:
             ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).id_range()) for item in self._curr_corpus.get_conf('ATTRLIST').split(',')]
