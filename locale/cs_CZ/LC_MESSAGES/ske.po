@@ -855,3 +855,60 @@ msgstr "Celkem"
 
 msgid "Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href=\"http://www.korpus.cz/english/struktura.php\" target=\"_blank\">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered."
 msgstr "Pozice jsou základní jednotky pro vyhledávání v korpusu odpovídající tokenům: samostatnou pozici tvoří každý jednotlivý výskyt slovního tvaru, čísla nebo interpunkčního znaménka v korpusu. Velikost korpusu v pozicích udávaná vyhledávacím rozhraním je tedy vždy vyšší než velikost korpusu v počtu slov uváděná na <a href=\"http://www.korpus.cz/struktura.php\" target=\"_blank\">stránkách ÚČNK</a>, kde se slovem rozumí pouze pozice obsahující alespoň jeden alfabetický znak."
+
+msgid "Select All"
+msgstr "Vybrat vše"
+
+msgid "Clear All"
+msgstr "Odznačit vše"
+
+msgid "Simple"
+msgstr "Jednoduchý"
+
+msgid "Character"
+msgstr "Podřetězec"
+
+msgid "left"
+msgstr "levý"
+
+msgid "right"
+msgstr "pravý"
+
+msgid "both"
+msgstr "oba"
+
+msgid "all"
+msgstr "všechny"
+
+msgid "any"
+msgstr "některé"
+
+msgid "none"
+msgstr "žádné"
+
+msgid "Lemma(s)"
+msgstr "Lemmata"
+
+msgid "Window"
+msgstr "Okno"
+
+msgid "Search attribute"
+msgstr "Hledaný atribut"
+
+msgid "Filter wordlist by"
+msgstr "Filtrovat seznam slov pomocí"
+
+msgid "RE pattern"
+msgstr "Regulární výraz"
+
+msgid "Word list options"
+msgstr "Seznam slov - volby"
+
+msgid "All words"
+msgstr "Všechna slova"
+
+msgid "All lemmas"
+msgstr "Všechna lemmata"
+
+msgid "Help on Word Lists"
+msgstr "Nápověda k seznamům slov"
