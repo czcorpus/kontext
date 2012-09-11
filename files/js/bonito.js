@@ -77,6 +77,8 @@
 
             newElem : null,
 
+            timeout : 25000,
+
             extractIntFromSize : function (size) {
                 var ans = /([0-9]+)[a-z]*/.exec(size);
                 if (ans !== null) {
@@ -171,7 +173,7 @@
 
                 Event.observe(document, 'click', popupBox.close);
 
-                popupBox.timer = setInterval(popupBox.close, 15000);
+                popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
 
             }
         }
