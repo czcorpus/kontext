@@ -269,6 +269,7 @@ class ConcCGI (CGIPublisher):
         result['corplist_size'] = min (len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)
+
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
         corp_conf_info = settings.get_corpus_info(thecorp.get_conf ('NAME'))
@@ -1773,7 +1774,7 @@ class ConcCGI (CGIPublisher):
         #self.format = 'json'
         corp_conf_info = settings.get_corpus_info(self._curr_corpus.corpname)
         ans = {
-            'corpname' : self._curr_corpus.corpname,
+            'corpname' : self._curr_corpus.get_conf ('NAME'),
             'corpus': self._curr_corpus.get_info(),
             'size': self._curr_corpus.size(),
             'attrlist' : [],
