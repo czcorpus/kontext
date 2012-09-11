@@ -102,7 +102,7 @@ $input_hidden
       class="$i['class']"
     #end if
   >
-    <td style="text-align: right">$rowNum.</td>
+    <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
     #set $rowNum += 1
     <td>
     #if $i.get('pfilter', '')
@@ -129,12 +129,6 @@ $input_hidden
   </tr>
   #end for
 #end for
-  <tr>
-      <td>$_('Total'):</td>
-      <td colspan="2"></td>
-      <td style="text-align: right">#filter $IntegerFormatter# $concsize #end filter#</td>
-      <td></td>
-  </tr>
 </table>
 #end filter
 
