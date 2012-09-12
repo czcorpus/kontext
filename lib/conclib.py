@@ -151,8 +151,6 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
             out['lastlink'] = 'fromp=%i' % numofpages
     out['concsize'] = conc.size()
     out['result_arf'] = round(conc.compute_ARF(), 2)
-    import logging
-    logging.getLogger(__name__).info('foo: %s' % type(corpus))
 
     if type(corpus) is manatee.SubCorpus:
         corpsize = corpus.search_size() # TODO this is unverified solution trying to bypass possible manatee bug
