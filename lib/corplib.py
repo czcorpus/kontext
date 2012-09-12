@@ -100,8 +100,10 @@ class CorpusManager:
                                 'size' : size,
                                 'path' : path
                     })
-                except:
-                    cl.append ({'id': c, 'name': c, 'path' : '', 'desc' : '', 'size' : ''})
+                except Exception, e:
+                    import logging
+                    logging.getLogger(__name__).warn(e)
+                    cl.append ({'id': c, 'name': c, 'path' : path, 'desc' : '', 'size' : ''})
         return cl
 
     def subcorpora (self, corpname):
