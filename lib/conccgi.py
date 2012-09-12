@@ -121,6 +121,7 @@ class ConcCGI (CGIPublisher):
     corpname = 'susanne'
     corplist = ['susanne', 'bnc']
     usesubcorp = ''
+    subcorp_size = None
     subcname = ''
     subcpath = []
     _conc_dir = ''
@@ -277,6 +278,8 @@ class ConcCGI (CGIPublisher):
             result['corp_web'] = corp_conf_info['web']
         else:
             result['corp_web'] = ''
+        if self.usesubcorp:
+            result['subcorp_size'] = _('%s positions') % locale.format('%d', thecorp.search_size(), True).decode('utf-8') # TODO check whether this is proper method
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
