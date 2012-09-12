@@ -69,7 +69,7 @@ document.observe('dom:loaded', function () {
         <li>$_('Size'): <strong>$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
       #end if
       #if $usesubcorp
-      <li>$_('Subcorpus'): <strong>$usesubcorp</strong></li>
+      <li>$_('Subcorpus'): <strong>$usesubcorp</strong> ($subcorp_size)</li>
       #end if
     #if $concsize
       <li>$_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong></li>
