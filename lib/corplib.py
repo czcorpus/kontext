@@ -153,7 +153,7 @@ def add_block_items (items, attr='class', val='even', block_size=3):
     return items
 
 def wordlist (corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
-              wlsort='', blacklist=[], wlnums='frq', include_nonwords=False):
+              wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
     attr = corp.get_attr (wlattr)
     if '.' in wlattr: # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
@@ -401,7 +401,7 @@ def subc_keywords3 (sc, scref, attrname, minarf=10, maxitems=100):
 
 def subc_keywords_onstr (sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
                          wlmaxitems=100, simple_n=100, wlwords=[],
-                         blacklist=[], include_nonwords=False, wlnums='frq'):
+                         blacklist=[], include_nonwords=0, wlnums='frq'):
     f = frq_db (sc, attrname, wlnums)
     fref = frq_db (scref, attrname, wlnums)
     size = sum(f)

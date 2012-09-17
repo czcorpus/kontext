@@ -1196,7 +1196,7 @@ class ConcCGI (CGIPublisher):
         return wlwords, os.path.basename(filename)
 
 
-    include_nonwords = False
+    include_nonwords = 0
     wltype = 'simple'
     wlnums = 'frq'
 
