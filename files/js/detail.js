@@ -3,32 +3,36 @@ function winH() {
    if (window.innerHeight) {
       /* NN4 and compatible browsers */
       return window.innerHeight;
-   }
-   else if (document.documentElement &&
-            document.documentElement.clientHeight)
+
+   } else if (document.documentElement &&
+            document.documentElement.clientHeight) {
       /* MSIE6 in std. mode - Opera and Mozilla
        succeeded with window.innerHeight */
-      return document.documentElement.clientHeight;
-   else if (document.body && document.body.clientHeight)
+        return document.documentElement.clientHeight;
+
+   } else if (document.body && document.body.clientHeight) {
       /* older MSIE + MSIE6 in quirk mode */
       return document.body.clientHeight;
-   else
+
+   } else {
       return screen.availHeight;
+   }
 }
 
 function getScrollY() {
-  var scrOfY = 0;
-  if( typeof( window.pageYOffset ) == 'number' ) {
-    //Netscape compliant
-    scrOfY = window.pageYOffset;
-  } else if( document.body && ( document.body.scrollLeft || document.body.scrollTop ) ) {
-    //DOM compliant
-    scrOfY = document.body.scrollTop;
-  } else if( document.documentElement && ( document.documentElement.scrollLeft || document.documentElement.scrollTop ) ) {
-    //IE6 standards compliant mode
-    scrOfY = document.documentElement.scrollTop;
-  }
-  return scrOfY;
+    var scrOfY = 0;
+    if( typeof( window.pageYOffset ) == 'number' ) {
+        //Netscape compliant
+        scrOfY = window.pageYOffset;
+
+    } else if (document.body && ( document.body.scrollLeft || document.body.scrollTop ) ) {
+        //DOM compliant
+        scrOfY = document.body.scrollTop;
+    } else if (document.documentElement && ( document.documentElement.scrollLeft || document.documentElement.scrollTop ) ) {
+        //IE6 standards compliant mode
+        scrOfY = document.documentElement.scrollTop;
+    }
+    return scrOfY;
 }
 
 
@@ -44,54 +48,74 @@ function getIEVersion() {
 }
 
 function fix_detail_frame_on_scrolling() { // IE only
-  if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion()<8) {
-  win_height = winH();
-  detail_height = $('detailframe').scrollHeight;
-  if (detail_height > win_height / 3) { detail_height = win_height / 3; }
-  div_position = win_height - detail_height;
-  if (navigator.appName == "Microsoft Internet Explorer") {
-    $('detailframe').style.position = 'absolute';
-    $('detailframe').style.top = getScrollY() + div_position - 3;
-    if ($('detailframecontent').scrollHeight > win_height / 3) {
-      $('detailframe').style.height = detail_height;
+    if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion() < 8) {
+        var win_height = winH();
+        var detail_height = $('detailframe').scrollHeight;
+        if (detail_height > win_height / 3) {
+            detail_height = win_height / 3;
+        }
+        var div_position = win_height - detail_height;
+        if (navigator.appName == "Microsoft Internet Explorer") {
+            $('detailframe').style.position = 'absolute';
+            $('detailframe').style.top = getScrollY() + div_position - 3;
+            if ($('detailframecontent').scrollHeight > win_height / 3) {
+                $('detailframe').style.height = detail_height;
+            }
+            $('bodytag').style.paddingBottom = detail_height;
+            $('bodytag').style.height = win_height - detail_height;
+        }
     }
-    $('bodytag').style.paddingBottom = detail_height;
-    $('bodytag').style.height = win_height - detail_height;
-  }
-  }
 }
 
 function update_detail_frame(request) {
-  win_height = winH();
-  $('detailframecontent').innerHTML = request.responseText;
-  detail_height = $('detailframecontent').scrollHeight + 18; // 18 = horiz. sroll bar
-  if (detail_height > win_height / 3) { detail_height = win_height / 3; }
-  div_position = win_height - detail_height;
-
-  if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion()<8) {
-    $('detailframe').style.position = 'absolute';
-    $('detailframe').style.top = getScrollY() + div_position - 3;
-    if ($('detailframecontent').scrollHeight > win_height / 3) {
-      $('detailframe').style.height = detail_height;
+    var win_height = winH();
+    $('detailframecontent').innerHTML = request.responseText;
+    var detail_height = $('detailframecontent').scrollHeight + 18; // 18 = horiz. sroll bar
+    if (detail_height > win_height / 3) {
+        detail_height = win_height / 3;
     }
-    $('detailframe').style.height = detail_height;
-    $('bodytag').style.paddingBottom = detail_height;
-    $('bodytag').style.height = win_height - detail_height;
-  }
-  else { // normal browsers
-    $('detailframe').style.height = detail_height + 'px';
-    $('detailframe').style.position = 'fixed';
-    $('detailframe').style.top = div_position - 1;
-    $('bodytag').style.paddingBottom = detail_height;
-  }
+    var div_position = win_height - detail_height;
+
+    if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion()<8) {
+        $('detailframe').style.position = 'absolute';
+        $('detailframe').style.top = getScrollY() + div_position - 3;
+        if ($('detailframecontent').scrollHeight > win_height / 3) {
+            $('detailframe').style.height = detail_height;
+        }
+        $('detailframe').style.height = detail_height;
+        $('bodytag').style.paddingBottom = detail_height;
+        $('bodytag').style.height = win_height - detail_height;
+
+    } else { // normal browsers
+        $('detailframe').style.height = detail_height + 'px';
+        $('detailframe').style.position = 'fixed';
+        $('detailframe').style.top = div_position - 1;
+        $('bodytag').style.paddingBottom = detail_height;
+    }
+    Event.observe(document, 'click', close_by_outside_click);
+    $('detailframe').observe('click', function (event) {
+        event.stop();
+    });
+
 }
 
 
+function close_by_outside_click(event) {
+    hide_detail_frame();
+}
+
 function display_in_detail_frame(url, params) {
+    $('minus_sign').firstDescendant().observe('click', function (event) {
+        hide_detail_frame();
+        event.stop();
+    });
+    Event.stopObserving(document, 'click', close_by_outside_click);
 	var df = $('detailframe');
-	df.style.display='block'; 
-        df.style.height = '50';
-    	$('detailframecontent').innerHTML = '';
+	df.setStyle({
+        display : 'block',
+        height : '50'
+    });
+    $('detailframecontent').innerHTML = '';
 	params += '&corpname=' + df.corpname;
 	new Ajax.Request(url, {parameters: params, method:'get',
 			       onComplete: update_detail_frame});
