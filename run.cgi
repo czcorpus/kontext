@@ -81,13 +81,14 @@ def get_uilang(locale_dir):
 
 if __name__ == '__main__':
     import logging
+    from logging import handlers
     import __builtin__
     import gettext
     import locale
 
     # logging setup
     logger = logging.getLogger('') # root logger
-    hdlr = logging.FileHandler(settings.get('global', 'log_path'))
+    hdlr = handlers.RotatingFileHandler(settings.get('global', 'log_path'), maxBytes=(1 << 20))
     formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
