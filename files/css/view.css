@@ -54,9 +54,10 @@
   left: 0;
   right: 0;
   height: auto;
-  width: 99%;
+  width: 98%;
   display: none;
-  border: 2px solid #000;
+  box-shadow: 2px 2px 1px #444;
+  border: 1px solid #AAA;
   background-color: #fff;
 }
 
@@ -70,6 +71,7 @@
 
 #detailframecontent {
    margin-left: 15px;
+   padding: 8px;
 }
 
 tr.even {
