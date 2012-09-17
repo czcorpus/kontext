@@ -921,3 +921,24 @@ msgstr "Filtrovat podle lemmatu"
 
 msgid "PoS filter"
 msgstr "Filtrovat podle slovního druhu"
+
+msgid "Sort good dictionary examples"
+msgstr "Setřídit vhodné slovníkové příklady"
+
+msgid "Number of lines to be sorted"
+msgstr "Počet řádek ke třídění"
+
+msgid "Icon for one-click sentence copying"
+msgstr "Ikona pro kopírování jedním klikem"
+
+msgid "Allow multiple lines selection"
+msgstr "Povolit víceřádkový výběr"
+
+msgid "XML template for one-click copying"
+msgstr "XML šablona pro výběr jedním klikem"
+
+msgid "Save Options"
+msgstr "Uložit nastavení"
+
+msgid "format"
+msgstr "formát"
