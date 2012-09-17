@@ -310,6 +310,7 @@ class ConcCGI (CGIPublisher):
         result['ttcrit'] = self.urlencode ([('fcrit', '%s 0' % a) for a in
                                      thecorp.get_conf ('SUBCORPATTRS')
                                      .replace('|',',').split(',') if a])
+        result['corp_uses_tag'] = 'tag' in thecorp.get_conf('ATTRLIST').split(',')
         if self.annotconc and not result.has_key('GroupNumbers'):
             labelmap = conclib.get_conc_labelmap (self._storeconc_path() 
                                                   + '.info')
