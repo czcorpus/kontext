@@ -41,6 +41,48 @@ var updForm = function (item) {
     }
 }
 createTreeComponent(\$\$('form[action="subcorp"] select[name="corpname"]'), null, updForm);
+\$('subc-spec-row').setStyle({ display : 'none' });
+
+\$\$('input.method-select').each(function (item) {
+    item.observe('click', function (event) {
+        var value = event.element().getValue();
+        if (value === 'raw') {
+            \$('subc-spec-row').setStyle({ display : 'table-row' });
+            \$\$('table.text-type-params').each(function (item) {
+                item.setStyle({ display : 'none'});
+            });
+            showWithinHint({ element : function () { return \$('within-struct-selector'); } });
+
+        } else if (value === 'gui') {
+            \$('subc-spec-row').setStyle({ display : 'none' });
+            \$\$('table.text-type-params').each(function (item) {
+                item.setStyle({ display : 'table'});
+            });
+            \$('within-select-hint-row').remove();
+        }
+    });
+});
+
+
+function showWithinHint(event) {
+    var findValueOption = function (value) {
+        var i, options;
+
+        options = event.element().select('option[value="' + value + '"]');
+        for (i = 0; i < options.length; i += 1) {
+            if (options[i].readAttribute('value') === value) {
+                return options[i].readAttribute('title');
+            }
+        }
+        return '';
+    };
+    if (\$('within-select-hint-row')) {
+        \$('within-select-hint-row').remove();
+    }
+    \$('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>$_('available attributes'): <strong>' + findValueOption(event.element().getValue()) + '</strong></td>' });
+}
+
+\$('within-struct-selector').observe('change', showWithinHint);
 
 #end def
 
@@ -61,9 +103,29 @@ $corp_sel_node
 <th>$_("New subcorpus name"):</th>
 <td><input type="text" name="subcname" id="subcname" /></td>
 </tr>
+<tr>
+    <th>$_('Specify subcorpus using'):</th>
+    <td>
+        <input class="method-select" type="radio" name="method" value="raw" />$_('Custom \'within\' condition')
+        <input class="method-select" type="radio" name="method" value="gui" checked="yes" />$_('Attribute list')
+    </td>
+</tr>
+<tr id="subc-spec-row">
+    <th>$_('Condition within')
+        <select id="within-struct-selector" name="within_struct">
+            #for key, value in $structs_and_attrs.items()
+            <option value="$key" title="#echo (', ').join($value) #">$key</option>
+            #end for
+        </select>:
+    </th>
+    <td style="width: 300px">
+        <input id="within-condition-input" type="text" name="within_condition" size="50" />
+    </td>
+</tr>
 </tbody>
 </table>
 <input type="hidden" name="create" value="True" />
+
 #filter None
 $tt_sel
 #end filter

@@ -64,14 +64,15 @@
         }
     };
 
-    createPopupBox = function (event, boxId, whereElementId, contents, options) {
+    createPopupBox = function (event, boxId, whereElement, contents, options) {
+        var popupBox;
 
         if (context.bonitoBoxes[boxId]) {
             context.bonitoBoxes[boxId].close();
             return;
         }
 
-        var popupBox = {
+        popupBox = {
 
             timer : null,
 
@@ -87,7 +88,7 @@
                 return null;
             },
 
-            close : function () {
+            close : function (event) {
                 if (popupBox.newElem) {
                     popupBox.newElem.remove();
                     popupBox.newElem = null;
@@ -100,7 +101,7 @@
                 delete context.bonitoBoxes[boxId];
             },
 
-            open : function (event, boxId, whereElementId, contents, options) {
+            open : function (event, boxId, whereElement, contents, options) {
                 var pageWidth = document.viewport.getDimensions().width,
                     horizPadding = 8,
                     totalBoxWidth = 638,
@@ -169,16 +170,16 @@
                     });
                 }
                 document.viewport.getDimensions();
-                $(whereElementId).insert({ after : popupBox.newElem });
-
+                if (typeof whereElement === 'string') {
+                    whereElement = $(whereElement);
+                }
+                whereElement.insert({ after : popupBox.newElem });
                 Event.observe(document, 'click', popupBox.close);
-
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
-
             }
         }
         context.bonitoBoxes[boxId] = popupBox;
-        popupBox.open(event, boxId, whereElementId, contents, options);
+        popupBox.open(event, boxId, whereElement, contents, options);
         return popupBox;
     };
 

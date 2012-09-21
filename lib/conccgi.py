@@ -1388,9 +1388,22 @@ class ConcCGI (CGIPublisher):
 
     def subcorp_form (self, subcorpattrs=''):
         tt_sel = self.texttypes_with_norms()
-        if tt_sel.has_key('error'): 
-            return {'error': tt_sel['error'], 'TextTypeSel': tt_sel }
-        return { 'TextTypeSel': tt_sel }
+        structs_and_attrs = {}
+        for s, a in [ t.split('.') for t in self._curr_corpus.get_conf('STRUCTATTRLIST').split(',')]:
+            if not s in structs_and_attrs:
+                structs_and_attrs[s] = []
+            structs_and_attrs[s].append(a)
+
+        if tt_sel.has_key('error'):
+            return {
+                'error': tt_sel['error'],
+                'TextTypeSel': tt_sel,
+                'structs_and_attrs' : structs_and_attrs
+            }
+        return {
+            'TextTypeSel': tt_sel,
+            'structs_and_attrs' : structs_and_attrs
+        }
 
     def _texttype_query (self):
         scas = [(a[4:], getattr (self, a))
@@ -1412,13 +1425,17 @@ class ConcCGI (CGIPublisher):
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
         
-    def subcorp (self, subcname='', delete='', create=False):
+    def subcorp (self, subcname='', delete='', create=False, within_condition='', within_struct=''):
         if delete:
             base = os.path.join (self.subcpath[-1], self.corpname, subcname)
             for e in ('.subc', '.used'):
                 if os.path.isfile (base + e):
                     os.unlink (base + e)
-        tt_query = self._texttype_query()
+        if within_condition and within_struct:
+            tt_query = [(within_struct, within_condition)]
+        else:
+            tt_query = self._texttype_query()
+
         if create and not subcname:
             raise ConcError (_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
@@ -1436,6 +1453,7 @@ class ConcCGI (CGIPublisher):
         # XXX ignoring more structures
         if not tt_query:
             raise ConcError (_('Nothing specified!'))
+
         structname, subquery = tt_query[0]
         if type(path) == unicode:
             path = path.encode("utf-8")
