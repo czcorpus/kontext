@@ -23,3 +23,15 @@ class FloatFormatter(Filter):
         if val:
             return locale.format('%01.2f', val, True).decode('UTF-8')
         return str(val)
+
+class HtmlEscape(Filter):
+    """
+    """
+
+    def filter(self, val, **kw):
+        val = val.replace('&', '&amp;')
+        val = val.replace('<', '&lt;')
+        val = val.replace('>', '&gt;')
+        val = val.replace('"', '&quot;')
+        val = val.replace("'", '&apos;')
+        return val
