@@ -2464,3 +2464,17 @@ msgstr "Pozice jsou základní jednotky pro vyhledávání v korpusu odpovídaj�
 msgid "Help on Word Lists"
 msgstr "Nápověda k seznamům slov"
 
+msgid "available attributes"
+msgstr "dostupné atributy"
+
+msgid "Specify subcorpus using"
+msgstr "Specifikovat subkorpus pomocí"
+
+msgid "Custom 'within' condition"
+msgstr "Vlastní 'within' podmínka"
+
+msgid "Attribute list"
+msgstr "Seznam atributů"
+
+msgid "Condition within"
+msgstr "Podmínka 'within'"
