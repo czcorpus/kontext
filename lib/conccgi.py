@@ -1372,8 +1372,8 @@ class ConcCGI (CGIPublisher):
     def get_normslist(self, structname):
         corp = self._corp()
         normsliststr = corp.get_conf ('DOCNORMS')
-        normslist = [{'n':'freq', 'label':'Document counts'},
-                     {'n':'tokens', 'label':'Tokens'}]
+        normslist = [{'n':'freq', 'label': _('Document counts') },
+                     {'n':'tokens', 'label':_('Tokens') }]
         if normsliststr:
             normslist += [{'n': n, 'label': corp.get_conf (structname + '.'
                                                           + n + '.LABEL') or n}
@@ -1386,7 +1386,7 @@ class ConcCGI (CGIPublisher):
                 pass
         return normslist
 
-    def subcorp_form (self, subcorpattrs=''):
+    def subcorp_form (self, subcorpattrs='', method='gui'):
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
         for s, a in [ t.split('.') for t in self._curr_corpus.get_conf('STRUCTATTRLIST').split(',')]:
@@ -1398,11 +1398,13 @@ class ConcCGI (CGIPublisher):
             return {
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
-                'structs_and_attrs' : structs_and_attrs
+                'structs_and_attrs' : structs_and_attrs,
+                'method' : method
             }
         return {
             'TextTypeSel': tt_sel,
-            'structs_and_attrs' : structs_and_attrs
+            'structs_and_attrs' : structs_and_attrs,
+            'method' : method
         }
 
     def _texttype_query (self):
@@ -1425,7 +1427,25 @@ class ConcCGI (CGIPublisher):
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
         
-    def subcorp (self, subcname='', delete='', create=False, within_condition='', within_struct=''):
+    def subcorp (self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
+        """
+        Parameters
+        ----------
+        subcname : str
+                name of new subcorpus
+        delete : str
+                sets whether to delete existing subcorpus; any non-empty value means 'delete'
+        create : bool
+                sets whether to create new subcorpus
+        within_condition: str
+                custom within condition; if non-empty then clickable form is omitted
+        within_struct : str
+                a structure the within_condition will be applied to
+        method : {'raw', 'gui'}
+                flag indicating whether user used raw query or clickable attribute list; this is
+                actually used only to display proper user interface (i.e. not to detect which
+                values to use when creating the subcorpus)
+        """
         if delete:
             base = os.path.join (self.subcpath[-1], self.corpname, subcname)
             for e in ('.subc', '.used'):
@@ -1461,10 +1481,13 @@ class ConcCGI (CGIPublisher):
                                              subquery):
             finalname = '%s:%s' % (basecorpname, subcname)
             sc = self.cm.get_Corpus (finalname)
-            return {'subcorp': finalname,
-                    'corpsize': formatnum (sc.size()),
-                    'subcsize': formatnum (sc.search_size()),
-                    'SubcorpList': self.cm.subcorp_names (self.corpname)}
+            return {
+                'subcorp': finalname,
+                'corpsize': formatnum (sc.size()),
+                'subcsize': formatnum (sc.search_size()),
+                'SubcorpList': self.cm.subcorp_names (self.corpname),
+                'method' : method
+            }
         else:
             raise ConcError (_('Empty subcorpus!'))
 
