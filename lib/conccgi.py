@@ -41,7 +41,7 @@ def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
 class ConcError (Exception):
     def __init__ (self, msg):
         self.message = msg
-
+        
 
 class ConcCGI (CGIPublisher):
 
@@ -1386,7 +1386,19 @@ class ConcCGI (CGIPublisher):
                 pass
         return normslist
 
-    def subcorp_form (self, subcorpattrs='', method='gui'):
+    def subcorp_form (self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
+        """
+        Parameters
+        ----------
+        subcorpattrs : str
+            TODO
+        within_condition : str
+            the same meaning as in subcorp()
+        within_struct : str
+            the same meaning as in subcorp()
+        method : str
+            the same meaning as in subcorp()
+        """
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
         for s, a in [ t.split('.') for t in self._curr_corpus.get_conf('STRUCTATTRLIST').split(',')]:
@@ -1399,12 +1411,18 @@ class ConcCGI (CGIPublisher):
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
                 'structs_and_attrs' : structs_and_attrs,
-                'method' : method
+                'method' : method,
+                'within_condition' : '',
+                'within_struct' : '',
+                'subcname' : ''
             }
         return {
             'TextTypeSel': tt_sel,
             'structs_and_attrs' : structs_and_attrs,
-            'method' : method
+            'method' : method,
+            'within_condition' : within_condition,
+            'within_struct' : within_struct,
+            'subcname' : subcname
         }
 
     def _texttype_query (self):
@@ -1486,7 +1504,10 @@ class ConcCGI (CGIPublisher):
                 'corpsize': formatnum (sc.size()),
                 'subcsize': formatnum (sc.search_size()),
                 'SubcorpList': self.cm.subcorp_names (self.corpname),
-                'method' : method
+                'method' : method,
+                'within_condition' : within_condition,
+                'within_struct' : within_struct,
+                'subcname' : subcname
             }
         else:
             raise ConcError (_('Empty subcorpus!'))
