@@ -67,7 +67,8 @@ $_("Collocations")#slurp
 #end block
 
 <table class='result numtab'>
-  <tr><th></th>
+#set $rowNum = 1
+  <tr><th></th><th></th>
   #for $h in $Head
     <th
     #if $h.has_key('style')
@@ -88,6 +89,8 @@ $_("Collocations")#slurp
       class='$i['class']'
     #end if
     >
+        <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
+    #set $rowNum += 1
       <td><a href='view?$globals;$q;$i['pfilter']'>p</a>/<a href='view?$globals;$q;$i['nfilter']'>n</a></td>
       <td class='left'>$i['str']</td><td> $i['freq']</td>
       #for $s in $i['Stats']
