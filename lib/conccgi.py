@@ -867,13 +867,29 @@ class ConcCGI (CGIPublisher):
                 if i % 2 == 1: ranges.append(item)
             return attrs, ranges
 
+        def is_non_structural_attr(criteria):
+            crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
+            if len(crit_attrs) == 0:
+                crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
+            attr_list = set(self._curr_corpus.get_conf('ATTRLIST').split(','))
+            return crit_attrs <= attr_list
+
+        fcrit_is_all_nonstruct = True
+        for fcrit_item in fcrit:
+            fcrit_is_all_nonstruct = (fcrit_is_all_nonstruct and is_non_structural_attr(fcrit_item))
+
+        if fcrit_is_all_nonstruct:
+            rel_mode = 1
+        else:
+            rel_mode = 0
+
         conc = self.call_function (conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
                                             for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
-                                   self.ftt_include_empty) for cr in fcrit],
+                                   self.ftt_include_empty, rel_mode) for cr in fcrit],
             'paging': 0,
             'concsize' : conc.size(),
             'fmaxitems' : self.fmaxitems

@@ -551,17 +551,38 @@ class PyConc (manatee.Concordance):
         self.delete_pnfilter (collnum, ispositive)
 
     def xfreq_dist (self, crit, limit=1, sortkey='f', normwidth=300, ml='',
-                                                        ftt_include_empty=''):
+            ftt_include_empty='', rel_mode=0):
+        """
+        Calculates data (including data for visual output) of a frequency distribution
+        specified by the 'crit' parameter
+
+        Parameters
+        ----------
+        crit : str
+            CQL specified criteria
+        limit : str
+            minimal frequency accepted, this value is exclusive! (i.e. accepted values must be
+            greater than the limit)
+        sortkey : str
+            a key according to which the distribution will be sorted
+        normwidth : int
+            specifies width of the bar representing highest frequency
+        ml : str
+            if non-empty then multi-level freq. distribution is generated
+        ftt_include_empty : str
+            TODO
+        rel_mode : {0, 1}
+            TODO
+        """
+
         # ml = determines how the bar appears (multilevel x text type)
         # import math
         normheight=15
-        def compute_corrections (freqs, norms):
-            from operator import add
-            sumn = float (reduce (add, norms))
+
+        def compute_corrections (freqs, norms, sumf, sumn):
             if sumn == 0:
                 return float (normwidth) / max (freqs), 0
             else:
-                sumf = float (reduce (add, freqs))
                 corr = min (sumf / max (freqs), sumn / max (norms))
                 return normwidth / sumf * corr, normwidth / sumn * corr
             
@@ -572,6 +593,9 @@ class PyConc (manatee.Concordance):
         if not len (freqs):
             return {}
 
+        sumn = float(sum([x for x in norms]))
+        sumf = float(sum([x for x in freqs]))
+
         attrs = crit.split()
         def label (attr):
             if '/' in attr:
@@ -580,8 +604,8 @@ class PyConc (manatee.Concordance):
         head = [{'n': label (attrs[x]), 's': x/2}
                 for x in range(0, len(attrs), 2)]
         head.append ({'n': 'Freq', 's': 'freq'})
-        
-        tofbar, tonbar = compute_corrections (freqs, norms)
+
+        tofbar, tonbar = compute_corrections (freqs, norms, sumf, sumn)
         if (tonbar and not(ml)):
             maxf = max(freqs) # because of bar height
             minf = min(freqs)
@@ -593,15 +617,39 @@ class PyConc (manatee.Concordance):
                 newrel = (f*tofbar / (nf*tonbar))
                 if maxrel < newrel:
                     maxrel = newrel
-            head.append ({'n': 'Rel [%]', 's': 'rel'})
-            lines = [{'Word':[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
-                      'freq': f, 'fbar': int(f*tofbar)+1,
-                      'norm': nf, 'nbar': int(nf*tonbar),
-                      'relbar': 1 + int(f*tofbar*normwidth / (nf*tonbar*maxrel)),
-                      'norel': ml,
-                      'freqbar': int(normheight*(f-minf+1)/(maxf-minf+1)+1),
-                      'rel': round (f*tofbar / (nf*tonbar) * 100, 1)}
-                     for w,f,nf in zip (words, freqs, norms)]
+            if rel_mode == 0:
+                head.append ({'n': 'Rel [%]', 's': 'rel'})
+            else:
+                head.append ({'n': 'Freq [%]', 's': 'rel'})
+
+            lines = []
+            for w, f, nf in zip (words, freqs, norms):
+                rel_norm_freq = {
+                    0 : round((f / sumf) / (nf / sumn) * 100, 1),
+                    1 : round(f / sumf * 100, 1)
+                }[rel_mode]
+
+                rel_bar = {
+                    0 : 1 + int(f * tofbar * normwidth / (nf * tonbar * maxrel)),
+                    1 : 1 + int(float(f) / maxf * normwidth)
+                }[rel_mode]
+
+                freq_bar = {
+                    0 : int(normheight * (f - minf + 1) / (maxf - minf + 1) + 1),
+                    1 : 10
+                }[rel_mode]
+
+                lines.append({
+                    'Word' :[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    'freq' : f,
+                    'fbar' : int(f*tofbar)+1,
+                    'norm' : nf,
+                    'nbar' : int(nf*tonbar),
+                    'relbar' : rel_bar,
+                    'norel' : ml,
+                    'freqbar' : freq_bar,
+                    'rel': rel_norm_freq
+                })
         else:
             lines = [{'Word':[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
                       'freq': f, 'fbar': int(f*tofbar)+1,
@@ -614,11 +662,18 @@ class PyConc (manatee.Concordance):
             used_vals = [line['Word'][0]['n'] for line in lines]
             for v in all_vals:
                 if v in used_vals: continue
-                lines.append({ 'Word': [{'n': v}],
-                               'freq': 0, 'rel': 0, 'norm': 0, 'nbar': 0,
-                               'relbar':0, 'norel': ml, 'freq': 0,
-                               'freqbar': 0, 'fbar': 0,
-                             })
+                lines.append({
+                    'Word': [{'n': v}],
+                    'freq': 0,
+                    'rel': 0,
+                    'norm': 0,
+                    'nbar': 0,
+                    'relbar': 0,
+                    'norel': ml,
+                    'freq': 0,
+                    'freqbar': 0,
+                    'fbar': 0,
+                })
 
         if (sortkey in ('0','1','2')) and (int(sortkey)<len(lines[0]['Word'])):
             sortkey = int (sortkey)

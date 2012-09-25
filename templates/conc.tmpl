@@ -28,10 +28,10 @@
   <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_("Frequency")</a>
     <ul class="submenu">
       #if $corp_uses_tag
-      <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag+0~0>0;ml=1">$_("Node tags")</a></li>
+      <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag+0~0>0;ml=0">$_("Node tags")</a></li>
       #end if
-      <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word+0~0>0;ml=1">$_("Node forms")</a></li>
-      <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=1">$_("Doc IDs")</a></li>
+      <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word+0~0>0;ml=0">$_("Node forms")</a></li>
+      <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
       #if $ttcrit
       <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
       #end if
