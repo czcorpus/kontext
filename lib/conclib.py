@@ -631,8 +631,10 @@ class PyConc (manatee.Concordance):
         if rel_mode == 0:
             norms2_dict = self.get_attr_values_sizes(crit)
             norms = [norms2_dict[x] for x in words]
+            sumn = float(self.corp.size())
+        elif rel_mode == 1:
+            sumn = float(sum([x for x in norms]))
 
-        sumn = float(self.corp.size())
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
 
