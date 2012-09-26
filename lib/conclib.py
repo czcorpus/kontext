@@ -644,7 +644,7 @@ class PyConc (manatee.Concordance):
             return self.corp.get_conf (attr + '.LABEL') or attr
         head = [{'n': label (attrs[x]), 's': x/2}
                 for x in range(0, len(attrs), 2)]
-        head.append ({'n': 'Freq', 's': 'freq'})
+        head.append ({'n': 'freq', 's': 'freq'})
 
         tofbar, tonbar = compute_corrections (freqs, norms, sumf, sumn)
         if (tonbar and not(ml)):
