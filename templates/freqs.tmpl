@@ -87,7 +87,8 @@ $input_hidden
   <th></th>
   <th></th>
   #for $h in $b['Head']
-    <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h['s'];ftt_include_empty=$ftt_include_empty">
+    <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h['s'];ftt_include_empty=$ftt_include_empty"
+        #if 'title' in $h# title="$h['title']" #end if#>
       $_($h['n'])</a>
     </th>
   #end for
