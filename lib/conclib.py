@@ -628,8 +628,9 @@ class PyConc (manatee.Concordance):
 
         # now we intentionally rewrite norms as filled in by freq_dist()
         # because of "hard to explain" metrics they lead to
-        norms2_dict = self.get_attr_values_sizes(crit)
-        norms = [norms2_dict[x] for x in words]
+        if rel_mode == 0:
+            norms2_dict = self.get_attr_values_sizes(crit)
+            norms = [norms2_dict[x] for x in words]
 
         sumn = float(self.corp.size())
         sumf = float(sum([x for x in freqs]))
@@ -656,14 +657,14 @@ class PyConc (manatee.Concordance):
                 if maxrel < newrel:
                     maxrel = newrel
             if rel_mode == 0:
-                head.append ({'n': 'Rel [%]', 's': 'rel'})
+                head.append ({'n': 'i.p.m.', 'title' : _('instances per million'), 's': 'rel'})
             else:
-                head.append ({'n': 'Freq [%]', 's': 'rel'})
+                head.append ({'n': 'Freq [%]', 'title' : '', 's': 'rel'})
 
             lines = []
             for w, f, nf in zip (words, freqs, norms):
                 rel_norm_freq = {
-                    0 : round((f / sumf) / (nf / sumn) * 100, 1),
+                    0 : round(f * 1e6 / nf, 1),
                     1 : round(f / sumf * 100, 1)
                 }[rel_mode]
 
