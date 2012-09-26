@@ -1111,7 +1111,7 @@ msgstr "Bohužel nemáte oprávnění vyhodnocovat Word Sketches na tomto korpus
 #: cmpltmpl/wsketch.py:670
 #: cmpltmpl/wsketch.py:684
 msgid "freq"
-msgstr ""
+msgstr "frekvence"
 
 #: cmpltmpl/load_all_wseval.py:171
 msgid "Evaluation set"
