@@ -550,6 +550,39 @@ class PyConc (manatee.Concordance):
         self.set_collocation (collnum, query +';', lctx, rctx, int(rank))
         self.delete_pnfilter (collnum, ispositive)
 
+    def get_attr_values_sizes(self, full_attr_name):
+        """
+        Returns all values of provided structural attribute and their corresponding sizes in positions.
+
+        Parameters
+        ----------
+        full_attr_name : str
+           Fully qualified structural attribute name (e.g. "opus.srclang", "doc.id" etc.). Method allows
+           this name to be suffixed if this suffix starts with at least one whitespace. In such case
+           the suffix is ignored.
+
+        Returns
+        -------
+        dictionary (key = "structural attribute value" and value = "size in positions")
+        """
+        full_attr_name = re.split(r'\s+', full_attr_name)[0]
+        struct_name, attr_name = full_attr_name.split('.')
+        struct = self.corp.get_struct(struct_name)
+        attr = struct.get_attr(attr_name)
+        normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i)) for i in range (struct.size())])
+        ans = {}
+        for i in range(attr.id_range()):
+            value = attr.id2str(i)
+            valid = attr.str2id(str(value))
+            r = self.corp.filter_query (struct.attr_val (attr_name, valid))
+            cnt = 0
+            while not r.end():
+                cnt += normvals[r.peek_beg()]
+                r.next()
+            ans[value] = cnt
+        return ans
+
+
     def xfreq_dist (self, crit, limit=1, sortkey='f', normwidth=300, ml='',
             ftt_include_empty='', rel_mode=0):
         """
@@ -593,10 +626,15 @@ class PyConc (manatee.Concordance):
         if not len (freqs):
             return {}
 
-        sumn = float(sum([x for x in norms]))
-        sumf = float(sum([x for x in freqs]))
+        # now we intentionally rewrite norms as filled in by freq_dist()
+        # because of "hard to explain" metrics they lead to
+        norms2_dict = self.get_attr_values_sizes(crit)
+        norms = [norms2_dict[x] for x in words]
 
+        sumn = float(self.corp.size())
+        sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
+
         def label (attr):
             if '/' in attr:
                 attr = attr [:attr.index('/')]
@@ -642,9 +680,9 @@ class PyConc (manatee.Concordance):
                 lines.append({
                     'Word' :[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
                     'freq' : f,
-                    'fbar' : int(f*tofbar)+1,
+                    'fbar' : int(f * tofbar) + 1,
                     'norm' : nf,
-                    'nbar' : int(nf*tonbar),
+                    'nbar' : int(nf * tonbar),
                     'relbar' : rel_bar,
                     'norel' : ml,
                     'freqbar' : freq_bar,
