@@ -176,7 +176,7 @@ def user_has_access_to(corpname):
     """
     Tests whether the current user has access to provided corpus name
     """
-    return corpname in get_corplist()
+    return corpname in get_corplist() or not { 'true' : True, 'false' : False, None : False }[get('corpora', 'use_db_whitelist')]
 
 def is_debug_mode():
     value = get('global', 'debug')
