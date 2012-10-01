@@ -150,7 +150,11 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
             out['nextlink'] = 'fromp=%i' % (fromp +1)
             out['lastlink'] = 'fromp=%i' % numofpages
     out['concsize'] = conc.size()
-    out['result_arf'] = round(conc.compute_ARF(), 2)
+
+    if type(corpus) == manatee.SubCorpus:
+        out['result_arf'] = ''
+    else:
+        out['result_arf'] = round(conc.compute_ARF(), 2)
 
     if type(corpus) is manatee.SubCorpus:
         corpsize = corpus.search_size() # TODO this is unverified solution trying to bypass possible manatee bug
