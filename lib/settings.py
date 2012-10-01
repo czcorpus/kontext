@@ -22,6 +22,16 @@ def get(section, key=None, default=None):
         return _conf[section][key]
     return default
 
+def get_bool(section, key):
+    """
+    """
+    return {
+        'true' : True,
+        '1' : True,
+        'false' : False,
+        '0' : False
+    }[get(section, str(key).lower())]
+
 def parse_corplist(root, path='/', data=[]):
     """
     """
@@ -111,7 +121,7 @@ def get_default_corpus(corplist):
       name of the corpus to be used as a default one
     """
     # set default corpus
-    if { 'true' : True, 'false' : False, None : False }[get('corpora', 'use_db_whitelist')]:
+    if get_bool('corpora', 'use_db_whitelist'):
         if get('corpora', 'default_corpus') in corplist:
             return get('corpora', 'default_corpus')
         elif get('corpora', 'alternative_corpus') in corplist:
@@ -176,7 +186,7 @@ def user_has_access_to(corpname):
     """
     Tests whether the current user has access to provided corpus name
     """
-    return corpname in get_corplist() or not { 'true' : True, 'false' : False, None : False }[get('corpora', 'use_db_whitelist')]
+    return corpname in get_corplist() or not get_bool('corpora', 'use_db_whitelist')
 
 def is_debug_mode():
     value = get('global', 'debug')
