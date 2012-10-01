@@ -66,7 +66,7 @@ class CorpusManager:
     def corpattrlist (self, corp):
         return dict (self.corpconf_pairs (corp, label)).get (item)
 
-    def corplist_with_names (self, paths):
+    def corplist_with_names (self, paths, use_db_whitelist=True):
         #subc = manatee.StrVector()
         #for s in self.subcpath:
         #    manatee.find_subcorpora (s, subc)
@@ -85,7 +85,7 @@ class CorpusManager:
                 subdir_map[tmp[0]] = ''
         cl = []
         for c, path, web in paths: # self.corplist
-            if c in simple_names:
+            if c in simple_names or not use_db_whitelist:
                 try:
                     corp = manatee.Corpus(c)
                     size = locale.format('%d', corp.size(), grouping=True)
