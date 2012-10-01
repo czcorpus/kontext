@@ -111,11 +111,15 @@ def get_default_corpus(corplist):
       name of the corpus to be used as a default one
     """
     # set default corpus
-    if get('corpora', 'default_corpus') in corplist:
+    if { 'true' : True, 'false' : False, None : False }[get('corpora', 'use_db_whitelist')]:
+        if get('corpora', 'default_corpus') in corplist:
+            return get('corpora', 'default_corpus')
+        elif get('corpora', 'alternative_corpus') in corplist:
+            return get('corpora', 'alternative_corpus')
+        return None
+    else:
         return get('corpora', 'default_corpus')
-    elif get('corpora', 'alternative_corpus') in corplist:
-        return get('corpora', 'alternative_corpus')
-    return None
+
 
 def get_corplist():
     """

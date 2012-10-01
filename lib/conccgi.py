@@ -267,7 +267,7 @@ class ConcCGI (CGIPublisher):
         result['can_wseval'] = getattr(self, '_can_wseval', '')
         # these were in add_undefined
         result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
-            { 'true' : True, 'false' : False, None : False }[settings.get('use_db_whitelist')])
+            { 'true' : True, 'false' : False, None : False }[settings.get('corpora', 'use_db_whitelist')])
         result['corplist_size'] = min (len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)
