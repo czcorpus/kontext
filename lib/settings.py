@@ -12,6 +12,13 @@ _user = None
 
 _corplist = None
 
+def create_db_connection():
+    """
+    """
+    return MySQLdb.connect (host=get('database', 'host'), user=get('database', 'username'),
+        passwd=get('database', 'password'), db=get('database', 'name'))
+
+
 def get(section, key=None, default=None):
     """
     TODO
@@ -131,6 +138,40 @@ def get_default_corpus(corplist):
         return get('corpora', 'default_corpus')
 
 
+def create_salt(length=2):
+    """
+    """
+    import random
+    salt_chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
+    return ''.join([salt_chars[random.randint(0, len(salt_chars) - 1)] for i in range(length)])
+
+def get_user_data():
+    """
+    """
+    cols = ('pass', 'corplist')
+    conn = create_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(("SELECT %s FROM user WHERE user = %%s" % ','.join(cols)), (_user,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return dict(zip(cols, row))
+
+def update_user_password(password):
+    """
+    """
+    import crypt
+
+    hashed_pass = crypt.crypt(password, create_salt())
+    conn = create_db_connection()
+    cursor = conn.cursor()
+    ans = cursor.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, _user,))
+    cursor.close()
+    conn.commit()
+    conn.close()
+    return ans
+
+
 def get_corplist():
     """
     Fetches list of available corpora according to provided user
@@ -143,10 +184,9 @@ def get_corplist():
     global _corplist
 
     if _corplist is None:
-        conn = MySQLdb.connect (host=get('database', 'host'), user=get('database', 'username'),
-            passwd=get('database', 'password'), db=get('database', 'name'))
-        cursor = conn.cursor ()
-        cursor.execute ("SELECT corplist, sketches FROM user WHERE user LIKE '%s'" % _user)
+        conn = create_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT corplist, sketches FROM user WHERE user LIKE %s",  (_user, ))
         row = cursor.fetchone()
 
         c = row[0].split()

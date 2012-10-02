@@ -2478,3 +2478,18 @@ msgstr "Seznam atributů"
 
 msgid "Condition within"
 msgstr "Podmínka 'within'"
+
+msgid "Password settings"
+msgstr "Nastavení hesla"
+
+msgid "Your password has been changed successfully."
+msgstr "Vaše heslo bylo úspěšně změněno."
+
+msgid "Unknown user"
+msgstr "Neznámý uživatel"
+
+msgid "Invalid password"
+msgstr "Chybné heslo"
+
+msgid "New password and its confirmation do not match."
+msgstr "Nové heslo a jeho ověření nesouhlasí."
