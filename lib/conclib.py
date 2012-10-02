@@ -221,10 +221,12 @@ def line_parts_contain_speech(line_left, line_right):
             return True
     return False
 
-def postproc_kwicline_part(line, side, filter_speech_tag, prev_speech_id = None):
+def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_speech_id = None):
     """
     Parameters
     ----------
+    corpus_name : str
+      name of the corpus
     line : list of dicts
       contains keys 'str', 'class'
     side : str
@@ -264,9 +266,9 @@ def postproc_kwicline_part(line, side, filter_speech_tag, prev_speech_id = None)
                 'class' : item['class']
             }
             if frag_ext.startswith(fragment_separator):
-                newline_item['open_link'] = { 'speech_url' : settings.create_speech_url(speech_id) }
+                newline_item['open_link'] = { 'speech_url' : settings.create_speech_url(corpus_name, speech_id) }
             elif frag_ext.endswith('</%s>' % speech_struct):
-                newline_item['close_link'] = { 'speech_url' : settings.create_speech_url(speech_id) }
+                newline_item['close_link'] = { 'speech_url' : settings.create_speech_url(corpus_name, speech_id) }
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the concordance line
@@ -361,8 +363,8 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(tokens2strclass(kl.get_left()), 'left', filter_out_speech_tag, leftmost_speech_id)
-        rightwords = postproc_kwicline_part(tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag, last_left_speech_id)[0]
+        leftwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_left()), 'left', filter_out_speech_tag, leftmost_speech_id)
+        rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag, last_left_speech_id)[0]
 
         kwicwords = tokens2strclass (kl.get_kwic())
         if alignlist:

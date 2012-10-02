@@ -249,11 +249,14 @@ def has_configured_speech(corpus):
 def get_speech_structure():
     return get('corpora', 'speech_segment_struct_attr').split('.')[0]
 
-def create_speech_url(speech_id):
+def create_speech_url(corpus_name, speech_id):
     speech_url = get('corpora', 'speech_data_url')
     if speech_url[-1] <> '/':
         speech_url += '/'
-    return "%s%s" % (speech_url, speech_id)
+    if '@SERVER_NAME' in speech_url:
+        speech_url = speech_url.replace('@SERVER_NAME', '%s')
+        speech_url = speech_url % os.getenv('SERVER_NAME')
+    return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
 if __name__ == '__main__':
     import sys
