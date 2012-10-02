@@ -213,6 +213,9 @@ def create_speech_url(corpus_name, speech_id):
     speech_url = get('corpora', 'speech_data_url')
     if speech_url[-1] <> '/':
         speech_url += '/'
+    if '@SERVER_NAME' in speech_url:
+        speech_url = speech_url.replace('@SERVER_NAME', '%s')
+        speech_url = speech_url % os.getenv('SERVER_NAME')
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
 if __name__ == '__main__':
