@@ -91,7 +91,7 @@
                     ans = ans.replace(/-/g, anyCharSymbol);
                 }
                 if (anyCharSymbol === '.') {
-                    ans = ans.replace(/([^.])(\.)+$/, '$1.*');
+                    ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
                 }
                 return ans;
             },
