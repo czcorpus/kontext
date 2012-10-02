@@ -190,6 +190,10 @@
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
 
+        if (Prototype.Browser.IE) {
+            return;
+        }
+
         function getTitleOfSelectedItem(selectBoxElement) {
             var descendants,
                 currValue = null,
