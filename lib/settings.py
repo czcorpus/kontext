@@ -258,6 +258,9 @@ def create_speech_url(corpus_name, speech_id):
         speech_url = speech_url % os.getenv('SERVER_NAME')
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
+def get_root_uri():
+    return 'http://%s%s' % (os.getenv('SERVER_NAME'), os.getenv('REQUEST_URI').replace('user_password', 'first_form'))
+
 if __name__ == '__main__':
     import sys
 

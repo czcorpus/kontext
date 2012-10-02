@@ -94,5 +94,6 @@ class UserCGI (CGIPublisher.CGIPublisher):
             raise Exception(_('New password and its confirmation do not match.'))
 
         settings.update_user_password(new_passwd)
+        print('Location: %s' % settings.get_root_uri())
 
     user_password.template = 'user_password.tmpl'
