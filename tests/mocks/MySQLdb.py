@@ -5,7 +5,7 @@ TODO
 
 class Cursor(object):
 
-    def execute(self, query):
+    def execute(self, query, params=''):
         pass
 
     def fetchone(self):
