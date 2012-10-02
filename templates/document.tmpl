@@ -292,7 +292,7 @@ $corp_sel
      #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
      <option value="cqlrow" $selected>$_("CQL")</option>
      #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
-     <option value="tagrow" $selected>$_("tag")</option>
+     <option value="tagrow" $selected>$_("Tag")</option>
   </select>
   </td>
 </tr>
@@ -390,8 +390,8 @@ $corp_sel
         <table border="0">
             <tr>
                 <td colspan="2">
-                    <button id="reset-button" type="button">reset</button>
-                    <button id="back-button" type="button">back</button>
+                    <button id="reset-button" type="button">$_('Reset')</button>
+                    <button id="back-button" type="button">$_('Undo')</button>
                 </td>
             </tr>
             <tr>
