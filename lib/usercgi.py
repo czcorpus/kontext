@@ -75,15 +75,3 @@ class UserCGI (CGIPublisher.CGIPublisher):
         server.sendmail('support@sketchengine.co.uk',
                         self._email, full_msg)
         server.quit()
-
-    def user_password_form(self):
-        """
-        """
-        return {}
-    user_password_form.template = 'user_password_form.tmpl'
-
-    def user_password(self):
-        """
-        password submit action
-        """
-        return {}
