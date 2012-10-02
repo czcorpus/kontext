@@ -2493,3 +2493,6 @@ msgstr "Chybné heslo"
 
 msgid "New password and its confirmation do not match."
 msgstr "Nové heslo a jeho ověření nesouhlasí."
+
+msgid "After a successful password update, you will be logged out and prompted to enter your new credentials."
+msgstr "Po úspěšné aktualizaci hesla budete odhlášeni a vyzváni k zadání vašich nových přihlašovacích údajů."
