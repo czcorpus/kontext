@@ -52,13 +52,13 @@ class TestConclibModule(unittest.TestCase):
             }
         )
 
-        ans, last_speech_id = conclib.postproc_kwicline_part(line, 'left', False)
+        ans, last_speech_id = conclib.postproc_kwicline_part('syn3000', line, 'left', False)
         self.assertEquals('lorem ipsum ', ans[0]['str'])
         self.assertEquals('937.341', last_speech_id)
         # second item has the string 'soundfile=123.wav' removed
         self.assertEquals('<seg foo=bar>', ans[1]['str'])
         # but the removed value (not the key) is still accessible:
-        self.assertEquals(settings.create_speech_url('123.wav'), ans[1]['open_link']['speech_url'])
+        self.assertEquals(settings.create_speech_url('syn3000', '123.wav'), ans[1]['open_link']['speech_url'])
         self.assertEquals('dolor sit', ans[2]['str'])
         self.assertEquals('</seg>', ans[3]['str'])
         self.assertEquals('<seg>', ans[4]['str'])
