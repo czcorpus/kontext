@@ -78,16 +78,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
                         self._email, full_msg)
         server.quit()
 
-    def user_password_form(self):
-        """
-        """
-        return {}
-    user_password_form.template = 'user_password_form.tmpl'
-
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
-        """
-        password submit action
-        """
         import crypt
         import logging
         logging.getLogger(__name__).info('curr: %s, new: %s, new2: %s' % (curr_passwd, new_passwd, new_passwd2))
@@ -103,6 +94,5 @@ class UserCGI (CGIPublisher.CGIPublisher):
             raise Exception(_('New password and its confirmation do not match.'))
 
         settings.update_user_password(new_passwd)
-        return {}
 
     user_password.template = 'user_password.tmpl'
