@@ -4,6 +4,7 @@ import os
 import re
 import json
 import logging
+import locale
 
 try:
     _
@@ -29,7 +30,7 @@ class TagVariantLoader(object):
     def get_variant(self, selected_tags):
         """
         """
-        path = '%s/tag-%s.json' % (self.cache_dir, selected_tags)
+        path = '%s/tag-%s.%s.json' % (self.cache_dir, selected_tags, locale.getlocale()[0])
         data = '{}'
         if not os.path.exists(path):
             data = json.dumps(self.calculate_variant(selected_tags))
@@ -50,7 +51,7 @@ class TagVariantLoader(object):
     def get_initial_values(self):
         """
         """
-        path = '%s/initial-values.json' % self.cache_dir
+        path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         data = '[]'
 
         if not os.path.exists(path):
@@ -92,7 +93,6 @@ class TagVariantLoader(object):
                 matching_tags.append(line)
 
         ans = {}
-        #fixed_pos = [i for i in range(len(selected_tags)) if selected_tags[i] != '-']
         for item in matching_tags:
             for i in range(len(selected_tags)):
                 if i not in ans:
