@@ -29,14 +29,6 @@ $ca_headers
 #else
 
 <script type="text/javascript">
-var tagBuilderOptions = {
-    tagPosSelector  : 'select.tag-position',
-    corpusName      : '$corpname',
-    resetButton     : 'reset-button',
-    backButton      : 'back-button',
-    tagDisplay      : 'tag-display',
-    hiddenElm       : 'tag'
-};
 document.observe("dom:loaded", function() {
     targetedLinks();
     #block bodyonload
@@ -44,8 +36,15 @@ document.observe("dom:loaded", function() {
     #if $focus
     focusEx($focus);
     #end if
-    attachTagLoader(tagBuilderOptions);
-    $('queryselector').observe('change', function (event) {
+    attachTagLoader({
+        tagPosSelector  : 'select.tag-position',
+        corpusName      : '$corpname',
+        resetButton     : 'reset-button',
+        backButton      : 'back-button',
+        tagDisplay      : 'tag-display',
+        hiddenElm       : 'tag'
+    });
+    \$('queryselector').observe('change', function (event) {
         cmdSwitchQuery();
     });
 });
@@ -404,7 +403,6 @@ $corp_sel
                 <td>$(i + 1)</td>
                 <td style="width: 100px">
                     <select class="tag-position" id="position-sel-$i">
-                        <option value=".">.</option>
                     </select>
                 </td>
             </tr>
