@@ -3,10 +3,18 @@ import conf
 import settings
 import unittest
 import conclib
+import mox
+import MySQLdb
+from MySQLdb import cursors
 
 class TestSettingsModule(unittest.TestCase):
     """
     """
+
+    def setUp(self):
+        self.mysql_mocker = mox.Mox()
+        self.dbcon_mocker = mox.Mox()
+        self.dbcursor_mocker = mox.Mox()
 
     def test_top_level_structure(self):
         """
@@ -83,3 +91,15 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEquals(True, settings.user_has_access_to('syn2010'))
         self.assertEquals(False, settings.user_has_access_to('syn201024309u02'))
 
+    def test_get_user_data(self):
+        """
+        """
+        mysql = self.mysql_mocker.CreateMock(MySQLdb)
+        conn = self.dbcon_mocker.CreateMock(MySQLdb.connections.Connection)
+        cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
+        conn.cursor().AndReturn(cursor)
+        mysql.connection().AndReturn(conn)
+
+        dbc = mysql.connection()
+
+        print(dbc)
