@@ -130,7 +130,7 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
         sen_refs = sen_refs.replace('.MAP_OUP', '') # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(corpus, conc, (fromp -1) * pagesize, fromp * pagesize,
+        sen_lines = kwiclines(corpus, conc, has_speech, (fromp -1) * pagesize, fromp * pagesize,
                              '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
