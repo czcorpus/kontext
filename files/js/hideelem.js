@@ -146,7 +146,6 @@ function cmdSwitchQuery() {
     }
     // Keep the value of the last query
     FocusElem.value = oldval;
-    FocusElem.focus();
     FocusElem.select();
 
 	var date = new Date();
@@ -271,7 +270,6 @@ function targetedLinks() {
 function focusEx(focus) {
 	var elem = $(focus);
     if (elem) {
-        elem.focus();
         if (elem.select) {
         	elem.select();
         }

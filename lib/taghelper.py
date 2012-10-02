@@ -58,12 +58,19 @@ class TagVariantLoader(object):
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
                 for i in range(self.num_tag_pos):
-                    if line[i] in translationTable[i]:
+                    if line[i] == '-':
+                        ans[i].add(('-', ''))
+                    elif line[i] in translationTable[i]:
                         ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
                     else:
                         ans[i].add((line[i], line[i]))
                         logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
             ans = [sorted(x, key=lambda item : item[0]) for x in ans]
+            for i in range(len(ans)):
+                if len(ans[i]) == 1:
+                    ans[i] = ()
+                elif '-' not in (x[0] for x in ans[i]):
+                    ans[i].insert(0, ('-', ''))
             data = json.dumps(ans)
             with open(path, 'w') as f:
                 f.write(data)
@@ -90,10 +97,21 @@ class TagVariantLoader(object):
             for i in range(len(selected_tags)):
                 if i not in ans:
                     ans[i] = set()
-                if item[i] in translationTable[i]:
+                if item[i] == '-':
+                    ans[i].add((item[i], ''))
+                elif item[i] in translationTable[i]:
                     ans[i].add((item[i], '%s - %s' % (item[i], translationTable[i][item[i]])))
+                else:
+                    ans[i].add((item[i], '%s - %s' % (item[i], item[i])))
+
+
         for key in ans:
-            ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
+            if len(ans[key]) == 1 and ans[key]:
+                ans[key] = ()
+            else:
+                if '-' not in (x[0] for x in ans[key]):
+                    ans[key].add(('-', ''))
+                ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
         return ans
 
     def cache_variant(self, selected_positions):

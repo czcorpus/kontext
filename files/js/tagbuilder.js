@@ -76,24 +76,25 @@
              * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param elmList list of SELECT elements to be used
+             * @param anyCharSymbol
              */
-            encodeFormStatus : function (elmList) {
+            encodeFormStatus : function (elmList, anyCharSymbol) {
                 var i,
                     ans = '';
 
+                anyCharSymbol = anyCharSymbol || '-'
                 for (i = 0; i < elmList.length; i += 1) {
-                    ans += elmList[i].getValue() || '.';
+                    ans += elmList[i].getValue() || '-';
                 }
 
-                if (tagLoader.hiddenElm) { // TODO this is quite debatable
-                    tagLoader.hiddenElm.setValue(ans);
+                if (anyCharSymbol !== '-') {
+                    ans = ans.replace(/-/g, anyCharSymbol);
                 }
-
                 return ans;
             },
 
             /**
-             * Returns number of SELECT elements from a provided list with values other than empty or '.'
+             * Returns number of SELECT elements from a provided list with values other than empty or '-'
              *
              * @param elmList list of SELECT elements
              * @return number
@@ -103,7 +104,7 @@
                     ans = 0;
 
                 for (i = 0; i < elmList.length; i += 1) {
-                    if (elmList[i].getValue() && elmList[i].getValue() !== '.') {
+                    if (elmList[i].getValue() && elmList[i].getValue() !== '-') {
                         ans += 1;
                     }
                 }
@@ -142,7 +143,7 @@
 
                         } else if (data[i].length > 1) {
                             elmList[i].writeAttribute('disabled', null);
-                            elmList[i].update('<option value="."></option>');
+                            elmList[i].update();
                             for (j = 0; j < data[i].length; j += 1) {
                                 newOption = Element.extend(document.createElement('option'));
                                 newOption.writeAttribute('value', data[i][j][0]);
@@ -173,7 +174,7 @@
                 var i,
                     newElement;
 
-                selectElement.update('<option value="."></option>');
+                selectElement.update('');
                 for (i = 0; i < data.length; i += 1) {
                     newElement = Element.extend(document.createElement('option'));
                     newElement.writeAttribute('value', data[i][0]);
@@ -231,7 +232,7 @@
         tagLoader.corpusName = corpusName;
         tagLoader.hiddenElm = hiddenElm;
         for (i = 0; i < numTagPos; i += 1) {
-            tagLoader.selectedValues[i] = '.';
+            tagLoader.selectedValues[i] = '-';
         }
         return tagLoader;
     };
@@ -254,7 +255,16 @@
             backButton,
             resetButton,
             tagDisplay,
-            hiddenElm;
+            hiddenElm,
+            updateConcordanceQuery;
+
+        updateConcordanceQuery = function () {
+            var pattern = tagLoader.encodeFormStatus(selList, '.');
+            tagDisplay.update(pattern);
+            if (tagLoader.hiddenElm) {
+                tagLoader.hiddenElm.setValue(pattern);
+            }
+        };
 
         selList = $$(opt.tagPosSelector);
         if (typeof (opt.hiddenElm) === 'string') {
@@ -274,13 +284,13 @@
 
                 tagLoader.updateFormValues(selList, null, data);
                 for (a in tagLoader.selectedValues) {
-                    tagLoader.selectedValues[a] = '.';
+                    tagLoader.selectedValues[a] = '-';
                 }
                 tagLoader.lastPattern = null;
                 selList.each(function (item, idx) {
                     item.selectedIndex = 0;
                 });
-                tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                updateConcordanceQuery();
             });
         });
         if (typeof (opt.backButton) === 'string') {
@@ -298,7 +308,7 @@
                     tagLoader.loadPatternVariants(newPattern, function (data) {
                         tagLoader.updateFormValues(selList, null, data);
                         tagLoader.lastPattern = newPattern;
-                        tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                        updateConcordanceQuery();
                     });
                 }
             }
@@ -323,10 +333,10 @@
                             tagLoader.loadPatternVariants(currPattern, function (data) {
                                 tagLoader.updateFormValues(selList, event.element(), data);
                                 tagLoader.lastPattern = currPattern;
-                                tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                                updateConcordanceQuery();
                             });
                         }
-                        tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                        updateConcordanceQuery();
 
                     } else {
                         // different browsers here pass different nodes as an event source
@@ -337,11 +347,11 @@
 
                 } else {
                     // TODO is this necessary?
-                    tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                    updateConcordanceQuery();
                 }
             });
         });
-        tagDisplay.update(tagLoader.encodeFormStatus(selList));
+        updateConcordanceQuery();
         return tagLoader;
     };
 
