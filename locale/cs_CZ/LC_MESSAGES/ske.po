@@ -2479,8 +2479,8 @@ msgstr "Seznam atributů"
 msgid "Condition within"
 msgstr "Podmínka 'within'"
 
-msgid "Password settings"
-msgstr "Nastavení hesla"
+msgid "Password change"
+msgstr "Změna hesla"
 
 msgid "Your password has been changed successfully."
 msgstr "Vaše heslo bylo úspěšně změněno."

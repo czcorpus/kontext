@@ -797,6 +797,7 @@ class ConcCGI (CGIPublisher):
                            '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                            fc_pos_type)
 
+
     def first (self, fc_lemword_window_type='',
                      fc_lemword_wsize=0,
                      fc_lemword_type='',
@@ -813,6 +814,7 @@ class ConcCGI (CGIPublisher):
                              fc_pos_wsize,
                              fc_pos_type,
                              fc_pos)
+
         return self.view()
     
     first.template = 'view.tmpl'
