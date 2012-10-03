@@ -151,13 +151,10 @@ def get_user_data():
     cols = ('pass', 'corplist')
     conn = create_db_connection()
     cursor = conn.cursor()
-    print("SELECT %s FROM user WHERE user = %%s" % ','.join(cols))
-    print((_user,))
     cursor.execute(("SELECT %s FROM user WHERE user = %%s" % ','.join(cols)), (_user,))
     row = cursor.fetchone()
     cursor.close()
     conn.close()
-    print(row)
     return dict(zip(cols, row))
 
 def update_user_password(password):
