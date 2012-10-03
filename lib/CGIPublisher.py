@@ -269,7 +269,10 @@ class CGIPublisher:
 
         if not hasattr (self, methodname):
             if methodname.endswith ('_form'):
-                return (methodname[:-5], methodname + '.tmpl', {})
+                tpl_data = {}
+                if methodname == 'first_form':
+                    tpl_data['user_menu'] = True
+                return (methodname[:-5], methodname + '.tmpl', tpl_data)
             else:
                 raise Exception('unknown method: "%s" dict:%s' % (methodname,
                                                         self.__dict__))
