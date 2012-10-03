@@ -16,7 +16,7 @@ $_("Concordance - First query form")#slurp
         var formAncestor,
             i,
             srch,
-            ancestors = item.currentTarget.ancestors();
+            ancestors = item.element().ancestors();
 
         for (i = 0; i < ancestors.length; i += 1) {
             if (ancestors[i].nodeName === 'FORM') {
