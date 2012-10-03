@@ -6,6 +6,13 @@
     'use strict';
 
     /**
+     *
+     */
+    function getElementText(element) {
+        return element.textContent || element.innerText;
+    }
+
+    /**
      * Creates object which transforms any UL+LI tree so that it becomes a single level list
      * expandable to the original multi-level list by mouse clicking.
      *
@@ -41,11 +48,11 @@
                 var style = ulElement.getStyle('display');
                 if (style === 'block') {
                     ulElement.setStyle({ display : 'none' });
-                    expSymbolWrapper.update('&#9654;&nbsp;');
+                    expSymbolWrapper.update('&#x25BA;&nbsp;');
 
                 } else {
                     ulElement.setStyle({ display : 'block' });
-                    expSymbolWrapper.update('&#9660;&nbsp;');
+                    expSymbolWrapper.update('&#x25BC;&nbsp;');
                 }
             },
 
@@ -76,7 +83,7 @@
                         newLink.writeAttribute('class', 'tree-expand');
                         newLink.writeAttribute('href', '#');
                         newSpan = Element.extend(document.createElement('span'));
-                        newSpan.update('&#9654;&nbsp;');
+                        newSpan.update('&#x25BA;&nbsp;');
                         newLink.insert(newSpan);
                         item.insert({ top : newLink });
                         newLink.setStyle({
@@ -170,7 +177,7 @@
                     }
                     splitPath = path.split('/');
                     splitPath.push(item.readAttribute('value'));
-                    selectParser.findUlPath(splitPath, item.textContent, item.readAttribute('title'), rootUl, button, customCallback);
+                    selectParser.findUlPath(splitPath, getElementText(item), item.readAttribute('title'), rootUl, button, customCallback);
                 });
                 rootUl.writeAttribute('class', 'tree-component');
                 return rootUl;
@@ -190,15 +197,10 @@
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
 
-        if (Prototype.Browser.IE) {
-            return;
-        }
-
         function getTitleOfSelectedItem(selectBoxElement) {
             var descendants,
                 currValue = null,
                 i;
-
             if (selectBoxElement.getValue()) {
                 currValue = selectBoxElement.getValue();
 
@@ -208,7 +210,7 @@
             descendants = selectBoxElement.descendants();
             for (i = 0; i < descendants.length; i += 1) {
                 if (descendants[i].readAttribute('value') === currValue) {
-                    return descendants[i].textContent;
+                    return getElementText(descendants[i]);
                 }
             }
             return null;
