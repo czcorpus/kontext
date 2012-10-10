@@ -53,7 +53,13 @@ def parse_corplist(root, path='/', data=[]):
             parse_corplist(item, path, data)
         elif item.tag == 'corpus':
             web_url = item.attrib['web'] if 'web' in item.attrib else None
-            data.append((item.attrib['id'].lower(), path, web_url))
+            sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
+            data.append({
+                'id' : item.attrib['id'].lower(),
+                'path' : path,
+                'web' : web_url,
+                'sentence_struct' : sentence_struct
+            })
 
 def parse_config(path):
     """
@@ -106,11 +112,8 @@ def get_corpus_info(corp_name):
     or None if no such item is found
     """
     for item in _conf['corpora_hierarchy']:
-        if item[0] == corp_name:
-            return {
-                'path' : item[1],
-                'web' : item[2]
-            }
+        if item['id'] == corp_name:
+            return item
     return None
 
 def get_default_corpus(corplist):

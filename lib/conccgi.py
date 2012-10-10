@@ -274,7 +274,7 @@ class ConcCGI (CGIPublisher):
 
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
-        corp_conf_info = settings.get_corpus_info(thecorp.get_conf ('NAME'))
+        corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info['web']
         else:
@@ -423,10 +423,9 @@ class ConcCGI (CGIPublisher):
             if self._corp().get_conf ('RIGHTTOLEFT'):
                 self.righttoleft = True
         else:
-            # smallest structure detection is based on a convention used in registry files
-            smallest_struct = self._curr_corpus.get_conf('STRUCTLIST').split(',')[-1]
-            self.leftctx = self.senleftctx_tpl % smallest_struct
-            self.rightctx = self.senrightctx_tpl % smallest_struct
+            sentence_struct = settings.get_corpus_info(self.corpname)['sentence_struct']
+            self.leftctx = self.senleftctx_tpl % sentence_struct
+            self.rightctx = self.senrightctx_tpl % sentence_struct
             # GDEX changing and turning on and off
         if self.gdex_enabled and self.gdexcnt:
             gdex_set = 0
