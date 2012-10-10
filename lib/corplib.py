@@ -84,7 +84,8 @@ class CorpusManager:
                 simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
-        for c, path, web in paths: # self.corplist
+        for item in paths: # self.corplist
+            c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
                 try:
                     corp = manatee.Corpus(c)
