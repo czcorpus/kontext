@@ -3,8 +3,7 @@ syntax: glob
 *.*~
 .idea
 *.pyc
-config.ini
-config*.xml
+config.xml
 
 syntax: regexp
 
