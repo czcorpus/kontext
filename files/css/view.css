@@ -150,6 +150,7 @@ a.speech-link:hover {
 #audio-wrapper {
     position: absolute;
     width: 460px;
+    height: 36px;
     left: 50%;
     margin-left: -230px;
 }
