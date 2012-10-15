@@ -125,7 +125,15 @@ class SourceCorpusTagExtractor(TagExtractor):
         tuple
           unique list of all found tags
         """
-        lines = subprocess.Popen("cat %s | grep -v '<' | awk 'BEGIN { FS = \"\\t\" } ; {print $3}' | sort | uniq" % src_path, stdout=subprocess.PIPE, shell=True).communicate()[0]
+        if src_path.endswith('.gz'):
+            cat_type = 'zcat'
+        else:
+            cat_type = 'cat'
+        p = subprocess.Popen("%s %s | grep -v '<' | awk 'BEGIN { FS = \"\\t\" } ; {print $3}' | sort | uniq" % (cat_type, src_path),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        lines, err = p.communicate()
+        if len(err) > 0:
+            raise Exception(err)
         lines = lines.split('\n')
         ans = set()
         for line in lines:
@@ -153,25 +161,29 @@ if __name__ == '__main__':
         help='Corpus name or path (depends on the type of selected processing method')
     parser.add_argument('num_tag_pos', metavar='NUMBER_OF_TAG_POSITIONS', type=int,
         help='Number of positions within tags (typically, it is 16)')
-    args = parser.parse_args()
-    tags = []
-    if args.source_type == 'plain':
-        t = SourceCorpusTagExtractor()
-        tags = t.export_tags(args.corpus_id)
-    elif args.source_type == 'compiled':
-        if not os.environ.has_key ('MANATEE_REGISTRY'):
-            os.environ['MANATEE_REGISTRY'] = '/var/local/corpora/registry/'
-        t = CompiledCorpusTagExtractor()
-        tags = t.export_tags(args.corpus_id)
-    else:
-        raise Exception('Unknown source type: %s' % args.source_type)
 
-    file_mask = '%s.tags.%s.json'
-    for i in range (args.num_tag_pos):
-        file_name = file_mask % (args.export_name, i)
-        with open(file_name, 'w') as f:
-            ans = t.export_tag_relations(tags, i, args.num_tag_pos)
-            json_ans = json.dumps(ans)
-            f.write(json_ans)
-            f.close()
-            print('Created file %s' % file_name)
+    try:
+        args = parser.parse_args()
+        tags = []
+        if args.source_type == 'plain':
+            t = SourceCorpusTagExtractor()
+            tags = t.export_tags(args.corpus_id)
+        elif args.source_type == 'compiled':
+            if not os.environ.has_key ('MANATEE_REGISTRY'):
+                os.environ['MANATEE_REGISTRY'] = '/var/local/corpora/registry/'
+            t = CompiledCorpusTagExtractor()
+            tags = t.export_tags(args.corpus_id)
+        else:
+            raise Exception('Unknown source type: %s' % args.source_type)
+
+        file_mask = '%s.tags.%s.json'
+        for i in range (args.num_tag_pos):
+            file_name = file_mask % (args.export_name, i)
+            with open(file_name, 'w') as f:
+                ans = t.export_tag_relations(tags, i, args.num_tag_pos)
+                json_ans = json.dumps(ans)
+                f.write(json_ans)
+                f.close()
+                print('Created file %s' % file_name)
+    except Exception, e:
+        print('ERROR: %s' % e)
