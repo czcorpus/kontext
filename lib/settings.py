@@ -54,11 +54,13 @@ def parse_corplist(root, path='/', data=[]):
         elif item.tag == 'corpus':
             web_url = item.attrib['web'] if 'web' in item.attrib else None
             sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
+            num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
             data.append({
                 'id' : item.attrib['id'].lower(),
                 'path' : path,
                 'web' : web_url,
-                'sentence_struct' : sentence_struct
+                'sentence_struct' : sentence_struct,
+                'num_tag_pos' : num_tag_pos
             })
 
 def parse_config(path):

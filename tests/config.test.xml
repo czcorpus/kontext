@@ -16,6 +16,8 @@
         <cache_dir>/var/local/corpora/cache</cache_dir>
         <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <tags_src_dir>../test-data/tags</tags_src_dir>
+        <tags_cache_dir>/tmp/tags-cache</tags_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
