@@ -7,6 +7,7 @@ from sys import stderr
 import time
 import glob
 from types import ListType
+import logging
 
 from CGIPublisher import CGIPublisher
 import corplib
@@ -1867,10 +1868,29 @@ class ConcCGI (CGIPublisher):
         try:
             ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).id_range()) for item in self._curr_corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError, e:
-            import logging
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = [(_('Failed to load'), '')]
         ans['structlist'] = [(item, self._curr_corpus.get_struct(item).size()) for item in self._curr_corpus.get_conf('STRUCTLIST').split(',')]
 
         return ans
     ajax_get_corp_details.template = 'corpus_details.tmpl'
+
+
+    def test_tags(self, corpname=''):
+        return { 'corpus_name' : self.corpname if self.corpname else corpname,
+                 'num_tag_pos' : settings.get_corpus_info(self.corpname)['num_tag_pos'] }
+    test_tags.template = 'tqbtest.tmpl'
+
+    def ajax_get_tag_variants(self, pattern='', position=''):
+        """
+        """
+        import taghelper
+        tag_loader = taghelper.TagVariantLoader(self.corpname, 8) # TODO
+
+        if len(pattern) > 0:
+            ans = tag_loader.get_variant(pattern)
+        elif len(position) > 0:
+            ans = tag_loader.get_unique_values_at_pos(int(position))
+        #self._headers['Content-Type'] = 'text/json'
+        logging.getLogger(__name__).info('json tag ans: %s' % ans)
+        return ans
