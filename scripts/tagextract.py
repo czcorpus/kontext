@@ -9,56 +9,8 @@ sys.path.insert(0, './lib')
 
 import manatee
 
-class TagExtractor(object):
-    """
-    General tag extractor. For normal use you want to use its descendant classes.
-    """
 
-    def create_struct(self, active_pos, num_flag_pos):
-        lft = range(num_flag_pos + 1)[:active_pos]
-        rgt =  range(num_flag_pos + 1)[active_pos + 1:num_flag_pos]
-        return dict(zip(lft + rgt, [set() for i in range(num_flag_pos)]))
-
-    def export_tag_relations(self, data, active_pos, num_flag_pos):
-        """
-        Returns all possible variants of other (according to active_pos) tag positions
-
-        Parameters
-        ----------
-        data : list
-          a list of all unique tag values
-        active_pos : int
-          tag position index
-        num_flag_pos : int
-          number of flag positions used within tags (in case of Czech National Corpus it is typically 16)
-
-        Returns
-        -------
-        dict
-          a dictionary of the following form:
-          { 'active_pos_flag_letter' :
-                  { 1 : [ ... list of unique characters on position 1 ],
-                    2 : [ ... list of unique characters on position 2],... },
-            'another_active_pos_flag_letter' : ...
-          }
-        """
-        ans = {}
-
-        for tag in data:
-            tag += ''.join(['-' for i in range(num_flag_pos - len(tag))])
-            key = tag[active_pos]
-            if not key in ans:
-                ans[key] = self.create_struct(active_pos, num_flag_pos)
-            for i in range(num_flag_pos):
-                if i != active_pos:
-                    ans[key][i].add(tag[i])
-        for key, value in ans.items():
-            for key2 in value:
-                value[key2] = tuple(value[key2])
-        return ans
-
-
-class CompiledCorpusTagExtractor(TagExtractor):
+class CompiledCorpusTagExtractor(object):
     """
     Extracts unique tag position values using a compiled corpus.
     Instances are stateless so you can use a single one to export tags from multiple corpora.
@@ -106,7 +58,7 @@ class CompiledCorpusTagExtractor(TagExtractor):
 
 
 
-class SourceCorpusTagExtractor(TagExtractor):
+class SourceCorpusTagExtractor(object):
     """
     Instances are stateless so you can use a single one to export tags from multiple corpora.
     """
@@ -176,14 +128,15 @@ if __name__ == '__main__':
         else:
             raise Exception('Unknown source type: %s' % args.source_type)
 
-        file_mask = '%s.tags.%s.json'
-        for i in range (args.num_tag_pos):
-            file_name = file_mask % (args.export_name, i)
-            with open(file_name, 'w') as f:
-                ans = t.export_tag_relations(tags, i, args.num_tag_pos)
-                json_ans = json.dumps(ans)
-                f.write(json_ans)
-                f.close()
-                print('Created file %s' % file_name)
+        file_name = '%s.tags' % args.export_name
+        with open(file_name, 'w') as f:
+            for line in tags:
+                f.write('%s\n' % line)
+            f.close()
+            print('Created file %s' % file_name)
     except Exception, e:
+        import traceback
+        err_type, err_value, err_trace = sys.exc_info()
+        err_out = traceback.format_exception(err_type, err_value, err_trace)
+        print('\n'.join(err_out))
         print('ERROR: %s' % e)
