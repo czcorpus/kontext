@@ -16,6 +16,8 @@
         <cache_dir>/var/local/corpora/cache</cache_dir>
         <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
+        <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
@@ -28,10 +30,10 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		<corpus id="ORWELL" sentence_struct="s" />
+		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16"  />
 	    </corplist>
             <corplist title="Foreign corpora">
-                <corpus id="SUSANNE" sentence_struct="p" />
+                <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
 		<corpus id="BNC" sentence_struct="s" />
             </corplist>
         </corplist>
