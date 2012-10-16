@@ -1,7 +1,10 @@
 (function (context) {
+    'use strict';
+
 
     var mlkfu,
-        createPopupBox;
+        createPopupBox,
+        createTagLoader;
 
     context.bonitoBoxes = context.bonitoBoxes || {};
 
@@ -25,7 +28,7 @@
             $$('select.kwic-alignment').each(function (item) {
                 mlkfu.switchAlignment(item.value, mlkfu.getColumnId(item));
             });
-            $$('select.kwic-alignment').each( function (item) {
+            $$('select.kwic-alignment').each(function (item) {
                 item.observe('change', function (event) {
                     mlkfu.switchAlignment(event.target.value, mlkfu.getColumnId(item));
                 });
@@ -38,9 +41,9 @@
          * @param columnIdx column to update (indexing from 1 to 3)
          */
         switchAlignment : function (state, columnIdx) {
-            var srch, repl;
+            var srch, repl, select;
 
-            if (state == 'left') {
+            if (state === 'left') {
                 srch = '>';
                 repl = '<';
 
@@ -49,9 +52,9 @@
                 repl = '>';
             }
             select = $$("select[name='ml" + columnIdx + "ctx']");
-            if (select.length == 1) {
+            if (select.length === 1) {
                 select[0].childElements().each(function (item) {
-                    if (item.value == '0~0>0') {
+                    if (item.value === '0~0>0') {
                         // This resets the default behaviour which just displays all the KWIC words.
                         // It should be executed only when the page is loaded.
                         item.value = '0<0';
@@ -83,7 +86,7 @@
             extractIntFromSize : function (size) {
                 var ans = /([0-9]+)[a-z]*/.exec(size);
                 if (ans !== null) {
-                    return new Number(ans[1]);
+                    return parseInt(ans[1], 10);
                 }
                 return null;
             },
@@ -142,7 +145,7 @@
 
                 popupBox.newElem = Element.extend(document.createElement('div'));
                 popupBox.newElem.writeAttribute('id', boxId);
-                if (typeof(contents) === 'function') {
+                if (typeof (contents) === 'function') {
                     contents(popupBox.newElem);
 
                 } else {
@@ -177,7 +180,7 @@
                 Event.observe(document, 'click', popupBox.close);
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
             }
-        }
+        };
         context.bonitoBoxes[boxId] = popupBox;
         popupBox.open(event, boxId, whereElement, contents, options);
         return popupBox;
@@ -185,5 +188,132 @@
 
     context.multiLevelKwicFormUtil = mlkfu;
     context.createPopupBox = createPopupBox;
+
+    createTagLoader = function (corpusName) {
+        var tagLoader = {
+
+            corpusName : '',
+
+            lastPattern : '',
+
+            /**
+             *
+             */
+            encodeFormStatus : function (elmList) {
+                var i,
+                    ans = '';
+
+                for (i = 0; i < elmList.length; i += 1) {
+                    ans += elmList[i].getValue() || '-';
+                }
+                return ans;
+            },
+
+            /**
+             *
+             */
+            getNumberOfSelectedItems : function (elmList) {
+                var i,
+                    ans = 0;
+
+                for (i = 0; i < elmList.length; i += 1) {
+                    if (elmList[i].getValue() && elmList[i].getValue() !== '-') {
+                        ans += 1;
+                    }
+                }
+                return ans;
+            },
+
+
+            /**
+             *
+             * @param elmList
+             * @param activeNode
+             * @param data
+             */
+            updateFormValues : function (elmList, activeNode, data) {
+                var i,
+                    j,
+                    currValue,
+                    newOption;
+
+                for (i = 0; i < elmList.length; i += 1) {
+                    if (activeNode.parentNode !== elmList[i]) {
+                        currValue = elmList[i].getValue();
+                        elmList[i].update('<option value="-">-</option>');
+                        for (j = 0; j < data[i].length; j += 1) {
+                            newOption = Element.extend(document.createElement('option'));
+                            newOption.writeAttribute('value', data[i][j]);
+                            newOption.insert(data[i][j]);
+                            elmList[i].insert(newOption);
+
+                            if (currValue === data[i][j]) {
+                                elmList[i].selectedIndex = j + 1;
+                            }
+                        }
+
+                    } else {
+                        activeNode.writeAttribute('selected', 'selected');
+                    }
+                }
+            },
+
+            /**
+             *
+             */
+            updateFormValue : function (element, data) {
+                var i;
+                element.update('<option>-</option>');
+                for (i = 0; i < data.length; i += 1) {
+                    element.insert('<option value="' + data[i] + '">' + data[i] + '</option>');
+                }
+            },
+
+            /**
+             *
+             * @param position
+             * @param callback
+             */
+            loadSinglePositionVariants : function (position, callback) {
+                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName + '&position=' + position,
+                    params = {},
+                    ajax;
+                ajax = new Ajax.Request(url, {
+                    parameters : params,
+                    method : 'get',
+                    // requestHeaders: {Accept: 'application/json'},
+                    onComplete : function (data) {
+                        callback(data.responseText.evalJSON());
+                    }
+                });
+            },
+
+            /**
+             *
+             * @param pattern
+             * @param callback
+             */
+            loadPatternVariants : function (pattern, callback) {
+                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName + '&pattern=' + pattern,
+                    params = {},
+                    ajax;
+
+                ajax = new Ajax.Request(url, {
+                    parameters : params,
+                    method : 'get',
+                    // requestHeaders: {Accept: 'application/json'},
+                    onComplete : function (data) {
+                        callback(data.responseText.evalJSON());
+                    }
+                });
+            }
+
+        };
+        tagLoader.corpusName = corpusName;
+        return tagLoader;
+    };
+
+    context.createTagLoader = createTagLoader;
+
 
 }(window));
