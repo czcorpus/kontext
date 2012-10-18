@@ -6,6 +6,7 @@ import conclib
 import mox
 import MySQLdb
 from MySQLdb import cursors
+from MySQLdb import connections
 
 class TestSettingsModule(unittest.TestCase):
     """
@@ -95,11 +96,14 @@ class TestSettingsModule(unittest.TestCase):
         """
         """
         mysql = self.mysql_mocker.CreateMock(MySQLdb)
-        conn = self.dbcon_mocker.CreateMock(MySQLdb.connections.Connection)
+        conn = self.dbcon_mocker.CreateMock(connections.Connection)
         cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
         conn.cursor().AndReturn(cursor)
         mysql.connection().AndReturn(conn)
+        query = "SELECT pass,corplist FROM user WHERE user = %s"
+        cursor.execute(query, ('atomik',)).AndReturn(True)
+        cursor.fetchone().AndReturn(('my*password', 'syn2010 oral2013 susanne'))
 
-        dbc = mysql.connection()
-
-        print(dbc)
+        settings._user = 'atomik'
+        user_data = settings.get_user_data()
+        print(user_data)
