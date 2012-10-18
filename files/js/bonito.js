@@ -246,8 +246,7 @@
                             newOption.writeAttribute('value', data[i][j][0]);
                             newOption.insert(data[i][j][1]);
                             elmList[i].insert(newOption);
-
-                            if (currValue === data[i][j]) {
+                            if (currValue === data[i][j][0]) {
                                 elmList[i].selectedIndex = j + 1;
                             }
                         }
