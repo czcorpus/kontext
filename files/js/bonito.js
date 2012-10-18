@@ -239,16 +239,22 @@
 
                 for (i = 0; i < elmList.length; i += 1) {
                     if (activeNode.parentNode !== elmList[i]) {
-                        currValue = elmList[i].getValue();
-                        elmList[i].update('<option value="-">-</option>');
-                        for (j = 0; j < data[i].length; j += 1) {
-                            newOption = Element.extend(document.createElement('option'));
-                            newOption.writeAttribute('value', data[i][j][0]);
-                            newOption.insert(data[i][j][1]);
-                            elmList[i].insert(newOption);
-                            if (currValue === data[i][j][0]) {
-                                elmList[i].selectedIndex = j + 1;
+                        if (data[i].length > 0) {
+                            elmList[i].writeAttribute('disabled', null);
+                            currValue = elmList[i].getValue();
+                            elmList[i].update('<option value="-">-</option>');
+                            for (j = 0; j < data[i].length; j += 1) {
+                                newOption = Element.extend(document.createElement('option'));
+                                newOption.writeAttribute('value', data[i][j][0]);
+                                newOption.insert(data[i][j][1]);
+                                elmList[i].insert(newOption);
+                                if (currValue === data[i][j][0]) {
+                                    elmList[i].selectedIndex = j + 1;
+                                }
                             }
+
+                        } else {
+                            elmList[i].writeAttribute('disabled', 'disabled');
                         }
 
                     } else {
