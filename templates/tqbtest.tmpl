@@ -36,21 +36,21 @@ console.log('test...');
 
 <h1>Tag query builder test</h1>
 <form>
-    <table border="1">
+    <table border="0">
         <tr>
-            #for i in range($num_tag_pos)
-            <td>
+            <th>pozice</th>
+            <th>hodnota</th>
+        </tr>
+        #for i in range($num_tag_pos)
+        <tr>
+            <td>$(i + 1)</td>
+            <td style="width: 100px">
                 <select class="tag-position" id="position-sel-$i">
                     <option>-</option>
                 </select>
             </td>
-            #end for
         </tr>
+        #end for
     </table>
-</form>
-
-
-<form action="" method="get">
-    <input id="test-input" type="text" name="query" />
 </form>
 #end def
