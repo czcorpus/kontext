@@ -243,8 +243,8 @@
                         elmList[i].update('<option value="-">-</option>');
                         for (j = 0; j < data[i].length; j += 1) {
                             newOption = Element.extend(document.createElement('option'));
-                            newOption.writeAttribute('value', data[i][j]);
-                            newOption.insert(data[i][j]);
+                            newOption.writeAttribute('value', data[i][j][0]);
+                            newOption.insert(data[i][j][1]);
                             elmList[i].insert(newOption);
 
                             if (currValue === data[i][j]) {
@@ -265,7 +265,7 @@
                 var i;
                 element.update('<option>-</option>');
                 for (i = 0; i < data.length; i += 1) {
-                    element.insert('<option value="' + data[i] + '">' + data[i] + '</option>');
+                    element.insert('<option value="' + data[i][0] + '">' + data[i][1] + '</option>');
                 }
             },
 
