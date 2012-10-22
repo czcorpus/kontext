@@ -1885,7 +1885,7 @@ class ConcCGI (CGIPublisher):
                  'num_tag_pos' : settings.get_corpus_info(self.corpname)['num_tag_pos'] }
     test_tags.template = 'tqbtest.tmpl'
 
-    def ajax_get_tag_variants(self, pattern='', position=''):
+    def ajax_get_tag_variants(self, pattern=''):
         """
         """
         import taghelper
@@ -1893,8 +1893,8 @@ class ConcCGI (CGIPublisher):
 
         if len(pattern) > 0:
             ans = tag_loader.get_variant(pattern)
-        elif len(position) > 0:
-            ans = tag_loader.get_unique_values_at_pos(int(position))
+        else:
+            ans = tag_loader.get_initial_values()
         #self._headers['Content-Type'] = 'text/json'
         logging.getLogger(__name__).info('json tag ans: %s' % ans)
         return ans

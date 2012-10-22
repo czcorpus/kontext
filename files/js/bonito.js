@@ -4,7 +4,8 @@
 
     var mlkfu,
         createPopupBox,
-        createTagLoader;
+        createTagLoader,
+        attachTagLoader;
 
     context.bonitoBoxes = context.bonitoBoxes || {};
 
@@ -238,8 +239,9 @@
                     newOption;
 
                 for (i = 0; i < elmList.length; i += 1) {
-                    if (activeNode.parentNode !== elmList[i]) {
+                    if (!activeNode || activeNode.parentNode !== elmList[i]) {
                         if (data[i].length > 0) {
+                            console.log('test[' + i + ']: ' + data[i]);
                             elmList[i].writeAttribute('disabled', null);
                             currValue = elmList[i].getValue();
                             elmList[i].update('<option value="-">-</option>');
@@ -264,14 +266,20 @@
             },
 
             /**
-             *
+             * TODO check if needed
              */
             updateFormValue : function (element, data) {
-                var i;
-                element.update('<option>-</option>');
+                var i,
+                    newElement;
+
+                // element.update('<option>-</option>');
                 for (i = 0; i < data.length; i += 1) {
-                    element.insert('<option value="' + data[i][0] + '">' + data[i][1] + '</option>');
+                    newElement = Element.extend(document.createElement('option'));
+                    newElement.writeAttribute('value', data[i][0]);
+                    newElement.insert(data[i][1]);
+                    element.insert(newElement);
                 }
+                element.selectedIndex = 0;
             },
 
             /**
@@ -279,8 +287,8 @@
              * @param position
              * @param callback
              */
-            loadSinglePositionVariants : function (position, callback) {
-                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName + '&position=' + position,
+            loadInitialVariants : function (callback) {
+                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName,
                     params = {},
                     ajax;
                 ajax = new Ajax.Request(url, {
@@ -320,5 +328,30 @@
 
     context.createTagLoader = createTagLoader;
 
+    attachTagLoader = function (selList, corpusName) {
+        var tagLoader = createTagLoader(corpusName);
+
+        tagLoader.loadInitialVariants(function (data) {
+            tagLoader.updateFormValues(selList, null, data, true);
+        });
+
+        selList.each(function (item, idx) {
+            $('position-sel-' + idx).observe('click', function (event) {
+                var currPattern;
+
+                if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
+                    currPattern = tagLoader.encodeFormStatus(selList);
+                    if (currPattern !== tagLoader.lastPattern) {
+                        tagLoader.loadPatternVariants(currPattern, function (data) {
+                            tagLoader.updateFormValues(selList, event.element(), data);
+                            tagLoader.lastPattern = currPattern;
+                        });
+                    }
+                }
+            });
+        });
+    };
+
+    context.attachTagLoader = attachTagLoader;
 
 }(window));

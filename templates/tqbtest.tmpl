@@ -5,30 +5,8 @@
 #end def
 
 #def bodyonload
-var tagLoader = createTagLoader('$corpus_name');
-var selList = \$\$('select.tag-position');
-selList.each(function (item, idx) {
-    \$('position-sel-' + idx).observe('focus', function (event) {
-        if (tagLoader.getNumberOfSelectedItems(selList) === 0
-            || tagLoader.getNumberOfSelectedItems(selList) === 1 && event.element().getValue() !== '-') {
-            tagLoader.loadSinglePositionVariants(idx, function (data) {
-                tagLoader.updateFormValue(event.element(), data);
-            });
-        }
-    });
-    \$('position-sel-' + idx).observe('click', function (event) {
-        var currPattern;
-        if (event.element().nodeName !== 'SELECT') {
-          currPattern = tagLoader.encodeFormStatus(selList);
-          if (currPattern !== tagLoader.lastPattern) {
-              tagLoader.loadPatternVariants(currPattern, function (data) {
-                  tagLoader.updateFormValues(selList, event.element(), data);
-                  tagLoader.lastPattern = currPattern;
-              });
-          }
-        }
-    });
-});
+attachTagLoader(\$\$('select.tag-position'),'$corpus_name');
+
 console.log('test...');
 #end def
 
@@ -46,7 +24,7 @@ console.log('test...');
             <td>$(i + 1)</td>
             <td style="width: 100px">
                 <select class="tag-position" id="position-sel-$i">
-                    <option>-</option>
+                    <option value="-">-</option>
                 </select>
             </td>
         </tr>
