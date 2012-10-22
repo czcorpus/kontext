@@ -46,18 +46,21 @@ class TagVariantLoader(object):
         """
         pass
 
-    def get_unique_values_at_pos(self, position):
+    def get_initial_values(self):
         """
         """
-        path = '%s/position-%s.json' % (self.cache_dir, position)
+        path = '%s/initial-values.json' % self.cache_dir
         data = '[]'
+        import logging
         if not os.path.exists(path):
-            ans = set()
+            ans = [set() for i in range(self.num_tag_pos)]
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
-                if line[position] != '-':
-                    ans.add((line[position], '%s - %s' % (line[position], translationTable[position][line[position]])))
-            data = json.dumps(sorted(ans, key=lambda item : item[0]))
+                for i in range(self.num_tag_pos):
+                    if line[i] != '-' and line[i] in translationTable[i]:
+                        ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+            ans = [sorted(x, key=lambda item : item[0]) for x in ans]
+            data = json.dumps(ans)
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
@@ -83,7 +86,7 @@ class TagVariantLoader(object):
             for i in range(len(selected_tags)):
                 if i not in ans:
                     ans[i] = set()
-                if item[i] != '-':
+                if item[i] != '-' and item[i] in translationTable[i]:
                     ans[i].add((item[i], '%s - %s' % (item[i], translationTable[i][item[i]])))
         for key in ans:
             ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
