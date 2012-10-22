@@ -176,7 +176,7 @@
                 if (typeof whereElement === 'string') {
                     whereElement = $(whereElement);
                 }
-                whereElement.insert({ after : popupBox.newElem });
+                whereElement.insert(popupBox.newElem);
                 Event.observe(document, 'click', popupBox.close);
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
             }
