@@ -552,7 +552,14 @@ class PyConc (manatee.Concordance):
 
     def pn_filter (self, options, ispositive):
         lctx, rctx, rank, query = options.split (None, 3)
-        collnum = self.numofcolls() +1
+        query_elems = query.split(',')
+        logging.getLogger(__name__).info('query_elems: %s' % (query_elems,))
+        if len(query_elems) > 1:
+            self.corp.set_default_attr(query_elems[0])
+            query = query_elems[1]
+        else:
+            query = query_elems[0]
+        collnum = self.numofcolls() + 1
         self.set_collocation (collnum, query +';', lctx, rctx, int(rank))
         self.delete_pnfilter (collnum, ispositive)
 
@@ -894,7 +901,7 @@ def get_conc (corp, q=[], save=0, cache_dir='cache'):
     else:
         conc = PyConc (corp, q[0][0], q[0][1:])
         toprocess = 1
-    #print conc.size(),
+
     for act in range(toprocess, len(q)):
         command = q[act][0]
         if save and command in 'gae':
@@ -903,8 +910,6 @@ def get_conc (corp, q=[], save=0, cache_dir='cache'):
             conc.save (add_to_map (cache_dir, subchash, q[:act],
                                    conc.size()) + '.conc')
         getattr (conc, 'command_' + command) (q[act][1:])
-        #print conc.size(),
-    #print 'hotovo'
 
     if save:
         conc.save (add_to_map (cache_dir, subchash, q, conc.size()) + '.conc')

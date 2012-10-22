@@ -838,10 +838,14 @@ class ConcCGI (CGIPublisher):
             if texttypes: query = '[]'; filfpos='0'; filtpos='0'
             else: raise ConcError (_('No query entered.'))
         query +=  ' '.join (['within <%s %s />' % nq for nq in texttypes])
-        self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
-                                          rank, query))
-        try: return self.view()
-        except: del self.q[-1]; raise
+        if not self.default_attr:
+            self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos, rank, query))
+        else:
+            self.q.append ('%s%s %s %i %s,%s' % (pnfilter, filfpos, filtpos, rank, self.default_attr, query))
+        try:
+            return self.view()
+        except Exception, e:
+            del self.q[-1]; raise
     filter.template = 'view.tmpl'
     add_vars['filter'] = ['orig_query']
 
