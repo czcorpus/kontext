@@ -14,13 +14,14 @@
      * @param element
      */
     function normalizeSelectEventSource(element) {
+        var ans = null;
         if (element.nodeName === 'OPTION') {
-            return element.parentNode;
+            ans = element.parentNode;
 
         } else if (element.nodeName === 'SELECT') {
-            return element;
+            ans =  element;
         }
-        return null;
+        return ans;
     }
 
     /**
@@ -426,12 +427,37 @@
      *
      * @param selList list of SELECT elements
      * @param corpusName identifier of a corpus to be used with this tag loader
+     * @param resetButton ID or element itself for the "reset" button
+     * @param backButton ID or element itself for the "back" button
      */
-    attachTagLoader = function (selList, corpusName) {
+    attachTagLoader = function (selList, corpusName, resetButton, backButton) {
         var tagLoader = createTagLoader(corpusName, selList.length);
 
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.updateFormValues(selList, null, data);
+        });
+        if (typeof (resetButton) === 'string') {
+            resetButton = $(resetButton);
+        }
+        resetButton.observe('click', function (event) {
+            tagLoader.loadInitialVariants(function (data) {
+                var a;
+
+                tagLoader.updateFormValues(selList, null, data);
+                for (a in tagLoader.selectedValues) {
+                    tagLoader.selectedValues[a] = '-';
+                }
+                tagLoader.lastPattern = null;
+                selList.each(function (item, idx) {
+                    item.selectedIndex = 0;
+                });
+            });
+        });
+        if (typeof (backButton) === 'string') {
+            backButton = $(backButton);
+        }
+        backButton.observe('click', function (event) {
+            alert('Sorry, this function is currently not supported.');
         });
 
         selList.each(function (item, idx) {
