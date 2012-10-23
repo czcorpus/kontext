@@ -30,6 +30,7 @@ $ca_headers
 <script type="text/javascript">
 document.observe("dom:loaded", function() {
     targetedLinks();
+    attachTagLoader(\$\$('select.tag-position'),'$corpname', 'reset-button', 'back-button', 'tag-display', 'tag');
     #block bodyonload
     #end block
     #if $focus
@@ -279,6 +280,8 @@ $corp_sel
      <option value="charrow" $selected>$_("Character")</option>
      #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
      <option value="cqlrow" $selected>$_("CQL")</option>
+     #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
+     <option value="tagrow" $selected>$_("tag")</option>
   </select>
   </td>
 </tr>
@@ -369,6 +372,35 @@ $corp_sel
 #end if
   </span>
 </td></tr>
+<tr class="required $hidden" id="tagrow">
+    <th>$_("Tag"):</th>
+    <td>
+        <div id="tag-display" style="font-size: 25pt; font-family: 'Courier New', Courier, monospace"></div>
+        <table border="0">
+            <tr>
+                <td colspan="2">
+                    <button id="reset-button" type="button">reset</button>
+                    <button id="back-button" type="button">back</button>
+                </td>
+            </tr>
+            <tr>
+                <th>pozice</th>
+                <th>hodnota</th>
+            </tr>
+            #for i in range($num_tag_pos)
+            <tr>
+                <td>$(i + 1)</td>
+                <td style="width: 100px">
+                    <select class="tag-position" id="position-sel-$i">
+                        <option value=".">.</option>
+                    </select>
+                </td>
+            </tr>
+            #end for
+        </table>
+    <input id="tag" type="hidden" name="tag" value="$tag" />
+    </td>
+</tr>
 </tbody>
 #end def
 

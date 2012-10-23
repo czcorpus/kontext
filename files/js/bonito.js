@@ -228,9 +228,10 @@
      *
      * @param corpusName corpus identifier
      * @param numTagPos
+     * @param hiddenElm ID or element itself
      * @return {Object}
      */
-    createTagLoader = function (corpusName, numTagPos) {
+    createTagLoader = function (corpusName, numTagPos, hiddenElm) {
 
         var tagLoader,
             i;
@@ -263,6 +264,11 @@
             selectedValues : [],
 
             /**
+             *
+             */
+            hiddenElm : null,
+
+            /**
              * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param elmList list of SELECT elements to be used
@@ -274,6 +280,11 @@
                 for (i = 0; i < elmList.length; i += 1) {
                     ans += elmList[i].getValue() || '.';
                 }
+
+                if (tagLoader.hiddenElm) { // TODO this is quite debatable
+                    tagLoader.hiddenElm.setValue(ans);
+                }
+
                 return ans;
             },
 
@@ -414,6 +425,7 @@
 
         };
         tagLoader.corpusName = corpusName;
+        tagLoader.hiddenElm = hiddenElm;
         for (i = 0; i < numTagPos; i += 1) {
             tagLoader.selectedValues[i] = '.';
         }
@@ -430,10 +442,15 @@
      * @param resetButton ID or element itself for the "reset" button
      * @param backButton ID or element itself for the "back" button
      * @param tagDisplay ID or element itself for the "tag display" box
+     * @param hiddenElm ID or element itself
      */
-    attachTagLoader = function (selList, corpusName, resetButton, backButton, tagDisplay) {
-        var tagLoader = createTagLoader(corpusName, selList.length);
+    attachTagLoader = function (selList, corpusName, resetButton, backButton, tagDisplay, hiddenElm) {
+        var tagLoader;
 
+        if (typeof (hiddenElm) === 'string') {
+            hiddenElm = $(hiddenElm);
+        }
+        tagLoader = createTagLoader(corpusName, selList.length, hiddenElm);
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.updateFormValues(selList, null, data);
         });

@@ -118,22 +118,26 @@ function cmdGetFocusedId() {
 
 
 function cmdSwitchQuery() {
-    var qs = window.document.getElementById('queryselector');
-    var newid = qs.options[qs.selectedIndex].value;
-    var FocusElem = window.document.getElementById(newid.substring(0,
-                                                   newid.length-3));
-    var oldval = FocusElem.value;
+    var qs = $('queryselector'),
+        newid = qs.options[qs.selectedIndex].value,
+        FocusElem = $(newid.substring(0, newid.length - 3)),
+        oldval = FocusElem.value,
+        i,
+        elementId,
+        oldelem,
+        elem;
 
-    for (var i=0; i<qs.options.length; i++) {
+    for (i = 0; i < qs.options.length; i += 1) {
         elementId = qs.options[i].value;
-        elem = window.document.getElementById(elementId);
+        elem = $(elementId);
 
-        if (elementId == newid){
+        if (elementId == newid) {
             elem.className = elem.className.replace("hidden", "visible");
+
         } else {
-            var oldelem = window.document.getElementById(elementId.substring(0,
-                                                    elementId.length-3));
-            if (elem.className.search('visible')> -1 & !oldval){
+            console.log('oldelem: ' + elementId.substring(0, elementId.length - 3));
+            oldelem = $(elementId.substring(0, elementId.length - 3));
+            if (elem.className.search('visible') > -1 & !oldval) {
                 oldval = oldelem.value;
             }
             oldelem.value = '';
