@@ -9,6 +9,13 @@
 
     context.bonitoBoxes = context.bonitoBoxes || {};
 
+    /**
+     * This objects serves as a service object for "multi-level KWIC HTML form".
+     * It in fact fixes some flaws of original bonito2 application without massive rewriting of
+     * related HTML templates and controller logic.
+     *
+     * @type {Object}
+     */
     mlkfu = {
 
         /**
@@ -68,6 +75,17 @@
         }
     };
 
+    /**
+     * Creates simple absolute positioned DIV as a child of whereElement.
+     *
+     * @param event event which lead to this request
+     * @param boxId attribute ID for new box
+     * @param whereElement element to be used as a parent
+     * @param contents text/HTML content of the box
+     * @param options object with options "width", "height", "top" (just like in CSS but also with additional
+     * values "attached-top" and "attached-bottom")
+     * @return {*}
+     */
     createPopupBox = function (event, boxId, whereElement, contents, options) {
         var popupBox;
 
@@ -190,15 +208,40 @@
     context.multiLevelKwicFormUtil = mlkfu;
     context.createPopupBox = createPopupBox;
 
+    /**
+     * Creates new AJAX tag hint loader for selected corpus
+     *
+     * @param corpusName corpus identifier
+     * @return {Object}
+     */
     createTagLoader = function (corpusName) {
+
+        /**
+         * Tag data loading service object
+         *
+         * @type {Object}
+         */
         var tagLoader = {
 
+            /**
+             * Holds a corpus name for which this object is configured.
+             */
             corpusName : '',
 
+            /**
+             * Latest tag pattern (e.g. PKM-4--2--------) used by this loader
+             */
             lastPattern : '',
 
             /**
+             * Initial values for all tag positions used by this tag loader (always the same for a specific corpus)
+             */
+            initialValues : null,
+
+            /**
+             * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
              *
+             * @param elmList list of SELECT elements to be used
              */
             encodeFormStatus : function (elmList) {
                 var i,
@@ -211,7 +254,10 @@
             },
 
             /**
+             * Returns number of SELECT elements from a provided list with values other than empty or '-'
              *
+             * @param elmList list of SELECT elements
+             * @return number
              */
             getNumberOfSelectedItems : function (elmList) {
                 var i,
@@ -227,10 +273,12 @@
 
 
             /**
+             * Updates all SELECT element-based form items with provided data
              *
              * @param elmList
              * @param activeNode
-             * @param data
+             * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
+             * tag position value) of arrays (0 - value, 1 - label))
              */
             updateFormValues : function (elmList, activeNode, data) {
                 var i,
@@ -241,7 +289,6 @@
                 for (i = 0; i < elmList.length; i += 1) {
                     if (!activeNode || activeNode.parentNode !== elmList[i]) {
                         if (data[i].length > 0) {
-                            console.log('test[' + i + ']: ' + data[i]);
                             elmList[i].writeAttribute('disabled', null);
                             currValue = elmList[i].getValue();
                             elmList[i].update('<option value="-">-</option>');
@@ -266,39 +313,47 @@
             },
 
             /**
-             * TODO check if needed
+             * Updates options of a single SELECT element by provided data
+             *
+             * @param selectElement
+             * @param data
              */
-            updateFormValue : function (element, data) {
+            updateSelectOptions : function (selectElement, data) {
                 var i,
                     newElement;
 
-                // element.update('<option>-</option>');
+                selectElement.update('<option>-</option>');
                 for (i = 0; i < data.length; i += 1) {
                     newElement = Element.extend(document.createElement('option'));
                     newElement.writeAttribute('value', data[i][0]);
                     newElement.insert(data[i][1]);
-                    element.insert(newElement);
+                    selectElement.insert(newElement);
                 }
-                element.selectedIndex = 0;
+                selectElement.selectedIndex = 0;
             },
 
             /**
-             *
-             * @param position
-             * @param callback
+             * @param callback function to be called when variants are loaded, JSON data is passed as a parameter
              */
             loadInitialVariants : function (callback) {
                 var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName,
                     params = {},
                     ajax;
-                ajax = new Ajax.Request(url, {
-                    parameters : params,
-                    method : 'get',
-                    // requestHeaders: {Accept: 'application/json'},
-                    onComplete : function (data) {
-                        callback(data.responseText.evalJSON());
-                    }
-                });
+
+                if (tagLoader.initialValues === null) {
+                    ajax = new Ajax.Request(url, {
+                        parameters : params,
+                        method : 'get',
+                        // requestHeaders: {Accept: 'application/json'},
+                        onComplete : function (data) {
+                            tagLoader.initialValues = data.responseText.evalJSON();
+                            callback(tagLoader.initialValues);
+                        }
+                    });
+
+                } else {
+                    callback(tagLoader.initialValues);
+                }
             },
 
             /**
@@ -328,6 +383,12 @@
 
     context.createTagLoader = createTagLoader;
 
+    /**
+     * A helper method that does whole 'create a tag loader for me' job.
+     *
+     * @param selList list of SELECT elements
+     * @param corpusName identifier of a corpus to be used with this tag loader
+     */
     attachTagLoader = function (selList, corpusName) {
         var tagLoader = createTagLoader(corpusName);
 
@@ -345,6 +406,19 @@
                         tagLoader.loadPatternVariants(currPattern, function (data) {
                             tagLoader.updateFormValues(selList, event.element(), data);
                             tagLoader.lastPattern = currPattern;
+                        });
+                    }
+
+                } else {
+                    // different browsers here pass different nodes as an event source
+                    if (event.element().nodeName === 'SELECT') {
+                        tagLoader.loadInitialVariants(function (data) {
+                            tagLoader.updateSelectOptions(event.element(), data[event.element().selectedIndex]);
+                        });
+
+                    } else if (event.element().nodeName === 'OPTION') {
+                        tagLoader.loadInitialVariants(function (data) {
+                            tagLoader.updateSelectOptions(event.element().parentNode, data[event.element().parentNode.selectedIndex]);
                         });
                     }
                 }
