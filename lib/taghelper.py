@@ -90,7 +90,7 @@ class TagVariantLoader(object):
             for i in range(len(selected_tags)):
                 if i not in ans:
                     ans[i] = set()
-                if item[i] != '-' and item[i] in translationTable[i]:
+                if item[i] in translationTable[i]:
                     ans[i].add((item[i], '%s - %s' % (item[i], translationTable[i][item[i]])))
         for key in ans:
             ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
