@@ -5,16 +5,21 @@
 #end def
 
 #def bodyonload
-attachTagLoader(\$\$('select.tag-position'),'$corpus_name');
-
-console.log('test...');
+attachTagLoader(\$\$('select.tag-position'),'$corpus_name', 'reset-button', 'back-button', 'tag-display');
 #end def
 
 #def main
 
 <h1>Tag query builder test</h1>
+<div id="tag-display" style="font-size: 25pt; font-family: 'Courier New', Courier, monospace"></div>
 <form>
     <table border="0">
+        <tr>
+            <td colspan="2">
+                <button id="reset-button" type="button">reset</button>
+                <button id="back-button" type="button">back</button>
+            </td>
+        </tr>
         <tr>
             <th>pozice</th>
             <th>hodnota</th>
@@ -24,7 +29,7 @@ console.log('test...');
             <td>$(i + 1)</td>
             <td style="width: 100px">
                 <select class="tag-position" id="position-sel-$i">
-                    <option value="-">-</option>
+                    <option value=".">.</option>
                 </select>
             </td>
         </tr>

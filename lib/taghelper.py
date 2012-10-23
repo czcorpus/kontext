@@ -58,12 +58,11 @@ class TagVariantLoader(object):
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
                 for i in range(self.num_tag_pos):
-                    if line[i] != '-':
-                        if line[i] in translationTable[i]:
-                            ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
-                        else:
-                            ans[i].add((line[i], line[i]))
-                            logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
+                    if line[i] in translationTable[i]:
+                        ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+                    else:
+                        ans[i].add((line[i], line[i]))
+                        logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
             ans = [sorted(x, key=lambda item : item[0]) for x in ans]
             data = json.dumps(ans)
             with open(path, 'w') as f:
