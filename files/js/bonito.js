@@ -276,7 +276,7 @@
              * Updates all SELECT element-based form items with provided data
              *
              * @param elmList
-             * @param activeNode
+             * @param activeNode active SELECT element
              * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
              * tag position value) of arrays (0 - value, 1 - label))
              */
@@ -404,6 +404,15 @@
                     currPattern = tagLoader.encodeFormStatus(selList);
                     if (currPattern !== tagLoader.lastPattern) {
                         tagLoader.loadPatternVariants(currPattern, function (data) {
+                            var eventSrcElement;
+
+                            if (event.element().nodeName === 'SELECT') {
+                                eventSrcElement = event.element();
+
+                            } else if (event.element().nodeName === 'OPTION') {
+                                eventSrcElement = event.element().parentNode;
+                            }
+
                             tagLoader.updateFormValues(selList, event.element(), data);
                             tagLoader.lastPattern = currPattern;
                         });
@@ -413,12 +422,12 @@
                     // different browsers here pass different nodes as an event source
                     if (event.element().nodeName === 'SELECT') {
                         tagLoader.loadInitialVariants(function (data) {
-                            tagLoader.updateSelectOptions(event.element(), data[event.element().selectedIndex]);
+                            tagLoader.updateSelectOptions(event.element(), data[idx]);
                         });
 
                     } else if (event.element().nodeName === 'OPTION') {
                         tagLoader.loadInitialVariants(function (data) {
-                            tagLoader.updateSelectOptions(event.element().parentNode, data[event.element().parentNode.selectedIndex]);
+                            tagLoader.updateSelectOptions(event.element().parentNode, data[idx]);
                         });
                     }
                 }
