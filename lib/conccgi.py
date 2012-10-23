@@ -138,6 +138,7 @@ class ConcCGI (CGIPublisher):
     word = ''
     wpos = ''
     cql = ''
+    tag = ''
     default_attr = None
     save = 1
     spos = 3
@@ -322,6 +323,7 @@ class ConcCGI (CGIPublisher):
                                                ('lpos', self.lpos),
                                                ('usesubcorp', self.usesubcorp),
                                              ])
+        result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
         return result
 
 
@@ -625,7 +627,7 @@ class ConcCGI (CGIPublisher):
             'wordform': '[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
             'wordformonly': '[%(wordattr)s="%(word)s"]',
             }
-        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql'):
+        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql', 'tag'):
             if self.queryselector == a + 'row':
                 if getattr(self, a, ''):
                     setattr (self, a, getattr (self, a).strip())
@@ -711,6 +713,8 @@ class ConcCGI (CGIPublisher):
             return '[%s & tag="%s"]' % (wordattr, wpos)
         if self.queryselector == 'charrow':
             return '[word=".*%s.*"]' % self.char
+        if self.queryselector == 'tagrow':
+            return '[tag="%s"]' % self.tag
         return self.cql
         
 

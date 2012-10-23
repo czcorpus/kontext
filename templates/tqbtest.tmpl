@@ -5,7 +5,7 @@
 #end def
 
 #def bodyonload
-attachTagLoader(\$\$('select.tag-position'),'$corpus_name', 'reset-button', 'back-button', 'tag-display');
+attachTagLoader(\$\$('select.tag-position'),'$corpus_name', 'reset-button', 'back-button', 'tag-display', 'hidden-input');
 #end def
 
 #def main
@@ -13,6 +13,7 @@ attachTagLoader(\$\$('select.tag-position'),'$corpus_name', 'reset-button', 'bac
 <h1>Tag query builder test</h1>
 <div id="tag-display" style="font-size: 25pt; font-family: 'Courier New', Courier, monospace"></div>
 <form>
+    <input type="hidden" name="ans-value" id="hidden-input" />
     <table border="0">
         <tr>
             <td colspan="2">
