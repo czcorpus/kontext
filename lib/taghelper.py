@@ -3,6 +3,7 @@ import settings
 import os
 import re
 import json
+import logging
 
 try:
     _
@@ -51,14 +52,17 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.json' % self.cache_dir
         data = '[]'
-        import logging
+
         if not os.path.exists(path):
             ans = [set() for i in range(self.num_tag_pos)]
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
                 for i in range(self.num_tag_pos):
-                    if line[i] != '-' and line[i] in translationTable[i]:
-                        ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+                    if line[i] != '-':
+                        if line[i] in translationTable[i]:
+                            ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+                        else:
+                            logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
             ans = [sorted(x, key=lambda item : item[0]) for x in ans]
             data = json.dumps(ans)
             with open(path, 'w') as f:
