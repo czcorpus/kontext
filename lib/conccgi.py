@@ -1889,12 +1889,11 @@ class ConcCGI (CGIPublisher):
         """
         """
         import taghelper
-        tag_loader = taghelper.TagVariantLoader(self.corpname, 8) # TODO
+        tag_loader = taghelper.TagVariantLoader(self.corpname, settings.get_corpus_info(self.corpname)['num_tag_pos'])
 
         if len(pattern) > 0:
             ans = tag_loader.get_variant(pattern)
         else:
             ans = tag_loader.get_initial_values()
         #self._headers['Content-Type'] = 'text/json'
-        logging.getLogger(__name__).info('json tag ans: %s' % ans)
         return ans
