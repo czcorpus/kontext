@@ -272,13 +272,13 @@
                     ans = '';
 
                 for (i = 0; i < elmList.length; i += 1) {
-                    ans += elmList[i].getValue() || '-';
+                    ans += elmList[i].getValue() || '.';
                 }
                 return ans;
             },
 
             /**
-             * Returns number of SELECT elements from a provided list with values other than empty or '-'
+             * Returns number of SELECT elements from a provided list with values other than empty or '.'
              *
              * @param elmList list of SELECT elements
              * @return number
@@ -288,7 +288,7 @@
                     ans = 0;
 
                 for (i = 0; i < elmList.length; i += 1) {
-                    if (elmList[i].getValue() && elmList[i].getValue() !== '-') {
+                    if (elmList[i].getValue() && elmList[i].getValue() !== '.') {
                         ans += 1;
                     }
                 }
@@ -327,7 +327,7 @@
 
                         } else if (data[i].length > 1) {
                             elmList[i].writeAttribute('disabled', null);
-                            elmList[i].update('<option value="-">-</option>');
+                            elmList[i].update('<option value=".">.</option>');
                             for (j = 0; j < data[i].length; j += 1) {
                                 newOption = Element.extend(document.createElement('option'));
                                 newOption.writeAttribute('value', data[i][j][0]);
@@ -358,7 +358,7 @@
                 var i,
                     newElement;
 
-                selectElement.update('<option>-</option>');
+                selectElement.update('<option value=".">.</option>');
                 for (i = 0; i < data.length; i += 1) {
                     newElement = Element.extend(document.createElement('option'));
                     newElement.writeAttribute('value', data[i][0]);
@@ -415,7 +415,7 @@
         };
         tagLoader.corpusName = corpusName;
         for (i = 0; i < numTagPos; i += 1) {
-            tagLoader.selectedValues[i] = '-';
+            tagLoader.selectedValues[i] = '.';
         }
         return tagLoader;
     };
@@ -429,8 +429,9 @@
      * @param corpusName identifier of a corpus to be used with this tag loader
      * @param resetButton ID or element itself for the "reset" button
      * @param backButton ID or element itself for the "back" button
+     * @param tagDisplay ID or element itself for the "tag display" box
      */
-    attachTagLoader = function (selList, corpusName, resetButton, backButton) {
+    attachTagLoader = function (selList, corpusName, resetButton, backButton, tagDisplay) {
         var tagLoader = createTagLoader(corpusName, selList.length);
 
         tagLoader.loadInitialVariants(function (data) {
@@ -445,12 +446,13 @@
 
                 tagLoader.updateFormValues(selList, null, data);
                 for (a in tagLoader.selectedValues) {
-                    tagLoader.selectedValues[a] = '-';
+                    tagLoader.selectedValues[a] = '.';
                 }
                 tagLoader.lastPattern = null;
                 selList.each(function (item, idx) {
                     item.selectedIndex = 0;
                 });
+                tagDisplay.update(tagLoader.encodeFormStatus(selList));
             });
         });
         if (typeof (backButton) === 'string') {
@@ -459,6 +461,10 @@
         backButton.observe('click', function (event) {
             alert('Sorry, this function is currently not supported.');
         });
+
+        if (typeof (tagDisplay) === 'string') {
+            tagDisplay = $(tagDisplay);
+        }
 
         selList.each(function (item, idx) {
             $('position-sel-' + idx).observe('click', function (event) {
@@ -474,8 +480,10 @@
                             tagLoader.loadPatternVariants(currPattern, function (data) {
                                 tagLoader.updateFormValues(selList, event.element(), data);
                                 tagLoader.lastPattern = currPattern;
+                                tagDisplay.update(tagLoader.encodeFormStatus(selList));
                             });
                         }
+                        tagDisplay.update(tagLoader.encodeFormStatus(selList));
 
                     } else {
                         // different browsers here pass different nodes as an event source
@@ -483,9 +491,14 @@
                             tagLoader.updateSelectOptions(eventSrcElement, data[idx]);
                         });
                     }
+
+                } else {
+                    // TODO is this necessary?
+                    tagDisplay.update(tagLoader.encodeFormStatus(selList));
                 }
             });
         });
+        tagDisplay.update(tagLoader.encodeFormStatus(selList));
     };
 
     context.attachTagLoader = attachTagLoader;
