@@ -10,6 +10,20 @@
     context.bonitoBoxes = context.bonitoBoxes || {};
 
     /**
+     *
+     * @param element
+     */
+    function normalizeSelectEventSource(element) {
+        if (element.nodeName === 'OPTION') {
+            return element.parentNode;
+
+        } else if (element.nodeName === 'SELECT') {
+            return element;
+        }
+        return null;
+    }
+
+    /**
      * This objects serves as a service object for "multi-level KWIC HTML form".
      * It in fact fixes some flaws of original bonito2 application without massive rewriting of
      * related HTML templates and controller logic.
@@ -212,16 +226,20 @@
      * Creates new AJAX tag hint loader for selected corpus
      *
      * @param corpusName corpus identifier
+     * @param numTagPos
      * @return {Object}
      */
-    createTagLoader = function (corpusName) {
+    createTagLoader = function (corpusName, numTagPos) {
+
+        var tagLoader,
+            i;
 
         /**
          * Tag data loading service object
          *
          * @type {Object}
          */
-        var tagLoader = {
+        tagLoader = {
 
             /**
              * Holds a corpus name for which this object is configured.
@@ -237,6 +255,11 @@
              * Initial values for all tag positions used by this tag loader (always the same for a specific corpus)
              */
             initialValues : null,
+
+            /**
+             *
+             */
+            selectedValues : [],
 
             /**
              * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
@@ -288,9 +311,21 @@
 
                 for (i = 0; i < elmList.length; i += 1) {
                     if (!activeNode || activeNode.parentNode !== elmList[i]) {
-                        if (data[i].length > 0) {
+                        currValue = elmList[i].getValue();
+                        // TODO simplify if-elseif
+                        if (data[i].length === 1) {
+                            elmList[i].update();
+                            elmList[i].writeAttribute('disabled', 'disabled');
+                            newOption = Element.extend(document.createElement('option'));
+                            newOption.writeAttribute('value', data[i][0][0]);
+                            newOption.insert(data[i][0][1]);
+                            elmList[i].insert(newOption);
+                            if (currValue === data[i][0][0]) {
+                                elmList[i].selectedIndex = 0;
+                            }
+
+                        } else if (data[i].length > 1) {
                             elmList[i].writeAttribute('disabled', null);
-                            currValue = elmList[i].getValue();
                             elmList[i].update('<option value="-">-</option>');
                             for (j = 0; j < data[i].length; j += 1) {
                                 newOption = Element.extend(document.createElement('option'));
@@ -378,6 +413,9 @@
 
         };
         tagLoader.corpusName = corpusName;
+        for (i = 0; i < numTagPos; i += 1) {
+            tagLoader.selectedValues[i] = '-';
+        }
         return tagLoader;
     };
 
@@ -390,44 +428,33 @@
      * @param corpusName identifier of a corpus to be used with this tag loader
      */
     attachTagLoader = function (selList, corpusName) {
-        var tagLoader = createTagLoader(corpusName);
+        var tagLoader = createTagLoader(corpusName, selList.length);
 
         tagLoader.loadInitialVariants(function (data) {
-            tagLoader.updateFormValues(selList, null, data, true);
+            tagLoader.updateFormValues(selList, null, data);
         });
 
         selList.each(function (item, idx) {
             $('position-sel-' + idx).observe('click', function (event) {
-                var currPattern;
+                var currPattern,
+                    eventSrcElement = normalizeSelectEventSource(event.element());
 
-                if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
-                    currPattern = tagLoader.encodeFormStatus(selList);
-                    if (currPattern !== tagLoader.lastPattern) {
-                        tagLoader.loadPatternVariants(currPattern, function (data) {
-                            var eventSrcElement;
+                if (eventSrcElement.getValue() !== tagLoader.selectedValues[idx]) {
+                    tagLoader.selectedValues[idx] = eventSrcElement.getValue();
 
-                            if (event.element().nodeName === 'SELECT') {
-                                eventSrcElement = event.element();
+                    if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
+                        currPattern = tagLoader.encodeFormStatus(selList);
+                        if (currPattern !== tagLoader.lastPattern) {
+                            tagLoader.loadPatternVariants(currPattern, function (data) {
+                                tagLoader.updateFormValues(selList, event.element(), data);
+                                tagLoader.lastPattern = currPattern;
+                            });
+                        }
 
-                            } else if (event.element().nodeName === 'OPTION') {
-                                eventSrcElement = event.element().parentNode;
-                            }
-
-                            tagLoader.updateFormValues(selList, event.element(), data);
-                            tagLoader.lastPattern = currPattern;
-                        });
-                    }
-
-                } else {
-                    // different browsers here pass different nodes as an event source
-                    if (event.element().nodeName === 'SELECT') {
+                    } else {
+                        // different browsers here pass different nodes as an event source
                         tagLoader.loadInitialVariants(function (data) {
-                            tagLoader.updateSelectOptions(event.element(), data[idx]);
-                        });
-
-                    } else if (event.element().nodeName === 'OPTION') {
-                        tagLoader.loadInitialVariants(function (data) {
-                            tagLoader.updateSelectOptions(event.element().parentNode, data[idx]);
+                            tagLoader.updateSelectOptions(eventSrcElement, data[idx]);
                         });
                     }
                 }
