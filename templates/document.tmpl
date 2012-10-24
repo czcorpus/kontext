@@ -29,14 +29,24 @@ $ca_headers
 #else
 
 <script type="text/javascript">
+var tagBuilderOptions = {
+    tagPosSelector  : 'select.tag-position',
+    corpusName      : '$corpname',
+    resetButton     : 'reset-button',
+    backButton      : 'back-button',
+    tagDisplay      : 'tag-display',
+    hiddenElm       : 'tag'
+};
 document.observe("dom:loaded", function() {
     targetedLinks();
-    attachTagLoader(\$\$('select.tag-position'),'$corpname', 'reset-button', 'back-button', 'tag-display', 'tag');
     #block bodyonload
     #end block
     #if $focus
     focusEx($focus);
     #end if
+    $('queryselector').observe('change', function (event) {
+        cmdSwitchQuery(tagBuilderOptions);
+    });
 });
 
 #if $getVar('ga_identifier', '')
@@ -266,7 +276,7 @@ $corp_sel
 #set $hidden = ('querytypeel' in $showhiddenlistsimple) and 'visible' or 'hidden'
 <tr class="required" id="querytypeel">
   <th>$_("Query Type"):</th>
-  <td><select id="queryselector" name="queryselector" onchange="cmdSwitchQuery();">
+  <td><select id="queryselector" name="queryselector">
 #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
      <option value="iqueryrow" $selected>$_("Simple")</option>
   #if $has_lemmaattr

@@ -7,20 +7,6 @@
 
     context.bonitoBoxes = context.bonitoBoxes || {};
 
-    /**
-     *
-     * @param element
-     */
-    function normalizeSelectEventSource(element) {
-        var ans = null;
-        if (element.nodeName === 'OPTION') {
-            ans = element.parentNode;
-
-        } else if (element.nodeName === 'SELECT') {
-            ans =  element;
-        }
-        return ans;
-    }
 
     /**
      * This objects serves as a service object for "multi-level KWIC HTML form".
