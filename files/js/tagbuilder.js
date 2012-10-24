@@ -68,6 +68,11 @@
             hiddenElm : null,
 
             /**
+             *
+             */
+            history : [],
+
+            /**
              * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param elmList list of SELECT elements to be used
@@ -263,6 +268,7 @@
             resetButton = $(opt.resetButton);
         }
         resetButton.observe('click', function (event) {
+            tagLoader.history = [];
             tagLoader.loadInitialVariants(function (data) {
                 var a;
 
@@ -281,7 +287,21 @@
             backButton = $(opt.backButton);
         }
         backButton.observe('click', function (event) {
-            alert('Sorry, this function is currently not supported.');
+            var lastSel = tagLoader.history.pop(),
+                newPattern;
+
+            if (lastSel) {
+                lastSel.selectedIndex = 0;
+                lastSel.writeAttribute('disabled', null);
+                newPattern = tagLoader.encodeFormStatus(selList);
+                if (newPattern !== tagLoader.lastPattern) {
+                    tagLoader.loadPatternVariants(newPattern, function (data) {
+                        tagLoader.updateFormValues(selList, null, data);
+                        tagLoader.lastPattern = newPattern;
+                        tagDisplay.update(tagLoader.encodeFormStatus(selList));
+                    });
+                }
+            }
         });
 
         if (typeof (opt.tagDisplay) === 'string') {
@@ -294,6 +314,7 @@
                     eventSrcElement = normalizeSelectEventSource(event.element());
 
                 if (eventSrcElement.getValue() !== tagLoader.selectedValues[idx]) {
+                    tagLoader.history.push(eventSrcElement);
                     tagLoader.selectedValues[idx] = eventSrcElement.getValue();
 
                     if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
