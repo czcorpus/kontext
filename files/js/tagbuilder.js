@@ -5,6 +5,23 @@
         attachTagLoader;
 
 
+
+    /**
+     *
+     * @param element
+     */
+    function normalizeSelectEventSource(element) {
+        var ans = null;
+        if (element.nodeName === 'OPTION') {
+            ans = element.parentNode;
+
+        } else if (element.nodeName === 'SELECT') {
+            ans =  element;
+        }
+        return ans;
+    }
+
+
     /**
      * Creates new AJAX tag hint loader for selected corpus
      *
@@ -217,25 +234,32 @@
     /**
      * A helper method that does whole 'create a tag loader for me' job.
      *
-     * @param selList list of SELECT elements
-     * @param corpusName identifier of a corpus to be used with this tag loader
-     * @param resetButton ID or element itself for the "reset" button
-     * @param backButton ID or element itself for the "back" button
-     * @param tagDisplay ID or element itself for the "tag display" box
-     * @param hiddenElm ID or element itself
+     * @param opt a dictionary with following keys:
+     *  tagPosSelector : a selector to obtain list of SELECT elements
+     *  corpusName : identifier of a corpus to be used with this tag loader
+     *  resetButton : ID or element itself for the "reset" button
+     *  backButton : ID or element itself for the "back" button
+     *  tagDisplay : ID or element itself for the "tag display" box
+     *  hiddenElm : ID or element itself
      */
-    attachTagLoader = function (selList, corpusName, resetButton, backButton, tagDisplay, hiddenElm) {
-        var tagLoader;
+    attachTagLoader = function (opt) {
+        var tagLoader,
+            selList,
+            backButton,
+            resetButton,
+            tagDisplay,
+            hiddenElm;
 
+        selList = $$(opt.tagPosSelector);
         if (typeof (hiddenElm) === 'string') {
             hiddenElm = $(hiddenElm);
         }
-        tagLoader = createTagLoader(corpusName, selList.length, hiddenElm);
+        tagLoader = createTagLoader(opt.corpusName, selList.length, hiddenElm);
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.updateFormValues(selList, null, data);
         });
-        if (typeof (resetButton) === 'string') {
-            resetButton = $(resetButton);
+        if (typeof (opt.resetButton) === 'string') {
+            resetButton = $(opt.resetButton);
         }
         resetButton.observe('click', function (event) {
             tagLoader.loadInitialVariants(function (data) {
@@ -252,15 +276,15 @@
                 tagDisplay.update(tagLoader.encodeFormStatus(selList));
             });
         });
-        if (typeof (backButton) === 'string') {
-            backButton = $(backButton);
+        if (typeof (opt.backButton) === 'string') {
+            backButton = $(opt.backButton);
         }
         backButton.observe('click', function (event) {
             alert('Sorry, this function is currently not supported.');
         });
 
-        if (typeof (tagDisplay) === 'string') {
-            tagDisplay = $(tagDisplay);
+        if (typeof (opt.tagDisplay) === 'string') {
+            tagDisplay = $(opt.tagDisplay);
         }
 
         selList.each(function (item, idx) {

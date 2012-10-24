@@ -117,7 +117,7 @@ function cmdGetFocusedId() {
 }
 
 
-function cmdSwitchQuery() {
+function cmdSwitchQuery(tagOptions) {
     var qs = $('queryselector'),
         newid = qs.options[qs.selectedIndex].value,
         FocusElem = $(newid.substring(0, newid.length - 3)),
@@ -133,9 +133,12 @@ function cmdSwitchQuery() {
 
         if (elementId == newid) {
             elem.className = elem.className.replace("hidden", "visible");
+            //if (elem.)
+            if (elem.readAttribute('id') === 'tagrow') {
+                attachTagLoader(tagOptions);
+            }
 
         } else {
-            console.log('oldelem: ' + elementId.substring(0, elementId.length - 3));
             oldelem = $(elementId.substring(0, elementId.length - 3));
             if (elem.className.search('visible') > -1 & !oldval) {
                 oldval = oldelem.value;
