@@ -137,7 +137,7 @@
 
                         } else if (data[i].length > 1) {
                             elmList[i].writeAttribute('disabled', null);
-                            elmList[i].update('<option value=".">.</option>');
+                            elmList[i].update('<option value="."></option>');
                             for (j = 0; j < data[i].length; j += 1) {
                                 newOption = Element.extend(document.createElement('option'));
                                 newOption.writeAttribute('value', data[i][j][0]);
@@ -168,7 +168,7 @@
                 var i,
                     newElement;
 
-                selectElement.update('<option value=".">.</option>');
+                selectElement.update('<option value="."></option>');
                 for (i = 0; i < data.length; i += 1) {
                     newElement = Element.extend(document.createElement('option'));
                     newElement.writeAttribute('value', data[i][0]);
@@ -236,11 +236,12 @@
      *
      * @param opt a dictionary with following keys:
      *  tagPosSelector : a selector to obtain list of SELECT elements
-     *  corpusName : identifier of a corpus to be used with this tag loader
+     *  corpusName : identifier of a corpus to be used along with this tag loader
      *  resetButton : ID or element itself for the "reset" button
      *  backButton : ID or element itself for the "back" button
      *  tagDisplay : ID or element itself for the "tag display" box
      *  hiddenElm : ID or element itself
+     * @return {tagLoader}
      */
     attachTagLoader = function (opt) {
         var tagLoader,
@@ -251,8 +252,8 @@
             hiddenElm;
 
         selList = $$(opt.tagPosSelector);
-        if (typeof (hiddenElm) === 'string') {
-            hiddenElm = $(hiddenElm);
+        if (typeof (opt.hiddenElm) === 'string') {
+            hiddenElm = $(opt.hiddenElm);
         }
         tagLoader = createTagLoader(opt.corpusName, selList.length, hiddenElm);
         tagLoader.loadInitialVariants(function (data) {
@@ -320,6 +321,7 @@
             });
         });
         tagDisplay.update(tagLoader.encodeFormStatus(selList));
+        return tagLoader;
     };
 
     context.createTagLoader = createTagLoader;
