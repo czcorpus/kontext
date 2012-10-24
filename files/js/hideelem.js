@@ -117,7 +117,7 @@ function cmdGetFocusedId() {
 }
 
 
-function cmdSwitchQuery(tagOptions) {
+function cmdSwitchQuery() {
     var qs = $('queryselector'),
         newid = qs.options[qs.selectedIndex].value,
         FocusElem = $(newid.substring(0, newid.length - 3)),
@@ -134,9 +134,6 @@ function cmdSwitchQuery(tagOptions) {
         if (elementId == newid) {
             elem.className = elem.className.replace("hidden", "visible");
             //if (elem.)
-            if (elem.readAttribute('id') === 'tagrow') {
-                attachTagLoader(tagOptions);
-            }
 
         } else {
             oldelem = $(elementId.substring(0, elementId.length - 3));

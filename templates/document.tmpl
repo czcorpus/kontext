@@ -44,8 +44,9 @@ document.observe("dom:loaded", function() {
     #if $focus
     focusEx($focus);
     #end if
+    attachTagLoader(tagBuilderOptions);
     $('queryselector').observe('change', function (event) {
-        cmdSwitchQuery(tagBuilderOptions);
+        cmdSwitchQuery();
     });
 });
 
