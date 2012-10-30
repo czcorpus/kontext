@@ -92,6 +92,7 @@ class TagVariantLoader(object):
             if patt.match(line):
                 matching_tags.append(line)
 
+
         ans = {}
         for item in matching_tags:
             for i in range(len(selected_tags)):
@@ -104,14 +105,16 @@ class TagVariantLoader(object):
                 else:
                     ans[i].add((item[i], '%s - %s' % (item[i], item[i])))
 
-
         for key in ans:
-            if len(ans[key]) == 1 and ans[key]:
-                ans[key] = ()
-            else:
-                if '-' not in (x[0] for x in ans[key]):
-                    ans[key].add(('-', ''))
-                ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
+            used_keys = [x[0] for x in ans[key]]
+            if '-' in used_keys:
+                if len(used_keys) == 1:
+                    ans[key] = ()
+                elif len(used_keys) == 2:
+                    ans[key].remove(('-', ''))
+            elif len(used_keys) > 1:
+                ans[key].add(('-', ''))
+            ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
         return ans
 
     def cache_variant(self, selected_positions):
