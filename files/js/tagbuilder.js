@@ -7,7 +7,7 @@
 
 
     /**
-     *
+     * @todo rename function
      * @param element
      */
     function normalizeSelectEventSource(element) {
@@ -21,6 +21,27 @@
         return ans;
     }
 
+    /**
+     * @param selector
+     * @param status boolean
+     */
+    function switchSelectorStatus(selector, status) {
+        var siblings = selector.parentNode.siblings(),
+            tableCell = null;
+
+        if (siblings.length === 1 && siblings[0].readAttribute('class') === 'num') {
+            tableCell = siblings[0];
+        }
+
+        if (status === true) {
+            selector.writeAttribute('disabled', null);
+            siblings[0].setStyle({ color : '#000' });
+
+        } else if (status === false) {
+            selector.writeAttribute('disabled', 'disabled');
+            siblings[0].setStyle({ color : '#AAA' });
+        }
+    }
 
     /**
      * Creates new AJAX tag hint loader for selected corpus
@@ -135,7 +156,7 @@
                         // TODO simplify if-elseif
                         if (data[i].length === 1) {
                             elmList[i].update();
-                            elmList[i].writeAttribute('disabled', 'disabled');
+                            switchSelectorStatus(elmList[i], false);
                             newOption = Element.extend(document.createElement('option'));
                             newOption.writeAttribute('value', data[i][0][0]);
                             newOption.insert(data[i][0][1]);
@@ -145,7 +166,7 @@
                             }
 
                         } else if (data[i].length > 1) {
-                            elmList[i].writeAttribute('disabled', null);
+                            switchSelectorStatus(elmList[i], true);
                             elmList[i].update();
                             for (j = 0; j < data[i].length; j += 1) {
                                 newOption = Element.extend(document.createElement('option'));
@@ -158,7 +179,7 @@
                             }
 
                         } else {
-                            elmList[i].writeAttribute('disabled', 'disabled');
+                            switchSelectorStatus(elmList[i], false);
                         }
 
                     } else {
@@ -305,7 +326,7 @@
 
             if (lastSel) {
                 lastSel.selectedIndex = 0;
-                lastSel.writeAttribute('disabled', null);
+                switchSelectorStatus(lastSel, true);
                 newPattern = tagLoader.encodeFormStatus(selList);
                 if (newPattern !== tagLoader.lastPattern) {
                     tagLoader.loadPatternVariants(newPattern, function (data) {
