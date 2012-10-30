@@ -874,6 +874,13 @@ class ConcCGI (CGIPublisher):
                 if i % 2 == 1: ranges.append(item)
             return attrs, ranges
 
+        def escape_word(s):
+            return s.replace('"', '\\"').replace('<', '\\<').replace('>', '\\>') \
+            .replace('.', '\\.').replace('?', '\\?').replace('*', '\\*').replace('[', '\\[')\
+            .replace(']', '\\]').replace('{', '\\{').replace('}', '\\}').replace('+', '\\+')\
+            .replace(')', '\\)').replace('(', '\\(').replace('\\', '\\\\')
+
+
         def is_non_structural_attr(criteria):
             crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
             if len(crit_attrs) == 0:
@@ -935,13 +942,14 @@ class ConcCGI (CGIPublisher):
                             end = str(len(wwords) - 1) + '<0'
                             begin += '<0'
                         fquery = '%s %s 1 ' % (begin, end)
-                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, w)
+                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_word(w))
                            for w in wwords ])
                     else: # text types
                         fquery = '0 0 1 [] within <%s %s="%s" />' % \
                                  (attr.split('.')[0], attr.split('.')[1],
                                   item['Word'][0]['n'])
                     fquery = self.urlencode(fquery)
+
                     item['pfilter'] += ';q=p%s' % fquery
                     item['nfilter'] += ';q=n%s' % fquery
         return result
