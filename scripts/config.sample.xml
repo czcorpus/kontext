@@ -1,0 +1,42 @@
+<bonito>
+    <global>
+        <log_path>/var/log/bonito/application.log</log_path>
+    </global>
+    <database>
+        <name>bonito</name>
+        <host>localhost</host>
+        <password>bonito</password>
+        <username>bonito</username>
+    </database>
+    <corpora>
+        <manatee_registry>%(corpus_root)s/registry</manatee_registry>
+        <options_dir>%(corpus_root)s/registry/options</options_dir>
+        <cache_dir>%(corpus_root)s/cache</cache_dir>
+        <subcpath>%(corpus_root)s/subcorp/GLOBAL</subcpath>
+        <users_subcpath>%(corpus_root)s/subcorp</users_subcpath>
+        <conc_dir>%(corpus_root)s/conc</conc_dir>
+        <wseval_dir></wseval_dir>
+        <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
+        <default_corpus>syn2010</default_corpus>
+        <alternative_corpus>omezeni/syn2010</alternative_corpus>
+        <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
+        <speech_data_url>http://127.0.0.1/data</speech_data_url>
+        <kwicline_max_context>500</kwicline_max_context>
+
+        <corplist id="registry">
+            <corpus id="oral" />
+            <corpus id="syn2010" />
+            <corpus id="oral2013" />
+            <corpus id="oral2008" />
+            <corplist id="no_sketches">
+                <corpus id="no_sketches/oral" />
+                <corpus id="no_sketches/syn2010" />
+                <corpus id="no_sketches/oral2013" />
+                <corpus id="no_sketches/oral2008" />
+                <corpus id="no_sketches/oral2006" />
+            </corplist>
+            <corpus id="oral2006" />
+        </corplist>
+    </corpora>
+</bonito>
+
