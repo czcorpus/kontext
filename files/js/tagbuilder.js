@@ -89,7 +89,7 @@
             hiddenElm : null,
 
             /**
-             *
+             * List of patterns user gradually created
              */
             history : [],
 
@@ -103,7 +103,7 @@
                 var i,
                     ans = '';
 
-                anyCharSymbol = anyCharSymbol || '-'
+                anyCharSymbol = anyCharSymbol || '-';
                 for (i = 0; i < elmList.length; i += 1) {
                     ans += elmList[i].getValue() || '-';
                 }
@@ -285,6 +285,7 @@
         updateConcordanceQuery = function () {
             var pattern = tagLoader.encodeFormStatus(selList, '.');
             tagDisplay.update(pattern);
+            tagLoader.lastPattern = pattern;
             if (tagLoader.hiddenElm) {
                 tagLoader.hiddenElm.setValue(pattern);
             }
@@ -308,7 +309,9 @@
 
                 tagLoader.updateFormValues(selList, null, data);
                 for (a in tagLoader.selectedValues) {
-                    tagLoader.selectedValues[a] = '-';
+                    if (tagLoader.selectedValues.hasOwnProperty(a)) {
+                        tagLoader.selectedValues[a] = '-';
+                    }
                 }
                 tagLoader.lastPattern = null;
                 selList.each(function (item, idx) {
@@ -321,20 +324,33 @@
             backButton = $(opt.backButton);
         }
         backButton.observe('click', function (event) {
-            var lastSel = tagLoader.history.pop(),
-                newPattern;
+            var prevPattern;
 
-            if (lastSel) {
-                lastSel.selectedIndex = 0;
-                switchSelectorStatus(lastSel, true);
-                newPattern = tagLoader.encodeFormStatus(selList);
-                if (newPattern !== tagLoader.lastPattern) {
-                    tagLoader.loadPatternVariants(newPattern, function (data) {
-                        tagLoader.updateFormValues(selList, null, data);
-                        tagLoader.lastPattern = newPattern;
-                        updateConcordanceQuery();
+            tagLoader.history.pop(); // remove current value
+            prevPattern = tagLoader.history[tagLoader.history.length - 1];
+
+            if (prevPattern) {
+                tagLoader.loadPatternVariants(prevPattern, function (data) {
+                    tagLoader.updateFormValues(selList, null, data);
+                    updateConcordanceQuery();
+                });
+
+            } else { // empty => load initial values
+                tagLoader.loadInitialVariants(function (data) {
+                    var a;
+
+                    tagLoader.updateFormValues(selList, null, data);
+                    for (a in tagLoader.selectedValues) {
+                        if (tagLoader.selectedValues.hasOwnProperty(a)) {
+                            tagLoader.selectedValues[a] = '-';
+                        }
+                    }
+                    tagLoader.lastPattern = null;
+                    selList.each(function (item, idx) {
+                        item.selectedIndex = 0;
                     });
-                }
+                    updateConcordanceQuery();
+                });
             }
         });
 
@@ -348,7 +364,6 @@
                     eventSrcElement = normalizeSelectEventSource(event.element());
 
                 if (eventSrcElement.getValue() !== tagLoader.selectedValues[idx]) {
-                    tagLoader.history.push(eventSrcElement);
                     tagLoader.selectedValues[idx] = eventSrcElement.getValue();
 
                     if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
@@ -358,6 +373,7 @@
                                 tagLoader.updateFormValues(selList, event.element(), data);
                                 tagLoader.lastPattern = currPattern;
                                 updateConcordanceQuery();
+                                tagLoader.history.push(currPattern);
                             });
                         }
                         updateConcordanceQuery();
