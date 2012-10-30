@@ -5,12 +5,12 @@
 $_("Concordance: Filter form")#slurp
 #end def
 
-#attr $focus = "cmdGetFocusedId()"
+#attr $focus = "hideElem.cmdGetFocusedId()"
 
 #def bodyonload
-cmdSwitchQuery(tagBuilderOptions);
-loadHideElementStoreSimple();
-loadHideElementStore('${files_path}');
+hideElem.cmdSwitchQuery(tagBuilderOptions);
+hideElem.loadHideElementStoreSimple();
+hideElem.loadHideElementStore('${files_path}');
 #end def
 
 #def helpblock
@@ -30,8 +30,8 @@ loadHideElementStore('${files_path}');
 #def left_submenu_expert
   <li>$_("Expert options:")
     <ul class="submenu">
-      <li><a onclick="cmdHideElementStoreSimple('querytypeel', 1);">$_("Query Type")</a></li>
-      <li><a onclick="cmdHideElementStoreSimple('texttypeel', 1);" >$_("Text Types")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('querytypeel', 1);">$_("Query Type")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('texttypeel', 1);" >$_("Text Types")</a></li>
     </ul>
   </li>
 #end def

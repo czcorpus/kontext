@@ -33,7 +33,7 @@ document.observe('dom:loaded', function () {
 });
 </script>
 #filter WebSafe
-<form id="help-search-form" action="" onsubmit="cmdHelp('https://trac.sketchengine.co.uk/');">
+<form id="help-search-form" action="" onsubmit="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');">
 <table id="topbar">
   <tr>
     <td rowspan="2">
@@ -45,7 +45,7 @@ document.observe('dom:loaded', function () {
             $_("Search")
             <input type="text" id="searchhelp" />
             $_("in")
-            <a href='https://trac.sketchengine.co.uk/' onclick="cmdHelp('https://trac.sketchengine.co.uk/');return false;">$_("Help")</a>
+            <a href='https://trac.sketchengine.co.uk/' onclick="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');return false;">$_("Help")</a>
     </td>
   </tr>
 </table>

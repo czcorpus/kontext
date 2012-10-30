@@ -31,11 +31,11 @@ $ca_headers
 
 <script type="text/javascript">
 document.observe("dom:loaded", function() {
-    targetedLinks();
+    hideElem.targetedLinks();
     #block bodyonload
     #end block
     #if $focus
-    focusEx($focus);
+    hideElem.focusEx($focus);
     #end if
     attachTagLoader({
         tagPosSelector  : 'select.tag-position',
@@ -46,7 +46,7 @@ document.observe("dom:loaded", function() {
         hiddenElm       : 'tag'
     });
     \$('queryselector').observe('change', function (event) {
-        cmdSwitchQuery();
+        hideElem.cmdSwitchQuery();
     });
 });
 
@@ -167,7 +167,7 @@ $corp_sel
       document.observe('dom:loaded', function () {
         \$\$('input[class="select-all"]').each(function (item) {
             item.observe('click', function (event) {
-              selectAllCheckBoxes(event.element(), event.element().readAttribute('data-item-name'));
+                hideElem.selectAllCheckBoxes(event.element(), event.element().readAttribute('data-item-name'));
             });
         });
       });
@@ -211,7 +211,7 @@ $corp_sel
             <li>
             #if $v['display_plus']
             #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
-            <img src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")" onclick="cmdHideElementStore('div_$v['key']$hsep$v['label']', 1, '${files_path}');" />
+            <img src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")" onclick="hideElem.cmdHideElementStore('div_$v['key']$hsep$v['label']', 1, '${files_path}');" />
             #else
             <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
             #end if
