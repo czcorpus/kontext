@@ -5,12 +5,12 @@
 $_("Concordance - First query form")#slurp
 #end def
 
-#attr $focus = "cmdGetFocusedId()"
+#attr $focus = "hideElem.cmdGetFocusedId()"
 
 #def bodyonload
-    cmdSwitchQuery();
-    loadHideElementStoreSimple();
-    loadHideElementStore('${files_path}');
+    hideElem.cmdSwitchQuery();
+    hideElem.loadHideElementStoreSimple();
+    hideElem.loadHideElementStore('${files_path}');
 
     var updForm = function (item) {
         var formAncestor,
@@ -57,8 +57,8 @@ $_("Concordance - First query form")#slurp
 #def left_submenu_expert
   <li>$_("Expert options"):
     <ul class="submenu">
-      <li><a onclick="cmdHideElementStoreSimple('contextel', 1);">$_("Context")</a></li>
-      <li><a onclick="cmdHideElementStoreSimple('texttypeel', 1);" >$_("Subcorpora")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('contextel', 1);">$_("Context")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('texttypeel', 1);" >$_("Subcorpora")</a></li>
     </ul>
   </li>
 #end def
@@ -203,7 +203,7 @@ $tt_sel
 
 <div class="buttons">
 <input class="submit" type="submit" value="$_("Make Concordance")" />
-<input class="button" type="button" value="$_("Clear All")" onclick="clearForm(document.getElementById('mainform'));cmdSwitchQuery();" />
+<input class="button" type="button" value="$_("Clear All")" onclick="hideElem.clearForm(document.getElementById('mainform'));hideElem.cmdSwitchQuery();" />
 </div>
 </fieldset>
 </form>

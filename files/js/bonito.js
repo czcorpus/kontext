@@ -1,12 +1,31 @@
 (function (context) {
     'use strict';
 
-
-    var mlkfu,
-        createPopupBox;
+    var mlkfu;
 
     context.bonitoBoxes = context.bonitoBoxes || {};
 
+    /**
+     *
+     * @param cookiename
+     * @return {String}
+     */
+    context.getCookieValue = function (cookiename) {
+        var allcookies = document.cookie,
+            pos = allcookies.indexOf(cookiename + "="),
+            start,
+            end;
+
+        if (pos !== -1) {
+            start = pos + cookiename.length + 1;
+            end = allcookies.indexOf(";", start);
+            if (end === -1) {
+                end = allcookies.length;
+            }
+            return allcookies.substring(start, end);
+        }
+        return ".";
+    };
 
     /**
      * This objects serves as a service object for "multi-level KWIC HTML form".
