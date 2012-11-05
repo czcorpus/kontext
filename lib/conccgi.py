@@ -957,7 +957,7 @@ class ConcCGI (CGIPublisher):
                             end = str(len(wwords) - 1) + '<0'
                             begin += '<0'
                         fquery = '%s %s 1 ' % (begin, end)
-                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, w)
+                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_query_value(w))
                                            for w in wwords ])
                     else: # text types
                         fquery = '0 0 1 [] within <%s %s="%s" />' %\
