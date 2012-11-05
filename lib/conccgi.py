@@ -863,7 +863,7 @@ class ConcCGI (CGIPublisher):
         return {'Pos_ctxs': conclib.pos_ctxs(1,1)}
 
     fcrit = []
-    add_vars['freqs'] = ['concsize'] 
+    add_vars['freqs'] = ['concsize']
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
         "display a frequecy list"
         import operator
@@ -881,6 +881,28 @@ class ConcCGI (CGIPublisher):
             attr_list = set(self._curr_corpus.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
+        def escape_query_value(s):
+            ans = s
+            t = {
+                '"' : r'\"',
+                '<' : r'\<',
+                '>' : r'\>',
+                '.' : r'\.',
+                ',' : r'\,',
+                '?' : r'\?',
+                '*' : r'\*',
+                '[' : r'\[',
+                ']' : r'\]',
+                '{' : r'\{',
+                '}' : r'\}',
+                '+' : r'\+',
+                ')' : r'\)',
+                '(' : r'\(',
+            }
+            for k, v in t.items():
+                ans = ans.replace(k, v)
+            return ans
+
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
             fcrit_is_all_nonstruct = (fcrit_is_all_nonstruct and is_non_structural_attr(fcrit_item))
@@ -893,10 +915,10 @@ class ConcCGI (CGIPublisher):
         conc = self.call_function (conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
-                                            for cr in fcrit]),
+                                      for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
-                                   self.ftt_include_empty, rel_mode) for cr in fcrit],
+                self.ftt_include_empty, rel_mode) for cr in fcrit],
             'paging': 0,
             'concsize' : conc.size(),
             'fmaxitems' : self.fmaxitems
@@ -910,13 +932,13 @@ class ConcCGI (CGIPublisher):
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
-            result['Blocks'][0]['Items'] = \
-               result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
+            result['Blocks'][0]['Items'] =\
+            result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
         for b in result['Blocks']:
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-        ## generating positive and negative filter references
+            ## generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
@@ -936,9 +958,9 @@ class ConcCGI (CGIPublisher):
                             begin += '<0'
                         fquery = '%s %s 1 ' % (begin, end)
                         fquery += ''.join(['[%s="%s%s"]' % (attr, icase, w)
-                           for w in wwords ])
+                                           for w in wwords ])
                     else: # text types
-                        fquery = '0 0 1 [] within <%s %s="%s" />' % \
+                        fquery = '0 0 1 [] within <%s %s="%s" />' %\
                                  (attr.split('.')[0], attr.split('.')[1],
                                   item['Word'][0]['n'])
                     fquery = self.urlencode(fquery)
