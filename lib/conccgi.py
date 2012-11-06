@@ -864,7 +864,7 @@ class ConcCGI (CGIPublisher):
         return {'Pos_ctxs': conclib.pos_ctxs(1,1)}
 
     fcrit = []
-    add_vars['freqs'] = ['concsize']
+    add_vars['freqs'] = ['concsize'] 
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
         "display a frequecy list"
         import operator
