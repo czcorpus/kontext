@@ -4,33 +4,18 @@
 #def title
 #end def
 
+#def bodyonload
+//var tagLoader = createTagLoader('$corpus_name');
+var multiselect = createMultiselectComponent('testing-component', 8);
+multiselect.addItem(0, 'item A.1', 'hodnota A1');
+multiselect.addItem(0, 'item A.2', 'hodnota A2');
+multiselect.addItem(1, 'item B.1', 'hodnota B1');
+#end def
+
 #def main
 
 <h1>Tag query builder test</h1>
-<div id="tag-display" style="font-size: 25pt; font-family: 'Courier New', Courier, monospace"></div>
 <form>
-    <input type="hidden" name="ans-value" id="hidden-input" />
-    <table border="0">
-        <tr>
-            <td colspan="2">
-                <button id="reset-button" type="button">reset</button>
-                <button id="back-button" type="button">back</button>
-            </td>
-        </tr>
-        <tr>
-            <th>pozice</th>
-            <th>hodnota</th>
-        </tr>
-        #for i in range($num_tag_pos)
-        <tr>
-            <td>$(i + 1)</td>
-            <td style="width: 100px">
-                <select class="tag-position" id="position-sel-$i">
-                    <option value=".">.</option>
-                </select>
-            </td>
-        </tr>
-        #end for
-    </table>
+    <div id="testing-component" style="width: 300px">foo</div>
 </form>
 #end def
