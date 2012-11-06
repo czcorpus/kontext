@@ -6,7 +6,7 @@ from inspect import isclass
 import Cookie
 import codecs
 import imp
-from urllib import urlencode
+import urllib
 import simplejson
 
 # According to Cheetag changelog, Cheetah should use Unicode in its internals since version 2.2.0
@@ -328,12 +328,13 @@ class CGIPublisher:
         return x
 
     def urlencode (self, key_val_pairs):
-        """recode values of key-value pairs and run urlencode from urllib"""
-        if type(key_val_pairs) is StringType:
-            # mapping strings
-            key_val_pairs = [('', key_val_pairs)]
+        """
+        """
         enc = self.self_encoding()
-        return urlencode ([(k, self.rec_recode(v, enc, utf8_out=True)) 
+        if type(key_val_pairs) is StringType:
+            return urllib.quote(self.rec_recode(key_val_pairs, enc, utf8_out=True))
+        else:
+            return urllib.urlencode([(k, self.rec_recode(v, enc, utf8_out=True))
                                                 for (k,v) in key_val_pairs])
     
     def output_headers (self, outf=sys.stdout):

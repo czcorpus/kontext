@@ -552,8 +552,7 @@ class PyConc (manatee.Concordance):
 
     def pn_filter (self, options, ispositive):
         lctx, rctx, rank, query = options.split (None, 3)
-        query_elems = query.split(',')
-        logging.getLogger(__name__).info('query_elems: %s' % (query_elems,))
+        query_elems = re.split(r'(?<!\\),', query)
         if len(query_elems) > 1:
             self.corp.set_default_attr(query_elems[0])
             query = query_elems[1]
@@ -886,7 +885,7 @@ def get_conc (corp, q=[], save=0, cache_dir='cache'):
                     os.remove (f)
         except OSError:
             pass
-    
+
     saved = load_map (cache_dir)
     subchash = getattr(corp, 'subchash', None)
     for i in range (len(q), 0, -1):
