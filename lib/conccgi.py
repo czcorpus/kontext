@@ -932,8 +932,10 @@ class ConcCGI (CGIPublisher):
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
+            result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
             result['Blocks'][0]['Items'] =\
             result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
+
         for b in result['Blocks']:
             for item in b['Items']:
                 item['pfilter'] = ''
