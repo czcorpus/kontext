@@ -101,7 +101,8 @@ def load(user, conf_path='config.xml'):
 def get_corpus_info(corp_name):
     """
     Returns information related to provided corpus name and contained within
-    the configuration XML file (i.e. not the data from the registry file).
+    the configuration XML file (i.e. not the data from the registry file). It is
+    able to handle names containing the '/' character.
 
     Parameters
     ----------
@@ -113,6 +114,11 @@ def get_corpus_info(corp_name):
     path, web
     or None if no such item is found
     """
+    tmp = corp_name.split('/')
+    if len(tmp) > 1:
+        corp_name = tmp[1]
+    else:
+        corp_name = tmp[0]
     for item in _conf['corpora_hierarchy']:
         if item['id'] == corp_name:
             return item

@@ -874,19 +874,34 @@ class ConcCGI (CGIPublisher):
                 if i % 2 == 1: ranges.append(item)
             return attrs, ranges
 
-        def escape_word(s):
-            return s.replace('"', '\\"').replace('<', '\\<').replace('>', '\\>') \
-            .replace('.', '\\.').replace('?', '\\?').replace('*', '\\*').replace('[', '\\[')\
-            .replace(']', '\\]').replace('{', '\\{').replace('}', '\\}').replace('+', '\\+')\
-            .replace(')', '\\)').replace('(', '\\(').replace('\\', '\\\\')
-
-
         def is_non_structural_attr(criteria):
             crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
             if len(crit_attrs) == 0:
                 crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
             attr_list = set(self._curr_corpus.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
+
+        def escape_query_value(s):
+            ans = s
+            t = {
+                '"' : r'\"',
+                '<' : r'\<',
+                '>' : r'\>',
+                '.' : r'\.',
+                ',' : r'\,',
+                '?' : r'\?',
+                '*' : r'\*',
+                '[' : r'\[',
+                ']' : r'\]',
+                '{' : r'\{',
+                '}' : r'\}',
+                '+' : r'\+',
+                ')' : r'\)',
+                '(' : r'\(',
+            }
+            for k, v in t.items():
+                ans = ans.replace(k, v)
+            return ans
 
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
@@ -900,10 +915,10 @@ class ConcCGI (CGIPublisher):
         conc = self.call_function (conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
-                                            for cr in fcrit]),
+                                      for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist (cr, flimit, freq_sort, 300, ml,
-                                   self.ftt_include_empty, rel_mode) for cr in fcrit],
+                self.ftt_include_empty, rel_mode) for cr in fcrit],
             'paging': 0,
             'concsize' : conc.size(),
             'fmaxitems' : self.fmaxitems
@@ -917,13 +932,15 @@ class ConcCGI (CGIPublisher):
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
-            result['Blocks'][0]['Items'] = \
-               result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
+            result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
+            result['Blocks'][0]['Items'] =\
+            result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
+
         for b in result['Blocks']:
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-        ## generating positive and negative filter references
+            ## generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
@@ -942,14 +959,13 @@ class ConcCGI (CGIPublisher):
                             end = str(len(wwords) - 1) + '<0'
                             begin += '<0'
                         fquery = '%s %s 1 ' % (begin, end)
-                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_word(w))
-                           for w in wwords ])
+                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_query_value(w))
+                                           for w in wwords ])
                     else: # text types
-                        fquery = '0 0 1 [] within <%s %s="%s" />' % \
+                        fquery = '0 0 1 [] within <%s %s="%s" />' %\
                                  (attr.split('.')[0], attr.split('.')[1],
                                   item['Word'][0]['n'])
                     fquery = self.urlencode(fquery)
-
                     item['pfilter'] += ';q=p%s' % fquery
                     item['nfilter'] += ';q=n%s' % fquery
         return result

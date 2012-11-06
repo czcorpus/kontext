@@ -83,6 +83,14 @@ $input_hidden
 <table class="result">
 #for $b in $Blocks
   #set $rowNum = 1
+  #if 'Total' in $b
+  <tr>
+      <td colspan="2"><strong>$_('Total'):</strong> $b['Total']</td>
+      #for $h in $b['Head']
+      <td></td>
+      #end for
+  </tr>
+  #end if
   <tr>
   <th></th>
   <th></th>
