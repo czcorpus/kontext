@@ -85,7 +85,7 @@ $input_hidden
   #set $rowNum = 1
   #if 'Total' in $b
   <tr>
-      <td colspan="2"><strong>$_('Total'):</strong> $b['Total']</td>
+      <td colspan="2"><strong>$_('Total'):</strong> $b['Total'] ($b['TotalPages'] $_('pages'))</td>
       #for $h in $b['Head']
       <td></td>
       #end for

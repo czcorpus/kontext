@@ -926,6 +926,7 @@ class ConcCGI (CGIPublisher):
         }
         if not result['Blocks'][0]: raise ConcError(_('Empty list'))
         if len(result['Blocks']) == 1: # paging
+            items_per_page = self.fmaxitems
             fstart = (self.fpage - 1) * self.fmaxitems
             self.fmaxitems = self.fmaxitems * self.fpage + 1
             result['paging'] = 1
@@ -934,8 +935,8 @@ class ConcCGI (CGIPublisher):
             else:
                 result['lastpage'] = 0
             result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
-            result['Blocks'][0]['Items'] =\
-            result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
+            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total'] / float(items_per_page)))
+            result['Blocks'][0]['Items'] = result['Blocks'][0]['Items'][fstart:self.fmaxitems-1]
 
         for b in result['Blocks']:
             for item in b['Items']:
