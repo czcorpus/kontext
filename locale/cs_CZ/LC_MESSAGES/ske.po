@@ -2505,3 +2505,6 @@ msgstr "Potvrzení nového hesla"
 
 msgid "After a successful password update, you will be logged out and prompted to enter your new credentials."
 msgstr "Po úspěšné aktualizaci hesla budete odhlášeni a vyzváni k zadání vašich nových přihlašovacích údajů."
+
+msgid "pages"
+msgstr "str."
