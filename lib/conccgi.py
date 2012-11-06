@@ -8,6 +8,7 @@ import time
 import glob
 from types import ListType
 import logging
+import math
 
 from CGIPublisher import CGIPublisher
 import corplib
@@ -1027,7 +1028,7 @@ class ConcCGI (CGIPublisher):
     ctow = 5
     cminfreq = 5
     cminbgr = 3
-    cmaxitems = 50
+    citemsperpage = 50
     
     add_vars['coll'] = ['concsize'] 
     def coll (self):
@@ -1040,19 +1041,23 @@ class ConcCGI (CGIPublisher):
                'Pos_ctxs': conclib.pos_ctxs(1,1)}
         return out
 
-    add_vars['collx'] = ['concsize'] 
+    add_vars['collx'] = ['concsize']
+
     def collx (self, csortfn='d', cbgrfns=['t','m', 'd']):
         "list collocations"
-        collstart = (self.collpage - 1) * self.cmaxitems
-        self.cmaxitems = self.cmaxitems * self.collpage + 1
+        collstart = (self.collpage - 1) * self.citemsperpage
         self.cbgrfns = ''.join (cbgrfns)
         if csortfn is '' and cbgrfns:
             self.csortfn = cbgrfns[0]
         conc = self.call_function (conclib.get_conc, (self._corp(),))
-        result = self.call_function (conc.collocs, ())
-        if len(result['Items']) < self.cmaxitems: result['lastpage'] = 1
-        else: result['lastpage'] = 0; result['Items'] = result['Items'][:-1]
-        result['Items'] = result['Items'][collstart:]
+
+        result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
+                cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
+                from_idx=collstart, max_lines=self.citemsperpage)
+        if collstart + self.citemsperpage < result['Total']:
+            result['lastpage'] = 0
+        else:
+            result['lastpage'] = 1
         return result
 
 
@@ -1060,7 +1065,7 @@ class ConcCGI (CGIPublisher):
         out = self.coll()
         self.cbgrfns = ''.join(cbgrfns)
         self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
-                            'cmaxitems', 'cbgrfns', 'csortfn'], self.corpname)
+                            'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
         out['saved_attrs'] = 1
         return out
 
@@ -1070,12 +1075,9 @@ class ConcCGI (CGIPublisher):
     def savecoll (self, csortfn='', cbgrfns=['t','m'], saveformat='text',
                   heading=0, maxsavelines=1000):
         "save collocations"
-        if self.pages:
-            if maxsavelines < self.cmaxitems:
-                self.cmaxitems = maxsavelines
-        else:
+        if not self.pages:
             self.collpage = 1
-            self.cmaxitems = maxsavelines
+            self.citemsperpage = maxsavelines
         result = self.collx(csortfn, cbgrfns)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'

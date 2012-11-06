@@ -6,6 +6,7 @@ import os, re
 from sys import stderr
 from datetime import datetime
 import logging
+import math
 
 import manatee
 import settings
@@ -753,7 +754,7 @@ class PyConc (manatee.Concordance):
         return zip (vals, begs)
 
     def collocs (self, cattr='-', csortfn='m', cbgrfns='mt',
-                 cfromw=1, ctow=1, cminfreq=5, cminbgr=3, cmaxitems=30):
+                 cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, from_idx=0, max_lines=50):
         statdesc = {'t': 'T-score',
                     'm': 'MI',
                     '3': 'MI3',
@@ -767,19 +768,28 @@ class PyConc (manatee.Concordance):
 
         items=[]
         colls = manatee.CollocItems (self, cattr, csortfn, cminfreq, cminbgr,
-                                     cfromw, ctow, cmaxitems)
+                                     cfromw, ctow, 2 ** 29)
         qfilter = 'q=%%s%i %i 1 [%s="%%s"]' % (cfromw, ctow, cattr)
+        i = 0
         while not colls.eos():
-            items.append ({'str': colls.get_item(), 'freq': colls.get_cnt(),
-                           'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
-                                     for s in  cbgrfns],
-                           'pfilter': qfilter % ('p',colls.get_item()),
-                           'nfilter': qfilter % ('n',colls.get_item())
+            if i >= from_idx and i < from_idx + max_lines:
+                items.append ({'str': colls.get_item(), 'freq': colls.get_cnt(),
+                               'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
+                                         for s in  cbgrfns],
+                               'pfilter': qfilter % ('p',colls.get_item()),
+                            'nfilter': qfilter % ('n',colls.get_item())
                            })
             colls.next()
+            i += 1
+
         head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] \
                + [{'n': statdesc.get(s,s), 's': s} for s in cbgrfns]
-        return {'Head': head, 'Items': add_block_items (items)}
+        return {
+            'Head': head,
+            'Items': add_block_items (items),
+            'Total' : i,
+            'TotalPages' : int(math.ceil(i / float(max_lines)))
+        }
 
     def linegroup_info_select (self, selected_count=5):
         ids = manatee.IntVector()
