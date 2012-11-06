@@ -1,0 +1,86 @@
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Save Collocations")#slurp
+#end def
+
+#attr $focus = "'submit'"
+
+#def main
+#filter WebSafe
+<h3>$_("Save Collocation Candidates")</h3>
+<form action="savecoll">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+<input type="hidden" name="cattr" value="$cattr" />
+<input type="hidden" name="cbgrfns" value="$cbgrfns" />
+<input type="hidden" name="cminfreq" value="$cminfreq" />
+<input type="hidden" name="cminbgr" value="$cminbgr" />
+<input type="hidden" name="cfromw" value="$cfromw" />
+<input type="hidden" name="ctow" value="$ctow" />
+<input type="hidden" name="csortfn" value="$csortfn" />
+
+<table class="form">
+  <tr>
+    <th>$_("Save collocations as"):</th>
+    <td>
+      <label>
+        <input type="radio" name="saveformat" value="text"
+        #if $saveformat == 'text'
+          checked="checked"
+        #end if
+        /> $_("Text")
+      </label>
+      <label>
+        <input type="radio" name="saveformat" value="xml"
+        #if $saveformat == 'xml'
+          checked="checked"
+        #end if
+        /> $_("XML")
+      </label>
+    </td>
+  </tr>
+  <tr class="separator">
+      <th>$_("Save pages"):</th>
+      <td>
+      <label>
+        <input type="radio" name="pages" value="0"
+        #if $pages == 0
+          checked="checked"
+        #end if
+        /> $_("All")
+      </label>
+      </td>
+    </tr><tr>
+      <th></th>
+      <td>
+      <label>
+        <input type="radio" name="pages" value="1"
+        #if $pages == 1
+          checked="checked"
+        #end if
+        /> $_("Only page"):
+   <input type="text" name="collpage" value="$collpage" size="5" />
+      </label>
+      </td>
+    </tr>
+  <tr class="separator">
+    <th>$_("Include heading"):</th>
+    <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
+  </tr>
+  <tr>
+    <th>$_("Maximum number of lines"):</th>
+    <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
+  </tr>
+</table>
+
+<div class="buttons">
+<input type="submit" value="$_("Save Collocation candidates")" id="submit" />
+</div>
+</fieldset>
+</form>
+#end filter
+#end def

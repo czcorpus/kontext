@@ -1,0 +1,39 @@
+#from templating.filters import *
+
+<h2>$_('Corpus'): $corpname</h2>
+<table class="wrapper" border="0" style="border-collapse: collapse">
+    <tr>
+        <td>
+            <table class="attrib-list">
+                <tr>
+                    <th class="attrib-heading" colspan="2">$_('Attributes')</th>
+                </tr>
+                <tr>
+                    <td style="height: 5px"> </td>
+                </tr>
+                #for item, freq in $attrlist
+                <tr>
+                    <th>$item</th>
+                    <td class="numeric">#filter $IntegerFormatter# $freq #end filter#</td>
+                </tr>
+                #end for
+            </table>
+        </td>
+        <td style="padding-left: 4em">
+            <table class="attrib-list">
+                <tr>
+                    <th class="attrib-heading" colspan="2">$_('Structures')</th>
+                </tr>
+                <tr>
+                    <td style="height: 5px"> </td>
+                </tr>
+                #for item, freq in $structlist
+                <tr>
+                    <th>$item</th>
+                    <td class="numeric">#filter $IntegerFormatter# $freq #end filter#</td>
+                </tr>
+                #end for
+            </table>
+        </td>
+    </tr>
+</table>

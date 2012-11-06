@@ -1,0 +1,15 @@
+#filter WebSafe
+
+
+<table>
+  #for $g in $GroupNumbers
+    <tr>
+    #for $i in $g['Items']
+      <td onclick="assing_group('$i['n']', '$i['lab']')">$i['lab']</td>
+    #end for
+    </tr>
+  #end for
+  <tr><td colspan="3" onclick="add_new_annotation_label()">$_("Add next")</td></tr>
+  <tr><td colspan="3" onclick="assing_group('0', '_')">$_("None")</td></tr>
+</table>
+#end filter

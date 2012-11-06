@@ -1,0 +1,31 @@
+#from cmpltmpl.leftmenu import leftmenu
+#extends leftmenu
+
+#def title
+$_("Corpus Pattern Analysis")#slurp
+#end def
+
+#attr $focus = "'lemma'"
+
+#def left_submenu
+#filter WebSafe
+    <li><a href="selectstored">Last edited</a></li>
+#end filter
+#end def
+
+#def main
+#filter WebSafe
+<h3>$_("Annotate")</h3>
+<form action="storeconc_fromlemma">
+<fieldset>
+   Verb: <input name="lemma" size="20" id="lemma" />
+   Corpus:
+   #filter None
+   $corp_sel
+   #end filter
+   <input type="submit" value="Store verb concordance for annotation" />
+   <input type="hidden" name="lpos" value="-v" />
+</fieldset>
+</form>
+#end filter
+#end def
