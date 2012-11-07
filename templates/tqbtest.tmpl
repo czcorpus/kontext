@@ -32,11 +32,15 @@ var msData = {
         ]
     }
 };
-var multiselect = createMultiselectComponent('testing-component', {}, msData);
+var multiselect = createMultiselectComponent('testing-component', { width : '400px' });
+var tagLoader = attachTagLoader('syn2010', 16, multiselect, {});
 
 \$('test-button').observe('click', function () {
-    multiselect.exportStatus();
+    // multiselect.exportStatus();
+    tagLoader.encodeFormStatus('-');
 });
+
+
 
 /*
 multiselect.addBlock('block-A', 'Sekce A')

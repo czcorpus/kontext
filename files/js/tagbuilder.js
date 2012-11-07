@@ -5,22 +5,6 @@
         attachTagLoader;
 
 
-
-    /**
-     * @todo rename function
-     * @param element
-     */
-    function normalizeSelectEventSource(element) {
-        var ans = null;
-        if (element.nodeName === 'OPTION') {
-            ans = element.parentNode;
-
-        } else if (element.nodeName === 'SELECT') {
-            ans =  element;
-        }
-        return ans;
-    }
-
     /**
      * @param selector
      * @param status boolean
@@ -49,9 +33,10 @@
      * @param corpusName corpus identifier
      * @param numTagPos
      * @param hiddenElm ID or element itself
+     * @param multiSelectComponent
      * @return {Object}
      */
-    createTagLoader = function (corpusName, numTagPos, hiddenElm) {
+    createTagLoader = function (corpusName, numTagPos, hiddenElm, multiSelectComponent) {
 
         var tagLoader,
             i;
@@ -66,7 +51,22 @@
             /**
              * Holds a corpus name for which this object is configured.
              */
-            corpusName : '',
+            corpusName : corpusName,
+
+            /**
+             *
+             */
+            numTagPos : numTagPos,
+
+            /**
+             *
+             */
+            hiddenElm : hiddenElm,
+
+            /**
+             *
+             */
+            multiSelectComponent : multiSelectComponent,
 
             /**
              * Latest tag pattern (e.g. PKM-4--2--------) used by this loader
@@ -84,28 +84,43 @@
             selectedValues : [],
 
             /**
-             *
-             */
-            hiddenElm : null,
-
-            /**
              * List of patterns user gradually created
              */
             history : [],
 
             /**
-             * Encodes SELECT element-based form into a tag string (like 'NNT1h22' etc.)
+             * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
              *
-             * @param elmList list of SELECT elements to be used
              * @param anyCharSymbol
              */
-            encodeFormStatus : function (elmList, anyCharSymbol) {
-                var i,
-                    ans = '';
+            encodeFormStatus : function (anyCharSymbol) {
+                var data,
+                    ans = '',
+                    prop,
+                    positionCode,
+                    i;
 
                 anyCharSymbol = anyCharSymbol || '-';
-                for (i = 0; i < elmList.length; i += 1) {
-                    ans += elmList[i].getValue() || '-';
+                data = tagLoader.multiSelectComponent.exportStatus();
+
+                for (prop in data) {
+                    positionCode = [];
+                    if (data.hasOwnProperty(prop)) {
+                        for (i = 0; i < data[prop].length; i += 1) {
+                            if (data[prop][i] !== null) {
+                                positionCode.push(data[prop][i]);
+                            }
+                        }
+                    }
+                    if (positionCode.length > 1) {
+                        ans += '(' + positionCode.join('|') + ')';
+
+                    } else if (positionCode.length === 1) {
+                        ans += positionCode[0];
+                        
+                    } else {
+                        ans += '-';
+                    }
                 }
 
                 if (anyCharSymbol !== '-') {
@@ -114,6 +129,7 @@
                 if (anyCharSymbol === '.') {
                     ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
                 }
+                console.log('ans: ' + ans);
                 return ans;
             },
 
@@ -139,16 +155,25 @@
             /**
              * Updates all SELECT element-based form items with provided data
              *
-             * @param elmList
              * @param activeNode active SELECT element
              * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
              * tag position value) of arrays (0 - value, 1 - label))
              */
-            updateFormValues : function (elmList, activeNode, data) {
+            updateMultiSelectValues : function (activeNode, data) {
                 var i,
                     j,
                     currValue,
-                    newOption;
+                    newOption,
+                    blockId;
+
+                for (i = 0; i < data.length; i += 1) {
+                    blockId = 'position_' + i;
+                    tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
+                    for (j = 0; j < data[i].length; j += 1) {
+                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1]);
+                    }
+                }
+
 
                 for (i = 0; i < elmList.length; i += 1) {
                     if (!activeNode || activeNode.parentNode !== elmList[i]) {
@@ -250,96 +275,18 @@
                         callback(data.responseText.evalJSON());
                     }
                 });
-            }
+            },
 
-        };
-        tagLoader.corpusName = corpusName;
-        tagLoader.hiddenElm = hiddenElm;
-        for (i = 0; i < numTagPos; i += 1) {
-            tagLoader.selectedValues[i] = '-';
-        }
-        return tagLoader;
-    };
-
-    /**
-     * A helper method that does whole 'create a tag loader for me' job.
-     *
-     * @param opt a dictionary with following keys:
-     *  tagPosSelector : a selector to obtain list of SELECT elements
-     *  corpusName : identifier of a corpus to be used along with this tag loader
-     *  resetButton : ID or element itself for the "reset" button
-     *  backButton : ID or element itself for the "back" button
-     *  tagDisplay : ID or element itself for the "tag display" box
-     *  hiddenElm : ID or element itself
-     * @return {tagLoader}
-     */
-    attachTagLoader = function (opt) {
-        var tagLoader,
-            selList,
-            backButton,
-            resetButton,
-            tagDisplay,
-            hiddenElm,
-            updateConcordanceQuery;
-
-        updateConcordanceQuery = function () {
-            var pattern = tagLoader.encodeFormStatus(selList, '.');
-            tagDisplay.update(pattern);
-            tagLoader.lastPattern = pattern;
-            if (tagLoader.hiddenElm) {
-                tagLoader.hiddenElm.setValue(pattern);
-            }
-        };
-
-        selList = $$(opt.tagPosSelector);
-        if (typeof (opt.hiddenElm) === 'string') {
-            hiddenElm = $(opt.hiddenElm);
-        }
-        tagLoader = createTagLoader(opt.corpusName, selList.length, hiddenElm);
-        tagLoader.loadInitialVariants(function (data) {
-            tagLoader.updateFormValues(selList, null, data);
-        });
-        if (typeof (opt.resetButton) === 'string') {
-            resetButton = $(opt.resetButton);
-        }
-        resetButton.observe('click', function (event) {
-            tagLoader.history = [];
-            tagLoader.loadInitialVariants(function (data) {
-                var a;
-
-                tagLoader.updateFormValues(selList, null, data);
-                for (a in tagLoader.selectedValues) {
-                    if (tagLoader.selectedValues.hasOwnProperty(a)) {
-                        tagLoader.selectedValues[a] = '-';
-                    }
-                }
-                tagLoader.lastPattern = null;
-                selList.each(function (item, idx) {
-                    item.selectedIndex = 0;
-                });
-                updateConcordanceQuery();
-            });
-        });
-        if (typeof (opt.backButton) === 'string') {
-            backButton = $(opt.backButton);
-        }
-        backButton.observe('click', function (event) {
-            var prevPattern;
-
-            tagLoader.history.pop(); // remove current value
-            prevPattern = tagLoader.history[tagLoader.history.length - 1];
-
-            if (prevPattern) {
-                tagLoader.loadPatternVariants(prevPattern, function (data) {
-                    tagLoader.updateFormValues(selList, null, data);
-                    updateConcordanceQuery();
-                });
-
-            } else { // empty => load initial values
+            /**
+             * @todo rewrite
+             * @param event
+             */
+            resetButtonClick : function (event) {
+                tagLoader.history = [];
                 tagLoader.loadInitialVariants(function (data) {
                     var a;
 
-                    tagLoader.updateFormValues(selList, null, data);
+                    tagLoader.updateMultiSelectValues(null, data);
                     for (a in tagLoader.selectedValues) {
                         if (tagLoader.selectedValues.hasOwnProperty(a)) {
                             tagLoader.selectedValues[a] = '-';
@@ -351,13 +298,108 @@
                     });
                     updateConcordanceQuery();
                 });
+            },
+
+            /**
+             * @todo rewrite
+             * @param event
+             */
+            backButtonClick : function (event) {
+                var prevPattern;
+
+                tagLoader.history.pop(); // remove current value
+                prevPattern = tagLoader.history[tagLoader.history.length - 1];
+
+                if (prevPattern) {
+                    tagLoader.loadPatternVariants(prevPattern, function (data) {
+                        tagLoader.updateMultiSelectValues(null, data);
+                        updateConcordanceQuery();
+                    });
+
+                } else { // empty => load initial values
+                    tagLoader.loadInitialVariants(function (data) {
+                        var a;
+
+                        tagLoader.updateMultiSelectValues(null, data);
+                        for (a in tagLoader.selectedValues) {
+                            if (tagLoader.selectedValues.hasOwnProperty(a)) {
+                                tagLoader.selectedValues[a] = '-';
+                            }
+                        }
+                        tagLoader.lastPattern = null;
+                        selList.each(function (item, idx) {
+                            item.selectedIndex = 0;
+                        });
+                        updateConcordanceQuery();
+                    });
+                }
             }
-        });
+        };
+
+
+        tagLoader.corpusName = corpusName;
+        tagLoader.hiddenElm = hiddenElm;
+        for (i = 0; i < numTagPos; i += 1) {
+            tagLoader.selectedValues[i] = '-';
+        }
+        return tagLoader;
+    };
+
+    /**
+     * A helper method that does whole 'create a tag loader for me' job.
+     *
+     * @param corpusName identifier of a corpus to be used along with this tag loader
+     * @param numOfPos number of positions in the tag string
+     * @param multiSelectComponent
+     * @param opt a dictionary with following keys:
+     *     resetButton    : ID or element itself for the "reset" button
+     *     backButton     : ID or element itself for the "back" button
+     *     tagDisplay     : ID or element itself for the "tag display" box
+     *     hiddenElm      : ID or element itself
+     * @return {tagLoader}
+     */
+    context.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
+        var tagLoader,
+            selList,
+            hiddenElm,
+            updateConcordanceQuery;
 
         if (typeof (opt.tagDisplay) === 'string') {
-            tagDisplay = $(opt.tagDisplay);
+            opt.tagDisplay = $(opt.tagDisplay);
         }
 
+        updateConcordanceQuery = function () {
+            var pattern = tagLoader.encodeFormStatus('.');
+            if (opt.tagDisplay) {
+                opt.tagDisplay.update(pattern);
+            }
+            tagLoader.lastPattern = pattern;
+            if (tagLoader.hiddenElm) {
+                tagLoader.hiddenElm.setValue(pattern);
+            }
+        };
+        numOfPos = numOfPos || 4; // TODO
+        if (typeof (opt.hiddenElm) === 'string') {
+            hiddenElm = $(opt.hiddenElm);
+        }
+        tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, multiSelectComponent);
+        tagLoader.loadInitialVariants(function (data) {
+            tagLoader.updateMultiSelectValues(null, data);
+        });
+        if (typeof (opt.resetButton) === 'string') {
+            opt.resetButton = $(opt.resetButton);
+        }
+        if (opt.resetButton) {
+            opt.resetButton.observe('click', tagLoader.resetButtonClick);
+        }
+        if (typeof (opt.backButton) === 'string') {
+            opt.backButton = $(opt.backButton);
+        }
+        if (opt.backButton) {
+            opt.backButton.observe('click', tagLoader.backButtonClick);
+        }
+
+/*
         selList.each(function (item, idx) {
             $('position-sel-' + idx).observe('click', function (event) {
                 var currPattern,
@@ -391,11 +433,10 @@
                 }
             });
         });
+*/
         updateConcordanceQuery();
         return tagLoader;
     };
 
-    context.createTagLoader = createTagLoader;
-    context.attachTagLoader = attachTagLoader;
 
 }(window));
