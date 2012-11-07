@@ -75,7 +75,8 @@
                 var i,
                     borderStyle,
                     marginStyle,
-                    paddingStyle;
+                    paddingStyle,
+                    widthStyle;
 
                 if (typeof (wrapperElem) === 'string') {
                     wrapperElem = $(wrapperElem);
@@ -83,8 +84,10 @@
                 borderStyle = opt.hasOwnProperty('border') ? opt.border : '1px solid #aaa';
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
                 paddingStyle = opt.hasOwnProperty('padding') ? opt.padding : '5px';
+                widthStyle = opt.hasOwnProperty('width') ? opt.width : '200px';
 
                 wrapperElem.setStyle({
+                    width : widthStyle,
                     border : borderStyle,
                     margin : marginStyle,
                     padding : paddingStyle
@@ -167,7 +170,7 @@
             },
 
             /**
-             * 
+             *
              * @return {Object}
              */
             exportStatus : function () {
