@@ -1,0 +1,95 @@
+#if $saveformat == 'xml'
+<?xml version="1.0" encoding="$corpencoding"?>
+
+#filter WebSafe
+<concordance>
+
+#if $heading
+  <heading>
+    <corpus>$corpname</corpus>
+    <hits>$concsize</hits>
+    <query>#slurp
+  #for $d in $Desc
+$d['arg'] $d['size'] #slurp 
+  #end for
+</query>
+  </heading>
+#end if
+## kwic lines
+<lines>
+#set $num = 0
+#for $l in $Lines
+  <line>
+  #if $numbering
+    #set $num = $num + 1
+    <num>$num</num>
+  #end if
+    <ref>$l['ref']</ref>#slurp
+<left_context>#slurp
+    #for $ll in $l['Left']
+      #unless $ll['class'] == 'strc'
+$ll['str'] #slurp
+      #end unless
+    #end for
+</left_context><kwic>#slurp
+    #for $kw in $l['Kwic']
+$kw['str'] #slurp
+    #end for
+</kwic><right_context>#slurp
+    #for $rr in $l['Right']
+      #unless $rr['class'] == 'strc'
+$rr['str'] #slurp
+      #end unless
+    #end for
+</right_context>
+  </line>
+#end for
+</lines>
+
+</concordance>
+
+#end filter
+#else
+## Text format
+#if $heading
+\# Corpus: $corpname
+\# Hits:   $concsize
+  #for $d in $Desc
+\#      $d['op']    $d['arg'] $d['size']
+  #end for
+
+
+#end if
+## kwic lines
+#set $num = 0
+#for $l in $Lines
+  #if $numbering
+    #set $num = $num + 1
+$num	#slurp
+  #end if
+$l['ref']	#slurp
+  #if $align_kwic
+$l['leftspace'] #slurp
+  #end if
+    #for $ll in $l['Left']
+      #unless $ll['class'] == 'strc'
+$ll['str'] #slurp
+      #end unless
+    #end for
+<#slurp
+    #for $kw in $l['Kwic']
+$kw['str'] #slurp
+    #end for
+>#slurp
+    #if $annotconc
+[${l['linegroup']}]
+    #end if
+    #for $rr in $l['Right']
+      #unless $rr['class'] == 'strc'
+$rr['str'] #slurp
+      #end unless
+    #end for
+
+#end for
+
+#end if 
