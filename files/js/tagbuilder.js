@@ -117,7 +117,7 @@
 
                     } else if (positionCode.length === 1) {
                         ans += positionCode[0];
-                        
+
                     } else {
                         ans += '-';
                     }
@@ -170,7 +170,15 @@
                     blockId = 'position_' + i;
                     tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
                     for (j = 0; j < data[i].length; j += 1) {
-                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1]);
+                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], function (event) {
+                            var pattern;
+
+                            pattern = tagLoader.encodeFormStatus();
+                            //console.log('event: ' + pattern);
+                            tagLoader.loadPatternVariants(pattern, function (data) {
+                                console.log('response: ' + data);
+                            });
+                        });
                     }
                 }
 

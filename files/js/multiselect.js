@@ -158,14 +158,35 @@
              * @param blockId
              * @param value
              * @param label
+             * @param callback
              * @return {Object}
              */
-            addItem : function (blockId, value, label) {
+            addItem : function (blockId, value, label, callback) {
+                var trElm,
+                    tdElm,
+                    inputElm;
+
                 if (!multiSelect.blocks.hasOwnProperty(blockId)) {
                     throw new Error('Cannot add item to the block ' + blockId + '. Block does not exist.');
                 }
-                multiSelect.blocks[blockId].insert('<tr><td><input type="checkbox" name="' + blockId + '[]" value="' +
-                    value + '" /></td><td>' + label + '</td></tr>');
+                trElm = Element.extend(document.createElement('TR'));
+                multiSelect.blocks[blockId].insert(trElm);
+                tdElm = Element.extend(document.createElement('TD'));
+                trElm.insert(tdElm);
+                inputElm = Element.extend(document.createElement('INPUT'));
+                inputElm.writeAttribute('type', 'checkbox');
+                inputElm.writeAttribute('name', blockId);
+                inputElm.writeAttribute('value', value);
+                tdElm.insert(inputElm);
+
+                tdElm = Element.extend(document.createElement('TD'));
+                tdElm.update(label);
+                trElm.insert(tdElm);
+
+                if (typeof (callback) === 'function') {
+                    inputElm.observe('click', callback);
+                }
+
                 return multiSelect;
             },
 
