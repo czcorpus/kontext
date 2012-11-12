@@ -103,7 +103,7 @@ class TagVariantLoader(object):
 
         ans = {}
         for item in matching_tags:
-            tag_elms = re.findall(r'\([^)]+\)|[^-]|-', selected_tags)
+            tag_elms = re.findall(r'\[[^)]+\]|[^-]|-', selected_tags)
             for i in range(len(tag_elms)):
                 if i not in ans:
                     ans[i] = set()

@@ -113,7 +113,7 @@
                         }
                     }
                     if (positionCode.length > 1) {
-                        ans += '(' + positionCode.join('|') + ')';
+                        ans += '[' + positionCode.join('') + ']';
 
                     } else if (positionCode.length === 1) {
                         ans += positionCode[0];
