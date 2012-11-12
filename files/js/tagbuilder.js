@@ -129,28 +129,8 @@
                 if (anyCharSymbol === '.') {
                     ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
                 }
-                console.log('ans: ' + ans);
                 return ans;
             },
-
-            /**
-             * Returns number of SELECT elements from a provided list with values other than empty or '-'
-             *
-             * @param elmList list of SELECT elements
-             * @return number
-             */
-            getNumberOfSelectedItems : function (elmList) {
-                var i,
-                    ans = 0;
-
-                for (i = 0; i < elmList.length; i += 1) {
-                    if (elmList[i].getValue() && elmList[i].getValue() !== '-') {
-                        ans += 1;
-                    }
-                }
-                return ans;
-            },
-
 
             /**
              * Updates all SELECT element-based form items with provided data
@@ -164,81 +144,65 @@
                     j,
                     currValue,
                     newOption,
-                    blockId;
+                    blockId,
+                    getResponseLength,
+                    iterStart,
+                    prevSelects = tagLoader.multiSelectComponent.exportStatus();
 
-                for (i = 0; i < data.length; i += 1) {
-                    blockId = 'position_' + i;
-                    tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
-                    for (j = 0; j < data[i].length; j += 1) {
-                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], function (event) {
-                            var pattern;
+                getResponseLength = function (resp) {
+                    var prop,
+                        ans = 0;
 
-                            pattern = tagLoader.encodeFormStatus();
-                            //console.log('event: ' + pattern);
-                            tagLoader.loadPatternVariants(pattern, function (data) {
-                                console.log('response: ' + data);
-                            });
-                        });
+                    if (resp.hasOwnProperty('length')) {
+                        return resp.length;
                     }
-                }
+                    for (prop in resp) {
+                        if (resp.hasOwnProperty(prop)) {
+                            ans += 1;
+                        }
+                    }
+                    return ans;
+                };
 
+                for (i = 0; i < getResponseLength(data); i += 1) {
+                    blockId = 'position_' + i;
 
-                for (i = 0; i < elmList.length; i += 1) {
-                    if (!activeNode || activeNode.parentNode !== elmList[i]) {
-                        currValue = elmList[i].getValue();
-                        // TODO simplify if-elseif
-                        if (data[i].length === 1) {
-                            elmList[i].update();
-                            switchSelectorStatus(elmList[i], false);
-                            newOption = Element.extend(document.createElement('option'));
-                            newOption.writeAttribute('value', data[i][0][0]);
-                            newOption.insert(data[i][0][1]);
-                            elmList[i].insert(newOption);
-                            if (currValue === data[i][0][0]) {
-                                elmList[i].selectedIndex = 0;
-                            }
+                    if (tagLoader.multiSelectComponent.activeBlockId !== blockId) {
 
-                        } else if (data[i].length > 1) {
-                            switchSelectorStatus(elmList[i], true);
-                            elmList[i].update();
-                            for (j = 0; j < data[i].length; j += 1) {
-                                newOption = Element.extend(document.createElement('option'));
-                                newOption.writeAttribute('value', data[i][j][0]);
-                                newOption.insert(data[i][j][1]);
-                                elmList[i].insert(newOption);
-                                if (currValue === data[i][j][0]) {
-                                    elmList[i].selectedIndex = j + 1;
-                                }
-                            }
+                        if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
+                            tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
 
                         } else {
-                            switchSelectorStatus(elmList[i], false);
+                            tagLoader.multiSelectComponent.clearBlock(blockId);
                         }
+                        if (data[i].length > 0) {
+                            if (data[i][0][0] === '-') {
+                                tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][0][0]);
+                                iterStart = 1;
 
-                    } else {
-                        activeNode.writeAttribute('selected', 'selected');
+                            } else {
+                                iterStart = 0;
+                            }
+
+                            // we start from 1 here because 0 contains default value
+
+                            for (j = iterStart; j < data[i].length; j += 1) {
+                                tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], function (event) {
+                                    var pattern = tagLoader.encodeFormStatus();
+
+                                    tagLoader.loadPatternVariants(pattern, function (data) {
+                                        tagLoader.updateMultiSelectValues(null, data);
+                                    });
+                                });
+
+                                if (prevSelects.hasOwnProperty(blockId)
+                                        && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
+                                    tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+                                }
+                            }
+                        }
                     }
                 }
-            },
-
-            /**
-             * Updates options of a single SELECT element by provided data
-             *
-             * @param selectElement
-             * @param data
-             */
-            updateSelectOptions : function (selectElement, data) {
-                var i,
-                    newElement;
-
-                selectElement.update('');
-                for (i = 0; i < data.length; i += 1) {
-                    newElement = Element.extend(document.createElement('option'));
-                    newElement.writeAttribute('value', data[i][0]);
-                    newElement.insert(data[i][1]);
-                    selectElement.insert(newElement);
-                }
-                selectElement.selectedIndex = 0;
             },
 
             /**
@@ -291,20 +255,10 @@
              */
             resetButtonClick : function (event) {
                 tagLoader.history = [];
+                tagLoader.multiSelectComponent.uncheckAll();
+                tagLoader.multiSelectComponent.collapseAll();
                 tagLoader.loadInitialVariants(function (data) {
-                    var a;
-
                     tagLoader.updateMultiSelectValues(null, data);
-                    for (a in tagLoader.selectedValues) {
-                        if (tagLoader.selectedValues.hasOwnProperty(a)) {
-                            tagLoader.selectedValues[a] = '-';
-                        }
-                    }
-                    tagLoader.lastPattern = null;
-                    selList.each(function (item, idx) {
-                        item.selectedIndex = 0;
-                    });
-                    updateConcordanceQuery();
                 });
             },
 
@@ -407,41 +361,6 @@
             opt.backButton.observe('click', tagLoader.backButtonClick);
         }
 
-/*
-        selList.each(function (item, idx) {
-            $('position-sel-' + idx).observe('click', function (event) {
-                var currPattern,
-                    eventSrcElement = normalizeSelectEventSource(event.element());
-
-                if (eventSrcElement.getValue() !== tagLoader.selectedValues[idx]) {
-                    tagLoader.selectedValues[idx] = eventSrcElement.getValue();
-
-                    if (tagLoader.getNumberOfSelectedItems(selList) > 0) {
-                        currPattern = tagLoader.encodeFormStatus(selList);
-                        if (currPattern !== tagLoader.lastPattern) {
-                            tagLoader.loadPatternVariants(currPattern, function (data) {
-                                tagLoader.updateFormValues(selList, event.element(), data);
-                                tagLoader.lastPattern = currPattern;
-                                updateConcordanceQuery();
-                                tagLoader.history.push(currPattern);
-                            });
-                        }
-                        updateConcordanceQuery();
-
-                    } else {
-                        // different browsers here pass different nodes as an event source
-                        tagLoader.loadInitialVariants(function (data) {
-                            tagLoader.updateSelectOptions(eventSrcElement, data[idx]);
-                        });
-                    }
-
-                } else {
-                    // TODO is this necessary?
-                    updateConcordanceQuery();
-                }
-            });
-        });
-*/
         updateConcordanceQuery();
         return tagLoader;
     };

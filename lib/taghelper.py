@@ -32,7 +32,7 @@ class TagVariantLoader(object):
         """
         path = '%s/tag-%s.%s.json' % (self.cache_dir, selected_tags, locale.getlocale()[0])
         data = '{}'
-        if not os.path.exists(path):
+        if not os.path.exists(path) or True: # TODO debug
             data = json.dumps(self.calculate_variant(selected_tags))
             with open(path, 'w') as f:
                 f.write(data)
@@ -85,7 +85,15 @@ class TagVariantLoader(object):
     def calculate_variant(self, selected_tags):
         """
         """
-        patt = re.compile(selected_tags.replace('-', r'[\w\-]'))
+        replacements = (
+            ('-', r'[\w\-]'),
+            ('*', r'\*')
+        )
+        patt_string = selected_tags
+        for p, r in replacements:
+            patt_string = patt_string.replace(p, r)
+        patt = re.compile(patt_string)
+        logging.getLogger(__name__).info('pattern: %s' % selected_tags)
         matching_tags = []
         for line in self.tags_file:
             line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
@@ -95,7 +103,8 @@ class TagVariantLoader(object):
 
         ans = {}
         for item in matching_tags:
-            for i in range(len(selected_tags)):
+            tag_elms = re.findall(r'\([^)]+\)|[^-]|-', selected_tags)
+            for i in range(len(tag_elms)):
                 if i not in ans:
                     ans[i] = set()
                 if item[i] == '-':

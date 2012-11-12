@@ -14,7 +14,8 @@ var msData = {
             { value : 'item_A2', label : 'polozka A2' },
             { value : 'item_A3', label : 'polozka A3' },
             { value : 'item_A4', label : 'polozka A4' }
-        ]
+        ],
+        defaultValue : '-default-A-'
     },
 
     'block-B' : {
@@ -22,22 +23,31 @@ var msData = {
         items : [
             { value : 'item_B1', label : 'hodnota B1' },
             { value : 'item_B2', label : 'hodnota B2' },
-        ]
+        ],
+        defaultValue : '-default-B-'
     },
 
     'block-C' : {
         label : 'Sekce C',
         items : [
             { value : 'item_C1', label : 'hodnota C1' },
-        ]
+        ],
+        defaultValue : '-default-C-'
     }
 };
 var multiselect = createMultiselectComponent('testing-component', { width : '400px' });
-var tagLoader = attachTagLoader('syn2010', 16, multiselect, {});
+var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
+    resetButton : 'reset-button',
+    backButton : 'back-button'
+});
 
 \$('test-button').observe('click', function () {
     // multiselect.exportStatus();
     tagLoader.encodeFormStatus('-');
+});
+
+\$('dump-button').observe('click', function (event) {
+   console.log('num selected: ' + multiselect.getNumSelected('block-B'));
 });
 
 
@@ -61,7 +71,11 @@ multiselect.addItem('block-A', 'item A.1', 'hodnota A1')
 <form method="POST">
     <div id="testing-component" style="width: 300px">Component not supported. Please upgrade your browser.</div>
 
+    <button type="button" id="reset-button">Reset</button>
+    <button type="button" id="back-button">Back</button>
+    <br />
     <button type="submit">Submit</button>
     <button type="button" id="test-button">Test</button>
+    <button type="button" id="dump-button">Dump status</button>
 </form>
 #end def
