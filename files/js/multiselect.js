@@ -23,7 +23,7 @@
             return buildSkeletonFromJson(wrapperElem, opt, json);
         }
         return buildSkeleton(wrapperElem, opt);
-    },
+    };
 
     buildSkeletonFromJson = function (wrapperElem, opt, jsonData) {
         var prop,
@@ -36,7 +36,7 @@
         for (prop in jsonData) {
             if (jsonData.hasOwnProperty(prop)) {
                 item = jsonData[prop];
-                skeleton.addBlock(prop, item.label);
+                skeleton.addBlock(prop, item.label, item.defaultValue);
                 for (i = 0; i < item.items.length; i += 1) {
                     skeleton.addItem(prop, item.items[i].value, item.items[i].label);
                 }
@@ -44,7 +44,7 @@
         }
 
         return skeleton;
-    },
+    };
 
 
     /**
@@ -68,12 +68,17 @@
             blocks : {},
 
             /**
+             * Contains references to hidden inputs which are
+             * activated whenever there is no checked checkbox in a block
+             */
+            defaultValues : {},
+
+            /**
              *
              * @param wrapperElem multi-select component will be inserted into this element
              */
             init : function (wrapperElem) {
-                var i,
-                    borderStyle,
+                var borderStyle,
                     marginStyle,
                     paddingStyle,
                     widthStyle;
@@ -106,9 +111,10 @@
              *
              * @param blockId
              * @param blockLabel
+             * @param defaultValue value used if no checkbox is selected
              * @return {Object}
              */
-            addBlock : function (blockId, blockLabel) {
+            addBlock : function (blockId, blockLabel, defaultValue) {
                 var liElement,
                     switchLink,
                     itemTable,
@@ -139,7 +145,7 @@
                 itemTbody.writeAttribute('class', 'item-' + blockId);
                 itemTable.insert(itemTbody);
                 multiSelect.blocks[blockId] = itemTbody;
-                switchLink.observe('click', function (event) {
+                switchLink.observe('click', function () {
                     if (itemTbody.parentNode.getStyle('display') === 'none') {
                         itemTbody.parentNode.setStyle({ display : 'table'});
                         switchLink.nextSiblings()[0].update('&#x25BC;&nbsp;');
@@ -150,6 +156,7 @@
                     }
                 });
                 itemTbody.parentNode.setStyle({ display : 'none'});
+                multiSelect.addDefaultValue(blockId, liElement, defaultValue || ''); // 'default default' value
                 return multiSelect;
             },
 
@@ -158,7 +165,7 @@
              * @param blockId
              * @param value
              * @param label
-             * @param callback
+             * @param callback {optional Function}
              * @return {Object}
              */
             addItem : function (blockId, value, label, callback) {
@@ -183,11 +190,37 @@
                 tdElm.update(label);
                 trElm.insert(tdElm);
 
+                inputElm.observe('click', function () {
+                    if (multiSelect.getNumSelected() === 0) {
+                        multiSelect.defaultValues[blockId].writeAttribute('value',
+                            multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
+
+                    } else {
+                        multiSelect.defaultValues[blockId].writeAttribute('value', '');
+                    }
+                });
                 if (typeof (callback) === 'function') {
                     inputElm.observe('click', callback);
                 }
-
                 return multiSelect;
+            },
+
+            /**
+             * @param blockId
+             * @param parentElement
+             * @param value
+             * @return {Object}
+             */
+            addDefaultValue : function (blockId, parentElement, value) {
+                var inputElm;
+
+                inputElm = Element.extend(document.createElement('INPUT'));
+                inputElm.writeAttribute('type', 'hidden');
+                inputElm.writeAttribute('data-orig-value', value);
+                inputElm.writeAttribute('value', value);
+                inputElm.writeAttribute('name', blockId);
+                parentElement.insert(inputElm);
+                multiSelect.defaultValues[blockId] = inputElm;
             },
 
             /**
@@ -197,18 +230,33 @@
             exportStatus : function () {
                 var prop,
                     ans = {},
-                    blockTable,
-                    checkBoxList;
+                    setStatus;
+
+                setStatus = function (item) {
+                    ans[prop].push(item.getValue());
+                };
 
                 for (prop in multiSelect.blocks) {
                     if (multiSelect.blocks.hasOwnProperty(prop)) {
                         ans[prop] = [];
-                        multiSelect.blocks[prop].select('input[type="checkbox"]').each(function (item) {
-                            ans[prop].push(item.getValue());
-                        });
+                        multiSelect.blocks[prop].select('input[type="checkbox"]').each(setStatus);
                     }
                 }
                 return ans;
+            },
+
+            /**
+             * Returns number of checkboxes (total or within a block
+             * if blockId is defined) checked.
+             *
+             * @param blockId {optional String}
+             * @return Number
+             */
+            getNumSelected : function (blockId) {
+                if (blockId !== undefined) {
+                    return multiSelect.blocks[blockId].select('input[type="checkbox"]:checked').length;
+                }
+                return multiSelect.ulElement.select('input[type="checkbox"]:checked').length;
             }
         };
         multiSelect.init(wrapperElem);
