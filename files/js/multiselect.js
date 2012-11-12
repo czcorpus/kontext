@@ -75,6 +75,11 @@
 
             /**
              *
+             */
+            blockSwitchLinks : {},
+
+            /**
+             *
              * @param wrapperElem multi-select component will be inserted into this element
              */
             init : function (wrapperElem) {
@@ -109,9 +114,9 @@
             /**
              * Adds checkbox list box
              *
-             * @param blockId
-             * @param blockLabel
-             * @param defaultValue value used if no checkbox is selected
+             * @param blockId {String}
+             * @param blockLabel {String}
+             * @param defaultValue {optional String} value used if no checkbox is selected
              * @return {Object}
              */
             addBlock : function (blockId, blockLabel, defaultValue) {
@@ -130,6 +135,7 @@
                 multiSelect.ulElement.insert(liElement);
                 switchLink = Element.extend(document.createElement('A'));
                 switchLink.update(blockLabel);
+                multiSelect.blockSwitchLinks[blockId] = switchLink;
                 liElement.insert(switchLink);
                 flagElement = Element.extend(document.createElement('SPAN'));
                 flagElement.writeAttribute('class', 'flag');
@@ -191,12 +197,15 @@
                 trElm.insert(tdElm);
 
                 inputElm.observe('click', function () {
-                    if (multiSelect.getNumSelected() === 0) {
+                    if (multiSelect.getNumSelected(blockId) === 0) {
                         multiSelect.defaultValues[blockId].writeAttribute('value',
                             multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
+                        console.log('test hit...');
+                        multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
 
                     } else {
                         multiSelect.defaultValues[blockId].writeAttribute('value', '');
+                        multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'bold'});
                     }
                 });
                 if (typeof (callback) === 'function') {
