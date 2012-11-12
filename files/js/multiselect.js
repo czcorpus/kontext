@@ -79,6 +79,10 @@
             blockSwitchLinks : {},
 
             /**
+             */
+            activeBlockId : null,
+
+            /**
              *
              * @param wrapperElem multi-select component will be inserted into this element
              */
@@ -109,6 +113,27 @@
                     padding : 0
                 });
                 wrapperElem.update(multiSelect.ulElement);
+            },
+
+            /**
+             * Shows/hides multi-select block. If no status is provided then visibility is changed
+             * (visible->hidden, hidden->visible).
+             *
+             * @param blockId {String}
+             * @param status {optional String}
+             */
+            flipBlockVisibility : function (blockId, status) {
+                var switchLink = multiSelect.blockSwitchLinks[blockId],
+                    tbodyElm = multiSelect.blocks[blockId];
+
+                if (tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none' || status === 'table') {
+                    tbodyElm.parentNode.setStyle({ display : 'table'});
+                    switchLink.nextSiblings()[0].update('&#x25BC;&nbsp;');
+
+                } else if (tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table' || status === 'none') {
+                    tbodyElm.parentNode.setStyle({ display : 'none'});
+                    switchLink.nextSiblings()[0].update('&#x25BA;&nbsp;');
+                }
             },
 
             /**
@@ -152,18 +177,26 @@
                 itemTable.insert(itemTbody);
                 multiSelect.blocks[blockId] = itemTbody;
                 switchLink.observe('click', function () {
-                    if (itemTbody.parentNode.getStyle('display') === 'none') {
-                        itemTbody.parentNode.setStyle({ display : 'table'});
-                        switchLink.nextSiblings()[0].update('&#x25BC;&nbsp;');
-
-                    } else {
-                        itemTbody.parentNode.setStyle({ display : 'none'});
-                        switchLink.nextSiblings()[0].update('&#x25BA;&nbsp;');
-                    }
+                    multiSelect.activeBlockId = blockId;
+                    multiSelect.flipBlockVisibility(blockId);
                 });
                 itemTbody.parentNode.setStyle({ display : 'none'});
                 multiSelect.addDefaultValue(blockId, liElement, defaultValue || ''); // 'default default' value
                 return multiSelect;
+            },
+
+            /**
+             * @param blockId {String}
+             */
+            clearBlock : function (blockId) {
+                multiSelect.blocks[blockId].update();
+            },
+
+            /**
+             * @param blockId {String}
+             */
+            containsBlock : function (blockId) {
+                return multiSelect.blocks.hasOwnProperty(blockId);
             },
 
             /**
@@ -200,7 +233,6 @@
                     if (multiSelect.getNumSelected(blockId) === 0) {
                         multiSelect.defaultValues[blockId].writeAttribute('value',
                             multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
-                        console.log('test hit...');
                         multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
 
                     } else {
@@ -230,6 +262,61 @@
                 inputElm.writeAttribute('name', blockId);
                 parentElement.insert(inputElm);
                 multiSelect.defaultValues[blockId] = inputElm;
+            },
+
+            /**
+             *
+             * @param blockId {String}
+             * @param value {String}
+             */
+            setDefaultValue : function (blockId, value) {
+                multiSelect.defaultValues[blockId].writeAttribute('data-orig-value', value);
+                if (multiSelect.defaultValues[blockId].readAttribute('value')) {
+                    multiSelect.defaultValues[blockId].writeAttribute('value', value);
+                }
+            },
+
+            /**
+             *
+             * @param blockId
+             * @param value
+             */
+            checkItem : function (blockId, value) {
+                var items = multiSelect.blocks[blockId].select('input[type="checkbox"][value="' + value + '"]');
+                if (items.length === 1) {
+                    items[0].checked = true;
+                }
+            },
+
+            /**
+             *
+             */
+            uncheckAll : function () {
+                var prop;
+
+                multiSelect.activeBlockId = null;
+                multiSelect.ulElement.select('input[type="checkbox"]').each(function (item) {
+                    item.checked = false;
+                });
+
+                for (prop in multiSelect.blockSwitchLinks) {
+                    if (multiSelect.blockSwitchLinks.hasOwnProperty(prop)) {
+                        multiSelect.blockSwitchLinks[prop].setStyle({ fontWeight : 'normal'});
+                    }
+                }
+            },
+
+            /**
+             *
+             */
+            collapseAll : function () {
+                var prop;
+
+                for (prop in multiSelect.blocks) {
+                    if (multiSelect.blocks.hasOwnProperty(prop)) {
+                        multiSelect.flipBlockVisibility(prop, 'none');
+                    }
+                }
             },
 
             /**
