@@ -128,11 +128,11 @@
 
                 if (tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none' || status === 'table') {
                     tbodyElm.parentNode.setStyle({ display : 'table'});
-                    switchLink.nextSiblings()[0].update('&#x25BC;&nbsp;');
+                    switchLink.nextSiblings()[1].update('&#x25BC;&nbsp;');
 
                 } else if (tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table' || status === 'none') {
                     tbodyElm.parentNode.setStyle({ display : 'none'});
-                    switchLink.nextSiblings()[0].update('&#x25BA;&nbsp;');
+                    switchLink.nextSiblings()[1].update('&#x25BA;&nbsp;');
                 }
             },
 
@@ -147,6 +147,7 @@
             addBlock : function (blockId, blockLabel, defaultValue) {
                 var liElement,
                     switchLink,
+                    statusText,
                     itemTable,
                     itemTbody,
                     flagElement;
@@ -162,13 +163,21 @@
                 switchLink.update(blockLabel);
                 multiSelect.blockSwitchLinks[blockId] = switchLink;
                 liElement.insert(switchLink);
+
+                statusText = Element.extend(document.createElement('SPAN'));
+                statusText.setStyle({ paddingLeft : '5px', color : '#444' });
+                statusText.writeAttribute('class', 'num-avail');
+                statusText.update('[ 0 ]');
+                liElement.insert(statusText);
+
                 flagElement = Element.extend(document.createElement('SPAN'));
                 flagElement.writeAttribute('class', 'flag');
                 flagElement.update('&#x25BA;&nbsp;');
                 flagElement.setStyle({
                     paddingLeft : '5px'
                 });
-                switchLink.insert({ after : flagElement });
+                liElement.insert(flagElement);
+
                 itemTable = Element.extend(document.createElement('TABLE'));
                 liElement.insert(itemTable);
                 itemTable.writeAttribute('class', 'checkbox-list');
@@ -197,6 +206,15 @@
              */
             containsBlock : function (blockId) {
                 return multiSelect.blocks.hasOwnProperty(blockId);
+            },
+
+            /**
+             *
+             */
+            updateBlockStatusText : function (blockId, text) {
+                multiSelect.blockSwitchLinks[blockId].parentNode.select('span[class="num-avail"]').each(function (item) {
+                    item.update(text);
+                });
             },
 
             /**

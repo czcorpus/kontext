@@ -200,6 +200,10 @@
                                     tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
                                 }
                             }
+                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (data[i].length - iterStart) + ' ]');
+
+                        } else {
+                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                         }
                     }
                 }
