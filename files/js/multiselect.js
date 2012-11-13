@@ -248,6 +248,7 @@
                 trElm.insert(tdElm);
 
                 inputElm.observe('click', function () {
+                    multiSelect.activeBlockId = blockId;
                     if (multiSelect.getNumSelected(blockId) === 0) {
                         multiSelect.defaultValues[blockId].writeAttribute('value',
                             multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
