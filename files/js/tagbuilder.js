@@ -143,9 +143,9 @@
              * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
              * tag position value) of arrays (0 - value, 1 - label))
              * @param selects {optional Object}
-             * @param updateActiveBlockChecks {optional Boolean}
+             * @param callback {optional Function} called with parameters blockId and prevSelects (see the function inside)
              */
-            updateMultiSelectValues : function (data, selects, updateActiveBlockChecks) {
+            updateMultiSelectValues : function (data, selects, callback) {
                 var i,
                     j,
                     blockId,
@@ -198,7 +198,14 @@
                                     var pattern = tagLoader.encodeFormStatus();
 
                                     tagLoader.loadPatternVariants(pattern, function (data) {
-                                        tagLoader.updateMultiSelectValues(data);
+                                        tagLoader.updateMultiSelectValues(data, null, function (blockId) {
+                                            if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
+                                                    && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
+                                                tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                                                   item.writeAttribute('disabled', 'disabled');
+                                                });
+                                            }
+                                        });
                                     });
                                 });
                                 if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
@@ -214,15 +221,10 @@
                             tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                         }
 
-                    } else if (updateActiveBlockChecks) {
-                        tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                            if (prevSelects[blockId].indexOf(item.getValue()) === -1) {
-                                item.checked = false;
-                            }
-                        });
-                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
-                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
-                        }
+                    }
+
+                    if (typeof callback === 'function') {
+                        callback(blockId, prevSelects);
                     }
                 }
             },
@@ -292,7 +294,8 @@
             backButtonClick : function (event) {
                 var prevSelection,
                     prevActiveBlock,
-                    objectIsEmpty;
+                    objectIsEmpty,
+                    updateActiveBlock;
 
                 objectIsEmpty = function (obj) {
                     var prop;
@@ -302,7 +305,18 @@
                         }
                     }
                     return true;
-                }
+                };
+
+                updateActiveBlock = function (blockId, prevSelects) {
+                    tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(item.getValue()) === -1) {
+                            item.checked = false;
+                        }
+                    });
+                    if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
+                        tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
+                    }
+                };
 
                 tagLoader.history.pop(); // remove current status which has been already pushed
                 tagLoader.activeBlockHistory.pop();
@@ -311,7 +325,7 @@
 
                 if (!objectIsEmpty(prevSelection)) {
                     tagLoader.loadPatternVariants(tagLoader.encodeFormStatus('-', prevSelection), function (data) {
-                        tagLoader.updateMultiSelectValues(data, prevSelection, true);
+                        tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                         tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
                     });
 
@@ -319,7 +333,7 @@
                     prevSelection = {};
                     prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
                     tagLoader.loadInitialVariants(function (data) {
-                        tagLoader.updateMultiSelectValues(data, prevSelection, true);
+                        tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                         tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
                         tagLoader.multiSelectComponent.collapseAll();
                     });

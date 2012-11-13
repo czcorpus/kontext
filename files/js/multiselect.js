@@ -222,10 +222,10 @@
              * @param blockId
              * @param value
              * @param label
-             * @param callback {optional Function}
+             * @param clickCallback {optional Function}
              * @return {Object}
              */
-            addItem : function (blockId, value, label, callback) {
+            addItem : function (blockId, value, label, clickCallback) {
                 var trElm,
                     tdElm,
                     inputElm;
@@ -259,8 +259,8 @@
                         multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'bold'});
                     }
                 });
-                if (typeof (callback) === 'function') {
-                    inputElm.observe('click', callback);
+                if (typeof (clickCallback) === 'function') {
+                    inputElm.observe('click', clickCallback);
                 }
                 return multiSelect;
             },
@@ -348,6 +348,15 @@
                         multiSelect.flipBlockVisibility(prop, 'none');
                     }
                 }
+            },
+
+            /**
+             *
+             */
+            disableBlock : function (blockId) {
+                multiSelect.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                    item.writeAttribute('disabled', 'disabled');
+                });
             },
 
             /**
