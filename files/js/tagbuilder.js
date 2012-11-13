@@ -173,7 +173,8 @@
                 for (i = 0; i < getResponseLength(data); i += 1) {
                     blockId = 'position_' + i;
 
-                    if (tagLoader.multiSelectComponent.activeBlockId !== blockId) {
+                    //if (tagLoader.multiSelectComponent.activeBlockId !== blockId) {
+                    if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                         if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
                             tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
@@ -285,6 +286,7 @@
                 tagLoader.loadInitialVariants(function (data) {
                     tagLoader.updateMultiSelectValues(data);
                 });
+                tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
             },
 
             /**
@@ -338,6 +340,7 @@
                         tagLoader.multiSelectComponent.collapseAll();
                     });
                 }
+                tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
             }
         };
 
