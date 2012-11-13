@@ -15,6 +15,7 @@
      *
      * @param wrapperElem
      * @param opt configuration options
+     *   useNamedCheckboxes
      * @param json
      * @return {Object}
      */
@@ -79,8 +80,14 @@
             blockSwitchLinks : {},
 
             /**
+             *
              */
             activeBlockId : null,
+
+            /**
+             *
+             */
+            useNamedCheckboxes : null,
 
             /**
              *
@@ -92,6 +99,7 @@
                     paddingStyle,
                     widthStyle;
 
+                multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 if (typeof (wrapperElem) === 'string') {
                     wrapperElem = $(wrapperElem);
                 }
@@ -99,6 +107,7 @@
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
                 paddingStyle = opt.hasOwnProperty('padding') ? opt.padding : '5px';
                 widthStyle = opt.hasOwnProperty('width') ? opt.width : '200px';
+
 
                 wrapperElem.setStyle({
                     width : widthStyle,
@@ -239,7 +248,9 @@
                 trElm.insert(tdElm);
                 inputElm = Element.extend(document.createElement('INPUT'));
                 inputElm.writeAttribute('type', 'checkbox');
-                inputElm.writeAttribute('name', blockId);
+                if (multiSelect.useNamedCheckboxes) {
+                    inputElm.writeAttribute('name', blockId);
+                }
                 inputElm.writeAttribute('value', value);
                 tdElm.insert(inputElm);
 
