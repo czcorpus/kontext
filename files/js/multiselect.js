@@ -308,6 +308,18 @@
 
             /**
              *
+             * @param blockId
+             * @param value
+             */
+            uncheckItem : function (blockId, value) {
+                var items = multiSelect.blocks[blockId].select('input[type="checkbox"][value="' + value + '"]');
+                if (items.length === 1) {
+                    items[0].checked = false;
+                }
+            },
+
+            /**
+             *
              */
             uncheckAll : function () {
                 var prop;
