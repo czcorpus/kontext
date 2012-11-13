@@ -96,9 +96,8 @@
              * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param anyCharSymbol
-             * @param data {optional Object}
              */
-            encodeFormStatus : function (anyCharSymbol, data) {
+            encodeFormStatus : function (anyCharSymbol) {
                 var data,
                     ans = '',
                     prop,
@@ -207,6 +206,7 @@
                                             }
                                         });
                                     });
+                                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
                                 });
                                 if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
                                     tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
@@ -341,7 +341,6 @@
             }
         };
 
-
         tagLoader.corpusName = corpusName;
         tagLoader.hiddenElm = hiddenElm;
         for (i = 0; i < numTagPos; i += 1) {
@@ -384,6 +383,7 @@
             }
         };
         numOfPos = numOfPos || 4; // TODO
+
         if (typeof (opt.hiddenElm) === 'string') {
             hiddenElm = $(opt.hiddenElm);
         }

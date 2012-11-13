@@ -35,10 +35,11 @@ var msData = {
         defaultValue : '-default-C-'
     }
 };
-var multiselect = createMultiselectComponent('testing-component', { width : '400px' });
+var multiselect = createMultiselectComponent('testing-component', { width : '400px', useNamedCheckboxes : false });
 var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
     resetButton : 'reset-button',
-    backButton : 'back-button'
+    backButton : 'back-button',
+    hiddenElm : 'tag-pattern'
 });
 
 \$('test-button').observe('click', function () {
@@ -70,7 +71,7 @@ multiselect.addItem('block-A', 'item A.1', 'hodnota A1')
 <h1>Tag query builder test</h1>
 <form method="POST">
     <div id="testing-component" style="width: 300px">Component not supported. Please upgrade your browser.</div>
-
+    <input type="hidden" name="tag-pattern" id="tag-pattern" />
     <button type="button" id="reset-button">Reset</button>
     <button type="button" id="back-button">Back</button>
     <br />
