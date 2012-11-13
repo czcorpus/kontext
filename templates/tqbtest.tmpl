@@ -39,7 +39,8 @@ var multiselect = createMultiselectComponent('testing-component', { width : '400
 var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
     resetButton : 'reset-button',
     backButton : 'back-button',
-    hiddenElm : 'tag-pattern'
+    hiddenElm : 'tag-pattern',
+    tagDisplay : 'tag-display'
 });
 
 \$('test-button').observe('click', function () {
@@ -69,6 +70,7 @@ multiselect.addItem('block-A', 'item A.1', 'hodnota A1')
 #def main
 
 <h1>Tag query builder test</h1>
+<div id="tag-display" style="font-family: monospace; font-size: 200%">test</div>
 <form method="POST">
     <div id="testing-component" style="width: 300px">Component not supported. Please upgrade your browser.</div>
     <input type="hidden" name="tag-pattern" id="tag-pattern" />
