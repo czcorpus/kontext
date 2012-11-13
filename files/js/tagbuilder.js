@@ -4,7 +4,6 @@
     var createTagLoader,
         attachTagLoader;
 
-
     /**
      * @param selector
      * @param status boolean
@@ -33,7 +32,7 @@
      * @param corpusName corpus identifier
      * @param numTagPos
      * @param hiddenElm ID or element itself
-     * @param multiSelectComponent
+     * @param multiSelectComponent {Object}
      * @return {Object}
      */
     createTagLoader = function (corpusName, numTagPos, hiddenElm, multiSelectComponent) {
@@ -89,11 +88,17 @@
             history : [],
 
             /**
+             *
+             */
+            activeBlockHistory : [],
+
+            /**
              * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param anyCharSymbol
+             * @param data {optional Object}
              */
-            encodeFormStatus : function (anyCharSymbol) {
+            encodeFormStatus : function (anyCharSymbol, data) {
                 var data,
                     ans = '',
                     prop,
@@ -101,7 +106,7 @@
                     i;
 
                 anyCharSymbol = anyCharSymbol || '-';
-                data = tagLoader.multiSelectComponent.exportStatus();
+                data = data || tagLoader.multiSelectComponent.exportStatus();
 
                 for (prop in data) {
                     positionCode = [];
@@ -135,19 +140,18 @@
             /**
              * Updates all SELECT element-based form items with provided data
              *
-             * @param activeNode active SELECT element
              * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
              * tag position value) of arrays (0 - value, 1 - label))
+             * @param selects {optional Object}
+             * @param updateActiveBlockChecks {optional Boolean}
              */
-            updateMultiSelectValues : function (activeNode, data) {
+            updateMultiSelectValues : function (data, selects, updateActiveBlockChecks) {
                 var i,
                     j,
-                    currValue,
-                    newOption,
                     blockId,
                     getResponseLength,
                     iterStart,
-                    prevSelects = tagLoader.multiSelectComponent.exportStatus();
+                    prevSelects = selects || tagLoader.multiSelectComponent.exportStatus();
 
                 getResponseLength = function (resp) {
                     var prop,
@@ -163,6 +167,9 @@
                     }
                     return ans;
                 };
+
+                tagLoader.history.push(prevSelects);
+                tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
 
                 for (i = 0; i < getResponseLength(data); i += 1) {
                     blockId = 'position_' + i;
@@ -191,19 +198,30 @@
                                     var pattern = tagLoader.encodeFormStatus();
 
                                     tagLoader.loadPatternVariants(pattern, function (data) {
-                                        tagLoader.updateMultiSelectValues(null, data);
+                                        tagLoader.updateMultiSelectValues(data);
                                     });
                                 });
-
-                                if (prevSelects.hasOwnProperty(blockId)
-                                        && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
+                                if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
                                     tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+
+                                } else {
+                                    tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
                                 }
                             }
                             tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (data[i].length - iterStart) + ' ]');
 
                         } else {
                             tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
+                        }
+
+                    } else if (updateActiveBlockChecks) {
+                        tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                            if (prevSelects[blockId].indexOf(item.getValue()) === -1) {
+                                item.checked = false;
+                            }
+                        });
+                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
+                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
                         }
                     }
                 }
@@ -259,10 +277,11 @@
              */
             resetButtonClick : function (event) {
                 tagLoader.history = [];
+                tagLoader.activeBlockHistory = [];
                 tagLoader.multiSelectComponent.uncheckAll();
                 tagLoader.multiSelectComponent.collapseAll();
                 tagLoader.loadInitialVariants(function (data) {
-                    tagLoader.updateMultiSelectValues(null, data);
+                    tagLoader.updateMultiSelectValues(data);
                 });
             },
 
@@ -271,32 +290,38 @@
              * @param event
              */
             backButtonClick : function (event) {
-                var prevPattern;
+                var prevSelection,
+                    prevActiveBlock,
+                    objectIsEmpty;
 
-                tagLoader.history.pop(); // remove current value
-                prevPattern = tagLoader.history[tagLoader.history.length - 1];
+                objectIsEmpty = function (obj) {
+                    var prop;
+                    for (prop in obj) {
+                        if (obj.hasOwnProperty(prop)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
 
-                if (prevPattern) {
-                    tagLoader.loadPatternVariants(prevPattern, function (data) {
-                        tagLoader.updateMultiSelectValues(null, data);
-                        updateConcordanceQuery();
+                tagLoader.history.pop(); // remove current status which has been already pushed
+                tagLoader.activeBlockHistory.pop();
+                prevSelection = tagLoader.history.pop(); // and use the previous one
+                prevActiveBlock = tagLoader.activeBlockHistory.pop();
+
+                if (!objectIsEmpty(prevSelection)) {
+                    tagLoader.loadPatternVariants(tagLoader.encodeFormStatus('-', prevSelection), function (data) {
+                        tagLoader.updateMultiSelectValues(data, prevSelection, true);
+                        tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
                     });
 
                 } else { // empty => load initial values
+                    prevSelection = {};
+                    prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
                     tagLoader.loadInitialVariants(function (data) {
-                        var a;
-
-                        tagLoader.updateMultiSelectValues(null, data);
-                        for (a in tagLoader.selectedValues) {
-                            if (tagLoader.selectedValues.hasOwnProperty(a)) {
-                                tagLoader.selectedValues[a] = '-';
-                            }
-                        }
-                        tagLoader.lastPattern = null;
-                        selList.each(function (item, idx) {
-                            item.selectedIndex = 0;
-                        });
-                        updateConcordanceQuery();
+                        tagLoader.updateMultiSelectValues(data, prevSelection, true);
+                        tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
+                        tagLoader.multiSelectComponent.collapseAll();
                     });
                 }
             }
@@ -350,7 +375,7 @@
         }
         tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, multiSelectComponent);
         tagLoader.loadInitialVariants(function (data) {
-            tagLoader.updateMultiSelectValues(null, data);
+            tagLoader.updateMultiSelectValues(data);
         });
         if (typeof (opt.resetButton) === 'string') {
             opt.resetButton = $(opt.resetButton);
