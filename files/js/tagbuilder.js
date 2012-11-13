@@ -32,10 +32,11 @@
      * @param corpusName corpus identifier
      * @param numTagPos
      * @param hiddenElm ID or element itself
+     * @param tagDisplay
      * @param multiSelectComponent {Object}
      * @return {Object}
      */
-    createTagLoader = function (corpusName, numTagPos, hiddenElm, multiSelectComponent) {
+    createTagLoader = function (corpusName, numTagPos, hiddenElm, tagDisplay, multiSelectComponent) {
 
         var tagLoader,
             i;
@@ -91,6 +92,11 @@
              *
              */
             activeBlockHistory : [],
+
+            /**
+             *
+             */
+            tagDisplay : null,
 
             /**
              * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
@@ -207,7 +213,10 @@
                                             }
                                         });
                                     });
+                                    // TODO optional
                                     tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
+                                    tagLoader.tagDisplay.update(tagLoader.encodeFormStatus('.'));
+
                                 });
                                 if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
                                     tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
@@ -346,6 +355,7 @@
 
         tagLoader.corpusName = corpusName;
         tagLoader.hiddenElm = hiddenElm;
+        tagLoader.tagDisplay = tagDisplay;
         for (i = 0; i < numTagPos; i += 1) {
             tagLoader.selectedValues[i] = '-';
         }
@@ -369,6 +379,7 @@
         var tagLoader,
             selList,
             hiddenElm,
+            tagDisplay,
             updateConcordanceQuery;
 
         if (typeof (opt.tagDisplay) === 'string') {
@@ -389,8 +400,18 @@
 
         if (typeof (opt.hiddenElm) === 'string') {
             hiddenElm = $(opt.hiddenElm);
+
+        } else {
+            hiddenElm = opt.hiddenElm;
         }
-        tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, multiSelectComponent);
+        if (typeof (opt.tagDisplay) === 'string') {
+            tagDisplay = $(opt.tagDisplay);
+
+        } else {
+            tagDisplay = opt.tagDisplay;
+        }
+
+        tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, tagDisplay, multiSelectComponent);
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.updateMultiSelectValues(data);
         });
