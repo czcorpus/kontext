@@ -2508,3 +2508,12 @@ msgstr "Po úspěšné aktualizaci hesla budete odhlášeni a vyzváni k zadán�
 
 msgid "pages"
 msgstr "str."
+
+msgid "related to the selected subcorpus"
+msgstr "vztaženo k vybranému subkorpusu"
+
+msgid "related to the whole corpus"
+msgstr "vztaženo k celému korpusu"
+
+msgid "instances per million (refers to the respective category)"
+msgstr "výskytů na milion (vztaženo k příslušné kategorii)"
