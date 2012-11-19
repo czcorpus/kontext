@@ -145,7 +145,8 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 #end if
 <div id="result-info">
     $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
-     (#filter $FloatFormatter# $result_relative_freq #end filter#</strong> <acronym title="$_('instances per million')">i.p.m.</acronym>)
+     (#filter $FloatFormatter# $result_relative_freq #end filter#</strong>
+    <acronym title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</acronym>; $result_relative_freq_rel_to)
     #if $result_arf
     | <acronym title="$_('Average Reduced Frequency')">$_('ARF')</acronym>:
     <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>

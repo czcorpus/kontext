@@ -162,8 +162,8 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
     else:
         corpsize = corpus.size()
     out['result_relative_freq'] = round(conc.size() / (float(corpsize) / 1e6), 2)
-    #arf = conc.compute_ARF()
-    #out['concarf'] = '%.2f' % arf
+    out['result_relative_freq_rel_to'] = _('related to the selected subcorpus') if hasattr(corpus, 'subcname') \
+                    else _('related to the whole corpus')
     return out
 
 def separate_speech_struct_from_tag(text):
@@ -672,7 +672,7 @@ class PyConc (manatee.Concordance):
                 if maxrel < newrel:
                     maxrel = newrel
             if rel_mode == 0:
-                head.append ({'n': 'i.p.m.', 'title' : _('instances per million'), 's': 'rel'})
+                head.append ({'n': 'i.p.m.', 'title' : _('instances per million (refers to the respective category)'), 's': 'rel'})
             else:
                 head.append ({'n': 'Freq [%]', 'title' : '', 's': 'rel'})
 
