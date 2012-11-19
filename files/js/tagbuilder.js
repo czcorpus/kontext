@@ -2,8 +2,22 @@
     'use strict';
 
     var createTagLoader,
-        attachTagLoader;
+        objectIsEmpty;
 
+    /**
+     *
+     * @param obj
+     * @return {Boolean}
+     */
+    objectIsEmpty = function (obj) {
+        var prop;
+        for (prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                return false;
+            }
+        }
+        return true;
+    };
 
     /**
      * Creates new AJAX tag hint loader for selected corpus
@@ -152,8 +166,10 @@
                     return ans;
                 };
 
-                tagLoader.history.push(prevSelects);
-                tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
+                if (prevSelects && !objectIsEmpty(prevSelects)) {
+                    tagLoader.history.push(prevSelects);
+                    tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
+                }
 
                 for (i = 0; i < getResponseLength(data); i += 1) {
                     blockId = 'position_' + i;
@@ -284,24 +300,19 @@
             backButtonClick : function (event) {
                 var prevSelection,
                     prevActiveBlock,
-                    objectIsEmpty,
                     updateActiveBlock;
-
-                objectIsEmpty = function (obj) {
-                    var prop;
-                    for (prop in obj) {
-                        if (obj.hasOwnProperty(prop)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
 
                 updateActiveBlock = function (blockId, prevSelects) {
                     if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
                         tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                            if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(item.getValue()) === -1) {
-                                item.checked = false;
+                            if (prevSelects.hasOwnProperty(blockId)) {
+                                if (prevSelects[blockId].indexOf(item.readAttribute('value')) === -1) {
+                                    item.checked = false;
+
+                                } else {
+                                    item.checked = true;
+                                }
+
                             }
                             item.disabled = false;
                         });
