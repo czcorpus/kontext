@@ -4,27 +4,6 @@
     var createTagLoader,
         attachTagLoader;
 
-    /**
-     * @param selector
-     * @param status boolean
-     */
-    function switchSelectorStatus(selector, status) {
-        var siblings = selector.parentNode.siblings(),
-            tableCell = null;
-
-        if (siblings.length === 1 && siblings[0].readAttribute('class') === 'num') {
-            tableCell = siblings[0];
-        }
-
-        if (status === true) {
-            selector.writeAttribute('disabled', null);
-            siblings[0].setStyle({ color : '#000' });
-
-        } else if (status === false) {
-            selector.writeAttribute('disabled', 'disabled');
-            siblings[0].setStyle({ color : '#AAA' });
-        }
-    }
 
     /**
      * Creates new AJAX tag hint loader for selected corpus
@@ -319,13 +298,18 @@
                 };
 
                 updateActiveBlock = function (blockId, prevSelects) {
-                    tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(item.getValue()) === -1) {
-                            item.checked = false;
+                    if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
+                        tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                            if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(item.getValue()) === -1) {
+                                item.checked = false;
+                            }
+                            item.disabled = false;
+                        });
+                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
+                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
                         }
-                    });
-                    if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
-                        tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
+                        tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
+                        tagLoader.tagDisplay.update(tagLoader.encodeFormStatus('.'));
                     }
                 };
 
@@ -349,7 +333,6 @@
                         tagLoader.multiSelectComponent.collapseAll();
                     });
                 }
-                tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
             }
         };
 
