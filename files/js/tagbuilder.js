@@ -178,7 +178,7 @@
                     if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                         if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                            tagLoader.multiSelectComponent.addBlock(blockId, 'position ' + (i + 1));
+                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1);
 
                         } else {
                             tagLoader.multiSelectComponent.clearBlock(blockId);
