@@ -92,18 +92,15 @@
             tagDisplay : null,
 
             /**
-             * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
-             *
-             * @param anyCharSymbol
+             * Encodes form status into a list of regular expressions (one for each position)
              */
-            encodeFormStatus : function (anyCharSymbol) {
+            encodeFormStatusItems : function () {
                 var data,
-                    ans = '',
+                    ans = [],
                     prop,
                     positionCode,
                     i;
 
-                anyCharSymbol = anyCharSymbol || '-';
                 data = data || tagLoader.multiSelectComponent.exportStatus();
 
                 for (prop in data) {
@@ -116,15 +113,30 @@
                         }
                     }
                     if (positionCode.length > 1) {
-                        ans += '[' + positionCode.join('') + ']';
+                        ans.push('[' + positionCode.join('') + ']');
 
                     } else if (positionCode.length === 1) {
-                        ans += positionCode[0];
+                        ans.push(positionCode[0]);
 
                     } else {
-                        ans += '-';
+                        ans.push('-');
                     }
                 }
+                return ans;
+            },
+
+            /**
+             * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
+             *
+             * @param anyCharSymbol
+             */
+            formStatusToPlainText : function (anyCharSymbol) {
+                var ans,
+                    items;
+
+                items = tagLoader.encodeFormStatusItems();
+                anyCharSymbol = anyCharSymbol || '-';
+                ans = items.join('');
 
                 if (anyCharSymbol !== '-') {
                     ans = ans.replace(/-/g, anyCharSymbol);
@@ -133,6 +145,51 @@
                     ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
                 }
                 return ans;
+            },
+
+            /**
+             *
+             * @return {String}
+             */
+            formStatusToHTML : function () {
+                var ans = '',
+                    items,
+                    i,
+                    lastNonDotPos;
+
+                items = tagLoader.encodeFormStatusItems();
+                lastNonDotPos = items.length - 1;
+                while (lastNonDotPos >= 0 && items[lastNonDotPos] === '-') {
+                    lastNonDotPos -= 1;
+                }
+
+                for (i = 0; i <= lastNonDotPos; i += 1) {
+                    if (items[i] === '-') {
+                        ans +=  items[i].replace('-', '.');
+
+                    } else {
+                        ans += '<a class="backlink" data-block-idx="' + i + '" href="#">' + items[i] + '</a>';
+                    }
+                }
+                if (lastNonDotPos < items.length) {
+                    ans += '.*';
+                }
+                return ans;
+            },
+
+            /**
+             *
+             */
+            updateBacklinks : function () {
+                tagLoader.tagDisplay.select('a.backlink').each(function (item) {
+                    item.observe('click', function (event) {
+                        var liElms = tagLoader.multiSelectComponent.ulElement.select('li:nth-child('
+                                + (parseInt(item.readAttribute('data-block-idx')) + 1) + ')');
+                        if (liElms.length === 1) {
+                            tagLoader.multiSelectComponent.flipBlockVisibility(liElms[0].readAttribute('data-block-id'), 'table');
+                        }
+                    });
+                });
             },
 
             /**
@@ -196,7 +253,7 @@
 
                             for (j = iterStart; j < data[i].length; j += 1) {
                                 tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], function (event) {
-                                    var pattern = tagLoader.encodeFormStatus();
+                                    var pattern = tagLoader.formStatusToPlainText();
 
                                     tagLoader.loadPatternVariants(pattern, function (data) {
                                         tagLoader.updateMultiSelectValues(data, null, function (blockId) {
@@ -209,8 +266,9 @@
                                         });
                                     });
                                     // TODO optional
-                                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
-                                    tagLoader.tagDisplay.update(tagLoader.encodeFormStatus('.'));
+                                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
+                                    tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
+                                    tagLoader.updateBacklinks();
 
                                 });
                                 if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
@@ -290,7 +348,7 @@
                 tagLoader.loadInitialVariants(function (data) {
                     tagLoader.updateMultiSelectValues(data);
                 });
-                tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
+                tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
             },
 
             /**
@@ -319,8 +377,9 @@
                         if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
                             tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
                         }
-                        tagLoader.hiddenElm.writeAttribute('value', tagLoader.encodeFormStatus('.'));
-                        tagLoader.tagDisplay.update(tagLoader.encodeFormStatus('.'));
+                        tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
+                        tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
+                        tagLoader.updateBacklinks();
                     }
                 };
 
@@ -330,7 +389,8 @@
                 prevActiveBlock = tagLoader.activeBlockHistory.pop();
 
                 if (!objectIsEmpty(prevSelection)) {
-                    tagLoader.loadPatternVariants(tagLoader.encodeFormStatus('-', prevSelection), function (data) {
+                    // TODO check the change
+                    tagLoader.loadPatternVariants(tagLoader.formStatusToPlainText('-'), function (data) {
                         tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                         tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
                     });

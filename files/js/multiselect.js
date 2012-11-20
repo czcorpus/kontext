@@ -66,6 +66,9 @@
 
             ulElement : null,
 
+            /**
+             *
+             */
             blocks : {},
 
             /**
@@ -91,6 +94,11 @@
 
             /**
              *
+             */
+            allowMultipleOpenedBoxes : false,
+
+            /**
+             *
              * @param wrapperElem multi-select component will be inserted into this element
              */
             init : function (wrapperElem) {
@@ -100,6 +108,7 @@
                     widthStyle;
 
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
+                multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
                 if (typeof (wrapperElem) === 'string') {
                     wrapperElem = $(wrapperElem);
                 }
@@ -128,10 +137,20 @@
              * @param status {optional String}
              */
             flipBlockVisibility : function (blockId, status) {
-                var switchLink = multiSelect.blockSwitchLinks[blockId],
+                var prop,
+                    switchLink = multiSelect.blockSwitchLinks[blockId],
                     tbodyElm = multiSelect.blocks[blockId];
 
+
                 if (tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none' || status === 'table') {
+                    if (!multiSelect.allowMultipleOpenedBoxes) {
+                        for (prop in multiSelect.blocks) {
+                            if (multiSelect.blocks.hasOwnProperty(prop)) {
+                                multiSelect.blocks[prop].parentNode.setStyle({ display : 'none'});
+                                multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link');
+                            }
+                        }
+                    }
                     tbodyElm.parentNode.setStyle({ display : 'table'});
                     switchLink.writeAttribute('class', 'switch-link active');
 
@@ -164,6 +183,7 @@
                     overflow : 'hidden',
                     clear : 'both'
                 });
+                liElement.writeAttribute('data-block-id', blockId);
                 multiSelect.ulElement.insert(liElement);
                 switchLink = Element.extend(document.createElement('A'));
                 switchLink.writeAttribute('class', 'switch-link');

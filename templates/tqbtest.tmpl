@@ -35,7 +35,8 @@ var msData = {
         defaultValue : '-default-C-'
     }
 };
-var multiselect = createMultiselectComponent('testing-component', { width : '400px', useNamedCheckboxes : false });
+var multiselect = createMultiselectComponent('testing-component',
+{ width : '400px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
 var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
     resetButton : 'reset-button',
     backButton : 'back-button',
