@@ -168,7 +168,7 @@
                         ans +=  items[i].replace('-', '.');
 
                     } else {
-                        ans += '<a class="backlink" data-block-idx="' + i + '" href="#">' + items[i] + '</a>';
+                        ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
                     }
                 }
                 if (lastNonDotPos < items.length) {
@@ -410,6 +410,7 @@
         tagLoader.corpusName = corpusName;
         tagLoader.hiddenElm = hiddenElm;
         tagLoader.tagDisplay = tagDisplay;
+        tagLoader.tagDisplay.writeAttribute('class', 'tag-display-box');
         for (i = 0; i < numTagPos; i += 1) {
             tagLoader.selectedValues[i] = '-';
         }
