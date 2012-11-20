@@ -116,11 +116,7 @@
                     padding : paddingStyle
                 });
                 multiSelect.ulElement = Element.extend(document.createElement('UL'));
-                multiSelect.ulElement.setStyle({
-                    listStyleType : 'none',
-                    margin: 0,
-                    padding : 0
-                });
+                multiSelect.ulElement.writeAttribute('class', 'multiselect');
                 wrapperElem.update(multiSelect.ulElement);
             },
 
@@ -137,11 +133,11 @@
 
                 if (tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none' || status === 'table') {
                     tbodyElm.parentNode.setStyle({ display : 'table'});
-                    switchLink.nextSiblings()[1].update('&#x25BC;&nbsp;');
+                    switchLink.writeAttribute('class', 'switch-link active');
 
                 } else if (tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table' || status === 'none') {
                     tbodyElm.parentNode.setStyle({ display : 'none'});
-                    switchLink.nextSiblings()[1].update('&#x25BA;&nbsp;');
+                    switchLink.writeAttribute('class', 'switch-link');
                 }
             },
 
@@ -158,34 +154,28 @@
                     switchLink,
                     statusText,
                     itemTable,
-                    itemTbody,
-                    flagElement;
+                    itemTbody;
 
                 blockLabel = blockLabel || blockId;
 
                 liElement = Element.extend(document.createElement('LI'));
                 liElement.setStyle({
-                    margin : 0
+                    margin : 0,
+                    overflow : 'hidden',
+                    clear : 'both'
                 });
                 multiSelect.ulElement.insert(liElement);
                 switchLink = Element.extend(document.createElement('A'));
+                switchLink.writeAttribute('class', 'switch-link');
                 switchLink.update(blockLabel);
                 multiSelect.blockSwitchLinks[blockId] = switchLink;
                 liElement.insert(switchLink);
 
                 statusText = Element.extend(document.createElement('SPAN'));
-                statusText.setStyle({ paddingLeft : '5px', color : '#444' });
-                statusText.writeAttribute('class', 'num-avail');
+                statusText.writeAttribute('class', 'status-text');
                 statusText.update('[ 0 ]');
-                liElement.insert(statusText);
-
-                flagElement = Element.extend(document.createElement('SPAN'));
-                flagElement.writeAttribute('class', 'flag');
-                flagElement.update('&#x25BA;&nbsp;');
-                flagElement.setStyle({
-                    paddingLeft : '5px'
-                });
-                liElement.insert(flagElement);
+                //liElement.insert(statusText);
+                switchLink.insert(statusText);
 
                 itemTable = Element.extend(document.createElement('TABLE'));
                 liElement.insert(itemTable);
@@ -221,7 +211,7 @@
              *
              */
             updateBlockStatusText : function (blockId, text) {
-                multiSelect.blockSwitchLinks[blockId].parentNode.select('span[class="num-avail"]').each(function (item) {
+                multiSelect.blockSwitchLinks[blockId].parentNode.select('span[class="status-text"]').each(function (item) {
                     item.update(text);
                 });
             },
