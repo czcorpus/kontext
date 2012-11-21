@@ -171,7 +171,10 @@
                         ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
                     }
                 }
-                if (lastNonDotPos < items.length) {
+                if (lastNonDotPos == items.length - 2) {
+                    ans += '.';
+
+                } else if (lastNonDotPos < items.length - 2) {
                     ans += '.*';
                 }
                 return ans;
