@@ -50,11 +50,17 @@ ul.multiselect li td {
     padding: 2px 5px;
 }
 
-.tag-display-box a.backlink:hover {
+.tag-display-box a.backlink:hover,
+.tag-display-box a.called,
+.tag-display-box span.called {
     text-decoration: none;
-    background-color: #fffacd;
+    background-color: #fffacd !important;
 }
 
-.tag-display-box a.backlink {
+.tag-display-box a.backlink,
+.tag-display-box span.backlink {
     text-decoration: none;
+    background-color: #dddddd;
+    padding: 2px 4px;
+    margin: 2px;
 }

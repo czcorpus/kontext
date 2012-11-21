@@ -71,7 +71,11 @@ multiselect.addItem('block-A', 'item A.1', 'hodnota A1')
 #def main
 
 <h1>Tag query builder test</h1>
-<div id="tag-display" style="font-family: monospace; font-size: 200%">test</div>
+<div id="tag-display" style="font-family: monospace; font-size: 200%">
+#for i in range(16)
+<span class="backlink" data-block-idx="$i">.</span>#slurp
+#end for
+</div>
 <form method="POST">
     <div id="testing-component" style="width: 300px">Component not supported. Please upgrade your browser.</div>
     <input type="hidden" name="tag-pattern" id="tag-pattern" />

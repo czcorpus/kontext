@@ -67,7 +67,7 @@
             ulElement : null,
 
             /**
-             *
+             * Contains TBODY elements of each block
              */
             blocks : {},
 
@@ -166,14 +166,16 @@
              * @param blockId {String}
              * @param blockLabel {String}
              * @param defaultValue {optional String} value used if no checkbox is selected
+             * @param eventCallbacks {optional Object} map 'event' -> callback
              * @return {Object}
              */
-            addBlock : function (blockId, blockLabel, defaultValue) {
+            addBlock : function (blockId, blockLabel, defaultValue, eventCallbacks) {
                 var liElement,
                     switchLink,
                     statusText,
                     itemTable,
-                    itemTbody;
+                    itemTbody,
+                    prop;
 
                 blockLabel = blockLabel || blockId;
 
@@ -210,7 +212,49 @@
                 });
                 itemTbody.parentNode.setStyle({ display : 'none'});
                 multiSelect.addDefaultValue(blockId, liElement, defaultValue || ''); // 'default default' value
+
+                eventCallbacks = eventCallbacks || {};
+                for (prop in eventCallbacks) {
+                    if (eventCallbacks.hasOwnProperty(prop) && typeof (eventCallbacks[prop]) === 'function') {
+                        switchLink.observe(prop, eventCallbacks[prop]);
+                    }
+                }
                 return multiSelect;
+            },
+
+            /**
+             * Returns TBODY block identified by its order (starting from zero)
+             *
+             * @param idx
+             * @return {Object} object representing found TBODY element or null
+             * if nothing found or if invalid index is provided
+             */
+            getBlockByIndex : function (idx) {
+                var items = multiSelect.ulElement.select('tbody');
+                if (idx >= 0 && idx < items.length) {
+                    return items[idx];
+                }
+                return null;
+            },
+
+            /**
+             * Returns order (in the related list of DOM elements, starting from zero)
+             * of the block specified by blockId.
+             *
+             * @param blockId
+             */
+            getBlockOrder : function (blockId) {
+                var i,
+                    ans = null,
+                    items = multiSelect.ulElement.select('tbody');
+
+                for (i = 0; i < items.length; i += 1) {
+                    if (items[i] === multiSelect.blocks[blockId]) {
+                        ans = i;
+                        break;
+                    }
+                }
+                return ans;
             },
 
             /**

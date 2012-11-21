@@ -165,7 +165,7 @@
 
                 for (i = 0; i <= lastNonDotPos; i += 1) {
                     if (items[i] === '-') {
-                        ans +=  items[i].replace('-', '.');
+                        ans +=  '<span class="backlink" data-block-idx="' + i + '">' + items[i].replace('-', '.') + '</span>';
 
                     } else {
                         ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
@@ -235,7 +235,26 @@
                     if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                         if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1);
+                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, {
+                                mouseover : function (event) {
+                                    var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                                        items;
+
+                                    items = tagLoader.tagDisplay.select('*');
+                                    if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
+                                        items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink called');
+                                    }
+                                },
+                                mouseout : function (event) {
+                                    var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                                        items;
+
+                                    items = tagLoader.tagDisplay.select('*');
+                                    if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
+                                        items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink');
+                                    }
+                                }
+                        });
 
                         } else {
                             tagLoader.multiSelectComponent.clearBlock(blockId);
