@@ -18,6 +18,7 @@ fi
 
 for f in `find . -name "*.js"`; do
   if echo $f | grep -Eqv '/[^/]+min[^/]+$'; then
+    hg revert -C $f
     java -jar $yuiloc $f -o $f
     echo "Minified [$f]"
   else
