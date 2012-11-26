@@ -93,7 +93,6 @@ class TagVariantLoader(object):
         for p, r in replacements:
             patt_string = patt_string.replace(p, r)
         patt = re.compile(patt_string)
-        logging.getLogger(__name__).info('pattern: %s' % selected_tags)
         matching_tags = []
         for line in self.tags_file:
             line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
@@ -103,7 +102,7 @@ class TagVariantLoader(object):
 
         ans = {}
         for item in matching_tags:
-            tag_elms = re.findall(r'\[[^)]+\]|[^-]|-', selected_tags)
+            tag_elms = re.findall(r'\[[^\]]+\]|[^-]|-', selected_tags)
             for i in range(len(tag_elms)):
                 if i not in ans:
                     ans[i] = set()
