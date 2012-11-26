@@ -110,7 +110,7 @@
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
                 if (typeof (wrapperElem) === 'string') {
-                    wrapperElem = $(wrapperElem);
+                    wrapperElem = context.$(wrapperElem);
                 }
                 borderStyle = opt.hasOwnProperty('border') ? opt.border : '1px solid #aaa';
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
@@ -147,7 +147,12 @@
                         for (prop in multiSelect.blocks) {
                             if (multiSelect.blocks.hasOwnProperty(prop)) {
                                 multiSelect.blocks[prop].parentNode.setStyle({ display : 'none'});
-                                multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link');
+                                if (multiSelect.getNumSelected(prop) === 0) {
+                                    multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link');
+
+                                } else {
+                                    multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link used');
+                                }
                             }
                         }
                     }
@@ -156,7 +161,12 @@
 
                 } else if ((tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table') || status === 'none') {
                     tbodyElm.parentNode.setStyle({ display : 'none'});
-                    switchLink.writeAttribute('class', 'switch-link');
+                    if (multiSelect.getNumSelected(blockId) === 0) {
+                        switchLink.writeAttribute('class', 'switch-link');
+
+                    } else {
+                        switchLink.writeAttribute('class', 'switch-link used');
+                    }
                 }
             },
 
@@ -317,11 +327,11 @@
                     if (multiSelect.getNumSelected(blockId) === 0) {
                         multiSelect.defaultValues[blockId].writeAttribute('value',
                             multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
-                        multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
+                        multiSelect.blockSwitchLinks[blockId].writeAttribute('class', 'switch-link');
 
                     } else {
                         multiSelect.defaultValues[blockId].writeAttribute('value', '');
-                        multiSelect.blockSwitchLinks[blockId].setStyle({ fontWeight : 'bold'});
+                        multiSelect.blockSwitchLinks[blockId].writeAttribute('class', 'switch-link used');
                     }
                 });
                 if (typeof (clickCallback) === 'function') {
