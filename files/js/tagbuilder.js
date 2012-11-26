@@ -1,3 +1,11 @@
+// Copyright (c) 2012 Institute of the Czech National Corpus
+//
+// This library depends on Prototype.js version 1.7+ and multiselect.js
+//
+
+/**
+ * This library provides a clickable 'tag ge
+ */
 (function (context) {
     'use strict';
 
@@ -104,22 +112,24 @@
                 data = data || tagLoader.multiSelectComponent.exportStatus();
 
                 for (prop in data) {
-                    positionCode = [];
                     if (data.hasOwnProperty(prop)) {
-                        for (i = 0; i < data[prop].length; i += 1) {
-                            if (data[prop][i] !== null) {
-                                positionCode.push(data[prop][i]);
+                        positionCode = [];
+                        if (data.hasOwnProperty(prop)) {
+                            for (i = 0; i < data[prop].length; i += 1) {
+                                if (data[prop][i] !== null) {
+                                    positionCode.push(data[prop][i]);
+                                }
                             }
                         }
-                    }
-                    if (positionCode.length > 1) {
-                        ans.push('[' + positionCode.join('') + ']');
+                        if (positionCode.length > 1) {
+                            ans.push('[' + positionCode.join('') + ']');
 
-                    } else if (positionCode.length === 1) {
-                        ans.push(positionCode[0]);
+                        } else if (positionCode.length === 1) {
+                            ans.push(positionCode[0]);
 
-                    } else {
-                        ans.push('-');
+                        } else {
+                            ans.push('-');
+                        }
                     }
                 }
                 return ans;
@@ -171,7 +181,7 @@
                         ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
                     }
                 }
-                if (lastNonDotPos == items.length - 2) {
+                if (lastNonDotPos === items.length - 2) {
                     ans += '.';
 
                 } else if (lastNonDotPos < items.length - 2) {
@@ -185,9 +195,9 @@
              */
             updateBacklinks : function () {
                 tagLoader.tagDisplay.select('a.backlink').each(function (item) {
-                    item.observe('click', function (event) {
+                    item.observe('click', function () {
                         var liElms = tagLoader.multiSelectComponent.ulElement.select('li:nth-child('
-                                + (parseInt(item.readAttribute('data-block-idx')) + 1) + ')');
+                                + (parseInt(item.readAttribute('data-block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
                             tagLoader.multiSelectComponent.flipBlockVisibility(liElms[0].readAttribute('data-block-id'), 'table');
                         }
@@ -209,7 +219,10 @@
                     blockId,
                     getResponseLength,
                     iterStart,
-                    prevSelects = selects || tagLoader.multiSelectComponent.exportStatus();
+                    prevSelects = selects || tagLoader.multiSelectComponent.exportStatus(),
+                    blockSwitchEventHandlers,
+                    lockPreviousItems,
+                    itemClickCallback;
 
                 getResponseLength = function (resp) {
                     var prop,
@@ -226,6 +239,50 @@
                     return ans;
                 };
 
+                blockSwitchEventHandlers = {
+                    mouseover : function (event) {
+                        var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                            items;
+
+                        items = tagLoader.tagDisplay.select('*');
+                        if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
+                            items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink called');
+                        }
+                    },
+                    mouseout : function (event) {
+                        var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                            items;
+
+                        items = tagLoader.tagDisplay.select('*');
+                        if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
+                            items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink');
+                        }
+                    }
+                };
+
+                lockPreviousItems = function (data) {
+                    tagLoader.updateMultiSelectValues(data, null, function (blockId) {
+                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
+                                && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
+                            tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                                item.writeAttribute('disabled', 'disabled');
+                            });
+                        }
+                    });
+                };
+
+                itemClickCallback = function () {
+                    var pattern = tagLoader.formStatusToPlainText();
+
+                    tagLoader.loadPatternVariants(pattern, lockPreviousItems);
+                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
+                    tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
+                    tagLoader.updateBacklinks();
+
+                };
+
+
+
                 if (prevSelects && !objectIsEmpty(prevSelects)) {
                     tagLoader.history.push(prevSelects);
                     tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
@@ -238,26 +295,7 @@
                     if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                         if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, {
-                                mouseover : function (event) {
-                                    var blockId = event.element().parentNode.readAttribute('data-block-id'),
-                                        items;
-
-                                    items = tagLoader.tagDisplay.select('*');
-                                    if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
-                                        items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink called');
-                                    }
-                                },
-                                mouseout : function (event) {
-                                    var blockId = event.element().parentNode.readAttribute('data-block-id'),
-                                        items;
-
-                                    items = tagLoader.tagDisplay.select('*');
-                                    if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
-                                        items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink');
-                                    }
-                                }
-                        });
+                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, blockSwitchEventHandlers);
 
                         } else {
                             tagLoader.multiSelectComponent.clearBlock(blockId);
@@ -274,25 +312,7 @@
                             // we start from 1 here because 0 contains default value
 
                             for (j = iterStart; j < data[i].length; j += 1) {
-                                tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], function (event) {
-                                    var pattern = tagLoader.formStatusToPlainText();
-
-                                    tagLoader.loadPatternVariants(pattern, function (data) {
-                                        tagLoader.updateMultiSelectValues(data, null, function (blockId) {
-                                            if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
-                                                    && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
-                                                tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                                                   item.writeAttribute('disabled', 'disabled');
-                                                });
-                                            }
-                                        });
-                                    });
-                                    // TODO optional
-                                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
-                                    tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
-                                    tagLoader.updateBacklinks();
-
-                                });
+                                tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
                                 if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
                                     tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
 
@@ -359,10 +379,9 @@
             },
 
             /**
-             * @todo rewrite
-             * @param event
+             *
              */
-            resetButtonClick : function (event) {
+            resetButtonClick : function () {
                 tagLoader.history = [];
                 tagLoader.activeBlockHistory = [];
                 tagLoader.multiSelectComponent.uncheckAll();
@@ -374,10 +393,9 @@
             },
 
             /**
-             * @todo rewrite
-             * @param event
+             *
              */
-            backButtonClick : function (event) {
+            backButtonClick : function () {
                 var prevSelection,
                     prevActiveBlock,
                     updateActiveBlock;
@@ -411,7 +429,6 @@
                 prevActiveBlock = tagLoader.activeBlockHistory.pop();
 
                 if (!objectIsEmpty(prevSelection)) {
-                    // TODO check the change
                     tagLoader.loadPatternVariants(tagLoader.formStatusToPlainText('-'), function (data) {
                         tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                         tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
@@ -454,7 +471,6 @@
      */
     context.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
         var tagLoader,
-            selList,
             hiddenElm,
             tagDisplay,
             updateConcordanceQuery;
@@ -464,7 +480,7 @@
         }
 
         updateConcordanceQuery = function () {
-            var pattern = tagLoader.encodeFormStatus('.');
+            var pattern = tagLoader.formStatusToPlainText('.');
             if (opt.tagDisplay) {
                 opt.tagDisplay.update(pattern);
             }
@@ -473,7 +489,6 @@
                 tagLoader.hiddenElm.setValue(pattern);
             }
         };
-        numOfPos = numOfPos || 4; // TODO
 
         if (typeof (opt.hiddenElm) === 'string') {
             hiddenElm = $(opt.hiddenElm);
