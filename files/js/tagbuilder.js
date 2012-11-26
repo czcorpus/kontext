@@ -154,6 +154,9 @@
                 if (anyCharSymbol === '.') {
                     ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
                 }
+                if (ans.length === 0) {
+                    ans = '.*';
+                }
                 return ans;
             },
 
@@ -264,6 +267,7 @@
                     tagLoader.updateMultiSelectValues(data, null, function (blockId) {
                         if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
                                 && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
+                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ opacity : 0.4 });
                             tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
                                 item.writeAttribute('disabled', 'disabled');
                             });
@@ -280,18 +284,13 @@
                     tagLoader.updateBacklinks();
 
                 };
-
-
-
                 if (prevSelects && !objectIsEmpty(prevSelects)) {
                     tagLoader.history.push(prevSelects);
                     tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
                 }
-
                 for (i = 0; i < getResponseLength(data); i += 1) {
                     blockId = 'position_' + i;
 
-                    //if (tagLoader.multiSelectComponent.activeBlockId !== blockId) {
                     if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                         if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
@@ -325,7 +324,6 @@
                         } else {
                             tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                         }
-
                     }
 
                     if (typeof callback === 'function') {
@@ -382,6 +380,8 @@
              *
              */
             resetButtonClick : function () {
+                var prop;
+
                 tagLoader.history = [];
                 tagLoader.activeBlockHistory = [];
                 tagLoader.multiSelectComponent.uncheckAll();
@@ -389,6 +389,12 @@
                 tagLoader.loadInitialVariants(function (data) {
                     tagLoader.updateMultiSelectValues(data);
                 });
+                for (prop in tagLoader.multiSelectComponent.blockSwitchLinks) {
+                    if (tagLoader.multiSelectComponent.blockSwitchLinks.hasOwnProperty(prop)) {
+                        tagLoader.multiSelectComponent.blockSwitchLinks[prop].setStyle({ opacity : 1 });
+                    }
+                }
+                tagLoader.tagDisplay.update('.*');
                 tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
             },
 
@@ -404,12 +410,7 @@
                     if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
                         tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
                             if (prevSelects.hasOwnProperty(blockId)) {
-                                if (prevSelects[blockId].indexOf(item.readAttribute('value')) === -1) {
-                                    item.checked = false;
-
-                                } else {
-                                    item.checked = true;
-                                }
+                                item.checked = (prevSelects[blockId].indexOf(item.readAttribute('value')) === -1);
 
                             }
                             item.disabled = false;
@@ -450,6 +451,8 @@
         tagLoader.hiddenElm = hiddenElm;
         tagLoader.tagDisplay = tagDisplay;
         tagLoader.tagDisplay.writeAttribute('class', 'tag-display-box');
+        tagLoader.tagDisplay.update('.*');
+
         for (i = 0; i < numTagPos; i += 1) {
             tagLoader.selectedValues[i] = '-';
         }

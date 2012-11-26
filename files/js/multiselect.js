@@ -102,8 +102,7 @@
              * @param wrapperElem multi-select component will be inserted into this element
              */
             init : function (wrapperElem) {
-                var borderStyle,
-                    marginStyle,
+                var marginStyle,
                     paddingStyle,
                     widthStyle;
 
@@ -112,7 +111,6 @@
                 if (typeof (wrapperElem) === 'string') {
                     wrapperElem = context.$(wrapperElem);
                 }
-                borderStyle = opt.hasOwnProperty('border') ? opt.border : '1px solid #aaa';
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
                 paddingStyle = opt.hasOwnProperty('padding') ? opt.padding : '5px';
                 widthStyle = opt.hasOwnProperty('width') ? opt.width : '200px';
@@ -120,7 +118,6 @@
 
                 wrapperElem.setStyle({
                     width : widthStyle,
-                    border : borderStyle,
                     margin : marginStyle,
                     padding : paddingStyle
                 });
