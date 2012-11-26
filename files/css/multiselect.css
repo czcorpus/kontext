@@ -23,7 +23,7 @@ ul.multiselect a.switch-link  {
     font-weight: bold;
     text-decoration : none;
     color: #444444;
-    background-color: #e1e1e1;
+    background-color: #c6e0e0;
 }
 
 ul.multiselect a.switch-link:hover {
@@ -32,8 +32,12 @@ ul.multiselect a.switch-link:hover {
 }
 
 ul.multiselect a.used {
-    background-color: #cccccc;
-    color: #eeeeee;
+    background-color: #a64d4d;
+    color: #ffffff;
+}
+
+ul.multiselect a.used span.status-text {
+    color: #ffffff;
 }
 
 ul.multiselect a.used:hover {
@@ -57,17 +61,25 @@ ul.multiselect li td {
     padding: 2px 5px;
 }
 
+.tag-display-box {
+    font-size: 15pt;
+    font-family: "Courier New", Courier, monospace;
+    background-color: #dedede;
+    border: 1px solid #979f9f;
+    padding: 2px;
+}
+
 .tag-display-box a.backlink:hover,
 .tag-display-box a.called,
 .tag-display-box span.called {
     text-decoration: none;
-    background-color: #fffacd !important;
+    background-color: #fffcf5 !important;
 }
 
 .tag-display-box a.backlink,
 .tag-display-box span.backlink {
     text-decoration: none;
-    background-color: #dddddd;
-    padding: 2px 4px;
-    margin: 2px;
+    background-color: transparent;
+    padding: 1px 2px;
+    margin: 0 1px;
 }
