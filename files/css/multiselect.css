@@ -22,13 +22,22 @@ ul.multiselect a.switch-link  {
     margin: 1px;
     font-weight: bold;
     text-decoration : none;
-    background-color: #dddddd;
     color: #444444;
+    background-color: #e1e1e1;
 }
 
 ul.multiselect a.switch-link:hover {
     background-color: #99ccee;
     color: #ffffff;
+}
+
+ul.multiselect a.used {
+    background-color: #cccccc;
+    color: #eeeeee;
+}
+
+ul.multiselect a.used:hover {
+    color: #888888;
 }
 
 ul.multiselect a.active {
@@ -44,7 +53,7 @@ ul.multiselect li table {
 }
 
 ul.multiselect li td {
-    border: 1px solid #cccccc;
+    border: 1px solid #dedede;
     padding: 2px 5px;
 }
 

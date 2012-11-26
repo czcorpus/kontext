@@ -33,24 +33,32 @@ $ca_headers
 
 <script type="text/javascript">
 document.observe("dom:loaded", function() {
+    var multiselect,
+        tagLoader;
+
     hideElem.targetedLinks();
     #block bodyonload
     #end block
     #if $focus
     hideElem.focusEx($focus);
     #end if
-    var multiselect = createMultiselectComponent('tag-builder-widget',
-            { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-    var tagLoader = attachTagLoader('$corpname', $num_tag_pos, multiselect, {
-        resetButton : 'reset-button',
-        backButton : 'back-button',
-        hiddenElm : 'tag',
-        tagDisplay : 'tag-display'
-    });
 
-    \$('queryselector').observe('change', function (event) {
-        hideElem.cmdSwitchQuery();
-    });
+    if (\$('tag-builder-widget')) {
+        multiselect = createMultiselectComponent('tag-builder-widget',
+                { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
+        tagLoader = attachTagLoader('$corpname', $num_tag_pos, multiselect, {
+            resetButton : 'reset-button',
+            backButton : 'back-button',
+            hiddenElm : 'tag',
+            tagDisplay : 'tag-display'
+        });
+    }
+
+    if (\$('queryselector')) {
+        \$('queryselector').observe('change', function (event) {
+            hideElem.cmdSwitchQuery();
+        });
+    }
 });
 
 #if $getVar('ga_identifier', '')

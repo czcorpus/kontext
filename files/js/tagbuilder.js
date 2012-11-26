@@ -199,7 +199,7 @@
                         var liElms = tagLoader.multiSelectComponent.ulElement.select('li:nth-child('
                                 + (parseInt(item.readAttribute('data-block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
-                            tagLoader.multiSelectComponent.flipBlockVisibility(liElms[0].readAttribute('data-block-id'), 'table');
+                            tagLoader.multiSelectComponent.flipBlockVisibility(liElms[0].readAttribute('data-block-id'));
                         }
                     });
                 });
