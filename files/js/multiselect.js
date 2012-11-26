@@ -142,7 +142,7 @@
                     tbodyElm = multiSelect.blocks[blockId];
 
 
-                if (tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none' || status === 'table') {
+                if ((tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none') || status === 'table') {
                     if (!multiSelect.allowMultipleOpenedBoxes) {
                         for (prop in multiSelect.blocks) {
                             if (multiSelect.blocks.hasOwnProperty(prop)) {
@@ -154,7 +154,7 @@
                     tbodyElm.parentNode.setStyle({ display : 'table'});
                     switchLink.writeAttribute('class', 'switch-link active');
 
-                } else if (tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table' || status === 'none') {
+                } else if ((tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table') || status === 'none') {
                     tbodyElm.parentNode.setStyle({ display : 'none'});
                     switchLink.writeAttribute('class', 'switch-link');
                 }
