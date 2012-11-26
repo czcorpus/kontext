@@ -99,6 +99,11 @@
 
             /**
              *
+             */
+            itemIdCounter : 0,
+
+            /**
+             *
              * @param wrapperElem multi-select component will be inserted into this element
              */
             init : function (wrapperElem) {
@@ -298,7 +303,9 @@
             addItem : function (blockId, value, label, clickCallback) {
                 var trElm,
                     tdElm,
-                    inputElm;
+                    labelElm,
+                    inputElm,
+                    inputElmId;
 
                 if (!multiSelect.blocks.hasOwnProperty(blockId)) {
                     throw new Error('Cannot add item to the block ' + blockId + '. Block does not exist.');
@@ -306,18 +313,26 @@
                 trElm = Element.extend(document.createElement('TR'));
                 multiSelect.blocks[blockId].insert(trElm);
                 tdElm = Element.extend(document.createElement('TD'));
+                tdElm.writeAttribute('class', 'checkbox-cell');
                 trElm.insert(tdElm);
                 inputElm = Element.extend(document.createElement('INPUT'));
                 inputElm.writeAttribute('type', 'checkbox');
                 if (multiSelect.useNamedCheckboxes) {
                     inputElm.writeAttribute('name', blockId);
                 }
+                inputElmId = 'c_' + blockId + '_' + multiSelect.itemIdCounter;
+                inputElm.writeAttribute('id', inputElmId);
+                multiSelect.itemIdCounter += 1;
                 inputElm.writeAttribute('value', value);
                 tdElm.insert(inputElm);
 
                 tdElm = Element.extend(document.createElement('TD'));
-                tdElm.update(label);
                 trElm.insert(tdElm);
+
+                labelElm = Element.extend(document.createElement('LABEL'));
+                labelElm.writeAttribute('for', inputElmId);
+                tdElm.insert(labelElm);
+                labelElm.update(label);
 
                 inputElm.observe('click', function () {
                     multiSelect.activeBlockId = blockId;
