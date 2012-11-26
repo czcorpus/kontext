@@ -61,10 +61,14 @@ ul.multiselect li td {
     padding: 2px 5px;
 }
 
+ul.multiselect li td.checkbox-cell {
+    width: 15px;
+}
+
 .tag-display-box {
     font-size: 15pt;
     font-family: "Courier New", Courier, monospace;
-    background-color: #dedede;
+    background-color: #ffffff;
     border: 1px solid #979f9f;
     padding: 2px;
 }
