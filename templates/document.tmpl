@@ -39,19 +39,18 @@ document.observe("dom:loaded", function() {
     #if $focus
     hideElem.focusEx($focus);
     #end if
-    /*
-    attachTagLoader({
-        tagPosSelector  : 'select.tag-position',
-        corpusName      : '$corpname',
-        resetButton     : 'reset-button',
-        backButton      : 'back-button',
-        tagDisplay      : 'tag-display',
-        hiddenElm       : 'tag'
+    var multiselect = createMultiselectComponent('tag-builder-widget',
+            { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
+    var tagLoader = attachTagLoader('$corpname', $num_tag_pos, multiselect, {
+        resetButton : 'reset-button',
+        backButton : 'back-button',
+        hiddenElm : 'tag',
+        tagDisplay : 'tag-display'
     });
+
     \$('queryselector').observe('change', function (event) {
         hideElem.cmdSwitchQuery();
     });
-     */
 });
 
 #if $getVar('ga_identifier', '')
@@ -392,28 +391,10 @@ $corp_sel
     <th>$_("Tag"):</th>
     <td>
         <div id="tag-display" style="font-size: 25pt; font-family: 'Courier New', Courier, monospace"></div>
-        <table border="0">
-            <tr>
-                <td colspan="2">
-                    <button id="reset-button" type="button">$_('Reset')</button>
-                    <button id="back-button" type="button">$_('Undo')</button>
-                </td>
-            </tr>
-            <tr>
-                <th>pozice</th>
-                <th>hodnota</th>
-            </tr>
-            #for i in range($num_tag_pos)
-            <tr>
-                <td class="num">$(i + 1)</td>
-                <td style="width: 100px">
-                    <select class="tag-position" id="position-sel-$i">
-                    </select>
-                </td>
-            </tr>
-            #end for
-        </table>
-    <input id="tag" type="hidden" name="tag" value="$tag" />
+        <div id="tag-builder-widget"></div>
+        <button id="reset-button" type="button">$_('Reset')</button>
+        <button id="back-button" type="button">$_('Undo')</button>
+        <input id="tag" type="hidden" name="tag" value="$tag" />
     </td>
 </tr>
 </tbody>
