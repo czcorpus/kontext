@@ -3,8 +3,6 @@
 
     var mlkfu;
 
-    context.bonitoBoxes = context.bonitoBoxes || {};
-
     /**
      *
      * @param cookiename

@@ -14,16 +14,18 @@ $_("Sort form")#slurp
 #end def
 
 #def bodyonload
-multiLevelKwicFormUtil.init();
-\$\$('a.kwic-alignment-help').each(function (item) {
-    item.observe('click', function (event) {
-        var msg = "$_('This counts only for multi-word KWICs')";
-        createPopupBox(event, 'kwic-alignment-help-box', 'toolbar-info', msg, {
-            'top' : 'attached-bottom',
-            'width' : 'auto',
-            'height' : 'auto'
+require(['popupbox'], function (popupbox) {
+    multiLevelKwicFormUtil.init();
+    \$\$('a.kwic-alignment-help').each(function (item) {
+        item.observe('click', function (event) {
+            var msg = "$_('This counts only for multi-word KWICs')";
+            popupbox.createPopupBox(event, 'kwic-alignment-help-box', 'toolbar-info', msg, {
+                'top' : 'attached-bottom',
+                'width' : 'auto',
+                'height' : 'auto'
+            });
+            event.stop();
         });
-        event.stop();
     });
 });
 #end def
