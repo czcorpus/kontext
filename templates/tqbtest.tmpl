@@ -5,52 +5,85 @@
 #end def
 
 #def bodyonload
-var tagLoader = createTagLoader('$corpus_name');
-var selList = \$\$('select.tag-position');
-selList.each(function (item, idx) {
-    \$('position-sel-' + idx).observe('focus', function (event) {
-        if (tagLoader.getNumberOfSelectedItems(selList) === 0
-            || tagLoader.getNumberOfSelectedItems(selList) === 1 && event.element().getValue() !== '-') {
-            tagLoader.loadSinglePositionVariants(idx, function (data) {
-                tagLoader.updateFormValue(event.element(), data);
-            });
-        }
-    });
-    \$('position-sel-' + idx).observe('click', function (event) {
-        var currPattern;
-        if (event.element().nodeName !== 'SELECT') {
-          currPattern = tagLoader.encodeFormStatus(selList);
-          if (currPattern !== tagLoader.lastPattern) {
-              tagLoader.loadPatternVariants(currPattern, function (data) {
-                  tagLoader.updateFormValues(selList, event.element(), data);
-                  tagLoader.lastPattern = currPattern;
-              });
-          }
-        }
-    });
+//var tagLoader = createTagLoader('$corpus_name');
+var msData = {
+    'block-A' : {
+        label : 'Sekce A',
+        items : [
+            { value : 'item_A1', label : 'polozka A1' },
+            { value : 'item_A2', label : 'polozka A2' },
+            { value : 'item_A3', label : 'polozka A3' },
+            { value : 'item_A4', label : 'polozka A4' }
+        ],
+        defaultValue : '-default-A-'
+    },
+
+    'block-B' : {
+        label : 'Sekce B',
+        items : [
+            { value : 'item_B1', label : 'hodnota B1' },
+            { value : 'item_B2', label : 'hodnota B2' },
+        ],
+        defaultValue : '-default-B-'
+    },
+
+    'block-C' : {
+        label : 'Sekce C',
+        items : [
+            { value : 'item_C1', label : 'hodnota C1' },
+        ],
+        defaultValue : '-default-C-'
+    }
+};
+var multiselect = createMultiselectComponent('testing-component',
+{ width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
+var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
+    resetButton : 'reset-button',
+    backButton : 'back-button',
+    hiddenElm : 'tag-pattern',
+    tagDisplay : 'tag-display'
 });
-console.log('test...');
+
+\$('test-button').observe('click', function () {
+    // multiselect.exportStatus();
+    tagLoader.encodeFormStatus('-');
+});
+
+\$('dump-button').observe('click', function (event) {
+   console.log('num selected: ' + multiselect.getNumSelected('block-B'));
+});
+
+
+
+/*
+multiselect.addBlock('block-A', 'Sekce A')
+        .addBlock('block-B', 'Sekce B')
+        .addBlock('block-C', 'Sekce C');
+multiselect.addItem('block-A', 'item A.1', 'hodnota A1')
+            .addItem('block-A', 'item A.2', 'hodnota A2')
+            .addItem('block-B', 'item B.1', 'hodnota B1')
+            .addItem('block-B', 'item B.2', 'hodnota B2')
+            .addItem('block-B', 'item B.3', 'hodnota B3')
+            .addItem('block-C', 'item C.1', 'hodnota C1');
+*/
 #end def
 
 #def main
 
 <h1>Tag query builder test</h1>
-<form>
-    <table border="0">
-        <tr>
-            <th>pozice</th>
-            <th>hodnota</th>
-        </tr>
-        #for i in range($num_tag_pos)
-        <tr>
-            <td>$(i + 1)</td>
-            <td style="width: 100px">
-                <select class="tag-position" id="position-sel-$i">
-                    <option>-</option>
-                </select>
-            </td>
-        </tr>
-        #end for
-    </table>
+<div id="tag-display" style="font-family: monospace; font-size: 200%">
+#for i in range(16)
+<span class="backlink" data-block-idx="$i">.</span>#slurp
+#end for
+</div>
+<form method="POST">
+    <div id="testing-component" style="width: 300px">Component not supported. Please upgrade your browser.</div>
+    <input type="hidden" name="tag-pattern" id="tag-pattern" />
+    <button type="button" id="reset-button">Reset</button>
+    <button type="button" id="back-button">Back</button>
+    <br />
+    <button type="submit">Submit</button>
+    <button type="button" id="test-button">Test</button>
+    <button type="button" id="dump-button">Dump status</button>
 </form>
 #end def

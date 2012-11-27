@@ -24,3 +24,7 @@ table.numtab td {
 table.result tr.even {
     background-color: #ddd;
 }
+
+td.num {
+    text-align: right;
+}
