@@ -1,5 +1,7 @@
-(function (context) {
+define(['win'], function (context) {
     'use strict';
+
+    context.bonitoBoxes = context.bonitoBoxes || {};
 
     /**
      * Creates simple absolute positioned DIV as a child of whereElement.
@@ -37,13 +39,15 @@
             },
 
             close : function (event) {
+                if (event) {
+                    event.element().stopObserving('click', popupBox.close);
+                }
                 if (popupBox.newElem) {
                     popupBox.newElem.remove();
                     popupBox.newElem = null;
                     if (popupBox.timer) {
                         clearInterval(popupBox.timer);
                     }
-                    event.element().stopObserving('click', popupBox.close);
                     document.stopObserving('click', popupBox.close);
                 }
                 delete context.bonitoBoxes[boxId];
@@ -131,5 +135,7 @@
         return popupBox;
     };
 
-    context.createPopupBox = createPopupBox;
-}(window));
+    return {
+        createPopupBox : createPopupBox
+    };
+});

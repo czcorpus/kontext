@@ -14,11 +14,12 @@ $_("Freqs form")#slurp
 #end def
 
 #def bodyonload
+require(['popupbox'], function (popupbox) {
     multiLevelKwicFormUtil.init();
     \$\$('a.kwic-alignment-help').each(function (item) {
         item.observe('click', function (event) {
             var msg = "$_('This counts only for multi-word KWICs')";
-            createPopupBox(event, 'kwic-alignment-help-box', 'toolbar-info', msg, {
+            popupbox.createPopupBox(event, 'kwic-alignment-help-box', 'toolbar-info', msg, {
                 'top' : 'attached-bottom',
                 'width' : 'auto',
                 'height' : 'auto'
@@ -26,6 +27,7 @@ $_("Freqs form")#slurp
             event.stop();
         });
     });
+});
 #end def
 
 

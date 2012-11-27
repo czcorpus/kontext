@@ -31,7 +31,12 @@ $ca_headers
 
 <script type="text/javascript">
 requirejs.config({
-    baseUrl : '../files/js'
+    baseUrl : '../files/js',
+    map: {
+        '*': {
+            'domReady': 'domReady.min'
+        }
+    }
 });
 
 define('win', [], function () { return window; });
