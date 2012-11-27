@@ -149,9 +149,10 @@
         },
 
         /**
-         *
+         * @param resetButtonActions
          */
-        cmdSwitchQuery : function () {
+        cmdSwitchQuery : function (resetButtonActions) {
+
             var qs = $('queryselector'),
                 newid = qs.options[qs.selectedIndex].value,
                 FocusElem = $(newid.substring(0, newid.length - 3)),
@@ -161,6 +162,16 @@
                 oldelem,
                 elem,
                 date;
+
+            $('conc-form-clear-button').stopObserving('click');
+            if (resetButtonActions[qs.getValue()]) {
+                $('conc-form-clear-button').observe('click', resetButtonActions[qs.getValue()]);
+
+            } else {
+                $('conc-form-clear-button').observe('click', function () {
+                    hideElem.clearForm($('mainform'));
+                });
+            }
 
             for (i = 0; i < qs.options.length; i += 1) {
                 elementId = qs.options[i].value;
@@ -195,7 +206,13 @@
          */
         clearForm : function (f) {
             var i,
-                e;
+                e,
+                qs,
+                prevRowType;
+
+            qs = $('queryselector');
+            prevRowType = qs.getValue();
+
             if (document.getElementById('error') !== null) {
                 document.getElementById('error').style.display = 'none';
             }
@@ -212,6 +229,7 @@
                     e.value = '';
                 }
             }
+            qs.setValue(prevRowType);
         },
 
         /**

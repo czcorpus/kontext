@@ -52,27 +52,6 @@ document.observe("dom:loaded", function() {
     hideElem.focusEx($focus);
     #end if
 
-    requirejs(['multiselect', 'tagbuilder'], function (multiselect, tagbuilder) {
-        var msComponent,
-            tagBuilderComponent;
-
-        if (\$('tag-builder-widget')) {
-            msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
-                    { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-            tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
-                resetButton : 'reset-button',
-                backButton : 'back-button',
-                hiddenElm : 'tag',
-                tagDisplay : 'tag-display'
-            });
-        }
-    });
-
-    if (\$('queryselector')) {
-        \$('queryselector').observe('change', function (event) {
-            hideElem.cmdSwitchQuery();
-        });
-    }
 });
 
 #if $getVar('ga_identifier', '')
@@ -414,8 +393,6 @@ $corp_sel
     <td>
         <div id="tag-display" class="tag-display-block"></div>
         <div id="tag-builder-widget"><img src="../files/img/ajax-loader.gif" alt="loading tag-builder widget..." title="loading tag-builder widget..." style="width:24px;height:24px;display:block;margin: 0 auto;" /></div>
-        <button id="reset-button" type="button">$_('Reset')</button>
-        <button id="back-button" type="button">$_('Undo')</button>
         <input id="tag" type="hidden" name="tag" value="$tag" />
     </td>
 </tr>
