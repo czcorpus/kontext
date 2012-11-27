@@ -6,11 +6,12 @@
 /**
  * This library provides a clickable 'tag ge
  */
-(function (context) {
+define(function () {
     'use strict';
 
     var createTagLoader,
-        objectIsEmpty;
+        objectIsEmpty,
+        attachTagLoader;
 
     /**
      *
@@ -472,7 +473,7 @@
      *     hiddenElm      : ID or element itself
      * @return {tagLoader}
      */
-    context.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
+    attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
         var tagLoader,
             hiddenElm,
             tagDisplay,
@@ -527,5 +528,8 @@
         return tagLoader;
     };
 
+    return {
+        attachTagLoader : attachTagLoader
+    };
 
-}(window));
+});
