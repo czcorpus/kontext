@@ -21,10 +21,8 @@ $text
 <script src="$files_path/js/prototype.min.js" type="text/javascript"></script>
 <script src="$files_path/js/hideelem.js" type="text/javascript"></script>
 <script src="$files_path/js/bonito.js" type="text/javascript"></script>
-<script src="$files_path/js/tagbuilder.js" type="text/javascript"></script>
-<script src="$files_path/js/popupbox.js" type="text/javascript"></script>
-<script src="$files_path/js/treecomponent.js" type="text/javascript"></script>
-<script src="$files_path/js/multiselect.js" type="text/javascript"></script>
+<script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+
 #block headers
 #end block
 #if $getVar('ca_headers', '')
@@ -32,6 +30,12 @@ $ca_headers
 #else
 
 <script type="text/javascript">
+requirejs.config({
+    baseUrl : '../files/js'
+});
+
+define('win', [], function () { return window; });
+
 document.observe("dom:loaded", function() {
     var multiselect,
         tagLoader;
@@ -43,16 +47,21 @@ document.observe("dom:loaded", function() {
     hideElem.focusEx($focus);
     #end if
 
-    if (\$('tag-builder-widget')) {
-        multiselect = createMultiselectComponent('tag-builder-widget',
-                { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-        tagLoader = attachTagLoader('$corpname', $num_tag_pos, multiselect, {
-            resetButton : 'reset-button',
-            backButton : 'back-button',
-            hiddenElm : 'tag',
-            tagDisplay : 'tag-display'
-        });
-    }
+    requirejs(['multiselect', 'tagbuilder'], function (multiselect, tagbuilder) {
+        var msComponent,
+            tagBuilderComponent;
+
+        if (\$('tag-builder-widget')) {
+            msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
+                    { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
+            tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
+                resetButton : 'reset-button',
+                backButton : 'back-button',
+                hiddenElm : 'tag',
+                tagDisplay : 'tag-display'
+            });
+        }
+    });
 
     if (\$('queryselector')) {
         \$('queryselector').observe('change', function (event) {

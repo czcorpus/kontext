@@ -36,7 +36,9 @@ $_("Concordance - First query form")#slurp
             formAncestor.submit();
         }
     }
-    createTreeComponent(\$\$('form[action="first"] select[name="corpname"]'), null, updForm);
+    requirejs(['treecomponent'], function (tc) {
+        tc.createTreeComponent(\$\$('form[action="first"] select[name="corpname"]'), null, updForm);
+    });
 
 #end def
 

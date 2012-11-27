@@ -2,7 +2,7 @@
 //
 // This library depends on Prototype.js version 1.7+.
 
-(function (context) {
+define(function () {
     'use strict';
 
     /**
@@ -357,9 +357,12 @@
         });
     }
 
-    context.createTreeComponent = createTreeComponent;
-    context.makeListExpandable = function (rootId) {
-        createTreeComponentInstance().init(rootId);
+    return {
+        createTreeComponent : createTreeComponent,
+
+        makeListExpandable : function (rootId) {
+            createTreeComponentInstance().init(rootId);
+        }
     };
 
-}(window));
+});

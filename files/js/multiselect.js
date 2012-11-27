@@ -5,11 +5,12 @@
 /**
  * This library provides a replacement for standard SELECT element with 'multiple' option enabled.
  */
-(function (context) {
+define(['win'], function (win) {
     'use strict';
 
     var buildSkeleton,
-        buildSkeletonFromJson;
+        buildSkeletonFromJson,
+        createMultiselectComponent;
 
     /**
      *
@@ -19,7 +20,7 @@
      * @param json
      * @return {Object}
      */
-    context.createMultiselectComponent = function (wrapperElem, opt, json) {
+    createMultiselectComponent = function (wrapperElem, opt, json) {
         if (json !== undefined) {
             return buildSkeletonFromJson(wrapperElem, opt, json);
         }
@@ -114,7 +115,7 @@
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
                 if (typeof (wrapperElem) === 'string') {
-                    wrapperElem = context.$(wrapperElem);
+                    wrapperElem = win.$(wrapperElem);
                 }
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
                 paddingStyle = opt.hasOwnProperty('padding') ? opt.padding : '5px';
@@ -486,4 +487,8 @@
         return multiSelect;
     };
 
-}(window));
+    return {
+        createMultiselectComponent : createMultiselectComponent
+    };
+
+});
