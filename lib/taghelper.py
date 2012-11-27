@@ -3,6 +3,8 @@ import settings
 import os
 import re
 import json
+import logging
+import locale
 
 try:
     _
@@ -28,9 +30,9 @@ class TagVariantLoader(object):
     def get_variant(self, selected_tags):
         """
         """
-        path = '%s/tag-%s.json' % (self.cache_dir, selected_tags)
+        path = '%s/tag-%s.%s.json' % (self.cache_dir, selected_tags, locale.getlocale()[0])
         data = '{}'
-        if not os.path.exists(path):
+        if not os.path.exists(path) or True: # TODO debug
             data = json.dumps(self.calculate_variant(selected_tags))
             with open(path, 'w') as f:
                 f.write(data)
@@ -46,18 +48,31 @@ class TagVariantLoader(object):
         """
         pass
 
-    def get_unique_values_at_pos(self, position):
+    def get_initial_values(self):
         """
         """
-        path = '%s/position-%s.json' % (self.cache_dir, position)
+        path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         data = '[]'
+
         if not os.path.exists(path):
-            ans = set()
+            ans = [set() for i in range(self.num_tag_pos)]
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
-                if line[position] != '-':
-                    ans.add((line[position], '%s - %s' % (line[position], translationTable[position][line[position]])))
-            data = json.dumps(sorted(ans, key=lambda item : item[0]))
+                for i in range(self.num_tag_pos):
+                    if line[i] == '-':
+                        ans[i].add(('-', ''))
+                    elif line[i] in translationTable[i]:
+                        ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+                    else:
+                        ans[i].add((line[i], line[i]))
+                        logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
+            ans = [sorted(x, key=lambda item : item[0]) for x in ans]
+            for i in range(len(ans)):
+                if len(ans[i]) == 1:
+                    ans[i] = ()
+                elif '-' not in (x[0] for x in ans[i]):
+                    ans[i].insert(0, ('-', ''))
+            data = json.dumps(ans)
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
@@ -70,22 +85,43 @@ class TagVariantLoader(object):
     def calculate_variant(self, selected_tags):
         """
         """
-        patt = re.compile(selected_tags.replace('-', r'[\w\-]'))
+        replacements = (
+            ('-', r'[\w\-]'),
+            ('*', r'\*')
+        )
+        patt_string = selected_tags
+        for p, r in replacements:
+            patt_string = patt_string.replace(p, r)
+        patt = re.compile(patt_string)
         matching_tags = []
         for line in self.tags_file:
             line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
             if patt.match(line):
                 matching_tags.append(line)
 
+
         ans = {}
-        #fixed_pos = [i for i in range(len(selected_tags)) if selected_tags[i] != '-']
         for item in matching_tags:
-            for i in range(len(selected_tags)):
+            tag_elms = re.findall(r'\[[^\]]+\]|[^-]|-', selected_tags)
+            for i in range(len(tag_elms)):
                 if i not in ans:
                     ans[i] = set()
-                if item[i] != '-':
+                if item[i] == '-':
+                    ans[i].add((item[i], ''))
+                elif item[i] in translationTable[i]:
                     ans[i].add((item[i], '%s - %s' % (item[i], translationTable[i][item[i]])))
+                else:
+                    ans[i].add((item[i], '%s - %s' % (item[i], item[i])))
+
         for key in ans:
+            used_keys = [x[0] for x in ans[key]]
+            if '-' in used_keys:
+                if len(used_keys) == 1:
+                    ans[key] = ()
+                elif len(used_keys) == 2:
+                    ans[key].remove(('-', ''))
+            elif len(used_keys) > 1:
+                ans[key].add(('-', ''))
             ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
         return ans
 
