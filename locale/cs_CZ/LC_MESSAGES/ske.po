@@ -2517,3 +2517,6 @@ msgstr "vztaženo k celému korpusu"
 
 msgid "instances per million (refers to the respective category)"
 msgstr "výskytů na milion (vztaženo k příslušné kategorii)"
+
+msgid "Failed to process your request. Please try again later or contact system support."
+msgstr "Chyba při zpracování požadavku. Opakujte, prosím, akci později nebo kontaktujte technickou podporu."

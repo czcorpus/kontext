@@ -414,3 +414,27 @@ div.buttons {
     border-width: 1px 0 1px 0;
     background-color: #EFEFEF;
 }
+
+#error-box {
+    width: 40%;
+    margin: 5% auto 0 auto;
+    padding: 0;
+    border: 2px solid #cc2b22;
+    color: #cc2b22;
+    text-align: center;
+}
+
+#error-box h1.error {
+    background-color: #cc2b22;
+    color: #eeeeee;
+    margin: 0;
+    font-size: 12pt;
+    font-weight: normal;
+    padding-top: 1pt;
+    padding-bottom: 1pt;
+}
+
+#error-box p {
+    margin: 0;
+    padding: 5pt;
+}
