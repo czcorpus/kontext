@@ -10,7 +10,7 @@ from types import ListType
 import logging
 import math
 
-from CGIPublisher import CGIPublisher
+from CGIPublisher import CGIPublisher, JsonEncodedData
 import corplib
 import conclib
 import version
@@ -1745,9 +1745,9 @@ class ConcCGI (CGIPublisher):
                 log.append((toknum, conc.set_linegroup_at_pos (toknum, lngrp)))
         actionid = self._save_lngroup_log (log)
         conc.save (self._storeconc_path() + '.conc', 1)
-        self.format = 'json'
         return {'actionid': actionid, 'count': len(log)}
-        
+    undolngroupaction.return_type = 'json'
+
     def setlngroup (self, toknum='', group=0):
         if not self.annotconc:
             return 'No concordance selected'
@@ -1759,8 +1759,8 @@ class ConcCGI (CGIPublisher):
         actionid = self._save_lngroup_log (log)
         conc.save (self._storeconc_path() + '.conc', 1)
         lab = conc.labelmap.get (group, group)
-        self.format = 'json'
         return {'actionid': actionid, 'label': lab, 'count': len(log)}
+    setlngroup.return_type = 'json'
 
     def setlngroupglobally (self, group=0):
         if not self.annotconc:
@@ -1779,8 +1779,8 @@ class ConcCGI (CGIPublisher):
         anot.set_linegroup_from_conc (conc)
         anot.save (self._storeconc_path() + '.conc', 1)
         lab = anot.labelmap.get (group, group)
-        self.format = 'json'
         return {'actionid': actionid, 'label': lab, 'count': len(log)}
+    setlngroupglobally.return_type = 'json'
 
     def addlngrouplabel (self, annotconc='', newlabel=''):
         ipath = self._storeconc_path() + '.info'
@@ -1887,6 +1887,7 @@ class ConcCGI (CGIPublisher):
 
     rename_annot.template = 'lngroupinfo.tmpl'
 
+
     def ajax_get_corp_details(self):
         """
         """
@@ -1910,8 +1911,9 @@ class ConcCGI (CGIPublisher):
         return ans
     ajax_get_corp_details.template = 'corpus_details.tmpl'
 
-
     def test_tags(self, corpname=''):
+        """
+        """
         import cgi
         form = cgi.FieldStorage()
         for k in form.keys():
@@ -1930,5 +1932,6 @@ class ConcCGI (CGIPublisher):
             ans = tag_loader.get_variant(pattern)
         else:
             ans = tag_loader.get_initial_values()
-        #self._headers['Content-Type'] = 'text/json'
-        return ans
+
+        return JsonEncodedData(ans)
+    ajax_get_tag_variants.return_type = 'json'
