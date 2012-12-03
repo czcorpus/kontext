@@ -95,6 +95,10 @@ class JsonEncodedData(object):
     def __repr__(self):
         return self.data
 
+class UserActionException(Exception):
+    pass
+
+
 class CGIPublisher:
 
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
@@ -258,19 +262,65 @@ class CGIPublisher:
 #        self.corpname = 'desam'
         return named_args
 
-    def run_unprotected (self, path=None, selectorname=None):
-        if path is None:
-            path = os.getenv('PATH_INFO','').strip().split('/')[1:]
+    def import_req_path(self):
+        """
+        Parses PATH_INFO into a list of elements
+
+        Returns
+        -------
+        list of path elements
+        """
+        path = os.getenv('PATH_INFO', '').strip().split('/')[1:]
         if len (path) is 0 or path[0] is '':
             path = ['methods']
-        else:
-            if path[0].startswith ('_'):
-                raise Exception('access denied')
+        elif path[0].startswith ('_'):
+            raise Exception('access denied')
+        return path
+
+    def run_unprotected (self, path=None, selectorname=None):
+        if path is None:
+            path = self.import_req_path()
         named_args = self.parse_parameters (selectorname)
         methodname, tmpl, result = self.process_method (path[0], path, named_args)
         return_type = self.get_method_metadata(methodname, 'return_type')
         self.output_headers(return_type)
         self.output_result (methodname, tmpl, result, return_type)
+
+    def run (self, path=None, selectorname=None):
+        """
+        This method wraps run_unprotected by try-except and presents
+        only brief error messages to the user.
+        """
+        if path is None:
+            path = self.import_req_path()
+
+        try:
+            self.run_unprotected(path, selectorname)
+
+        except Exception, e:
+            from Cheetah.Template import Template
+            from cmpltmpl import error_message
+
+            return_type = self.get_method_metadata(path[0], 'return_type')
+            self.output_headers(return_type=return_type)
+            if self.debug or type(e) is UserActionException:
+                message = '%s' % e
+            else:
+                message = _('Failed to process your request. Please try again later or contact system support.')
+
+            if return_type == 'json':
+                print(simplejson.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
+            else:
+                tpl_data = {
+                    'message' : message,
+                    'corp_full_name' : '?',
+                    'corplist_size' : '?',
+                    'Corplist' : [],
+                    'corp_description' : '',
+                    'corp_size' : ''
+                }
+                error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
+
 
     def process_method (self, methodname, pos_args, named_args):
         reload = {'headers': 'wordlist_form'}
@@ -306,12 +356,12 @@ class CGIPublisher:
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
-                if self.debug:
-                    json_msg = '%s' % e
+                if self.debug or type(e) is UserActionException:
+                    json_msg = self.rec_recode('%s' % e, 'utf-8', True)
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
                 return (methodname, None,
-                        {'error': self.rec_recode('%s' % e, 'utf-8', True)})
+                        {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname +'_form'):
                 self.exceptmethod = methodname + '_form'
             if self.debug or not self.exceptmethod:
@@ -419,30 +469,6 @@ class CGIPublisher:
         # Other (string)
         else:
             outf.write(str(result))
-
-
-    def run (self, path=None, selectorname=None):
-        """
-        This method wraps run_unprotected by try-except and presents
-        only brief error messages to the user.
-        """
-        try:
-            self.run_unprotected (path, selectorname)
-
-        except Exception, e:
-            from Cheetah.Template import Template
-            from cmpltmpl import error_message
-
-            self.output_headers()
-            tpl_data = {
-                'message' : _('Failed to process your request. Please try again later or contact system support.'),
-                'corp_full_name' : '?',
-                'corplist_size' : '?',
-                'Corplist' : [],
-                'corp_description' : '',
-                'corp_size' : ''
-            }
-            error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
 
     def methods (self, params=0):
