@@ -293,7 +293,7 @@ class CGIPublisher:
             if not self.exceptmethod and self.is_template(methodname +'_form'):
                 self.exceptmethod = methodname + '_form'
             if self.debug or not self.exceptmethod:
-                raise
+                raise e
             self.error = self.rec_recode(e.message, enc='utf-8') or str(e)
                 # may be localized
             em, self.exceptmethod = self.exceptmethod, None
@@ -411,7 +411,7 @@ class CGIPublisher:
 
             self.output_headers()
             tpl_data = {
-                'message' : u'%s' % e,
+                'message' : _('Failed to process your request. Please try again later or contact system support.'),
                 'corp_full_name' : '?',
                 'corplist_size' : '?',
                 'Corplist' : [],
