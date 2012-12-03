@@ -448,8 +448,6 @@ class ConcCGI (CGIPublisher):
                 i += 1
             
         conc = self.call_function (conclib.get_conc, (self._corp(),))
-        if not conc.size():
-            raise ConcError (_('Empty result'))
         labelmap = {}
         if self.annotconc:
             if self._selectstored (self.annotconc):
