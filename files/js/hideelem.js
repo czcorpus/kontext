@@ -179,7 +179,6 @@
 
                 if (elementId === newid) {
                     elem.className = elem.className.replace('hidden', 'visible');
-                    //if (elem.)
 
                 } else {
                     oldelem = $(elementId.substring(0, elementId.length - 3));
@@ -191,9 +190,22 @@
                 }
             }
             // Keep the value of the last query
-            FocusElem.value = oldval;
-            FocusElem.select();
+            if (newid === 'cqlrow' && oldelem.name === 'tag') {
+                if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
+                    FocusElem.value = '[tag="' + oldval + '"]';
 
+                } else {
+                    FocusElem.value = '';
+                }
+
+            } else if (newid === 'tagrow') {
+                FocusElem.value = '';
+
+            } else {
+                FocusElem.value = oldval;
+            }
+
+            FocusElem.select();
             date = new Date();
             date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
             document.cookie = 'query_type=' + newid
