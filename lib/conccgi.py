@@ -10,7 +10,7 @@ from types import ListType
 import logging
 import math
 
-from CGIPublisher import CGIPublisher, JsonEncodedData
+from CGIPublisher import CGIPublisher, JsonEncodedData, UserActionException
 import corplib
 import conclib
 import version
@@ -211,7 +211,7 @@ class ConcCGI (CGIPublisher):
             if isinstance(cn, ListType):
                 cn = cn[-1]
             if not settings.user_has_access_to(cn):
-                raise Exception(_('Access to the corpus "%s" or its requested variant denied') % cn)
+                raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
     def self_encoding(self):
