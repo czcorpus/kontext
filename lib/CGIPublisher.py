@@ -1,7 +1,7 @@
 # Copyright (c) 2003-2009  Pavel Rychly
 
 import os, sys, cgi
-from types import MethodType, TypeType, StringType, DictType, ListType, TupleType
+from types import MethodType, StringType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
 import codecs
@@ -293,21 +293,21 @@ class CGIPublisher:
         """
         if path is None:
             path = self.import_req_path()
-
         try:
             self.run_unprotected(path, selectorname)
-
-        except Exception, e:
+        except Exception as e:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
+            import settings
 
             return_type = self.get_method_metadata(path[0], 'return_type')
             self.output_headers(return_type=return_type)
-            if self.debug or type(e) is UserActionException:
-                message = '%s' % e
+
+            if settings.is_debug_mode() or type(e) is UserActionException:
+                import logging
+                message = u'%s' % e
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
-
             if return_type == 'json':
                 print(json.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
             else:
@@ -350,13 +350,14 @@ class CGIPublisher:
         except Exception, e:
             import logging
             import traceback
+            import settings
             err_type, err_value, err_trace = sys.exc_info()
             err_out = traceback.format_exception(err_type, err_value, err_trace)
             logging.getLogger(__name__).error(''.join(err_out))
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
-                if self.debug or type(e) is UserActionException:
+                if settings.is_debug_mode() or type(e) is UserActionException:
                     json_msg = self.rec_recode('%s' % e, 'utf-8', True)
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
@@ -364,7 +365,7 @@ class CGIPublisher:
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname +'_form'):
                 self.exceptmethod = methodname + '_form'
-            if self.debug or not self.exceptmethod:
+            if settings.is_debug_mode() or not self.exceptmethod:
                 raise e
             self.error = self.rec_recode(e.message, enc='utf-8') or str(e)
                 # may be localized
