@@ -415,23 +415,48 @@ div.buttons {
     background-color: #EFEFEF;
 }
 
-#error-box {
+#error-box,
+#message-box {
     width: 40%;
     margin: 5% auto 0 auto;
     padding: 0;
-    border: 2px solid #cc2b22;
-    color: #cc2b22;
     text-align: center;
+    font-size: 110%;
 }
 
-#error-box h1.error {
-    background-color: #cc2b22;
-    color: #eeeeee;
+#error-box {
+    border-color: #cc2b22;
+    border-width: 1px 0 1px 0;
+    border-style: solid;
+    background-color: #ffffff;
+    color: #cc2b22;
+}
+
+#message-box {
+    border-color: #99ccee;
+    border-style: solid;
+    border-width: 1px 0 1px 0;
+    background-color: #ffffff;
+    color: #2068af;
+}
+
+#error-box h1,
+#message-box h1 {
     margin: 0;
     font-size: 12pt;
     font-weight: normal;
     padding-top: 1pt;
     padding-bottom: 1pt;
+}
+
+#error-box h1 {
+    background-color: #cc2b22;
+    color: #eeeeee;
+}
+
+#message-box h1 {
+    background-color: #99ccee;
+    color: #2068af;
 }
 
 #error-box p {

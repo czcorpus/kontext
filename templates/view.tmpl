@@ -202,209 +202,218 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 #end block
 
 ## kwic lines
-<table id="conclines">
-#if $viewmode == 'kwic'
-  #for $i, $l in $enumerate($Lines)
-    <tr toknum="$l['toknum']" >
-    <td class="ref" onclick="full_ref($l['toknum'])"><div class="ref">$l['ref']</div></td>
-    <td class="lc">
-      #for $ll in $l['Left']
-        #if $ll.has_key('open_link')
-        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
-        #end if
-        #if $ll.has_key('class') and $ll['class']
-          <i class='$ll['class']'>
-	    #end if
-        $ll['str']
-        #if $ll.has_key('class') and $ll['class']
-	    </i>
-	    #end if
-        #if $ll.has_key('close_link')
-        <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-        #end if
-      #end for
-    </td><td class="kw" onclick="wide_context($l['toknum'],'$l['hitlen']');">
-      #for $k in $l['Kwic']
-        #if $k.has_key('class') and $k['class']
-	  <b class='$k['class']'>
-	#end if
-        $k['str']
-	#if $k.has_key('class') and $k['class']
-          </b>
-	#end if
-      #end for
-    </td><td class="rc">
-      #if $annotconc
-        <span class="groupbox" 
-        #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
-         >$l['linegroup']</span>
-      #end if
-      #for $rr in $l['Right']
-        #if $rr.has_key('open_link')
-        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
-        #end if
-        #if $rr.has_key('class') and $rr['class']
-          <i class='$rr['class']'>
-        #end if
-        $rr['str']
-        #if $rr.has_key('class') and $rr['class']
-	    </i>
-	    #end if
-        #if $rr.has_key('close_link')
-        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-        #end if
-      #end for
-    </td>
-    #if $copy_icon
-    <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
-      #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
-<span id="ref$i-$ref_i" class="hidden">$ref</span>
-      #end for
-<span id="sent$i" class="hidden">#slurp
-      #for $word in $l['Sen_Left']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-#if $l['Kwic'][0]['str'].startswith(' ')
-  #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
- <b>#slurp
-#else
-<b>#slurp
-#end if
-      #for $word in $l['Kwic']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-</b>#slurp
-      #for $word in $l['Sen_Right']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-</span></td>
-    #end if
-    </tr>
-    #for $a in $l['Align']
-      <tr><td></td><td colspan="3"><b>$a['name']: </b>
-      #for $w in $a['Words']
-        #if $w.has_key('class')
-          <i class='$w['class']'>
-        #end if
-        $w['str']
-        #if $w.has_key('class')
-	  </i>
-	     #end if
-      #end for
-      </td>
-    </tr>
-    #end for
-  #end for
-#else
-## sentence mode
-  #for $i,$l in $enumerate($Lines)
-    <tr toknum="$l['toknum']" #if $i%2# class="even"#end if#>
-    <td class="ref" onclick="full_ref($l['toknum'])">$l['ref']</td>
-    <td class="par">
-      #if $annotconc
-        <span class="groupbox" 
-        #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
-         >$l['linegroup']</span>
-      #end if
-      #for $ll in $l['Left']
-        #if $ll.has_key('open_link')
+#if $concsize > 0
+    <table id="conclines">
+    #if $viewmode == 'kwic'
+      #for $i, $l in $enumerate($Lines)
+        <tr toknum="$l['toknum']" >
+        <td class="ref" onclick="full_ref($l['toknum'])"><div class="ref">$l['ref']</div></td>
+        <td class="lc">
+          #for $ll in $l['Left']
+            #if $ll.has_key('open_link')
             <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
-        #end if
-        #if $ll.has_key('class') and $ll['class']
-          <i class='$ll['class']'>
-        #end if
-        $ll['str']
-        #if $ll.has_key('class') and $ll['class']
-          </i>
-        #end if
-        #if $ll.has_key('close_link')
+            #end if
+            #if $ll.has_key('class') and $ll['class']
+              <i class='$ll['class']'>
+            #end if
+            $ll['str']
+            #if $ll.has_key('class') and $ll['class']
+            </i>
+            #end if
+            #if $ll.has_key('close_link')
             <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-        #end if
-      #end for
-      <span  onclick="wide_context($l['toknum'],'$l['hitlen']');">
-      #for $k in $l['Kwic']
-        #if $k.has_key('class') and $k['class']
+            #end if
+          #end for
+        </td><td class="kw" onclick="wide_context($l['toknum'],'$l['hitlen']');">
+          #for $k in $l['Kwic']
+            #if $k.has_key('class') and $k['class']
           <b class='$k['class']'>
         #end if
-        $k['str']
+            $k['str']
         #if $k.has_key('class') and $k['class']
-          </b>
+              </b>
         #end if
+          #end for
+        </td><td class="rc">
+          #if $annotconc
+            <span class="groupbox"
+            #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
+             >$l['linegroup']</span>
+          #end if
+          #for $rr in $l['Right']
+            #if $rr.has_key('open_link')
+            <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+            #end if
+            #if $rr.has_key('class') and $rr['class']
+              <i class='$rr['class']'>
+            #end if
+            $rr['str']
+            #if $rr.has_key('class') and $rr['class']
+            </i>
+            #end if
+            #if $rr.has_key('close_link')
+            <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            #end if
+          #end for
+        </td>
+        #if $copy_icon
+        <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
+          #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
+    <span id="ref$i-$ref_i" class="hidden">$ref</span>
+          #end for
+    <span id="sent$i" class="hidden">#slurp
+          #for $word in $l['Sen_Left']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    #if $l['Kwic'][0]['str'].startswith(' ')
+      #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
+     <b>#slurp
+    #else
+    <b>#slurp
+    #end if
+          #for $word in $l['Kwic']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    </b>#slurp
+          #for $word in $l['Sen_Right']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    </span></td>
+        #end if
+        </tr>
+        #for $a in $l['Align']
+          <tr><td></td><td colspan="3"><b>$a['name']: </b>
+          #for $w in $a['Words']
+            #if $w.has_key('class')
+              <i class='$w['class']'>
+            #end if
+            $w['str']
+            #if $w.has_key('class')
+          </i>
+             #end if
+          #end for
+          </td>
+        </tr>
+        #end for
       #end for
-      </span>
-      #for $rr in $l['Right']
-        #if $rr.has_key('open_link')
-        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+    #else
+    ## sentence mode
+      #for $i,$l in $enumerate($Lines)
+        <tr toknum="$l['toknum']" #if $i%2# class="even"#end if#>
+        <td class="ref" onclick="full_ref($l['toknum'])">$l['ref']</td>
+        <td class="par">
+          #if $annotconc
+            <span class="groupbox"
+            #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
+             >$l['linegroup']</span>
+          #end if
+          #for $ll in $l['Left']
+            #if $ll.has_key('open_link')
+                <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
+            #end if
+            #if $ll.has_key('class') and $ll['class']
+              <i class='$ll['class']'>
+            #end if
+            $ll['str']
+            #if $ll.has_key('class') and $ll['class']
+              </i>
+            #end if
+            #if $ll.has_key('close_link')
+                <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            #end if
+          #end for
+          <span  onclick="wide_context($l['toknum'],'$l['hitlen']');">
+          #for $k in $l['Kwic']
+            #if $k.has_key('class') and $k['class']
+              <b class='$k['class']'>
+            #end if
+            $k['str']
+            #if $k.has_key('class') and $k['class']
+              </b>
+            #end if
+          #end for
+          </span>
+          #for $rr in $l['Right']
+            #if $rr.has_key('open_link')
+            <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+            #end if
+            #if $rr.has_key('class') and $rr['class']
+              <i class='$rr['class']'>
+            #end if
+            $rr['str']
+            #if $rr.has_key('class') and $rr['class']
+              </i>
+            #end if
+            #if $rr.has_key('close_link')
+            <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            #end if
+          #end for
+        </td>
+        #if $copy_icon
+        <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
+          #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
+    <span id="ref$i-$ref_i" class="hidden">$ref</span>
+          #end for
+    <span id="sent$i" class="hidden">#slurp
+          #for $word in $l['Sen_Left']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    #if $l.Kwic and $l['Kwic'][0]['str'].startswith(' ')
+      #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
+     <b>#slurp
+    #else
+    <b>#slurp
+    #end if
+          #for $word in $l['Kwic']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    </b>#slurp
+          #for $word in $l['Sen_Right']
+    #slurp
+    $word['str']#slurp
+          #end for
+    #slurp
+    </span></td>
         #end if
-        #if $rr.has_key('class') and $rr['class']
-          <i class='$rr['class']'>
+        #for $a in $l['Align']
+          <td><b>$a['name']:</b>
+          #for $w in $a['Words']
+            #if $w.has_key('class')
+              <i class='$w['class']'>
         #end if
-        $rr['str']
-        #if $rr.has_key('class') and $rr['class']
+            $w['str']
+            #if $w.has_key('class')
           </i>
         #end if
-        #if $rr.has_key('close_link')
-        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-        #end if
+          #end for
+          </td>
+        #end for
+        </tr>
       #end for
-    </td>
-    #if $copy_icon
-    <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
-      #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
-<span id="ref$i-$ref_i" class="hidden">$ref</span>
-      #end for
-<span id="sent$i" class="hidden">#slurp
-      #for $word in $l['Sen_Left']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-#if $l.Kwic and $l['Kwic'][0]['str'].startswith(' ')
-  #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
- <b>#slurp
-#else
-<b>#slurp
-#end if
-      #for $word in $l['Kwic']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-</b>#slurp
-      #for $word in $l['Sen_Right']
-#slurp
-$word['str']#slurp
-      #end for
-#slurp
-</span></td>
     #end if
-    #for $a in $l['Align']
-      <td><b>$a['name']:</b>
-      #for $w in $a['Words']
-        #if $w.has_key('class')
-          <i class='$w['class']'>
-	#end if
-        $w['str']
-        #if $w.has_key('class')
-	  </i>
-	#end if
-      #end for
-      </td>
-    #end for
-    </tr>
-  #end for
-#end if
-</table>
-
+    </table>
 #filter None
 $navigation("navigation_form2", "next2")
 #end filter
+#else
+
+<div id="message-box">
+    <h1>Info</h1>
+    <p>$_('Empty result')</p>
+</div>
+
+#end if
+
 
 <div id="detailframe">
 <div id="minus_sign"><img src="$files_path/img/minus.png" alt="$_("hide detail")" /></div>
