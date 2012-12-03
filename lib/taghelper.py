@@ -30,18 +30,7 @@ class TagVariantLoader(object):
     def get_variant(self, selected_tags):
         """
         """
-        path = '%s/tag-%s.%s.json' % (self.cache_dir, selected_tags, locale.getlocale()[0])
-        data = '{}'
-        if not os.path.exists(path) or True: # TODO debug
-            data = json.dumps(self.calculate_variant(selected_tags))
-            with open(path, 'w') as f:
-                f.write(data)
-                f.close()
-        else:
-            with open(path) as f:
-                data = f.read()
-                f.close()
-        return data
+        return json.dumps(self.calculate_variant(selected_tags))
 
     def get_fixed_positions(self, pattern):
         """
