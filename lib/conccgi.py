@@ -203,8 +203,8 @@ class ConcCGI (CGIPublisher):
         if self._corpus_architect: return
         cn = ''
         if form.has_key ('json'):
-            import simplejson
-            cn = str(simplejson.loads(form.getvalue('json')).get('corpname', ''))
+            import json
+            cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
         if form.has_key('corpname') and not cn:
             cn = form.getvalue('corpname')
         if cn:

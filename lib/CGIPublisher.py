@@ -7,7 +7,7 @@ import Cookie
 import codecs
 import imp
 import urllib
-import simplejson
+import json
 
 # According to Cheetag changelog, Cheetah should use Unicode in its internals since version 2.2.0
 # If you experience it also in any previous version, change it here:
@@ -229,7 +229,7 @@ class CGIPublisher:
     def finish_parse_parameters(self, form, selectorname, named_args):
         self.preprocess_values(form) # values needed before recoding
         if form.has_key ('json'):
-            json_data = simplejson.loads(form.getvalue('json')) # in utf8
+            json_data = json.loads(form.getvalue('json')) # in utf8
             for k, l in json_data.iteritems():
                 str_k = str(k)
                 named_args[str_k] = []
@@ -309,7 +309,7 @@ class CGIPublisher:
                 message = _('Failed to process your request. Please try again later or contact system support.')
 
             if return_type == 'json':
-                print(simplejson.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
+                print(json.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
             else:
                 tpl_data = {
                     'message' : message,
@@ -435,7 +435,7 @@ class CGIPublisher:
         # JSON
         if return_type == 'json':
             if type(result) != JsonEncodedData:
-                simplejson.dump(self.rec_recode(result, utf8_out=True), outf)
+                json.dump(self.rec_recode(result, utf8_out=True), outf)
             else:
                 print >>outf, result # this is obsolete
 
