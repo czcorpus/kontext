@@ -109,6 +109,7 @@ if __name__ == '__main__':
             help='source to be analyzed (plain vs. compiled)')
     parser.add_argument('--export-name', default='untitled',
             help='a name to be used when exporting corpus tags data files')
+    parser.add_argument('--registry-path', default='/var/local/corpora/registry/', help='path to the directory containing corpora registry files')
     parser.add_argument('corpus_id', metavar='CORPUS_ID', type=str,
         help='Corpus name or path (depends on the type of selected processing method')
     parser.add_argument('num_tag_pos', metavar='NUMBER_OF_TAG_POSITIONS', type=int,
@@ -122,7 +123,7 @@ if __name__ == '__main__':
             tags = t.export_tags(args.corpus_id)
         elif args.source_type == 'compiled':
             if not os.environ.has_key ('MANATEE_REGISTRY'):
-                os.environ['MANATEE_REGISTRY'] = '/var/local/corpora/registry/'
+                os.environ['MANATEE_REGISTRY'] = args.registry_path
             t = CompiledCorpusTagExtractor()
             tags = t.export_tags(args.corpus_id)
         else:
