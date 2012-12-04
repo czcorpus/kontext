@@ -1924,7 +1924,11 @@ class ConcCGI (CGIPublisher):
         """
         """
         import taghelper
-        tag_loader = taghelper.TagVariantLoader(self.corpname, settings.get_corpus_info(self.corpname)['num_tag_pos'])
+
+        try:
+            tag_loader = taghelper.TagVariantLoader(self.corpname, settings.get_corpus_info(self.corpname)['num_tag_pos'])
+        except IOError as e:
+            raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
 
         if len(pattern) > 0:
             ans = tag_loader.get_variant(pattern)
