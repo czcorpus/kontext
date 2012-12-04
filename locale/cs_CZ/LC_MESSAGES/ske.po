@@ -2523,3 +2523,6 @@ msgstr "Chyba při zpracování požadavku. Opakujte, prosím, akci později neb
 
 msgid "Version"
 msgstr "Verze"
+
+msgid "Corpus %s is not supported by this widget."
+msgstr "Korpus %s nelze s touto funkcionalitou použít."

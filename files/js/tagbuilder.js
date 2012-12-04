@@ -226,7 +226,8 @@ define(function () {
                     prevSelects = selects || tagLoader.multiSelectComponent.exportStatus(),
                     blockSwitchEventHandlers,
                     lockPreviousItems,
-                    itemClickCallback;
+                    itemClickCallback,
+                    errorBox;
 
                 getResponseLength = function (resp) {
                     var prop,
@@ -289,46 +290,55 @@ define(function () {
                     tagLoader.history.push(prevSelects);
                     tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
                 }
-                for (i = 0; i < getResponseLength(data); i += 1) {
-                    blockId = 'position_' + i;
 
-                    if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
+                if (data.hasOwnProperty('error')) {
+                    errorBox = document.createElement('li');
+                    errorBox.writeAttribute('class', 'error-box');
+                    errorBox.update(data['error']);
+                    tagLoader.multiSelectComponent.ulElement.insert(errorBox);
 
-                        if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                            tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, blockSwitchEventHandlers);
+                } else {
+                    for (i = 0; i < getResponseLength(data); i += 1) {
+                        blockId = 'position_' + i;
 
-                        } else {
-                            tagLoader.multiSelectComponent.clearBlock(blockId);
-                        }
-                        if (data[i].length > 0) {
-                            if (data[i][0][0] === '-') {
-                                tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][0][0]);
-                                iterStart = 1;
+                        if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
+
+                            if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
+                                tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, blockSwitchEventHandlers);
 
                             } else {
-                                iterStart = 0;
+                                tagLoader.multiSelectComponent.clearBlock(blockId);
                             }
-
-                            // we start from 1 here because 0 contains default value
-
-                            for (j = iterStart; j < data[i].length; j += 1) {
-                                tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
-                                if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
-                                    tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+                            if (data[i].length > 0) {
+                                if (data[i][0][0] === '-') {
+                                    tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][0][0]);
+                                    iterStart = 1;
 
                                 } else {
-                                    tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
+                                    iterStart = 0;
                                 }
+
+                                // we start from 1 here because 0 contains default value
+
+                                for (j = iterStart; j < data[i].length; j += 1) {
+                                    tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
+                                    if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
+                                        tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+
+                                    } else {
+                                        tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
+                                    }
+                                }
+                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (data[i].length - iterStart) + ' ]');
+
+                            } else {
+                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                             }
-                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (data[i].length - iterStart) + ' ]');
-
-                        } else {
-                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                         }
-                    }
 
-                    if (typeof callback === 'function') {
-                        callback(blockId, prevSelects);
+                        if (typeof callback === 'function') {
+                            callback(blockId, prevSelects);
+                        }
                     }
                 }
             },

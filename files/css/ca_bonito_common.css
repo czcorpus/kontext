@@ -416,7 +416,8 @@ div.buttons {
 }
 
 #error-box,
-#message-box {
+#message-box,
+.error-box {
     width: 40%;
     margin: 5% auto 0 auto;
     padding: 0;
@@ -424,7 +425,8 @@ div.buttons {
     font-size: 110%;
 }
 
-#error-box {
+#error-box,
+.error-box {
     border-color: #cc2b22;
     border-width: 1px 0 1px 0;
     border-style: solid;
