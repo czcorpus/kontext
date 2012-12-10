@@ -82,6 +82,17 @@ Define a loadable configuration file for your Apache 2 installation or update so
 
 Using this configuration, your application will be available at URL http://your_server_hostname/bonito.
 
+Deployment
+==========
+
+Copy/unpack your application directory/archive to the location of your choice and run the deployment script::
+
+   ./scripts/deploy.sh
+
+The script compiles HTML templates and then asks you for the location of the YUI compressor. If you don't want to minify
+JavaScript and CSS files you can cancel it by pressing Ctrl^C. If you want to use this feature, please download latest
+version of the YUI compressor from https://github.com/yui/yuicompressor/downloads.
+
 Configuration
 =============
 
