@@ -16,6 +16,7 @@ class TestSettingsModule(unittest.TestCase):
         self.mysql_mocker = mox.Mox()
         self.dbcon_mocker = mox.Mox()
         self.dbcursor_mocker = mox.Mox()
+        self.mox = mox.Mox()
 
     def test_top_level_structure(self):
         """
@@ -29,11 +30,11 @@ class TestSettingsModule(unittest.TestCase):
         """
         data = settings.get('corpora_hierarchy')
         self.assertEqual(list, type(data))
-        self.assertEqual(47, len(data))
-        self.assertEqual(tuple, type(data[0]))
-        self.assertEqual('syn', data[0][0])
-        self.assertEqual(u'/Synchronní psané korpusy/řada SYN/', data[0][1])
-        self.assertEqual('http://www.korpus.cz/syn.php', data[0][2])
+        self.assertEqual(11, len(data))
+        self.assertEqual(dict, type(data[0]))
+        self.assertEqual('syn', data[0]['id'])
+        self.assertEqual(u'/Synchronní psané korpusy/řada SYN/', data[0]['path'])
+        self.assertEqual('http://www.korpus.cz/syn.php', data[0]['web'])
 
     def test_get(self):
         """
@@ -51,9 +52,9 @@ class TestSettingsModule(unittest.TestCase):
         """
         """
         # test existing item
-        data = settings.get_corpus_info('SYN2006PUB'.lower())
+        data = settings.get_corpus_info('SYN2010'.lower())
         self.assertEquals(u'/Synchronní psané korpusy/řada SYN/', data['path'])
-        self.assertEquals('http://www.korpus.cz/syn2006pub.php', data['web'])
+        self.assertEquals('http://www.korpus.cz/syn2010.php', data['web'])
 
         # test non-existing item
         data = settings.get_corpus_info('foo133235-235')
@@ -81,8 +82,8 @@ class TestSettingsModule(unittest.TestCase):
         """
         """
         corplist = settings.get_corplist()
-        self.assertEqual('abcd2000', corplist[0])
-        self.assertEqual('omezeni/syn2010', corplist[1])
+        self.assertEqual('oral2013', corplist[0])
+        self.assertEqual('susanne', corplist[1])
         self.assertEqual('syn', corplist[2])
         self.assertEqual('syn2010', corplist[3])
 
@@ -103,7 +104,17 @@ class TestSettingsModule(unittest.TestCase):
         query = "SELECT pass,corplist FROM user WHERE user = %s"
         cursor.execute(query, ('atomik',)).AndReturn(True)
         cursor.fetchone().AndReturn(('my*password', 'syn2010 oral2013 susanne'))
+        self.mox.StubOutWithMock(settings, 'create_db_connection')
+        settings.create_db_connection().AndReturn(conn)
+        cursor.close().AndReturn(None)
+        conn.close().AndReturn(None)
+
+        self.mysql_mocker.ReplayAll()
+        self.dbcon_mocker.ReplayAll()
+        self.dbcursor_mocker.ReplayAll()
+        self.mox.ReplayAll()
 
         settings._user = 'atomik'
         user_data = settings.get_user_data()
-        print(user_data)
+        self.assertEqual('syn2010 oral2013 susanne', user_data['corplist'])
+        self.assertEqual('my*password', user_data['pass'])
