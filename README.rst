@@ -19,7 +19,7 @@ Features
     - hierarchical corpora organization
     - on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
     - tag query building widget
-    
+
   * support for spoken corpora
   * simplified installation and configuration
 
