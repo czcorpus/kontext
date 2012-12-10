@@ -1,0 +1,170 @@
+==================
+Installation guide
+==================
+
+Database
+========
+
+Open your mysql console::
+
+     mysql -u root -p
+
+Create new database for your application::
+
+     CREATE DATABASE your_db_name DEFAULT CHARSET UTF8;
+
+Grant required privileges to the database user you want to use along with this application::
+
+     GRANT SELECT, UPDATE ON your_db_name.* to 'some_username'@'database_hostname' IDENTIFIED BY 'some_password';
+
+Typically, your database will run on the same hostname as the application itself::
+
+    GRANT SELECT, UPDATE ON your_db_name.* to 'some_username'@'localhost' IDENTIFIED BY 'some_password';
+
+Update the privileges information::
+
+    FLUSH PRIVILEGES;
+
+Leave mysql console and run the script to create required tables (we assume your current directory is bonito's
+root directory)::
+
+    mysql -u root -p < scripts/create-tables.sql
+
+
+Corpora and users
+=================
+
+Bonito 2 does not provide web-based administration of the users which means you have to use mysql console or some
+GUI based client application (e.g. the PHPMyAdmin). Open mysql console again::
+
+    mysql -u root -p
+
+Define some corpus/corpora you want to publish::
+
+    INSERT INTO corpora (name) VALUES ('some_corpora_name');
+    INSERT INTO corpora (name) VALUES ('some_other_corpora_name');
+
+Define a user::
+
+    INSERT INTO user (user, pass, corplist, subcorp, fullname, email, regist, valid)
+    VALUES ('some_username', ENCRYPT('some_password'), 'some_corpora_name some_other_corpora_name', 'yes',
+    'fullname of the user', 'email of the user', NOW(), 1);
+
+Please note that corpora names in **corplist** are separated by the whitespace.
+
+Apache
+======
+
+Define a loadable configuration file for your Apache 2 installation or update some of existing configuration file::
+
+  Alias /bonito /path/to/your/app
+
+  <Directory /path/to/your/app>
+    Options +ExecCGI
+    AddHandler cgi-script .cgi
+    AllowOverride FileInfo
+    AuthType Basic
+    AuthName "Add your login message here."
+    AuthGroupFile /dev/null
+    AuthMySQL On
+    AuthMySQL_Authoritative On
+    AuthBasicAuthoritative Off
+    AuthMySQL_Host localhost
+    AuthMySQL_User bonito
+    AuthMySQL_Password bonito
+    AuthMySQL_DB bonito
+    AuthMySQL_Password_Table user
+    AuthMySQL_Username_Field user
+    AuthMySQL_Password_Field pass
+    AuthMySQL_Encryption_Types Crypt_DES
+    require valid-user
+  </Directory>
+
+Using this configuration, your application will be available at URL http://your_server_hostname/bonito.
+
+Configuration
+=============
+
+The application itself is configured via config.xml file located in the root directory of the application.
+Please refer to the **config.sample.xml** to see the structure.
+
++--------------------------------------------+-----------------------------------------------------------+
+| Xpath                                      | Description                                               |
++============================================+===========================================================+
+| /bonito/global/manatee_path                | Location of your Python interface to the manatee          |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/global/debug                       | true/false (true => detailed error info is visible)       |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/global/log_path                    | Path to the logging file (Apache must have write access)  |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/database/name                      | Name of the database used along with the application      |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/database/host                      | Hostname of the database server                           |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/database/password                  | Password to the database                                  |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/database/username                  | Username of the user with SELECT and UPDATE privileges    |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/manatee_registry           | Path where corpora registry files are stored              |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/options_dir                | Path where 'options' files are stored                     |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/cache_dir                  | Path where application stores general cached data         |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/subcpath                   | Path where general subcorpora data is stored              |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/users_subcpath             | Path where user's subcorpora are stored                   |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/tags_src_dir               | TODO (incoming feature)                                   |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/tags_cache_dir             | TODO (incoming feature)                                   |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/conc_dir                   | Path where general concordance data is stored             |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/helpsite                   | URL of the help site (refer to the config.sample.xml)     |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/default_corpus             | Name of the default corpus                                |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/alternative_corpus         | UNDOCUMENTED FEATURE                                      |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/speech_segment_struct_attr | Name of the structural attribute delimiting speeches      |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/speech_data_url            | URL where speech files are stored                         |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/kwicline_max_context       | Maximum size (in words) of the KWIC context               |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/corpora/use_db_whitelist           | 0/1 (0 => any user has access to any corpus)              |
++--------------------------------------------+-----------------------------------------------------------+
+
+
+Corpora hierarchy
+-----------------
+
+Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool. It supports nested (i.e. multi-level)
+ organization::
+
+    <corplist title="">
+      <corplist title="Synchronic Corpora">
+         <corplist title="SYN corpora">
+           <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
+           ... etc...
+         </corplist>
+         <corplist title="Diachronic Corpora">
+            <corpus id="DIA" />
+         </corplist>
+      </corplist>
+    </corplist>
+
+Important attributes for the **corpus** element:
+
++-----------------+--------------------------------------------------------------------+
+| attr. name      | description                                                        |
++=================+====================================================================+
+| id              | name of the corpus (as used within registry files)                 |
++-----------------+--------------------------------------------------------------------+
+| sentence_struct | structure delimiting sentences                                     |
++-----------------+--------------------------------------------------------------------+
+| num_tag_pos     | number of character positions in a tag                             |
++-----------------+--------------------------------------------------------------------+
+| web             | (optional) external link containing information about the corpus   |
++-----------------+--------------------------------------------------------------------+
