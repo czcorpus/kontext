@@ -33,33 +33,11 @@
                 <corplist title="řada SYN">
                     <corpus id="SYN" web="http://www.korpus.cz/syn.php" sentence_struct="s" />
                     <corpus id="SYN2010" web="http://www.korpus.cz/syn2010.php" sentence_struct="s" />
-                    <corpus id="SYN2009PUB" web="http://www.korpus.cz/syn2009pub.php" sentence_struct="s" />
-                    <corpus id="SYN2006PUB" web="http://www.korpus.cz/syn2006pub.php" sentence_struct="s" />
-                    <corpus id="SYN2005" web="http://www.korpus.cz/syn2005.php" sentence_struct="s" />
-                    <corpus id="SYN2005WSBR" sentence_struct="s" />
-                    <corpus id="SYN2005FON" sentence_struct="s" />
                     <corpus id="SYN2000" web="http://www.korpus.cz/syn2000.php" sentence_struct="s" />
-                </corplist>
-                <corplist title="specializované">
-                    <corpus id="DEAF" sentence_struct="s" />
-                    <corpus id="KSK-DOPISY" web="http://www.korpus.cz/dopisy.php" sentence_struct="s" />
-                    <corpus id="LINK" web="http://www.korpus.cz/link.php" sentence_struct="s" />
-                    <corpus id="ORIG_SYN" sentence_struct="s" />
-                    <corpus id="ORIG_SYN_WSBR" sentence_struct="s" />
-                    <corpus id="ORW-MTE" sentence_struct="s" />
-                    <corpus id="ORWELL" web="http://www.korpus.cz/orwell.php" sentence_struct="s" />
-                    <corpus id="SKRIPT2012" sentence_struct="s" />
                 </corplist>
                 <corplist title="ke slovníkům">
                     <corpus id="CAPEK" sentence_struct="s" />
-                    <corpus id="CAPEK_FR" sentence_struct="s" />
-                    <corpus id="CAPEK_SYL" sentence_struct="s" />
-                    <corpus id="CAPEK_UPLNY" sentence_struct="s" />
-                    <corpus id="FDCC" sentence_struct="s" />
-                    <corpus id="FSC2000" web="http://www.korpus.cz/fsc2000.php" sentence_struct="s" />
                     <corpus id="HRABAL" sentence_struct="s" />
-                    <corpus id="HRABAL_FR" sentence_struct="s" />
-                    <corpus id="TOTALITA" sentence_struct="s" />
                 </corplist>
             </corplist>
             <corplist title="Synchronní mluvené korpusy">
@@ -69,29 +47,9 @@
                     <corpus id="ORAL2008" web="http://www.korpus.cz/ORAL2008.php" sentence_struct="sp" />
                     <corpus id="ORAL2006" web="http://www.korpus.cz/ORAL2006.php" sentence_struct="sp" />
                 </corplist>
-                <corplist title="specializované">
-                    <corpus id="BANAT" sentence_struct="sp" />
-                    <corpus id="BMK" web="http://www.korpus.cz/bmk.php" sentence_struct="sp" />
-                    <corpus id="PMK" web="http://www.korpus.cz/pmk.php" sentence_struct="sp" />
-                    <corpus id="PMK_DL" sentence_struct="sp" />
-                    <corpus id="PMK_KR" sentence_struct="sp" />
-                    <corpus id="PMK_KR_DL" sentence_struct="sp" />
-                    <corpus id="PRIBEHY" sentence_struct="sp" />
-                    <corpus id="SCHOLA2010" web="http://www.korpus.cz/schola.php" sentence_struct="sp" />
-                </corplist>
-            </corplist>
-            <corplist title="Diachronní korpusy">
-                <corpus id="DIAKORP" web="http://www.korpus.cz/diakorp.php" sentence_struct="s" />
-                <corpus id="DIAKON" />
             </corplist>
             <corplist title="Cizojazyčné korpusy">
                 <corpus id="BNC" sentence_struct="s" />
-                <corpus id="CIZOJAZ_DE" sentence_struct="s" />
-                <corpus id="CIZOJAZ_FR" sentence_struct="s" />
-                <corpus id="CIZOJAZ_IT" sentence_struct="s" />
-                <corpus id="DOTKO" web="http://www.korpus.cz/dotko.php" sentence_struct="s" />
-                <corpus id="HOTKO" sentence_struct="s" />
-                <corpus id="PAROLE" sentence_struct="s" />
                 <corpus id="SUSANNE" sentence_struct="s" />
             </corplist>
         </corplist>
