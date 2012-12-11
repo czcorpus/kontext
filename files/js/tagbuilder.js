@@ -151,6 +151,17 @@ define(function () {
             },
 
             /**
+             *
+             * @return {*}
+             */
+            getLatestActiveBlock : function () {
+                if (tagLoader.activeBlockHistory.length > 0) {
+                    return tagLoader.activeBlockHistory[tagLoader.activeBlockHistory.length - 1];
+                }
+                return null;
+            },
+
+            /**
              * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
              *
              * @param anyCharSymbol
@@ -302,13 +313,22 @@ define(function () {
                 };
                 if (prevSelects && !objectIsEmpty(prevSelects)) {
                     tagLoader.history.push(prevSelects);
-                    tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
+
+                    if (tagLoader.getLatestActiveBlock() === tagLoader.multiSelectComponent.activeBlockId) {
+                        if (tagLoader.multiSelectComponent.getNumSelected(tagLoader.multiSelectComponent.activeBlockId) === 0) {
+                            tagLoader.activeBlockHistory.pop();
+                            tagLoader.history.pop();
+                        }
+
+                    } else {
+                        tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
+                    }
                 }
 
                 if (data.hasOwnProperty('error')) {
                     errorBox = document.createElement('li');
                     errorBox.writeAttribute('class', 'error-box');
-                    errorBox.update(data['error']);
+                    errorBox.update(data.error);
                     tagLoader.multiSelectComponent.ulElement.insert(errorBox);
 
                 } else {
@@ -340,7 +360,7 @@ define(function () {
                                         tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][j][0]);
                                     }
                                 }
-                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (blockLength) + ' ]');
+                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');
 
                             } else {
                                 tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
