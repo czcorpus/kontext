@@ -103,7 +103,6 @@ class TagVariantLoader(object):
             if patt.match(line):
                 matching_tags.append(line)
 
-
         ans = {}
         for item in matching_tags:
             tag_elms = re.findall(r'\[[^\]]+\]|[^-]|-', selected_tags)
