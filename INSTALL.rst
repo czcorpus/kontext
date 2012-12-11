@@ -2,8 +2,57 @@
 Installation guide
 ==================
 
+Apache
+======
+
+Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
+
+  Alias /bonito /path/to/your/app
+
+  <Directory /path/to/your/app>
+    Options +ExecCGI
+    AddHandler cgi-script .cgi
+    AllowOverride FileInfo
+    RewriteEngine On
+    RewriteRule ^$ run.cgi/first_form [L,R=301]
+    AuthType Basic
+    AuthName "Add your login message here."
+    AuthGroupFile /dev/null
+    AuthMySQL On
+    AuthMySQL_Authoritative On
+    AuthBasicAuthoritative Off
+    AuthMySQL_Host localhost
+    AuthMySQL_User bonito
+    AuthMySQL_Password bonito
+    AuthMySQL_DB bonito
+    AuthMySQL_Password_Table user
+    AuthMySQL_Username_Field user
+    AuthMySQL_Password_Field pass
+    AuthMySQL_Encryption_Types Crypt_DES
+    require valid-user
+  </Directory>
+
+If you want to skip using mysql-based user authentication you can use following simplified version::
+
+  Alias /bonito /path/to/your/app
+
+  <Directory /path/to/your/app>
+    Options +ExecCGI
+    AddHandler cgi-script .cgi
+    AllowOverride FileInfo
+    RewriteEngine On
+    RewriteRule ^$ run.cgi/first_form [L,R=301]
+    SetEnv REMOTE_USER default
+  </Directory>
+
+Please note that the value of the REMOTE_USER variable ('default' in the example) is up to your choice but you have
+to create user of that name in your database (see the following section).
+
+Using one of described configurations, your web application should be available at URL http://your_server_hostname/bonito.
+
 Database
 ========
+
 
 Open your mysql console::
 
@@ -35,7 +84,7 @@ Corpora and users
 =================
 
 Bonito 2 does not provide web-based administration of the users which means you have to use mysql console or some
-GUI based client application (e.g. the PHPMyAdmin). Open mysql console again::
+GUI client application (e.g. the PHPMyAdmin). Open mysql console again::
 
     mysql -u root -p
 
@@ -51,36 +100,6 @@ Define a user::
     'fullname of the user', 'email of the user', NOW(), 1);
 
 Please note that corpora names in **corplist** are separated by the whitespace.
-
-Apache
-======
-
-Define a loadable configuration file for your Apache 2 installation or update some of existing configuration file::
-
-  Alias /bonito /path/to/your/app
-
-  <Directory /path/to/your/app>
-    Options +ExecCGI
-    AddHandler cgi-script .cgi
-    AllowOverride FileInfo
-    AuthType Basic
-    AuthName "Add your login message here."
-    AuthGroupFile /dev/null
-    AuthMySQL On
-    AuthMySQL_Authoritative On
-    AuthBasicAuthoritative Off
-    AuthMySQL_Host localhost
-    AuthMySQL_User bonito
-    AuthMySQL_Password bonito
-    AuthMySQL_DB bonito
-    AuthMySQL_Password_Table user
-    AuthMySQL_Username_Field user
-    AuthMySQL_Password_Field pass
-    AuthMySQL_Encryption_Types Crypt_DES
-    require valid-user
-  </Directory>
-
-Using this configuration, your application will be available at URL http://your_server_hostname/bonito.
 
 Deployment
 ==========
@@ -166,7 +185,15 @@ Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool. 
       </corplist>
     </corplist>
 
-Important attributes for the **corpus** element:
+Attributes for the **corplist** element:
+
++--------------+---------------------+
+| attr. name   | description         |
++==============+=====================+
+| title        | name of the group   |
++--------------+---------------------+
+
+Attributes for the **corpus** element:
 
 +-----------------+--------------------------------------------------------------------+
 | attr. name      | description                                                        |

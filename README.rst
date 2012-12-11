@@ -12,7 +12,7 @@ Features
 ========
 
   * miscellaneous bug fixes
-  * removed legacy code required by Python 2.5 and less
+  * removed legacy code required by Python 2.5 and older
   * enhanced user interface
 
     - corpora information
@@ -27,11 +27,15 @@ Features
 Requirements
 ============
 
-  * CGI capable Apache web server
+  * Apache 2 web server
+
+    - CGI
+    - mod_rewrite
+
   * MySQL database server
-  * Python 2.6+
+  * Python 2.6 or 2.7
 
     - lxml
     - pymox (if you want to run the unit tests)
 
-  * manatee: open-2.33.1
+  * Manatee corpus manager: open-2.33.1
