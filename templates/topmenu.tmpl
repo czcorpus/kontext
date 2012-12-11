@@ -79,9 +79,7 @@ require(['domReady!', 'popupbox'], function (domReady, popupbox) {
       <li>$_("Corpus"): <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')"><strong>$corp_full_name</strong></a></li>
       #if $corp_description
         <li>$_('Description'):
-            #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#
-            <strong>$corp_description</strong>
-            #if $corp_web#</a>#end if#
+            #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#<strong>$corp_description</strong>#if $corp_web#</a>#end if#
         </li>
       #end if
       #if $corp_size

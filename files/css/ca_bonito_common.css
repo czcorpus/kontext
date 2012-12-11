@@ -156,11 +156,11 @@ p.footer {
 
 #toolbar-info a.corpus-desc {
     color : inherit;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 #toolbar-info a.corpus-desc:hover {
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 #help-search-form,
