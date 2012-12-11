@@ -226,7 +226,7 @@ def get_corplist():
                 FROM corplist,relation,corpora
                 WHERE corplist.id=relation.corplist
                   AND relation.corpora=corpora.id
-                  AND corplist.name='%s'""" % i)
+                  AND corplist.name=%s""", i)
                 row = cursor.fetchall()
 
                 for y in row:
