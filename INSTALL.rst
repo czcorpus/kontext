@@ -171,7 +171,7 @@ Corpora hierarchy
 -----------------
 
 Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool. It supports nested (i.e. multi-level)
- organization::
+organization::
 
     <corplist title="">
       <corplist title="Synchronic Corpora">
