@@ -76,8 +76,6 @@ class TagVariantLoader(object):
             for i in range(len(ans)):
                 if len(ans[i]) == 1:
                     ans[i] = ()
-                elif '-' not in (x[0] for x in ans[i]):
-                    ans[i].insert(0, ('-', ''))
             data = json.dumps(ans)
             with open(path, 'w') as f:
                 f.write(data)
@@ -92,7 +90,7 @@ class TagVariantLoader(object):
         """
         """
         replacements = (
-            ('-', r'[\w\-]'),
+            ('-', r'.'),
             ('*', r'\*')
         )
         patt_string = selected_tags
@@ -136,7 +134,7 @@ class TagVariantLoader(object):
         """
         pass
 
-
+# TODO: this table should be translated and in English by default
 translationTable = [
     { # position 1
         'A' : _(u'adjektivum (přídavné jméno)'),

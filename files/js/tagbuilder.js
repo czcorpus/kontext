@@ -236,7 +236,7 @@ define(function () {
                     j,
                     blockId,
                     getResponseLength,
-                    iterStart,
+                    blockLength,
                     prevSelects = selects || tagLoader.multiSelectComponent.exportStatus(),
                     blockSwitchEventHandlers,
                     lockPreviousItems,
@@ -324,26 +324,23 @@ define(function () {
                                 tagLoader.multiSelectComponent.clearBlock(blockId);
                             }
                             if (data[i].length > 0) {
-                                if (data[i][0][0] === '-') {
-                                    tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][0][0]);
-                                    iterStart = 1;
+                                blockLength = data[i].length;
+                                for (j = 0; j < data[i].length; j += 1) {
+                                    if (data[i][j][0] !== '-') {
+                                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
+                                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
+                                            tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
 
-                                } else {
-                                    iterStart = 0;
-                                }
-
-                                // we start from 1 here because 0 contains default value
-
-                                for (j = iterStart; j < data[i].length; j += 1) {
-                                    tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
-                                    if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
-                                        tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+                                        } else {
+                                            tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
+                                        }
 
                                     } else {
-                                        tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
+                                        blockLength -= 1;
+                                        tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][j][0]);
                                     }
                                 }
-                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (data[i].length - iterStart) + ' ]');
+                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + (blockLength) + ' ]');
 
                             } else {
                                 tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
