@@ -13,6 +13,7 @@ Features
 
   * miscellaneous bug fixes
   * removed legacy code required by Python 2.5 and older
+  * improved logging and error processing
   * enhanced user interface
 
     - corpora information
