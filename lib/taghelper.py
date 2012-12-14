@@ -99,12 +99,12 @@ class TagVariantLoader(object):
                 f.close()
         return data
 
-    def calculate_variant(self, selected_tags):
+    def calculate_variant(self, required_pattern):
         """
         """
+        required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        patt_string = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , selected_tags))
-        patt = re.compile(patt_string)
+        patt = re.compile(required_pattern)
         matching_tags = []
         for line in self.tags_file:
             line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
@@ -113,13 +113,13 @@ class TagVariantLoader(object):
 
         ans = {}
         for item in matching_tags:
-            tag_elms = re.findall(r'\[[^\]]+\]|[^-]|-', selected_tags)
+            tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
             for i in range(len(tag_elms)):
                 value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , item[i]))
                 if i not in ans:
                     ans[i] = set()
                 if item[i] == '-':
-                    ans[i].add((value, ''))
+                    ans[i].add(('-', ''))
                 elif item[i] in translationTable[i]:
                     ans[i].add((value, '%s - %s' % (item[i], translationTable[i][item[i]])))
                 else:
