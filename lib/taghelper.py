@@ -36,6 +36,15 @@ class TagVariantLoader(object):
     """
     """
 
+    spec_char_replacements = (
+        ('-', r'.'),
+        ('*', r'\*'),
+        ('^', r'\^'),
+        ('?', r'\?'),
+        ('}', r'\}'),
+        ('!', r'\!')
+        )
+
     def __init__(self, corp_name, num_tag_pos):
         """
         """
@@ -59,6 +68,7 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         data = '[]'
+        char_replac_tab = dict(self.__class__.spec_char_replacements)
 
         if not os.path.exists(path):
             if not os.path.exists(os.path.dirname(path)):
@@ -67,14 +77,15 @@ class TagVariantLoader(object):
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
                 for i in range(self.num_tag_pos):
+                    value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
                     elif line[i] in translationTable[i]:
-                        ans[i].add((line[i], '%s - %s' % (line[i], translationTable[i][line[i]])))
+                        ans[i].add((value, '%s - %s' % (line[i], translationTable[i][line[i]])))
                     else:
-                        ans[i].add((line[i], line[i]))
+                        ans[i].add((value, line[i]))
                         logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
-            ans = [sorted(x, key=lambda item : item[0]) for x in ans]
+            ans = [sorted(x, key=lambda item : item[1]) for x in ans]
             for i in range(len(ans)):
                 if len(ans[i]) == 1:
                     ans[i] = ()
@@ -91,13 +102,8 @@ class TagVariantLoader(object):
     def calculate_variant(self, selected_tags):
         """
         """
-        replacements = (
-            ('-', r'.'),
-            ('*', r'\*')
-        )
-        patt_string = selected_tags
-        for p, r in replacements:
-            patt_string = patt_string.replace(p, r)
+        char_replac_tab = dict(self.__class__.spec_char_replacements)
+        patt_string = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , selected_tags))
         patt = re.compile(patt_string)
         matching_tags = []
         for line in self.tags_file:
@@ -109,14 +115,15 @@ class TagVariantLoader(object):
         for item in matching_tags:
             tag_elms = re.findall(r'\[[^\]]+\]|[^-]|-', selected_tags)
             for i in range(len(tag_elms)):
+                value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , item[i]))
                 if i not in ans:
                     ans[i] = set()
                 if item[i] == '-':
-                    ans[i].add((item[i], ''))
+                    ans[i].add((value, ''))
                 elif item[i] in translationTable[i]:
-                    ans[i].add((item[i], '%s - %s' % (item[i], translationTable[i][item[i]])))
+                    ans[i].add((value, '%s - %s' % (item[i], translationTable[i][item[i]])))
                 else:
-                    ans[i].add((item[i], '%s - %s' % (item[i], item[i])))
+                    ans[i].add((value, '%s - %s' % (item[i], item[i])))
 
         for key in ans:
             used_keys = [x[0] for x in ans[key]]
@@ -127,13 +134,8 @@ class TagVariantLoader(object):
                     ans[key].remove(('-', ''))
             elif len(used_keys) > 1:
                 ans[key].add(('-', ''))
-            ans[key] = sorted(ans[key], key=lambda item: item[0]) if ans[key] is not None else None
+            ans[key] = sorted(ans[key], key=lambda item: item[1]) if ans[key] is not None else None
         return ans
-
-    def cache_variant(self, selected_positions):
-        """
-        """
-        pass
 
 # TODO: this table should be translated and in English by default
 translationTable = [
