@@ -314,7 +314,8 @@ define(function () {
                 if (prevSelects && !objectIsEmpty(prevSelects)) {
                     tagLoader.history.push(prevSelects);
 
-                    if (tagLoader.getLatestActiveBlock() === tagLoader.multiSelectComponent.activeBlockId) {
+                    if (tagLoader.getLatestActiveBlock() === tagLoader.multiSelectComponent.activeBlockId
+                                && tagLoader.multiSelectComponent.activeBlockId) {
                         if (tagLoader.multiSelectComponent.getNumSelected(tagLoader.multiSelectComponent.activeBlockId) === 0) {
                             tagLoader.activeBlockHistory.pop();
                             tagLoader.history.pop();
@@ -423,7 +424,6 @@ define(function () {
              */
             resetButtonClick : function () {
                 var prop;
-
                 tagLoader.history = [];
                 tagLoader.activeBlockHistory = [];
                 tagLoader.multiSelectComponent.uncheckAll();
