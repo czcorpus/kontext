@@ -61,6 +61,8 @@ class TagVariantLoader(object):
         data = '[]'
 
         if not os.path.exists(path):
+            if not os.path.exists(os.path.dirname(path)):
+                os.mkdir(os.path.dirname(path), 0775)
             ans = [set() for i in range(self.num_tag_pos)]
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
