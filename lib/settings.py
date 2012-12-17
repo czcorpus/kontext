@@ -19,25 +19,66 @@ This module wraps application's configuration (as specified in config.xml) and p
 methods.
 """
 import os
-import MySQLdb
 from lxml import etree
 
 _conf = {}
-
 _user = None
-
 _corplist = None
+
+
+def fq(q):
+    """
+    Transforms a query containing db independent '%(p)s' placeholders
+    according to the selected adapter type.
+
+    Parameters
+    ----------
+    q : str
+        input query
+
+    Returns
+    -------
+    query : string
+            formatted query
+    """
+    return {
+        'mysql': q % { 'p' : '%s' },
+        'sqlite': q % { 'p' : '?' }
+    }[_conf['database']['adapter']]
 
 def create_db_connection():
     """
-    """
-    return MySQLdb.connect (host=get('database', 'host'), user=get('database', 'username'),
-        passwd=get('database', 'password'), db=get('database', 'name'))
+    Opens database connection according to the application setup.
+    MySQL and SQLite database adapters are supported.
 
+    Returns
+    -------
+    connection : object
+                 connection object as provided by selected module
+    """
+    global _conf
+
+    db_adapter = _conf['database']['adapter'].lower()
+    import logging
+    logging.getLogger(__name__).info('stuff: %s' % db_adapter)
+    if db_adapter == 'mysql':
+        import MySQLdb
+        return MySQLdb.connect(host=get('database', 'host'), user=get('database', 'username'),
+            passwd=get('database', 'password'), db=get('database', 'name'))
+    elif db_adapter == 'sqlite':
+        import sqlite3
+        return sqlite3.connect(get('database', 'name'))
 
 def get(section, key=None, default=None):
     """
-    TODO
+    Gets a configuration value.
+
+    Parameters
+    ----------
+    section : str
+              name of the section (global, database,...)
+    key : str (optional)
+          name of the configuration value; if omitted then whole section is returned
     """
     if key is None and section in _conf:
         return _conf[section]
@@ -79,6 +120,22 @@ def parse_corplist(root, path='/', data=[]):
                 'num_tag_pos' : num_tag_pos
             })
 
+def parse_tagsets(root):
+    """
+    """
+    ans = [None for i in range(len(root))]
+    for item in root:
+        idx = int(item.attrib['position'])
+        ans[idx] = {}
+        for v in item:
+            ans[idx][v.attrib['id']] = {}
+            for d in v:
+                if d.attrib['lang'] != 'en':
+                    ans[idx][v.attrib['id']] = d.text
+                else:
+                    ans[idx][v.attrib['id']] = _(d.text)
+    return ans
+
 def parse_config(path):
     """
     """
@@ -91,12 +148,14 @@ def parse_config(path):
         _conf['database'][item.tag] = item.text
     _conf['corpora'] = {}
     for item in xml.find('corpora'):
-        if item.tag != 'corplist':
-            _conf['corpora'][item.tag] = item.text
-        else:
+        if item.tag == 'corplist':
             data = []
             parse_corplist(item, data=data)
             _conf['corpora_hierarchy'] = data
+        elif item.tag == 'tagsets':
+            _conf['tagsets'] = parse_tagsets(item)
+        else:
+            _conf['corpora'][item.tag] = item.text
 
 def load(user, conf_path='config.xml'):
     """
@@ -178,7 +237,7 @@ def get_user_data():
     cols = ('pass', 'corplist')
     conn = create_db_connection()
     cursor = conn.cursor()
-    cursor.execute(("SELECT %s FROM user WHERE user = %%s" % ','.join(cols)), (_user,))
+    cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (_user,))
     row = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -186,13 +245,15 @@ def get_user_data():
 
 def update_user_password(password):
     """
+    Updates current (see the _user variable) user's password.
+    There is no need to hash/encrypt the password - function does it automatically.
     """
     import crypt
 
     hashed_pass = crypt.crypt(password, create_salt())
     conn = create_db_connection()
     cursor = conn.cursor()
-    ans = cursor.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, _user,))
+    ans = cursor.execute(fq("UPDATE user SET pass = %(p)s WHERE user = %(p)s"), (hashed_pass, _user,))
     cursor.close()
     conn.commit()
     conn.close()
@@ -213,7 +274,7 @@ def get_corplist():
     if _corplist is None:
         conn = create_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT corplist, sketches FROM user WHERE user LIKE %s",  (_user, ))
+        cursor.execute(fq("SELECT corplist, sketches FROM user WHERE user LIKE %(p)s"),  (_user, ))
         row = cursor.fetchone()
 
         c = row[0].split()
@@ -222,11 +283,11 @@ def get_corplist():
         for i in c:
             if i[0] == '@':
                 i = i[1:len(i)]
-                cursor.execute("""SELECT corpora.name
+                cursor.execute(fq("""SELECT corpora.name
                 FROM corplist,relation,corpora
                 WHERE corplist.id=relation.corplist
                   AND relation.corpora=corpora.id
-                  AND corplist.name=%s""", i)
+                  AND corplist.name=%(p)s"""), i)
                 row = cursor.fetchall()
 
                 for y in row:
@@ -256,6 +317,11 @@ def user_has_access_to(corpname):
     return corpname in get_corplist() or not get_bool('corpora', 'use_db_whitelist')
 
 def is_debug_mode():
+    """
+    Returns true if the application is in 'debugging mode'
+    (which leads to more detailed error messages etc.).
+    Else returns false.
+    """
     value = get('global', 'debug')
     return value is not None and value.lower() in ('true', '1')
 
@@ -274,9 +340,15 @@ def has_configured_speech(corpus):
     return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
 
 def get_speech_structure():
+    """
+    Returns name of the structure configured as a 'speech' delimiter
+    """
     return get('corpora', 'speech_segment_struct_attr').split('.')[0]
 
 def create_speech_url(corpus_name, speech_id):
+    """
+    Builds a URL string to the provided speech_id and corpus_name
+    """
     speech_url = get('corpora', 'speech_data_url')
     if speech_url[-1] <> '/':
         speech_url += '/'
