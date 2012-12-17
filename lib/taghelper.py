@@ -22,6 +22,7 @@ import re
 import json
 import logging
 import locale
+from lxml import etree
 
 class TagGeneratorException(Exception):
     """
@@ -60,9 +61,28 @@ def tag_variants_file_exists(corpus_name):
     """
     return os.path.exists(create_tag_variants_file_path(corpus_name))
 
-def generate_descriptions():
+
+def load_tag_descriptions(path, lang):
     """
     """
+    lang = lang.split('_')[0]
+    xml = etree.parse(open(path))
+    root = xml.find('corpora/tagsets')
+    ans = [None for i in range(len(root))]
+    for item in root:
+        idx = int(item.attrib['position'])
+        ans[idx] = {}
+        for v in item:
+            translations = {}
+            for d in v:
+                translations[d.attrib['lang']] = d.text
+            if lang in translations:
+                ans[idx][v.attrib['id']] = translations[lang]
+            elif 'en' in translations:
+                ans[idx][v.attrib['id']] = translations['en']
+            else:
+                ans[idx][v.attrib['id']] = '[%s]' % _('no description')
+    return ans
 
 
 class TagVariantLoader(object):
@@ -99,7 +119,7 @@ class TagVariantLoader(object):
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         data = '[]'
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translation_table = settings.get('tagsets')
+        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
 
         if not os.path.exists(path):
             if not os.path.exists(os.path.dirname(path)):
@@ -111,7 +131,7 @@ class TagVariantLoader(object):
                     value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
-                    elif line[i] in translation_table[i]:
+                    elif i < len(translation_table) and line[i] in translation_table[i]:
                         ans[i].add((value, '%s - %s' % (line[i], translation_table[i][line[i]])))
                     else:
                         ans[i].add((value, line[i]))
@@ -147,7 +167,7 @@ class TagVariantLoader(object):
                    a dictionary where keys represent tag-string position and values are lists of
                    tuples containing pairs 'ID, description'
         """
-        translation_table = settings.get('tagsets')
+        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         patt = re.compile(required_pattern)

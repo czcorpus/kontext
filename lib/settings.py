@@ -19,7 +19,6 @@ This module wraps application's configuration (as specified in config.xml) and p
 methods.
 """
 import os
-import re
 from lxml import etree
 
 _conf = {}
@@ -57,11 +56,7 @@ def create_db_connection():
     connection : object
                  connection object as provided by selected module
     """
-    global _conf
-
     db_adapter = _conf['database']['adapter'].lower()
-    import logging
-    logging.getLogger(__name__).info('stuff: %s' % db_adapter)
     if db_adapter == 'mysql':
         import MySQLdb
         return MySQLdb.connect(host=get('database', 'host'), user=get('database', 'username'),
@@ -86,6 +81,11 @@ def get(section, key=None, default=None):
     elif section in _conf and key in _conf[section]:
         return _conf[section][key]
     return default
+
+def set(section, key, value):
+    if not section in _conf:
+        _conf[section] = {}
+    _conf[section][key] = value
 
 def get_bool(section, key):
     """
@@ -121,21 +121,6 @@ def parse_corplist(root, path='/', data=[]):
                 'num_tag_pos' : num_tag_pos
             })
 
-def parse_tagsets(root):
-    """
-    """
-    ans = [None for i in range(len(root))]
-    for item in root:
-        idx = int(item.attrib['position'])
-        ans[idx] = {}
-        for v in item:
-            ans[idx][v.attrib['id']] = {}
-            for d in v:
-                if d.attrib['lang'] != 'en':
-                    ans[idx][v.attrib['id']] = d.text
-                else:
-                    ans[idx][v.attrib['id']] = _(d.text)
-    return ans
 
 def parse_config(path):
     """
@@ -153,8 +138,6 @@ def parse_config(path):
             data = []
             parse_corplist(item, data=data)
             _conf['corpora_hierarchy'] = data
-        elif item.tag == 'tagsets':
-            _conf['tagsets'] = parse_tagsets(item)
         else:
             _conf['corpora'][item.tag] = item.text
 
@@ -173,28 +156,7 @@ def load(user, conf_path='config.xml'):
     _user = user
     parse_config(conf_path)
     os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
-
-def get_uilang(locale_dir=None):
-    """
-    Returns locale code according to client's settings.
-    Empty value means 'English language'
-    """
-    lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE','')
-    if lgs_string == '':
-        return '' # english
-    lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-    lgs = lgs_string.split(',')
-    lgdirs = os.listdir(locale_dir) if locale_dir is not None else []
-    for lg in lgs:
-        lg = lg.replace('-', '_').lower()
-        if lg.startswith('en'): # english
-            return ''
-        for lgdir in lgdirs:
-            if lgdir.lower().startswith(lg):
-                return lgdir
-    return ''
-
-
+    set('session', 'conf_path', conf_path)
 
 def get_corpus_info(corp_name):
     """

@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
-import conf
-conf.init()
-import settings
+import os
+
 import unittest
-import conclib
 import mox
 from MySQLdb import cursors
 from MySQLdb import connections
+
+import conf
+conf.init()
+import settings
+import conclib
+
 
 class TestSettingsModule(unittest.TestCase):
     """
@@ -36,15 +40,6 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEqual('syn', data[0]['id'])
         self.assertEqual(u'/Synchronní psané korpusy/řada SYN/', data[0]['path'])
         self.assertEqual('http://www.korpus.cz/syn.php', data[0]['web'])
-
-    def test_tagsets_load(self):
-        data = settings.get('tagsets')
-        self.assertEqual(2, len(data))
-        self.assertEqual(2, len(data[0]))
-        self.assertEqual('cs: adjective', data[0]['A']['en'])
-        self.assertEqual('cs: preposition', data[0]['R']['en'])
-        self.assertEqual(1, len(data[1]))
-        self.assertEqual('cs: experimental item', data[1]['X']['en'])
 
     def test_get(self):
         """
@@ -179,4 +174,3 @@ class TestSettingsModule(unittest.TestCase):
         settings._conf['database']['adapter'] = 'sqlite'
         q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
         self.assertEqual('SELECT * FROM foo WHERE name = ?', q)
-
