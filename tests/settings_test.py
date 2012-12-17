@@ -4,7 +4,6 @@ import settings
 import unittest
 import conclib
 import mox
-import MySQLdb
 from MySQLdb import cursors
 from MySQLdb import connections
 
@@ -13,6 +12,7 @@ class TestSettingsModule(unittest.TestCase):
     """
 
     def setUp(self):
+        settings._conf['database']['adapter'] = 'mysql'
         self.mysql_mocker = mox.Mox()
         self.dbcon_mocker = mox.Mox()
         self.dbcursor_mocker = mox.Mox()
@@ -48,6 +48,14 @@ class TestSettingsModule(unittest.TestCase):
         # existing key, existing section
         self.assertEqual(settings.get('database', 'name'), 'bonito')
 
+        # whole section
+        ans = settings.get('database')
+        self.assertEqual(dict, type(ans))
+        self.assertEqual('bonito', ans['username'])
+        self.assertEqual('localhost', ans['host'])
+        self.assertEqual('bonito', ans['password'])
+        self.assertEqual('bonito', ans['name'])
+
     def test_corpus_info(self):
         """
         """
@@ -81,11 +89,36 @@ class TestSettingsModule(unittest.TestCase):
     def test_get_corplist(self):
         """
         """
+        conn = self.dbcon_mocker.CreateMock(connections.Connection)
+        self.mox.StubOutWithMock(settings, 'create_db_connection')
+        settings.create_db_connection().AndReturn(conn)
+
+        cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
+        conn.cursor().AndReturn(cursor)
+
+        query = "SELECT corplist, sketches FROM user WHERE user LIKE %s"
+        cursor.execute(query, ('default', )).AndReturn(True)
+        cursor.fetchone().AndReturn(('oral2013 susanne syn syn2010',))
+
+        cursor.close().AndReturn(None)
+        conn.close().AndReturn(None)
+
+        self.mysql_mocker.ReplayAll()
+        self.dbcon_mocker.ReplayAll()
+        self.dbcursor_mocker.ReplayAll()
+        self.mox.ReplayAll()
+
         corplist = settings.get_corplist()
         self.assertEqual('oral2013', corplist[0])
         self.assertEqual('susanne', corplist[1])
         self.assertEqual('syn', corplist[2])
         self.assertEqual('syn2010', corplist[3])
+
+        self.mysql_mocker.VerifyAll()
+        self.dbcon_mocker.VerifyAll()
+        self.dbcursor_mocker.VerifyAll()
+        self.mox.VerifyAll()
+        self.mox.UnsetStubs()
 
     def test_user_has_access_to(self):
         """
@@ -96,16 +129,17 @@ class TestSettingsModule(unittest.TestCase):
     def test_get_user_data(self):
         """
         """
-        mysql = self.mysql_mocker.CreateMock(MySQLdb)
         conn = self.dbcon_mocker.CreateMock(connections.Connection)
+        self.mox.StubOutWithMock(settings, 'create_db_connection')
+        settings.create_db_connection().AndReturn(conn)
+
         cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
         conn.cursor().AndReturn(cursor)
-        mysql.connection().AndReturn(conn)
+
         query = "SELECT pass,corplist FROM user WHERE user = %s"
         cursor.execute(query, ('atomik',)).AndReturn(True)
         cursor.fetchone().AndReturn(('my*password', 'syn2010 oral2013 susanne'))
-        self.mox.StubOutWithMock(settings, 'create_db_connection')
-        settings.create_db_connection().AndReturn(conn)
+
         cursor.close().AndReturn(None)
         conn.close().AndReturn(None)
 
@@ -118,3 +152,21 @@ class TestSettingsModule(unittest.TestCase):
         user_data = settings.get_user_data()
         self.assertEqual('syn2010 oral2013 susanne', user_data['corplist'])
         self.assertEqual('my*password', user_data['pass'])
+
+        self.mysql_mocker.VerifyAll()
+        self.dbcon_mocker.VerifyAll()
+        self.dbcursor_mocker.VerifyAll()
+        self.mox.VerifyAll()
+        self.mox.UnsetStubs()
+
+    def test_fq(self):
+        """
+        """
+        settings._conf['database']['adapter'] = 'mysql'
+        q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
+        self.assertEqual('SELECT * FROM foo WHERE name = %s', q)
+
+        settings._conf['database']['adapter'] = 'sqlite'
+        q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
+        self.assertEqual('SELECT * FROM foo WHERE name = ?', q)
+
