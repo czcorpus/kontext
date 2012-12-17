@@ -351,6 +351,7 @@ define(function () {
                     elm.setStyle({
                         display : 'block',
                         position: 'absolute',
+                        zIndex : 1000000,
                         left : leftPos + 'px',
                         border : '1px solid #CCC',
                         backgroundColor: '#eee',
