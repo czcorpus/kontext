@@ -314,8 +314,10 @@ $corp_sel
      <option value="charrow" $selected>$_("Character")</option>
      #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
      <option value="cqlrow" $selected>$_("CQL")</option>
-     #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
-     <option value="tagrow" $selected>$_("Tag")</option>
+     #if $tag_builder_support
+        #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
+        <option value="tagrow" $selected>$_("Tag")</option>
+     #end if
   </select>
   </td>
 </tr>

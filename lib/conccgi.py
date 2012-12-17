@@ -29,7 +29,7 @@ import corplib
 import conclib
 import version
 import settings
-
+import taghelper
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
 def escape (s):
@@ -339,6 +339,7 @@ class ConcCGI (CGIPublisher):
                                                ('usesubcorp', self.usesubcorp),
                                              ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['tag_builder_support'] = taghelper.tag_variants_file_exists(self.corpname)
         return result
 
 
