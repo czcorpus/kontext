@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import conf
+conf.init()
 import settings
 import unittest
 import conclib
