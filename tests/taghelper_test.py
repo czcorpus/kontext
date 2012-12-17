@@ -41,4 +41,12 @@ class TestTagVariantLoader(unittest.TestCase):
     def test_variants_provider(self):
         vp = TagVariantLoader('susanne', 6)
         values = vp.get_initial_values()
-        print(values)
+
+    def test_tagsets_load(self):
+        data = load_tag_descriptions('config.test.xml', 'cs')
+        self.assertEqual(2, len(data))
+        self.assertEqual(2, len(data[0]))
+        self.assertEqual('adjective', data[0]['A'])
+        self.assertEqual('preposition', data[0]['R'])
+        self.assertEqual(1, len(data[1]))
+        self.assertEqual('experimental item', data[1]['X'])
