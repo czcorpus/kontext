@@ -19,6 +19,7 @@ This module wraps application's configuration (as specified in config.xml) and p
 methods.
 """
 import os
+import re
 from lxml import etree
 
 _conf = {}
@@ -172,6 +173,28 @@ def load(user, conf_path='config.xml'):
     _user = user
     parse_config(conf_path)
     os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
+
+def get_uilang(locale_dir=None):
+    """
+    Returns locale code according to client's settings.
+    Empty value means 'English language'
+    """
+    lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE','')
+    if lgs_string == '':
+        return '' # english
+    lgs_string = re.sub(';q=[^,]*', '', lgs_string)
+    lgs = lgs_string.split(',')
+    lgdirs = os.listdir(locale_dir) if locale_dir is not None else []
+    for lg in lgs:
+        lg = lg.replace('-', '_').lower()
+        if lg.startswith('en'): # english
+            return ''
+        for lgdir in lgdirs:
+            if lgdir.lower().startswith(lg):
+                return lgdir
+    return ''
+
+
 
 def get_corpus_info(corp_name):
     """

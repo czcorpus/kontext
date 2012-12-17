@@ -77,23 +77,6 @@ class BonitoCGI (WSEval, UserCGI):
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
 
-def get_uilang(locale_dir):
-    lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE','')
-    if lgs_string == '':
-        return '' # english
-    lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-    lgs = lgs_string.split(',')
-    lgdirs = os.listdir(locale_dir)
-    for lg in lgs:
-        lg = lg.replace('-', '_').lower()
-        if lg.startswith('en'): # english
-            return ''
-        for lgdir in lgdirs:
-            if lgdir.lower().startswith(lg):
-                return lgdir
-    return ''
-
-
 if __name__ == '__main__':
     import logging
     from logging import handlers
@@ -121,7 +104,7 @@ if __name__ == '__main__':
             # hereby we retrieve the system default locale directory back:
             locale_dir = gettext.bindtextdomain('ske')
 
-    os.environ['LANG'] = get_uilang(locale_dir)
+    os.environ['LANG'] = settings.get_uilang(locale_dir)
     os.environ['LC_ALL'] = os.environ['LANG']
     formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
     locale.setlocale(locale.LC_ALL, formatting_lang)
