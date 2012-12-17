@@ -122,8 +122,16 @@ class TagVariantLoader(object):
         translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
 
         if not os.path.exists(path):
-            if not os.path.exists(os.path.dirname(path)):
-                os.mkdir(os.path.dirname(path), 0775)
+            cache_path_items = os.path.dirname(path).split('/')
+            if cache_path_items[0] == '':
+                cache_path_items[0] = '/'
+            else:
+                cache_path_items.insert(0, './')
+            tst_path = ''
+            for s in cache_path_items:
+                tst_path += '%s/' % s
+                if not os.path.exists(tst_path):
+                    os.mkdir(tst_path, 0775)
             ans = [set() for i in range(self.num_tag_pos)]
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
