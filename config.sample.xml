@@ -37,6 +37,17 @@
 		<corpus id="BNC" sentence_struct="s" />
             </corplist>
         </corplist>
+
+        <tagsets>
+            <tagset position="0">
+                <value id="A">
+                    <desc lang="en">adjective</desc>
+                    <desc lang="cs">adjektivum (přídavné jméno)</desc>
+                </value>
+                <!-- ... etc ... -->
+            </tagset>
+            <!-- ... etc ... -->
+        </tagsets>
     </corpora>
 </bonito>
 
