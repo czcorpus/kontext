@@ -5,6 +5,7 @@
         <debug>true</debug>
     </global>
     <database>
+        <adapter>sqlite</adapter>
         <name>bonito</name>
         <host>localhost</host>
         <password>bonito</password>
@@ -53,6 +54,21 @@
                 <corpus id="SUSANNE" sentence_struct="s" />
             </corplist>
         </corplist>
+        <tagsets>
+            <tagset position="0">
+                <value id="A">
+                    <desc lang="en">adjective</desc>
+                </value>
+                <value id="R">
+                    <desc lang="en">preposition</desc>
+                </value>
+            </tagset>
+            <tagset position="1">
+                <value id="X">
+                    <desc lang="en">experimental item</desc>
+                </value>
+            </tagset>
+        </tagsets>
     </corpora>
 </bonito>
 
