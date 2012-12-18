@@ -30,7 +30,7 @@ $_("Concordance")#slurp
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
 <script src="$files_path/js/detail.js" type="text/javascript"></script>
 <script src="$files_path/js/tblex.js" type="text/javascript"></script>
-<script src="$files_path/misc/audiojs/audio.min.js" type="text/javascript"></script>
+<script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
 #if $can_annotate and $annotconc
 <script src="$files_path/js/annotconc.js" type="text/javascript"></script>
 #end if
@@ -45,6 +45,12 @@ document.observe("dom:loaded", function() {
             open_speech(item);
             event.stop();
         });
+    });
+
+    soundManager.setup({
+        url: '../files/misc/soundmanager2/',
+        flashVersion: 9,
+        debugMode : false
     });
 });
 </script>
