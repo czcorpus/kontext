@@ -149,8 +149,39 @@ a.speech-link:hover {
 
 #audio-wrapper {
     position: absolute;
-    width: 460px;
-    height: 36px;
-    left: 50%;
-    margin-left: -230px;
+}
+
+.audio-controls {
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    background-color: #99CCEE;
+    padding: 4px 8px;
+    overflow: hidden;
+}
+
+.audio-controls a {
+    width: 24px;
+    height: 24px;
+    float: left;
+    text-decoration: none;
+}
+
+.audio-controls a.img-button-play {
+    background-image: url('../img/media_start.jpg');
+}
+
+.audio-controls a.img-button-play-b {
+    background-image: url('../img/media_start_b.jpg');
+}
+
+.audio-controls a.img-button-pause {
+    background-image: url('../img/media_pause.jpg');
+}
+
+.audio-controls a.img-button-pause-b {
+    background-image: url('../img/media_pause_b.jpg');
+}
+
+.audio-controls a.img-button-stop {
+    background-image: url('../img/media_stop.jpg');
 }

@@ -158,42 +158,14 @@ function full_ref(toknum) {
  * @param linkElem
  */
 function open_speech(linkElem) {
-    var speechURL = linkElem.readAttribute('href');
-    var triggerLink = Element.extend(linkElem);
-    var wrapper = $('audio-wrapper');
-    if (wrapper === null) {
-        wrapper = Element.extend(document.createElement('div'));
-        wrapper.writeAttribute('id', 'audio-wrapper');
-        wrapper.observe('click', function (event) {
-            event.stop();
-        });
-        $(document.body).insert(wrapper);
-    }
-    wrapper.setStyle({
-        top : (triggerLink.cumulativeOffset()[1] - 35) + 'px'
+    var speechURL = linkElem.readAttribute('href'),
+        sound;
+
+    speechURL = linkElem.readAttribute('href');
+    require(['audioplayer'], function (ap) {
+        ap.create('audio-wrapper', Element.extend(linkElem)).play(speechURL);
     });
 
-    var player = $('audio-player');
-    if (player === null) {
-        player = Element.extend(document.createElement('audio'));
-        wrapper.insert(player);
-        player.writeAttribute('id', 'audio-player');
-        player.writeAttribute('autoplay', '');
-    }
-    player.writeAttribute('src', speechURL);
-    audiojs.events.ready(function() { var as = audiojs.createAll(); });
 
-    Event.observe(document, 'click', function (event) {
-        wrapper = $('audio-wrapper');
-        if (wrapper) {
-            wrapper.remove();
-        }
-    });
 
-    if (triggerLink.preventDefault) {
-        triggerLink.preventDefault();
-
-    } else {
-        return false;
-    }
 }
