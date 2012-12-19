@@ -248,6 +248,7 @@ define(function () {
                     blockId,
                     getResponseLength,
                     blockLength,
+                    blockLabel,
                     prevSelects = selects || tagLoader.multiSelectComponent.exportStatus(),
                     blockSwitchEventHandlers,
                     lockPreviousItems,
@@ -333,32 +334,37 @@ define(function () {
                     tagLoader.multiSelectComponent.ulElement.insert(errorBox);
 
                 } else {
-                    for (i = 0; i < getResponseLength(data); i += 1) {
+                    for (i = 0; i < getResponseLength(data.tags); i += 1) {
                         blockId = 'position_' + i;
 
                         if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
 
                             if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                                tagLoader.multiSelectComponent.addBlock(blockId, i + 1, null, blockSwitchEventHandlers);
+                                if (data.labels[i] !== undefined && data.labels[i] !== null) {
+                                    blockLabel = (i + 1) + ' - ' + data.labels[i];
+                                } else {
+                                    blockLabel = (i + 1);
+                                }
+                                tagLoader.multiSelectComponent.addBlock(blockId, blockLabel, null, blockSwitchEventHandlers);
 
                             } else {
                                 tagLoader.multiSelectComponent.clearBlock(blockId);
                             }
-                            if (data[i].length > 0) {
-                                blockLength = data[i].length;
-                                for (j = 0; j < data[i].length; j += 1) {
-                                    if (data[i][j][0] !== '-') {
-                                        tagLoader.multiSelectComponent.addItem(blockId, data[i][j][0], data[i][j][1], itemClickCallback);
-                                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data[i][j][0]) > -1) {
-                                            tagLoader.multiSelectComponent.checkItem(blockId, data[i][j][0]);
+                            if (data.tags[i].length > 0) {
+                                blockLength = data.tags[i].length;
+                                for (j = 0; j < data.tags[i].length; j += 1) {
+                                    if (data.tags[i][j][0] !== '-') {
+                                        tagLoader.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
+                                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data.tags[i][j][0]) > -1) {
+                                            tagLoader.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
 
                                         } else {
-                                            tagLoader.multiSelectComponent.uncheckItem(blockId, data[i][j][0]);
+                                            tagLoader.multiSelectComponent.uncheckItem(blockId, data.tags[i][j][0]);
                                         }
 
                                     } else {
                                         blockLength -= 1;
-                                        tagLoader.multiSelectComponent.setDefaultValue(blockId, data[i][j][0]);
+                                        tagLoader.multiSelectComponent.setDefaultValue(blockId, data.tags[i][j][0]);
                                     }
                                 }
                                 tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');

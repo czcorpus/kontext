@@ -40,6 +40,10 @@
 
         <tagsets>
             <tagset position="0">
+                <label>
+                    <desc lang="en">Position 1</desc>
+                    <desc lang="cs">Pozice 1</desc>
+                </label>
                 <value id="A">
                     <desc lang="en">adjective</desc>
                     <desc lang="cs">adjektivum (přídavné jméno)</desc>
