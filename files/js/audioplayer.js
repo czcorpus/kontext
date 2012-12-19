@@ -131,7 +131,7 @@ define(['win'], function (win) {
                     autoPlay: false,
                     volume: 90,
                     onload: function (bSuccess) {
-                        if (!this.loaded) {
+                        if (!bSuccess) {
                             clearInterval(player.animationTimer);
                             player.wrapper.update('<div class="audio-controls"><a id="audio-error-confirm">:-(</a></div>');
                             $('audio-error-confirm').observe('click', function () {
@@ -141,8 +141,9 @@ define(['win'], function (win) {
                     },
                     onplay : function () {
                     },
-                    onstop : function () {
+                    onfinish : function () {
                         player.status = 0;
+                        player.removeUserInterface();
                     }
                 });
 
