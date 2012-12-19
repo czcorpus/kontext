@@ -1,18 +1,46 @@
 /**
- * Creates global instance of SoundManager 2 based audio player
- * and defines some related visual control elements (play, pause, stop).
+ * This library provides a simple audio-player (play/pause/stop)
+ * based on the SoundManager 2 library (http://www.schillmania.com/projects/soundmanager2/)
+ * Prototype 1.7+ is also required.
  */
 define(['win'], function (win) {
     'use strict';
 
-    var create = function (wrapper, triggerLink) {
+    /**
+     * Creates instance of the player as an attribute of the 'win' parameter. If such
+     * parameter exists and is non-empty, then current value is replaced by the new one.
+     *
+     * @param wrapper {string|Element} ID of wrapping HTML element or element itself
+     * @param triggerLink {string|Element} ID of link which has been clicked and leads to an audio,
+     * or link element itself
+     * @param options {object} a key->value object holding some options (currently only 'volume' is accepted)
+     * @return {player}
+     */
+    var create = function (wrapper, triggerLink, options) {
         var player;
 
         if (win.audioPlayer) {
             win.audioPlayer.removeUserInterface();
         }
+        options = options || {};
 
+        /**
+         * Object of the player.
+         *
+         * @type {Object}
+         */
         player = {
+
+            PLAYER_STATUS_STOPPED : 0,
+
+            PLAYER_STATUS_PAUSED : 1,
+
+            PLAYER_STATUS_PLAYING : 2,
+
+            /**
+             * Defines how fast animated buttons blink (in milliseconds)
+             */
+            BLINKING_INTERVAL : 500,
 
             triggerLink : null,
 
@@ -22,8 +50,22 @@ define(['win'], function (win) {
 
             animationTimer : null,
 
-            status : 0, // 0 = stopped, 1 = paused, 2 = playing
+            /**
+             * Audio volume. Values from 0 to 100 are accepted.
+             */
+            volume : 100,
 
+            /**
+             * status of the player, see PLAYER_STATUS_* constants
+             */
+            status : 0,
+
+            /**
+             *
+             * @param wrapper {string|Element} ID of wrapping HTML element or element itself
+             * @param triggerLink {string|Element} ID of link which has been clicked and leads to an audio,
+             * or link element itself
+             */
             init : function (wrapper, triggerLink) {
                 player.triggerLink = typeof triggerLink === 'string' ? $(triggerLink) : triggerLink;
                 player.wrapper = typeof wrapper === 'string' ? $(wrapper) : wrapper;
@@ -44,47 +86,51 @@ define(['win'], function (win) {
                 });
             },
 
-            animatePlayButton : function () {
-                var img1,
-                    img2,
+            /**
+             * Animates Play or Pause button according to the state of the player
+             * (see PLAYER_STATUS_* constants).
+             */
+            animateActiveButton : function () {
+                var stateClass1,
+                    stateClass2,
                     blinkingElement = null;
 
                 clearInterval(player.animationTimer);
-                if (player.status === 1) {
+                if (player.status === player.PLAYER_STATUS_PAUSED) {
                     $('audio-play-button').writeAttribute('class', 'img-button-play');
                     blinkingElement = 'audio-pause-button';
-                    img1 = 'img-button-pause';
-                    img2 = 'img-button-pause-b';
+                    stateClass1 = 'img-button-pause';
+                    stateClass2 = 'img-button-pause-b';
 
-                } else if (player.status === 2) {
+                } else if (player.status === player.PLAYER_STATUS_PLAYING) {
                     $('audio-pause-button').writeAttribute('class', 'img-button-pause');
                     blinkingElement = 'audio-play-button';
-                    img1 = 'img-button-play';
-                    img2 = 'img-button-play-b';
+                    stateClass1 = 'img-button-play';
+                    stateClass2 = 'img-button-play-b';
                 }
 
                 if (blinkingElement) {
                     player.animationTimer = setInterval(function () {
-                        if ($(blinkingElement).readAttribute('class') === img1) {
-                            $(blinkingElement).writeAttribute('class', img2);
+                        if ($(blinkingElement).readAttribute('class') === stateClass1) {
+                            $(blinkingElement).writeAttribute('class', stateClass2);
 
                         } else {
-                            $(blinkingElement).writeAttribute('class', img1);
+                            $(blinkingElement).writeAttribute('class', stateClass1);
                         }
-                    }, 500);
+                    }, player.BLINKING_INTERVAL);
                 }
             },
 
+            /**
+             * Creates simple three-button (play, pause, stop) interface for the player
+             * and defines 'click' handlers for the buttons.
+             */
             createUserInterface : function () {
-                var uiSource;
-
-                uiSource = '<div class="audio-controls">' +
+                player.wrapper.update('<div class="audio-controls">' +
                     '<a id="audio-play-button" class="img-button-play"></a>' +
                     '<a id="audio-pause-button" class="img-button-pause"></a>' +
                     '<a id="audio-stop-button" class="img-button-stop"></a>' +
-                    '</div>';
-
-                player.wrapper.update(uiSource);
+                    '</div>');
 
                 $('audio-stop-button').observe('click', function () {
                     soundManager.stop('speech-player');
@@ -93,35 +139,41 @@ define(['win'], function (win) {
                 });
 
                 $('audio-pause-button').observe('click', function () {
-                    if (player.status === 1) {
+                    if (player.status === player.PLAYER_STATUS_PAUSED) {
                         soundManager.play(player.playSessionId);
-                        player.status = 2;
+                        player.status = player.PLAYER_STATUS_PLAYING;
 
-                    } else if (player.status === 2) {
+                    } else if (player.status === player.PLAYER_STATUS_PLAYING) {
                         soundManager.pause(player.playSessionId);
-                        player.status = 1;
+                        player.status = player.PLAYER_STATUS_PAUSED;
                     }
-                    player.animatePlayButton();
+                    player.animateActiveButton();
                 });
 
                 $('audio-play-button').observe('click', function () {
-                    if (player.status === 0) {
+                    if (player.status === player.PLAYER_STATUS_STOPPED) {
                         soundManager.play(player.playSessionId);
-                        player.status = 2;
+                        player.status = player.PLAYER_STATUS_PLAYING;
 
-                    } else if (player.status === 1) {
+                    } else if (player.status === player.PLAYER_STATUS_PAUSED) {
                         soundManager.play(player.playSessionId);
-                        player.status = 2;
+                        player.status = player.PLAYER_STATUS_PLAYING;
                     }
-                    player.animatePlayButton();
+                    player.animateActiveButton();
                 });
             },
 
+            /**
+             * Clears all animations and cleans-up contents of the 'wrapper' element.
+             */
             removeUserInterface : function () {
                 clearInterval(player.animationTimer);
                 player.wrapper.update();
             },
 
+            /**
+             * Plays the audio file as specified by the player.triggerLink element.
+             */
             play : function () {
                 player.createUserInterface();
                 var sound = soundManager.createSound({
@@ -129,7 +181,7 @@ define(['win'], function (win) {
                     url: player.triggerLink.readAttribute('href'),
                     autoLoad: true,
                     autoPlay: false,
-                    volume: 90,
+                    volume: player.volume,
                     onload: function (bSuccess) {
                         if (!bSuccess) {
                             clearInterval(player.animationTimer);
@@ -142,22 +194,25 @@ define(['win'], function (win) {
                     onplay : function () {
                     },
                     onfinish : function () {
-                        player.status = 0;
+                        player.status = player.PLAYER_STATUS_STOPPED;
                         player.removeUserInterface();
                     }
                 });
 
                 sound.play();
-                player.status = 2;
-                player.animatePlayButton();
+                player.status = player.PLAYER_STATUS_PLAYING;
+                player.animateActiveButton();
             }
         };
         player.init(wrapper, triggerLink);
+        if (options.hasOwnProperty('volume')) {
+            player.volume = options.volume;
+        }
         win.audioPlayer = player;
         return win.audioPlayer;
     };
 
-    // API
+    // API exported for require.js compatible modules
     return {
         create : create
     };

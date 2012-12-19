@@ -163,7 +163,7 @@ function open_speech(linkElem) {
 
     speechURL = linkElem.readAttribute('href');
     require(['audioplayer'], function (ap) {
-        ap.create('audio-wrapper', Element.extend(linkElem)).play(speechURL);
+        ap.create('audio-wrapper', Element.extend(linkElem), { volume : 90 }).play(speechURL);
     });
 
 
