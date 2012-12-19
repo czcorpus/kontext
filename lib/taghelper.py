@@ -69,20 +69,33 @@ def load_tag_descriptions(path, lang):
     xml = etree.parse(open(path))
     root = xml.find('corpora/tagsets')
     ans = [None for i in range(len(root))]
+    labels = [None for i in range(len(root))]
     for item in root:
         idx = int(item.attrib['position'])
         ans[idx] = {}
         for v in item:
-            translations = {}
-            for d in v:
-                translations[d.attrib['lang']] = d.text
-            if lang in translations:
-                ans[idx][v.attrib['id']] = translations[lang]
-            elif 'en' in translations:
-                ans[idx][v.attrib['id']] = translations['en']
-            else:
-                ans[idx][v.attrib['id']] = '[%s]' % _('no description')
-    return ans
+            if v.tag == 'value':
+                translations = {}
+                for d in v:
+                    translations[d.attrib['lang']] = d.text
+                if lang in translations:
+                    ans[idx][v.attrib['id']] = translations[lang]
+                elif 'en' in translations:
+                    ans[idx][v.attrib['id']] = translations['en']
+                else:
+                    ans[idx][v.attrib['id']] = '[%s]' % _('no description')
+            elif v.tag == 'label':
+                translations = {}
+                for d in v:
+                    translations[d.attrib['lang']] = d.text
+                if lang in translations:
+                    labels[idx] = translations[lang]
+                elif 'en' in translations:
+                    labels[idx] = translations['en']
+                else:
+                    labels[idx] = None
+
+    return ans, labels
 
 
 class TagVariantLoader(object):
@@ -119,7 +132,7 @@ class TagVariantLoader(object):
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         data = '[]'
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+        translation_table, label_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
 
         if not os.path.exists(path):
             cache_path_items = os.path.dirname(path).split('/')
@@ -148,7 +161,7 @@ class TagVariantLoader(object):
             for i in range(len(ans)):
                 if len(ans[i]) == 1:
                     ans[i] = ()
-            data = json.dumps(ans)
+            data = json.dumps({ 'tags' : ans, 'labels' : label_table})
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
@@ -175,7 +188,7 @@ class TagVariantLoader(object):
                    a dictionary where keys represent tag-string position and values are lists of
                    tuples containing pairs 'ID, description'
         """
-        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))[0]
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         patt = re.compile(required_pattern)
@@ -209,4 +222,4 @@ class TagVariantLoader(object):
             elif len(used_keys) > 1:
                 ans[key].add(('-', ''))
             ans[key] = sorted(ans[key], key=lambda item: item[1]) if ans[key] is not None else None
-        return ans
+        return { 'tags' : ans, 'labels' : [] }
