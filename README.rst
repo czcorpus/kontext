@@ -33,7 +33,6 @@ Requirements
     - CGI
     - mod_rewrite
 
-  * MySQL database server
   * Python 2.6 or 2.7
 
     - lxml
