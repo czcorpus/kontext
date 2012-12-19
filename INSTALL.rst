@@ -53,10 +53,13 @@ Using one of described configurations, your web application should be available 
 Database
 ========
 
+MySQL users
+-----------
 
 Open your mysql console::
 
      mysql -u root -p
+
 
 Create new database for your application::
 
@@ -77,11 +80,22 @@ Update the privileges information::
 Leave mysql console and run the script to create required tables (we assume your current directory is bonito's
 root directory)::
 
-    mysql -u root -p < scripts/create-tables.sql
+    mysql -u root -p < scripts/create-tables-mysql.sql
+
+SQLite3 users
+-------------
+
+Create your database::
+
+    sqlite3 /path/to/your/database/file < scripts/create-tables-sqlite.sql
+
 
 
 Corpora and users
 =================
+
+MySQL users
+-----------
 
 Bonito 2 does not provide web-based administration of the users which means you have to use mysql console or some
 GUI client application (e.g. the PHPMyAdmin). Open mysql console again::
@@ -98,6 +112,32 @@ Define a user::
     INSERT INTO user (user, pass, corplist, subcorp, fullname, email, regist, valid)
     VALUES ('some_username', ENCRYPT('some_password'), 'some_corpora_name some_other_corpora_name', 'yes',
     'fullname of the user', 'email of the user', NOW(), 1);
+
+Please note that corpora names in **corplist** are separated by the whitespace.
+
+SQLite3 users
+-------------
+
+Open your sqlite3 console::
+
+    sqlite3 /path/to/your/database/file
+
+Define some corpus/corpora you want to publish::
+
+    INSERT INTO corpora (name) VALUES ('some_corpora_name');
+    INSERT INTO corpora (name) VALUES ('some_other_corpora_name');
+
+Define a user::
+
+    INSERT INTO user (user, pass, corplist, subcorp, fullname, email, regist, valid)
+    VALUES ('some_username', 'encrypted_password', 'some_corpora_name some_other_corpora_name', 'yes',
+    'fullname of the user', 'email of the user', datetime('now'), 1);
+
+In case of sqlite3 you have to encrypt the password yourself. You can use simple script in **scripts/encrypt.py** to
+do this::
+
+    ./scripts/encrypt.py your_plain_password
+
 
 Please note that corpora names in **corplist** are separated by the whitespace.
 
@@ -126,6 +166,8 @@ Please refer to the **config.sample.xml** to see the structure.
 | /bonito/global/debug                       | true/false (true => detailed error info is visible)       |
 +--------------------------------------------+-----------------------------------------------------------+
 | /bonito/global/log_path                    | Path to the logging file (Apache must have write access)  |
++--------------------------------------------+-----------------------------------------------------------+
+| /bonito/database/adapter                   | mysql|sqlite - database adapter used along with the app.  |
 +--------------------------------------------+-----------------------------------------------------------+
 | /bonito/database/name                      | Name of the database used along with the application      |
 +--------------------------------------------+-----------------------------------------------------------+
