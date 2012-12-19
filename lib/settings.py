@@ -355,13 +355,14 @@ if __name__ == '__main__':
         for block in _conf:
             print('\n[%s]' % block)
             for key in _conf[block]:
-                if key.find('passw') == -1:
-                    value = _conf[block][key]
-                else:
-                    value = '******'
-                print('%s: %s' % (key, value))
+                if type(key) == str:
+                    if key.find('passw') == -1:
+                        value = _conf[block][key]
+                    else:
+                        value = '******'
+                    print('%s: %s' % (key, value))
         print('\n[corpora hierarchy]')
-        for corpname, path in corplist:
-            print('%s%s' % (path, corpname))
+        for item in corplist:
+            print('%s%s' % (item['path'], item['id']))
     else:
         print('No config XML specified')
