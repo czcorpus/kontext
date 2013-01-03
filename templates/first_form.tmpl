@@ -38,8 +38,8 @@ $_("Concordance - First query form")#slurp
             tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
                 resetButton : null,
                 backButton : null,
-                hiddenElm : 'tag',
-                tagDisplay : 'tag-display'
+                hiddenElm : \$('#tag'),
+                tagDisplay : \$('#tag-display')
             });
         }
 
