@@ -222,10 +222,10 @@ define(['jquery'], function ($) {
              *
              */
             updateBacklinks : function () {
-                tagLoader.tagDisplay.find('a.backlink').each(function (item) {
-                    $(item).bind('click', function () {
+                $(tagLoader.tagDisplay).find('a.backlink').each(function () {
+                    $(this).bind('click', function () {
                         var liElms = $(tagLoader.multiSelectComponent.ulElement).find('li:nth-child('
-                                + (parseInt($(item).attr('data-block-idx'), 10) + 1) + ')');
+                                + (parseInt($(this).attr('data-block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
                             tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).attr('data-block-id'));
                         }
@@ -538,18 +538,8 @@ define(['jquery'], function ($) {
             }
         };
 
-        if (typeof (opt.hiddenElm) === 'string') {
-            hiddenElm = $(opt.hiddenElm);
-
-        } else {
-            hiddenElm = opt.hiddenElm;
-        }
-        if (typeof (opt.tagDisplay) === 'string') {
-            tagDisplay = $(opt.tagDisplay);
-
-        } else {
-            tagDisplay = opt.tagDisplay;
-        }
+        hiddenElm = $(opt.hiddenElm).get(0);
+        tagDisplay = $(opt.tagDisplay).get(0);
 
         tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, tagDisplay, multiSelectComponent);
         tagLoader.loadInitialVariants(function (data) {
