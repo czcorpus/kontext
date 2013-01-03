@@ -26,23 +26,15 @@ $_("Concordance: Filter form")#slurp
 #attr $focus = "hideElem.cmdGetFocusedId()"
 
 #def bodyonload
-hideElem.cmdSwitchQuery(tagBuilderOptions);
-hideElem.loadHideElementStoreSimple();
-hideElem.loadHideElementStore('${files_path}');
+    hideElem.cmdSwitchQuery({});
+    hideElem.loadHideElementStoreSimple();
+    hideElem.loadHideElementStore('${files_path}');
 #end def
 
 #def helpblock
   #if $varExists('helpsite')
   <li class="context_help"><a href="${helpsite}filterconc" rel="help">$_("? Help on Filter form")</a></li>
   #end if
-#end def
-
-#def headers
-#filter WebSafe
-<script src="$files_path/js/util.js" type="text/javascript"></script>
-<script src="$files_path/js/effects.js" type="text/javascript"></script>
-<script src="$files_path/js/controls.js" type="text/javascript"></script>
-#end filter
 #end def
 
 #def left_submenu_expert

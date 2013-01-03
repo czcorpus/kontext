@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['win'], function (context) {
+define(['win', 'jquery'], function (context, $) {
     'use strict';
 
     context.bonitoBoxes = context.bonitoBoxes || {};
@@ -24,9 +24,9 @@ define(['win'], function (context) {
     /**
      * Creates simple absolute positioned DIV as a child of whereElement.
      *
-     * @param event event which lead to this request
-     * @param boxId attribute ID for new box
-     * @param whereElement element to be used as a parent
+     * @param event event which triggered this request
+     * @param {string} boxId attribute ID for new box
+     * @param {jQuery|string} whereElement element to be used as a parent
      * @param contents text/HTML content of the box
      * @param options object with options "width", "height", "top" (just like in CSS but also with additional
      * values "attached-top" and "attached-bottom")
@@ -58,29 +58,29 @@ define(['win'], function (context) {
 
             close : function (event) {
                 if (event) {
-                    event.element().stopObserving('click', popupBox.close);
+                    $(event.target).unbind('click', popupBox.close);
                 }
                 if (popupBox.newElem) {
-                    popupBox.newElem.remove();
+                    $(popupBox.newElem).remove();
                     popupBox.newElem = null;
                     if (popupBox.timer) {
                         clearInterval(popupBox.timer);
                     }
-                    document.stopObserving('click', popupBox.close);
+                    $(document).unbind('click', popupBox.close);
                 }
                 delete context.bonitoBoxes[boxId];
             },
 
             open : function (event, boxId, whereElement, contents, options) {
-                var pageWidth = document.viewport.getDimensions().width,
+                var pageWidth = $(document).width(),
                     horizPadding = 8,
-                    totalBoxWidth = 638,
                     boxWidth = '620px',
                     borderWidth = 1,
                     boxHeight = '70px',
                     boxIntWidth,
                     boxIntHeight,
-                    boxTop = 0;
+                    boxTop = 0,
+                    jqWhereElement = $(whereElement);
 
                 if (options !== undefined) {
                     if (options.hasOwnProperty('height')) {
@@ -95,10 +95,10 @@ define(['win'], function (context) {
 
                     if (options.hasOwnProperty('top')) {
                         if (options.top === 'attached-top') {
-                            boxTop = event.element().cumulativeOffset()[1] + 'px';
+                            boxTop = $(event.target).position().top + 'px';
 
                         } else if (options.top === 'attached-bottom') {
-                            boxTop = (event.element().cumulativeOffset()[1] - boxIntHeight - 30) + 'px';
+                            boxTop = ($(event.target).position().top - boxIntHeight - 30) + 'px';
 
                         } else {
                             boxTop = options.top;
@@ -110,41 +110,36 @@ define(['win'], function (context) {
                     boxIntWidth = popupBox.extractIntFromSize(boxWidth);
                 }
 
-                popupBox.newElem = Element.extend(document.createElement('div'));
-                popupBox.newElem.writeAttribute('id', boxId);
-                if (typeof (contents) === 'function') {
+                popupBox.newElem = document.createElement('div');
+                $(popupBox.newElem).attr('id', boxId);
+                if (typeof contents === 'function') {
                     contents(popupBox.newElem);
 
                 } else {
-                    popupBox.newElem.update(contents);
+                    $(popupBox.newElem).empty().append(contents);
                 }
-                popupBox.newElem.setStyle({
+                $(popupBox.newElem).css({
                     padding : '5px ' + horizPadding + 'px',
                     position : 'absolute',
                     top : boxTop,
                     border : borderWidth + 'px solid #DDD',
                     color : '#333',
-                    backgroundColor : '#FFF',
+                    'background-color' : '#FFF',
                     width : boxWidth,
                     height: boxHeight,
-                    boxShadow: '2px 2px 1px #444'
+                    'box-shadow': '2px 2px 1px #444'
                 });
-                if (pageWidth - boxIntWidth > event.element().cumulativeOffset()[0]) {
-                    popupBox.newElem.setStyle({
-                        left : event.element().cumulativeOffset()[0] + 'px'
-                    });
+                if (pageWidth - boxIntWidth > $(event.target).position().left) {
+                    $(popupBox.newElem).css('left', $(event.target).position().left + 'px');
+
                 } else {
-                    popupBox.newElem.setStyle({
+                    $(popupBox.newElem).css({
                         left : '100%',
-                        marginLeft : '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+                        'margin-left' : '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
                     });
                 }
-                document.viewport.getDimensions();
-                if (typeof whereElement === 'string') {
-                    whereElement = $(whereElement);
-                }
-                whereElement.insert(popupBox.newElem);
-                Event.observe(document, 'click', popupBox.close);
+                jqWhereElement.append(popupBox.newElem);
+                $(document).bind('click', popupBox.close);
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
             }
         };

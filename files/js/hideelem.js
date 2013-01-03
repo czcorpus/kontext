@@ -153,59 +153,63 @@
          */
         cmdSwitchQuery : function (resetButtonActions) {
 
-            var qs = $('queryselector'),
-                newid = qs.options[qs.selectedIndex].value,
-                FocusElem = $(newid.substring(0, newid.length - 3)),
-                oldval = FocusElem.value,
+            var jqQs = $('#queryselector'),
+                newid,
+                jqFocusElem,
+                oldval,
                 i,
                 elementId,
                 oldelem,
-                elem,
+                jqElem,
                 date;
 
-            $('conc-form-clear-button').stopObserving('click');
-            if (resetButtonActions[qs.getValue()]) {
-                $('conc-form-clear-button').observe('click', resetButtonActions[qs.getValue()]);
+            newid = jqQs.val();
+            jqFocusElem = $(newid.substring(0, newid.length - 3));
+            oldval = jqFocusElem.val();
+
+            $('#conc-form-clear-button').unbind('click');
+            if (resetButtonActions[jqQs.val()]) {
+                $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
 
             } else {
-                $('conc-form-clear-button').observe('click', function () {
-                    hideElem.clearForm($('mainform'));
+                $('#conc-form-clear-button').bind('click', function () {
+                    context.hideElem.clearForm($('#mainform'));
                 });
             }
 
-            for (i = 0; i < qs.options.length; i += 1) {
-                elementId = qs.options[i].value;
-                elem = $(elementId);
+            for (i = 0; i < jqQs.get(0).options.length; i += 1) {
+                elementId = jqQs.get(0).options[i].value;
+                jqElem = $('#' + elementId);
 
                 if (elementId === newid) {
-                    elem.className = elem.className.replace('hidden', 'visible');
+                    jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
                     oldelem = $(elementId.substring(0, elementId.length - 3));
-                    if (elem.className.search('visible') > -1 && !oldval) {
+                    if (jqElem.hasClass('visible') && !oldval) {
                         oldval = oldelem.value;
                     }
                     oldelem.value = '';
-                    elem.className = elem.className.replace('visible', 'hidden');
+                    jqElem.removeClass('visible').addClass('hidden');
                 }
             }
             // Keep the value of the last query
             if (newid === 'cqlrow' && oldelem.name === 'tag') {
                 if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
-                    FocusElem.value = '[tag="' + oldval + '"]';
+                    jqFocusElem.val('[tag="' + oldval + '"]');
 
                 } else {
-                    FocusElem.value = '';
+                    jqFocusElem.val('');
                 }
 
             } else if (newid === 'tagrow') {
-                FocusElem.value = '';
+                jqFocusElem.val('');
 
             } else {
-                FocusElem.value = oldval;
+                jqFocusElem.val(oldval);
             }
 
-            FocusElem.select();
+            jqFocusElem.select();
             date = new Date();
             date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
             document.cookie = 'query_type=' + newid
@@ -217,31 +221,23 @@
          * @param f
          */
         clearForm : function (f) {
-            var i,
-                e,
-                qs,
-                prevRowType;
+            var prevRowType = $('#queryselector').val();
 
-            qs = $('queryselector');
-            prevRowType = qs.getValue();
-
-            if (document.getElementById('error') !== null) {
-                document.getElementById('error').style.display = 'none';
+            if ($('#error').length === 0) {
+                $('#error').css('display', 'none');
             }
-            f.reset();
-            for (i = 0; i < f.elements.length; i += 1) {
-                e = f.elements[i];
-                if (e.type === 'text') {
-                    e.value = '';
+            $(f).find('input,select').each(function () {
+                if ($(this).attr('type') === 'text') {
+                    $(this).val('');
                 }
-                if (e.name === 'default_attr') {
-                    e.value = '';
+                if ($(this).attr('name') === 'default_attr') {
+                    $(this).val('');
                 }
-                if (e.name === 'lpos' || e.name === 'wpos') {
-                    e.value = '';
+                if ($(this).attr('name') === 'lpos' || $(this).attr('name') === 'wpos') {
+                    $(this).val('');
                 }
-            }
-            qs.setValue(prevRowType);
+            });
+            $('#queryselector').val(prevRowType);
         },
 
         /**
@@ -302,7 +298,7 @@
         selectAllCheckBoxes : function (initiator, name) {
             var i,
                 form,
-                ancestors = initiator.ancestors(),
+                ancestors = $(initiator).parents(),
                 chkStatus,
                 tmp;
 
@@ -312,19 +308,19 @@
                     break;
                 }
             }
-            if (initiator.readAttribute('data-action-type') === '1') {
+            if ($(initiator).attr('data-action-type') === '1') {
                 chkStatus = true;
-                initiator.writeAttribute('data-action-type', 2);
-                tmp = initiator.readAttribute('value');
-                initiator.writeAttribute('value', initiator.readAttribute('data-alt-value'));
-                initiator.writeAttribute('data-alt-value', tmp);
+                $(initiator).attr('data-action-type', 2);
+                tmp = $(initiator).attr('value');
+                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
+                $(initiator).attr('data-alt-value', tmp);
 
-            } else if (initiator.readAttribute('data-action-type') === '2') {
+            } else if ($(initiator).attr('data-action-type') === '2') {
                 chkStatus = false;
-                initiator.writeAttribute('data-action-type', 1);
-                tmp = initiator.readAttribute('value');
-                initiator.writeAttribute('value', initiator.readAttribute('data-alt-value'));
-                initiator.writeAttribute('data-alt-value', tmp);
+                $(initiator).attr('data-action-type', 1);
+                tmp = $(initiator).attr('value');
+                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
+                $(initiator).attr('data-alt-value', tmp);
             }
             if (form !== undefined) {
                 form.select('input[type="checkbox"][name="' + name + '"]').each(function (item) {

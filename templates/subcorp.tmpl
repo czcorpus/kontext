@@ -87,13 +87,11 @@ $_("Subcorpora"):<br/>
 <script type="text/javascript"> 
 
 function update_subcorpinfo(request) {
-    \$('subcorpinfo').innerHTML = request.responseText;
+    \$('#subcorpinfo').innerHTML = request.responseText;
 }
 
 function show_subcorpinfo() {
-    new Ajax.Request('subcorp_info', 
-                     {parameters: Form.serialize('subcorpform'), 
-		      method:'get', onComplete: update_subcorpinfo});
+    $.ajaxGet('subcorp_info', { parameters: Form.serialize('subcorpform') }, update_subcorpinfo);
 }
    
 </script>

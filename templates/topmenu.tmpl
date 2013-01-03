@@ -24,30 +24,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_ca_topbar
 #else
 <script type="text/javascript">
-require(['domReady!', 'popupbox'], function (domReady, popupbox) {
+require(['domReady!', 'popupbox', 'jquery'], function (domReady, popupbox, \$) {
     var msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')',
         msg2 = function (updatedElement) {
-            new Ajax.Request('ajax_get_corp_details?corpname=$corpname', {
-                method : 'get',
-                onSuccess : function (transport) {
-                    updatedElement.update(transport.responseText);
+            $.ajax({
+                url : 'ajax_get_corp_details?corpname=$corpname',
+                success : function (data) {
+                    \$(updatedElement).empty().append(data);
                 },
-                onFailure : function () {
-                    updatedElement.update('$_('Failed to load corpus information.')');
+                error : function () {
+                    \$(updatedElement).empty().append('$_('Failed to load corpus information.')');
                 }
             });
         };
 
-    \$('positions-help-link').observe('click', function (event) {
-        popupbox.createPopupBox(event, 'positions-help', 'toolbar-info', msg1);
-        event.stop();
+    \$('#positions-help-link').bind('click', function (event) {
+        popupbox.createPopupBox(event, 'positions-help', \$('#toolbar-info'), msg1);
+        event.stopPropagation();
     });
-    \$('corpus-desc-link').observe('click', function (event) {
-        popupbox.createPopupBox(event, 'corpus-details-box', 'corpus-desc-link', msg2, {
+    \$('#corpus-desc-link').bind('click', function (event) {
+        popupbox.createPopupBox(event, 'corpus-details-box', \$('#corpus-desc-link'), msg2, {
             'height' : 'auto',
             'width' : 'auto'
         });
-        event.stop();
+        event.stopPropagation();
     });
 });
 </script>

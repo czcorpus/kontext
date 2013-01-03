@@ -62,12 +62,12 @@ var tagLoader = attachTagLoader('syn2010', 16, multiselect, {
     tagDisplay : 'tag-display'
 });
 
-\$('test-button').observe('click', function () {
+\$('#test-button').bind('click', function () {
     // multiselect.exportStatus();
     tagLoader.encodeFormStatus('-');
 });
 
-\$('dump-button').observe('click', function (event) {
+\$('#dump-button').bind('click', function (event) {
    console.log('num selected: ' + multiselect.getNumSelected('block-B'));
 });
 
