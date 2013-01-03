@@ -86,7 +86,7 @@ function fix_detail_frame_on_scrolling() { // IE only
 
 function update_detail_frame(request) {
     var win_height = winH();
-    $('detailframecontent').innerHTML = request.responseText;
+    $('#detailframecontent').innerHTML = request.responseText;
     var detail_height = $('detailframecontent').scrollHeight + 18; // 18 = horiz. sroll bar
     if (detail_height > win_height / 3) {
         detail_height = win_height / 3;
@@ -94,24 +94,24 @@ function update_detail_frame(request) {
     var div_position = win_height - detail_height;
 
     if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion()<8) {
-        $('detailframe').style.position = 'absolute';
-        $('detailframe').style.top = getScrollY() + div_position - 3;
-        if ($('detailframecontent').scrollHeight > win_height / 3) {
-            $('detailframe').style.height = detail_height;
+        $('#detailframe').style.position = 'absolute';
+        $('#detailframe').style.top = getScrollY() + div_position - 3;
+        if ($('#detailframecontent').scrollHeight > win_height / 3) {
+            $('#detailframe').style.height = detail_height;
         }
-        $('detailframe').style.height = detail_height;
-        $('bodytag').style.paddingBottom = detail_height;
-        $('bodytag').style.height = win_height - detail_height;
+        $('#detailframe').style.height = detail_height;
+        $('#bodytag').style.paddingBottom = detail_height;
+        $('#bodytag').style.height = win_height - detail_height;
 
     } else { // normal browsers
-        $('detailframe').style.height = detail_height + 'px';
-        $('detailframe').style.position = 'fixed';
-        $('detailframe').style.top = div_position - 1;
-        $('bodytag').style.paddingBottom = detail_height;
+        $('#detailframe').style.height = detail_height + 'px';
+        $('#detailframe').style.position = 'fixed';
+        $('#detailframe').style.top = div_position - 1;
+        $('#bodytag').style.paddingBottom = detail_height;
     }
-    Event.observe(document, 'click', close_by_outside_click);
-    $('detailframe').observe('click', function (event) {
-        event.stop();
+    $(document).bind('click', close_by_outside_click);
+    $('#detailframe').bind('click', function (event) {
+        event.stopPropagation();
     });
 
 }
@@ -122,20 +122,24 @@ function close_by_outside_click(event) {
 }
 
 function display_in_detail_frame(url, params) {
-    $('minus_sign').firstDescendant().observe('click', function (event) {
+    $($('#minus_sign *:first-child')).bind('click', function (event) {
         hide_detail_frame();
-        event.stop();
+        event.stopPropagation();
     });
-    Event.stopObserving(document, 'click', close_by_outside_click);
+    $(document).unbind('click', close_by_outside_click);
 	var df = $('detailframe');
-	df.setStyle({
+	df.css({
         display : 'block',
         height : '50'
     });
     $('detailframecontent').innerHTML = '';
 	params += '&corpname=' + df.corpname;
-	new Ajax.Request(url, {parameters: params, method:'get',
-			       onComplete: update_detail_frame});
+	$.ajax({
+        url : url,
+        data : params,
+        method:'get',
+        complete: update_detail_frame
+    });
 }
 
 function hide_detail_frame() {
@@ -158,12 +162,11 @@ function full_ref(toknum) {
  * @param linkElem
  */
 function open_speech(linkElem) {
-    var speechURL = linkElem.readAttribute('href'),
+    var speechURL = $(linkElem).attr('href'),
         sound;
 
-    speechURL = linkElem.readAttribute('href');
     require(['audioplayer'], function (ap) {
-        ap.create('audio-wrapper', Element.extend(linkElem), { volume : 90 }).play(speechURL);
+        ap.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     });
 
 

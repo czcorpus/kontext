@@ -5,7 +5,7 @@
         <script type="text/javascript" src="../../files/js/prototype.min.js"></script>
         <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
         <script type="text/javascript">
-            document.observe("dom:loaded", function() {
+            \$(document).ready(function() {
                 var tst = function (item) {
                     var formAncestor,
                         i,
@@ -21,11 +21,11 @@
                         //.reload.value = 1;
                         srch = formAncestor.select('*[name="firstname"]');
                         if (srch.length > 0) {
-                            srch[0].writeAttribute('value', '1');
+                            $(srch[0]).attr('value', '1');
                         }
                         srch = formAncestor.select('*[name="usesubcorp"]');
                         if (srch.length > 0) {
-                            srch[0].writeAttribute('value', '');
+                            $(srch[0]).attr('value', '');
                         }
                         formAncestor.submit();
                     }

@@ -58,7 +58,7 @@
          * @return {String}
          */
         getColumnId : function (element) {
-            return element.readAttribute('id').substr(element.readAttribute('id').length - 1, 1);
+            return $(element).attr('id').substr($(element).attr('id').length - 1, 1);
         },
 
         /**
@@ -66,13 +66,13 @@
          * of these select-boxes.
          */
         init : function () {
-            $('kwic-alignment-box').setStyle({ display : 'table-row' });
-            $$('select.kwic-alignment').each(function (item) {
-                mlkfu.switchAlignment(item.value, mlkfu.getColumnId(item));
+            $('#kwic-alignment-box').css({ display : 'table-row' });
+            $('select.kwic-alignment').each(function () {
+                mlkfu.switchAlignment($(this).val(), mlkfu.getColumnId(this));
             });
-            $$('select.kwic-alignment').each(function (item) {
-                item.observe('change', function (event) {
-                    mlkfu.switchAlignment(event.target.value, mlkfu.getColumnId(item));
+            $('select.kwic-alignment').each(function () {
+                $(this).bind('change', function (event) {
+                    mlkfu.switchAlignment($(event.target).val(), mlkfu.getColumnId(this));
                 });
             });
         },
@@ -93,16 +93,16 @@
                 srch = '<';
                 repl = '>';
             }
-            select = $$("select[name='ml" + columnIdx + "ctx']");
+            select = $("select[name='ml" + columnIdx + "ctx']");
             if (select.length === 1) {
-                select[0].childElements().each(function (item) {
-                    if (item.value === '0~0>0') {
+                select.first().children().each(function () {
+                    if ($(this).val() === '0~0>0') {
                         // This resets the default behaviour which just displays all the KWIC words.
                         // It should be executed only when the page is loaded.
-                        item.value = '0<0';
+                        $(this).val('0<0');
 
                     } else {
-                        item.value = item.value.replace(srch, repl);
+                        $(this).val($(this).val().replace(srch, repl));
                     }
                 });
             }
