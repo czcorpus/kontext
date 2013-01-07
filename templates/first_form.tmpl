@@ -31,8 +31,9 @@ $_("Concordance - First query form")#slurp
         var updForm = function (item) {
             var formAncestor,
                 i,
-                srch;
-            ancestors = \$(item.target).parents();
+                srch,
+                ancestors = \$(item.target).parents();
+        
             for (i = 0; i < ancestors.length; i += 1) {
                 if (ancestors[i].nodeName === 'FORM') {
                     formAncestor = ancestors[i];
