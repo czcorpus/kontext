@@ -1,2 +1,2 @@
 
-version = 'open-2.68ucnk-current'
+version = 'open-2.68ucnk-0.2'
