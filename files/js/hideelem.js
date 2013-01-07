@@ -159,12 +159,12 @@
                 oldval,
                 i,
                 elementId,
-                oldelem,
+                jqOldElem,
                 jqElem,
                 date;
 
             newid = jqQs.val();
-            jqFocusElem = $(newid.substring(0, newid.length - 3));
+            jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
             oldval = jqFocusElem.val();
 
             $('#conc-form-clear-button').unbind('click');
@@ -185,16 +185,16 @@
                     jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
-                    oldelem = $(elementId.substring(0, elementId.length - 3));
+                    jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
                     if (jqElem.hasClass('visible') && !oldval) {
-                        oldval = oldelem.value;
+                        oldval = jqOldElem.val();
                     }
-                    oldelem.value = '';
+                    jqOldElem.val('');
                     jqElem.removeClass('visible').addClass('hidden');
                 }
             }
             // Keep the value of the last query
-            if (newid === 'cqlrow' && oldelem.name === 'tag') {
+            if (newid === 'cqlrow' && jqOldElem.attr('name') === 'tag') {
                 if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
                     jqFocusElem.val('[tag="' + oldval + '"]');
 
@@ -209,11 +209,12 @@
                 jqFocusElem.val(oldval);
             }
 
-            jqFocusElem.select();
             date = new Date();
             date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
             document.cookie = 'query_type=' + newid
                     + '; expires=' + date.toGMTString();
+
+            hideElem.focusCurrentInput();
         },
 
         /**
@@ -369,10 +370,18 @@
          * @param focus
          */
         focusEx : function (focus) {
-            var elem = $(focus);
-            if (elem && elem.select) {
-                elem.select();
+            var jqElem = $(focus);
+            if (jqElem.length > 0 && jqElem.select) {
+                jqElem.select();
             }
+        },
+
+        focusCurrentInput : function () {
+            $('#mainform tr input[type="text"]').each(function () {
+                if ($(this).css('display') !== 'none') {
+                    $(this).focus();
+                }
+            });
         }
     };
 }(window));
