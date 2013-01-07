@@ -48,8 +48,12 @@ function assing_group(grpid, grplabel) {
             params += '&toknum=' + grpmenu.firstparam;
 	    Element.hide($('annot_undo'));
     }
-    new Ajax.Request(method_name, {parameters: params, method: 'get',
-				   onComplete: onCompletefn});
+    $.ajax({
+        url : method_name,
+        data : params,
+        method: 'get',
+	    complete: onCompletefn
+    });
     grpmenu.sourceel.innerHTML = grplabel;
     close_menu(grpmenu);
 }
@@ -60,7 +64,7 @@ function assigned_callback(request) {
 
 function close_menu(grpmenu) {
     grpmenu.style.visibility = 'hidden';
-    Event.stopObserving(grpmenu.sourceel, 'mouseout', cancel_menu)
+    $(grpmenu.sourceel).unbind('mouseout', cancel_menu)
     var element = grpmenu.sourceel;
     while (element.parentNode && (!element.tagName || element.tagName != 'TR'))
         element = element.parentNode;
@@ -96,11 +100,10 @@ function show_groupmenu(element, pos) {
 	grpmenu.style.visibility = 'visible';
 	grpmenu.sourceel = element;
 	grpmenu.firstparam = pos;
-	Event.observe(element, 'mouseout', cancel_menu);
+	$(element).bind('mouseout', cancel_menu);
 	if (pos != 'select') {
 	    highlight_parent_row(element);
         }
-	//Event.stop(window.event);
 	return false;
     }
 }
@@ -116,8 +119,12 @@ function add_new_annotation_label() {
     var params = 'annotconc=' + grpmenu.annotconc 
 		 + '&corpname=' + grpmenu.corpname
                  + '&newlabel=' + newlabelel.value;
-    new Ajax.Request('addlngrouplabel', {parameters: params, method:'get',
-					 onComplete: update_groupmenu});
+    $.ajax({
+        url : 'addlngrouplabel',
+        data: params,
+        method:'get',
+        complete: update_groupmenu
+    });
 }
 
 var current_line;
@@ -226,6 +233,10 @@ function undo_last_action() {
     var params = 'annotconc=' + grpmenu.annotconc 
 		 + '&corpname=' + grpmenu.corpname
                  + '&action=' + grpmenu.actionid;
-    new Ajax.Request('undolngroupaction', {parameters: params, method:'get'});
+    $.ajax({
+        url : 'undolngroupaction',
+        data : params,
+        method:'get'
+    });
     Element.hide($('annot_undo'));
 }

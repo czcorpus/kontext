@@ -38,11 +38,11 @@ $_("Concordance")#slurp
 #end filter
 <script src="$files_path/js/detail.js" type="text/javascript"></script>
 <script type="text/javascript">
-\$(document).observe("dom:loaded", function() {
-  \$\$('a.speech-link').each(function (item) {
-        item.observe('click', function (event) {
+\$(document).ready(function() {
+  \$('a.speech-link').each(function (i, item) {
+        \$(item).bind('click', function (event) {
             open_speech(item);
-            event.stop();
+            event.stopPropagation();
         });
   });
 });

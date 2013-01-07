@@ -36,7 +36,6 @@ $text
 #if $getVar("menupositi", '') == "top"
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}horizontal.css" />
 #end if
-<script src="$files_path/js/prototype.min.js" type="text/javascript"></script>
 <script src="$files_path/js/hideelem.js" type="text/javascript"></script>
 <script src="$files_path/js/bonito.js" type="text/javascript"></script>
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
@@ -50,16 +49,15 @@ $ca_headers
 <script type="text/javascript">
 requirejs.config({
     baseUrl : '../files/js',
-    map: {
-        '*': {
-            'domReady': 'domReady.min'
-        }
+    paths: {
+        'domReady' : './domReady.min',
+        'jquery': './jquery.min'
     }
 });
 
 define('win', [], function () { return window; });
 
-document.observe("dom:loaded", function() {
+require(['domReady!', 'jquery'], function (domReady, \$) {
     var multiselect,
         tagLoader;
 
@@ -69,7 +67,6 @@ document.observe("dom:loaded", function() {
     #if $focus
     hideElem.focusEx($focus);
     #end if
-
 });
 
 #if $getVar('ga_identifier', '')
@@ -182,17 +179,19 @@ $corp_sel
 
 #def tt_sel
 ## Text Types
-## requires util.js effects.js and controls.js
+## requires util.js
   <div class="auto_complete" id="subcorp_auto_complete"></div>
   #set $showhiddenlist = $getVar("showhidden", '').split(".")
   <script type="text/javascript">
-      document.observe('dom:loaded', function () {
-        \$\$('input[class="select-all"]').each(function (item) {
-            item.observe('click', function (event) {
-                hideElem.selectAllCheckBoxes(event.element(), event.element().readAttribute('data-item-name'));
+  require(['jquery'], function (\$) {
+      \$(document).ready(function () {
+        \$('input[class="select-all"]').each(function (i, item) {
+            \$(item).bind('click', function (event) {
+                hideElem.selectAllCheckBoxes(event.target, event.target.readAttribute('data-item-name'));
             });
         });
       });
+  });
   </script>
   <table class="text-type-params"><tr><td colspan="4" align="right">
   #for $nn in $TextTypeSel['Normslist']
@@ -271,12 +270,6 @@ $corp_sel
         <tr><td>
    <input id="scaid_$l['name']" name="sca_$l['name']"
            type="text" size="$l['textboxlength']" />
-   <script type="text/javascript">
-       new Ajax.Autocompleter('scaid_$l['name']',
-         'subcorp_auto_complete', 'attr_vals',
-         {parameters: '$corpname_url;avattr=$l['name']',
-         paramName: 'avpat', tokens: '|'})
-   </script>
    </td></tr>
       #end if
       #if $l.attr_doc

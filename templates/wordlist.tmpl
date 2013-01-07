@@ -82,7 +82,7 @@ $_("Word list")#slurp
 <script type="text/javascript"> 
 
 function update_processbar_width(request) {
-    $('processbar').style.width = request.responseText;
+    $('#processbar').style.width = request.responseText;
     if (request.responseText == '100%') {
         window.location.reload(true);
     }
@@ -91,11 +91,13 @@ function update_processbar_width(request) {
 function update_processbar() {
     var params = '$corpname_url&amp;subcname=$usesubcorp' 
                  + '&amp;attrname=$wlattr'
-    new Ajax.Request('wordlist_process', {parameters: params, method:'get',
-				         onComplete: update_processbar_width});
-    
+    \$.ajax({
+        url : 'wordlist_process',
+        data : params,
+        method:'get',
+        complete: update_processbar_width
+    });
 }
-
 </script>
 #end if
 

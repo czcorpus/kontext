@@ -18,9 +18,9 @@
 
 /**
  * This library provides a clickable 'tag generator' widget.
- * The library depends on Prototype.js version 1.7+ and multiselect.js
+ * The library depends on multiselect.js - TODO use require.js
  */
-define(function () {
+define(['jquery'], function ($) {
     'use strict';
 
     var createTagLoader,
@@ -125,7 +125,6 @@ define(function () {
                     i;
 
                 data = data || tagLoader.multiSelectComponent.exportStatus();
-
                 for (prop in data) {
                     if (data.hasOwnProperty(prop)) {
                         positionCode = [];
@@ -223,12 +222,12 @@ define(function () {
              *
              */
             updateBacklinks : function () {
-                tagLoader.tagDisplay.select('a.backlink').each(function (item) {
-                    item.observe('click', function () {
-                        var liElms = tagLoader.multiSelectComponent.ulElement.select('li:nth-child('
-                                + (parseInt(item.readAttribute('data-block-idx'), 10) + 1) + ')');
+                $(tagLoader.tagDisplay).find('a.backlink').each(function () {
+                    $(this).bind('click', function () {
+                        var liElms = $(tagLoader.multiSelectComponent.ulElement).find('li:nth-child('
+                                + (parseInt($(this).attr('data-block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
-                            tagLoader.multiSelectComponent.flipBlockVisibility(liElms[0].readAttribute('data-block-id'));
+                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).attr('data-block-id'));
                         }
                     });
                 });
@@ -272,21 +271,21 @@ define(function () {
 
                 blockSwitchEventHandlers = {
                     mouseover : function (event) {
-                        var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                        var blockId = $(event.target.parentNode).attr('data-block-id'),
                             items;
 
-                        items = tagLoader.tagDisplay.select('*');
-                        if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
-                            items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink called');
+                        items = $(tagLoader.tagDisplay).find('*');
+                        if (items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
+                            $(items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink called');
                         }
                     },
                     mouseout : function (event) {
-                        var blockId = event.element().parentNode.readAttribute('data-block-id'),
+                        var blockId = $(event.target.parentNode).attr('data-block-id'),
                             items;
 
-                        items = tagLoader.tagDisplay.select('*');
-                        if (items[tagLoader.multiSelectComponent.getBlockOrder(blockId)] !== undefined) {
-                            items[tagLoader.multiSelectComponent.getBlockOrder(blockId)].writeAttribute('class', 'backlink');
+                        items = $(tagLoader.tagDisplay).find('*');
+                        if (items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
+                            $(items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink');
                         }
                     }
                 };
@@ -295,20 +294,18 @@ define(function () {
                     tagLoader.updateMultiSelectValues(data, null, function (blockId) {
                         if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
                                 && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
-                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ opacity : 0.4 });
-                            tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                                item.writeAttribute('disabled', 'disabled');
-                            });
+                            $(tagLoader.multiSelectComponent.blockSwitchLinks[blockId]).css('opacity', 0.4);
+                            $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]')
+                                    .attr('disabled', 'disabled');
                         }
                     });
                 };
 
                 itemClickCallback = function () {
                     var pattern = tagLoader.formStatusToPlainText();
-
                     tagLoader.loadPatternVariants(pattern, lockPreviousItems);
-                    tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
-                    tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
+                    $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
+                    $(tagLoader.tagDisplay).empty().append(tagLoader.formStatusToHTML());
                     tagLoader.updateBacklinks();
 
                 };
@@ -329,9 +326,9 @@ define(function () {
 
                 if (data.hasOwnProperty('error')) {
                     errorBox = document.createElement('li');
-                    errorBox.writeAttribute('class', 'error-box');
-                    errorBox.update(data.error);
-                    tagLoader.multiSelectComponent.ulElement.insert(errorBox);
+                    $(errorBox).attr('class', 'error-box');
+                    $(errorBox).empty().append(data.error);
+                    $(tagLoader.multiSelectComponent.ulElement).append(errorBox);
 
                 } else {
                     for (i = 0; i < getResponseLength(data.tags); i += 1) {
@@ -386,16 +383,16 @@ define(function () {
              */
             loadInitialVariants : function (callback) {
                 var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName,
-                    params = {},
-                    ajax;
+                    params = {};
 
                 if (tagLoader.initialValues === null) {
-                    ajax = new Ajax.Request(url, {
-                        parameters : params,
+                    $.ajax({
+                        url : url,
+                        data : params,
                         method : 'get',
                         // requestHeaders: {Accept: 'application/json'},
-                        onComplete : function (data) {
-                            tagLoader.initialValues = data.responseText.evalJSON();
+                        complete : function (data) {
+                            tagLoader.initialValues = $.parseJSON(data.responseText);
                             callback(tagLoader.initialValues);
                         }
                     });
@@ -412,15 +409,15 @@ define(function () {
              */
             loadPatternVariants : function (pattern, callback) {
                 var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName + '&pattern=' + pattern,
-                    params = {},
-                    ajax;
+                    params = {};
 
-                ajax = new Ajax.Request(url, {
-                    parameters : params,
+                $.ajax({
+                    url : url,
+                    data : params,
                     method : 'get',
                     // requestHeaders: {Accept: 'application/json'},
-                    onComplete : function (data) {
-                        callback(data.responseText.evalJSON());
+                    complete : function (data) {
+                        callback($.parseJSON(data.responseText));
                     }
                 });
             },
@@ -439,11 +436,11 @@ define(function () {
                 });
                 for (prop in tagLoader.multiSelectComponent.blockSwitchLinks) {
                     if (tagLoader.multiSelectComponent.blockSwitchLinks.hasOwnProperty(prop)) {
-                        tagLoader.multiSelectComponent.blockSwitchLinks[prop].setStyle({ opacity : 1 });
+                        $(tagLoader.multiSelectComponent.blockSwitchLinks[prop]).css('opacity', 1);
                     }
                 }
-                tagLoader.tagDisplay.update('.*');
-                tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
+                $(tagLoader.tagDisplay).empty().append('.*');
+                $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
             },
 
             /**
@@ -456,18 +453,18 @@ define(function () {
 
                 updateActiveBlock = function (blockId, prevSelects) {
                     if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
-                        tagLoader.multiSelectComponent.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
+                        $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]').each(function () {
                             if (prevSelects.hasOwnProperty(blockId)) {
-                                item.checked = (prevSelects[blockId].indexOf(item.readAttribute('value')) === -1);
+                                $(this).attr('checked', (prevSelects[blockId].indexOf($(this).attr('value')) === -1));
 
                             }
-                            item.disabled = false;
+                            $(this).attr('disabled', false);
                         });
                         if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
-                            tagLoader.multiSelectComponent.blockSwitchLinks[blockId].setStyle({ fontWeight : 'normal'});
+                            $(tagLoader.multiSelectComponent.blockSwitchLinks[blockId]).css('font-weight', 'normal');
                         }
-                        tagLoader.hiddenElm.writeAttribute('value', tagLoader.formStatusToPlainText('.'));
-                        tagLoader.tagDisplay.update(tagLoader.formStatusToHTML());
+                        $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
+                        $(tagLoader.tagDisplay).empty().append(tagLoader.formStatusToHTML());
                         tagLoader.updateBacklinks();
                     }
                 };
@@ -498,8 +495,8 @@ define(function () {
         tagLoader.corpusName = corpusName;
         tagLoader.hiddenElm = hiddenElm;
         tagLoader.tagDisplay = tagDisplay;
-        tagLoader.tagDisplay.writeAttribute('class', 'tag-display-box');
-        tagLoader.tagDisplay.update('.*');
+        $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
+        $(tagLoader.tagDisplay).empty().append('.*');
 
         for (i = 0; i < numTagPos; i += 1) {
             tagLoader.selectedValues[i] = '-';
@@ -533,26 +530,16 @@ define(function () {
         updateConcordanceQuery = function () {
             var pattern = tagLoader.formStatusToPlainText('.');
             if (opt.tagDisplay) {
-                opt.tagDisplay.update(pattern);
+                $(opt.tagDisplay).empty().append(pattern);
             }
             tagLoader.lastPattern = pattern;
             if (tagLoader.hiddenElm) {
-                tagLoader.hiddenElm.setValue(pattern);
+                $(tagLoader.hiddenElm).val(pattern);
             }
         };
 
-        if (typeof (opt.hiddenElm) === 'string') {
-            hiddenElm = $(opt.hiddenElm);
-
-        } else {
-            hiddenElm = opt.hiddenElm;
-        }
-        if (typeof (opt.tagDisplay) === 'string') {
-            tagDisplay = $(opt.tagDisplay);
-
-        } else {
-            tagDisplay = opt.tagDisplay;
-        }
+        hiddenElm = $(opt.hiddenElm).get(0);
+        tagDisplay = $(opt.tagDisplay).get(0);
 
         tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, tagDisplay, multiSelectComponent);
         tagLoader.loadInitialVariants(function (data) {
@@ -562,13 +549,13 @@ define(function () {
             opt.resetButton = $(opt.resetButton);
         }
         if (opt.resetButton) {
-            opt.resetButton.observe('click', tagLoader.resetButtonClick);
+            $(opt.resetButton).bind('click', tagLoader.resetButtonClick);
         }
         if (typeof (opt.backButton) === 'string') {
             opt.backButton = $(opt.backButton);
         }
         if (opt.backButton) {
-            opt.backButton.observe('click', tagLoader.backButtonClick);
+            $(opt.backButton).bind('click', tagLoader.backButtonClick);
         }
 
         updateConcordanceQuery();

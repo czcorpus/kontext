@@ -26,14 +26,6 @@ $_("Create Subcorpus")#slurp
 
 #attr focus = "'subcname'"
 
-#def headers
-#filter WebSafe
-<script src="$files_path/js/util.js" type="text/javascript"></script>
-<script src="$files_path/js/effects.js" type="text/javascript"></script>
-<script src="$files_path/js/controls.js" type="text/javascript"></script>
-#end filter
-#end def
-
 #def bodyonload
 var updForm,
     switchToInputMethod,
@@ -43,7 +35,7 @@ updForm = function (item) {
     var formAncestor,
     i,
     srch,
-    ancestors = item.currentTarget.ancestors();
+    ancestors = \$(item.currentTarget).parents();
 
     for (i = 0; i < ancestors.length; i += 1) {
         if (ancestors[i].nodeName === 'FORM') {
@@ -52,13 +44,13 @@ updForm = function (item) {
         }
     }
     if (formAncestor !== undefined) {
-        srch = formAncestor.select('*[name="reload"]');
+        srch = \$(formAncestor).find('*[name="reload"]');
         if (srch.length > 0) {
-            srch[0].writeAttribute('value', '1');
+            \$(srch[0]).attr('value', '1');
         }
-        srch = formAncestor.select('*[name="usesubcorp"]');
+        srch = \$(formAncestor).find('*[name="usesubcorp"]');
         if (srch.length > 0) {
-            srch[0].writeAttribute('value', '');
+            \$(srch[0]).attr('value', '');
         }
         formAncestor.submit();
     }
@@ -66,16 +58,16 @@ updForm = function (item) {
 
 switchToInputMethod = function (value) {
     if (value === 'raw') {
-        \$('subc-spec-row').setStyle({ display : 'table-row' });
-        \$\$('table.text-type-params').each(function (item) {
-            item.setStyle({ display : 'none'});
+        \$('#subc-spec-row').css({ display : 'table-row' });
+        \$('table.text-type-params').each(function (i, item) {
+            \$(item).css({ display : 'none'});
         });
         showWithinHint({ element : function () { return \$('within-struct-selector'); } });
 
     } else if (value === 'gui') {
-        \$('subc-spec-row').setStyle({ display : 'none' });
-        \$\$('table.text-type-params').each(function (item) {
-            item.setStyle({ display : 'table'});
+        \$('#subc-spec-row').css({ display : 'none' });
+        \$('table.text-type-params').each(function (i, item) {
+            \$(item).css({ display : 'table'});
         });
         if (\$('within-select-hint-row')) {
             \$('within-select-hint-row').remove();
@@ -98,20 +90,20 @@ showWithinHint = function (event) {
     if (\$('within-select-hint-row')) {
         \$('within-select-hint-row').remove();
     }
-    \$('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td><div style="width: 70%">$_('available attributes'): <strong>' + findValueOption(event.element().getValue()) + '</strong></div></td>' });
+    \$('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td><div style="width: 70%">$_('available attributes'): <strong>' + findValueOption(\$(event.element()).val()) + '</strong></div></td>' });
 };
 
 
-createTreeComponent(\$\$('form[action="subcorp"] select[name="corpname"]'), null, updForm);
-\$('subc-spec-row').setStyle({ display : 'none' });
+createTreeComponent(\$('form[action="subcorp"] select[name="corpname"]'), null, updForm);
+\$('subc-spec-row').css({ display : 'none' });
 
-\$\$('input.method-select').each(function (item) {
-    item.observe('click', function (event) {
-        switchToInputMethod(event.element().getValue());
+\$('input.method-select').each(function (i, item) {
+    \$(item).bind('click', function (event) {
+        switchToInputMethod(\$(event.target).val());
     });
 });
 
-\$('within-struct-selector').observe('change', showWithinHint);
+\$('#within-struct-selector').bind('change', showWithinHint);
     
 switchToInputMethod('$method');
 

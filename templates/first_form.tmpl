@@ -32,14 +32,14 @@ $_("Concordance - First query form")#slurp
         tagBuilderComponent,
         concFormResetButtonActions;
 
-        if (\$('tag-builder-widget')) {
+        if (\$('#tag-builder-widget')) {
             msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
                     { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
             tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
                 resetButton : null,
                 backButton : null,
-                hiddenElm : 'tag',
-                tagDisplay : 'tag-display'
+                hiddenElm : \$('#tag'),
+                tagDisplay : \$('#tag-display')
             });
         }
 
@@ -51,7 +51,7 @@ $_("Concordance - First query form")#slurp
         hideElem.loadHideElementStoreSimple();
         hideElem.loadHideElementStore('${files_path}');
 
-        \$('queryselector').observe('change', function () {
+        \$('#queryselector').bind('change', function () {
             hideElem.cmdSwitchQuery(concFormResetButtonActions);
         });
 
@@ -61,9 +61,8 @@ $_("Concordance - First query form")#slurp
         var updForm = function (item) {
             var formAncestor,
                 i,
-                srch,
-            ancestors = item.element().ancestors();
-
+                srch;
+            ancestors = \$(item.target).parents();
             for (i = 0; i < ancestors.length; i += 1) {
                 if (ancestors[i].nodeName === 'FORM') {
                     formAncestor = ancestors[i];
@@ -71,28 +70,20 @@ $_("Concordance - First query form")#slurp
                 }
             }
             if (formAncestor !== undefined) {
-                srch = formAncestor.select('*[name="reload"]');
+                srch = \$(formAncestor).find('*[name="reload"]');
                 if (srch.length > 0) {
-                    srch[0].writeAttribute('value', '1');
+                    \$(srch[0]).attr('value', '1');
                 }
-                srch = formAncestor.select('*[name="usesubcorp"]');
+                srch = \$(formAncestor).find('*[name="usesubcorp"]');
                 if (srch.length > 0) {
-                    srch[0].writeAttribute('value', '');
+                    \$(srch[0]).attr('value', '');
                 }
                 formAncestor.submit();
             }
         }
-        tc.createTreeComponent(\$\$('form[action="first"] select[name="corpname"]'), null, updForm);
+        tc.createTreeComponent(\$('form[action="first"] select[name="corpname"]'), null, updForm);
     });
 
-#end def
-
-#def headers
-#filter WebSafe
-<script src="$files_path/js/util.js" type="text/javascript"></script>
-<script src="$files_path/js/effects.js" type="text/javascript"></script>
-<script src="$files_path/js/controls.js" type="text/javascript"></script>
-#end filter
 #end def
 
 #def left_submenu_help
