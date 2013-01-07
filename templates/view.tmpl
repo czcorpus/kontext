@@ -35,22 +35,24 @@ $_("Concordance")#slurp
 <script src="$files_path/js/annotconc.js" type="text/javascript"></script>
 #end if
 <script type="text/javascript">
-document.observe("dom:loaded", function() {
-    \$('detailframe').corpname = "$corpname";
+require(['domReady!', 'jquery'], function (domReady, $) {
+    \$('#detailframe').attr('data-corpname', "$corpname");
     #if $can_annotate and $annotconc
-    Event.observe('conclines', 'mousedown', handle_selection);
+    \$('#conclines').observe('mousedown', handle_selection);
     #end if
-    \$\$('a.speech-link').each(function (item) {
-        item.observe('click', function (event) {
-            open_speech(item);
-            event.stop();
+    \$('a.speech-link').each(function () {
+        \$(this).bind('click', function (event) {
+            open_speech(this);
+            event.stopPropagation();
+            return false;
         });
     });
 
     soundManager.setup({
         url: '../files/misc/soundmanager2/',
         flashVersion: 9,
-        debugMode : false
+        debugMode : false,
+        preferFlash : false
     });
 });
 </script>
@@ -161,9 +163,9 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 </table>
 </div>
 <script type="text/javascript">
-\$('groupmenu').annotconc = "$annotconc";
-\$('groupmenu').corpname = "$corpname";
-\$('groupmenu').queryparams = "$q";
+\$('#groupmenu').annotconc = "$annotconc";
+\$('#groupmenu').corpname = "$corpname";
+\$('#groupmenu').queryparams = "$q";
 </script>
 #end if
 #end if

@@ -12,8 +12,12 @@ Features
 ========
 
   * miscellaneous bug fixes
-  * removed legacy code required by Python 2.5 and older
-  * improved logging and error processing
+  * code-level changes
+
+    * removed legacy code required by Python 2.5 and older
+    * modularized JavaScript code via RequireJS
+    * improved logging and error processing
+
   * enhanced user interface
 
     - corpora information

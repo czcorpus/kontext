@@ -49,7 +49,7 @@ var updForm = function (item) {
     var formAncestor,
     i,
     srch,
-    ancestors = item.currentTarget.ancestors();
+    ancestors = \$(item.target).parents();
 
     for (i = 0; i < ancestors.length; i += 1) {
         if (ancestors[i].nodeName === 'FORM') {
@@ -58,18 +58,18 @@ var updForm = function (item) {
         }
     }
     if (formAncestor !== undefined) {
-        srch = formAncestor.select('*[name="reload"]');
+        srch = \$(formAncestor).find('*[name="reload"]');
         if (srch.length > 0) {
-            srch[0].writeAttribute('value', '1');
+            \$(srch[0]).attr('value', '1');
         }
-        srch = formAncestor.select('*[name="usesubcorp"]');
+        srch = \$(formAncestor).find('*[name="usesubcorp"]');
         if (srch.length > 0) {
-            srch[0].writeAttribute('value', '');
+            \$(srch[0]).attr('value', '');
         }
         formAncestor.submit();
     }
 }
-createTreeComponent(\$\$('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
+createTreeComponent(\$('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
 #end filter
 #end def
 

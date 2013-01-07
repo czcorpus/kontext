@@ -67,51 +67,65 @@ function getIEVersion() {
 function fix_detail_frame_on_scrolling() { // IE only
     if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion() < 8) {
         var win_height = winH();
-        var detail_height = $('detailframe').scrollHeight;
+        var detail_height = $('#detailframe').prop('scrollHeight');
         if (detail_height > win_height / 3) {
             detail_height = win_height / 3;
         }
         var div_position = win_height - detail_height;
         if (navigator.appName == "Microsoft Internet Explorer") {
-            $('detailframe').style.position = 'absolute';
-            $('detailframe').style.top = getScrollY() + div_position - 3;
-            if ($('detailframecontent').scrollHeight > win_height / 3) {
-                $('detailframe').style.height = detail_height;
+            $('#detailframe').css({
+                'position' : 'absolute',
+                'top' : getScrollY() + div_position - 3
+            });
+            if ($('#detailframecontent').prop('scrollHeight') > win_height / 3) {
+                $('#detailframe').css('height', detail_height);
             }
-            $('bodytag').style.paddingBottom = detail_height;
-            $('bodytag').style.height = win_height - detail_height;
+            $('#bodytag').css({
+                'padding-bottom' : detail_height,
+                'height' : win_height - detail_height
+            });
         }
     }
 }
 
 function update_detail_frame(request) {
-    var win_height = winH();
-    $('detailframecontent').innerHTML = request.responseText;
-    var detail_height = $('detailframecontent').scrollHeight + 18; // 18 = horiz. sroll bar
+    var win_height,
+        detail_height,
+        div_position;
+
+    win_height = winH();
+    $('#detailframecontent').html(request.responseText);
+    detail_height = $('#detailframecontent').prop('scrollHeight') + 18; // 18 = horiz. sroll bar
     if (detail_height > win_height / 3) {
         detail_height = win_height / 3;
     }
-    var div_position = win_height - detail_height;
+    div_position = win_height - detail_height;
 
-    if (navigator.appName == "Microsoft Internet Explorer" & getIEVersion()<8) {
-        $('detailframe').style.position = 'absolute';
-        $('detailframe').style.top = getScrollY() + div_position - 3;
-        if ($('detailframecontent').scrollHeight > win_height / 3) {
-            $('detailframe').style.height = detail_height;
+    if (navigator.appName == "Microsoft Internet Explorer" && getIEVersion() < 8) {
+        $('#detailframe').css({
+            'position' : 'absolute',
+            'top' : getScrollY() + div_position - 3
+        });
+        if ($('#detailframecontent').prop('scrollHeight') > win_height / 3) {
+            $('#detailframe').css('height', detail_height);
         }
-        $('detailframe').style.height = detail_height;
-        $('bodytag').style.paddingBottom = detail_height;
-        $('bodytag').style.height = win_height - detail_height;
+        $('#detailframe').css('height', detail_height);
+        $('#bodytag').css({
+            'padding-bottom' : detail_height,
+            'height' : win_height - detail_height
+        });
 
     } else { // normal browsers
-        $('detailframe').style.height = detail_height + 'px';
-        $('detailframe').style.position = 'fixed';
-        $('detailframe').style.top = div_position - 1;
-        $('bodytag').style.paddingBottom = detail_height;
+        $('#detailframe').css({
+            'height' : detail_height + 'px',
+            'position' : 'fixed',
+            'top' : div_position - 1
+        });
+        $('#bodytag').css('padding-bottom', detail_height);
     }
-    Event.observe(document, 'click', close_by_outside_click);
-    $('detailframe').observe('click', function (event) {
-        event.stop();
+    $(document).bind('click', close_by_outside_click);
+    $('#detailframe').bind('click', function (event) {
+        event.stopPropagation();
     });
 
 }
@@ -122,26 +136,34 @@ function close_by_outside_click(event) {
 }
 
 function display_in_detail_frame(url, params) {
-    $('minus_sign').firstDescendant().observe('click', function (event) {
+    var jqDetailFrame;
+
+    $('#minus_sign *:first-child').bind('click', function (event) {
         hide_detail_frame();
-        event.stop();
+        event.stopPropagation();
     });
-    Event.stopObserving(document, 'click', close_by_outside_click);
-	var df = $('detailframe');
-	df.setStyle({
+    $(document).unbind('click', close_by_outside_click);
+	jqDetailFrame = $('#detailframe');
+    jqDetailFrame.css({
         display : 'block',
         height : '50'
     });
-    $('detailframecontent').innerHTML = '';
-	params += '&corpname=' + df.corpname;
-	new Ajax.Request(url, {parameters: params, method:'get',
-			       onComplete: update_detail_frame});
+    $('#detailframecontent').empty();
+	params += '&corpname=' + jqDetailFrame.attr('data-corpname');
+	$.ajax({
+        url : url,
+        data : params,
+        method:'get',
+        complete: update_detail_frame
+    });
 }
 
 function hide_detail_frame() {
-	$('detailframe').style.display='none'; 
-        if (navigator.appName == "Microsoft Internet Explorer") { $('bodytag').style.height = winH(); }
-	$('bodytag').style.paddingBottom='0px';
+	$('#detailframe').css('display', 'none');
+    if (navigator.appName == "Microsoft Internet Explorer") {
+        $('#bodytag').css('height', winH());
+    }
+	$('#bodytag').css('padding-bottom', 0);
 }
 
 function wide_context(toknum, hitlen) {
@@ -158,14 +180,10 @@ function full_ref(toknum) {
  * @param linkElem
  */
 function open_speech(linkElem) {
-    var speechURL = linkElem.readAttribute('href'),
+    var speechURL = $(linkElem).attr('href'),
         sound;
 
-    speechURL = linkElem.readAttribute('href');
     require(['audioplayer'], function (ap) {
-        ap.create('audio-wrapper', Element.extend(linkElem), { volume : 90 }).play(speechURL);
+        ap.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     });
-
-
-
 }

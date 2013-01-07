@@ -16,10 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- * This library depends on Prototype.js version 1.7+.
- */
-define(function () {
+
+define(['jquery'], function ($) {
     'use strict';
 
     /**
@@ -45,10 +43,11 @@ define(function () {
              */
             findSubtree : function (elm) {
                 var i,
-                    children = elm.childElements();
+                    children = $(elm).children();
+
                 for (i = 0; i < children.length; i += 1) {
-                    if (children[i].tagName === 'UL') {
-                        return children[i];
+                    if (children.get(i).tagName === 'UL') {
+                        return children.get(i);
                     }
                 }
                 return null;
@@ -62,14 +61,16 @@ define(function () {
              * @param expSymbolWrapper element where the state signalling symbol is
              */
             switchSubtree : function (ulElement, expSymbolWrapper) {
-                var style = ulElement.getStyle('display');
+                var jqUlElement = $(ulElement),
+                    style = jqUlElement.css('display');
+
                 if (style === 'block') {
-                    ulElement.setStyle({ display : 'none' });
-                    expSymbolWrapper.update('&#x25BA;&nbsp;');
+                    jqUlElement.css('display', 'none');
+                    $(expSymbolWrapper).empty().append('&#x25BA;&nbsp;');
 
                 } else {
-                    ulElement.setStyle({ display : 'block' });
-                    expSymbolWrapper.update('&#x25BC;&nbsp;');
+                    jqUlElement.css('display', 'block');
+                    $(expSymbolWrapper).empty().append('&#x25BC;&nbsp;');
                 }
             },
 
@@ -79,38 +80,30 @@ define(function () {
              * @param rootUl root UL element. It could be either a prototype.js element or an ID
              */
             init : function (rootUl) {
-                if (typeof (rootUl) === 'string') { // assuming rootUl is ID
-                    rootUl = $(rootUl);
-                }
-                rootUl.setStyle({
-                    listStyleType : 'none'
-                });
-                rootUl.select('ul').each(function (item) {
-                    item.setStyle({
-                        listStyleType : 'none'
-                    });
-                });
-                rootUl.select('li').each(function (item) {
-                    var subtree = treeComponent.findSubtree(item),
+                var jqRootUl = $(rootUl);
+                jqRootUl.css('list-style-type', 'none');
+                jqRootUl.find('ul').css('list-style-type', 'none');
+                jqRootUl.find('li').each(function () {
+                    var subtree = treeComponent.findSubtree(this),
                         newSpan,
-                        newLink;
+                        jqNewLink;
 
                     if (subtree !== null) {
-                        newLink = Element.extend(document.createElement('a'));
-                        newLink.writeAttribute('class', 'tree-expand');
-                        newLink.writeAttribute('href', '#');
-                        newSpan = Element.extend(document.createElement('span'));
-                        newSpan.update('&#x25BA;&nbsp;');
-                        newLink.insert(newSpan);
-                        item.insert({ top : newLink });
-                        newLink.setStyle({
-                            textDecoration : 'none'
+                        jqNewLink = $(document.createElement('a'));
+                        jqNewLink.attr({
+                            'class' : 'tree-expand',
+                            'href' : '#'
                         });
-                        newLink.observe('click', function (event) {
+                        newSpan = document.createElement('span');
+                        $(newSpan).empty().append('&#x25BA;&nbsp;');
+                        jqNewLink.append(newSpan);
+                        $(this).prepend(jqNewLink.get(0));
+                        jqNewLink.css('text-decoration', 'none');
+                        jqNewLink.bind('click', function (event) {
                             if (subtree !== null) {
                                 treeComponent.switchSubtree(subtree, newSpan);
                             }
-                            event.stop();
+                            event.stopPropagation();
                         });
                         treeComponent.switchSubtree(subtree, newSpan);
                     }
@@ -137,55 +130,56 @@ define(function () {
                     foundElm,
                     newLi,
                     newUl,
-                    newLink;
+                    jqNewLink;
 
-                rootElm.childElements().each(function (item) {
-                    if (item.readAttribute('data-path') === currPathItem) {
-                        foundElm = item;
+                $(rootElm).children().each(function () {
+                    if ($(this).attr('data-path') === currPathItem) {
+                        foundElm = this;
                         return;
                     }
                 });
                 if (foundElm === undefined) {
-                    newLi = Element.extend(document.createElement('li'));
-                    newLi.writeAttribute('data-path', currPathItem);
-                    rootElm.insert(newLi);
+                    newLi = document.createElement('li');
+                    $(newLi).attr('data-path', currPathItem);
+                    $(rootElm).append(newLi);
 
                     if (pathItems.length > 0) {
-                        newUl = Element.extend(document.createElement('ul'));
-                        newLi.insert(currPathItem);
-                        newLi.insert(newUl);
+                        newUl = document.createElement('ul');
+                        $(newLi).append(currPathItem);
+                        $(newLi).append(newUl);
                         selectParser.findUlPath(pathItems, itemTitle, itemDesc, newUl, button, customCallback);
 
                     } else {
-                        newLink = Element.extend(document.createElement('a'));
-                        newLink.writeAttribute('href', '#');
-                        newLink.writeAttribute('data-id', currPathItem);
+                        jqNewLink = $(document.createElement('a'));
+                        jqNewLink.attr('href', '#');
+                        jqNewLink.attr('data-id', currPathItem);
                         if (itemDesc) {
-                            newLink.writeAttribute('title', itemDesc);
+                            jqNewLink.attr('title', itemDesc);
                         }
-                        newLink.insert(itemTitle);
-                        newLink.observe('click', function (event) {
-                            selectParser.hiddenInput.setValue(currPathItem);
-                            button.update(itemTitle);
+                        jqNewLink.append(itemTitle);
+                        jqNewLink.bind('click', function (event) {
+                            $(selectParser.hiddenInput).val(currPathItem);
+                            $(button).empty().append(itemTitle);
                             button.click();
                             if (customCallback !== undefined) {
                                 customCallback(event);
                             }
-                            event.stop();
+                            event.stopPropagation();
                         });
-                        newLi.insert(newLink);
+                        $(newLi).append(jqNewLink);
                     }
 
                 } else {
-                    selectParser.findUlPath(pathItems, itemTitle, itemDesc, foundElm.firstDescendant(), button, customCallback);
+                    selectParser.findUlPath(pathItems, itemTitle, itemDesc, $(foundElm).children().get(0), button, customCallback);
                 }
             },
 
             parseSelectOptions : function (selectBoxId, button, customCallback) {
                 var splitPath,
-                    rootUl = Element.extend(document.createElement('ul'));
-                $(selectBoxId).childElements().each(function (item) {
-                    var path = item.readAttribute('data-path');
+                    rootUl = document.createElement('ul');
+
+                $(selectBoxId).children().each(function () {
+                    var path = $(this).attr('data-path');
                     if (path.indexOf('/') === 0) {
                         path = path.substring(1);
                     }
@@ -193,10 +187,10 @@ define(function () {
                         path = path.substr(0, path.length - 1);
                     }
                     splitPath = path.split('/');
-                    splitPath.push(item.readAttribute('value'));
-                    selectParser.findUlPath(splitPath, getElementText(item), item.readAttribute('title'), rootUl, button, customCallback);
+                    splitPath.push($(this).attr('value'));
+                    selectParser.findUlPath(splitPath, getElementText(this), $(this).attr('title'), rootUl, button, customCallback);
                 });
-                rootUl.writeAttribute('class', 'tree-component');
+                $(rootUl).attr('class', 'tree-component');
                 return rootUl;
             }
         };
@@ -217,16 +211,18 @@ define(function () {
         function getTitleOfSelectedItem(selectBoxElement) {
             var descendants,
                 currValue = null,
-                i;
-            if (selectBoxElement.getValue()) {
-                currValue = selectBoxElement.getValue();
+                i,
+                jqSelectBoxElement = $(selectBoxElement);
+
+            if (jqSelectBoxElement.val()) {
+                currValue = jqSelectBoxElement.val();
 
             } else {
-                currValue = selectBoxElement.firstDescendant().readAttribute('value');
+                currValue = jqSelectBoxElement.children().first().val();
             }
-            descendants = selectBoxElement.descendants();
+            descendants = jqSelectBoxElement.children();
             for (i = 0; i < descendants.length; i += 1) {
-                if (descendants[i].readAttribute('value') === currValue) {
+                if ($(descendants[i]).val() === currValue) {
                     return getElementText(descendants[i]);
                 }
             }
@@ -234,32 +230,35 @@ define(function () {
         }
 
         function expandSelected(treeComponentInstance, currentValue, rootElm) {
-            var rootDescendants = rootElm.descendants(),
+            var rootDescendants = $(rootElm).find('li'),
                 itemAncestors,
                 srchItem = null,
                 i,
                 expandFunc;
 
             for (i = 0; i < rootDescendants.length; i += 1) {
-                if (rootDescendants[i].nodeName === 'LI'
-                        && rootDescendants[i].readAttribute('data-path') === currentValue) {
-                    srchItem = rootDescendants[i];
+                if (rootDescendants.get(i).nodeName === 'LI'
+                        && $(rootDescendants.get(i)).attr('data-path') === currentValue) {
+                    srchItem = rootDescendants.get(i);
                     break;
                 }
             }
 
-            expandFunc = function (item) {
-                if (item.readAttribute('class') === 'tree-expand') {
-                    treeComponentInstance.switchSubtree(treeComponentInstance.findSubtree(item.parentElement),
-                        item.firstDescendant());
+            /**
+             * Expects currently iterated element as 'this'
+             */
+            expandFunc = function () {
+                if ($(this).attr('class') === 'tree-expand') {
+                    treeComponentInstance.switchSubtree(treeComponentInstance.findSubtree(this.parentElement),
+                        $(this).children().get(0));
                 }
             };
             if (srchItem !== null) {
-                itemAncestors = srchItem.ancestors();
+                itemAncestors = $(srchItem).parents();
                 for (i = 0; i < itemAncestors.length; i += 1) {
-                    if (itemAncestors[i].nodeName === 'UL') {
-                        itemAncestors[i].siblings().each(expandFunc);
-                        if (itemAncestors[i].readAttribute('class') === 'tree-component') {
+                    if (itemAncestors.get(i).nodeName === 'UL') {
+                        $(itemAncestors.get(i)).siblings().each(expandFunc);
+                        if ($(itemAncestors.get(i)).attr('class') === 'tree-component') {
                             break;
                         }
                     }
@@ -267,41 +266,48 @@ define(function () {
             }
         }
 
-        selResult.each(function (selectBoxItem) {
-            var inputName = selectBoxItem.readAttribute('name'),
+        selResult.each(function () {
+            var inputName = $(this).attr('name'),
                 menuWidth = 200,
                 rootUl,
                 button,
                 wrapper,
+                jqWrapper,
                 switchComponentVisibility,
                 titleOfSelectedItem,
-                treeComponentInstance;
+                treeComponentInstance,
+                jqSelectBoxItem = $(this);
 
-            selectParser.hiddenInput = Element.extend(document.createElement('input'));
-            selectParser.hiddenInput.writeAttribute('type', 'hidden');
-            selectParser.hiddenInput.writeAttribute('name', inputName);
-            selectParser.hiddenInput.writeAttribute('value', selectBoxItem.getValue());
+            selectParser.hiddenInput = document.createElement('input');
+            $(selectParser.hiddenInput).attr({
+                'type' : 'hidden',
+                'name' : inputName,
+                'value' : jqSelectBoxItem.val()
+            });
 
-            button = Element.extend(document.createElement('button'));
+            button = document.createElement('button');
             if (title) {
                 titleOfSelectedItem = title;
 
             } else {
-                titleOfSelectedItem = getTitleOfSelectedItem(selectBoxItem);
+                titleOfSelectedItem = getTitleOfSelectedItem(this);
             }
-            button.update(titleOfSelectedItem);
-            button.writeAttribute('type', 'button');
-            button.observe('click', function (event) {
+
+            $(button)
+                .empty()
+                .append(titleOfSelectedItem)
+                .attr('type', 'button');
+            $(button).bind('click', function (event) {
                 switchComponentVisibility(rootUl);
-                event.stop();
+                event.stopPropagation();
             });
-            Event.observe(document, 'click', function (event) {
+            $(document).bind('click', function (event) {
                 var i,
                     isWithinTreeComponent = false,
-                    ancestors = event.target.ancestors();
+                    ancestors = $(event.target).parents();
 
                 for (i = 0; i < ancestors.length; i += 1) {
-                    if (ancestors[i].readAttribute('class') === 'tree-component') {
+                    if ($(ancestors[i]).attr('class') === 'tree-component') {
                         isWithinTreeComponent = true;
                         break;
                     }
@@ -311,22 +317,23 @@ define(function () {
                 }
             });
 
-            rootUl = selectParser.parseSelectOptions(selectBoxItem, button, customCallback);
+            rootUl = selectParser.parseSelectOptions(this, button, customCallback);
 
-            wrapper = Element.extend(document.createElement('div'));
-            wrapper.setStyle({
-                position : selectBoxItem.getStyle('position'),
-                left : selectBoxItem.getStyle('left'),
-                top : selectBoxItem.getStyle('top'),
-                display : selectBoxItem.getStyle('display'),
-                'float' : selectBoxItem.getStyle('float'),
-                fontSize : selectBoxItem.getStyle('fontSize'),
-                color : selectBoxItem.getStyle('color')
+            wrapper = document.createElement('div');
+            jqWrapper = $(wrapper);
+            jqWrapper.css({
+                position : jqSelectBoxItem.css('position'),
+                left : jqSelectBoxItem.css('left'),
+                top : jqSelectBoxItem.css('top'),
+                display : jqSelectBoxItem.css('display'),
+                'float' : jqSelectBoxItem.css('float'),
+                'font-size' : jqSelectBoxItem.css('fontSize'),
+                color : jqSelectBoxItem.css('color')
             });
-            Element.replace(selectBoxItem, wrapper);
-            rootUl.writeAttribute('id', selectBoxItem.readAttribute('id'));
-            wrapper.insert(button);
-            wrapper.insert(rootUl);
+            jqSelectBoxItem.replaceWith(wrapper);
+            $(rootUl).attr('id', jqSelectBoxItem.attr('id'));
+            jqWrapper.append(button);
+            jqWrapper.append(rootUl);
 
             /**
              *
@@ -334,43 +341,44 @@ define(function () {
              * @param state one of {"show", "hide"}; if not provided then any state is changed to the other one
              */
             switchComponentVisibility = function (elm, state) {
-                var leftPos = 0;
+                var leftPos = 0,
+                    jqElm = $(elm);
 
-                if (elm.getStyle('display') === 'block' || state === 'hide') {
-                    elm.setStyle({ display : 'none', position: 'relative'});
+                if (jqElm.css('display') === 'block' || state === 'hide') {
+                    jqElm.css({ display : 'none', position: 'relative'});
 
-                } else if (elm.getStyle('display') === 'none' || state === 'show') {
-                    if (wrapper.getStyle('position') !== 'absolute') {
-                        leftPos = wrapper.cumulativeOffset()[0];
+                } else if (jqElm.css('display') === 'none' || state === 'show') {
+                    if (jqWrapper.css('position') !== 'absolute') {
+                        leftPos = jqWrapper.position().left;
                     }
-                    if (wrapper.cumulativeOffset()[0] + menuWidth > document.viewport.getDimensions().width) {
-                        leftPos = wrapper.cumulativeOffset()[0] + Math.min(0, document.viewport.getDimensions().width
-                            - wrapper.cumulativeOffset()[0] - rootUl.getWidth());
+                    if (jqWrapper.position().left + menuWidth > $(document).width()) {
+                        leftPos = jqWrapper.position().left + Math.min(0, $(document).width()
+                            - jqWrapper.position().left - $(rootUl).width());
                     }
 
-                    elm.setStyle({
+                    jqElm.css({
                         display : 'block',
                         position: 'absolute',
-                        zIndex : 1000000,
+                        'z-index' : 1000000,
                         left : leftPos + 'px',
                         border : '1px solid #CCC',
-                        backgroundColor: '#eee',
+                        'background-color': '#eee',
                         margin : '0',
                         width : menuWidth + 'px',
                         padding: '3px 5px',
-                        mozBorderRadius : '3px',
-                        webkitBorderRadius: '3px',
-                        khtmlborderRadius: '3px',
-                        borderRadius: '3px',
-                        textAlign: 'left'
+                        'moz-border-radius' : '3px',
+                        'webkit-border-radius': '3px',
+                        'khtml-border-radius': '3px',
+                        'border-radius': '3px',
+                        'text-align': 'left'
                     });
                 }
             };
             switchComponentVisibility(rootUl);
             treeComponentInstance = createTreeComponentInstance();
             treeComponentInstance.init(rootUl);
-            rootUl.parentNode.insert({ before : selectParser.hiddenInput });
-            expandSelected(treeComponentInstance, selectParser.hiddenInput.getValue(), rootUl);
+            $(rootUl.parentNode).prepend(selectParser.hiddenInput);
+            expandSelected(treeComponentInstance, $(selectParser.hiddenInput).val(), rootUl);
 
         });
     }

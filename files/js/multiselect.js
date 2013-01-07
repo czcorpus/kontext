@@ -18,9 +18,8 @@
 
 /**
  * This library provides a replacement for standard SELECT element with 'multiple' option enabled.
- * The library depends on Prototype.js version 1.7+.
  */
-define(['win'], function (win) {
+define(['jquery'], function ($) {
     'use strict';
 
     var buildSkeleton,
@@ -129,22 +128,22 @@ define(['win'], function (win) {
 
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
-                if (typeof (wrapperElem) === 'string') {
-                    wrapperElem = win.$(wrapperElem);
+                if (typeof wrapperElem === 'string') {
+                    wrapperElem = $('#' + wrapperElem).get(0);
                 }
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
                 paddingStyle = opt.hasOwnProperty('padding') ? opt.padding : '5px';
                 widthStyle = opt.hasOwnProperty('width') ? opt.width : '200px';
 
 
-                wrapperElem.setStyle({
+                $(wrapperElem).css({
                     width : widthStyle,
                     margin : marginStyle,
                     padding : paddingStyle
                 });
-                multiSelect.ulElement = Element.extend(document.createElement('UL'));
-                multiSelect.ulElement.writeAttribute('class', 'multiselect');
-                wrapperElem.update(multiSelect.ulElement);
+                multiSelect.ulElement = document.createElement('UL');
+                $(multiSelect.ulElement).attr('class', 'multiselect');
+                $(wrapperElem).empty().append(multiSelect.ulElement);
             },
 
             /**
@@ -160,30 +159,30 @@ define(['win'], function (win) {
                     tbodyElm = multiSelect.blocks[blockId];
 
 
-                if ((tbodyElm.parentNode.getStyle('display') === 'none' && status !== 'none') || status === 'table') {
+                if (($(tbodyElm).parent().css('display') === 'none' && status !== 'none') || status === 'table') {
                     if (!multiSelect.allowMultipleOpenedBoxes) {
                         for (prop in multiSelect.blocks) {
                             if (multiSelect.blocks.hasOwnProperty(prop)) {
-                                multiSelect.blocks[prop].parentNode.setStyle({ display : 'none'});
+                                $(multiSelect.blocks[prop]).parent().css('display', 'none');
                                 if (multiSelect.getNumSelected(prop) === 0) {
-                                    multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link');
+                                    $(multiSelect.blockSwitchLinks[prop]).attr('class', 'switch-link');
 
                                 } else {
-                                    multiSelect.blockSwitchLinks[prop].writeAttribute('class', 'switch-link used');
+                                    $(multiSelect.blockSwitchLinks[prop]).attr('class', 'switch-link used');
                                 }
                             }
                         }
                     }
-                    tbodyElm.parentNode.setStyle({ display : 'table'});
-                    switchLink.writeAttribute('class', 'switch-link active');
+                    $(tbodyElm).parent().css('display', 'table');
+                    $(switchLink).attr('class', 'switch-link active');
 
-                } else if ((tbodyElm.parentNode.getStyle('display') === 'table' && status !== 'table') || status === 'none') {
-                    tbodyElm.parentNode.setStyle({ display : 'none'});
+                } else if (($(tbodyElm).parent().css('display') === 'table' && status !== 'table') || status === 'none') {
+                    $(tbodyElm).parent().css('display', 'none');
                     if (multiSelect.getNumSelected(blockId) === 0) {
-                        switchLink.writeAttribute('class', 'switch-link');
+                        $(switchLink).attr('class', 'switch-link');
 
                     } else {
-                        switchLink.writeAttribute('class', 'switch-link used');
+                        $(switchLink).attr('class', 'switch-link used');
                     }
                 }
             },
@@ -207,44 +206,44 @@ define(['win'], function (win) {
 
                 blockLabel = blockLabel || blockId;
 
-                liElement = Element.extend(document.createElement('LI'));
-                liElement.setStyle({
+                liElement = document.createElement('LI');
+                $(liElement).css({
                     margin : 0,
                     overflow : 'hidden',
                     clear : 'both'
                 });
-                liElement.writeAttribute('data-block-id', blockId);
-                multiSelect.ulElement.insert(liElement);
-                switchLink = Element.extend(document.createElement('A'));
-                switchLink.writeAttribute('class', 'switch-link');
-                switchLink.update(blockLabel);
+                $(liElement).attr('data-block-id', blockId);
+                $(multiSelect.ulElement).append(liElement);
+                switchLink = document.createElement('A');
+                $(switchLink).attr('class', 'switch-link');
+                $(switchLink).empty().append(blockLabel);
                 multiSelect.blockSwitchLinks[blockId] = switchLink;
-                liElement.insert(switchLink);
+                $(liElement).append(switchLink);
 
-                statusText = Element.extend(document.createElement('SPAN'));
-                statusText.writeAttribute('class', 'status-text');
-                statusText.update('[ 0 ]');
+                statusText = document.createElement('SPAN');
+                $(statusText).attr('class', 'status-text');
+                $(statusText).empty().append('[ 0 ]');
                 //liElement.insert(statusText);
-                switchLink.insert(statusText);
+                $(switchLink).append(statusText);
 
-                itemTable = Element.extend(document.createElement('TABLE'));
-                liElement.insert(itemTable);
-                itemTable.writeAttribute('class', 'checkbox-list');
-                itemTbody = Element.extend(document.createElement('TBODY'));
-                itemTbody.writeAttribute('class', 'item-' + blockId);
-                itemTable.insert(itemTbody);
+                itemTable = document.createElement('TABLE');
+                $(liElement).append(itemTable);
+                $(itemTable).attr('class', 'checkbox-list');
+                itemTbody = document.createElement('TBODY');
+                $(itemTbody).attr('class', 'item-' + blockId);
+                $(itemTable).append(itemTbody);
                 multiSelect.blocks[blockId] = itemTbody;
-                switchLink.observe('click', function () {
+                $(switchLink).bind('click', function () {
                     multiSelect.activeBlockId = blockId;
                     multiSelect.flipBlockVisibility(blockId);
                 });
-                itemTbody.parentNode.setStyle({ display : 'none'});
+                $(itemTbody).parent().css({ display : 'none'});
                 multiSelect.addDefaultValue(blockId, liElement, defaultValue || ''); // 'default default' value
 
                 eventCallbacks = eventCallbacks || {};
                 for (prop in eventCallbacks) {
                     if (eventCallbacks.hasOwnProperty(prop) && typeof (eventCallbacks[prop]) === 'function') {
-                        switchLink.observe(prop, eventCallbacks[prop]);
+                        $(switchLink).bind(prop, eventCallbacks[prop]);
                     }
                 }
                 return multiSelect;
@@ -258,7 +257,7 @@ define(['win'], function (win) {
              * if nothing found or if invalid index is provided
              */
             getBlockByIndex : function (idx) {
-                var items = multiSelect.ulElement.select('tbody');
+                var items = $(multiSelect.ulElement).find('tbody');
                 if (idx >= 0 && idx < items.length) {
                     return items[idx];
                 }
@@ -274,10 +273,10 @@ define(['win'], function (win) {
             getBlockOrder : function (blockId) {
                 var i,
                     ans = null,
-                    items = multiSelect.ulElement.select('tbody');
+                    items = $(multiSelect.ulElement).find('tbody');
 
                 for (i = 0; i < items.length; i += 1) {
-                    if (items[i] === multiSelect.blocks[blockId]) {
+                    if (items.get(i) === multiSelect.blocks[blockId]) {
                         ans = i;
                         break;
                     }
@@ -289,7 +288,7 @@ define(['win'], function (win) {
              * @param blockId {String}
              */
             clearBlock : function (blockId) {
-                multiSelect.blocks[blockId].update();
+                $(multiSelect.blocks[blockId]).empty();
             },
 
             /**
@@ -303,8 +302,8 @@ define(['win'], function (win) {
              *
              */
             updateBlockStatusText : function (blockId, text) {
-                multiSelect.blockSwitchLinks[blockId].parentNode.select('span[class="status-text"]').each(function (item) {
-                    item.update(text);
+                $(multiSelect.blockSwitchLinks[blockId]).parent().find('span[class="status-text"]').each(function () {
+                    $(this).empty().append(text);
                 });
             },
 
@@ -326,44 +325,44 @@ define(['win'], function (win) {
                 if (!multiSelect.blocks.hasOwnProperty(blockId)) {
                     throw new Error('Cannot add item to the block ' + blockId + '. Block does not exist.');
                 }
-                trElm = Element.extend(document.createElement('TR'));
-                multiSelect.blocks[blockId].insert(trElm);
-                tdElm = Element.extend(document.createElement('TD'));
-                tdElm.writeAttribute('class', 'checkbox-cell');
-                trElm.insert(tdElm);
-                inputElm = Element.extend(document.createElement('INPUT'));
-                inputElm.writeAttribute('type', 'checkbox');
+                trElm = document.createElement('TR');
+                $(multiSelect.blocks[blockId]).append(trElm);
+                tdElm = document.createElement('TD');
+                $(tdElm).attr('class', 'checkbox-cell');
+                $(trElm).append(tdElm);
+                inputElm = document.createElement('INPUT');
+                $(inputElm).attr('type', 'checkbox');
                 if (multiSelect.useNamedCheckboxes) {
-                    inputElm.writeAttribute('name', blockId);
+                    $(inputElm).attr('name', blockId);
                 }
                 inputElmId = 'c_' + blockId + '_' + multiSelect.itemIdCounter;
-                inputElm.writeAttribute('id', inputElmId);
+                $(inputElm).attr('id', inputElmId);
                 multiSelect.itemIdCounter += 1;
-                inputElm.writeAttribute('value', value);
-                tdElm.insert(inputElm);
+                $(inputElm).attr('value', value);
+                $(tdElm).append(inputElm);
 
-                tdElm = Element.extend(document.createElement('TD'));
-                trElm.insert(tdElm);
+                tdElm = document.createElement('TD');
+                $(trElm).append(tdElm);
 
-                labelElm = Element.extend(document.createElement('LABEL'));
-                labelElm.writeAttribute('for', inputElmId);
-                tdElm.insert(labelElm);
-                labelElm.update(label);
+                labelElm = document.createElement('LABEL');
+                $(labelElm).attr('for', inputElmId);
+                $(tdElm).append(labelElm);
+                $(labelElm).empty().append(label);
 
-                inputElm.observe('click', function () {
+                $(inputElm).bind('click', function () {
                     multiSelect.activeBlockId = blockId;
                     if (multiSelect.getNumSelected(blockId) === 0) {
-                        multiSelect.defaultValues[blockId].writeAttribute('value',
-                            multiSelect.defaultValues[blockId].readAttribute('data-orig-value'));
-                        multiSelect.blockSwitchLinks[blockId].writeAttribute('class', 'switch-link');
+                        $(multiSelect.defaultValues[blockId]).attr('value',
+                            $(multiSelect.defaultValues[blockId]).attr('data-orig-value'));
+                        $(multiSelect.blockSwitchLinks[blockId]).attr('class', 'switch-link');
 
                     } else {
-                        multiSelect.defaultValues[blockId].writeAttribute('value', '');
-                        multiSelect.blockSwitchLinks[blockId].writeAttribute('class', 'switch-link used');
+                        $(multiSelect.defaultValues[blockId]).attr('value', '');
+                        $(multiSelect.blockSwitchLinks[blockId]).attr('class', 'switch-link used');
                     }
                 });
-                if (typeof (clickCallback) === 'function') {
-                    inputElm.observe('click', clickCallback);
+                if (typeof clickCallback === 'function') {
+                    $(inputElm).bind('click', clickCallback);
                 }
                 return multiSelect;
             },
@@ -377,12 +376,14 @@ define(['win'], function (win) {
             addDefaultValue : function (blockId, parentElement, value) {
                 var inputElm;
 
-                inputElm = Element.extend(document.createElement('INPUT'));
-                inputElm.writeAttribute('type', 'hidden');
-                inputElm.writeAttribute('data-orig-value', value);
-                inputElm.writeAttribute('value', value);
-                inputElm.writeAttribute('name', blockId);
-                parentElement.insert(inputElm);
+                inputElm = document.createElement('INPUT');
+                $(inputElm).attr({
+                    'type' : 'hidden',
+                    'data-orig-value' : value,
+                    'value' : value,
+                    'name' : blockId
+                });
+                $(parentElement).append(inputElm);
                 multiSelect.defaultValues[blockId] = inputElm;
             },
 
@@ -392,9 +393,9 @@ define(['win'], function (win) {
              * @param value {String}
              */
             setDefaultValue : function (blockId, value) {
-                multiSelect.defaultValues[blockId].writeAttribute('data-orig-value', value);
-                if (multiSelect.defaultValues[blockId].readAttribute('value')) {
-                    multiSelect.defaultValues[blockId].writeAttribute('value', value);
+                $(multiSelect.defaultValues[blockId]).attr('data-orig-value', value);
+                if ($(multiSelect.defaultValues[blockId]).attr('value')) {
+                    $(multiSelect.defaultValues[blockId]).attr('value', value);
                 }
             },
 
@@ -404,7 +405,7 @@ define(['win'], function (win) {
              * @param value
              */
             checkItem : function (blockId, value) {
-                var items = multiSelect.blocks[blockId].select('input[type="checkbox"][value="' + value + '"]');
+                var items = $(multiSelect.blocks[blockId]).find('input[type="checkbox"][value="' + value + '"]');
                 if (items.length === 1) {
                     items[0].checked = true;
                 }
@@ -416,7 +417,7 @@ define(['win'], function (win) {
              * @param value
              */
             uncheckItem : function (blockId, value) {
-                var items = multiSelect.blocks[blockId].select('input[type="checkbox"][value="' + value + '"]');
+                var items = $(multiSelect.blocks[blockId]).find('input[type="checkbox"][value="' + value + '"]');
                 if (items.length === 1) {
                     items[0].checked = false;
                 }
@@ -429,13 +430,11 @@ define(['win'], function (win) {
                 var prop;
 
                 multiSelect.activeBlockId = null;
-                multiSelect.ulElement.select('input[type="checkbox"]').each(function (item) {
-                    item.checked = false;
-                });
+                $(multiSelect.ulElement).find('input[type="checkbox"]').attr('checked', false);
 
                 for (prop in multiSelect.blockSwitchLinks) {
                     if (multiSelect.blockSwitchLinks.hasOwnProperty(prop)) {
-                        multiSelect.blockSwitchLinks[prop].setStyle({ fontWeight : 'normal'});
+                        $(multiSelect.blockSwitchLinks[prop]).css('font-weight', 'normal');
                     }
                 }
             },
@@ -457,9 +456,7 @@ define(['win'], function (win) {
              *
              */
             disableBlock : function (blockId) {
-                multiSelect.blocks[blockId].select('input[type="checkbox"]').each(function (item) {
-                    item.writeAttribute('disabled', 'disabled');
-                });
+                $(multiSelect.blocks[blockId]).find('input[type="checkbox"]').attr('disabled', 'disabled');
             },
 
             /**
@@ -471,14 +468,16 @@ define(['win'], function (win) {
                     ans = {},
                     setStatus;
 
-                setStatus = function (item) {
-                    ans[prop].push(item.getValue());
+                setStatus = function () {
+                    if ($(this).is(':checked')) {
+                        ans[prop].push($(this).val());
+                    }
                 };
 
                 for (prop in multiSelect.blocks) {
                     if (multiSelect.blocks.hasOwnProperty(prop)) {
                         ans[prop] = [];
-                        multiSelect.blocks[prop].select('input[type="checkbox"]').each(setStatus);
+                        $(multiSelect.blocks[prop]).find('input[type="checkbox"]').each(setStatus);
                     }
                 }
                 return ans;
@@ -493,9 +492,9 @@ define(['win'], function (win) {
              */
             getNumSelected : function (blockId) {
                 if (blockId !== undefined) {
-                    return multiSelect.blocks[blockId].select('input[type="checkbox"]:checked').length;
+                    return $(multiSelect.blocks[blockId]).find('input[type="checkbox"]:checked').length;
                 }
-                return multiSelect.ulElement.select('input[type="checkbox"]:checked').length;
+                return $(multiSelect.ulElement).find('input[type="checkbox"]:checked').length;
             }
         };
         multiSelect.init(wrapperElem);
