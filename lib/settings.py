@@ -97,6 +97,11 @@ def get_bool(section, key):
         '0' : False
     }[get(section, str(key).lower())]
 
+def get_int(section, key):
+    """
+    """
+    return int(get(section, key))
+
 def parse_corplist(root, path='/', data=[]):
     """
     """
@@ -132,6 +137,9 @@ def parse_config(path):
     _conf['database'] = {}
     for item in xml.find('database'):
         _conf['database'][item.tag] = item.text
+    _conf['cache'] = {}
+    for item in xml.find('cache'):
+        _conf['cache'][item.tag] = item.text
     _conf['corpora'] = {}
     for item in xml.find('corpora'):
         if item.tag == 'corplist':

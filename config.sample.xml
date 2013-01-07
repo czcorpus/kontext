@@ -10,6 +10,9 @@
         <password>bonito</password>
         <username>bonito</username>
     </database>
+    <cache>
+        <clear_interval>3600</clear_interval>
+    </cache>
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <options_dir>/var/local/corpora/registry/options</options_dir>
