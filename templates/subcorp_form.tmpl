@@ -93,8 +93,11 @@ showWithinHint = function (event) {
     \$('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td><div style="width: 70%">$_('available attributes'): <strong>' + findValueOption(\$(event.element()).val()) + '</strong></div></td>' });
 };
 
+require(['treecomponent'], function (tc) {
+    tc.createTreeComponent(\$('form[action="subcorp"] select[name="corpname"]'), null, updForm);
+}
 
-createTreeComponent(\$('form[action="subcorp"] select[name="corpname"]'), null, updForm);
+
 \$('subc-spec-row').css({ display : 'none' });
 
 \$('input.method-select').each(function (i, item) {
