@@ -1,7 +1,6 @@
 /**
  * This library provides a simple audio-player (play/pause/stop)
- * based on the SoundManager 2 library (http://www.schillmania.com/projects/soundmanager2/)
- * Prototype 1.7+ is also required.
+ * based on the SoundManager 2 library (http://www.schillmania.com/projects/soundmanager2/).
  */
 define(['win', 'jquery'], function (win, $) {
     'use strict';
