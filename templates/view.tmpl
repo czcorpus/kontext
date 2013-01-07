@@ -36,7 +36,7 @@ $_("Concordance")#slurp
 #end if
 <script type="text/javascript">
 require(['domReady!', 'jquery'], function (domReady, $) {
-    \$('#detailframe').corpname = "$corpname";
+    \$('#detailframe').attr('data-corpname', "$corpname");
     #if $can_annotate and $annotconc
     \$('#conclines').observe('mousedown', handle_selection);
     #end if
