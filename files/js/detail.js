@@ -168,7 +168,4 @@ function open_speech(linkElem) {
     require(['audioplayer'], function (ap) {
         ap.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     });
-
-
-
 }

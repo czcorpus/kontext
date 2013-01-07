@@ -159,7 +159,12 @@ a.speech-link:hover {
     overflow: hidden;
 }
 
-.audio-controls a {
+.audio-controls a.img-button-play,
+.audio-controls a.img-button-play-b,
+.audio-controls a.img-button-pause,
+.audio-controls a.img-button-pause-b,
+.audio-controls a.img-button-stop,
+.audio-controls a.img-button-stop-b {
     width: 24px;
     height: 24px;
     float: left;
@@ -184,4 +189,24 @@ a.speech-link:hover {
 
 .audio-controls a.img-button-stop {
     background-image: url('../img/media_stop.jpg');
+}
+
+#audio-error-confirm {
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 100%;
+}
+
+.audio-controls a.audio-error-confirm {
+
+    text-decoration: none;
+    display: block;
+    padding: 3px 5px;
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.audio-controls a.audio-error-confirm:hover {
+    color: #FFFFFF !important;
 }
