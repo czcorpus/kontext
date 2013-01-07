@@ -84,16 +84,12 @@ $_("Subcorpora"):<br/>
 </fieldset>
 </form>
 
-<script type="text/javascript"> 
-
-function update_subcorpinfo(request) {
-    \$('#subcorpinfo').innerHTML = request.responseText;
-}
-
+<script type="text/javascript">
 function show_subcorpinfo() {
-    $.ajaxGet('subcorp_info', { parameters: Form.serialize('subcorpform') }, update_subcorpinfo);
+    \$.get('subcorp_info', \$('#subcorpform').serialize(), function (data) {
+        \$('#subcorpinfo').html(data);
+    });
 }
-   
 </script>
 #end filter
 #end def
