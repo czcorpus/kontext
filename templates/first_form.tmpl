@@ -27,36 +27,6 @@ $_("Concordance - First query form")#slurp
 
 #def bodyonload
 
-    require(['multiselect', 'tagbuilder'], function (multiselect, tagbuilder) {
-        var msComponent,
-        tagBuilderComponent,
-        concFormResetButtonActions;
-
-        if (\$('#tag-builder-widget')) {
-            msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
-                    { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-            tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
-                resetButton : null,
-                backButton : null,
-                hiddenElm : \$('#tag'),
-                tagDisplay : \$('#tag-display')
-            });
-        }
-
-        concFormResetButtonActions = {
-            tagrow : tagBuilderComponent.resetButtonClick
-        };
-
-        hideElem.cmdSwitchQuery(concFormResetButtonActions);
-        hideElem.loadHideElementStoreSimple();
-        hideElem.loadHideElementStore('${files_path}');
-
-        \$('#queryselector').bind('change', function () {
-            hideElem.cmdSwitchQuery(concFormResetButtonActions);
-        });
-
-    });
-
     require(['treecomponent'], function (tc) {
         var updForm = function (item) {
             var formAncestor,
