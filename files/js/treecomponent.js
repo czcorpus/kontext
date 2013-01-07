@@ -207,7 +207,6 @@ define(['jquery'], function ($) {
      */
     function createTreeComponent(selResult, title, customCallback) {
         var selectParser = createSelectParserInstance();
-
         function getTitleOfSelectedItem(selectBoxElement) {
             var descendants,
                 currValue = null,
@@ -285,18 +284,16 @@ define(['jquery'], function ($) {
                 'value' : jqSelectBoxItem.val()
             });
 
-            button = document.createElement('button');
+            button = $(document.createElement('button')).attr('type', 'button');
             if (title) {
                 titleOfSelectedItem = title;
 
             } else {
                 titleOfSelectedItem = getTitleOfSelectedItem(this);
             }
-
             $(button)
                 .empty()
-                .append(titleOfSelectedItem)
-                .attr('type', 'button');
+                .append(titleOfSelectedItem);
             $(button).bind('click', function (event) {
                 switchComponentVisibility(rootUl);
                 event.stopPropagation();
@@ -316,7 +313,6 @@ define(['jquery'], function ($) {
                     switchComponentVisibility(rootUl, 'hide');
                 }
             });
-
             rootUl = selectParser.parseSelectOptions(this, button, customCallback);
 
             wrapper = document.createElement('div');

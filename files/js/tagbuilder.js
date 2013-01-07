@@ -333,8 +333,7 @@ define(['jquery'], function ($) {
                 } else {
                     for (i = 0; i < getResponseLength(data.tags); i += 1) {
                         blockId = 'position_' + i;
-
-                        if (tagLoader.activeBlockHistory.indexOf(blockId) === -1) {
+                        if ($.inArray(blockId, tagLoader.activeBlockHistory) === -1) {
 
                             if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
                                 if (data.labels[i] !== undefined && data.labels[i] !== null) {
@@ -352,7 +351,7 @@ define(['jquery'], function ($) {
                                 for (j = 0; j < data.tags[i].length; j += 1) {
                                     if (data.tags[i][j][0] !== '-') {
                                         tagLoader.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
-                                        if (prevSelects.hasOwnProperty(blockId) && prevSelects[blockId].indexOf(data.tags[i][j][0]) > -1) {
+                                        if (prevSelects.hasOwnProperty(blockId) && $.inArray(data.tags[i][j][0], prevSelects[blockId]) > -1) {
                                             tagLoader.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
 
                                         } else {
@@ -455,7 +454,7 @@ define(['jquery'], function ($) {
                     if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
                         $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]').each(function () {
                             if (prevSelects.hasOwnProperty(blockId)) {
-                                $(this).attr('checked', (prevSelects[blockId].indexOf($(this).attr('value')) === -1));
+                                $(this).attr('checked', ($.inArray($(this).attr('value'), prevSelects[blockId]) === -1));
 
                             }
                             $(this).attr('disabled', false);
