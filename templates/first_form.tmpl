@@ -32,7 +32,7 @@ $_("Concordance - First query form")#slurp
         tagBuilderComponent,
         concFormResetButtonActions;
 
-        if (\$('tag-builder-widget')) {
+        if (\$('#tag-builder-widget')) {
             msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
                     { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
             tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
