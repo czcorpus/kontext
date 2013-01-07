@@ -40,10 +40,11 @@ require(['domReady!', 'jquery'], function (domReady, $) {
     #if $can_annotate and $annotconc
     \$('#conclines').observe('mousedown', handle_selection);
     #end if
-    \$('a.speech-link').each(function (i, item) {
-        \$(item).bind('click', function (event) {
-            open_speech(item);
-            event.Propagationstop();
+    \$('a.speech-link').each(function () {
+        \$(this).bind('click', function (event) {
+            open_speech(this);
+            event.stopPropagation();
+            return false;
         });
     });
 

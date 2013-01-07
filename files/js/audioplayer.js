@@ -67,16 +67,16 @@ define(['win', 'jquery'], function (win, $) {
              * or link element itself
              */
             init : function (wrapper, triggerLink) {
-                player.triggerLink = typeof triggerLink === 'string' ? $(triggerLink) : triggerLink;
-                player.wrapper = typeof wrapper === 'string' ? $(wrapper) : wrapper;
+                player.triggerLink = typeof triggerLink === 'string' ? $('#' + triggerLink).get(0) : triggerLink;
+                player.wrapper = typeof wrapper === 'string' ? $('#' + wrapper).get(0) : wrapper;
                 player.playSessionId = $(player.triggerLink).attr('href');
 
-                if (player.wrapper === null) {
+                if (!player.wrapper) {
                     player.wrapper = document.createElement('div');
-                    $(player.wrapper).attr('id', 'audio-wrapper');
-                    $(player.wrapper).bind('click', function (event) {
-                        event.stopPropagation();
-                    });
+                    $(player.wrapper).attr('id', 'audio-wrapper')
+                        .bind('click', function (event) {
+                            event.stopPropagation();
+                        });
                     $(document.body).append(player.wrapper);
                 }
                 $(player.wrapper).css({
@@ -97,13 +97,13 @@ define(['win', 'jquery'], function (win, $) {
 
                 clearInterval(player.animationTimer);
                 if (player.status === player.PLAYER_STATUS_PAUSED) {
-                    $('#audio-play-button').attr('class', 'img-button-play');
+                    $('#audio-play-button').removeClass().addClass('img-button-play');
                     blinkingElement = 'audio-pause-button';
                     stateClass1 = 'img-button-pause';
                     stateClass2 = 'img-button-pause-b';
 
                 } else if (player.status === player.PLAYER_STATUS_PLAYING) {
-                    $('#audio-pause-button').attr('class', 'img-button-pause');
+                    $('#audio-pause-button').removeClass().addClass('img-button-pause');
                     blinkingElement = 'audio-play-button';
                     stateClass1 = 'img-button-play';
                     stateClass2 = 'img-button-play-b';
@@ -111,11 +111,11 @@ define(['win', 'jquery'], function (win, $) {
 
                 if (blinkingElement) {
                     player.animationTimer = setInterval(function () {
-                        if ($('#' + blinkingElement).attr('class') === stateClass1) {
-                            $('#' + blinkingElement).attr('class', stateClass2);
+                        if ($('#' + blinkingElement).hasClass(stateClass1)) {
+                            $('#' + blinkingElement).removeClass().addClass(stateClass2);
 
                         } else {
-                            $('#' + blinkingElement).attr('class', stateClass1);
+                            $('#' + blinkingElement).removeClass().addClass(stateClass1);
                         }
                     }, player.BLINKING_INTERVAL);
                 }
@@ -133,7 +133,7 @@ define(['win', 'jquery'], function (win, $) {
                     '</div>');
 
                 $('#audio-stop-button').bind('click', function () {
-                    soundManager.stopPropagation('speech-player');
+                    soundManager.stop('speech-player');
                     player.removeUserInterface();
                     soundManager.destroySound(player.playSessionId);
                 });
@@ -175,8 +175,16 @@ define(['win', 'jquery'], function (win, $) {
              * Plays the audio file as specified by the player.triggerLink element.
              */
             play : function () {
+                var sound,
+                    outsideClickHandler;
+
+                outsideClickHandler = function () {
+                    player.removeUserInterface();
+                    $(document).unbind('click', outsideClickHandler);
+                };
+
                 player.createUserInterface();
-                var sound = soundManager.createSound({
+                sound = soundManager.createSound({
                     id: player.playSessionId,
                     url: $(player.triggerLink).attr('href'),
                     autoLoad: true,
@@ -185,10 +193,11 @@ define(['win', 'jquery'], function (win, $) {
                     onload: function (bSuccess) {
                         if (!bSuccess) {
                             clearInterval(player.animationTimer);
-                            $(player.wrapper).empty().append('<div class="audio-controls"><a id="audio-error-confirm">:-(</a></div>');
-                            $('#audio-error-confirm').bind('click', function () {
+                            $(player.wrapper).empty().append('<div class="audio-controls"><a class="audio-error-confirm">:-(</a></div>');
+                            $('div.audio-controls a.audio-error-confirm').bind('click', function () {
                                 player.removeUserInterface();
                             });
+                            $(document).bind('click', outsideClickHandler);
                         }
                     },
                     onplay : function () {
