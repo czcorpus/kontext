@@ -135,6 +135,8 @@ Please refer to the **config.sample.xml** to see the structure.
 +--------------------------------------------+-----------------------------------------------------------+
 | /bonito/database/username                  | Username of the user with SELECT and UPDATE privileges    |
 +--------------------------------------------+-----------------------------------------------------------+
+| /bonito/cache/clear_interval               | number of seconds to keep cached files                    |
++--------------------------------------------+-----------------------------------------------------------+
 | /bonito/corpora/manatee_registry           | Path where corpora registry files are stored              |
 +--------------------------------------------+-----------------------------------------------------------+
 | /bonito/corpora/options_dir                | Path where 'options' files are stored                     |
@@ -206,3 +208,31 @@ Attributes for the **corpus** element:
 +-----------------+--------------------------------------------------------------------+
 | web             | (optional) external link containing information about the corpus   |
 +-----------------+--------------------------------------------------------------------+
+
+
+Tag-builder component configuration
+-----------------------------------
+
+Sample file::
+
+    <tagsets>
+        <tagset position="0">
+            <label>
+                <desc lang="en">Part of speech</desc>
+                <desc lang="cs">Slovní druh</desc>
+            </label>
+            <value id="A">
+                <desc lang="en">adjective</desc>
+                <desc lang="cs">adjektivum</desc>
+            </value>
+            <value id="N">
+            ...
+            </value>
+            ...
+        </tagset>
+        <tagset position="1">
+        ...
+        </tagset>
+        ...
+    </tagsets>
+
