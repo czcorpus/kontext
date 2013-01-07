@@ -22,6 +22,7 @@ import re
 import json
 import logging
 import locale
+import time
 from lxml import etree
 
 class TagGeneratorException(Exception):
@@ -133,6 +134,9 @@ class TagVariantLoader(object):
         data = '[]'
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         translation_table, label_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+
+        if time.time() - os.stat(path).st_ctime > settings.get_int('cache', 'clear_interval'):
+            os.unlink(path)
 
         if not os.path.exists(path):
             cache_path_items = os.path.dirname(path).split('/')
