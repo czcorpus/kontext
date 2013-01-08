@@ -214,7 +214,7 @@
             document.cookie = 'query_type=' + newid
                     + '; expires=' + date.toGMTString();
 
-            hideElem.focusCurrentInput();
+            jqFocusElem.focus();
         },
 
         /**
@@ -367,21 +367,35 @@
 
         /**
          *
-         * @param focus
+         * @param element
          */
-        focusEx : function (focus) {
-            var jqElem = $(focus);
-            if (jqElem.length > 0 && jqElem.select) {
-                jqElem.select();
-            }
+        elementIsFocusableFormInput : function (element) {
+            var jqElement = $(element),
+                elementName = jqElement.prop('nodeName');
+
+            return ((elementName === 'INPUT' && jqElement.attr('type') !== 'hidden')
+                    || elementName === 'SELECT'
+                    || elementName === 'TEXTAREA'
+                    || elementName === 'BUTTON');
         },
 
-        focusCurrentInput : function () {
-            $('#mainform tr input[type="text"]').each(function () {
-                if ($(this).css('display') !== 'none') {
-                    $(this).focus();
-                }
-            });
+        /**
+         * Makes focus on the 'target' element if it is one of input|select|button|textarea
+         *
+         * @param {function|jquery|string|element} target
+         */
+        focusEx : function (target) {
+            var jqTargetElem;
+
+            if (typeof target === 'function') {
+                jqTargetElem = $(target());
+
+            } else {
+                jqTargetElem = $(target);
+            }
+            if (jqTargetElem.length > 0 && context.hideElem.elementIsFocusableFormInput(jqTargetElem)) {
+                jqTargetElem.focus();
+            }
         }
     };
 }(window));
