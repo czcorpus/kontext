@@ -79,9 +79,9 @@ require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, t
         msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
                 { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
         tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
-            resetButton : null,
-            backButton : null,
-            hiddenElm : \$('#tag'),
+                resetButton : null,
+                backButton : null,
+                hiddenElm : \$('#tag'),
                 tagDisplay : \$('#tag-display')
         });
         concFormResetButtonActions = {

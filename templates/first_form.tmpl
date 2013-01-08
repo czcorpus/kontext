@@ -23,7 +23,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Concordance - First query form")#slurp
 #end def
 
-#attr $focus = "hideElem.cmdGetFocusedId()"
+##attr $focus = "function () { var target = null; $('#mainform tr input[type=\"text\"]').each(function () { if ($(this).css('display') !== 'none') { target = $(this); return false; } }); return target; }"
+#attr $focus = """function () {
+        var target = null;
+        $('#mainform tr input[type=\"text\"]').each(function () {
+            if ($(this).css('display') !== 'none') {
+                target = $(this);
+                return false;
+            }
+        });
+        return target;
+    }"""
 
 #def bodyonload
 
@@ -33,7 +43,7 @@ $_("Concordance - First query form")#slurp
                 i,
                 srch,
                 ancestors = \$(item.target).parents();
-        
+
             for (i = 0; i < ancestors.length; i += 1) {
                 if (ancestors[i].nodeName === 'FORM') {
                     formAncestor = ancestors[i];
@@ -54,8 +64,6 @@ $_("Concordance - First query form")#slurp
         }
         tc.createTreeComponent(\$('form[action="first"] select[name="corpname"]'), null, updForm);
     });
-
-    hideElem.focusCurrentInput();
 
 #end def
 
