@@ -303,8 +303,7 @@ class ConcCGI (CGIPublisher):
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                                 for a in sref.split(',')])
         result['corpencoding'] = thecorp.get_conf('ENCODING')
-        result['_version'] = '%s-%s' % (conclib.manatee.version(),
-                                        version.version)
+        result['_version'] = (conclib.manatee.version(), version.version)
         poslist = self.cm.corpconf_pairs (thecorp, 'WPOSLIST')
         result['Wposlist'] = [{'n':x[0], 'v':x[1]} for x in poslist]
         poslist = self.cm.corpconf_pairs (thecorp, 'LPOSLIST')
