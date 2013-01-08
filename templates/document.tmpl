@@ -16,7 +16,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
+#encoding UTF-8
 #import urllib
+#from templating.filters import *
 #attr $focus = ""
 #if $format == 'text'
 $text
@@ -113,7 +115,189 @@ _gaq.push(['_trackPageview']);
 </head>
 
 <body #block bodyargs##end block#>
-$body
+
+
+#if $varExists('_ca_topbar')
+$_ca_topbar
+#else
+<script type="text/javascript">
+    require(['domReady!', 'popupbox', 'jquery'], function (domReady, popupbox, \$) {
+        var msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')',
+        msg2 = function (updatedElement) {
+            $.ajax({
+                url : 'ajax_get_corp_details?corpname=$corpname',
+                success : function (data) {
+                    \$(updatedElement).empty().append(data);
+                },
+                error : function () {
+                    \$(updatedElement).empty().append('$_('Failed to load corpus information.')');
+                }
+            });
+        };
+
+    \$('#positions-help-link').bind('click', function (event) {
+            popupbox.createPopupBox(event, 'positions-help', \$('#toolbar-info'), msg1);
+            event.stopPropagation();
+        });
+    \$('#corpus-desc-link').bind('click', function (event) {
+            popupbox.createPopupBox(event, 'corpus-details-box', \$('#corpus-desc-link'), msg2, {
+                'height' : 'auto',
+                'width' : 'auto'
+            });
+            event.stopPropagation();
+        });
+    });
+</script>
+#filter WebSafe
+<form id="help-search-form" action="" onsubmit="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');">
+    <table id="topbar">
+        <tr>
+            <td rowspan="2">
+                <a href="$_home_url">
+                    <img id="logo" alt="$_("Sketch Engine")" src="$files_path/img/${css_prefix}logo.png" />
+                </a>
+            </td>
+            <td id="topbar-navigation">
+                $_("Search")
+                <input type="text" id="searchhelp" />
+                $_("in")
+                <a href='https://trac.sketchengine.co.uk/' onclick="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');return false;">$_("Help")</a>
+            </td>
+        </tr>
+    </table>
+</form>
+
+<form id="corpus-search-form" action="simple_search">
+    <table id="toolbar">
+        <tr>
+            <td id="toolbar-info">
+                <ul>
+                    <li>$_("User"): <strong>$_user</strong></li>
+                    <li>$_("Corpus"): <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')"><strong>$corp_full_name</strong></a></li>
+                    #if $corp_description
+                    <li>$_('Description'):
+                        #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#<strong>$corp_description</strong>#if $corp_web#</a>#end if#
+                    </li>
+                    #end if
+                    #if $corp_size
+                    <li>$_('Size'): <strong>$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
+                    #end if
+                    #if $usesubcorp
+                    <li>$_('Subcorpus'): <strong>$usesubcorp</strong> ($subcorp_size)</li>
+                    #end if
+                    #if $concsize
+                    <li>$_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong></li>
+                    #if $concarf
+                    <li>($concarf)</li>
+                    #end if
+                    #end if
+                </ul>
+
+            </td>
+        </tr>
+    </table>
+</form>
+#end filter
+#end if
+
+<hr class="hidden" />
+
+
+## left menu
+#filter WebSafe
+<div id="container">
+    <div id="sidebar">
+        <div id="in-sidebar">
+            <ul>
+                <li><a title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Concordance")</a></li>
+                <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
+                #if $has_wsketch
+                <li><a title="$_("Word Sketch query entry form")" href="wsketch_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch")</a></li>
+                <li><a title="$_("Thesaurus query entry form")" href="thes_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Thesaurus")</a></li>
+                <li><a title="$_("Word sketch difference")" href="wsdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Diff")</a></li>
+                #if $can_wseval
+                <li><a title="$_("Word Sketch Evaluation")" href="wseval_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Eval")</a></li>
+                #end if
+                #if $can_annotate
+                <li><a title="$_("Corpus Pattern Analysis")" href="cpa_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Corpus Pattern Analysis")</a></li>
+                #end if
+                #if $alpha_features
+                <li><a title="$_("Word Sketch Patterns")" href="patterns_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch Patterns")</a></li>
+                <li><a title="$_("Word Sketch Text-type difference")" href="wsttdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("WS Text-type diff.")</a></li>
+                #end if
+                #if $getVar('lg_switch_content', '')
+                <script>
+                    var url = window.location.toString();
+                    if (url.indexOf('?') == -1) { url += '?'; }
+                    document.write('<li><a href="' + url +
+                            ';uilang=$lg_switch_content[0]">$lg_switch_content[1]</a></li>')
+                </script>
+                #end if
+                #end if
+                #if $varExists('helpsite')
+                <li class="context_help"><a href="${helpsite}../MainLinkHelp" rel="help">? $_("Help on main menu")</a></li>
+                #end if
+            </ul>
+            <hr/>
+            <div id="submenu">
+                <ul>
+                    #filter WebSafe
+                    #block left_submenu_help
+                    #end block
+                    #block left_submenu_save
+                    #end block
+                    #block left_submenu_options
+                    #end block
+                    #block left_submenu
+                    #end block
+                    #block left_submenu_expert
+                    #end block
+                    #end filter
+                    <li class="menu_switch" onclick="hideElem.cmdSwitchMenu('$files_path')"><a>$_("Switch menu position")</a></li>
+                </ul>
+            </div>
+            #if $varExists('user_menu')
+            <hr />
+            <ul>
+                <li>$_('User'):
+                    <ul style="margin-top: 0">
+                        <li><a href="user_password_form">$_('Password change')</a></li>
+                    </ul>
+                </li>
+            </ul>
+            #end if
+        </div>
+    </div>
+
+    <div id="body">
+        <div id="in-body">
+            #if $error
+            <div id="error">
+                $error
+                <button onclick="history.back(1);">$_("Back")</button>
+            </div>
+            #end if
+            #filter None
+            $main
+            #end filter
+            <div id="version">
+                <div id="lc_logo">
+                    <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
+                        <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
+                    </a></div>
+                $_('Version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+#end filter
+## end of left menu
+
+
+
+
+
 </body>
 </html>
 
