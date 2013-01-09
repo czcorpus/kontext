@@ -1,0 +1,69 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def left_submenu_help
+#filter WebSafe
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}Concordance" rel="help">? $_("Help on Conc. menu")</a></li>
+  #end if
+  #block helpblock
+  #end block
+#end filter
+#end def
+
+#def left_submenu
+#filter WebSafe
+## view menu
+#block viewblock
+  <li><a title="$_("View current concordance")" href="view?$q;$globals">$_("View concordance")</a></li>
+#end block
+#block sampleblock
+  <li><a title="$_("Make a random sample from the concordance.")" href="reduce_form?$q;$globals">$_("Sample")</a></li>
+#end block
+#block filterblock
+  <li><a title="$_("Make a query on the current concordance.")" href="filter_form?$q;$globals">$_("Filter")</a></li>
+#end block
+#block freqblock
+  <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_("Frequency")</a>
+    <ul class="submenu">
+      #if $corp_uses_tag
+      <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag+0~0>0;ml=0">$_("Node tags")</a></li>
+      #end if
+      <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word+0~0>0;ml=0">$_("Node forms")</a></li>
+      <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
+      #if $ttcrit
+      <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+      #end if
+    </ul>
+  </li>
+#end block
+#block collblock
+  <li><a title="$_("Collocation candidates")" href="coll?$q;$globals">$_("Collocations")</a></li>
+#end block
+  <li><a title="$_("Concordance description")" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_("ConcDesc")</a></li>
+#if $varExists('tourl')
+  #set $href = 'view?' + $tourl + ';' + $globals
+  <li><a title="$_("Take me to the original concordance")" href="$href">$_("Original Conc.")</a></li>
+#end if
+#end filter
+#end def
+
+

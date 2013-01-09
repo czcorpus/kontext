@@ -1,0 +1,49 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Corpus Pattern Analysis")#slurp
+#end def
+
+#attr $focus = "'lemma'"
+
+#def left_submenu
+#filter WebSafe
+    <li><a href="selectstored">Last edited</a></li>
+#end filter
+#end def
+
+#def main
+#filter WebSafe
+<h3>$_("Annotate")</h3>
+<form action="storeconc_fromlemma">
+<fieldset>
+   Verb: <input name="lemma" size="20" id="lemma" />
+   Corpus:
+   #filter None
+   $corp_sel
+   #end filter
+   <input type="submit" value="Store verb concordance for annotation" />
+   <input type="hidden" name="lpos" value="-v" />
+</fieldset>
+</form>
+#end filter
+#end def

@@ -1,0 +1,212 @@
+#conclines{
+    width : 100%;
+    font-size: 100%;
+    background-color: white;
+}
+
+/* concordance formating */
+.ref {
+	white-space:nowrap;
+	cursor: pointer;
+	color: blue;
+	font-weight: bold;
+}
+.lc {
+	text-align: right; 
+	white-space:nowrap;
+	padding-right: 0.1em;
+        border-right: 0px !important;
+}
+.rc {
+	text-align: left; 
+	white-space:nowrap;
+	padding-left: 0.3em;
+        border-right: 0px !important;
+}
+.kw {
+	text-align: center; 
+	white-space:nowrap;
+        width: 1px;
+        border-right: 0px !important;
+}
+.coll {
+	color: red;  
+	font-weight: bold; 
+        /*text-decoration: underline;*/ 
+	cursor: pointer;
+}
+.strc {
+	color: green;
+}
+.attr {
+	font-size: small;
+	position: relative;
+	bottom: -0.3em;
+	z-index: 0
+}
+
+
+/* detail frame */
+#detailframe  {
+  position: absolute;
+  overflow: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: auto;
+  width: 98%;
+  display: none;
+  box-shadow: 2px 2px 1px #444;
+  border: 1px solid #AAA;
+  background-color: #fff;
+}
+
+#detailframe img {
+  float: left;
+}
+
+#detailframe a {
+  font-size: small;
+}
+
+#detailframecontent {
+   margin-left: 15px;
+   padding: 8px;
+}
+
+tr.even {
+   background-color: #ddd;
+}
+
+.par {
+	padding: 2px;
+}
+
+.with_tickbox {
+	padding: 4px;
+}
+
+/* concordance annotation */
+tr.selected {
+	background-color: #bdb;
+}
+tr.highlight {
+	background-color: #bfb;
+}
+tr.highlight td {
+	border-top: 1px dashed #484;
+	border-bottom: 1px dashed #484;
+}
+
+#groupmenu td:hover {
+	background-color: #6c6;
+}
+#groupmenu {
+	padding: 5em;
+	margin: -5em;
+        position:absolute;
+        visibility: hidden;
+        cursor: default;
+}
+#groupmenu table {
+	background-color: #bfb;
+        border: solid 1px green;
+	padding: 3px;
+}
+#groupmenu td {
+	padding: 0 5px 0 5px;
+}
+.grp {
+	background-color: #6c6; 
+	cursor: pointer; 
+	padding: .1em;
+	margin-left: 2px
+} 
+.groupbox {
+	color: black; 
+	background-color: lightgreen; 
+	font-weight: normal;
+      	border:solid 1px green;
+	cursor: pointer;
+}
+#annot_undo {
+	background-color: #f88; 
+	padding: 1px 0.6em 1px 0.6em
+}
+
+a.speech-link {
+    font-size: 120%;
+    color: #9ce;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 0 0.1em 0 0.1em;
+}
+
+a.speech-link:hover {
+    background-color: #9ce;
+    color: #FFF;
+}
+
+#audio-wrapper {
+    position: absolute;
+}
+
+.audio-controls {
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    background-color: #99CCEE;
+    padding: 4px 8px;
+    overflow: hidden;
+}
+
+.audio-controls a.img-button-play,
+.audio-controls a.img-button-play-b,
+.audio-controls a.img-button-pause,
+.audio-controls a.img-button-pause-b,
+.audio-controls a.img-button-stop,
+.audio-controls a.img-button-stop-b {
+    width: 24px;
+    height: 24px;
+    float: left;
+    text-decoration: none;
+}
+
+.audio-controls a.img-button-play {
+    background-image: url('../img/media_start.jpg');
+}
+
+.audio-controls a.img-button-play-b {
+    background-image: url('../img/media_start_b.jpg');
+}
+
+.audio-controls a.img-button-pause {
+    background-image: url('../img/media_pause.jpg');
+}
+
+.audio-controls a.img-button-pause-b {
+    background-image: url('../img/media_pause_b.jpg');
+}
+
+.audio-controls a.img-button-stop {
+    background-image: url('../img/media_stop.jpg');
+}
+
+#audio-error-confirm {
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 100%;
+}
+
+.audio-controls a.audio-error-confirm {
+
+    text-decoration: none;
+    display: block;
+    padding: 3px 5px;
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.audio-controls a.audio-error-confirm:hover {
+    color: #FFFFFF !important;
+}
