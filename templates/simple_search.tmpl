@@ -91,43 +91,43 @@ id="bodytag"#slurp
     #set $even = ($i % 2) and 'even' or 'odd'
     <tr class="$even">
     <td class="par">
-      #for $ll in $l['Left']
+      #for $ll in $l.Left
         #if $ll.has_key('open_link')
-        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        <a href="$ll.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
         #end if
-        #if $ll.has_key('class') and $ll['class']
-          <i class='$ll['class']'>
+        #if $ll.has_key('class') and $ll.class
+          <i class='$ll.class'>
         #end if
-        $ll['str']
-        #if $ll.has_key('class') and $ll['class']
+        $ll.str
+        #if $ll.has_key('class') and $ll.class
           </i>
         #end if
         #if $ll.has_key('close_link')
-        <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+        <a href="$ll.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
-      #for $k in $l['Kwic']
-        #if $k.has_key('class') and $k['class']
-          <b class='$k['class']'>
+      #for $k in $l.Kwic
+        #if $k.has_key('class') and $k.class
+          <b class='$k.class'>
         #end if
-        $k['str']
-        #if $k.has_key('class') and $k['class']
+        $k.str
+        #if $k.has_key('class') and $k.class
           </b>
         #end if
       #end for
-      #for $rr in $l['Right']
+      #for $rr in $l.Right
         #if $rr.has_key('open_link')
-        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        <a href="$rr.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
         #end if
-        #if $rr.has_key('class') and $rr['class']
-          <i class='$rr['class']'>
+        #if $rr.has_key('class') and $rr.class
+          <i class='$rr.class'>
         #end if
-        $rr['str']
-        #if $rr.has_key('class') and $rr['class']
+        $rr.str
+        #if $rr.has_key('class') and $rr.class
           </i>
         #end if
         #if $rr.has_key('close_link')
-        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+        <a href="$rr.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
         #end if
       #end for
     </td>
@@ -153,14 +153,14 @@ $_("other")
 #set $gname = ''
 #for $i in $Sketches
 #set $index = $index + 1
-   #if $gname != $i['gramrel'] ## next gramrel
-     #set $gname = $i['gramrel']
+   #if $gname != $i.gramrel ## next gramrel
+     #set $gname = $i.gramrel
      #if $index > 1
      </ul>
      #end if
-     <b>$i['gramrel']</b><ul>
+     <b>$i.gramrel</b><ul>
    #end if
-   <li>$i['word']</li>
+   <li>$i.word</li>
 #end for
 #if $index > 1
 </ul>
@@ -182,19 +182,19 @@ $_(">> More")
 #for $b in $freqs.Blocks[:4]
 <table class="result">
 <tr>
-<th align="left">$_($b['Head'][0]['n'])</th><th></th>
+<th align="left">$_($b.Head[0]['n'])</th><th></th>
 </tr>
 
   #for $i in $b.get('Items', [])
-  #set $word = $i['Word'][0]['n']
+  #set $word = $i.Word[0]['n']
   #if $word
   <tr
     #if $i.has_key('class')
-      class="$i['class']"
+      class="$i.class"
     #end if
   >
       <td>$word</td> ## there is always just one word
-      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i['fbar']" alt="${i['fbar']}" />
+      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i.fbar" alt="${i['fbar']}" />
       </td>
   </tr>
   #end if

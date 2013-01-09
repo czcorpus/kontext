@@ -56,7 +56,7 @@ $input_hidden
   <th>$_("Attribute"):
   <select name="cattr">
   #for $a in $Coll_attrlist
-    <option value="$a['n']" #if $cattr == $a['n'] then 'selected="selected"' else ''# >$_($a['label'])</option>
+    <option value="$a.n" #if $cattr == $a.n then 'selected="selected"' else ''# >$_($a.label)</option>
   #end for
   </select>
 

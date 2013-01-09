@@ -22,8 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <table>
   #for $g in $GroupNumbers
     <tr>
-    #for $i in $g['Items']
-      <td onclick="assing_group('$i['n']', '$i['lab']')">$i['lab']</td>
+    #for $i in $g.Items
+      <td onclick="assing_group('$i.n', '$i.lab')">$i.lab</td>
     #end for
     </tr>
   #end for

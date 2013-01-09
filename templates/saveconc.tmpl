@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <hits>$concsize</hits>
     <query>#slurp
   #for $d in $Desc
-$d['arg'] $d['size'] #slurp 
+$d.arg $d.size #slurp 
   #end for
 </query>
   </heading>
@@ -42,21 +42,21 @@ $d['arg'] $d['size'] #slurp
     #set $num = $num + 1
     <num>$num</num>
   #end if
-    <ref>$l['ref']</ref>#slurp
+    <ref>$l.ref</ref>#slurp
 <left_context>#slurp
-    #for $ll in $l['Left']
-      #unless $ll['class'] == 'strc'
-$ll['str'] #slurp
+    #for $ll in $l.Left
+      #unless $ll.class == 'strc'
+$ll.str #slurp
       #end unless
     #end for
 </left_context><kwic>#slurp
-    #for $kw in $l['Kwic']
-$kw['str'] #slurp
+    #for $kw in $l.Kwic
+$kw.str #slurp
     #end for
 </kwic><right_context>#slurp
-    #for $rr in $l['Right']
-      #unless $rr['class'] == 'strc'
-$rr['str'] #slurp
+    #for $rr in $l.Right
+      #unless $rr.class == 'strc'
+$rr.str #slurp
       #end unless
     #end for
 </right_context>
@@ -73,7 +73,7 @@ $rr['str'] #slurp
 \# Corpus: $corpname
 \# Hits:   $concsize
   #for $d in $Desc
-\#      $d['op']    $d['arg'] $d['size']
+\#      $d.op    $d.arg $d.size
   #end for
 
 
@@ -85,26 +85,26 @@ $rr['str'] #slurp
     #set $num = $num + 1
 $num	#slurp
   #end if
-$l['ref']	#slurp
+$l.ref	#slurp
   #if $align_kwic
-$l['leftspace'] #slurp
+$l.leftspace #slurp
   #end if
-    #for $ll in $l['Left']
-      #unless $ll['class'] == 'strc'
-$ll['str'] #slurp
+    #for $ll in $l.Left
+      #unless $ll.class == 'strc'
+$ll.str #slurp
       #end unless
     #end for
 <#slurp
-    #for $kw in $l['Kwic']
-$kw['str'] #slurp
+    #for $kw in $l.Kwic
+$kw.str #slurp
     #end for
 >#slurp
     #if $annotconc
 [${l['linegroup']}]
     #end if
-    #for $rr in $l['Right']
-      #unless $rr['class'] == 'strc'
-$rr['str'] #slurp
+    #for $rr in $l.Right
+      #unless $rr.class == 'strc'
+$rr.str #slurp
       #end unless
     #end for
 

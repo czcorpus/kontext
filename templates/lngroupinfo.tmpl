@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $annotconc
 
   #for $l in $LineGroups
-$l['name']	$l['freq']
+$l.name	$l.freq
   #end for
   
 #end def
@@ -46,7 +46,7 @@ id="bodytag"#slurp
 
 #for $lg in $LineGroups
   #if $lg.has_key('pfilter')
-    #set $pfilter = $l['pfilter']
+    #set $pfilter = $l.pfilter
   #else
     #set $pfilter = ''
   #end if
@@ -60,7 +60,7 @@ id="bodytag"#slurp
     </tr></table>
     #for $s in $lg.get('Sketch',[])
 &nbsp;&nbsp;<i>$s.name:</i>
-      #for $c in $s.Colls# $c['word'], #end for#
+      #for $c in $s.Colls# $c.word, #end for#
     #end for
 &nbsp;&nbsp;
       <a href="concsketch?$globals;$q;$pfilter;q=a$annotconc+-$lg.id">word&nbsp;sketch</a></td>

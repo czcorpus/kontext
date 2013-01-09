@@ -125,7 +125,7 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 
 ## Aligned corpora
 #for $a in $Aligned
-[<a href="view?$q;$globals;align=$a['n']">$a['n']</a>]
+[<a href="view?$q;$globals;align=$a.n">$a.n</a>]
 #end for
 
 ## concordance annotation
@@ -153,8 +153,8 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
 <table>
    #for $g in $GroupNumbers
       <tr>
-      #for $i in $g['Items']
-         <td onclick="assing_group('${i['n']}', '${i['lab']}')">$i['lab']</td>
+      #for $i in $g.Items
+         <td onclick="assing_group('${i['n']}', '${i['lab']}')">$i.lab</td>
       #end for
       </tr>
    #end for
@@ -200,10 +200,10 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <select name="fromp">
     #for $p in $Page
       <option
-      #if $p['page'] == $fromp
+      #if $p.page == $fromp
         selected="selected"
       #end if
-      >$p['page']</option>
+      >$p.page</option>
     #end for
   </select>
   #else
@@ -232,53 +232,53 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <table id="conclines">
     #if $viewmode == 'kwic'
       #for $i, $l in $enumerate($Lines)
-        <tr toknum="$l['toknum']" >
-        <td class="ref" onclick="full_ref($l['toknum'])"><div class="ref">$l['ref']</div></td>
+        <tr toknum="$l.toknum" >
+        <td class="ref" onclick="full_ref($l.toknum)"><div class="ref">$l.ref</div></td>
         <td class="lc">
-          #for $ll in $l['Left']
+          #for $ll in $l.Left
             #if $ll.has_key('open_link')
-            <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
+            <a href="$ll.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
             #end if
-            #if $ll.has_key('class') and $ll['class']
-              <i class='$ll['class']'>
+            #if $ll.has_key('class') and $ll.class
+              <i class='$ll.class'>
             #end if
-            $ll['str']
-            #if $ll.has_key('class') and $ll['class']
+            $ll.str
+            #if $ll.has_key('class') and $ll.class
             </i>
             #end if
             #if $ll.has_key('close_link')
-            <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            <a href="$ll.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
             #end if
           #end for
-        </td><td class="kw" onclick="wide_context($l['toknum'],'$l['hitlen']');">
-          #for $k in $l['Kwic']
-            #if $k.has_key('class') and $k['class']
-          <b class='$k['class']'>
+        </td><td class="kw" onclick="wide_context($l.toknum,'$l.hitlen');">
+          #for $k in $l.Kwic
+            #if $k.has_key('class') and $k.class
+          <b class='$k.class'>
         #end if
-            $k['str']
-        #if $k.has_key('class') and $k['class']
+            $k.str
+        #if $k.has_key('class') and $k.class
               </b>
         #end if
           #end for
         </td><td class="rc">
           #if $annotconc
             <span class="groupbox"
-            #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
-             >$l['linegroup']</span>
+            #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
+             >$l.linegroup</span>
           #end if
-          #for $rr in $l['Right']
+          #for $rr in $l.Right
             #if $rr.has_key('open_link')
-            <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+            <a href="$rr.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
             #end if
-            #if $rr.has_key('class') and $rr['class']
-              <i class='$rr['class']'>
+            #if $rr.has_key('class') and $rr.class
+              <i class='$rr.class'>
             #end if
-            $rr['str']
-            #if $rr.has_key('class') and $rr['class']
+            $rr.str
+            #if $rr.has_key('class') and $rr.class
             </i>
             #end if
             #if $rr.has_key('close_link')
-            <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            <a href="$rr.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
             #end if
           #end for
         </td>
@@ -288,38 +288,38 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <span id="ref$i-$ref_i" class="hidden">$ref</span>
           #end for
     <span id="sent$i" class="hidden">#slurp
-          #for $word in $l['Sen_Left']
+          #for $word in $l.Sen_Left
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
-    #if $l['Kwic'][0]['str'].startswith(' ')
-      #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
+    #if $l.Kwic[0]['str'].startswith(' ')
+      #set $l.Kwic[0]['str'] = $l.Kwic[0]['str'].strip()
      <b>#slurp
     #else
     <b>#slurp
     #end if
-          #for $word in $l['Kwic']
+          #for $word in $l.Kwic
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
     </b>#slurp
-          #for $word in $l['Sen_Right']
+          #for $word in $l.Sen_Right
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
     </span></td>
         #end if
         </tr>
-        #for $a in $l['Align']
-          <tr><td></td><td colspan="3"><b>$a['name']: </b>
-          #for $w in $a['Words']
+        #for $a in $l.Align
+          <tr><td></td><td colspan="3"><b>$a.name: </b>
+          #for $w in $a.Words
             #if $w.has_key('class')
-              <i class='$w['class']'>
+              <i class='$w.class'>
             #end if
-            $w['str']
+            $w.str
             #if $w.has_key('class')
           </i>
              #end if
@@ -331,53 +331,53 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     #else
     ## sentence mode
       #for $i,$l in $enumerate($Lines)
-        <tr toknum="$l['toknum']" #if $i%2# class="even"#end if#>
-        <td class="ref" onclick="full_ref($l['toknum'])">$l['ref']</td>
+        <tr toknum="$l.toknum" #if $i%2# class="even"#end if#>
+        <td class="ref" onclick="full_ref($l.toknum)">$l.ref</td>
         <td class="par">
           #if $annotconc
             <span class="groupbox"
-            #if $can_annotate# onclick="show_groupmenu(this, $l['toknum'])" #end if
-             >$l['linegroup']</span>
+            #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
+             >$l.linegroup</span>
           #end if
-          #for $ll in $l['Left']
+          #for $ll in $l.Left
             #if $ll.has_key('open_link')
-                <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll['open_link'].has_key('continued') #&hellip;#end if #</a>
+                <a href="$ll.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
             #end if
-            #if $ll.has_key('class') and $ll['class']
-              <i class='$ll['class']'>
+            #if $ll.has_key('class') and $ll.class
+              <i class='$ll.class'>
             #end if
-            $ll['str']
-            #if $ll.has_key('class') and $ll['class']
+            $ll.str
+            #if $ll.has_key('class') and $ll.class
               </i>
             #end if
             #if $ll.has_key('close_link')
-                <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+                <a href="$ll.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
             #end if
           #end for
-          <span  onclick="wide_context($l['toknum'],'$l['hitlen']');">
-          #for $k in $l['Kwic']
-            #if $k.has_key('class') and $k['class']
-              <b class='$k['class']'>
+          <span  onclick="wide_context($l.toknum,'$l.hitlen');">
+          #for $k in $l.Kwic
+            #if $k.has_key('class') and $k.class
+              <b class='$k.class'>
             #end if
-            $k['str']
-            #if $k.has_key('class') and $k['class']
+            $k.str
+            #if $k.has_key('class') and $k.class
               </b>
             #end if
           #end for
           </span>
-          #for $rr in $l['Right']
+          #for $rr in $l.Right
             #if $rr.has_key('open_link')
-            <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+            <a href="$rr.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
             #end if
-            #if $rr.has_key('class') and $rr['class']
-              <i class='$rr['class']'>
+            #if $rr.has_key('class') and $rr.class
+              <i class='$rr.class'>
             #end if
-            $rr['str']
-            #if $rr.has_key('class') and $rr['class']
+            $rr.str
+            #if $rr.has_key('class') and $rr.class
               </i>
             #end if
             #if $rr.has_key('close_link')
-            <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+            <a href="$rr.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
             #end if
           #end for
         </td>
@@ -387,37 +387,37 @@ id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
     <span id="ref$i-$ref_i" class="hidden">$ref</span>
           #end for
     <span id="sent$i" class="hidden">#slurp
-          #for $word in $l['Sen_Left']
+          #for $word in $l.Sen_Left
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
-    #if $l.Kwic and $l['Kwic'][0]['str'].startswith(' ')
-      #set $l['Kwic'][0]['str'] = $l['Kwic'][0]['str'].strip()
+    #if $l.Kwic and $l.Kwic[0]['str'].startswith(' ')
+      #set $l.Kwic[0]['str'] = $l.Kwic[0]['str'].strip()
      <b>#slurp
     #else
     <b>#slurp
     #end if
-          #for $word in $l['Kwic']
+          #for $word in $l.Kwic
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
     </b>#slurp
-          #for $word in $l['Sen_Right']
+          #for $word in $l.Sen_Right
     #slurp
-    $word['str']#slurp
+    $word.str#slurp
           #end for
     #slurp
     </span></td>
         #end if
-        #for $a in $l['Align']
-          <td><b>$a['name']:</b>
-          #for $w in $a['Words']
+        #for $a in $l.Align
+          <td><b>$a.name:</b>
+          #for $w in $a.Words
             #if $w.has_key('class')
-              <i class='$w['class']'>
+              <i class='$w.class'>
         #end if
-            $w['str']
+            $w.str
             #if $w.has_key('class')
           </i>
         #end if

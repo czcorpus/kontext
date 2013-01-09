@@ -45,12 +45,12 @@ $_("Subcorpus"): <b>$usesubcorp</b>
 <tbody>
 #for $d in $Desc
   <tr>
-    <td>$d['op']
+    <td>$d.op
     </td><td>
-    $d['arg']
-    #set $href = 'view?' + $d['tourl'] + ';' + $globals
+    $d.arg
+    #set $href = 'view?' + $d.tourl + ';' + $globals
     </td><td align="right">
-      <a href="$href">$d['size']</a>
+      <a href="$href">$d.size</a>
     </td>
   </tr>
 #end for

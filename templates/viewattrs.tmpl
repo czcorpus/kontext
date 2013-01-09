@@ -62,8 +62,8 @@ $input_hidden
     <td valign="top">
       #set $navid = 'id="firstattr"'
       #for $a in $Availattrs
-        #set $checked = ($a['checked']) and 'checked="checked"' or ''
-        <label><input type='checkbox' name='setattrs' value='$a['n']' $checked $navid/> $_($a['n'])</label><br/>
+        #set $checked = ($a.checked) and 'checked="checked"' or ''
+        <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $_($a.n)</label><br/>
         #set $navid = ''
       #end for
       <hr/>
@@ -83,16 +83,16 @@ $input_hidden
     <td valign="top">
         <select name='setstructs' size="13" multiple="multiple">
       #for $a in $Availstructs
-        #set $selected = ($a['sel']) and 'selected="selected"' or ''
-        <option value='$a['n']' $selected>&lt;$a['n']&gt; $a['label']</option>
+        #set $selected = ($a.sel) and 'selected="selected"' or ''
+        <option value='$a.n' $selected>&lt;$a.n&gt; $a.label</option>
       #end for
         </select>
     </td>
     #end if
     <td valign="top"><select name='setrefs' size="13" multiple="multiple">
     #for $a in $Availrefs
-        #set $selected = ($a['sel']) and 'selected="selected"' or ''
-        <option value='$a['n']' $selected>$_($a['label'])</option>
+        #set $selected = ($a.sel) and 'selected="selected"' or ''
+        <option value='$a.n' $selected>$_($a.label)</option>
     #end for
     </select>
     </td>

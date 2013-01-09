@@ -38,7 +38,7 @@ $corpname
 <b><br/>$_("Last Stored Concordances")</b>
  <ul>
  #for $l in $LastStoredConcs
-   <li><a href="selectstored?$corpname_url;annotconc=$l['n']">$l['n']</a></li>
+   <li><a href="selectstored?$corpname_url;annotconc=$l.n">$l.n</a></li>
  #end for
  </ul>
 

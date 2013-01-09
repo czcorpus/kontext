@@ -321,8 +321,8 @@ $corp_full_name</b><br>
     onchange="this.form.reload.value=1;if(this.form.usesubcorp)this.form.usesubcorp.value='';this.form.submit();"
   #end if#>
   #for $c in $Corplist
-    #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-    <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
+    #set $selected = ($c.id == $corpname) and 'selected="selected"' or ''
+    <option value="$c.id" title="$c.desc ($c.size)" data-path="$c.path" $selected>$c.name</option>
   #end for
 </select>
 #end if
@@ -359,10 +359,10 @@ $corp_sel
     <option value="">$_("None (whole corpus)")</option>
     #for $l in $LastSubcorp
       <option
-      #if $l['n'] == $getVar($nameid, '')
+      #if $l.n == $getVar($nameid, '')
         selected
       #end if
-      >$l['n']</option>
+      >$l.n</option>
     #end for
     </select>
     <i>
@@ -384,7 +384,7 @@ $corp_sel
   <input type="hidden" name="q" value="${qq['q'], also='"'}" />
 #end for
 #for $g in $Globals
-  <input type="hidden" name="$g['name']" value="$g['value']" />
+  <input type="hidden" name="$g.name" value="$g.value" />
 #end for
 #end def
 
@@ -406,25 +406,25 @@ $corp_sel
   });
   </script>
   <table class="text-type-params"><tr><td colspan="4" align="right">
-  #for $nn in $TextTypeSel['Normslist']
+  #for $nn in $TextTypeSel.Normslist
     #if $nn.n == $subcnorm
       <b>
     #end if
-    <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
+    <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn.n">$nn.label</a>
     #if $nn.n == $subcnorm
       </b>
     #end if
   #end for
   </td></tr>
-  #for $t in $TextTypeSel['Blocks']
+  #for $t in $TextTypeSel.Blocks
   <tr valign="top">
-    #for $l in $t['Line']
+    #for $l in $t.Line
     <td>
     <table class="envelope" width="100%">
       <thead>
         <tr>
-        <th align="left">$_($l['label'])</th>
-      #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+        <th align="left">$_($l.label)</th>
+      #if $TextTypeSel.Normslist and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
         <th>#</th>
       #end if
         </tr>
@@ -435,39 +435,39 @@ $corp_sel
       #if $l.has_key('Values')
         #if $l.has_key('hierarchical')
           <tr><td><ul>
-          #set $hsep = $l['hierarchical']
-          #for $v in $l['Values']
-            #if $v['startdiv']
-              #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
-              <ul id="div_$v['key']" $hidden>
+          #set $hsep = $l.hierarchical
+          #for $v in $l.Values
+            #if $v.startdiv
+              #set $hidden = ("div_"+$v.key in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
+              <ul id="div_$v.key" $hidden>
             #end if
             <li>
-            #if $v['display_plus']
-            #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
-            <img src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")" onclick="hideElem.cmdHideElementStore('div_$v['key']$hsep$v['label']', 1, '${files_path}');" />
+            #if $v.display_plus
+            #set $icon = ("div_"+$v.key+$hsep+$v.label in $showhiddenlist) and 'minus' or 'plus'
+            <img src="$files_path/img/${icon}.png" id="div_$v.key$hsep${v['label']}img" alt="$_("hide/show")" onclick="hideElem.cmdHideElementStore('div_$v.key$hsep$v.label', 1, '${files_path}');" />
             #else
             <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
             #end if
-            #if $v['v']
-              <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
-<label for="sca_$l['name']">$_($v['label'])</label>
-              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength')
+            #if $v.v
+              <input type="checkbox" name="sca_$l.name" value="$v.v" />
+<label for="sca_$l.name">$_($v.label)</label>
+              #if $TextTypeSel.Normslist and not $l.has_key('textboxlength')
                 ($v.get('xcnt', ''))
               #end if
             #end if
-            #if not $v['display_plus']
+            #if not $v.display_plus
             </li>
             #end if
-            #for $i in $range($v['enddiv'])
+            #for $i in $range($v.enddiv)
               </ul></li>
             #end for
           #end for
           </ul></td></tr>
         #else
-          #for $v in $l['Values']
-            #if $v['v']
-              <tr><td><label><input type="checkbox" name="sca_$l['name']" value="$v['v']" /> $_($v['v'])</label></td>
-              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+          #for $v in $l.Values
+            #if $v.v
+              <tr><td><label><input type="checkbox" name="sca_$l.name" value="$v.v" /> $_($v.v)</label></td>
+              #if $TextTypeSel.Normslist and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
                 <td align="right">$v.get('xcnt', '')</td>
               #end if
               </tr>
@@ -475,13 +475,13 @@ $corp_sel
           #end for
         #end if
      <tr><td>
-     <input class="select-all" type="button" data-action-type="1" data-item-name="sca_$l['name']" data-alt-value="$_('Deselect all')" value="$_('Select All')" />
+     <input class="select-all" type="button" data-action-type="1" data-item-name="sca_$l.name" data-alt-value="$_('Deselect all')" value="$_('Select All')" />
      </td></tr>
       #end if
       #if $l.has_key('textboxlength')
         <tr><td>
-   <input id="scaid_$l['name']" name="sca_$l['name']"
-           type="text" size="$l['textboxlength']" />
+   <input id="scaid_$l.name" name="sca_$l.name"
+           type="text" size="$l.textboxlength" />
    </td></tr>
       #end if
       #if $l.attr_doc
@@ -546,11 +546,11 @@ $corp_sel
     $_("PoS"):<select name="lpos">
       <option value="">$_("unspecified")</option>
       #for $lp in $Lposlist
-        <option value="$lp['v']"
-	#if $lp['v'] == $lpos
+        <option value="$lp.v"
+	#if $lp.v == $lpos
 	  selected="selected"
 	#end if
-	>$lp['n']</option>
+	>$lp.n</option>
       #end for
       </select>
     </span>
@@ -571,11 +571,11 @@ $corp_sel
     $_("PoS"):<select name="wpos">
     <option value="">$_("unspecified")</option>
     #for $wp in $Wposlist
-      <option value="$wp['v']"
-      #if $wp['v'] == $wpos
+      <option value="$wp.v"
+      #if $wp.v == $wpos
         selected="selected"
       #end if
-      >$wp['n']</option>
+      >$wp.n</option>
     #end for
     </select>
     </span>
@@ -601,11 +601,11 @@ $corp_sel
   <span class="no-wrap">
   $_("Default attribute"):<select name="default_attr">
   #for $a in $AttrList
-    <option value="$a['n']"
-    #if $a['n'] == $default_attr
+    <option value="$a.n"
+    #if $a.n == $default_attr
       selected="selected"
     #end if
-    >$_($a['label'])</option>
+    >$_($a.label)</option>
   #end for
   </select>
 #if $tagsetdoc

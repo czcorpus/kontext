@@ -48,8 +48,8 @@ $_("Subcorpora"):<br/>
 <select name="subcname" id="subcname" onchange="show_subcorpinfo();"
         size="#if len($SubcorpList) == 1 then 2 else len($SubcorpList)#">
   #for $s in $SubcorpList
-    #set $selected = ($s['n'] == $subcname) and 'selected="selected"' or ''
-    <option $selected>$s['n']</option>
+    #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
+    <option $selected>$s.n</option>
   #end for
 </select>
 #else

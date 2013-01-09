@@ -200,25 +200,25 @@ function update_processbar() {
   #for $k in $Keywords
     <tr
     #if $k.has_key('class')
-      class="$k['class']"
+      class="$k.class"
     #end if
     >
-      <td class="left">$k['str']</td>
+      <td class="left">$k.str</td>
       <td></td>
-    #set $url_str = $urlquote($k['str'].replace('"', '\\"'))
-      <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k['freq']</a></td>
-      <td>$k['rel']</td>
+    #set $url_str = $urlquote($k.str.replace('"', '\\"'))
+      <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq</a></td>
+      <td>$k.rel</td>
       <td></td>
       <td>
-      #if $k['freq_ref']
-        <a href="first?$corpname_url;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k['freq_ref']</a>
+      #if $k.freq_ref
+        <a href="first?$corpname_url;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
       #else
         0
       #end if
       </td>
-      <td>$k['rel_ref']</td>
+      <td>$k.rel_ref</td>
       <td></td>
-      <td> $k['score']</td>
+      <td> $k.score</td>
     </tr>
   #end for
 #else

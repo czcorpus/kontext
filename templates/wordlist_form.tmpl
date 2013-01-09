@@ -104,14 +104,14 @@ $input_hidden
   <td><select name="wlattr">
   <optgroup label="Positional Attributes">
   #for $a in $Attrlist
-    #set $selected = ($a['n'] == $wlattr) and 'selected' or ''
-    <option value="$a['n']" $selected>$_($a['label'])</option>
+    #set $selected = ($a.n == $wlattr) and 'selected' or ''
+    <option value="$a.n" $selected>$_($a.label)</option>
   #end for
   </optgroup>
   <optgroup label="Text Types">
   #for $a in $StructAttrList
-    #set $selected = ($a['n'] == $wlattr) and 'selected' or ''
-    <option value="$a['n']" $selected>$_($a['label'])</option>
+    #set $selected = ($a.n == $wlattr) and 'selected' or ''
+    <option value="$a.n" $selected>$_($a.label)</option>
   #end for
   </optgroup>
   </select></td>
@@ -167,15 +167,15 @@ $input_hidden
     onchange="this.form.reload.value=1; if(this.form.ref_usesubcorp) this.form.ref_usesubcorp.value=''; this.form.submit();"
   >
     #for $c in $CompatibleCorpora
-      #set $selected = ($c['id'] == $ref_corpname) and 'selected="selected"' or ''
-      <option value="$c['id']" $selected>$c['name']</option>
+      #set $selected = ($c.id == $ref_corpname) and 'selected="selected"' or ''
+      <option value="$c.id" $selected>$c.name</option>
     #end for
   </select>
   <select name="ref_usesubcorp" id="ref_usesubcorp">
     <option value="">($_("whole corpus"))</option>
   #if $RefSubcorp
     #for $l in $RefSubcorp
-       <option>$l['n']</option>
+       <option>$l.n</option>
     #end for
   #end if
   </select>
@@ -192,7 +192,7 @@ $input_hidden
     <option value="">---</option>
     #for $a in $Attrlist
       #set selected = ''
-      <option value="$a['n']" $selected>$_($a['label'])</option>
+      <option value="$a.n" $selected>$_($a.label)</option>
     #end for
     </select>
   #end for

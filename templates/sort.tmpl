@@ -61,10 +61,10 @@ $input_hidden
     <th>$_("Attribute"):</th>
     <td><select name="sattr" id="select">
   #for $a in $Sort_attrlist
-    <option value="$a['n']">$_($a['n'])</option>
+    <option value="$a.n">$_($a.n)</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select></td>
   </tr>
@@ -132,10 +132,10 @@ $input_hidden
     <th>$_("Attribute"):</th>
     <td><select name="ml1attr">
   #for $a in $Sort_attrlist
-    <option value="$a['n']">$_($a['n'])</option>
+    <option value="$a.n">$_($a.n)</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select></td>
   </tr>
@@ -156,11 +156,11 @@ $input_hidden
   <th class="tall">$_("Position"):</th>
   <td><select name="ml1ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml1ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml1ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select></td>
   </tr>
@@ -179,10 +179,10 @@ $input_hidden
   <th>$_("Attribute"):</th>
   <td><select name="ml2attr">
   #for $a in $Sort_attrlist
-    <option value="$a['n']">$_($a['n'])</option>
+    <option value="$a.n">$_($a.n)</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select></td>
 </tr>
@@ -203,11 +203,11 @@ $input_hidden
   <th class="tall">$_("Position"):</th>
   <td><select name="ml2ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml2ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml2ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select></td>
 </tr>
@@ -226,10 +226,10 @@ $input_hidden
   <th>$_("Attribute"):</th>
   <td><select name="ml3attr">
   #for $a in $Sort_attrlist
-    <option value="$a['n']">$_($a['n'])</option>
+    <option value="$a.n">$_($a.n)</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select></td>
 </tr>
@@ -250,11 +250,11 @@ $input_hidden
   <th class="tall">$_("Position"):</th>
   <td><select name="ml3ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml3ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml3ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select></td>
   </tr>

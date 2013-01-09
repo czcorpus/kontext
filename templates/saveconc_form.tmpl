@@ -55,19 +55,19 @@ hideElem.loadHideElementStore('${files_path}');
 <tbody>
 #for $d in $Desc
   <tr>
-    <td>$d['op']
+    <td>$d.op
     </td><td>
-    #if $d['churl']
-      #set $href = $d['churl'] + ';' + $globals
+    #if $d.churl
+      #set $href = $d.churl + ';' + $globals
       <a href="$href">
     #end if
-    $d['arg']
-    #if $d['churl']
+    $d.arg
+    #if $d.churl
       </a>
     #end if
-    #set $href = 'view?' + $d['tourl'] + ';' + $globals
+    #set $href = 'view?' + $d.tourl + ';' + $globals
     </td><td align="right">
-      <a href="$href">$d['size']</a>
+      <a href="$href">$d.size</a>
     </td>
   </tr>
 #end for
