@@ -443,24 +443,14 @@ define(['jquery'], function ($) {
              *
              */
             uncheckAll : function () {
-                var prop;
-
                 multiSelect.activeBlockId = null;
                 $(multiSelect.ulElement).find('input[type="checkbox"]').attr('checked', false);
-
-                for (prop in multiSelect.blockSwitchLinks) {
-                    if (multiSelect.blockSwitchLinks.hasOwnProperty(prop)) {
-                        $(multiSelect.blockSwitchLinks[prop]).css('font-weight', 'normal');
-                    }
-                }
             },
 
             /**
              *
              */
             collapseAll : function () {
-                var prop;
-
                 multiSelect.eachBlock(function (block, blockId) {
                     multiSelect.flipBlockVisibility(blockId, 'none');
                 });
