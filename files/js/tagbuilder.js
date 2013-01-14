@@ -423,6 +423,64 @@ define(['jquery'], function ($) {
 
             /**
              *
+             * @param tagString
+             */
+            updateByRawInputData : function (tagString) {
+                var stringItems;
+
+                if (tagString.indexOf('.*') > -1) {
+                    tagString = tagString.substr(0, tagString.indexOf('.*'));
+                }
+                stringItems = (function (s) {
+                    var c, i, escape = null, ans = [], multiChar = null;
+
+                    for (i = 0; i < s.length; i += 1) {
+                        c = s.substr(i, 1);
+
+                        if (c === '\\') {
+                            escape = c;
+
+                        } else if (c === '[' && multiChar === null) {
+                            multiChar = [];
+
+                        } else if (c === ']' && multiChar !== null) {
+                            ans.push(multiChar);
+                            multiChar = null;
+
+                        } else {
+                            if (escape !== null) {
+                                c = escape + c;
+                                escape = null;
+                            }
+                            if (multiChar !== null) {
+                                multiChar.push(c);
+
+                            } else {
+                                ans.push([c]);
+                            }
+                        }
+                    }
+                    return ans;
+                })(tagString);
+                // ---- experimental/unfinished code -----
+                console.log('string items: ' + stringItems);
+                tagLoader.multiSelectComponent.uncheckAll();
+                tagLoader.multiSelectComponent.eachBlock(function (block, blockId, position) {
+                    $(block).find('input[type="checkbox"]').each(function () {
+                        console.log('testing: ' + $(this).val() + ' against: ');
+                        console.log(stringItems[position]);
+                        if ($.inArray($(this).val(), stringItems[position]) > -1) {
+                            //tagLoader.multiSelectComponent.checkItem(blockId, $(this).val());
+                            //$('#' + blockId).find('a.switch-link').trigger('click');
+                            $(this).trigger('click');
+                        }
+                        //console.log('init by a Q: ' + $(this).attr('id') + ', i = ' + position);
+                    });
+                });
+            },
+
+            /**
+             *
              */
             resetButtonClick : function () {
                 var prop;
