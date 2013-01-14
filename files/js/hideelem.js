@@ -199,7 +199,7 @@
                     jqFocusElem.val('[tag="' + oldval + '"]');
 
                 } else {
-                    jqFocusElem.val('');
+                    jqFocusElem.val(oldval);
                 }
 
             } else if (newid === 'tagrow') {
