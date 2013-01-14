@@ -149,9 +149,10 @@
         },
 
         /**
+         * @param widgets
          * @param resetButtonActions
          */
-        cmdSwitchQuery : function (resetButtonActions) {
+        cmdSwitchQuery : function (widgets, resetButtonActions) {
             var jqQs = $('#queryselector'),
                 newid,
                 jqFocusElem,
@@ -162,6 +163,7 @@
                 jqElem,
                 date;
 
+            widgets = widgets || {};
             resetButtonActions = resetButtonActions || {};
             newid = jqQs.val();
             jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
@@ -177,24 +179,26 @@
                 });
             }
 
-            for (i = 0; i < jqQs.get(0).options.length; i += 1) {
-                elementId = jqQs.get(0).options[i].value;
+            jqQs.find('option').each(function () {
+                elementId = $(this).val();
                 jqElem = $('#' + elementId);
-
                 if (elementId === newid) {
                     jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
-                    jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
-                    if (jqElem.hasClass('visible') && !oldval) {
+                    if (jqElem.hasClass('visible')) {
+                        jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
                         oldval = jqOldElem.val();
+                        jqOldElem.val('');
+                        if (widgets.hasOwnProperty(newid)) {
+                            widgets[newid].resetWidget();
+                        }
+                        jqElem.removeClass('visible').addClass('hidden');
                     }
-                    jqOldElem.val('');
-                    jqElem.removeClass('visible').addClass('hidden');
                 }
-            }
+            });
             // Keep the value of the last query
-            if (jqOldElem.attr('name') === 'tag') {
+            if (jqOldElem && jqOldElem.attr('name') === 'tag') {
                 if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
                     jqFocusElem.val('[tag="' + oldval + '"]');
 

@@ -75,7 +75,8 @@ require(['domReady!', 'jquery'], function (domReady, \$) {
 require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, tagbuilder) {
     var msComponent,
         tagBuilderComponent,
-        concFormResetButtonActions;
+        concFormResetButtonActions,
+        widgetMap;
 
     if (\$('#tag-builder-widget').length > 0) {
         msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
@@ -89,13 +90,16 @@ require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, t
         concFormResetButtonActions = {
             tagrow : tagBuilderComponent.resetButtonClick
         };
-        hideElem.cmdSwitchQuery(concFormResetButtonActions);
+        widgetMap = {
+            tagrow : tagBuilderComponent
+        };
+        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions);
     }
     hideElem.loadHideElementStoreSimple();
     hideElem.loadHideElementStore('${files_path}');
 
         \$('#queryselector').bind('change', function () {
-        hideElem.cmdSwitchQuery(concFormResetButtonActions);
+        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions);
     });
 });
 
