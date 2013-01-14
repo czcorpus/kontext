@@ -152,7 +152,6 @@
          * @param resetButtonActions
          */
         cmdSwitchQuery : function (resetButtonActions) {
-
             var jqQs = $('#queryselector'),
                 newid,
                 jqFocusElem,
@@ -163,6 +162,7 @@
                 jqElem,
                 date;
 
+            resetButtonActions = resetButtonActions || {};
             newid = jqQs.val();
             jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
             oldval = jqFocusElem.val();
@@ -194,7 +194,7 @@
                 }
             }
             // Keep the value of the last query
-            if (newid === 'cqlrow' && jqOldElem.attr('name') === 'tag') {
+            if (jqOldElem.attr('name') === 'tag') {
                 if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
                     jqFocusElem.val('[tag="' + oldval + '"]');
 
