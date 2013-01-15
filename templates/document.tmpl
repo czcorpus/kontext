@@ -471,9 +471,8 @@ $corp_sel
             #if $v['v']
               <tr  #if $i % 2 == 0 #class="even"#end if#>
                 <td class="separ">
-                    <div>
-                        <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label></td>
-                    </div>
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label>
+                </td>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
                 <td class="num">$v.get('xcnt', '')</td>
               #else
@@ -504,7 +503,7 @@ $corp_sel
     #end for
     <div style="clear: both; height: 20px;">  </div>
   #end for
-
+  </div>
 #end def
 
 
