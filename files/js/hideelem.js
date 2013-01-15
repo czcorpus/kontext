@@ -172,6 +172,7 @@
             $('#conc-form-clear-button').unbind('click');
             if (resetButtonActions[jqQs.val()]) {
                 $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
+                context.hideElem.clearForm($('#mainform'));
 
             } else {
                 $('#conc-form-clear-button').bind('click', function () {
@@ -232,14 +233,16 @@
                 $('#error').css('display', 'none');
             }
             $(f).find('input,select').each(function () {
-                if ($(this).attr('type') === 'text') {
-                    $(this).val('');
-                }
-                if ($(this).attr('name') === 'default_attr') {
-                    $(this).val('');
-                }
-                if ($(this).attr('name') === 'lpos' || $(this).attr('name') === 'wpos') {
-                    $(this).val('');
+                if ($(this).attr('data-ignore-reset') !== '1') {
+                    if ($(this).attr('type') === 'text') {
+                        $(this).val('');
+                    }
+                    if ($(this).attr('name') === 'default_attr') {
+                        $(this).val('');
+                    }
+                    if ($(this).attr('name') === 'lpos' || $(this).attr('name') === 'wpos') {
+                        $(this).val('');
+                    }
                 }
             });
             $('#queryselector').val(prevRowType);
