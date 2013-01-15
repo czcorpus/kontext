@@ -399,14 +399,12 @@ $corp_sel
   <div class="auto_complete" id="subcorp_auto_complete"></div>
   #set $showhiddenlist = $getVar("showhidden", '').split(".")
   <script type="text/javascript">
-  require(['jquery'], function (\$) {
-      \$(document).ready(function () {
-        \$('input[class="select-all"]').each(function (i, item) {
-            \$(item).bind('click', function (event) {
-                hideElem.selectAllCheckBoxes(event.target, event.target.readAttribute('data-item-name'));
-            });
+  require(['jquery', 'domReady!'], function (\$, dr) {
+    \$('input[class="select-all"]').each(function () {
+        \$(this).bind('click', function (event) {
+            hideElem.selectAllCheckBoxes(event.target, \$(event.target).attr('data-item-name'));
         });
-      });
+    });
   });
   </script>
   <div class="text-type-params">
