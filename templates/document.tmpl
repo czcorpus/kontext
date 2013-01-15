@@ -409,23 +409,23 @@ $corp_sel
       });
   });
   </script>
-  <table class="text-type-params"><tr><td colspan="4" align="right">
-  #for $nn in $TextTypeSel['Normslist']
-    #if $nn.n == $subcnorm
-      <b>
-    #end if
-    <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
-    #if $nn.n == $subcnorm
-      </b>
-    #end if
-  #end for
-  </td></tr>
+  <div class="text-type-params">
+  <div class="text-type-top-bar">
+      #for $nn in $TextTypeSel['Normslist']
+        #if $nn.n == $subcnorm
+          <b>
+        #end if
+        <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
+        #if $nn.n == $subcnorm
+          </b>
+        #end if
+      #end for
+  </div>
   #for $t in $TextTypeSel['Blocks']
-  <tr valign="top">
     #for $l in $t['Line']
-    <td>
-    <table class="envelope" width="100%">
-      <thead>
+
+    <table class="envelope" border="0">
+      <thead class="fixed">
         <tr>
         <th align="left">$_($l['label'])</th>
       #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
@@ -433,6 +433,7 @@ $corp_sel
       #end if
         </tr>
       </thead>
+      <tbody class="scrollable">
       #if $l.attr_doc
         <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
       #end if
@@ -454,7 +455,7 @@ $corp_sel
             #end if
             #if $v['v']
               <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
-<label for="sca_$l['name']">$_($v['label'])</label>
+                <label for="sca_$l['name']">$_($v['label'])</label>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength')
                 ($v.get('xcnt', ''))
               #end if
@@ -468,35 +469,43 @@ $corp_sel
           #end for
           </ul></td></tr>
         #else
+          #set $i = 0
           #for $v in $l['Values']
             #if $v['v']
-              <tr><td><label><input type="checkbox" name="sca_$l['name']" value="$v['v']" /> $_($v['v'])</label></td>
+              <tr  #if $i % 2 == 0 #class="even"#end if#>
+                <td class="separ">
+                    <div>
+                        <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label></td>
+                    </div>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
-                <td align="right">$v.get('xcnt', '')</td>
+                <td class="num">$v.get('xcnt', '')</td>
               #end if
               </tr>
             #end if
+            #set $i = $i + 1
           #end for
         #end if
-     <tr><td>
+      </tbody>
+      <tbody>
+     <tr class="last-line"><td>
      <input class="select-all" type="button" data-action-type="1" data-item-name="sca_$l['name']" data-alt-value="$_('Deselect all')" value="$_('Select All')" />
      </td></tr>
-      #end if
-      #if $l.has_key('textboxlength')
-        <tr><td>
-   <input id="scaid_$l['name']" name="sca_$l['name']"
-           type="text" size="$l['textboxlength']" />
-   </td></tr>
+      #else
+        <tr>
+            <td>
+            <input id="scaid_$l['name']" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+            </td>
+        </tr>
       #end if
       #if $l.attr_doc
         <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
       #end if
+    </tbody>
     </table>
-    </td>
     #end for
-  </tr>
+    <div style="clear: both; height: 20px;">  </div>
   #end for
-  </table>
+
 #end def
 
 
