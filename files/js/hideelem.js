@@ -328,8 +328,8 @@
                 $(initiator).attr('data-alt-value', tmp);
             }
             if (form !== undefined) {
-                form.select('input[type="checkbox"][name="' + name + '"]').each(function (item) {
-                    item.checked = chkStatus;
+                $(form).find('input[type="checkbox"][name="' + name + '"]').each(function () {
+                    $(this).attr('checked', chkStatus);
                 });
             }
         },
