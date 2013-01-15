@@ -136,6 +136,7 @@ table.envelope td, table.envelope th {
 
 table.envelope th {
     color: #ffffff;
+    text-align: left;
 }
 
 table.envelope tr.last-line td {
@@ -150,7 +151,7 @@ table.envelope td.separ {
     border-width: 0 1px 0 0;
 }
 
-table.envelope td.num {
+table.envelope .num {
     text-align: right;
 }
 
