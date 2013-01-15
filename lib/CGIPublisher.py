@@ -23,6 +23,8 @@ import codecs
 import imp
 import urllib
 import json
+import logging
+import settings
 
 # According to Cheetag changelog, Cheetah should use Unicode in its internals since version 2.2.0
 # If you experience it also in any previous version, change it here:
@@ -128,6 +130,7 @@ class CGIPublisher:
 
     def __init__ (self, environ=os.environ):
         self.environ = environ
+        self.headers_sent = False
 
         # correct _template_dir
         if not os.path.isdir (self._template_dir):
@@ -313,16 +316,19 @@ class CGIPublisher:
         except Exception as e:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
-            import settings
 
             return_type = self.get_method_metadata(path[0], 'return_type')
-            self.output_headers(return_type=return_type)
+            if not self.headers_sent:
+                self.output_headers(return_type=return_type)
+                self.headers_sent = True
 
             if settings.is_debug_mode() or type(e) is UserActionException:
-                import logging
                 message = u'%s' % e
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
+
+            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
+
             if return_type == 'json':
                 print(json.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
             else:
@@ -363,12 +369,7 @@ class CGIPublisher:
                     getattr (method, 'template', methodname + '.tmpl'),
                     self.call_method (method, pos_args, named_args))
         except Exception, e:
-            import logging
-            import traceback
-            import settings
-            err_type, err_value, err_trace = sys.exc_info()
-            err_out = traceback.format_exception(err_type, err_value, err_trace)
-            logging.getLogger(__name__).error(''.join(err_out))
+            logging.getLogger(__name__).error(''.join(self.get_traceback()))
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
@@ -442,6 +443,7 @@ class CGIPublisher:
             for k,v in self._headers.items():
                 outf.write('%s: %s\n' % (k, v))
             outf.write('\n')
+        self.headers_sent = True
         return cookies, self._headers
 
        
@@ -474,7 +476,8 @@ class CGIPublisher:
                 result = TemplateClass(searchList=[result, self])
             else:
                 result = Template(template, searchList=[result, self])
-            if return_template: return result
+            if return_template:
+                return result
             result.respond(CheetahResponseFile(outf))
         
         # Image
@@ -486,6 +489,13 @@ class CGIPublisher:
         else:
             outf.write(str(result))
 
+
+    def get_traceback(self):
+        """
+        """
+        import traceback
+        err_type, err_value, err_trace = sys.exc_info()
+        return traceback.format_exception(err_type, err_value, err_trace)
 
     def methods (self, params=0):
         """list all methods with a doc string"""

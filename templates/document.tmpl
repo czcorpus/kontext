@@ -77,30 +77,9 @@ require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, t
         tagBuilderComponent,
         concFormResetButtonActions,
         widgetMap;
+/*
 
-    if (\$('#tag-builder-widget').length > 0) {
-        msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
-                { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-        tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
-                resetButton : null,
-                backButton : null,
-                hiddenElm : \$('#tag'),
-                tagDisplay : \$('#tag-display')
-        });
-        concFormResetButtonActions = {
-            tagrow : tagBuilderComponent.resetButtonClick
-        };
-        widgetMap = {
-            tagrow : tagBuilderComponent
-        };
-        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions);
-    }
-    hideElem.loadHideElementStoreSimple();
-    hideElem.loadHideElementStore('${files_path}');
-
-        \$('#queryselector').bind('change', function () {
-        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions);
-    });
+    */
 });
 
 #if $getVar('ga_identifier', '')
