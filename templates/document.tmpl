@@ -479,6 +479,8 @@ $corp_sel
                     </div>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
                 <td class="num">$v.get('xcnt', '')</td>
+              #else
+                <td></td>
               #end if
               </tr>
             #end if
