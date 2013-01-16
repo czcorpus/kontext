@@ -79,7 +79,8 @@ define(['win', 'jquery'], function (context, $) {
                     boxHeight = '70px',
                     boxIntWidth,
                     boxTop = 0,
-                    jqWhereElement = $(whereElement);
+                    jqWhereElement = $(whereElement),
+                    fontSize;
 
                 options = options || {};
 
@@ -90,6 +91,8 @@ define(['win', 'jquery'], function (context, $) {
                 if (options.hasOwnProperty('width')) {
                     boxWidth = options.width;
                 }
+
+                fontSize = options.hasOwnProperty('fontSize') ? options.fontSize : 'inherit';
 
                 popupBox.newElem = document.createElement('div');
                 jqWhereElement.append(popupBox.newElem);
@@ -108,7 +111,8 @@ define(['win', 'jquery'], function (context, $) {
                     'background-color' : '#FFF',
                     width : boxWidth,
                     height: boxHeight,
-                    'box-shadow': '2px 2px 1px #444'
+                    'box-shadow': '2px 2px 1px #444',
+                    'font-size' : fontSize
                 });
 
                 if (options.hasOwnProperty('top')) {
