@@ -151,8 +151,9 @@
         /**
          * @param widgets
          * @param resetButtonActions
+         * @param hints
          */
-        cmdSwitchQuery : function (widgets, resetButtonActions) {
+        cmdSwitchQuery : function (widgets, resetButtonActions, hints) {
             var jqQs = $('#queryselector'),
                 newid,
                 jqFocusElem,
@@ -165,6 +166,7 @@
 
             widgets = widgets || {};
             resetButtonActions = resetButtonActions || {};
+            hints = hints || {};
             newid = jqQs.val();
             jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
             oldval = jqFocusElem.val();
@@ -212,6 +214,20 @@
 
             } else {
                 jqFocusElem.val(oldval);
+            }
+
+            if (newid === 'iqueryrow') {
+                $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
+                $('#query-type-hint').bind('click', function (event) {
+                    require(['popupbox'], function (ppbox) {
+                        ppbox.createPopupBox(event, 'query-type-hint-box', $('#query-type-hint'), hints['iqueryrow'],
+                            { 'top' : 'attached-bottom', 'fontSize' : '10pt' });
+                    });
+                    event.stopPropagation();
+                });
+
+            } else {
+                $('#query-type-hint').remove();
             }
 
             date = new Date();

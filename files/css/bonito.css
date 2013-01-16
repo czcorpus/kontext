@@ -373,3 +373,7 @@ fieldset.float {
     border-width: 0px;
     background-color: transparent;
 }
+
+#query-type-hint {
+    padding-left: 4px;
+}
