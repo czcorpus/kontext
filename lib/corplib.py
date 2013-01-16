@@ -313,8 +313,7 @@ def texttype_values (corp, subcorpattrs, maxlistsize, list_all=False):
                     attrval ['hierarchical'] = hsep
                     attrval ['Values'] = get_attr_hierarchy(vals, hsep, multisep)
                 else:
-                    vals.sort()
-                    attrval ['Values'] = vals
+                    attrval ['Values'] = sorted(vals, cmp=lambda x,y : cmp(x['v'].lower(), y['v'].lower()))
             attrvals.append (attrval)
         attrlines.append ({'Line': attrvals})
     return attrlines
