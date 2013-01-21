@@ -60,7 +60,6 @@ define(['jquery'], function ($) {
         /**
          * Tag data loading service object
          *
-         * @type {Object}
          */
         tagLoader = {
 
