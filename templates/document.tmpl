@@ -75,27 +75,35 @@ require(['domReady!', 'jquery'], function (domReady, \$) {
 require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, tagbuilder) {
     var msComponent,
         tagBuilderComponent,
-        concFormResetButtonActions;
+        concFormResetButtonActions,
+        widgetMap,
+        queryTypesHints;
 
     if (\$('#tag-builder-widget').length > 0) {
         msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
                 { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
         tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
-                resetButton : null,
-                backButton : null,
-                hiddenElm : \$('#tag'),
+            resetButton : null,
+            backButton : null,
+            hiddenElm : \$('#tag'),
                 tagDisplay : \$('#tag-display')
-        });
-        concFormResetButtonActions = {
-            tagrow : tagBuilderComponent.resetButtonClick
-        };
-        hideElem.cmdSwitchQuery(concFormResetButtonActions);
-    }
+    });
+    concFormResetButtonActions = {
+        tagrow : tagBuilderComponent.resetButtonClick
+    };
+    widgetMap = {
+        tagrow : tagBuilderComponent
+    };
+    queryTypesHints = {
+        iqueryrow : '$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')'
+    };
+    hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
+}
     hideElem.loadHideElementStoreSimple();
     hideElem.loadHideElementStore('${files_path}');
 
         \$('#queryselector').bind('change', function () {
-        hideElem.cmdSwitchQuery(concFormResetButtonActions);
+        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
     });
 });
 
@@ -395,40 +403,39 @@ $corp_sel
   <div class="auto_complete" id="subcorp_auto_complete"></div>
   #set $showhiddenlist = $getVar("showhidden", '').split(".")
   <script type="text/javascript">
-  require(['jquery'], function (\$) {
-      \$(document).ready(function () {
-        \$('input[class="select-all"]').each(function (i, item) {
-            \$(item).bind('click', function (event) {
-                hideElem.selectAllCheckBoxes(event.target, event.target.readAttribute('data-item-name'));
-            });
+  require(['jquery', 'domReady!'], function (\$, dr) {
+    \$('input[class="select-all"]').each(function () {
+        \$(this).bind('click', function (event) {
+            hideElem.selectAllCheckBoxes(event.target, \$(event.target).attr('data-item-name'));
         });
-      });
+    });
   });
   </script>
-  <table class="text-type-params"><tr><td colspan="4" align="right">
-  #for $nn in $TextTypeSel['Normslist']
-    #if $nn.n == $subcnorm
-      <b>
-    #end if
-    <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
-    #if $nn.n == $subcnorm
-      </b>
-    #end if
-  #end for
-  </td></tr>
+  <div class="text-type-params">
+  <div class="text-type-top-bar">
+      #for $nn in $TextTypeSel['Normslist']
+        #if $nn.n == $subcnorm
+          <b>
+        #end if
+        <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
+        #if $nn.n == $subcnorm
+          </b>
+        #end if
+      #end for
+  </div>
   #for $t in $TextTypeSel['Blocks']
-  <tr valign="top">
     #for $l in $t['Line']
-    <td>
-    <table class="envelope" width="100%">
-      <thead>
+
+    <table class="envelope" border="0">
+      <thead class="fixed">
         <tr>
-        <th align="left">$_($l['label'])</th>
+        <th>$_($l['label'])</th>
       #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
-        <th>#</th>
+        <th></th>
       #end if
         </tr>
       </thead>
+      <tbody class="scrollable">
       #if $l.attr_doc
         <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
       #end if
@@ -450,7 +457,7 @@ $corp_sel
             #end if
             #if $v['v']
               <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
-<label for="sca_$l['name']">$_($v['label'])</label>
+                <label for="sca_$l['name']">$_($v['label'])</label>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength')
                 ($v.get('xcnt', ''))
               #end if
@@ -464,35 +471,44 @@ $corp_sel
           #end for
           </ul></td></tr>
         #else
+          #set $i = 0
           #for $v in $l['Values']
             #if $v['v']
-              <tr><td><label><input type="checkbox" name="sca_$l['name']" value="$v['v']" /> $_($v['v'])</label></td>
+              <tr  #if $i % 2 == 0 #class="even"#end if#>
+                <td class="separ">
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label>
+                </td>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
-                <td align="right">$v.get('xcnt', '')</td>
+                <td class="num">$v.get('xcnt', '')</td>
+              #else
+                <td></td>
               #end if
               </tr>
             #end if
+            #set $i = $i + 1
           #end for
         #end if
-     <tr><td>
+      </tbody>
+      <tbody>
+     <tr class="last-line"><td>
      <input class="select-all" type="button" data-action-type="1" data-item-name="sca_$l['name']" data-alt-value="$_('Deselect all')" value="$_('Select All')" />
      </td></tr>
-      #end if
-      #if $l.has_key('textboxlength')
-        <tr><td>
-   <input id="scaid_$l['name']" name="sca_$l['name']"
-           type="text" size="$l['textboxlength']" />
-   </td></tr>
+      #else
+        <tr>
+            <td>
+            <input id="scaid_$l['name']" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+            </td>
+        </tr>
       #end if
       #if $l.attr_doc
         <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
       #end if
+    </tbody>
     </table>
-    </td>
     #end for
-  </tr>
+    <div style="clear: both; height: 20px;">  </div>
   #end for
-  </table>
+  </div>
 #end def
 
 
@@ -506,7 +522,7 @@ $corp_sel
   <th>$_("Query Type"):</th>
   <td><select id="queryselector" name="queryselector">
 #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
-     <option value="iqueryrow" $selected>$_("Simple")</option>
+     <option value="iqueryrow" $selected>$_("Basic")</option>
   #if $has_lemmaattr
      #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
      <option value="lemmarow" $selected>$_("Lemma")</option>

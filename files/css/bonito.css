@@ -97,13 +97,78 @@ table.form tr.required th {
 
 
 /* Text type selection */
+
+.text-type-top-bar {
+    text-align: right;
+    padding: 5px 10px;
+}
+
 table.envelope {
+    border-collapse: collapse;
+    table-layout: fixed;
     border:solid 1px black;
     background-color: #eee;
+    float: left;
+    margin-right: 5px;
+}
+
+table.envelope tbody.scrollable {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    max-height: 300px;
 }
 
 table.envelope thead {
-    background-color: gray;
+    background-color: #777777;
+}
+
+table.envelope thead.fixed tr {
+    display: block;
+}
+
+table.envelope td, table.envelope th {
+    white-space: nowrap;
+    margin: 0;
+    padding: 4px 20px 4px 6px;
+}
+
+table.envelope th {
+    color: #ffffff;
+    text-align: left;
+}
+
+table.envelope tr.last-line td {
+    border-style: solid;
+    border-color: #000000;
+    border-width: 1px 0 0 0;
+}
+
+table.envelope td.separ {
+    border-style: solid;
+    border-color: #dddddd;
+    border-width: 0 1px 0 0;
+}
+
+table.envelope .num {
+    text-align: right;
+}
+
+table.envelope tr.even {
+    background-color: #e7e7e7;
+}
+
+table.envelope td input[type="checkbox"] {
+    display: inline;
+    vertical-align: bottom;
+    margin: 0 5px 0 0;
+    padding: 0;
+}
+
+table.envelope td label {
+    margin: inherit;
+    padding: inherit;
 }
 
 table.envelope ul {
@@ -307,4 +372,8 @@ table.query {
 fieldset.float {
     border-width: 0px;
     background-color: transparent;
+}
+
+#query-type-hint {
+    padding-left: 4px;
 }

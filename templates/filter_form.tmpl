@@ -25,12 +25,6 @@ $_("Concordance: Filter form")#slurp
 
 #attr $focus = "hideElem.cmdGetFocusedId()"
 
-#def bodyonload
-    hideElem.cmdSwitchQuery({});
-    hideElem.loadHideElementStoreSimple();
-    hideElem.loadHideElementStore('${files_path}');
-#end def
-
 #def helpblock
   #if $varExists('helpsite')
   <li class="context_help"><a href="${helpsite}filterconc" rel="help">$_("? Help on Filter form")</a></li>
@@ -49,7 +43,7 @@ $_("Concordance: Filter form")#slurp
 #def main
 #filter WebSafe
 <h3>$_("Concordance Filter")</h3>
-<form action="filter">
+<form id="mainform" action="filter">
 <fieldset>
 #filter None
 $input_hidden
@@ -84,8 +78,8 @@ $input_hidden
     />  $_("last")</label></td></tr>
 <tr><th>$_("Search Span"):</th>
     <td>
-    $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" />
-    $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" />
+    $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
+    $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
     </td>
 </tr>
 </tbody>
@@ -100,17 +94,19 @@ $query_node
   <div class="advanced_options$hidden" id="texttypeel">
   <h3>$_("Text Types")</h3>
 
-<div class="indent">
-#filter None
-$tt_sel
-#end filter
-</div>
+    <div class="indent">
+    #filter None
+    $tt_sel
+    #end filter
+    </div>
 
-  </div>
+    </div>
+
 #end if
 
 <div class="buttons">
   <input class="submit" type="submit" value="$_("Filter Concordance")" />
+  <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
 </div>
 </fieldset>
 </form>

@@ -1387,7 +1387,8 @@ class ConcCGI (CGIPublisher):
             return { 'error': _('No meta-information to create a subcorpus.'),
                      'Normslist': [], 'Blocks': [],
                    }
-        tt = corplib.texttype_values(corp, subcorpattrs, list_all)
+        maxlistsize = settings.get_int('global', 'max_attr_list_size')
+        tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_all)
         if not ret_nums: return {'Blocks': tt, 'Normslist': []}
         basestructname = subcorpattrs.split('.')[0]
         struct = corp.get_struct (basestructname)

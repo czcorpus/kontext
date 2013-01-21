@@ -26,7 +26,6 @@ define(['win', 'jquery'], function (win, $) {
         /**
          * Object of the player.
          *
-         * @type {Object}
          */
         player = {
 

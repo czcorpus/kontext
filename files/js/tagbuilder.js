@@ -60,7 +60,6 @@ define(['jquery'], function ($) {
         /**
          * Tag data loading service object
          *
-         * @type {Object}
          */
         tagLoader = {
 
@@ -424,7 +423,7 @@ define(['jquery'], function ($) {
             /**
              *
              */
-            resetButtonClick : function () {
+            resetWidget : function () {
                 var prop;
                 tagLoader.history = [];
                 tagLoader.activeBlockHistory = [];
@@ -440,6 +439,13 @@ define(['jquery'], function ($) {
                 }
                 $(tagLoader.tagDisplay).empty().append('.*');
                 $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
+            },
+
+            /**
+             *
+             */
+            resetButtonClick : function () {
+                tagLoader.resetWidget();
             },
 
             /**
