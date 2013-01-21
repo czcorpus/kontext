@@ -95,7 +95,7 @@ require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, t
         tagrow : tagBuilderComponent
     };
     queryTypesHints = {
-        iqueryrow : '$_('TODO')'
+        iqueryrow : '$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')'
     };
     hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
 }
@@ -103,7 +103,7 @@ require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, t
     hideElem.loadHideElementStore('${files_path}');
 
         \$('#queryselector').bind('change', function () {
-        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions);
+        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
     });
 });
 
@@ -522,7 +522,7 @@ $corp_sel
   <th>$_("Query Type"):</th>
   <td><select id="queryselector" name="queryselector">
 #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
-     <option value="iqueryrow" $selected>$_("Simple")</option>
+     <option value="iqueryrow" $selected>$_("Basic")</option>
   #if $has_lemmaattr
      #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
      <option value="lemmarow" $selected>$_("Lemma")</option>
