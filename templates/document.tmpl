@@ -629,6 +629,7 @@ $corp_sel
 #end if
   </span>
 </td></tr>
+#set $hidden = ($querytype == 'tagrow') and 'visible' or 'hidden'
 <tr class="required $hidden" id="tagrow">
     <th>$_("Tag"):</th>
     <td>
