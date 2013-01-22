@@ -20,10 +20,7 @@ import locale
 import manatee
 import os.path, sys, glob
 from types import StringType
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import new as md5
+from hashlib import md5
 
 class CorpusManager:
     def __init__ (self, corplist=['susanne'], subcpath=[], gdexpath=[]):
@@ -257,7 +254,29 @@ def attr_vals (corpname, avattr, avpattern, avmaxitems=20):
     return '<ul><li>%s</li>%s</ul>' % ('</li><li>'.join(items), lastitem)
 
 
-def texttype_values (corp, subcorpattrs, list_all=False):
+def texttype_values (corp, subcorpattrs, maxlistsize, list_all=False):
+    """
+    Parameters
+    ----------
+    corp : manatee.Corpus
+
+    subcorpattrs : ??
+
+    maxlistsize : int
+            in case there is more that this number of items, empty list will be returned
+
+    list_all : bool
+            if True then non-empty lists are always returned
+
+    Returns
+    -------
+    a list containing following dictionaries
+    { 'Line' : [
+        { 'attr_doc_label' : '', 'Values' : [ {'v', 'item name'}, ... ], 'name' : '', 'attr_doc' : '', 'label' : '' },
+        { 'attr_doc_label' : '', 'Values' : [ {'v', 'item name'}, ... ], 'name' : '', 'attr_doc' : '', 'label' : '' },
+        ...
+    ]}
+    """
     if subcorpattrs == '#': return []
     attrlines = []
     for subcorpline in subcorpattrs.split(','):
@@ -271,10 +290,7 @@ def texttype_values (corp, subcorpattrs, list_all=False):
                         'attr_doc': corp.get_conf (n+'.ATTRDOC'),
                         'attr_doc_label': corp.get_conf (n+'.ATTRDOCLABEL'),
                       }
-            try:
-                maxlistsize = int(corp.get_conf (n+'.MAXLISTSIZE'))
-            except ValueError:
-                maxlistsize = 22
+            vals = []
             hsep = corp.get_conf(n+'.HIERARCHICAL')
             multisep = corp.get_conf(n+'.MULTISEP')
             if not hsep and not list_all \
@@ -284,7 +300,6 @@ def texttype_values (corp, subcorpattrs, list_all=False):
                                              or 30)
             else: # list of values
                 if corp.get_conf(n+'.NUMERIC'):
-                    vals = []
                     for i in range (attr.id_range()):
                         try: vals.append({'v': int(attr.id2str(i))})
                         except: vals.append({'v': attr.id2str(i)})
@@ -298,8 +313,7 @@ def texttype_values (corp, subcorpattrs, list_all=False):
                     attrval ['hierarchical'] = hsep
                     attrval ['Values'] = get_attr_hierarchy(vals, hsep, multisep)
                 else:
-                    vals.sort()
-                    attrval ['Values'] = vals
+                    attrval ['Values'] = sorted(vals, cmp=lambda x,y : cmp(x['v'].lower(), y['v'].lower()))
             attrvals.append (attrval)
         attrlines.append ({'Line': attrvals})
     return attrlines

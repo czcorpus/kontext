@@ -149,10 +149,11 @@
         },
 
         /**
+         * @param widgets
          * @param resetButtonActions
+         * @param hints
          */
-        cmdSwitchQuery : function (resetButtonActions) {
-
+        cmdSwitchQuery : function (widgets, resetButtonActions, hints) {
             var jqQs = $('#queryselector'),
                 newid,
                 jqFocusElem,
@@ -163,6 +164,9 @@
                 jqElem,
                 date;
 
+            widgets = widgets || {};
+            resetButtonActions = resetButtonActions || {};
+            hints = hints || {};
             newid = jqQs.val();
             jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
             oldval = jqFocusElem.val();
@@ -170,6 +174,7 @@
             $('#conc-form-clear-button').unbind('click');
             if (resetButtonActions[jqQs.val()]) {
                 $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
+                context.hideElem.clearForm($('#mainform'));
 
             } else {
                 $('#conc-form-clear-button').bind('click', function () {
@@ -177,29 +182,31 @@
                 });
             }
 
-            for (i = 0; i < jqQs.get(0).options.length; i += 1) {
-                elementId = jqQs.get(0).options[i].value;
+            jqQs.find('option').each(function () {
+                elementId = $(this).val();
                 jqElem = $('#' + elementId);
-
                 if (elementId === newid) {
                     jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
-                    jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
-                    if (jqElem.hasClass('visible') && !oldval) {
+                    if (jqElem.hasClass('visible')) {
+                        jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
                         oldval = jqOldElem.val();
+                        jqOldElem.val('');
+                        if (widgets.hasOwnProperty(newid)) {
+                            widgets[newid].resetWidget();
+                        }
+                        jqElem.removeClass('visible').addClass('hidden');
                     }
-                    jqOldElem.val('');
-                    jqElem.removeClass('visible').addClass('hidden');
                 }
-            }
+            });
             // Keep the value of the last query
-            if (newid === 'cqlrow' && jqOldElem.attr('name') === 'tag') {
+            if (jqOldElem && jqOldElem.attr('name') === 'tag') {
                 if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
                     jqFocusElem.val('[tag="' + oldval + '"]');
 
                 } else {
-                    jqFocusElem.val('');
+                    jqFocusElem.val(oldval);
                 }
 
             } else if (newid === 'tagrow') {
@@ -207,6 +214,20 @@
 
             } else {
                 jqFocusElem.val(oldval);
+            }
+
+            if (newid === 'iqueryrow') {
+                $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
+                $('#query-type-hint').bind('click', function (event) {
+                    require(['popupbox'], function (ppbox) {
+                        ppbox.createPopupBox(event, 'query-type-hint-box', $('#query-type-hint'), hints['iqueryrow'],
+                            { 'top' : 'attached-bottom', 'fontSize' : '10pt' });
+                    });
+                    event.stopPropagation();
+                });
+
+            } else {
+                $('#query-type-hint').remove();
             }
 
             date = new Date();
@@ -228,14 +249,16 @@
                 $('#error').css('display', 'none');
             }
             $(f).find('input,select').each(function () {
-                if ($(this).attr('type') === 'text') {
-                    $(this).val('');
-                }
-                if ($(this).attr('name') === 'default_attr') {
-                    $(this).val('');
-                }
-                if ($(this).attr('name') === 'lpos' || $(this).attr('name') === 'wpos') {
-                    $(this).val('');
+                if ($(this).attr('data-ignore-reset') !== '1') {
+                    if ($(this).attr('type') === 'text') {
+                        $(this).val('');
+                    }
+                    if ($(this).attr('name') === 'default_attr') {
+                        $(this).val('');
+                    }
+                    if ($(this).attr('name') === 'lpos' || $(this).attr('name') === 'wpos') {
+                        $(this).val('');
+                    }
                 }
             });
             $('#queryselector').val(prevRowType);
@@ -324,8 +347,8 @@
                 $(initiator).attr('data-alt-value', tmp);
             }
             if (form !== undefined) {
-                form.select('input[type="checkbox"][name="' + name + '"]').each(function (item) {
-                    item.checked = chkStatus;
+                $(form).find('input[type="checkbox"][name="' + name + '"]').each(function () {
+                    $(this).attr('checked', chkStatus);
                 });
             }
         },

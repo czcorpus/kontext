@@ -5,7 +5,7 @@ Bonito 2 - The UCNK fork
 Introduction
 ============
 
-This program is a fork of the Bonito 2 web interface to the corpus management tool Manatee
+This program is a fork of the Bonito 2.68 web interface to the corpus management tool Manatee
 (http://nlp.fi.muni.cz/trac/noske). It is maintained by the Czech National Corpus.
 
 Features
@@ -20,7 +20,7 @@ Features
 
   * enhanced user interface
 
-    - corpora information
+    - corpora information (size, structures, attributes)
     - hierarchical corpora organization
     - on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
     - tag query building widget
@@ -37,9 +37,9 @@ Requirements
     - CGI
     - mod_rewrite
 
-  * Python 2.6 or 2.7
+  * Python *2.6* or *2.7*
 
     - lxml
     - pymox (if you want to run the unit tests)
 
-  * Manatee corpus manager: open-2.33.1
+  * Manatee corpus manager: from the version *open-2.33.1* to the *open-2.59.1*
