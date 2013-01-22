@@ -19,7 +19,7 @@
 import locale
 import manatee
 import os.path, sys, glob
-from types import StringType
+from types import UnicodeType
 from hashlib import md5
 
 class CorpusManager:
@@ -29,15 +29,17 @@ class CorpusManager:
         self.gdexdict = dict(gdexpath)
 
     def default_subcpath(self, corp):
-       if type(corp) is StringType: corp = self.get_Corpus (corp)
-       cpath = corp.get_conf('PATH')
-       return os.path.join(cpath, 'subcorp')
+        if type(corp) is UnicodeType: corp = self.get_Corpus (corp)
+        if corp.get_conf('SUBCBASE'): return corp.get_conf('SUBCBASE')
+        cpath = corp.get_conf('PATH')
+        return os.path.join(cpath, 'subcorp')
 
     def get_Corpus (self, corpname, subcname=''):
         if ':' in corpname:
             corpname, subcname = corpname.split(':',1)
         corp = manatee.Corpus (corpname)
-        corp.corpname = corpname
+        manatee.setEncoding(corp.get_conf('ENCODING'))
+        corp.corpname = str(corpname) # never unicode (paths)
         corp.cm = self
         dsubcpath = self.default_subcpath (corp)
         if subcname:
@@ -54,7 +56,7 @@ class CorpusManager:
                     subc.spath = spath
                     try: open(spath[:-4] + 'used', 'w')
                     except: pass
-                    subc.corpname = corpname
+                    subc.corpname = str(corpname) # never unicode (paths)
                     subc.subcname = subcname
                     subc.cm = self
                     subc.subchash = md5(open(spath).read()).digest()
@@ -67,7 +69,7 @@ class CorpusManager:
         return manatee.findPosAttr (corpname.split(':',1)[0], attrname)
             
     def corpconf_pairs (self, corp, label):
-        if type(corp) is StringType:
+        if type(corp) is UnicodeType:
             corp = self.get_Corpus (corp)
         val = corp.get_conf(label)
         if len(val) > 2: val = val[1:].split(val[0])

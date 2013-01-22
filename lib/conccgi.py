@@ -10,16 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-import os
-import re
-import locale
+from usercgi import UserCGI
+import corplib, conclib, version
+import os, re
 from sys import stderr
 import time
 import glob
+import locale
 from types import ListType
 import logging
 import math
@@ -57,125 +54,124 @@ def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
 class ConcError (Exception):
     def __init__ (self, msg):
         self.message = msg
-        
 
-class ConcCGI (CGIPublisher):
+
+class ConcCGI (UserCGI):
 
     _global_vars = ['corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
                     'structs', 'refs', 'lemma', 'lpos', 'pagesize',
                     'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
-                    'gdexcnt', 'gdexconf']
-    _open_version = 0
-    # (due to Cheetah) added attributes
-    error = ''
-    fc_lemword_window_type = 'both'
-    fc_lemword_type = 'all'
+                    'gdexcnt', 'gdexconf', 'iquery', 'maincorp']
+    error = u''
+    fc_lemword_window_type = u'both'
+    fc_lemword_type = u'all'
     fc_lemword_wsize=5,
-    fc_lemword='',
-    fc_pos_window_type = 'both'
-    fc_pos_type = 'all'
+    fc_lemword=u'',
+    fc_pos_window_type = u'both'
+    fc_pos_type = u'all'
     fc_pos_wsize=5,
     fc_pos=[],
     ml = 0
-    concarf = ''
+    concarf = u''
     Aligned = []
-    prevlink = ''
-    nextlink = ''
-    concsize = ''
+    prevlink = u''
+    nextlink = u''
+    concsize = u''
+    samplesize = 10000000 #10M
     Lines = []
-    fromp = '1'
-    numofpages = ''
-    Page = []
-    pnfilter = 'p'
-    filfl = 'f'
-    filfpos = '-5'
-    filtpos = '5'
-    sicase = ''
-    sbward = ''
-    ml1icase = ''
-    ml2icase = ''
-    ml3icase = ''
-    ml1bward = ''
-    ml2bward = ''
-    ml3bward = ''
-    freq_sort = ''
+    fromp = u'1'
+    numofpages = u''
+    pnfilter = u'p'
+    filfl = u'f'
+    filfpos = u'-5'
+    filtpos = u'5'
+    sicase = u''
+    sbward = u''
+    ml1icase = u''
+    ml2icase = u''
+    ml3icase = u''
+    ml4icase = u''
+    ml1bward = u''
+    ml2bward = u''
+    ml3bward = u''
+    freq_sort = u''
     heading = 0
-    saveformat = 'text'
-    wlattr = ''
-    wlpat = ''
+    saveformat = u'text'
+    wlattr = u''
+    wlpat = u''
     wlpage = 1
-    wlcache = ''
-    blcache = ''
+    wlcache = u''
+    blcache = u''
     simple_n = 1
     usearf = 0
     collpage = 1
     fpage = 1
     fmaxitems = 50
-    ftt_include_empty = ''
+    ftt_include_empty = u''
     subcsize = 0
     processing = 0 
-    ref_usesubcorp = ''
-    wlsort = ''
-    keywords = ''
+    ref_usesubcorp = u''
+    wlsort = u''
+    keywords = u''
     Keywords = []
-    ref_corpname = ''
+    ref_corpname = u''
     Items = []
-    showmwlink = ''
-    format = ''
-    selected = ''
+    format = u''
+    selected = u''
     saved_attrs = 0
                      # save options
     pages = 0
-    leftctx = ''
-    rightctx = ''
+    leftctx = u''
+    rightctx = u''
     numbering = 0
     align_kwic = 0
-    stored = ''
+    stored = u''
     # end
 
     add_vars = {}
-    corpname = 'susanne'
-    corplist = ['susanne', 'bnc']
-    usesubcorp = ''
-    subcorp_size = None
-    subcname = ''
+    corpname = u'susanne'
+    corplist = [u'susanne', u'bnc']
+    usesubcorp = u''
+    subcname = u''
     subcpath = []
-    _conc_dir = ''
-    _home_url = '../run.cgi/first_form'
-    files_path = '../files'
-    css_prefix = ''
-    iquery = ''
-    queryselector = 'iqueryrow'
-    lemma = ''
-    lpos = ''
-    phrase = ''
-    char = ''
-    word = ''
-    wpos = ''
-    cql = ''
+    _conc_dir = u''
+    _home_url = u'../run.cgi/first_form'
+    files_path = u'../files'
+    css_prefix = u''
+    iquery = u''
+    queryselector = u'iqueryrow'
+    lemma = u''
+    lpos = u''
+    phrase = u''
+    char = u''
+    word = u''
+    wpos = u''
+    cql = u''
     tag = ''
     default_attr = None
     save = 1
+    async = 0
     spos = 3
-    skey = 'rc'
+    skey = u'rc'
     qmcase = 0
-    rlines = '250'
-    attrs = 'word'
-    ctxattrs = 'word'
-    attr_allpos = 'kw'
-    allpos = 'kw'
-    structs = 'p,g'
+    rlines = u'250'
+    attrs = u'word'
+    ctxattrs = u'word'
+    attr_allpos = u'kw'
+    allpos = u'kw'
+    structs = u'p,g,err,corr'
     q = []
     pagesize = 20
-    gdexconf = ''
+    gdexconf = u''
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
     gdexcnt = 100
     gdex_enabled = 0
     alt_gdexconf = None
     copy_icon = 0
-    _avail_tbl_templates = ''
+    _avail_tbl_templates = u''
     multiple_copy = 0
-    wlsendmail = ''
+    wlsendmail = u''
+    cup_hl = u'q'
 
     sortlevel=1
     flimit = 0
@@ -183,29 +179,32 @@ class ConcCGI (CGIPublisher):
     ml1pos = 1
     ml2pos = 1
     ml3pos = 1
-    ml1ctx = '0~0>0'
-    ml2ctx = '0~0>0'
-    ml3ctx = '0~0>0'
-    tbl_template = 'none'
+    ml4pos = 1
+    ml1ctx = u'0~0>0'
+    ml2ctx = u'0~0>0'
+    ml3ctx = u'0~0>0'
+    ml4ctx = u'0~0>0'
+    tbl_template = u'none'
+    errcodes_link = u''
+    hidenone = 1
+    helpsite=u'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     can_annotate = 0
     enable_sadd = 0
-    annotconc = ''
-    annotconc_init_labels = ('x', 'u')
-    annotconc_num_label_suffixes = ('.e',)
+    annotconc = u''
+    annotconc_init_labels = (u'x', u'u')
+    annotconc_num_label_suffixes = (u'.e',)
     #annotconc_info_umask = 022
     annotconc_info_umask = 0111  #XXX renumbering from CPA editor
 
     alpha_features = 0
 
-
-    add_vars['wsketch_form'] = ['LastSubcorp']
-    add_vars['wsketch'] = ['LastSubcorp']
-    add_vars['mwsketch_form'] = ['LastSubcorp']
-    add_vars['mwsketch'] = ['LastSubcorp']
-    add_vars['wsdiff'] = ['LastSubcorp']
-    add_vars['save_ws_options'] = ['LastSubcorp']
-    add_vars['findx_upload'] = ['LastSubcorp']
+    add_vars['wsketch_form'] = [u'LastSubcorp']
+    add_vars['wsketch'] = [u'LastSubcorp']
+    add_vars['wsdiff'] = [u'LastSubcorp']
+    add_vars['save_ws_options'] = [u'LastSubcorp']
+    add_vars['save_wsdiff_options'] = [u'LastSubcorp']
+    add_vars['findx_upload'] = [u'LastSubcorp']
     
     def __init__ (self, environ):
         CGIPublisher.__init__(self, environ=environ)
@@ -387,6 +386,8 @@ class ConcCGI (CGIPublisher):
     viewmode = 'kwic'
     changeviewmode = 0
     align = ''
+    sel_aligned = []
+    maincorp = ''
 
     def simple_search (self):
         "simple search result -- all in one"
