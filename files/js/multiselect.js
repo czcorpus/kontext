@@ -161,17 +161,15 @@ define(['jquery'], function ($) {
 
                 if (($(tbodyElm).parent().css('display') === 'none' && status !== 'none') || status === 'table') {
                     if (!multiSelect.allowMultipleOpenedBoxes) {
-                        for (prop in multiSelect.blocks) {
-                            if (multiSelect.blocks.hasOwnProperty(prop)) {
-                                $(multiSelect.blocks[prop]).parent().css('display', 'none');
-                                if (multiSelect.getNumSelected(prop) === 0) {
-                                    $(multiSelect.blockSwitchLinks[prop]).attr('class', 'switch-link');
+                        multiSelect.eachBlock(function (block, blockId) {
+                            $(multiSelect.blocks[blockId]).parent().css('display', 'none');
+                            if (multiSelect.getNumSelected(blockId) === 0) {
+                                $(multiSelect.blockSwitchLinks[blockId]).attr('class', 'switch-link');
 
-                                } else {
-                                    $(multiSelect.blockSwitchLinks[prop]).attr('class', 'switch-link used');
-                                }
+                            } else {
+                                $(multiSelect.blockSwitchLinks[blockId]).attr('class', 'switch-link used');
                             }
-                        }
+                        });
                     }
                     $(tbodyElm).parent().css('display', 'table');
                     $(switchLink).attr('class', 'switch-link active');
@@ -247,6 +245,24 @@ define(['jquery'], function ($) {
                     }
                 }
                 return multiSelect;
+            },
+
+            /**
+             * Iterates over all multi-select blocks.
+             * Callback can have following three parameters:
+             * 1) block - block object itself
+             * 2) blockId - identifier of the block
+             * 3) i - index of the block
+             */
+            eachBlock : function (callback) {
+                var prop,
+                    i = 0;
+                for (prop in multiSelect.blocks) {
+                    if (multiSelect.blocks.hasOwnProperty(prop)) {
+                        callback(multiSelect.blocks[prop], prop, i);
+                        i += 1;
+                    }
+                }
             },
 
             /**
@@ -427,29 +443,17 @@ define(['jquery'], function ($) {
              *
              */
             uncheckAll : function () {
-                var prop;
-
                 multiSelect.activeBlockId = null;
                 $(multiSelect.ulElement).find('input[type="checkbox"]').attr('checked', false);
-
-                for (prop in multiSelect.blockSwitchLinks) {
-                    if (multiSelect.blockSwitchLinks.hasOwnProperty(prop)) {
-                        $(multiSelect.blockSwitchLinks[prop]).css('font-weight', 'normal');
-                    }
-                }
             },
 
             /**
              *
              */
             collapseAll : function () {
-                var prop;
-
-                for (prop in multiSelect.blocks) {
-                    if (multiSelect.blocks.hasOwnProperty(prop)) {
-                        multiSelect.flipBlockVisibility(prop, 'none');
-                    }
-                }
+                multiSelect.eachBlock(function (block, blockId) {
+                    multiSelect.flipBlockVisibility(blockId, 'none');
+                });
             },
 
             /**
@@ -464,22 +468,19 @@ define(['jquery'], function ($) {
              * @return {Object}
              */
             exportStatus : function () {
-                var prop,
-                    ans = {},
+                var ans = {},
                     setStatus;
 
-                setStatus = function () {
+                setStatus = function (prop) {
                     if ($(this).is(':checked')) {
                         ans[prop].push($(this).val());
                     }
                 };
 
-                for (prop in multiSelect.blocks) {
-                    if (multiSelect.blocks.hasOwnProperty(prop)) {
-                        ans[prop] = [];
-                        $(multiSelect.blocks[prop]).find('input[type="checkbox"]').each(setStatus);
-                    }
-                }
+                multiSelect.eachBlock(function (block, blockId) {
+                    ans[blockId] = [];
+                    $(multiSelect.blocks[blockId]).find('input[type="checkbox"]').each(setStatus, [blockId]);
+                });
                 return ans;
             },
 

@@ -78,39 +78,24 @@ define(['win', 'jquery'], function (context, $) {
                     borderWidth = 1,
                     boxHeight = '70px',
                     boxIntWidth,
-                    boxIntHeight,
                     boxTop = 0,
-                    jqWhereElement = $(whereElement);
+                    jqWhereElement = $(whereElement),
+                    fontSize;
 
-                if (options !== undefined) {
-                    if (options.hasOwnProperty('height')) {
-                        boxHeight = options.height;
-                    }
-                    boxIntHeight = popupBox.extractIntFromSize(boxHeight);
+                options = options || {};
 
-                    if (options.hasOwnProperty('width')) {
-                        boxWidth = options.width;
-                    }
-                    boxIntWidth = popupBox.extractIntFromSize(boxWidth);
-
-                    if (options.hasOwnProperty('top')) {
-                        if (options.top === 'attached-top') {
-                            boxTop = $(event.target).position().top + 'px';
-
-                        } else if (options.top === 'attached-bottom') {
-                            boxTop = ($(event.target).position().top - boxIntHeight - 30) + 'px';
-
-                        } else {
-                            boxTop = options.top;
-                        }
-                    }
-
-                } else {
-                    boxIntHeight = popupBox.extractIntFromSize(boxHeight);
-                    boxIntWidth = popupBox.extractIntFromSize(boxWidth);
+                if (options.hasOwnProperty('height')) {
+                    boxHeight = options.height;
                 }
 
+                if (options.hasOwnProperty('width')) {
+                    boxWidth = options.width;
+                }
+
+                fontSize = options.hasOwnProperty('fontSize') ? options.fontSize : 'inherit';
+
                 popupBox.newElem = document.createElement('div');
+                jqWhereElement.append(popupBox.newElem);
                 $(popupBox.newElem).attr('id', boxId);
                 if (typeof contents === 'function') {
                     contents(popupBox.newElem);
@@ -121,14 +106,29 @@ define(['win', 'jquery'], function (context, $) {
                 $(popupBox.newElem).css({
                     padding : '5px ' + horizPadding + 'px',
                     position : 'absolute',
-                    top : boxTop,
                     border : borderWidth + 'px solid #DDD',
                     color : '#333',
                     'background-color' : '#FFF',
                     width : boxWidth,
                     height: boxHeight,
-                    'box-shadow': '2px 2px 1px #444'
+                    'box-shadow': '2px 2px 1px #444',
+                    'font-size' : fontSize
                 });
+
+                if (options.hasOwnProperty('top')) {
+                    if (options.top === 'attached-top') {
+                        boxTop = $(event.target).position().top + 'px';
+
+                    } else if (options.top === 'attached-bottom') {
+                        boxTop = ($(event.target).position().top - $(popupBox.newElem).outerHeight(true) - 2) + 'px';
+
+                    } else {
+                        boxTop = options.top;
+                    }
+                }
+                $(popupBox.newElem).css('top', boxTop);
+
+                boxIntWidth = $(popupBox.newElem).outerWidth(true);
                 if (pageWidth - boxIntWidth > $(event.target).position().left) {
                     $(popupBox.newElem).css('left', $(event.target).position().left + 'px');
 
@@ -138,7 +138,7 @@ define(['win', 'jquery'], function (context, $) {
                         'margin-left' : '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
                     });
                 }
-                jqWhereElement.append(popupBox.newElem);
+
                 $(document).bind('click', popupBox.close);
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
             }

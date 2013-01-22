@@ -2526,3 +2526,9 @@ msgstr "Verze"
 
 msgid "Corpus %s is not supported by this widget."
 msgstr "Korpus %s nelze s touto funkcionalitou použít."
+
+msgid "Basic"
+msgstr "Základní"
+
+msgid "Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well."
+msgstr "Typ dotazu <em>základní</em> je vhodný pro první seznámení s korpusem. Vyhledá vložený výraz jako slovní tvar bez ohledu na velikost písmen; jde-li zároveň o základní slovníkový tvar (lemma), vyhledají se také všechny jeho tvary."

@@ -47,8 +47,6 @@
      * This objects serves as a service object for "multi-level KWIC HTML form".
      * It in fact fixes some flaws of original bonito2 application without massive rewriting of
      * related HTML templates and controller logic.
-     *
-     * @type {Object}
      */
     mlkfu = {
 
