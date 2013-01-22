@@ -16,12 +16,12 @@
 
 
 import os, sys, cgi
-from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
+from types import MethodType, StringType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
 import codecs
 import imp
-from urllib import urlencode, quote_plus
+import urllib
 import json
 import logging
 import settings
@@ -121,36 +121,16 @@ class CGIPublisher:
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
     _cookieattrs = []
-    _template_dir = u'cmpltmpl/'
-    _locale_dir = u'locale/'
-    _tmp_dir = u'/tmp'
+    _template_dir = 'cmpltmpl'
+    _tmp_dir = '/tmp'
     _corpus_architect = 0
     exceptmethod = None
     debug = None
     precompile_template = 1
-    format = u''
-    uilang = u''
-    reload = 0
-    _has_access = 1
-    _anonymous = 0
-    _authenticated = 0
-    _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
-
 
     def __init__ (self, environ=os.environ):
         self.environ = environ
         self.headers_sent = False
-        
-        # correct _locale_dir
-        if not os.path.isdir (self._locale_dir):
-            p = os.path.join (os.path.dirname (__file__), self._locale_dir)
-            if os.path.isdir (p):
-                self._locale_dir = p
-            else:
-                # This will set the system default locale directory as a side-effect:
-                gettext.install(domain='ske', unicode=True)
-                # hereby we retrieve the system default locale directory back:
-                self._locale_dir = gettext.bindtextdomain('ske')
 
         # correct _template_dir
         if not os.path.isdir (self._template_dir):
@@ -164,9 +144,6 @@ class CGIPublisher:
             return False
 
     def preprocess_values(self, form):
-        pass
-
-    def _setup_user(self, user=None, corpname=''):
         pass
 
     def self_encoding(self):
@@ -212,6 +189,7 @@ class CGIPublisher:
                 na[a] = getattr (self, a)
         return na
 
+
     def parse_parameters (self, selectorname=None, cookies=None, 
                           environ=os.environ, post_fp=None):
         self.environ = environ
@@ -224,32 +202,83 @@ class CGIPublisher:
                 named_args[k] = v.value
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
-        self.preprocess_values(form) # values needed before recoding
-        self._setup_user(self.corpname)
-        if form.has_key ('json'):
-            json_data = json.loads(form.getvalue('json'))
-            named_args.update(json_data)
-        for k in form.keys():
-            # must remove empty values, this should be achieved by
-            # keep_blank_values=0, but it does not work for POST requests
-            if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
-                named_args[str(k)] = self.recode_input(form.getvalue(k))
-        if self._corpus_architect:
-            try: del named_args['corpname']
-            except KeyError: pass
-        na = named_args.copy()
-        correct_types (na, self.clone_self())
-        if selectorname:
-            choose_selector (self.__dict__, getattr (self, selectorname))
-        self._set_defaults()
-        self.__dict__.update (na)
-        self._correct_parameters()
-        return named_args
+        return self.finish_parse_parameters(form, selectorname, named_args)
+
+
+    def parse_parameters_django (self, selectorname=None, request=None):
+        self.environ = request.META
+        named_args = {}
+        named_args.update(request.COOKIES)
+
+        class FakeFieldStorage(dict):
+            def keys(self):
+                for key in super(FakeFieldStorage, self).keys():
+                    if self[key] != []:
+                        yield key
+            def getvalue(self, key, default=None):
+                if not self.has_key(key) or self[key] == []:
+                    return default
+                elif len(self[key]) == 1:
+                    return self[key][0]
+                else:
+                    return self[key]
+
+        form = FakeFieldStorage()
+        if request:
+            for get_post in (request.GET, request.POST):
+                for k,l in get_post.lists():
+                    str_k = str(k)
+                    form[str_k] = []
+                    for x in l:
+                        if x in ['', u'']: continue
+                        if isinstance(x, unicode):
+                            form[str_k].append(x.encode('utf-8'))
+                        else:
+                            form[str_k].append(x)
+            for k,fp in request.FILES.iteritems():
+                form[str(k)] = [fp.read()]
+        return self.finish_parse_parameters(form, selectorname, named_args)
 
     def get_method_metadata(self, method_name, data_name):
         if hasattr(self, method_name) and  hasattr(getattr(self, method_name), data_name):
             return getattr(getattr(self, method_name), data_name)
         return None
+
+    def finish_parse_parameters(self, form, selectorname, named_args):
+        self.preprocess_values(form) # values needed before recoding
+        if form.has_key ('json'):
+            json_data = json.loads(form.getvalue('json')) # in utf8
+            for k, l in json_data.iteritems():
+                str_k = str(k)
+                named_args[str_k] = []
+                if isinstance(l, ListType):
+                    for x in l:
+                        if x in ['', u'']: continue
+                        if isinstance(x, unicode):
+                            named_args[str_k].append(self.recode_input(
+                                                                 x, decode=0))
+                        else:
+                            named_args[str_k].append(self.recode_input(
+                                                                 x, decode=0))
+                elif isinstance(l, unicode):
+                    named_args[str_k].append(self.recode_input(l, decode=0))
+                else:
+                    named_args[str_k].append(self.recode_input(l, decode=0))
+        for k in form.keys():
+            named_args[str(k)] = self.recode_input(form.getvalue(k))
+        if self._corpus_architect:
+            try: del named_args['corpname']
+            except KeyError: pass
+        na = named_args.copy()
+        correct_types (na, self.clone_self())
+        self.__dict__.update (na)
+        if selectorname:
+            choose_selector (self.__dict__, getattr (self, selectorname))
+        self._set_defaults()
+        self.__dict__.update (na)
+        self._correct_parameters()
+#        self.corpname = 'desam'
+        return named_args
 
     def import_req_path(self):
         """
@@ -359,36 +388,18 @@ class CGIPublisher:
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method (em, pos_args, named_args)
 
-    def get_uilang(self):
-        if self.uilang:
-            return self.uilang
-        lgs_string = self.environ.get('HTTP_ACCEPT_LANGUAGE','')
-        if lgs_string == '':
-            return '' # english
-        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-        lgs = lgs_string.split(',')
-        lgdirs = os.listdir(self._locale_dir)
-        for lg in lgs:
-            lg = lg.replace('-', '_').lower()
-            if lg.startswith('en'): # english
-                return ''
-            for lgdir in lgdirs:
-                if lgdir.lower().startswith(lg):
-                    return lgdir
-        return ''
-
     def recode_input(self, x, decode=1): # converts query into corpencoding
         if self._corpus_architect and decode: return x
         if type(x) is ListType:
             return [self.recode_input(v, decode) for v in x]
+        pom = x
         if decode:
-            try: x = x.decode('utf-8')
-            except UnicodeDecodeError: x = x.decode('latin1')
-        return x
+            try: pom = x.decode('utf-8')
+            except UnicodeDecodeError: pom = x.decode('latin1')
+        pom = pom.encode(self.self_encoding(), 'replacedot')
+        return pom
 
     def rec_recode(self, x, enc='', utf8_out=False):
-        if has_cheetah_unicode_internals and not utf8_out:
-            return x
         if not enc: enc = self.self_encoding()
         if isinstance(x, TupleType) or isinstance(x, ListType):
             return [self.rec_recode(e, enc, utf8_out) for e in x]
@@ -399,20 +410,20 @@ class CGIPublisher:
                 else: d[key] = self.rec_recode(value, enc, utf8_out)
             return d
         elif type(x) is StringType:
-            return unicode(x, enc, 'replace').encode('utf-8')
-        elif type(x) is UnicodeType:
-            return x.encode('utf-8')
+            x = unicode(x, enc, 'replace')
+            if utf8_out or not has_cheetah_unicode_internals:
+                x = x.encode('utf-8')
+            return x
         return x
 
     def urlencode (self, key_val_pairs):
-        """recode values of key-value pairs and run urlencode from urllib"""
+        """
+        """
         enc = self.self_encoding()
-        if type(key_val_pairs) is UnicodeType: # urllib.quote does not support unicode
-            key_val_pairs = key_val_pairs.encode("utf-8")
         if type(key_val_pairs) is StringType:
-            # mapping strings
-            return quote_plus(key_val_pairs)
-        return urlencode ([(k, self.rec_recode(v, enc, utf8_out=True)) 
+            return urllib.quote(self.rec_recode(key_val_pairs, enc, utf8_out=True))
+        else:
+            return urllib.urlencode([(k, self.rec_recode(v, enc, utf8_out=True))
                                                 for (k,v) in key_val_pairs])
     
     def output_headers (self, return_type='html', outf=sys.stdout):
@@ -504,13 +515,13 @@ class CGIPublisher:
     
     methods.template = """<html><head><title>Methods</title></head><body><ul>
         #for $l in $List
-           <li><b>$l.name</b>(
+           <li><b>$l['name']</b>(
                #set $sep = ''
                #for $p in $l.get('Params',[])
-                  $sep$p.name
+                  $sep$p['name']
                   #set $sep = ', '
                #end for
-                )<br>$l.doc<br>
+                )<br>$l['doc']<br>
         #end for
         </ul></body></html>
         """

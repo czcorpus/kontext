@@ -367,10 +367,10 @@ $corp_sel
     <option value="">$_("None (whole corpus)")</option>
     #for $l in $LastSubcorp
       <option
-      #if $l.n == $getVar($nameid, '')
+      #if $l['n'] == $getVar($nameid, '')
         selected
       #end if
-      >$l.n</option>
+      >$l['n']</option>
     #end for
     </select>
     <i>
@@ -511,26 +511,29 @@ $corp_sel
   </div>
 #end def
 
-#def query_node($suff='')
+
+#def query_node
 ## basic query node form
-<tbody id="qnode$suff">
-#set $querytype = $getVar("query_type" + $suff, '')
-<tr class="required" id="querytypeel$suff">
+<tbody id="qnode">
+#set $querytype = $getVar("query_type", '')
+#set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
+#set $hidden = ('querytypeel' in $showhiddenlistsimple) and 'visible' or 'hidden'
+<tr class="required" id="querytypeel">
   <th>$_("Query Type"):</th>
-  <td><select id="queryselector$suff" name="queryselector$suff">
-#set $selected = ($querytype == 'iqueryrow'+$suff or $querytype == '') and 'selected="selected"' or ''
+  <td><select id="queryselector" name="queryselector">
+#set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
      <option value="iqueryrow" $selected>$_("Basic")</option>
   #if $has_lemmaattr
-     #set $selected = ($querytype == 'lemmarow'+$suff) and 'selected="selected"' or ''
+     #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
      <option value="lemmarow" $selected>$_("Lemma")</option>
   #end if
-     #set $selected = ($querytype == 'phraserow'+$suff) and 'selected="selected"' or ''
+     #set $selected = ($querytype == 'phraserow') and 'selected="selected"' or ''
      <option value="phraserow" $selected>$_("Phrase")</option>
-     #set $selected = ($querytype == 'wordrow'+$suff) and 'selected="selected"' or ''
+     #set $selected = ($querytype == 'wordrow') and 'selected="selected"' or ''
      <option value="wordrow" $selected>$_("Word Form")</option>
-     #set $selected = ($querytype == 'charrow'+$suff) and 'selected="selected"' or ''
+     #set $selected = ($querytype == 'charrow') and 'selected="selected"' or ''
      <option value="charrow" $selected>$_("Character")</option>
-     #set $selected = ($querytype == 'cqlrow'+$suff) and 'selected="selected"' or ''
+     #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
      <option value="cqlrow" $selected>$_("CQL")</option>
      #if $tag_builder_support
         #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
@@ -539,64 +542,64 @@ $corp_sel
   </select>
   </td>
 </tr>
-#set $hidden = ($querytype == 'iqueryrow'+$suff or $querytype == '' or
-                ($querytype == 'lemmarow'+$suff and not $has_lemmaattr)) and 'visible' or 'hidden'
-  <tr class="required $hidden" id="iqueryrow$suff">
+#set $hidden = ($querytype == 'iqueryrow' or $querytype == '' or
+                ($querytype == 'lemmarow' and not $has_lemmaattr)) and 'visible' or 'hidden'
+  <tr class="required $hidden" id="iqueryrow">
       <th>$_("Query"):</th>
-      <td><input type="text" id="iquery$suff" name="iquery$suff" size="40" value="$getVar('iquery' + $suff, '')" /></td>
+      <td><input type="text" id="iquery" name="iquery" size="60" value="$iquery" /></td>
   </tr>
 #if $has_lemmaattr
-  #set $hidden = ($querytype == 'lemmarow'+$suff) and 'visible' or 'hidden'
-  <tr class="required $hidden" id="lemmarow$suff">
+  #set $hidden = ($querytype == 'lemmarow') and 'visible' or 'hidden'
+  <tr class="required $hidden" id="lemmarow">
       <th>$_("Lemma"):</th><td>
   #if $q
-    <input type="text" name="lemma$suff" size="60" id="lemma$suff" />
+    <input type="text" name="lemma" size="60" id="lemma" />
   #else
-    <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" size="60" id="lemma$suff" />
+    <input type="text" name="lemma" value="$lemma" size="60" id="lemma" />
   #end if
   #if $Lposlist
     <span class="no-wrap">
-    $_("PoS"):<select name="lpos$suff">
+    $_("PoS"):<select name="lpos">
       <option value="">$_("unspecified")</option>
       #for $lp in $Lposlist
-        <option value="$lp.v"
-	#if $lp.v == $getVar('lpos' + $suff, '')
+        <option value="$lp['v']"
+	#if $lp['v'] == $lpos
 	  selected="selected"
 	#end if
-	>$lp.n</option>
+	>$lp['n']</option>
       #end for
       </select>
     </span>
   #end if
 </td></tr>
 #end if
-#set $hidden = ($querytype == 'phraserow'+$suff) and 'visible' or 'hidden'
-<tr class="required $hidden" id="phraserow$suff">
+#set $hidden = ($querytype == 'phraserow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="phraserow">
   <th>$_("Phrase"):</th><td>
-  <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" size="60" id="phrase$suff" />
+  <input type="text" name="phrase" value="$phrase" size="60" id="phrase" />
 </td></tr>
-#set $hidden = ($querytype == 'wordrow'+$suff) and 'visible' or 'hidden'
-<tr class="required $hidden" id="wordrow$suff">
+#set $hidden = ($querytype == 'wordrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="wordrow">
   <th>$_("Word Form"):</th><td>
-  <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" size="60" id="word$suff" />
+  <input type="text" name="word" value="$word" size="60" id="word" />
   #if $Wposlist
     <span class="no-wrap">
-    $_("PoS"):<select name="wpos$suff">
+    $_("PoS"):<select name="wpos">
     <option value="">$_("unspecified")</option>
     #for $wp in $Wposlist
-      <option value="$wp.v"
-      #if $wp.v == $getVar('wpos' + $suff, '')
+      <option value="$wp['v']"
+      #if $wp['v'] == $wpos
         selected="selected"
       #end if
-      >$wp.n</option>
+      >$wp['n']</option>
     #end for
     </select>
     </span>
   #end if
   <span class="no-wrap">
   <label>$_("Match case"):</label>
-  <input type="checkbox" name="qmcase$suff" value="1"
-  #if $getVar('qmcase' + $suff, '')
+  <input type="checkbox" name="qmcase" value="1"
+  #if $qmcase
     checked
   #end if
   />
