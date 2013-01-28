@@ -28,7 +28,9 @@ $_("Word List Form")#slurp
 #def left_submenu_help
 #filter WebSafe
     #if $varExists('helpsite')
-    <li class="context_help"><a href="${helpsite}WordList" rel="help">? $_("Help on Word Lists")</a></li>
+    <a href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank">
+      <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
+    </a>
     #end if
 #end filter
 #end def
@@ -78,7 +80,14 @@ require(['treecomponent'], function (tc) {
 
 #def main
 #filter WebSafe
-<h3>$_("Word list options")</h3>
+<h3>$_("Word list options")
+    #if $varExists('helpsite')
+    <a href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank" name="help_icon" id="help_icon">
+      <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
+    </a>
+    #end if
+</h3>
+
 <form action="wordlist" id="wordlist_form" method="post" enctype="multipart/form-data">
 <fieldset>
 #filter None
@@ -103,23 +112,23 @@ $input_hidden
 <th>$_("Search attribute"):</th>
   <td><select name="wlattr">
   <optgroup label="Positional Attributes">
-  #for $a in $Attrlist
+  #for $a in $AttrList
     #set $selected = ($a.n == $wlattr) and 'selected' or ''
-    <option value="$a.n" $selected>$_($a.label)</option>
+    <option value="$a.n" $selected>$a.label</option>
   #end for
   </optgroup>
   <optgroup label="Text Types">
   #for $a in $StructAttrList
     #set $selected = ($a.n == $wlattr) and 'selected' or ''
-    <option value="$a.n" $selected>$_($a.label)</option>
+    <option value="$a.n" $selected>$a.label</option>
   #end for
   </optgroup>
   </select></td>
 </tr></table>
 <hr />
 <table class="form"><tr>
-  <th>$_("Filter wordlist by"):</th><td title="Regular expression pattern">$_("RE pattern"):</td>
-  <td><input type="text" name="wlpat" size="10" value="$wlpat" id="wlpat" /></td>
+  <th>$_("Filter wordlist by"):</th><td title="$_('Regular expression pattern')">$_("RE pattern"):</td>
+  <td><input type="text" name="wlpat" size="50" value="$wlpat" id="wlpat" /></td>
 </tr><tr>
   <td></td><td>$_("Minimum frequency"):</td>
   <td><input type="text" name="wlminfreq" size="10" value="$wlminfreq" /></td>
@@ -190,21 +199,22 @@ $input_hidden
   #for $i in $range(1,4)
     <select name="wlstruct_attr$i" id="wlstruct_attr$i">
     <option value="">---</option>
-    #for $a in $Attrlist
-      #set selected = ''
-      <option value="$a.n" $selected>$_($a.label)</option>
+    #for $a in $AttrList
+      <option value="$a.n" $selected>$a.label</option>
     #end for
     </select>
   #end for
   </td>
 </tr></table>
-<input class="submit" type="submit" value="$_("Make Word List")" />
 </fieldset>
+
+<div class="buttons">
+<input class="submit" type="submit" value="$_("Make Word List")" />
+</div>
 </form>
 #end filter
 
 <script type="text/javascript">
-window.onload = select_output_type();
 
 function select_output_type() {
   var wltypes = ['wltype_simple', 'wltype_keywords', 'wltype_multilevel'];

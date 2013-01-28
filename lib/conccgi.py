@@ -568,13 +568,15 @@ class ConcCGI (UserCGI):
         if doc in availstruct:
             out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
                 'sel': (doc in reflist and 'selected' or '')})
-        out['newctxsize'] = self.kwicleftctx[:-1]
+        out['newctxsize'] = self.kwicleftctx[1:]
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
         out['tbl_labels'] = tbl_labels
         return out
 
     def set_new_viewattrs (self, setattrs=[], allpos='', setstructs=[],
-                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf=''):
+                    setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
+        if ctxunit == '@pos':
+            ctxunit = ''
         self.attrs = ','.join(setattrs)
         self.structs = ','.join(setstructs)
         self.refs = ','.join(setrefs)
