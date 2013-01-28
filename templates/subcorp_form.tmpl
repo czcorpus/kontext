@@ -114,7 +114,7 @@ switchToInputMethod('$method');
 
 #def main
 #filter WebSafe
-#if $_open_version
+#if $_anonymous
 <br /><br />$_("Sorry, creating user subcorpora is not available in the open version")
 #else
 
@@ -157,9 +157,7 @@ $tt_sel
 #end filter
 
 <div class="buttons">
-  #unless $_open_version
-  <input type="submit" value="$_("Create Subcorpus")" />
-  #end unless
+<input type="submit" value="$_("Create Subcorpus")" />
 </div>
 </fieldset>
 </form>

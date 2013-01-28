@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
-
+#import locale
 #from cmpltmpl.conc import conc
 #from templating.filters import *
 #extends conc
@@ -64,6 +64,7 @@ require(['domReady!', 'jquery'], function (domReady, $) {
 </style>
 #end if
 #end def
+
 #def left_submenu_save
 #filter WebSafe
   <li><a title="$_("Save concordance to a text file or xml")" href="saveconc_form?$q;$globals&amp;fromp=$fromp&amp;pagesize=$pagesize&amp;leftctx=$leftctx.replace('#', '')&amp;rightctx=$rightctx.replace('#', '')">$_("Save")</a></li>
@@ -81,15 +82,15 @@ require(['domReady!', 'jquery'], function (domReady, $) {
 #def viewblock
   <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_("Sort")</a>
     <ul class="submenu">
-      <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
-        | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
-      <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
+      <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc;sicase=i">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
+        | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc;sicase=i">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
+      <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw;sicase=i">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
       #set $mlsortref = ''
       #set $i = 0
       #for $r in $refs.split(',')
         #set $i = $i + 1
-        #set $mlsortref = $mlsortref + ('ml%dattr=' % $i) + $r[1:] + ';'
-        #set $mlsortref = $mlsortref + ('ml%dpos=0;ml%dctx=kl;' % ($i, $i))
+        #set $mlsortref = $mlsortref + ('ml%dattr=' % $i) + $r.strip('=') + ';'
+        #set $mlsortref = $mlsortref + ('ml%dpos=0;' % $i)
       #end for
       #set $mlsortref = $mlsortref + 'sortlevel=%d' % $i
       <li><a title="$_("Sort according to the 'References' field")" href="mlsortx?$q;$globals;$mlsortref">$_("References")</a></li>
@@ -99,351 +100,406 @@ require(['domReady!', 'jquery'], function (domReady, $) {
 #end def
 
 #def bodyonload
-preload_image('$files_path/img/edit-copy-selected.png');
+#if not $finished and $async and $save and not $sampled_size
+;reloadHits()#slurp
+#end if
 #end def
 
 #def bodyargs
-id="bodytag" onscroll="fix_detail_frame_on_scrolling()"#slurp
+id="bodytag"#slurp
+#end def
+
+#def align_heading($viewmode, $KWICCorps)
+  #if $getVar('Par_conc_corpnames', [])
+    <tr>
+    #for $i, $c in enumerate($Par_conc_corpnames)
+      <td></td>
+      <td #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>      
+      <a href="view?$q;$globals;q=x-$c.n;maincorp=$c.n"><b>$c.label</b></td></a></td>
+      #if $copy_icon and $i == 0 # <td></td> #end if#
+    #end for
+    </tr>
+  #end if
+#end def
+
+#def display_conc_line($l, $corpname, $viewmode, $KWICCorps)
+  #if $viewmode == 'kwic' and $corpname in $KWICCorps
+    <td class="lc #if $corpname == $maincorp#maincorp#end if#" >
+  #else
+    <td class="par #if $corpname == $maincorp#maincorp#end if#">
+    #if $annotconc
+      <span class="groupbox"
+      #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if#>
+      $l.linegroup</span>
+    #end if
+  #end if
+  #for $ll in $l.Left
+    #if $ll.has_key('class') and $ll.class
+      <i class='$ll.class'>
+    #end if
+    $ll.str
+    #if $ll.has_key('class') and $ll.class
+      </i>
+    #end if
+  #end for
+  #if $viewmode == 'kwic' and $corpname in $KWICCorps
+    </td><td class="kw #if $corpname == $maincorp#maincorp#end if#"
+             onclick='show_detail("widectx", "pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname", "$_('Loading...')", true);'>
+  #else
+    <span  onclick='show_detail("widectx", "pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname", "$_('Loading...')", true);'>
+  #end if
+  #for $k in $l.Kwic
+    #if $k.get('class', '') and $corpname in $KWICCorps
+      <b class='$k.class'>
+    #end if
+    $k.str
+    #if $k.has_key('class') and $k.class
+      </b>
+    #end if
+  #end for
+  #if $viewmode == 'kwic' and $corpname in $KWICCorps
+    </td><td class="rc #if $corpname == $maincorp#maincorp#end if#">
+    #if $annotconc
+      <span class="groupbox" 
+      #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
+       >$l.linegroup</span>
+    #end if
+  #else
+    </span>
+  #end if
+  #for $rr in $l.Right
+    #if $rr.has_key('class') and $rr.class
+      <i class='$rr.class'>
+    #end if
+    $rr.str
+    #if $rr.has_key('class') and $rr.class
+      </i>
+    #end if
+  #end for
+  </td>
+#end def
+
+#def oneclick_line($l, $i)
+  #if $copy_icon
+    <td><div class="copy_div"><a href="#" class="copy_button" id="$i"></a></div>
+      #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
+<span id="ref$i-$ref_i" class="hidden">$ref</span>
+      #end for
+<span id="sent$i" class="hidden">#slurp
+      #for $word in $l.Sen_Left
+#slurp
+$word.str#slurp
+      #end for
+#slurp
+#if $l.Kwic and $l.Kwic[0]['str'].startswith(' ')
+  #set $l['Kwic'][0]['str'] = $l.Kwic[0]['str'].strip()
+ <b>#slurp
+#else
+<b>#slurp
+#end if
+      #for $word in $l.Kwic
+#slurp
+$word.str#slurp
+      #end for
+#slurp
+</b>#slurp
+      #for $word in $l.Sen_Right
+#slurp
+$word.str#slurp
+      #end for
+#slurp
+</span></td>
+  #end if
+
 #end def
 
 
 #def main
+<script type="text/javascript">
+require(['domReady!', 'jquery'], function (dr, jQuery) {
+  jQuery(document).ready(function () {
+    jQuery('#next').focus();
+  });
+
+function reloadHits() {
+    var freq = 100;
+    var countup = 30;
+
+    jQuery.periodic({ period: freq, decay: 1.2, max_period: 60000 },
+    function() {
+        jQuery.ajax({
+            url: 'get_cached_conc_sizes?$q;$globals',
+            type: 'POST',
+            complete: function(data) {
+                s = data.responseText;
+                sizes = s.split('\n');
+                if (sizes.length != 4) return;
+                finished = parseInt(sizes[0]);
+                newconcsize = parseInt(sizes[1]);
+                relconcsize = parseFloat(sizes[2]);
+                newfullsize = parseInt(sizes[3]);
+                if (finished == NaN || newconcsize == NaN || relconcsize == NaN || fullsize == NaN)
+                    return;
+                concsize = document.getElementById("concsize");
+                fullsize = document.getElementById("fullsize");
+                numofpages = document.getElementsByName("numofpages");
+                lastpage = document.getElementById("lastpage");
+                incr = Math.round((newconcsize - parseInt(concsize.title)) / (freq * 1000 / countup));
+                newnumofpages = Math.ceil(newconcsize / $len($Lines));
+                numofpages_num = parseInt(numofpages[0].title);
+                pageincr = (newnumofpages - numofpages_num) / (freq * 1000.0 / countup);
+                function addCommas(nStr) {
+                    nStr += '';
+                    x = nStr.split('.');
+                    x1 = x[0];
+                    x2 = x.length > 1 ? '.' + x[1] : '';
+                    var rgx = /(\d+)(\d{3})/;
+                    while (rgx.test(x1)) {
+                        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                    }
+                    return x1 + x2;
+                }
+                function incConcSize(newconcsize, newnumofpages, finished, pageincr) {
+                    concsize_num = parseInt(concsize.title);
+                    concsize.innedHTML = "using random ";
+                    if (concsize_num >= newconcsize) {
+                        concsize.title = newconcsize;
+                        concsize.innerHTML += addCommas(newconcsize);
+                        if (!finished) {
+                            concsize.innerHTML += " (counting ...)";
+                        }
+                        concsize.innerHTML += " lines only.";
+                        lastpage.href = "view?$q;$globals;" + "fromp=" + newnumofpages;
+                        numofpages[0].title = newnumofpages;
+                        numofpages[1].title = newnumofpages;
+			newnumofpages = addCommas(newnumofpages);
+                        numofpages[0].innerHTML = newnumofpages;
+                        numofpages[1].innerHTML = newnumofpages;
+                        return;
+                    }
+                    concsize.title = (concsize_num + incr).toString();
+                    concsize.innerHTML += addCommas (concsize.title) + " (counting ...) lines only."
+                    numofpages_num += pageincr;
+                    numofpages_text = Math.ceil(numofpages_num).toString();
+                    lastpage.href = "view?$q;$globals;" + "fromp=" + numofpages_text;
+                    numofpages[0].title = numofpages_text;
+                    numofpages[1].title = numofpages_text;
+		    numofpages_text = addCommas(numofpages_text);
+                    numofpages[0].innerHTML = numofpages_text;
+                    numofpages[1].innerHTML = numofpages_text;
+                    var delegate = function() {incConcSize(newconcsize, newnumofpages, finished, pageincr);};
+                    setTimeout(delegate, countup);
+                }
+                if (newfullsize > 0) {
+                    if ("$q[2]" != "R") {
+                        l = addCommas (newconcsize);
+                        concsize.innerHTML = "$_('using first') " + l + " $_('lines only'). <a href='view?q=R$q[2:];$globals'>$_('Use random') " + l + " $_('instead').</a>";
+                        newconcsize = newfullsize;
+                    }
+                    else {
+                        incConcSize(newconcsize, newnumofpages, finished, pageincr);
+                        if (finished == 1) setTimeout('this.cancel', 2000);
+                        return;
+                    }
+                }
+                fullsize_num = parseInt(fullsize.title);
+                incr = (newconcsize - parseInt(fullsize.title)) / (freq * 1000 / countup);
+                function incSize(newconcisze, newnumofpages, finished, incr) {
+                    fullsize_num += incr;
+                    if (fullsize_num >= newconcsize) {
+                        fullsize.title = newconcsize;
+                        fullsize.innerHTML = addCommas(newconcsize);
+                        if (!finished)
+                            fullsize.innerHTML += " (counting ...)";
+                        document.getElementById("relconcsize").innerHTML = "(" + addCommas(relconcsize.toFixed(1).toString()) + " per million)";
+                        lastpage.href = "view?$q;$globals;" + "fromp=" + newnumofpages;
+                        numofpages[0].title = newnumofpages;
+                        numofpages[1].title = newnumofpages;
+		        newnumofpages = addCommas(newnumofpages);
+                        numofpages[0].innerHTML = newnumofpages;
+                        numofpages[1].innerHTML = newnumofpages;
+                        return;
+                    }
+                    fullsize.title = Math.ceil(fullsize_num).toString();
+                    fullsize.innerHTML = addCommas(fullsize.title) + " (counting ...)";
+                    numofpages_num += pageincr;
+                    numofpages_text = Math.ceil(numofpages_num).toString();
+                    lastpage.href = "view?$q;$globals;" + "fromp=" + numofpages_text;
+                    numofpages[0].title = numofpages_text;
+                    numofpages[1].title = numofpages_text;
+		    numofpages_text = addCommas(numofpages_text);
+                    numofpages[0].innerHTML = numofpages_text;
+                    numofpages[1].innerHTML = numofpages_text;
+                    var delegate = function () {incSize(newconcsize, newnumofpages, finished, incr);};
+                    setTimeout(delegate, countup);
+                }
+                incSize(newconcsize, newnumofpages, finished, incr);
+                if (finished == 1) setTimeout('this.cancel', 1000);
+            },
+            dataType: 'text'
+        });
+    });
+}
+
+});
+</script>
 #filter WebSafe
-#if $varExists('_ca_topbar')
     $_("Corpus"): <strong>$corp_full_name</strong>
     #if $usesubcorp
         $_("Subcorpus"): <strong>$usesubcorp</strong>
     #end if
     <br/>
-    #if $concsize
-        $_("Hits"): <strong>$concsize</strong>
-        #if $concarf
-            ($concarf)
-        #end if
-    #end if
-#end if
+	#if $q[2] == "R"
+		#set $online_sample = True
+	#else
+		#set $online_sample = False
+	#end if
 
-## Aligned corpora
-#for $a in $Aligned
-[<a href="view?$q;$globals;align=$a.n">$a.n</a>]
-#end for
+    <div id="result-info">
+        $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
+        (#filter $FloatFormatter# $result_relative_freq #end filter#</strong>
+        <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
+        #if $result_arf
+        | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+        <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
+        #end if
+    </div>
 
 ## concordance annotation
 #if $annotconc
-<i>$_("Annotating"):</i> <b>$annotconc</b>&nbsp;&nbsp;
-<a href="lngroupinfo?$q;$globals">$_("Info")</a>
-<a href="view?$q;q=g$annotconc;$globals">$_("Sort")</a>
-<a href="view?$q;$globals;annotconc=--NONE--">$_("Finish")</a>
-#if $can_annotate
-&nbsp;&nbsp;
-<i>$_("New pattern"):</i> <input id="newlabel" type="text" size="10" />
-<input type="submit" value="Add" onclick="add_new_annotation_label()" />
-<span id="number_globally">$_("Number globally"):
-   <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span>
-</span>
-<span id="number_selected" style="display:none">$_("Number selected") 
-  (<span id="num_of_selected_lines">0</span>):
-   <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span> 
-   <a href="#" onclick="clear_selection()">$_("Clear sel")</a>
-</span>
-<span id="annot_undo" style="display:none" onclick="undo_last_action()">
-  <span id="annot_undo_count">0</span> lines assigned. Undo.</span>
+    <i>$_("Annotating"):</i> <b>$annotconc</b>&nbsp;&nbsp;
+    <a href="lngroupinfo?$q;$globals">$_("Info")</a>
+    <a href="view?$q;q=g$annotconc;$globals">$_("Sort")</a>
+    <a href="view?$q;$globals;annotconc=--NONE--">$_("Finish")</a>
+    #if $can_annotate
+        &nbsp;&nbsp;
+        <i>$_("New pattern"):</i> <input id="newlabel" type="text" size="10" />
+        <input type="submit" value="Add" onclick="add_new_annotation_label()" />
+        <span id="number_globally">$_("Number globally"):
+           <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span>
+        </span>
+        <span id="number_selected" style="display:none">$_("Number selected")
+          (<span id="num_of_selected_lines">0</span>):
+           <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span>
+           <a href="#" onclick="clear_selection()">$_("Clear selection")</a>
+        </span>
+        <span id="annot_undo" style="display:none" onclick="undo_last_action()">
+          <span id="annot_undo_count">0</span> lines assigned. Undo.</span>
 
-<div id="groupmenu" onmouseout="cancel_menu(event);">
-<table>
-   #for $g in $GroupNumbers
-      <tr>
-      #for $i in $g.Items
-         <td onclick="assing_group('${i['n']}', '${i['lab']}')">$i.lab</td>
-      #end for
-      </tr>
-   #end for
-      <tr><td colspan=3 onclick="add_new_annotation_label()">$_("Add next")</td></tr>
-      <tr><td colspan=3 onclick="assing_group('0', '_')">$_("None")</td></tr>
-</table>
-</div>
-<script type="text/javascript">
-\$('#groupmenu').annotconc = "$annotconc";
-\$('#groupmenu').corpname = "$corpname";
-\$('#groupmenu').queryparams = "$q";
-</script>
-#end if
-#end if
-<div id="result-info">
-    $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
-     (#filter $FloatFormatter# $result_relative_freq #end filter#</strong>
-    <acronym title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</acronym>; $result_relative_freq_rel_to)
-    #if $result_arf
-    | <acronym title="$_('Average Reduced Frequency')">$_('ARF')</acronym>:
-    <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
+        <div id="groupmenu">
+        <table>
+           #for $g in $GroupNumbers
+              <tr>
+              #for $i in $g.Items
+                 <td onclick="assign_group('${i['n']}', '${i['lab']}')">$i.lab</td>
+              #end for
+              </tr>
+           #end for
+              <tr><td colspan=3 onclick="add_new_annotation_label()">$_("Add next")</td></tr>
+              <tr><td colspan=3 onclick="assign_group('0', '_')">$_("None")</td></tr>
+        </table>
+        </div>
+        <script type="text/javascript">
+        jQuery(document).ready(function () {
+            jQuery('#groupmenu').attr("annotconc", "$annotconc");
+            jQuery('#groupmenu').attr("corpname", "$corpname");
+            jQuery('#groupmenu').attr("queryparams", "$q");
+            jQuery('#groupmenu').mouseleave(close_menu);
+        });
+        </script>
     #end if
-</div>
+#end if
+
 #block navigation($navid="navigation_form", $nextid="next")
 ## navigation
 #if $numofpages
-<div class="bonito-pagination">
-<form action="view" id="$navid">
-<fieldset class="float">
-#if $prevlink
-  <div class="bonito-pagination-left">
-  <a href="view?$q;$firstlink;$globals">$_("First")</a> |
-  <a href="view?$q;$prevlink;$globals">$_("Previous")</a>
-  </div>
-#end if
+    <div class="bonito-pagination">
+    <form action="view" id="$navid">
+    #if $prevlink
+        <div class="bonito-pagination-left">
+        <a href="view?$q;$firstlink;$globals">$_("First")</a> |
+        <a href="view?$q;$prevlink;$globals">$_("Previous")</a>
+        </div>
+    #end if
 
-<div class="bonito-pagination-core">
-  #filter None
-  $input_hidden
-  #end filter
-  $_("Page")
-  #if $Page
-    <select name="fromp">
-    #for $p in $Page
-      <option
-      #if $p.page == $fromp
-        selected="selected"
-      #end if
-      >$p.page</option>
-    #end for
-  </select>
-  #else
-<input type="text" name="fromp" value="$fromp" size="4" />
-  #end if
- $_("of") $numofpages
-  <input type="submit" value="$_("Go")" />
-</div>
+    <div class="bonito-pagination-core">
+      #filter None
+      $input_hidden
+      #end filter
+      $_("Page")
+      <input type="text" name="fromp" value="$fromp" size="4" />
+      #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
+      $_("of") <span name="numofpages" title="$numofpages">$l_numofpages</span>
+      <input type="submit" value="$_("Go")" />
+    </div>
 
-#if $nextlink
-  <div class="bonito-pagination-right">
-  <a href="view?$q;$nextlink;$globals" id="$nextid">$_("Next")</a> |
-  <a href="view?$q;$lastlink;$globals">$_("Last")</a>
-  </div>
-#else
-<a id="$nextid"></a>
-#end if
-</fieldset>
-</form>
-</div>
+    #if $nextlink
+        <div class="bonito-pagination-right">
+        <a href="view?$q;$nextlink;$globals" id="$nextid">$_("Next")</a> |
+        <a id="lastpage" href="view?$q;$lastlink;$globals">$_("Last")</a>
+        </div>
+    #else
+        <a id="$nextid"></a>
+    #end if
+
+    #if $Sort_idx
+        &nbsp; &nbsp; $_("Concordance is sorted. Jump to"):
+        <select onchange="this.form.fromp.value = this.value; this.form.submit();">
+        #for $idx in $Sort_idx
+            <option value="$idx.page"
+            #if $idx.page == $fromp
+                selected="selected"
+            #end if
+            >$idx.label</option>
+        #end for
+        </select>
+    #end if
+    </form>
+    </div>
 #end if
 #end block
 
-## kwic lines
-#if $concsize > 0
-    <table id="conclines">
-    #if $viewmode == 'kwic'
-      #for $i, $l in $enumerate($Lines)
-        <tr toknum="$l.toknum" >
-        <td class="ref" onclick="full_ref($l.toknum)"><div class="ref">$l.ref</div></td>
-        <td class="lc">
-          #for $ll in $l.Left
-            #if $ll.has_key('open_link')
-            <a href="$ll.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
-            #end if
-            #if $ll.has_key('class') and $ll.class
-              <i class='$ll.class'>
-            #end if
-            $ll.str
-            #if $ll.has_key('class') and $ll.class
-            </i>
-            #end if
-            #if $ll.has_key('close_link')
-            <a href="$ll.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-            #end if
-          #end for
-        </td><td class="kw" onclick="wide_context($l.toknum,'$l.hitlen');">
-          #for $k in $l.Kwic
-            #if $k.has_key('class') and $k.class
-          <b class='$k.class'>
-        #end if
-            $k.str
-        #if $k.has_key('class') and $k.class
-              </b>
-        #end if
-          #end for
-        </td><td class="rc">
-          #if $annotconc
-            <span class="groupbox"
-            #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
-             >$l.linegroup</span>
-          #end if
-          #for $rr in $l.Right
-            #if $rr.has_key('open_link')
-            <a href="$rr.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
-            #end if
-            #if $rr.has_key('class') and $rr.class
-              <i class='$rr.class'>
-            #end if
-            $rr.str
-            #if $rr.has_key('class') and $rr.class
-            </i>
-            #end if
-            #if $rr.has_key('close_link')
-            <a href="$rr.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-            #end if
-          #end for
-        </td>
-        #if $copy_icon
-        <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
-          #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
-    <span id="ref$i-$ref_i" class="hidden">$ref</span>
-          #end for
-    <span id="sent$i" class="hidden">#slurp
-          #for $word in $l.Sen_Left
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    #if $l.Kwic[0]['str'].startswith(' ')
-      #set $l.Kwic[0]['str'] = $l.Kwic[0]['str'].strip()
-     <b>#slurp
-    #else
-    <b>#slurp
-    #end if
-          #for $word in $l.Kwic
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    </b>#slurp
-          #for $word in $l.Sen_Right
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    </span></td>
-        #end if
-        </tr>
-        #for $a in $l.Align
-          <tr><td></td><td colspan="3"><b>$a.name: </b>
-          #for $w in $a.Words
-            #if $w.has_key('class')
-              <i class='$w.class'>
-            #end if
-            $w.str
-            #if $w.has_key('class')
-          </i>
-             #end if
-          #end for
-          </td>
-        </tr>
-        #end for
-      #end for
-    #else
-    ## sentence mode
-      #for $i,$l in $enumerate($Lines)
-        <tr toknum="$l.toknum" #if $i%2# class="even"#end if#>
-        <td class="ref" onclick="full_ref($l.toknum)">$l.ref</td>
-        <td class="par">
-          #if $annotconc
-            <span class="groupbox"
-            #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
-             >$l.linegroup</span>
-          #end if
-          #for $ll in $l.Left
-            #if $ll.has_key('open_link')
-                <a href="$ll.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
-            #end if
-            #if $ll.has_key('class') and $ll.class
-              <i class='$ll.class'>
-            #end if
-            $ll.str
-            #if $ll.has_key('class') and $ll.class
-              </i>
-            #end if
-            #if $ll.has_key('close_link')
-                <a href="$ll.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-            #end if
-          #end for
-          <span  onclick="wide_context($l.toknum,'$l.hitlen');">
-          #for $k in $l.Kwic
-            #if $k.has_key('class') and $k.class
-              <b class='$k.class'>
-            #end if
-            $k.str
-            #if $k.has_key('class') and $k.class
-              </b>
-            #end if
-          #end for
-          </span>
-          #for $rr in $l.Right
-            #if $rr.has_key('open_link')
-            <a href="$rr.open_link['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
-            #end if
-            #if $rr.has_key('class') and $rr.class
-              <i class='$rr.class'>
-            #end if
-            $rr.str
-            #if $rr.has_key('class') and $rr.class
-              </i>
-            #end if
-            #if $rr.has_key('close_link')
-            <a href="$rr.close_link['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
-            #end if
-          #end for
-        </td>
-        #if $copy_icon
-        <td><img align="right" src="$files_path/img/edit-copy.png" title="$_("Copy the relevant sentence into the clipboard")" onclick="one_click_copy(this, '$tbl_template', $multiple_copy, '$files_path')" id="$i" />
-          #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
-    <span id="ref$i-$ref_i" class="hidden">$ref</span>
-          #end for
-    <span id="sent$i" class="hidden">#slurp
-          #for $word in $l.Sen_Left
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    #if $l.Kwic and $l.Kwic[0]['str'].startswith(' ')
-      #set $l.Kwic[0]['str'] = $l.Kwic[0]['str'].strip()
-     <b>#slurp
-    #else
-    <b>#slurp
-    #end if
-          #for $word in $l.Kwic
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    </b>#slurp
-          #for $word in $l.Sen_Right
-    #slurp
-    $word.str#slurp
-          #end for
-    #slurp
-    </span></td>
-        #end if
-        #for $a in $l.Align
-          <td><b>$a.name:</b>
-          #for $w in $a.Words
-            #if $w.has_key('class')
-              <i class='$w.class'>
-        #end if
-            $w.str
-            #if $w.has_key('class')
-          </i>
-        #end if
-          #end for
-          </td>
-        #end for
-        </tr>
-      #end for
-    #end if
-    </table>
+## concordance lines
+#set $KWICCorps = list($getVar('CollCorps', [$corpname]))
+<table id="conclines">
 #filter None
-$navigation("navigation_form2", "next2")
+$align_heading($viewmode, $KWICCorps)
 #end filter
+#if $len($Lines) > 0
+    #for $i, $l in $enumerate($Lines)
+      <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+      <td class="ref" onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);">$l.ref</td>
+      #filter None
+        $display_conc_line($l, $corpname, $viewmode, $KWICCorps)
+        $oneclick_line($l, $i)
+        #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
+          #if $ll.ref
+            <td class="ref" onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n', '$_("Loading...")', true);">$ll.ref</td>
+          #else
+            <td></td>
+          #end if
+          $display_conc_line($ll, $Par_conc_corpnames[$ii+1].n, $viewmode, $KWICCorps)
+        #end for
+      #end filter
+      </tr>
+    #end for
+    </table>
 #else
-
 <div id="message-box">
     <h1>Info</h1>
     <p>$_('Empty result')</p>
 </div>
-
 #end if
 
+#filter None
+$navigation("navigation_form2", "next2")
+#end filter
 
 <div id="detailframe">
-<div id="minus_sign"><img src="$files_path/img/minus.png" alt="$_("hide detail")" /></div>
-<div id="detailframecontent"></div>
+  <a href="#" id="hideel" onclick="jQuery('#detailframe').hide();return false">
+    <img src="$files_path/img/roll_down.png" alt="$_("hide detail")" />
+  </a>
+  <div id="detailframecontent"></div>
 </div>
 
 #end filter

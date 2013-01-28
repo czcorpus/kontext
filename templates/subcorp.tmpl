@@ -27,7 +27,7 @@ $_("Subcorpus Info")#slurp
 
 #def bodyonload
 #filter WebSafe
-show_subcorpinfo();
+show_subcorpinfo();#slurp
 #end filter
 #end def
 
@@ -46,7 +46,7 @@ $corp_sel_node
 $_("Subcorpora"):<br/>
 #if $SubcorpList
 <select name="subcname" id="subcname" onchange="show_subcorpinfo();"
-        size="#if len($SubcorpList) == 1 then 2 else len($SubcorpList)#">
+        size="#if len($SubcorpList) == 1 then 2 else min(len($SubcorpList), 25)#">
   #for $s in $SubcorpList
     #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
     <option $selected>$s.n</option>
@@ -58,7 +58,7 @@ $_("Subcorpora"):<br/>
 <br/>
 
      <i>
-     #if not $_open_version
+     #if not $_anonymous
      <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
      #end if
 </th>
@@ -76,7 +76,7 @@ $_("Subcorpora"):<br/>
 </tbody>
 </table>
 
-#if $SubcorpList and not $_open_version
+#if $SubcorpList and not $_anonymous
 <div class="buttons">
   <input type="submit" name="delete" value="$_("Delete Selected")" />
 </div>

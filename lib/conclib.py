@@ -53,6 +53,9 @@ else:
     def flck_unlock (file):
         fcntl.lockf (file, fcntl.LOCK_UN, 1, 0, 0)
 
+def tokens2strclass (tokens):
+    return [{'str': tokens[i], 'class': tokens[i+1].strip ('{}')}
+            for i in range(0, len(tokens), 2)]
 
 def printkwic (conc, froml=0, tol=5, leftctx='15#', rightctx='15#',
                attrs='word', refs='#', maxcontext=0):
@@ -67,13 +70,13 @@ def printkwic (conc, froml=0, tol=5, leftctx='15#', rightctx='15#',
 
 
 def pos_ctxs (min_hitlen, max_hitlen, max_ctx=3):
-    ctxs = [{'n':'%iL' % -c, 'ctx':'%i<0' % c} for c in range (-max_ctx, 0)]
+    ctxs = [{'n': _('%iL') % -c, 'ctx':'%i<0' % c} for c in range (-max_ctx, 0)]
     if max_hitlen == 1:
-        ctxs.append ({'n':'Node', 'ctx': '0~0>0'})
+        ctxs.append ({'n': _('Node'), 'ctx': '0~0>0'})
     else:
         ctxs.extend ([{'n':'Node %i' % c, 'ctx':'%i<0' % c}
                       for c in range (1,max_hitlen+1)])
-    ctxs.extend ([{'n':'%iR' % c, 'ctx':'%i>0' % c}
+    ctxs.extend ([{'n': _('%iR') % c, 'ctx':'%i>0' % c}
                   for c in range (1, max_ctx+1)])
     return ctxs
 
@@ -86,7 +89,7 @@ def add_block_items (items, attr='class', val='even', block_size=3):
 def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5', attrs='word',
               ctxattrs='word', refs='#', structs='p', pagesize=20,
               labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
-              tbl_template='none'):
+              tbl_template='none', hidenone=0):
     """
     Generates template data for page displaying provided concordance
 
@@ -124,6 +127,8 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
       TODO
     tbl_template : str, optional (default is 'none')
       TODO
+    hidenone : int (0 or 1)
+      TODO
 
     Returns
     -------
@@ -140,6 +145,9 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
            kwiclines(corpus, conc, has_speech, (fromp -1) * pagesize, fromp * pagesize,
                       leftctx, rightctx, attrs, ctxattrs, refs, structs,
                       labelmap, righttoleft, alignlist)}
+    add_aligns(out, conc,(fromp -1) * pagesize, fromp * pagesize,
+               leftctx, rightctx, attrs, ctxattrs, refs, structs,
+               labelmap, righttoleft, alignlist)
     if copy_icon:
         from tbl_settings import tbl_refs, tbl_structs
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
@@ -178,7 +186,47 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
     out['result_relative_freq'] = round(conc.size() / (float(corpsize) / 1e6), 2)
     out['result_relative_freq_rel_to'] = _('related to the selected subcorpus') if hasattr(corpus, 'subcname') \
                     else _('related to the whole corpus')
+    if hidenone:
+        for line in out['Lines']:
+            for part in ('Kwic', 'Left', 'Right'):
+                for item in line[part]:
+                    item['str'] = item['str'].replace('===NONE===', '')
+
     return out
+
+def add_aligns(result, conc, fromline, toline, leftctx='40#', rightctx='40#',
+               attrs='word', ctxattrs='word', refs='#', structs='p',
+               labelmap={}, righttoleft=False, alignlist=[]):
+    if not alignlist:
+        return
+    al_lines = []
+    corps_with_colls = manatee.StrVector()
+    conc.get_aligned(corps_with_colls)
+    result['CollCorps'] = corps_with_colls
+    result['Par_conc_corpnames'] = [{'n': c.get_conffile(),
+                                     'label': c.get_conf('NAME')
+                                     or c.get_conffile()}
+                                    for c in [conc.orig_corp]+alignlist]
+    for al_corp in alignlist:
+        al_corpname = al_corp.get_conffile()
+        if al_corpname in corps_with_colls:
+            conc.switch_aligned (al_corp.get_conffile())
+            al_lines.append (kwiclines (conc, fromline, toline, leftctx,
+                rightctx, attrs, ctxattrs, refs,
+                structs, labelmap, righttoleft))
+        else:
+            conc.switch_aligned(conc.orig_corp.get_conffile())
+            conc.add_aligned(al_corp.get_conffile())
+            conc.switch_aligned (al_corp.get_conffile())
+            al_lines.append (kwiclines (conc, fromline, toline, '0',
+                '0', 'word', '', refs, structs,
+                labelmap, righttoleft))
+    aligns = zip(*al_lines)
+    for i, line in enumerate(result['Lines']):
+        line['Align'] = aligns[i]
+
+
+
 
 def separate_speech_struct_from_tag(text):
     """
@@ -325,9 +373,6 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
         else:
             return ';hitlen=%i' % hitlen
 
-    def tokens2strclass (tokens):
-        return [{'str': tokens[i], 'class': tokens[i+1].strip ('{}')}
-                for i in range(0, len(tokens), 2)]
 
     # structs represent which structures are requested by user
     # all_structs contain also internal structures needed to render
@@ -352,22 +397,14 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
     else:
         leftlabel, rightlabel = 'Left', 'Right'
 
-    if alignlist:
-        alignlist = [(c, c.get_struct(align_attrname),
-                  manatee.CorpRegion (c, aattrs, astructs)) for c in alignlist]
-        align_struct = conc.corp.get_struct(align_attrname)
 
-    if corpus.get_conf('MAXDETAIL'):
-        kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
+    kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
             all_structs, refs)
-    else:
-        max_ctx = int(settings.get('corpora', 'kwicline_max_context'))
-        kl = manatee.KWICLines (conc, leftctx, rightctx, attrs, ctxattrs,
-            all_structs, refs, max_ctx)
 
     labelmap = labelmap.copy()
     labelmap['_'] = '_'
     maxleftsize = 0
+    maxrightsize = 0
     filter_out_speech_tag = has_speech and settings.get_speech_structure() not in user_structs and speech_struct_attr_name in all_structs
     for line in range (fromline, toline):
         if not kl.nextline (line):
@@ -382,18 +419,6 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
         rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag, last_left_speech_id)[0]
 
         kwicwords = tokens2strclass (kl.get_kwic())
-        if alignlist:
-            n = align_struct.num_at_pos (kl.get_pos())
-            if n < 0:
-                aligned_texts = []
-            else:
-                aligned_texts = [
-                    {'name': c.corpname,
-                     'Words': tokens2strclass (cr.region (a.beg(n), a.end(n)))}
-                    for (c, a, cr) in alignlist]
-        else:
-            aligned_texts = []
-
         if righttoleft:
             # change order for "English" context of "English" keywords
             if isengword(kwicwords[0]):
@@ -416,7 +441,7 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                     nfollow += 1
                 moveright = rightwords[:nfollow]
                 del rightwords[:nfollow]
-
+                
                 leftwords = leftwords + moveright
                 rightwords = moveleft + rightwords
 
@@ -427,6 +452,13 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
         if leftsize > maxleftsize:
             maxleftsize = leftsize
 
+        rightsize = 0
+        for w in rightwords:
+            if not w['class'] == 'strc':
+                rightsize += len(w['str']) + 1
+        if rightsize > maxrightsize:
+            maxrightsize = rightsize
+                
         lines.append ({'toknum': kl.get_pos(),
                        'hitlen': non1hitlen (kl.get_kwiclen()),
                        'ref': kl.get_refs(),
@@ -435,9 +467,12 @@ def kwiclines (corpus, conc, has_speech, fromline, toline, leftctx='-5', rightct
                        'Kwic': kwicwords,
                        rightlabel: rightwords,
                        'linegroup': linegroup,
-                       'leftspace': ' ' * (maxleftsize - leftsize),
-                       'Align': aligned_texts,
+                       'leftsize': leftsize,
+                       'rightsize': rightsize,
                        })
+    for l in lines:
+        l['leftspace'] = ' ' * (maxleftsize - l['leftsize'])
+        l['rightspace'] = ' ' * (maxrightsize - l['rightsize'])
     return lines
 
 
@@ -455,19 +490,41 @@ def strkwiclines (conc, fromline, toline=None, leftctx='-5', rightctx='5'):
             for line in range (fromline, toline) if kl.nextline (line)]
 
 
+def get_sort_idx (conc, q=[], pagesize=20, enc='latin1'):
+    crit = ''
+    for qq in q:
+        if qq.startswith('s') and not qq.startswith('s*'): crit = qq[1:]
+    if not crit: return []
+    vals = manatee.StrVector(); idx = manatee.IntVector()
+    if '.' in crit.split('/')[0]: just_letters = False
+    else: just_letters = True
+    conc.sort_idx(crit, vals, idx, just_letters)
+    out = [(v, pos/pagesize + 1) for v, pos in zip(vals, idx)]
+    if just_letters:
+        result = []; keys = []
+        for v, p in out:
+            if not v[0] in keys:
+                result.append((v[0], p)); keys.append(v[0])
+        out = result
+    return [{'page': p, 'label': v} for v, p in out]
+
+
 class PyConc (manatee.Concordance):
     selected_grps = []
 
-    def __init__ (self, corp, action, params):
+    def __init__ (self, corp, action, params, sample_size=0, full_size=-1,
+                  orig_corp=None):
         self.corp = corp
+        self.corpname = corp.get_conffile()
+        self.orig_corp = orig_corp or self.corp
         if action == 'q':
             # query
-            manatee.Concordance.__init__ (self, corp, params, 0)
+            manatee.Concordance.__init__ (self, corp, params, sample_size, full_size)
         elif action == 'a':
             # query with a default attribute
             default_attr, query = params.split (',', 1)
             corp.set_default_attr (default_attr)
-            manatee.Concordance.__init__ (self, corp, query, 0)
+            manatee.Concordance.__init__ (self, corp, query, sample_size, full_size)
         elif action == 'l':
             # load from a file
             manatee.Concordance.__init__ (self, corp, params)
@@ -480,26 +537,33 @@ class PyConc (manatee.Concordance):
         elif action == 'w':
             # word sketch
             import wmap
-            if params[0] == ',':
+            incoll = 1
+            if params[0] in [',', ':']:
                 # seek list
                 slist = wmap.IntVector (map (int, params[1:].split(',')))
-                ws = wmap.WMap (corp.get_conf('WSBASE'), 2)
-                fs = ws.selected_poss (slist)
+                incoll += len([x for x in slist if x < 0])
+                self.ws = wmap.WMap (corp.get_conf('WSBASE'),
+                                     params[0] == ":" and 1 or 2,
+                                     0, 0, self.corpname)
+                # self.* prevents freeing at the end of constructor (async conc)
+                fs = self.ws.selected_poss (slist)
             elif params[0] == '-':
                 # gramrel level
-                ws = wmap.WMap (corp.get_conf('WSBASE'), 1, int (params[1:]))
-                fs = ws.poss()
+                self.ws = wmap.WMap (corp.get_conf('WSBASE'), 1,
+                                     int (params[1:]), 0, self.corpname)
+                fs = self.ws.poss() # self to prevent freeing
             else:
                 # only one seek
-                ws = wmap.WMap (corp.get_conf('WSBASE'), 2, int (params))
-                fs = ws.poss()
-            fs.thisown = False
-            manatee.Concordance.__init__ (self, corp, fs)
+                self.ws = wmap.WMap (corp.get_conf('WSBASE'), 2, int (params),
+                                     0, self.corpname)
+                fs = self.ws.poss() # self to prevent freeing (async conc)
+            manatee.Concordance.__init__ (self, corp, fs, incoll)
         elif action == 't':
             # text type wordsketch -- will be replaced with filtered sketches
             import wmap
             suff, seek = params.split()
-            ws = wmap.WMap (corp.get_conf('WSBASE') + suff, 2, int (seek))
+            ws = wmap.WMap (corp.get_conf('WSBASE') + suff, 2, int (seek),
+                            0, self.corpname)
             manatee.Concordance.__init__ (self, corp, ws.poss())
         else:
             raise RuntimeError(_('Unknown action'))
@@ -557,7 +621,13 @@ class PyConc (manatee.Concordance):
         self.reduce_lines (options)
         
     def command_x (self, options):
-        self.swap_kwic_coll (int(options))
+        if options[0] == '-':
+            self.switch_aligned(self.orig_corp.get_conffile())
+            self.add_aligned(options[1:])
+            self.switch_aligned(options[1:])
+            self.corpname = options[1:]
+        else:
+            self.swap_kwic_coll (int(options))
         
     def command_n (self, options):
         self.pn_filter (options, 0)
@@ -565,7 +635,13 @@ class PyConc (manatee.Concordance):
     def command_p (self, options):
         self.pn_filter (options, 1)
 
-    def pn_filter (self, options, ispositive):
+    def command_N (self, options):
+        self.pn_filter (options, 0, True)
+
+    def command_P (self, options):
+        self.pn_filter (options, 1, True)
+
+    def pn_filter (self, options, ispositive, excludekwic = False):
         lctx, rctx, rank, query = options.split (None, 3)
         query_elems = re.split(r'(?<!\\),', query)
         if len(query_elems) > 1:
@@ -647,8 +723,8 @@ class PyConc (manatee.Concordance):
                 return normwidth / sumf * corr, normwidth / sumn * corr
             
         words = manatee.StrVector()
-        freqs = manatee.IntVector()
-        norms = manatee.IntVector()
+        freqs = manatee.NumVector()
+        norms = manatee.NumVector()
         self.freq_dist (crit, limit, words, freqs, norms)
         if not len (freqs):
             return {}
@@ -664,16 +740,15 @@ class PyConc (manatee.Concordance):
 
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
-
         def label (attr):
             if '/' in attr:
                 attr = attr [:attr.index('/')]
             return self.corp.get_conf (attr + '.LABEL') or attr
         head = [{'n': label (attrs[x]), 's': x/2}
                 for x in range(0, len(attrs), 2)]
-        head.append ({'n': 'freq', 's': 'freq'})
-
-        tofbar, tonbar = compute_corrections (freqs, norms, sumf, sumn)
+        head.append ({'n': _('Freq'), 's': 'freq'})
+        
+        tofbar, tonbar = compute_corrections (freqs, norms)
         if (tonbar and not(ml)):
             maxf = max(freqs) # because of bar height
             minf = min(freqs)
@@ -817,8 +892,8 @@ class PyConc (manatee.Concordance):
         return self.selected_grps
         
     def linegroup_info_subset (self, conc):
-        #fstream.thisown = False
         #conc = manatee.Concordance (fstream)
+        conc.sync()
         conc.set_linegroup_from_conc (self)
         if not conc.size():
             return 0, 0, [0]*(len(self.selected_grps)+1)
@@ -851,9 +926,34 @@ def load_map (cache_dir):
         return {}
     return ret
 
+def get_cached_conc_sizes (corp, q=[], cache_dir="cache", cachefile=None):
+    if not cachefile: # AJAX call
+        q = tuple(q)
+        subchash=getattr(corp, "subchash", None)
+        cache_dir = cache_dir + '/' + corp.corpname + '/'
+        saved = load_map (cache_dir)
+        cache_val = saved.get ((subchash, q))
+        cachefile = os.path.join (cache_dir, cache_val[0] + '.conc')
+    import struct
+    cache = open(cachefile,"rb")
+    flck_sh_lock (cache)
+    cache.seek(15);
+    finished = str(ord(cache.read(1)))
+    (fullsize,) = struct.unpack("q",cache.read(8))
+    cache.seek(32);
+    (concsize,) = struct.unpack("i",cache.read(4))
+    flck_unlock (cache)
+    relconcsize = None
+    if fullsize > 0:
+        relconcsize = 1000000.0 * fullsize / corp.search_size()
+    else:
+        relconcsize = 1000000.0 * concsize / corp.search_size()
+    return {'finished':finished, 'concsize':concsize, 'fullsize': fullsize,
+            'relconcsize': relconcsize}
+
 def uniqname (key, used):
     name = '#'.join ([''.join ([c for c in w if c.isalnum()]) for w in key])
-    name = name[1:15]
+    name = name[1:15].encode("UTF-8") # UTF-8 because os.path manipulations
     if not name:
         name = 'noalnums'
     if name in used:
@@ -864,9 +964,9 @@ def uniqname (key, used):
         name += str(i)
     return name
 
-def add_to_map (cache_dir, subchash, key, size):
+def add_to_map (cache_dir, pid_dir, subchash, key, size):
     import cPickle
-    kmap = None
+    kmap = pidfile = None
     try:
         f = open (cache_dir + '00CONCS.map', 'r+b')
     except IOError:
@@ -876,81 +976,292 @@ def add_to_map (cache_dir, subchash, key, size):
     if kmap is None:
         kmap = cPickle.load (f)
     if kmap.has_key ((subchash,key)):
-        ret = kmap [subchash,key][0]
+        ret, storedsize = kmap [subchash,key]
+        if storedsize < size:
+            kmap [subchash,key] = (ret, size)
+            f.seek(0)
+            cPickle.dump (kmap, f)
     else:
         ret = uniqname (key, [r for (r,s) in kmap.values()])
         kmap [subchash,key] = (ret, size)
         f.seek(0)
         cPickle.dump (kmap, f)
+        pidfile = open(pid_dir + ret + ".pid", "w")
+        pidfile.write (str(os.getpid()) + "\n")
+        pidfile.flush()
     f.close() # also automatically flck_unlock (f)
-    return cache_dir + ret
+    if not pidfile:
+        pidfile = pid_dir + ret + ".pid"
+    return cache_dir + ret + ".conc", pidfile
 
-
-def get_conc (corp, q=[], save=0, cache_dir='cache'):
-    user = os.getenv('REMOTE_USER')
-    date = datetime.now()
+def del_from_map (cache_dir, subchash, key):
+    import cPickle
     try:
-        action = q[0][0]
-        logging.getLogger(__name__).info('%s\t%s\t%s\t%s\t%s\t%s\n' % (date, user, "noske", corp.corpname, action, q[0][1:]))
-    except:
-        logging.getLogger(__name__).error('%s\t%s\t%s\t%s\n' % (date, user, corp.corpname, q))
-    if not q:
-        return None
-    q = tuple (q)
-    cache_dir = cache_dir + '/' + corp.corpname + '/'
-    if save:
-        try: 
-            if not os.path.isdir (cache_dir):
-                os.makedirs (cache_dir)
-            elif (os.stat(cache_dir + '00CONCS.map').st_mtime
-                  < os.stat(corp.get_conf('PATH') +'word.text').st_mtime):
-                os.remove (cache_dir + '00CONCS.map')
-                for f in os.listdir (cache_dir):
-                    os.remove (f)
-        except OSError:
+        f = open (cache_dir + '00CONCS.map', 'r+b')
+    except IOError:
+        return
+    flck_ex_lock (f)
+    kmap = cPickle.load (f)
+    try:
+        del kmap [subchash,key]
+        f.seek(0)
+        cPickle.dump (kmap, f)
+    except KeyError:
+        pass
+    f.close() # also automatically flck_unlock (f)
+
+def wait_for_conc (corp, q, cachefile, pidfile, minsize):
+    pidfile = os.path.realpath (pidfile)
+    sleeptime = 1
+    while True:
+        if sleeptime % 5 == 0 and not is_conc_alive (pidfile):
+            return
+        try:
+            sizes = get_cached_conc_sizes (corp, q, None, cachefile)
+            if minsize == -1:
+                if sizes["finished"] == 1: # whole conc
+                    return
+            elif sizes["concsize"] >= minsize:
+                return
+        except:
             pass
+        time.sleep(sleeptime * 0.1)
+        sleeptime += 1
+
+def is_conc_alive (pidfile):
+    try:
+        pid = open(pidfile).readline()[:-1]
+        link = os.readlink ("/proc/%s/fd/1" % pid)
+        if link != pidfile:
+            return False
+    except:
+        return False
+    return True
+
+def get_cached_conc (corp, subchash, q, cache_dir, pid_dir, minsize):
+    q = tuple (q)
+    try:
+        if not os.path.isdir (pid_dir):
+            os.makedirs (pid_dir)
+        if not os.path.isdir (cache_dir):
+            os.makedirs (cache_dir)
+        elif (os.stat(cache_dir + '00CONCS.map').st_mtime
+              < os.stat(corp.get_conf('PATH') +'word.text').st_mtime):
+            os.remove (cache_dir + '00CONCS.map')
+            for f in os.listdir (cache_dir):
+                os.remove (cache_dir + f)
+    except OSError:
+        pass
 
     saved = load_map (cache_dir)
-    subchash = getattr(corp, 'subchash', None)
     for i in range (len(q), 0, -1):
         cache_val = saved.get ((subchash, q[:i]))
         if cache_val:
-            conc = PyConc (corp, 'l', os.path.join (cache_dir,
-                                                    cache_val[0] + '.conc'))
-            toprocess = i
-            if toprocess == len(q):
-                save = 0
-            break
+            cachefile = os.path.join (cache_dir, cache_val[0] + '.conc')
+            pidfile = os.path.realpath (pid_dir + cache_val[0] + ".pid")
+            wait_for_conc (corp, q, cachefile, pidfile, minsize)
+            if not os.path.exists (cachefile): # broken cache
+                del_from_map (cache_dir, subchash, q)
+                try:
+                    os.remove (pidfile)
+                except OSError:
+                    pass
+                continue
+            conccorp = corp
+            for qq in reversed(q[:i]): # find the right main corp, if aligned
+                if qq.startswith('x-'): conccorp = manatee.Corpus(qq[2:]); break
+            conc = PyConc (conccorp, 'l', cachefile, orig_corp=corp)
+            if not is_conc_alive (pidfile) and not conc.finished():
+                # unfinished and dead concordance
+                del_from_map (cache_dir, subchash, q)
+                try:
+                    os.remove (cachefile)
+                except OSError:
+                    pass
+                try:
+                    os.remove (pidfile)
+                except OSError:
+                    pass
+                continue
+            return i, conc
+    return 0, None
+
+def compute_conc (corp, q, cache_dir, subchash, samplesize, fullsize):
+    q = tuple (q)
+    if q[0][0] == "R": # online sample
+        if fullsize == -1: # need to compute original conc first
+            q_copy = list(q)
+            q_copy[0] = q[0][1:]
+            q_copy = tuple(q_copy)
+            conc = None
+            cachefile, pidfile = add_to_map (cache_dir, pid_dir, subchash,
+                                             q_copy, 0)
+            if type(pidfile) != file: # computation got started meanwhile
+                wait_for_conc (corp, q, cachefile, pidfile, -1)
+                fullsize = PyConc (corp, 'l', cachefile).fullsize()
+            else:
+                conc = PyConc (corp, q[0][1], q[0][2:], samplesize)
+                conc.sync()
+                conc.save (cachefile)
+                # update size in map file
+                add_to_map (cache_dir, pid_dir, subchash, q_copy, conc.size())
+                fullsize = conc.fullsize()
+                os.remove (pidfile.name)
+                pidfile.close()
+        return PyConc (corp, q[0][1], q[0][2:], samplesize, fullsize)
     else:
-        conc = PyConc (corp, q[0][0], q[0][1:])
+        return PyConc (corp, q[0][0], q[0][1:], samplesize)
+
+def get_conc (corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0, \
+              cache_dir='cache', samplesize=0, debug=False):
+    if not q:
+        return None
+    q = tuple (q)
+    if not minsize:
+        if len(q) > 1: # subsequent concordance processing by its methods
+                       # needs whole concordance
+            minsize = -1
+        else:
+            minsize = fromp * pagesize
+    cache_dir = cache_dir + '/' + corp.corpname + '/'
+    pid_dir = cache_dir + "/run/"
+    subchash = getattr(corp, 'subchash', None)
+    conc = None
+    fullsize = -1
+
+    # try to locate concordance in cache
+    if save:
+        toprocess, conc = get_cached_conc(corp, subchash, q, cache_dir, pid_dir,
+                                          minsize)
+        if toprocess == len(q):
+            save = 0
+        if not conc and q[0][0] == "R": # online sample
+            q_copy = list(q)
+            q_copy[0] = q[0][1:]
+            q_copy = tuple(q_copy)
+            t, c = get_cached_conc (corp, subchash, q_copy, cache_dir,
+                                    pid_dir, -1)
+            if c:
+                fullsize = c.fullsize()
+    else:
+        async = 0
+
+    # cache miss or not used
+    if not conc:
         toprocess = 1
 
+        if async and len(q) == 1: # asynchronous processing
+
+            r, w = os.pipe()
+            r, w = os.fdopen(r,'r'), os.fdopen(w,'w')
+            if os.fork() == 0: # child
+                r.close() # child writes
+                setproctitle("bonito concordance;corp:%s;action:%s;params:%s;" \
+                             % (corp.get_conffile(), q[0][0], q[0][1:]))
+                # close stdin/stdout/stderr so that the webserver closes
+                # connection to client when parent ends
+                os.close(0); os.close(1); os.close(2)
+                # PID file will have fd 1
+                pidfile = None
+                try:
+                    cachefile, pidfile = add_to_map (cache_dir, pid_dir,
+                                                     subchash, q, 0)
+                    if type(pidfile) != file:
+                        # conc got started meanwhile by another process
+                        w.write (cachefile + "\n" + pidfile)
+                        w.close()
+                        os._exit(0)
+                    w.write (cachefile + "\n" + pidfile.name)
+                    w.close()
+                    conc = compute_conc (corp, q, cache_dir, subchash, samplesize,
+                                         fullsize)
+                    sleeptime = 0.1
+                    time.sleep (sleeptime)
+                    conc.save (cachefile, False, True) # partial
+                    while not conc.finished():
+                        conc.save (cachefile, False, True, True) # partial + append
+                        time.sleep(sleeptime)
+                        sleeptime += 0.1
+                    tmp_cachefile = cachefile + ".tmp"
+                    conc.save (tmp_cachefile) # whole
+                    os.rename (tmp_cachefile, cachefile)
+                    # update size in map file
+                    add_to_map (cache_dir, pid_dir, subchash, q, conc.size())
+                    os.remove (pidfile.name)
+                    pidfile.close()
+                    os._exit(0)
+                except:
+                    if not w.closed:
+                        w.write ("error\nerror")
+                        w.close()
+                    import traceback
+                    if type(pidfile) == file:
+                        traceback.print_exc (None, pidfile)
+                        pidfile.close()
+                    if debug:
+                        err_log = open (pid_dir + "/debug.log","a")
+                        err_log.write (time.strftime ("%x %X\n"))
+                        traceback.print_exc (None, err_log)
+                        err_log.close()
+                    os._exit(0)
+            else: # parent
+                w.close() # parent reads
+                cachefile, pidfile = r.read().split("\n")
+                r.close()
+                wait_for_conc (corp, q, cachefile, pidfile, minsize)
+                if not os.path.exists (cachefile):
+                    try:
+                        msg = open(pidfile).read().split("\n")[-2]
+                    except:
+                        msg = "Failed to process request."
+                    raise RuntimeError (unicode(msg, "utf-8"))
+                conc = PyConc (corp, 'l', cachefile)
+        else: # synchronous processing
+            conc = compute_conc (corp, q, cache_dir, subchash, samplesize,
+                                 fullsize)
+            conc.sync() # wait for the computation to finish
+            if save:
+                os.close(0) # PID file will have fd 1
+                cachefile, pidfile = add_to_map (cache_dir, pid_dir, subchash,
+                                                 q[:1], conc.size())
+                conc.save (cachefile)
+                # update size in map file
+                add_to_map (cache_dir, pid_dir, subchash, q[:1], conc.size())
+                os.remove (pidfile.name)
+                pidfile.close()
+
+    # process subsequent concordance actions
     for act in range(toprocess, len(q)):
         command = q[act][0]
-        if save and command in 'gae':
-            # user specific/volatile actions, cannot save later
-            save = 0
-            conc.save (add_to_map (cache_dir, subchash, q[:act],
-                                   conc.size()) + '.conc')
         getattr (conc, 'command_' + command) (q[act][1:])
-
-    if save:
-        conc.save (add_to_map (cache_dir, subchash, q, conc.size()) + '.conc')
-
+        if command in 'gae':# user specific/volatile actions, cannot save
+            save = 0
+        if save:
+            cachefile, pidfile = add_to_map (cache_dir, pid_dir, subchash,
+                                             q[:act + 1], conc.size())
+            if type(pidfile) != file:
+                wait_for_conc (corp, q[:act + 1], cachefile, pidfile, -1)
+            else:
+                conc.save (cachefile)
+                os.remove (pidfile.name)
+                pidfile.close()
     return conc
 
 
 def get_conc_desc (q=[], cache_dir='cache', corpname='', subchash=None):
-    desctext = {'q': 'Query',
-                'a': 'Query',
-                'r': 'Random sample',
-                's': 'Sort',
-                'f': 'Shuffle',
-                'n': 'Negative filter',
-                'p': 'Positive filter',
-                'w': 'Word sketch item',
-                't': 'Word sketch texttype item',
-                'e': 'GDEX',
+    desctext = {'q': _('Query'),
+                'a': _('Query'),
+                'r': _('Random sample'),
+                's': _('Sort'),
+                'f': _('Shuffle'),
+                'n': _('Negative filter'),
+                'N': _('Negative filter (excluding KWIC)'),
+                'p': _('Positive filter'),
+                'P': _('Positive filter (excluding KWIC)'),
+                'w': _('Word sketch item'),
+                't': _('Word sketch texttype item'),
+                'e': _('GDEX'),
+                'x': _('Switch KWIC'),
                 }
     forms = {'q': ('first_form', 'cql'),
              'a': ('first_form', 'cql'),
@@ -971,7 +1282,7 @@ def get_conc_desc (q=[], cache_dir='cache', corpname='', subchash=None):
         opid = q[i][0]
         args = q[i][1:]
         url1p = [('q', qi) for qi in q[:i]]
-        url2 = urlencode ([('q', qi) for qi in q[:i+1]])
+        url2 = [('q', qi) for qi in q[:i+1]]
         op = desctext.get (opid)
         formname = forms.get(opid, ('',''))
         if formname[1]:
@@ -991,7 +1302,7 @@ def get_conc_desc (q=[], cache_dir='cache', corpname='', subchash=None):
 
         if op:
             if formname[0]:
-                url1 = '%s?%s' % (formname[0], urlencode(url1p))
+                url1 = '%s?%s' % (formname[0], url1p)
             else:
                 url1 = ''
             desc.append ((op, args, url1, url2, size))
@@ -1055,10 +1366,12 @@ def get_stored_conc (corp, concname, conc_dir):
 
 def get_full_ref (corp, pos):
     data = {}
-    refs = [(n == '#' and ('Token number', pos) or
+    refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str (pos)))
             for n in corp.get_conf ('FULLREF').split(',')]
-    data['Refs'] = [{'name': (corp.get_conf (n+'.LABEL') or n), 'val': v}
+    data['Refs'] = [{'name': n == '#' and _('Token number')
+                             or corp.get_conf (n+'.LABEL') or n,
+                     'val': v}
                     for n,v in refs]
     for n,v in refs:
         data [n.replace('.','_')] = v
@@ -1067,7 +1380,15 @@ def get_full_ref (corp, pos):
 
 def get_detail_context (corp, pos, hitlen=1,
                         detail_left_ctx=40, detail_right_ctx=40,
-                        addattrs=[], attrsep='/', detail_ctx_incr=60):
+                        addattrs=[], structs='', detail_ctx_incr=60):
+    data = {}
+    wrapdetail = corp.get_conf ('WRAPDETAIL')
+    if wrapdetail:
+        data['wrapdetail'] = '<%s>' % wrapdetail
+        if not wrapdetail in structs.split(','): data['deletewrap'] = True
+        structs = wrapdetail + ',' + structs
+    else:
+        data['wrapdetail'] = ''
     try:
         maxdetail = int (corp.get_conf ('MAXDETAIL'))
     except:
@@ -1079,16 +1400,17 @@ def get_detail_context (corp, pos, hitlen=1,
             detail_right_ctx = maxdetail
     if detail_left_ctx > pos:
         detail_left_ctx = pos
-    attrs = map (corp.get_attr, ['word'] + addattrs)
-    tit = [a.textat (pos - detail_left_ctx) for a in attrs]
-    data = {}
-    data['left'] = ' '.join ([attrsep.join ([a.next() for a in tit])
-                              for x in range (detail_left_ctx)])
-    data['kwic'] = ' '.join ([attrsep.join ([a.next() for a in tit])
-                              for x in range (hitlen)])
-    data['right'] = ' '.join ([attrsep.join ([a.next() for a in tit])
-                               for x in range (detail_right_ctx)])
-
+    attrs = ','.join(['word'] + addattrs)
+    cr = manatee.CorpRegion(corp, attrs, structs)
+    region_left = tokens2strclass (cr.region (pos - detail_left_ctx, pos))
+    region_kwic = tokens2strclass (cr.region (pos, pos + hitlen))
+    region_right = tokens2strclass (cr.region(pos + hitlen,
+                                              pos + hitlen + detail_right_ctx))
+    for seg in region_left + region_kwic + region_right:
+        seg['str'] = seg['str'].replace('===NONE===', '')
+    for seg in region_kwic:
+        if not seg['class']: seg['class'] = 'coll'
+    data['content'] = region_left + region_kwic + region_right
     refbase = 'pos=%i;' % pos
     if hitlen != 1:
         refbase += 'hitlen=%i;' % hitlen
@@ -1101,8 +1423,6 @@ def get_detail_context (corp, pos, hitlen=1,
     data['righttoleft'] = corp.get_conf ('RIGHTTOLEFT')
     data['pos'] = pos
     return data
-
-
 
 
 if __name__ == '__main__':
