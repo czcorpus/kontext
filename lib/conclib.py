@@ -15,10 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from urllib import urlencode
 import os, re
 from sys import stderr
-from datetime import datetime
+import time
 import logging
 import math
 
@@ -32,9 +31,7 @@ except ImportError:
         import msvcrt
     except ImportError:
         # no locking available, dummy defs
-        def flck_no_op (file):
-            pass
-        flck_sh_lock = flck_ex_lock = flck_unlock = flck_no_op
+        flck_sh_lock = flck_ex_lock = flck_unlock = lambda f: None
     else:
         # Windows: msvcrt.locking
         def flck_sh_lock (file):
@@ -714,11 +711,13 @@ class PyConc (manatee.Concordance):
         # ml = determines how the bar appears (multilevel x text type)
         # import math
         normheight=15
-
-        def compute_corrections (freqs, norms, sumf, sumn):
+        def compute_corrections (freqs, norms):
+            from operator import add
+            sumn = float (reduce (add, norms))
             if sumn == 0:
                 return float (normwidth) / max (freqs), 0
             else:
+                sumf = float (reduce (add, freqs))
                 corr = min (sumf / max (freqs), sumn / max (norms))
                 return normwidth / sumf * corr, normwidth / sumn * corr
             
