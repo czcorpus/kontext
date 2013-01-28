@@ -10,16 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-import os
-import re
-import locale
+from usercgi import UserCGI
+import corplib, conclib, version
+import os, re
 from sys import stderr
 import time
 import glob
+import locale
 from types import ListType
 import logging
 import math
@@ -57,125 +54,124 @@ def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
 class ConcError (Exception):
     def __init__ (self, msg):
         self.message = msg
-        
 
-class ConcCGI (CGIPublisher):
+
+class ConcCGI (UserCGI):
 
     _global_vars = ['corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
                     'structs', 'refs', 'lemma', 'lpos', 'pagesize',
                     'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
-                    'gdexcnt', 'gdexconf']
-    _open_version = 0
-    # (due to Cheetah) added attributes
-    error = ''
-    fc_lemword_window_type = 'both'
-    fc_lemword_type = 'all'
+                    'gdexcnt', 'gdexconf', 'iquery', 'maincorp']
+    error = u''
+    fc_lemword_window_type = u'both'
+    fc_lemword_type = u'all'
     fc_lemword_wsize=5,
-    fc_lemword='',
-    fc_pos_window_type = 'both'
-    fc_pos_type = 'all'
+    fc_lemword=u'',
+    fc_pos_window_type = u'both'
+    fc_pos_type = u'all'
     fc_pos_wsize=5,
     fc_pos=[],
     ml = 0
-    concarf = ''
+    concarf = u''
     Aligned = []
-    prevlink = ''
-    nextlink = ''
-    concsize = ''
+    prevlink = u''
+    nextlink = u''
+    concsize = u''
+    samplesize = 10000000 #10M
     Lines = []
-    fromp = '1'
-    numofpages = ''
-    Page = []
-    pnfilter = 'p'
-    filfl = 'f'
-    filfpos = '-5'
-    filtpos = '5'
-    sicase = ''
-    sbward = ''
-    ml1icase = ''
-    ml2icase = ''
-    ml3icase = ''
-    ml1bward = ''
-    ml2bward = ''
-    ml3bward = ''
-    freq_sort = ''
+    fromp = u'1'
+    numofpages = u''
+    pnfilter = u'p'
+    filfl = u'f'
+    filfpos = u'-5'
+    filtpos = u'5'
+    sicase = u''
+    sbward = u''
+    ml1icase = u''
+    ml2icase = u''
+    ml3icase = u''
+    ml4icase = u''
+    ml1bward = u''
+    ml2bward = u''
+    ml3bward = u''
+    freq_sort = u''
     heading = 0
-    saveformat = 'text'
-    wlattr = ''
-    wlpat = ''
+    saveformat = u'text'
+    wlattr = u''
+    wlpat = u''
     wlpage = 1
-    wlcache = ''
-    blcache = ''
+    wlcache = u''
+    blcache = u''
     simple_n = 1
     usearf = 0
     collpage = 1
     fpage = 1
     fmaxitems = 50
-    ftt_include_empty = ''
+    ftt_include_empty = u''
     subcsize = 0
     processing = 0 
-    ref_usesubcorp = ''
-    wlsort = ''
-    keywords = ''
+    ref_usesubcorp = u''
+    wlsort = u''
+    keywords = u''
     Keywords = []
-    ref_corpname = ''
+    ref_corpname = u''
     Items = []
-    showmwlink = ''
-    format = ''
-    selected = ''
+    format = u''
+    selected = u''
     saved_attrs = 0
                      # save options
     pages = 0
-    leftctx = ''
-    rightctx = ''
+    leftctx = u''
+    rightctx = u''
     numbering = 0
     align_kwic = 0
-    stored = ''
+    stored = u''
     # end
 
     add_vars = {}
-    corpname = 'susanne'
-    corplist = ['susanne', 'bnc']
-    usesubcorp = ''
-    subcorp_size = None
-    subcname = ''
+    corpname = u'susanne'
+    corplist = [u'susanne', u'bnc']
+    usesubcorp = u''
+    subcname = u''
     subcpath = []
-    _conc_dir = ''
-    _home_url = '../run.cgi/first_form'
-    files_path = '../files'
-    css_prefix = ''
-    iquery = ''
-    queryselector = 'iqueryrow'
-    lemma = ''
-    lpos = ''
-    phrase = ''
-    char = ''
-    word = ''
-    wpos = ''
-    cql = ''
+    _conc_dir = u''
+    _home_url = u'../run.cgi/first_form'
+    files_path = u'../files'
+    css_prefix = u''
+    iquery = u''
+    queryselector = u'iqueryrow'
+    lemma = u''
+    lpos = u''
+    phrase = u''
+    char = u''
+    word = u''
+    wpos = u''
+    cql = u''
     tag = ''
     default_attr = None
     save = 1
+    async = 0
     spos = 3
-    skey = 'rc'
+    skey = u'rc'
     qmcase = 0
-    rlines = '250'
-    attrs = 'word'
-    ctxattrs = 'word'
-    attr_allpos = 'kw'
-    allpos = 'kw'
-    structs = 'p,g'
+    rlines = u'250'
+    attrs = u'word'
+    ctxattrs = u'word'
+    attr_allpos = u'kw'
+    allpos = u'kw'
+    structs = u'p,g,err,corr'
     q = []
     pagesize = 20
-    gdexconf = ''
+    gdexconf = u''
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
     gdexcnt = 100
     gdex_enabled = 0
     alt_gdexconf = None
     copy_icon = 0
-    _avail_tbl_templates = ''
+    _avail_tbl_templates = u''
     multiple_copy = 0
-    wlsendmail = ''
+    wlsendmail = u''
+    cup_hl = u'q'
 
     sortlevel=1
     flimit = 0
@@ -183,32 +179,35 @@ class ConcCGI (CGIPublisher):
     ml1pos = 1
     ml2pos = 1
     ml3pos = 1
-    ml1ctx = '0~0>0'
-    ml2ctx = '0~0>0'
-    ml3ctx = '0~0>0'
-    tbl_template = 'none'
+    ml4pos = 1
+    ml1ctx = u'0~0>0'
+    ml2ctx = u'0~0>0'
+    ml3ctx = u'0~0>0'
+    ml4ctx = u'0~0>0'
+    tbl_template = u'none'
+    errcodes_link = u''
+    hidenone = 1
+    helpsite=u'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     can_annotate = 0
     enable_sadd = 0
-    annotconc = ''
-    annotconc_init_labels = ('x', 'u')
-    annotconc_num_label_suffixes = ('.e',)
+    annotconc = u''
+    annotconc_init_labels = (u'x', u'u')
+    annotconc_num_label_suffixes = (u'.e',)
     #annotconc_info_umask = 022
     annotconc_info_umask = 0111  #XXX renumbering from CPA editor
 
     alpha_features = 0
 
-
-    add_vars['wsketch_form'] = ['LastSubcorp']
-    add_vars['wsketch'] = ['LastSubcorp']
-    add_vars['mwsketch_form'] = ['LastSubcorp']
-    add_vars['mwsketch'] = ['LastSubcorp']
-    add_vars['wsdiff'] = ['LastSubcorp']
-    add_vars['save_ws_options'] = ['LastSubcorp']
-    add_vars['findx_upload'] = ['LastSubcorp']
+    add_vars['wsketch_form'] = [u'LastSubcorp']
+    add_vars['wsketch'] = [u'LastSubcorp']
+    add_vars['wsdiff'] = [u'LastSubcorp']
+    add_vars['save_ws_options'] = [u'LastSubcorp']
+    add_vars['save_wsdiff_options'] = [u'LastSubcorp']
+    add_vars['findx_upload'] = [u'LastSubcorp']
     
     def __init__ (self, environ):
-        CGIPublisher.__init__(self, environ=environ)
+        UserCGI.__init__(self, environ=environ)
         self.cm = corplib.CorpusManager (self.corplist, self.subcpath, 
                                          self.gdexpath)
         self._curr_corpus = None
@@ -247,14 +246,8 @@ class ConcCGI (CGIPublisher):
         return self._curr_corpus
 
     def _set_defaults (self):
-        try:
-            corp = self._corp()
-            if not self.__dict__.has_key('refs'):
-                self.refs = corp.get_conf('SHORTREF')
-            self._headers ['Content-Type'] = 'text/html; charset=utf-8'
-#                                  (corp.get_conf('ENCODING') or 'iso-8859-1')
-        except:
-            self.refs = '#'
+        if not self.__dict__.has_key('refs'):
+            self.refs = self._corp().get_conf('SHORTREF')
 
     def _correct_parameters (self):
         if self.annotconc == '--NONE--':
@@ -263,7 +256,7 @@ class ConcCGI (CGIPublisher):
 
     
     def _add_globals (self, result):
-        CGIPublisher._add_globals (self, result)
+        UserCGI._add_globals (self, result)
 
         thecorp = self._corp()
         result['q'] = self.urlencode ([('q', q) for q in self.q])
@@ -319,6 +312,7 @@ class ConcCGI (CGIPublisher):
                                   or 'lemma' in attrlist
         result['default_attr'] = thecorp.get_conf('DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
+            if listname in result: continue
             result [listname] = \
                    [{'label': thecorp.get_conf (n+'.LABEL') or n, 'n': n}
                     for n in thecorp.get_conf (listname.upper()).split(',')
@@ -343,7 +337,7 @@ class ConcCGI (CGIPublisher):
 
 
     def add_undefined (self, result, methodname):
-        CGIPublisher.add_undefined (self, result, methodname)
+        UserCGI.add_undefined (self, result, methodname)
         result['methodname'] = methodname
         if self.add_vars.has_key (methodname):
             names = self.add_vars[methodname]
@@ -387,6 +381,8 @@ class ConcCGI (CGIPublisher):
     viewmode = 'kwic'
     changeviewmode = 0
     align = ''
+    sel_aligned = []
+    maincorp = ''
 
     def simple_search (self):
         "simple search result -- all in one"
@@ -460,8 +456,9 @@ class ConcCGI (CGIPublisher):
                 if self.q[i].startswith('s*') or self.q[i][0] == 'e':
                     del self.q[i]
                 i += 1
-            
+
         conc = self.call_function (conclib.get_conc, (self._corp(),))
+        conc.switch_aligned (os.path.basename(self.corpname))
         labelmap = {}
         if self.annotconc:
             if self._selectstored (self.annotconc):
@@ -477,22 +474,66 @@ class ConcCGI (CGIPublisher):
                 self.annotconc = ''
         #print >>stderr, 'view.labels:%s' % labelmap
         contains_speech = settings.has_configured_speech(self._curr_corpus)
-        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), labelmap=labelmap,
+        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), 
+								labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                         for c in self.align.split(',') if c],
                                  copy_icon=self.copy_icon,
                                  tbl_template=self.tbl_template)
-        del conc
+        out['Sort_idx'] = self.call_function (conclib.get_sort_idx, (conc,),
+                                                      enc=self.self_encoding())
+        out.update(self.get_conc_sizes(conc))
+        import logging
+        logging.getLogger(__name__).info('out: %s' % (out,))
+
         if self.viewmode == 'sen':
             conclib.add_block_items (out['Lines'], block_size=1)
         if self._corp().get_conf ('ALIGNED'):
-            out['Aligned'] = [{'n': w} for w in
-                              self._corp().get_conf ('ALIGNED').split(',')]
-            #if self.align:
-            #    self._cookieattrs.append ('align')
-        out.update(tpl_params)
+            out['Aligned'] = [{'n': w,
+                               'label': conclib.manatee.Corpus(w).get_conf(
+                                                                  'NAME') or w }
+                         for w in self._corp().get_conf ('ALIGNED').split(',')]
+        if self.align and not self.maincorp: self.maincorp = self.corpname
         return out
     add_vars['view'] = ['orig_query']
+
+    def first_form(self):
+        out = {}
+        if self._corp().get_conf ('ALIGNED'):
+            out['Aligned'] = [{'n': w,
+                               'label': conclib.manatee.Corpus(w).get_conf(
+                                   'NAME') or w }
+                              for w in self._corp().get_conf ('ALIGNED').split(',')]
+        return out
+    add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
+
+    def get_cached_conc_sizes (self):
+        self._headers['Content-Type']= 'text/plain'
+        cs = self.call_function (conclib.get_cached_conc_sizes,(self._corp(),))
+        return "\n".join(map(str,[cs["finished"], cs["concsize"],
+                                  cs["relconcsize"], cs["fullsize"]]))
+
+    def get_conc_sizes(self, conc):
+        i = 1
+        concsize = conc.size()
+        fullsize = conc.fullsize()
+        sampled_size = 0
+        while i < len(self.q) and not self.q[i].startswith('r'): i += 1
+        if i < len(self.q): sampled_size = concsize
+        j = i + 1
+        for j in range (i+1, len(self.q)):
+            if self.q[j][0] in ('pn'):
+                return {'concsize': concsize, 'sampled_size': 0,
+                        'relconcsize': 0}
+        if sampled_size:
+            orig_conc = self.call_function (conclib.get_conc, (self._corp(),),
+                q=self.q[:i])
+            concsize = orig_conc.size()
+        return {'sampled_size': sampled_size, 'concsize': concsize,
+                'relconcsize':1000000.0 * fullsize / self._corp().search_size(),
+                'fullsize': fullsize, 'finished': conc.finished()}
+
+
     
     def concdesc (self):
         return {'Desc': [{'op': o, 'arg': a, 'churl': u1, 'tourl': u2,
@@ -756,22 +797,24 @@ class ConcCGI (CGIPublisher):
             if not items:
                 return
             if fctxtype == 'any':
-                self.q.append ('p%s [%s]' %
+                self.q.append ('P%s [%s]' %
                                (ctx, '|'.join (['%s="%s"' % (attrname, i)
                                                 for i in items])))
             elif fctxtype == 'none':
-                self.q.append ('n%s [%s]' %
+                self.q.append ('N%s [%s]' %
                           (ctx, '|'.join (['%s="%s"' % (attrname, i)
                                            for i in items])))
             elif fctxtype == 'all':
                 for i in items:
-                    self.q.append ('p%s [%s="%s"]' % (ctx, attrname, i))
+                    self.q.append ('P%s [%s="%s"]' % (ctx, attrname, i))
                 
         if 'lemma' in self._corp().get_conf('ATTRLIST').split(','):
             lemmaattr = 'lemma'
         else:
             lemmaattr = 'word'
         wposlist = dict (self.cm.corpconf_pairs (self._corp(), 'WPOSLIST'))
+        if self.queryselector == 'phraserow':
+            self.default_attr = 'word' # XXX to be removed with new first form
         if self.default_attr:
             qbase = 'a%s,' % self.default_attr 
         else:
@@ -781,7 +824,14 @@ class ConcCGI (CGIPublisher):
             ttquery = ' '.join (['within <%s %s />' % nq for nq in texttypes])
         else:
             ttquery = ''
-        self.q = [qbase + self._compile_query() + ttquery]
+        par_query = ''
+        for al_corpname in self.sel_aligned:
+            if getattr(self, 'pcq_pos_neg_' + al_corpname) == 'pos': wnot = ''
+            else: wnot = '!'
+            pq = self._compile_basic_query(suff='_'+al_corpname,
+                                           cname=al_corpname)
+            if pq: par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+        self.q = [qbase + self._compile_query() + ttquery + par_query]
 
         if fc_lemword_window_type == 'left':
             append_filter (lemmaattr,
@@ -814,7 +864,6 @@ class ConcCGI (CGIPublisher):
                            '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                            fc_pos_type)
 
-
     def first (self, fc_lemword_window_type='',
                      fc_lemword_wsize=0,
                      fc_lemword_type='',
@@ -831,7 +880,7 @@ class ConcCGI (CGIPublisher):
                              fc_pos_wsize,
                              fc_pos_type,
                              fc_pos)
-
+        if self.sel_aligned: self.align = ','.join(self.sel_aligned)
         return self.view()
     
     first.template = 'view.tmpl'

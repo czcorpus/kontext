@@ -67,7 +67,7 @@ class BonitoCGI (WSEval, UserCGI):
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     def __init__ (self, user=None, environ=os.environ):
-        UserCGI.__init__ (self, user)
+        UserCGI.__init__ (self, environ=environ, user=user)
         ConcCGI.__init__ (self, environ=environ)
 
     def _user_defaults (self, user):
