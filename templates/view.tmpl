@@ -28,21 +28,20 @@ $_("Concordance")#slurp
 
 #def headers
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
-<script src="$files_path/js/detail.js" type="text/javascript"></script>
 <script src="$files_path/js/tblex.js" type="text/javascript"></script>
 <script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
 #if $can_annotate and $annotconc
 <script src="$files_path/js/annotconc.js" type="text/javascript"></script>
 #end if
 <script type="text/javascript">
-require(['domReady!', 'jquery'], function (domReady, $) {
+require(['domReady!', 'jquery', 'detail'], function (domReady, $, detail) {
     \$('#detailframe').attr('data-corpname', "$corpname");
     #if $can_annotate and $annotconc
     \$('#conclines').observe('mousedown', handle_selection);
     #end if
     \$('a.speech-link').each(function () {
         \$(this).bind('click', function (event) {
-            open_speech(this);
+            detail.openSpeech(this);
             event.stopPropagation();
             return false;
         });
@@ -103,6 +102,38 @@ require(['domReady!', 'jquery'], function (domReady, $) {
 #if not $finished and $async and $save and not $sampled_size
 ;reloadHits()#slurp
 #end if
+
+require(['jquery', 'detail'], function (\$, detail) {
+    var callback = function () {
+        \$('a.expand-link').each(function () {
+            \$(this).bind('click', function () {
+                detail.showDetail(\$(this).attr('data-url'), \$(this).attr('data-params'), \$(this).attr('data-loadtext'), true, callback);
+            });
+        });
+    };
+
+    \$('td.kw').bind('click', function (event) {
+        detail.showDetail(
+            \$(event.target).parent().attr('data-url'),
+            \$(event.target).parent().attr('data-params'),
+            \$(event.target).parent().attr('data-loadtext'),
+            true,
+            callback
+        );
+    });
+    \$('td.ref').bind('click', function (event) {
+        detail.showDetail(
+            \$(event.target).attr('data-url'),
+            \$(event.target).attr('data-params'),
+            \$(event.target).attr('data-loadtext'),
+            true
+        );
+    });
+
+    \$('#hideel').bind('click', detail.closeDetail);
+
+});
+
 #end def
 
 #def bodyargs
@@ -144,9 +175,9 @@ id="bodytag"#slurp
   #end for
   #if $viewmode == 'kwic' and $corpname in $KWICCorps
     </td><td class="kw #if $corpname == $maincorp#maincorp#end if#"
-             onclick='show_detail("widectx", "pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname", "$_('Loading...')", true);'>
+             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname" data-loadtext="$_('Loading...')">
   #else
-    <span  onclick='show_detail("widectx", "pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname", "$_('Loading...')", true);'>
+    <span data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname" data-loadtext="$_('Loading...')">
   #end if
   #for $k in $l.Kwic
     #if $k.get('class', '') and $corpname in $KWICCorps
@@ -215,134 +246,6 @@ $word.str#slurp
 
 
 #def main
-<script type="text/javascript">
-require(['domReady!', 'jquery'], function (dr, jQuery) {
-  jQuery(document).ready(function () {
-    jQuery('#next').focus();
-  });
-
-function reloadHits() {
-    var freq = 100;
-    var countup = 30;
-
-    jQuery.periodic({ period: freq, decay: 1.2, max_period: 60000 },
-    function() {
-        jQuery.ajax({
-            url: 'get_cached_conc_sizes?$q;$globals',
-            type: 'POST',
-            complete: function(data) {
-                s = data.responseText;
-                sizes = s.split('\n');
-                if (sizes.length != 4) return;
-                finished = parseInt(sizes[0]);
-                newconcsize = parseInt(sizes[1]);
-                relconcsize = parseFloat(sizes[2]);
-                newfullsize = parseInt(sizes[3]);
-                if (finished == NaN || newconcsize == NaN || relconcsize == NaN || fullsize == NaN)
-                    return;
-                concsize = document.getElementById("concsize");
-                fullsize = document.getElementById("fullsize");
-                numofpages = document.getElementsByName("numofpages");
-                lastpage = document.getElementById("lastpage");
-                incr = Math.round((newconcsize - parseInt(concsize.title)) / (freq * 1000 / countup));
-                newnumofpages = Math.ceil(newconcsize / $len($Lines));
-                numofpages_num = parseInt(numofpages[0].title);
-                pageincr = (newnumofpages - numofpages_num) / (freq * 1000.0 / countup);
-                function addCommas(nStr) {
-                    nStr += '';
-                    x = nStr.split('.');
-                    x1 = x[0];
-                    x2 = x.length > 1 ? '.' + x[1] : '';
-                    var rgx = /(\d+)(\d{3})/;
-                    while (rgx.test(x1)) {
-                        x1 = x1.replace(rgx, '$1' + ',' + '$2');
-                    }
-                    return x1 + x2;
-                }
-                function incConcSize(newconcsize, newnumofpages, finished, pageincr) {
-                    concsize_num = parseInt(concsize.title);
-                    concsize.innedHTML = "using random ";
-                    if (concsize_num >= newconcsize) {
-                        concsize.title = newconcsize;
-                        concsize.innerHTML += addCommas(newconcsize);
-                        if (!finished) {
-                            concsize.innerHTML += " (counting ...)";
-                        }
-                        concsize.innerHTML += " lines only.";
-                        lastpage.href = "view?$q;$globals;" + "fromp=" + newnumofpages;
-                        numofpages[0].title = newnumofpages;
-                        numofpages[1].title = newnumofpages;
-			newnumofpages = addCommas(newnumofpages);
-                        numofpages[0].innerHTML = newnumofpages;
-                        numofpages[1].innerHTML = newnumofpages;
-                        return;
-                    }
-                    concsize.title = (concsize_num + incr).toString();
-                    concsize.innerHTML += addCommas (concsize.title) + " (counting ...) lines only."
-                    numofpages_num += pageincr;
-                    numofpages_text = Math.ceil(numofpages_num).toString();
-                    lastpage.href = "view?$q;$globals;" + "fromp=" + numofpages_text;
-                    numofpages[0].title = numofpages_text;
-                    numofpages[1].title = numofpages_text;
-		    numofpages_text = addCommas(numofpages_text);
-                    numofpages[0].innerHTML = numofpages_text;
-                    numofpages[1].innerHTML = numofpages_text;
-                    var delegate = function() {incConcSize(newconcsize, newnumofpages, finished, pageincr);};
-                    setTimeout(delegate, countup);
-                }
-                if (newfullsize > 0) {
-                    if ("$q[2]" != "R") {
-                        l = addCommas (newconcsize);
-                        concsize.innerHTML = "$_('using first') " + l + " $_('lines only'). <a href='view?q=R$q[2:];$globals'>$_('Use random') " + l + " $_('instead').</a>";
-                        newconcsize = newfullsize;
-                    }
-                    else {
-                        incConcSize(newconcsize, newnumofpages, finished, pageincr);
-                        if (finished == 1) setTimeout('this.cancel', 2000);
-                        return;
-                    }
-                }
-                fullsize_num = parseInt(fullsize.title);
-                incr = (newconcsize - parseInt(fullsize.title)) / (freq * 1000 / countup);
-                function incSize(newconcisze, newnumofpages, finished, incr) {
-                    fullsize_num += incr;
-                    if (fullsize_num >= newconcsize) {
-                        fullsize.title = newconcsize;
-                        fullsize.innerHTML = addCommas(newconcsize);
-                        if (!finished)
-                            fullsize.innerHTML += " (counting ...)";
-                        document.getElementById("relconcsize").innerHTML = "(" + addCommas(relconcsize.toFixed(1).toString()) + " per million)";
-                        lastpage.href = "view?$q;$globals;" + "fromp=" + newnumofpages;
-                        numofpages[0].title = newnumofpages;
-                        numofpages[1].title = newnumofpages;
-		        newnumofpages = addCommas(newnumofpages);
-                        numofpages[0].innerHTML = newnumofpages;
-                        numofpages[1].innerHTML = newnumofpages;
-                        return;
-                    }
-                    fullsize.title = Math.ceil(fullsize_num).toString();
-                    fullsize.innerHTML = addCommas(fullsize.title) + " (counting ...)";
-                    numofpages_num += pageincr;
-                    numofpages_text = Math.ceil(numofpages_num).toString();
-                    lastpage.href = "view?$q;$globals;" + "fromp=" + numofpages_text;
-                    numofpages[0].title = numofpages_text;
-                    numofpages[1].title = numofpages_text;
-		    numofpages_text = addCommas(numofpages_text);
-                    numofpages[0].innerHTML = numofpages_text;
-                    numofpages[1].innerHTML = numofpages_text;
-                    var delegate = function () {incSize(newconcsize, newnumofpages, finished, incr);};
-                    setTimeout(delegate, countup);
-                }
-                incSize(newconcsize, newnumofpages, finished, incr);
-                if (finished == 1) setTimeout('this.cancel', 1000);
-            },
-            dataType: 'text'
-        });
-    });
-}
-
-});
-</script>
 #filter WebSafe
     $_("Corpus"): <strong>$corp_full_name</strong>
     #if $usesubcorp
@@ -468,13 +371,13 @@ $align_heading($viewmode, $KWICCorps)
 #if $len($Lines) > 0
     #for $i, $l in $enumerate($Lines)
       <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-      <td class="ref" onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);">$l.ref</td>
+      <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">$l.ref</td>
       #filter None
         $display_conc_line($l, $corpname, $viewmode, $KWICCorps)
         $oneclick_line($l, $i)
         #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
           #if $ll.ref
-            <td class="ref" onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n', '$_("Loading...")', true);">$ll.ref</td>
+            <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
           #else
             <td></td>
           #end if
@@ -496,7 +399,7 @@ $navigation("navigation_form2", "next2")
 #end filter
 
 <div id="detailframe">
-  <a href="#" id="hideel" onclick="jQuery('#detailframe').hide();return false">
+  <a href="#" id="hideel">
     <img src="$files_path/img/roll_down.png" alt="$_("hide detail")" />
   </a>
   <div id="detailframecontent"></div>

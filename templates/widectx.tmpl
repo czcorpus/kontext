@@ -19,20 +19,50 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #filter WebSafe
 
 #unless $getVar('no_display_links', '')
-  <a href="\#end" onclick="display_in_detail_frame('widectx','$leftlink')">$_("expand left")</a>
+  <a class="expand-link" href="\#end" data-url="widectx" data-params="$leftlink">$_("expand left")</a>
 #end unless
 #if $righttoleft
   <span dir="rtl">
 #end if
-$left <b class="coll">$kwic</b> $right
+
+#set $deletewrap = $getVar('deletewrap', False)
+#if $wrapdetail and $deletewrap
+  #set $wrapend = $wrapdetail[0] + '/' + $wrapdetail[1:]
+#end if
+
+#for $seg in $content
+  #if $seg.has_key('class') and $seg.class
+    #set $toprint = $seg.str
+    #if $deletewrap
+      #set $toprint = $toprint.replace($wrapend, '')
+    #end if
+    #if $wrapdetail and $wrapdetail in $toprint
+      #set $taglist = $toprint.split($wrapdetail)
+      #for $i, $s in enumerate($taglist)
+        <i class="$seg.class">$s</i>
+        #if $i + 1 < len($taglist)
+          <br/>
+          #if not $deletewrap
+            <i class='$seg.class'>$wrapdetail</i>
+          #end if
+        #end if
+      #end for
+    #else
+      <i class="$seg.class">$toprint</i>
+    #end if
+  #else
+    $seg.str
+  #end if
+#end for
+
 #if $righttoleft
   </span>
 #end if
 #unless $getVar('no_display_links', '')
-  <a name="end" href="\#end" onclick="display_in_detail_frame('widectx', '$rightlink')">$_("expand right")</a>
+  <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$rightlink")">$_("expand right")</a>
   #if $getVar('struct_ctx', '')
     <br/>
-    <a href="\#end" onclick="display_in_detail_frame('structctx', 'corpname=$corpname;pos=$pos;struct=$struct_ctx')">$_("display whole document")</a>
+    <a href="\#end" id="ctx-link" data-url="structctx" data-params="corpname=$corpname;pos=$pos;struct=$struct_ctx">$_("display whole document")</a>
   #end if
 #end unless
 #end filter
