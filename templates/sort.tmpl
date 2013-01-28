@@ -60,11 +60,11 @@ $input_hidden
   <tr>
     <th>$_("Attribute"):</th>
     <td><select name="sattr" id="select">
-  #for $a in $Sort_attrlist
-    <option value="$a.n">$_($a.n)</option>
+  #for $a in $AttrList
+    <option value="$a.n">$a.label</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a.n">$_($a.label)</option>
+    <option value="$a.n">$a.label</option>
   #end for
   </select></td>
   </tr>
@@ -131,11 +131,11 @@ $input_hidden
   <tr>
     <th>$_("Attribute"):</th>
     <td><select name="ml1attr">
-  #for $a in $Sort_attrlist
-    <option value="$a.n">$_($a.n)</option>
+  #for $a in $AttrList
+    <option value="$a.n">$a.label</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a.n">$_($a.label)</option>
+    <option value="$a.n">$a.label</option>
   #end for
   </select></td>
   </tr>
@@ -160,7 +160,7 @@ $input_hidden
     #if $p.ctx == $ml1ctx
       selected="selected"
     #end if
-    >$_($p.n)</option>
+    >$p.n</option>
   #end for
   </select></td>
   </tr>
@@ -178,11 +178,11 @@ $input_hidden
 <tr>
   <th>$_("Attribute"):</th>
   <td><select name="ml2attr">
-  #for $a in $Sort_attrlist
-    <option value="$a.n">$_($a.n)</option>
+  #for $a in $AttrList
+    <option value="$a.n">$a.label</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a.n">$_($a.label)</option>
+    <option value="$a.n">$a.label</option>
   #end for
   </select></td>
 </tr>
@@ -207,7 +207,7 @@ $input_hidden
     #if $p.ctx == $ml2ctx
       selected="selected"
     #end if
-    >$_($p.n)</option>
+    >$p.n</option>
   #end for
   </select></td>
 </tr>
@@ -225,11 +225,11 @@ $input_hidden
 <tr>
   <th>$_("Attribute"):</th>
   <td><select name="ml3attr">
-  #for $a in $Sort_attrlist
-    <option value="$a.n">$_($a.n)</option>
+  #for $a in $AttrList
+    <option value="$a.n">$a.label</option>
   #end for
   #for $a in $StructAttrList
-    <option value="$a.n">$_($a.label)</option>
+    <option value="$a.n">$a.label</option>
   #end for
   </select></td>
 </tr>
@@ -254,7 +254,7 @@ $input_hidden
     #if $p.ctx == $ml3ctx
       selected="selected"
     #end if
-    >$_($p.n)</option>
+    >$p.n</option>
   #end for
   </select></td>
   </tr>
