@@ -162,11 +162,61 @@ class CorpusManager:
         return None
 
 
+def ws_subc_freq (wmap3, corp):
+    if hasattr(corp, 'spath'):
+        fs = wmap3.poss()
+        fs2 = corp.filter_fstream(fs)
+        return corp.count_rest(fs2)
+    return wmap3.getcnt()
+
+def ws_find_triple (wmap1, id1, id2, id3):
+    # WARNING: ids has to be bigger than the current position in wmap
+    if not wmap1.findid (id1): return None
+    wmap2 = wmap1.nextlevel()
+    if not wmap2.findid (id2): return None
+    wmap3 = wmap2.nextlevel()
+    if not wmap3.findid (id3): return None
+    return wmap3
+
 
 def add_block_items (items, attr='class', val='even', block_size=3):
     for i in [i for i in range (len (items)) if (i / block_size) % 2]:
         items[i][attr] = val
     return items
+
+
+def ws_wordlist (corp, wlmaxitems=100, wlsort=''):
+    import wmap
+    csize = corp.search_size()
+    basewsbase = os.path.basename (corp.get_conf('WSBASE'))
+    freqs_file = subcorp_base_file (corp, basewsbase + '.hfrq')
+    lex_file = subcorp_base_file (corp, basewsbase + '.hlex')
+
+    if not os.path.isfile (freqs_file): # not computed
+        raise MissingSubCorpFreqFile (corp)
+    if os.path.isfile (subcorp_base_file(corp, 'hashws.build')):
+        raise MissingSubCorpFreqFile (corp) # computation in progress
+
+    result_str = wmap.StrVector()
+    wmap.terms_lexicon (freqs_file, lex_file, result_str, wlmaxitems)
+
+    # find out seek and cnt
+    ws1 = wmap.WMap (corp.get_conf('WSBASE'), 0, 0, 0, corp.get_conffile())
+    result_parsed = []
+    for item in result_str:
+        w1, gramrel, w2 = item.split ('\t')[:3]
+        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
+                              ws1.coll2id(w2), w1, gramrel, w2))
+    result = []
+    for id1, id2, id3, w1, gramrel, w2 in sorted (result_parsed):
+        ws3 = ws_find_triple (ws1, id1, id2, id3)
+        if not ws3: continue
+        freq = ws_subc_freq (ws3, corp)
+        result.append ((-freq, w1, gramrel, w2, ws3.tell()))
+    return add_block_items ([{'w1': w1, 'gramrel': g, 'w2': w2, 'seek': seek,
+                              'freq': -mfreq }
+                             for mfreq, w1, g, w2, seek in sorted (result)])
+
 
 def wordlist (corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
               wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
@@ -250,12 +300,9 @@ def attr_vals (corpname, avattr, avpattern, avmaxitems=20):
         items.append (attr.id2str(gen.next()))
         avmaxitems -= 1
     if not items:
-        return '<ul><li>--nothing found--</li></ul>'
-    if gen.end():
-        lastitem = ''
-    else:
-        lastitem = '<li>...</li>'
-    return '<ul><li>%s</li>%s</ul>' % ('</li><li>'.join(items), lastitem)
+        return "{query:'%s',suggestions:['%s']}" % (avpattern, '--nothing found--')
+    return "{query:'%s',suggestions:[%s]}" % \
+            (avpattern, ','.join(["'" + item + "'" for item in items]))
 
 
 def texttype_values (corp, subcorpattrs, maxlistsize, list_all=False):
@@ -304,12 +351,14 @@ def texttype_values (corp, subcorpattrs, maxlistsize, list_all=False):
                                              or 30)
             else: # list of values
                 if corp.get_conf(n+'.NUMERIC'):
+                    vals = []
                     for i in range (attr.id_range()):
                         try: vals.append({'v': int(attr.id2str(i))})
                         except: vals.append({'v': attr.id2str(i)})
                 elif hsep: # hierarchical
-                    vals = [attr.id2str(i) for i in range (attr.id_range())
-                                            if not multisep in attr.id2str(i)]
+                    vals = [{'v': attr.id2str(i)}
+                                  for i in range (attr.id_range())
+                                  if not multisep in attr.id2str(i)]
                 else:
                     vals = [{'v': attr.id2str(i)}
                             for i in range (attr.id_range())]
@@ -404,17 +453,28 @@ class MissingSubCorpFreqFile (Exception):
 def frq_db (corp, attrname, nums='frq'):
     import array
     filename = subcorp_base_file (corp, attrname) + '.' + nums
-    if nums == 'arf': frq = array.array('f')
-    else: frq = array.array('i')
-    if not hasattr(corp, 'spath') and nums == 'frq':
-        a = corp.get_attr (attrname)
-        frq.fromlist ([a.freq(i) for i in xrange(a.id_range())])
-        return frq
-    try:
-        frq.fromfile (open(filename), corp.get_attr (attrname).id_range())
-    except IOError:
-        raise MissingSubCorpFreqFile (corp)
+    if nums == 'arf':
+        frq = array.array('f')
+        try:
+            frq.fromfile (open(filename), corp.get_attr (attrname).id_range())
+        except IOError:
+            raise MissingSubCorpFreqFile (corp)
+    else:
+        try:
+            frq = array.array('i')
+            frq.fromfile (open(filename), corp.get_attr (attrname).id_range())
+        except IOError:
+            try:
+                frq = array.array('l')
+                frq.fromfile (open(filename + '64'), corp.get_attr (attrname).id_range())
+            except IOError:
+                if not hasattr(corp, 'spath') and nums == 'frq':
+                    a = corp.get_attr (attrname)
+                    frq.fromlist ([a.freq(i) for i in xrange(a.id_range())])
+                else:
+                    raise MissingSubCorpFreqFile (corp)
     return frq
+
 
 def subc_keywords3 (sc, scref, attrname, minarf=10, maxitems=100):
     f = frq_db (sc, attrname)
@@ -463,6 +523,78 @@ def subc_keywords_onstr (sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     items.sort(reverse=True)
     return items[:wlmaxitems]
 
+
+def ws_keywords (sc, scref, wlminfreq=10, wlmaxitems=100, simple_n=100):
+    import wmap
+    basewsbase = os.path.basename(sc.get_conf('WSBASE'))
+    ref_basewsbase = os.path.basename(scref.get_conf('WSBASE'))
+    freqs_file = subcorp_base_file(sc, basewsbase + '.hfrq')
+    lex_file = subcorp_base_file(sc, basewsbase + '.hlex')
+    ref_freqs_file = subcorp_base_file(scref, ref_basewsbase + '.hfrq')
+
+    if not os.path.isfile(freqs_file): # not computed
+        raise MissingSubCorpFreqFile(sc)
+    if not os.path.isfile(ref_freqs_file):
+        raise MissingSubCorpFreqFile(scref)
+    if os.path.isfile(subcorp_base_file(sc, 'hashws.build')):
+        raise MissingSubCorpFreqFile(sc) # computation in progress
+    if os.path.isfile(subcorp_base_file(scref, 'hashws.build')):
+        raise MissingSubCorpFreqFile(scref)
+
+    result_str = wmap.StrVector()
+    wmap.extrms(freqs_file, ref_freqs_file, lex_file, result_str, wlmaxitems,
+                simple_n)
+
+    # find out seek and cnt -- firstly for sc ...
+    ws1 = wmap.WMap (sc.get_conf('WSBASE'), 0, 0, 0, sc.get_conffile())
+    size = sc.search_size()
+    result_parsed = []
+    for item in result_str:
+        w1, gramrel, w2, score = item.strip().split('\t')[:4]
+        result_parsed.append ((ws1.coll2id(w1), ws1.str2id(gramrel),
+                               ws1.coll2id(w2), w1, gramrel, w2, float(score)))
+    result = {}
+    for id1, id2, id3, w1, gramrel, w2, score in sorted (result_parsed):
+        ws3 = ws_find_triple (ws1, id1, id2, id3)
+        if not ws3: continue
+        freq = ws_subc_freq (ws3, sc)
+        result[(-score, w1, gramrel, w2)] = [freq, float(freq)*1000000/size,
+                                             ws3.tell()]
+    # ... and then for scref
+    ws1 = wmap.WMap (scref.get_conf('WSBASE'), 0, 0, 0, scref.get_conffile())
+    size = scref.search_size()
+    result_parsed = []
+    for item in result_str:
+        w1, gramrel, w2, score = item.strip().split('\t')[:4]
+        result_parsed.append ((ws1.coll2id(w1), ws1.str2id(gramrel),
+                               ws1.coll2id(w2), w1, gramrel, w2, float(score)))
+    for id1, id2, id3, w1, gramrel, w2, score in sorted (result_parsed):
+        if not (-score, w1, gramrel, w2) in result: continue
+        ws3 = ws_find_triple (ws1, id1, id2, id3)
+        if not ws3: result[(-score, w1, gramrel, w2)].extend([0, 0, 0])
+        freq = ws_subc_freq (ws3, scref)
+        result[(-score, w1, gramrel, w2)].extend (
+                                 [freq, float(freq)*1000000/size, ws3.tell()])
+    return [(-k[0], v[1], v[4], v[0], v[3], '%s\t%s\t%s\t%d' % (k[1], k[2],
+                                                                k[3], v[2]))
+            for k, v in sorted (result.items())]
+
+
+def create_ws_db (corp, logfilename):
+    import subprocess
+    basewsbase = os.path.basename(corp.get_conf('WSBASE'))
+    freqs_file = subcorp_base_file(corp, basewsbase + '.hfrq')
+    lex_file = subcorp_base_file(corp, basewsbase + '.hlex')
+    logfile = open(logfilename, 'w')
+    hashws_args = ['hashws', corp.get_conffile(), freqs_file, lex_file]
+    if hasattr(corp, 'spath'):
+        hashws_args.append(corp.spath)
+    ret = subprocess.call (hashws_args, stdout=logfile)
+    if ret:
+        open(logfilename + '.error', 'w').write(str(ret))
+    logfile.close()
+    os.rename (logfilename, logfilename + '.old')
+
 def create_arf_db (corp, attrname, logfile=None, logstep=0.02):
     outfilename = subcorp_base_file (corp, attrname)
     if os.path.isfile (outfilename + '.arf') and os.path.isfile (outfilename
@@ -476,7 +608,7 @@ def create_arf_db (corp, attrname, logfile=None, logstep=0.02):
         if same:
             same = same[:-4] + attrname
             from shutil import copyfile
-            for suff in ('.arf','.frq', '.docf'):
+            for suff in ('.arf','.frq','.frq64','.docf'):
                 copyfile (same + suff, outfilename + suff)
             return
             
@@ -484,6 +616,7 @@ def create_arf_db (corp, attrname, logfile=None, logstep=0.02):
     outarf = array.array('f')
     outfrq = array.array('i')
     outdocf = array.array('i')
+    frqsize = {'i': "", 'l': "64"}
     attr = corp.get_attr(attrname)
     doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
     if logfile:
@@ -496,7 +629,11 @@ def create_arf_db (corp, attrname, logfile=None, logstep=0.02):
         freq = corp.count_rest (attr.id2poss(i))
         arf = corp.count_ARF (attr.id2poss(i), freq)
         docf = corp.compute_docf (attr.id2poss(i), rs)
-        outfrq.append (freq)
+        try:
+            outfrq.append (freq)
+        except OverflowError:
+            outfrq = array.array('l', outfrq)
+            outfrq.append (freq)
         outarf.append (arf)
         outdocf.append (docf)
         if logfile:
@@ -510,7 +647,8 @@ def create_arf_db (corp, attrname, logfile=None, logstep=0.02):
     outfrq.tofile (open (outfilename + '.frq.tmp', 'wb'))
     outdocf.tofile (open (outfilename + '.docf.tmp', 'wb'))
     os.rename (outfilename + '.arf.tmp', outfilename + '.arf')
-    os.rename (outfilename + '.frq.tmp', outfilename + '.frq')
+    os.rename (outfilename + '.frq.tmp', outfilename + '.frq' +
+        frqsize[outfrq.typecode])
     os.rename (outfilename + '.docf.tmp', outfilename + '.docf')
     if logfile:
         open(logfile, 'a').write('\nfreq:%s\narf:%s\ndocf:%s' %
@@ -521,7 +659,7 @@ def build_arf_db (corp, attrname):
     logfilename = subcorp_base_file (corp, attrname) + '.build'
     if os.path.isfile (logfilename):
         log = open(logfilename).read().split('\n')
-        return log[0], log[-1]
+        return log[0], log[-1].split('\r')[-1]
     sys.stderr.write ('build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename)) 
     pid = os.fork()
     if pid == 0:
@@ -530,7 +668,10 @@ def build_arf_db (corp, attrname):
         daemonize.createDaemon(maxfd=3)
         if hasattr(os, 'nice'):
             os.nice(10)
-        create_arf_db (corp, attrname, logfilename)
+        if attrname == 'hashws':
+            create_ws_db (corp, logfilename)
+        else:
+            create_arf_db (corp, attrname, logfilename)
         os._exit(0)
     else:
         return None
@@ -539,7 +680,7 @@ def build_arf_db_status (corp, attrname):
     logfilename = subcorp_base_file (corp, attrname) + '.build'
     if os.path.isfile (logfilename):
         log = open(logfilename).read().split('\n')
-        return log[0], log[-1]
+        return log[0], log[-1].split('\r')[-1]
     else:
         return 0, '100%'
 
