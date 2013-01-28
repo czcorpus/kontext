@@ -345,34 +345,29 @@ class ConcCGI (UserCGI):
             return
 
         if 'Desc' in names:
-            result['Desc'] = [{'op': o, 'arg': a, 'churl': u1, 'tourl': u2,
-                               'size': s}
+            result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+                               'tourl': self.urlencode(u2), 'size': s}
                               for o,a,u1,u2,s in
                               conclib.get_conc_desc (self.q,
                                                      corpname=self.corpname,
                                                      cache_dir=self.cache_dir,
                                                      subchash=getattr(self._corp(), "subchash", None))]
-        thecorp = self._corp()
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in names:
-            result['LastSubcorp'] = self.cm.last_subcorp_names (self.corpname)
+            result['LastSubcorp'] = self.cm.subcorp_names (self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) +1, 20)
 
-        if 'concsize' in names:
-           conc = self.call_function (conclib.get_conc,
-                (self._corp(),))
-           if conc :
-               result['concsize'] = conc.size()
-
-        if 'concsize' in names or 'orig_query' in names:
+        if 'orig_query' in names:
            conc_desc = conclib.get_conc_desc (self.q,
                        corpname=self.corpname,
                        cache_dir=self.cache_dir,
                        subchash=getattr(self._corp(), "subchash", None))
            if len(conc_desc) > 1:
-               result['tourl'] = conc_desc[0][3]
+               result['tourl'] = self.urlencode(conc_desc[0][3])
+        if methodname.startswith('first'):
+            result['show_cup_menu'] = self.is_err_corpus()
 
     kwicleftctx = '-5'
     kwicrightctx = '5'
@@ -674,26 +669,44 @@ class ConcCGI (UserCGI):
 
     mlsortx.template = 'view.tmpl'
 
-    def _compile_query (self, qtype=None):
+    def is_err_corpus(self):
+        availstruct = self._corp().get_conf('STRUCTLIST').split(',')
+        if not ('err' in availstruct and 'corr' in availstruct):
+            return False
+        return True
+
+    def _compile_basic_query (self, qtype=None, suff='', cname=''):
+        queryselector = getattr(self, 'queryselector' + suff)
+        iquery = getattr(self, 'iquery' + suff, '')
+        lemma = getattr(self, 'lemma' + suff, '')
+        lpos = getattr(self, 'lpos' + suff, '')
+        phrase = getattr(self, 'phrase' + suff, '')
+        qmcase = getattr(self, 'qmcase' + suff, '')
+        word = getattr(self, 'word' + suff, '')
+        wpos = getattr(self, 'wpos' + suff, '')
+        char = getattr(self, 'char' + suff, '')
+        cql = getattr(self, 'cql' + suff, '')
         queries = {
             'cql': '%(cql)s',
             'lemma': '[lempos="%(lemma)s%(lpos)s"]',
             'wordform': '[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
             'wordformonly': '[%(wordattr)s="%(word)s"]',
             }
-        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql', 'tag'):
-            if self.queryselector == a + 'row':
-                if getattr(self, a, ''):
-                    setattr (self, a, getattr (self, a).strip())
+        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql'):
+            if queryselector == a + 'row':
+                if getattr(self, a+suff, ''):
+                    setattr (self, a+suff, getattr (self, a+suff).strip())
+                elif suff:
+                    return ''
                 else:
                     raise ConcError (_('No query entered.'))
         if qtype:
             return queries[qtype] % self.clone_self()
-        thecorp = self._corp()
+        thecorp = cname and self.cm.get_Corpus (cname) or self._corp()
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict (self.cm.corpconf_pairs (thecorp, 'WPOSLIST'))
         lposlist = dict (self.cm.corpconf_pairs (thecorp, 'LPOSLIST'))
-        if self.queryselector == 'iqueryrow':
+        if queryselector == 'iqueryrow':
             if 'lc' in attrlist:
                 if 'lemma_lc' in attrlist:
                     qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
@@ -706,9 +719,9 @@ class ConcCGI (UserCGI):
                     qitem = '[word="(?i)%(q)s"|lemma="(?i)%(q)s"]'
                 else:
                     qitem = '[word="(?i)%(q)s"]'
-            if '--' not in self.iquery:
+            if '--' not in iquery:
                 return ''.join([qitem % {'q':escape(q)}
-                                for q in self.iquery.split()])
+                                for q in iquery.split()])
             else:
                 def split_tridash (word, qitem):
                     if '--' not in word:
@@ -719,58 +732,93 @@ class ConcCGI (UserCGI):
                                                     qitem % {'q':w2}, 
                                                     qitem % {'q':w1+'-'+w2})
                 return ''.join([split_tridash(escape(q), qitem)
-                                for q in self.iquery.split()])
+                                for q in iquery.split()])
 
-        if self.queryselector == 'lemmarow':
-            if self.lpos is '':
-                return '[lemma="%s"]' % self.lemma
+        if queryselector == 'lemmarow':
+            if not lpos:
+                return '[lemma="%s"]' % lemma
             if 'lempos' in attrlist:
                 try:
-                    if self.lpos in lposlist.values():
-                        lpos = self.lpos
-                    else:
-                        lpos = lposlist [self.lpos]
+                    if not lpos in lposlist.values():
+                        lpos = lposlist [lpos]
                 except KeyError:
-                    raise ConcError (_('Undefined lemma PoS')
-                                                         + ' "%s"' % self.lpos)
-                return '[lempos="%s%s"]' % (self.lemma, lpos)
-            else:
+                    raise ConcError (_('Undefined lemma PoS') + ' "%s"' % lpos)
+                return '[lempos="%s%s"]' % (lemma, lpos)
+            else: # XXX
                 try:
-                    if self.lpos in wposlist.values():
-                        wpos = self.lpos
+                    if lpos in wposlist.values():
+                        wpos = lpos
                     else:
-                        wpos = wposlist [self.lpos]
+                        wpos = wposlist [lpos]
                 except KeyError:
                     raise ConcError (_('Undefined word form PoS')
-                                                          + ' "%s"' %self.lpos)
-                return '[lemma="%s" & tag="%s"]' % (self.lemma, wpos)
-        if self.queryselector == 'phraserow':
-            return '"' + '" "'.join (self.phrase.split()) + '"'
-        if self.queryselector == 'wordrow':
-            if self.qmcase:
-                wordattr = 'word="%s"' % self.word
+                                                          + ' "%s"' % lpos)
+                return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
+        if queryselector == 'phraserow':
+            return '"' + '" "'.join (phrase.split()) + '"'
+        if queryselector == 'wordrow':
+            if qmcase:
+                wordattr = 'word="%s"' % word
             else:
                 if 'lc' in attrlist:
-                    wordattr = 'lc="%s"' % self.word
+                    wordattr = 'lc="%s"' % word
                 else:
-                    wordattr = 'word="(?i)%s"' % self.word
-            if self.wpos is '':
+                    wordattr = 'word="(?i)%s"' % word
+            if not wpos:
                 return '[%s]' % wordattr
             try:
-                if self.wpos in wposlist.values():
-                    wpos = self.wpos
-                else:
-                    wpos = wposlist [self.wpos]
+                if not wpos in wposlist.values():
+                    wpos = wposlist [wpos]
             except KeyError:
-                raise ConcError (_('Undefined word form PoS')
-                                                         + ' "%s"' % self.wpos)
+                raise ConcError (_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
-        if self.queryselector == 'charrow':
-            return '[word=".*%s.*"]' % self.char
-        if self.queryselector == 'tagrow':
+        if queryselector == 'charrow':
+            return '[word=".*%s.*"]' % char
+        elif queryselector == 'tagrow':
             return '[tag="%s"]' % self.tag
-        return self.cql
-        
+        return cql
+
+
+    def _compile_query(self, qtype=None):
+        if not self.is_err_corpus(): return self._compile_basic_query(qtype)
+        self._cookieattrs.append ('cup_hl')
+        err_code = getattr(self, 'cup_err_code', '')
+        err = getattr(self, 'cup_err', '')
+        corr = getattr(self, 'cup_corr', '')
+        switch = getattr(self, 'errcorr_switch', '')
+        if not err_code and not err and not corr:
+            cql = self._compile_basic_query(qtype)
+            if self.queryselector != 'cqlrow':
+                cql = cql.replace('][', '] (<corr/>)? [')
+                cql = cql.replace('](', '] (<corr/>)? (')
+                cql = cql.replace('] [', '] (<corr/>)? [')
+            return cql
+        # compute error query
+        corr_restr = corr or (err_code and switch == 'c')
+        err_restr = err or (err_code and switch == 'e')
+        if err_code: corr_within = '<corr type="%s"/>' % err_code
+        else: corr_within = '<corr/>'
+        if err_code: err_within = '<err type="%s"/>' % err_code
+        else: err_within = '<err/>'
+        err_containing = ''; corr_containing = ''
+        if err:
+            self.iquery = err; self.queryselector = 'iqueryrow'
+            err_containing = ' containing ' + self._compile_basic_query(qtype)
+        if corr:
+            self.iquery = corr; self.queryselector = 'iqueryrow'
+            corr_containing = ' containing ' + self._compile_basic_query(qtype)
+        err_query =  '(%s%s)' % (err_within, err_containing)
+        corr_query = '(%s%s)' % (corr_within, corr_containing)
+        fullstruct = '(%s%s)' % (err_query, corr_query)
+        if self.cup_hl == 'e' or (self.cup_hl == 'q' and err_restr
+                                                     and not corr_restr):
+            return '%s within %s' % (err_query, fullstruct)
+        elif self.cup_hl == 'c' or (self.cup_hl == 'q' and corr_restr
+                                                       and not err_restr):
+            return '%s within %s' % (corr_query, fullstruct)
+        else: # highlight both
+            return fullstruct
+
 
     def query (self, qtype='cql'):
         "perform query"
