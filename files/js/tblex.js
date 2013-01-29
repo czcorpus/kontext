@@ -16,102 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-// common functions
-
-function copy_to_clipboard(text2copy, path) {
-  if (window.clipboardData) { // IE without flash
-    window.clipboardData.setData("Text",text2copy);
-    return true;
-  } else if (window.netscape) { // firefox and similar without flash
-    try {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      var clip = Components.classes['@mozilla.org/widget/clipboard;1'].createInstance(Components.interfaces.nsIClipboard);
-      if (!clip) return;
-      var trans = Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
-      if (!trans) return;
-      trans.addDataFlavor('text/unicode');
-      var str = new Object();
-      var len = new Object();
-      var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
-      str.data=text2copy;
-      trans.setTransferData("text/unicode",str,text2copy.length*2);
-      var clipid=Components.interfaces.nsIClipboard;
-      if (!clip) return false;
-      clip.setData(trans,null,clipid.kGlobalClipboard);
-      return true;
-    } catch (e) {}
-  } 
-  // else try flash
-  var flashcopier = 'flashcopier';
-  if(!document.getElementById(flashcopier)) {
-    var divholder = document.createElement('div');
-    divholder.id = flashcopier;
-    document.body.appendChild(divholder);
-  }
-  document.getElementById(flashcopier).innerHTML = '';
-  var divinfo = '<embed src="' + path
-                + '/misc/clipboard.swf" FlashVars="clipboard='
-                + encodeURIComponent(text2copy)
-                + '" width="30" height="30" type="application/x-shockwave-flash"></embed>';
-  document.getElementById(flashcopier).innerHTML = divinfo;
-}
-
 function normalize_element(id) {
   text = document.getElementById(id).innerHTML;
-  return text.replace("<B>", "<b>").replace("</B>", "</b>");
+  return text.replace("<B>", "<b>").replace("</B>", "</b>").replace(/===NONE===/g, "");
 }
 
 function replace_tags(id, tag) {
   if (document.getElementById(id) == null) return '';
   text = document.getElementById(id).innerHTML;
-  return text.replace("<B>", "<" + tag + ">").replace("</B>", "</" + tag + ">").replace("<b>", "<" + tag + ">").replace("</b>", "</" + tag + ">");
+  return text.replace("<B>", "<" + tag + ">").replace("</B>", "</" + tag + ">").replace("<b>", "<" + tag + ">").replace("</b>", "</" + tag + ">").replace(/===NONE===/g, "");
 }
 
 function remove_tags(id) {
   if (document.getElementById(id) == null) return '';
   text = document.getElementById(id).innerHTML;
-  return text.replace("<B>", "").replace("</B>", "").replace("<b>", "").replace("</b>", "");
-}
-
-// one-click copying in concordance
-
-function preload_image(source) {
-  im =  new Image();
-  im.src = source;
-}
-
-function one_click_copy(img, tbl_template, multiple_copy, path) {
-  // change pictures
-  if (multiple_copy == 0) {
-    no_pictures = document.images.length;
-    for (i = 0; i < no_pictures; i++) {
-      document.images[i].title = '';
-      if (document.images[i].src.indexOf('edit-copy-selected.png') != -1) {
-        document.images[i].src = path + '/img/edit-copy.png';
-      }
-    }
-    img.src = path + '/img/edit-copy-selected.png';
-  } else {
-    if (img.src.indexOf('edit-copy-selected.png') != -1) {
-      img.src = path + '/img/edit-copy.png';
-    } else if (img.src.indexOf('edit-copy.png') != -1) {
-      img.src = path + '/img/edit-copy-selected.png';
-    }
-  }
-  pick_all_examples_to_clip(tbl_template, path);
-}
-
-function pick_all_examples_to_clip(tbl_template, path) {
-  text2copy = '';
-  no_pictures = document.images.length;
-  for (i = 0; i < no_pictures; i++) {
-    document.images[i].title = '';
-    if (document.images[i].src.indexOf('edit-copy-selected.png') != -1) {
-      // selected line
-      text2copy += gen_xml(document.images[i].id, tbl_template);
-    }
-  }
-  copy_to_clipboard(text2copy, path);
+  return text.replace("<B>", "").replace("</B>", "").replace("<b>", "").replace("</b>", "").replace(/===NONE===/g, "");
 }
 
 function gen_xml(id, template) {
@@ -165,12 +84,9 @@ function conc_oec_oup_all(id) {
 
 // tickbox lexicography functions
 
-// backbone function
-function xml_to_clip(template, lemma, gramrel, path) {
+function tblex2xml(template, lemma, gramrel) {
   xml = '';
-
-  // decide which template to use
-  if (template == 'vanilla') xml = vanilla(lemma, gramrel);
+  if (template == 'vanilla' || template == 'vanilla2') xml = vanilla(lemma, gramrel);
   else if (template == 'ukwac_mcd') xml = ukwac_mcd(lemma, gramrel);
   else if (template == 'oec_oup_shogakukan') xml = oec_oup_shogakukan();
   else if (template == 'ANW_INL') xml = anw_inl(lemma, gramrel);
@@ -183,15 +99,10 @@ function xml_to_clip(template, lemma, gramrel, path) {
   else if (template == 'bnc_test') xml = bnc_test();
   else if (template == 'bnc-1m_neco_neco') xml = bnc_test();
   else if (template == 'oec_oup_all') xml = oec_oup_all();
-
-  else { // handle error
-    document.getElementById('copy_note').innerHTML = 'ERROR'; return;
-  }
-
-  copy_to_clipboard(xml, path);
-  document.getElementById('copy_note').innerHTML = 'XML copied';
+  else { jQuery('#copy_note').text('ERROR'); }
+  jQuery('#copy_note').text('XML copied');
+  return xml;
 }
-
 
 function anw_inl(lemma, gramrel) {
   xml = '<keyword>' + lemma + '</keyword>\n<gramrel>\n  <grname>'

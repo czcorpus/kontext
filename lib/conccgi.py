@@ -2040,17 +2040,6 @@ class ConcCGI (UserCGI):
         return ans
     ajax_get_corp_details.template = 'corpus_details.tmpl'
 
-    def test_tags(self, corpname=''):
-        """
-        """
-        import cgi
-        form = cgi.FieldStorage()
-        for k in form.keys():
-            logging.getLogger(__name__).info('form %s -> %s' % (k, form[k]))
-        return { 'corpus_name' : self.corpname if self.corpname else corpname,
-                 'num_tag_pos' : settings.get_corpus_info(self.corpname)['num_tag_pos'] }
-    test_tags.template = 'tqbtest.tmpl'
-
     def ajax_get_tag_variants(self, pattern=''):
         """
         """
