@@ -142,7 +142,7 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
            kwiclines(corpus, conc, has_speech, (fromp -1) * pagesize, fromp * pagesize,
                       leftctx, rightctx, attrs, ctxattrs, refs, structs,
                       labelmap, righttoleft, alignlist)}
-    add_aligns(out, conc,(fromp -1) * pagesize, fromp * pagesize,
+    add_aligns(corpus, out, conc,(fromp -1) * pagesize, fromp * pagesize,
                leftctx, rightctx, attrs, ctxattrs, refs, structs,
                labelmap, righttoleft, alignlist)
     if copy_icon:
@@ -191,7 +191,7 @@ def kwicpage (corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5
 
     return out
 
-def add_aligns(result, conc, fromline, toline, leftctx='40#', rightctx='40#',
+def add_aligns(corpus, result, conc, fromline, toline, leftctx='40#', rightctx='40#',
                attrs='word', ctxattrs='word', refs='#', structs='p',
                labelmap={}, righttoleft=False, alignlist=[]):
     if not alignlist:
@@ -208,14 +208,14 @@ def add_aligns(result, conc, fromline, toline, leftctx='40#', rightctx='40#',
         al_corpname = al_corp.get_conffile()
         if al_corpname in corps_with_colls:
             conc.switch_aligned (al_corp.get_conffile())
-            al_lines.append (kwiclines (conc, fromline, toline, leftctx,
+            al_lines.append (kwiclines (corpus, conc, False, fromline, toline, leftctx,
                 rightctx, attrs, ctxattrs, refs,
                 structs, labelmap, righttoleft))
         else:
             conc.switch_aligned(conc.orig_corp.get_conffile())
             conc.add_aligned(al_corp.get_conffile())
             conc.switch_aligned (al_corp.get_conffile())
-            al_lines.append (kwiclines (conc, fromline, toline, '0',
+            al_lines.append (kwiclines (corpus, conc, False, fromline, toline, '0',
                 '0', 'word', '', refs, structs,
                 labelmap, righttoleft))
     aligns = zip(*al_lines)
