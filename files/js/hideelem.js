@@ -1,11 +1,12 @@
 /**
  *
  */
-(function (context) {
+define(['jquery', 'win', 'bonito'], function ($, win, bonito) {
     'use strict';
 
+    var hideElem;
 
-    context.hideElem = {
+    hideElem = {
 
         /**
          *
@@ -14,9 +15,9 @@
          * @param path
          */
         cmdHideElementStore : function (elementid, storeval, path) {
-            var elem = window.document.getElementById(elementid),
-                img = window.document.getElementById(elementid + 'img'),
-                cookieval = context.getCookieValue('showhidden'),
+            var elem = win.document.getElementById(elementid),
+                img = win.document.getElementById(elementid + 'img'),
+                cookieval = bonito.getCookieValue('showhidden'),
                 date;
 
             cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
@@ -42,7 +43,7 @@
          */
         loadHideElementStore : function (path) {
             var cookie = {},
-                ids = context.getCookieValue('showhidden').split('.'),
+                ids = bonito.getCookieValue('showhidden').split('.'),
                 i,
                 id,
                 elem,
@@ -81,8 +82,8 @@
          * @param storeval
          */
         cmdHideElementStoreSimple : function (elementid, storeval) {
-            var elem = window.document.getElementById(elementid),
-                cookieval = context.getCookieValue('showhidsim'),
+            var elem = win.document.getElementById(elementid),
+                cookieval = bonito.getCookieValue('showhidsim'),
                 date;
 
             cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
@@ -105,7 +106,7 @@
          */
         loadHideElementStoreSimple : function () {
             var cookie = {},
-                ids = context.getCookieValue("showhidsim").split('.'),
+                ids = bonito.getCookieValue("showhidsim").split('.'),
                 i,
                 all_elements,
                 onclick,
@@ -139,10 +140,10 @@
          * @return {String}
          */
         cmdGetFocusedId : function () {
-            var oldid = context.getCookieValue("query_type"),
+            var oldid = bonito.getCookieValue("query_type"),
                 id = oldid.substring(0, oldid.length - 3);
 
-            if (window.document.getElementById(id)) {
+            if (win.document.getElementById(id)) {
                 return oldid.substring(0, oldid.length - 3);
             }
             return 'iquery';
@@ -174,11 +175,11 @@
             $('#conc-form-clear-button').unbind('click');
             if (resetButtonActions[jqQs.val()]) {
                 $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
-                context.hideElem.clearForm($('#mainform'));
+                hideElem.clearForm($('#mainform'));
 
             } else {
                 $('#conc-form-clear-button').bind('click', function () {
-                    context.hideElem.clearForm($('#mainform'));
+                    hideElem.clearForm($('#mainform'));
                 });
             }
 
@@ -232,7 +233,7 @@
 
             date = new Date();
             date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = 'query_type=' + newid
+            win.document.cookie = 'query_type=' + newid
                     + '; expires=' + date.toGMTString();
 
             jqFocusElem.focus();
@@ -361,10 +362,10 @@
             var lookfor = document.getElementById('searchhelp').value;
 
             if (lookfor) {
-                window.open('http://www.google.com/#q=site%3Atrac.sketchengine.co.uk+' +
+                win.open('http://www.google.com/#q=site%3Atrac.sketchengine.co.uk+' +
                                                     lookfor.replace(/ /g, '+'));
             } else {
-                window.open(generic);
+                win.open(generic);
             }
         },
 
@@ -416,9 +417,11 @@
             } else {
                 jqTargetElem = $(target);
             }
-            if (jqTargetElem.length > 0 && context.hideElem.elementIsFocusableFormInput(jqTargetElem)) {
+            if (jqTargetElem.length > 0 && hideElem.elementIsFocusableFormInput(jqTargetElem)) {
                 jqTargetElem.focus();
             }
         }
     };
-}(window));
+
+    return hideElem;
+});

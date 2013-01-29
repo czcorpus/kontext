@@ -34,25 +34,11 @@ $_("Concordance")#slurp
 <script src="$files_path/js/annotconc.js" type="text/javascript"></script>
 #end if
 <script type="text/javascript">
-require(['domReady!', 'jquery', 'detail'], function (domReady, $, detail) {
-    \$('#detailframe').attr('data-corpname', "$corpname");
-    #if $can_annotate and $annotconc
-    \$('#conclines').observe('mousedown', handle_selection);
-    #end if
-    \$('a.speech-link').each(function () {
-        \$(this).bind('click', function (event) {
-            detail.openSpeech(this);
-            event.stopPropagation();
-            return false;
-        });
-    });
-
-    soundManager.setup({
-        url: '../files/misc/soundmanager2/',
-        flashVersion: 9,
-        debugMode : false,
-        preferFlash : false
-    });
+soundManager.setup({
+    url: '../files/misc/soundmanager2/',
+    flashVersion: 9,
+    debugMode : false,
+    preferFlash : false
 });
 </script>
 #if $righttoleft
@@ -103,35 +89,16 @@ require(['domReady!', 'jquery', 'detail'], function (domReady, $, detail) {
 ;reloadHits()#slurp
 #end if
 
-require(['jquery', 'detail'], function (\$, detail) {
-    var callback = function () {
-        \$('a.expand-link').each(function () {
-            \$(this).bind('click', function () {
-                detail.showDetail(\$(this).attr('data-url'), \$(this).attr('data-params'), \$(this).attr('data-loadtext'), true, callback);
-            });
-        });
-    };
+require(['tpl/view'], function(pageSelf) {
+    conf.annotconc = "$annotconc";
+    conf.q = "$q";
 
-    \$('td.kw').bind('click', function (event) {
-        detail.showDetail(
-            \$(event.target).parent().attr('data-url'),
-            \$(event.target).parent().attr('data-params'),
-            \$(event.target).parent().attr('data-loadtext'),
-            true,
-            callback
-        );
-    });
-    \$('td.ref').bind('click', function (event) {
-        detail.showDetail(
-            \$(event.target).attr('data-url'),
-            \$(event.target).attr('data-params'),
-            \$(event.target).attr('data-loadtext'),
-            true
-        );
-    });
+    #if $can_annotate and $annotconc
+    conf.canAnnotate = $can_annotate;
+    conf.annotConc = "$annotconc";
+    #end if
 
-    \$('#hideel').bind('click', detail.closeDetail);
-
+    pageSelf.init(conf);
 });
 
 #end def
@@ -159,8 +126,7 @@ id="bodytag"#slurp
   #else
     <td class="par #if $corpname == $maincorp#maincorp#end if#">
     #if $annotconc
-      <span class="groupbox"
-      #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if#>
+      <span class="groupbox" data-pos="$l.toknum">
       $l.linegroup</span>
     #end if
   #end if
@@ -191,9 +157,7 @@ id="bodytag"#slurp
   #if $viewmode == 'kwic' and $corpname in $KWICCorps
     </td><td class="rc #if $corpname == $maincorp#maincorp#end if#">
     #if $annotconc
-      <span class="groupbox" 
-      #if $can_annotate# onclick="show_groupmenu(this, $l.toknum)" #end if
-       >$l.linegroup</span>
+      <span class="groupbox" data-pos="$l.toknum">$l.linegroup</span>
     #end if
   #else
     </span>
@@ -260,7 +224,7 @@ $word.str#slurp
 
     <div id="result-info">
         $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
-        (#filter $FloatFormatter# $result_relative_freq #end filter#</strong>
+        (#filter $FloatFormatter# $result_relative_freq #end filter#
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
         #if $result_arf
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
@@ -277,16 +241,16 @@ $word.str#slurp
     #if $can_annotate
         &nbsp;&nbsp;
         <i>$_("New pattern"):</i> <input id="newlabel" type="text" size="10" />
-        <input type="submit" value="Add" onclick="add_new_annotation_label()" />
+        <input class="add-new-annotation-label" type="submit" value="Add" />
         <span id="number_globally">$_("Number globally"):
-           <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span>
+           <span class="groupbox" data-pos="select">X</span>
         </span>
         <span id="number_selected" style="display:none">$_("Number selected")
           (<span id="num_of_selected_lines">0</span>):
-           <span class="groupbox" onclick="show_groupmenu(this, 'select')">X</span>
-           <a href="#" onclick="clear_selection()">$_("Clear selection")</a>
+           <span class="groupbox" data-pos="select">X</span>
+           <a class="clear-selection" href="#">$_("Clear selection")</a>
         </span>
-        <span id="annot_undo" style="display:none" onclick="undo_last_action()">
+        <span id="annot_undo" style="display:none">
           <span id="annot_undo_count">0</span> lines assigned. Undo.</span>
 
         <div id="groupmenu">
@@ -294,22 +258,14 @@ $word.str#slurp
            #for $g in $GroupNumbers
               <tr>
               #for $i in $g.Items
-                 <td onclick="assign_group('${i['n']}', '${i['lab']}')">$i.lab</td>
+                 <td class="assign-group" data-grpid="${i['n']}" data-grplabel="${i['lab']}">$i.lab</td>
               #end for
               </tr>
            #end for
-              <tr><td colspan=3 onclick="add_new_annotation_label()">$_("Add next")</td></tr>
-              <tr><td colspan=3 onclick="assign_group('0', '_')">$_("None")</td></tr>
+              <tr><td class="add-new-annotation-label" colspan="3">$_("Add next")</td></tr>
+              <tr><td class="assign-group" colspan="3" data-grpid="0" data-grplabel="_">$_("None")</td></tr>
         </table>
         </div>
-        <script type="text/javascript">
-        jQuery(document).ready(function () {
-            jQuery('#groupmenu').attr("annotconc", "$annotconc");
-            jQuery('#groupmenu').attr("corpname", "$corpname");
-            jQuery('#groupmenu').attr("queryparams", "$q");
-            jQuery('#groupmenu').mouseleave(close_menu);
-        });
-        </script>
     #end if
 #end if
 
