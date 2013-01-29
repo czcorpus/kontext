@@ -970,7 +970,6 @@ class ConcCGI (UserCGI):
     fcrit = []
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
         "display a frequency list"
-        import operator
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):

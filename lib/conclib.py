@@ -673,7 +673,7 @@ class PyConc (manatee.Concordance):
         ans = {}
         for i in range(attr.id_range()):
             value = attr.id2str(i)
-            valid = attr.str2id(str(value))
+            valid = attr.str2id(unicode(value))
             r = self.corp.filter_query (struct.attr_val (attr_name, valid))
             cnt = 0
             while not r.end():
@@ -727,7 +727,6 @@ class PyConc (manatee.Concordance):
         self.freq_dist (crit, limit, words, freqs, norms)
         if not len (freqs):
             return {}
-
         # now we intentionally rewrite norms as filled in by freq_dist()
         # because of "hard to explain" metrics they lead to
         if rel_mode == 0:
@@ -736,7 +735,6 @@ class PyConc (manatee.Concordance):
             sumn = float(self.corp.size())
         elif rel_mode == 1:
             sumn = float(sum([x for x in norms]))
-
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
         def label (attr):
@@ -1228,7 +1226,6 @@ def get_conc (corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0, \
                 add_to_map (cache_dir, pid_dir, subchash, q[:1], conc.size())
                 os.remove (pidfile.name)
                 pidfile.close()
-
     # process subsequent concordance actions
     for act in range(toprocess, len(q)):
         command = q[act][0]
