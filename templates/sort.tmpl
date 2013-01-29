@@ -32,19 +32,10 @@ $_("Sort form")#slurp
 #end def
 
 #def bodyonload
-require(['popupbox', 'jquery'], function (popupbox, \$) {
-    multiLevelKwicFormUtil.init();
-    \$('a.kwic-alignment-help').each(function () {
-        \$(this).bind('click', function (event) {
-            var msg = "$_('This counts only for multi-word KWICs')";
-            popupbox.createPopupBox(event, 'kwic-alignment-help-box', \$('#toolbar-info'), msg, {
-                'top' : 'attached-bottom',
-                'width' : 'auto',
-                'height' : 'auto'
-            });
-            event.stopPropagation();
-        });
-    });
+require(['tpl/sort'], function (pageSelf) {
+    conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
+
+    pageSelf.init(conf);
 });
 #end def
 

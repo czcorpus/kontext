@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-(function (context) {
+define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
     'use strict';
 
-    var mlkfu;
+    var lib = {};
 
     /**
      *
      * @param cookiename
      * @return {String}
      */
-    context.getCookieValue = function (cookiename) {
-        var allcookies = document.cookie,
+    lib.getCookieValue = function (cookiename) {
+        var allcookies = win.document.cookie,
             pos = allcookies.indexOf(cookiename + "="),
             start,
             end;
@@ -48,7 +48,7 @@
      * It in fact fixes some flaws of original bonito2 application without massive rewriting of
      * related HTML templates and controller logic.
      */
-    mlkfu = {
+    lib.multiLevelKwicFormUtil = {
 
         /**
          *
@@ -64,6 +64,7 @@
          * of these select-boxes.
          */
         init : function () {
+            var mlkfu = lib.multiLevelKwicFormUtil;
             $('#kwic-alignment-box').css({ display : 'table-row' });
             $('select.kwic-alignment').each(function () {
                 mlkfu.switchAlignment($(this).val(), mlkfu.getColumnId(this));
@@ -107,6 +108,25 @@
         }
     };
 
-    context.multiLevelKwicFormUtil = mlkfu;
+    /**
+     * toggle show / hide and update cookie
+     * @param id
+     * @param status
+     */
+    lib.toggleViewStore = function (id, status) {
+        var exp = new Date();
+        exp.setDate(exp.getDate() + 30); // expires in 30 days
+        var opts = { domain: '', path: '/', expiresAt: exp, secure: false };
+        if ($('#' + id).is(':visible') || status === ':hidden') { // toggle visible and hidden
+            $('#' + id).hide();
+            cookies.set(id + '_view', 'hide', opts);
+        }
+        else if ($('#' + id).is(':hidden') || status === ':visible') {
+            $('#' + id).show();
+            cookies.set(id + '_view', 'show', opts);
+        }
+    }
 
-}(window));
+    return lib;
+
+});
