@@ -232,7 +232,6 @@ jaaulde.utils.cookies = ( function()
 
 
 		var optionsString = assembleOptionsString( options );
-
 		document.cookie = cookieName + '=' + encodeURIComponent( value ) + optionsString;
 	};
 	/**

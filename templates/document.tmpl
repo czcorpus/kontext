@@ -35,9 +35,6 @@ $text
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}forms.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
-#if $getVar("menupositi", '') == "top"
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}horizontal.css" />
-#end if
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
 
 #block headers
@@ -225,25 +222,24 @@ $_ca_topbar
         </div>
     </div>
 
-    <div id="body">
-        <div id="in-body">
-            #if $error
-            <div id="error">
-                $error
-                <button>$_("Back")</button>
-            </div>
-            #end if
-            #filter None
-            $main
-            #end filter
-            <div id="version">
+    <div id="content">
+        #if $error
+        <div id="error">
+            $error
+            <button>$_("Back")</button>
+        </div>
+        #end if
+        #filter None
+        $main
+        #end filter
+        <div id="footer">
+            <div id="app-version">
                 <div id="lc_logo">
                     <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
                         <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
                     </a></div>
                 $_('Version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
             </div>
-
         </div>
     </div>
 </div>
@@ -347,7 +343,6 @@ $corp_sel
 
 #def tt_sel
 ## Text Types
-  <div class="auto_complete" id="subcorp_auto_complete"></div>
   #set $showhiddenlist = $getVar("showhidden", '').split(".")
   <div class="text-type-params">
   <div class="text-type-top-bar">
