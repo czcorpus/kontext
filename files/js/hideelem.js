@@ -1,7 +1,7 @@
 /**
  *
  */
-define(['jquery', 'win', 'bonito'], function ($, win, bonito) {
+define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, cookies) {
     'use strict';
 
     var hideElem;
@@ -15,25 +15,28 @@ define(['jquery', 'win', 'bonito'], function ($, win, bonito) {
          * @param path
          */
         cmdHideElementStore : function (elementid, storeval, path) {
-            var elem = win.document.getElementById(elementid),
-                img = win.document.getElementById(elementid + 'img'),
-                cookieval = bonito.getCookieValue('showhidden'),
-                date;
+            var elem = $('#' + elementid),
+                img = $('#' + elementid + 'img'),
+                cookieval = cookies.get('showhidden');
 
+            if (!cookieval) {
+                cookieval = '';
+            }
             cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
             if (elem.className.match("hidden")) {
                 elem.className = elem.className.replace("hidden", "visible");
                 img.src = path + "/img/minus.png";
                 cookieval += elementid + ".";
+
             } else {
                 elem.className = elem.className.replace("visible", "hidden");
                 img.src = path + "/img/plus.png";
             }
             if (storeval) {
-                date = new Date();
-                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = "showhidden=" + cookieval
-                        + "; expires=" + date.toGMTString();
+                var date = new Date();
+                date.setDate(date.getDate() + 30);
+                var opts = { domain: '', path: '/', expiresAt: date, secure: false};
+                cookies.set('showhidden', cookieval, opts);
             }
         },
 
@@ -263,46 +266,6 @@ define(['jquery', 'win', 'bonito'], function ($, win, bonito) {
                 }
             });
             $('#queryselector').val(prevRowType);
-        },
-
-        /**
-         *
-         * @param path
-         */
-        cmdSwitchMenu : function (path) {
-            var styleSheets = document.styleSheets,
-                horizontal_style = null,
-                i,
-                position,
-                v_css,
-                date;
-
-            for (i = 0; i < styleSheets.length; i += 1) {
-                if (styleSheets[i].href.search('horizontal.css') > -1) {
-                    horizontal_style = styleSheets[i];
-                }
-            }
-            if (horizontal_style === null) {
-                position = 'top';
-                v_css  = document.createElement('link');
-                v_css.rel = 'stylesheet';
-                v_css.type = 'text/css';
-                v_css.href = path + '/css/horizontal.css';
-                document.getElementsByTagName('head')[0].appendChild(v_css);
-
-            } else if (horizontal_style.disabled) {
-                position = 'top';
-                horizontal_style.disabled = false;
-
-            } else {
-                position = 'left';
-                horizontal_style.disabled = true;
-            }
-
-            date = new Date();
-            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = "menupositi=" + position
-                            + "; expires=" + date.toGMTString();
         },
 
         /**

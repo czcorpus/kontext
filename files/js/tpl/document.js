@@ -1,8 +1,8 @@
 /**
  * This module contains functionality related directly to the document.tmpl template
  */
-define(['jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox'],
-        function ($, hideElem, multiselect, tagbuilder, popupbox) {
+define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'jquery.cookies'],
+        function (win, $, hideElem, multiselect, tagbuilder, popupbox, cookies) {
    'use strict';
 
     var lib = {};
@@ -47,6 +47,74 @@ define(['jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox'],
             hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
         });
 
+        // disable submit button after submiting
+        $("form").submit(function() {
+            $('input[type=submit]', this).attr('disabled', 'disabled');
+        });
+
+        // enable button on unload (tweak for bfcache in FF)
+        $(window).unload(function () {
+            $('input[type=submit]').removeAttr('disabled');
+        });
+
+        // enable disabled buttons again after ESC
+        $(win.document).keyup(function(e) {
+            if (e.keyCode == 27) {
+                $('input[type=submit]').removeAttr('disabled');
+            }
+        });
+
+        // switch between horiz | vert (implicit) menu, change cookies
+        $('.menu_switch a').bind('click', function () {
+            if (cookies.get('menupos') === 'top') {
+                $('#sidebar').removeClass('horizontal');
+                $('#in-sidebar').removeClass('horizontal');
+                cookies.del('menupos');
+            }
+            else {
+                $('#sidebar').toggleClass('horizontal');
+                $('#in-sidebar').toggleClass('horizontal');
+                cookies.set('menupos', 'top');
+            }
+        });
+
+        // change to horizontal menu if cookie is set to "top"
+        if (cookies.get("menupos") === "top") {
+            $('#sidebar').addClass('horizontal');
+            $('#in-sidebar').addClass('horizontal');
+        }
+
+        // remove empty and unused parameters from URL before mainform submit
+        $('form').submit(function () { // run before submit
+            $('#mainform input[name="sel_aligned"]').each(function () { // iterate over names of aligned corpora
+                if ($(this).is(':not(:checked)')) { // for those not checked for querying
+                    var corpn = $(this).val(); // get corpus name
+                    $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true); // disable -> remove from URL
+                    $('select[name=queryselector_' + corpn + ']').attr('disabled', true); // dtto
+                    $('#qtable_' + corpn).find('input').attr('disabled', true); // dtto
+                }
+            });
+            // disable all empty inputs
+            $('input').each(function () {
+                if ($(this).val() == '')
+                    $(this).attr('disabled', true);
+            });
+        });
+
+        // show or hide elements according to cookies
+        (function () {
+            var key,
+                el;
+            for (key in jQuery.cookies.get()) { // for all cookies
+                el = key.replace('_view', ''); // remove end '_view'
+                if ($('#' + el).length != 0) { // element exists
+                    if ($.cookies.get(key) == 'show') {
+                        $('#' + el).show();
+                    }
+                    else { $('#' + el).hide(); }
+                }
+            }
+        }());
 
     };
 
@@ -87,10 +155,6 @@ define(['jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox'],
             hideElem.cmdHelp('https://trac.sketchengine.co.uk/');
             event.stopPropagation();
             return false;
-        });
-
-        $('#submenu li.menu_switch a').bind('click', function (event) {
-            hideElem.cmdSwitchMenu($(event.target).attr('data-path'));
         });
 
         $('#error button').bind('click', function (event) {

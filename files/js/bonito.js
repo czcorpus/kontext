@@ -114,16 +114,18 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
      * @param status
      */
     lib.toggleViewStore = function (id, status) {
-        var exp = new Date();
-        exp.setDate(exp.getDate() + 30); // expires in 30 days
-        var opts = { domain: '', path: '/', expiresAt: exp, secure: false };
+        var exp = new Date(),
+            opts;
+
+        exp.setDate(exp.getDate() + 1); // expires in 1 day
+        opts = { domain: '', path: '/', expiresAt: exp, secure: false };
         if ($('#' + id).is(':visible') || status === ':hidden') { // toggle visible and hidden
-            $('#' + id).hide();
             cookies.set(id + '_view', 'hide', opts);
+            $('#' + id).hide();
         }
         else if ($('#' + id).is(':hidden') || status === ':visible') {
-            $('#' + id).show();
             cookies.set(id + '_view', 'show', opts);
+            $('#' + id).show();
         }
     }
 
