@@ -47,35 +47,55 @@
 
 
 /* detail frame */
+
 #detailframe  {
-  position: absolute;
-  overflow: auto;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: auto;
-  width: 98%;
-  display: none;
-  box-shadow: 2px 2px 1px #444;
-  border: 1px solid #AAA;
-  background-color: #fff;
-}
-
-#detailframe img {
-  float: left;
-}
-
-#detailframe a {
-  font-size: small;
+    position: fixed;
+    overflow: auto;
+    bottom: 0px;
+    left: 15%;
+    right: 15%;
+    height: auto;
+    max-height: 30%;
+    width: auto;
+    display: none;
+    background-color: #FFFFCC;
+    -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
+    -khtml-border-radius: 7px;
+    border-radius: 10px;
+    border: solid 1px #AAA;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 #detailframecontent {
-   margin-left: 15px;
-   padding: 8px;
+    padding: 5px 10px;
 }
 
-tr.even {
-   background-color: #ddd;
+#detailframecontent span.load {
+    display: block;
+    width: 150px;
+    margin: 10px auto 10px auto;
+    text-align: center;
+}
+
+#hideel img {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 10px auto 0px auto;
+}
+
+#hideel img:hover {
+    background-image: url(../img/roll_down_active.png);
+    background-repeat: no-repeat;
+    background-position: 0 0;
+}
+
+#hideel { 
+    display: block;
+    width: 100%;
+    height: 18px;
 }
 
 .par {
@@ -133,6 +153,12 @@ tr.highlight td {
 	background-color: #f88; 
 	padding: 1px 0.6em 1px 0.6em
 }
+
+tr.even {
+   background-color: #ddd;
+}
+
+/* spoken corpus */
 
 a.speech-link {
     font-size: 120%;

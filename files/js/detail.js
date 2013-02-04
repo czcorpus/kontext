@@ -30,7 +30,7 @@ define(['jquery'], function ($) {
          */
         showDetail : function (url, params, loadtext, erase, callback) {
             // show detailed info in bottom div
-            $('#detailframe').show();
+            $('#detailframe').fadeIn(100);
             if (erase) {
                 $('#detailframecontent').html('<span class="load">' + loadtext + '</span>');
             }
@@ -52,7 +52,7 @@ define(['jquery'], function ($) {
          * @param event
          */
         closeDetail : function (event) {
-            $('#detailframe').hide();
+            $('#detailframe').fadeOut(100);
             event.stopPropagation();
         },
 
