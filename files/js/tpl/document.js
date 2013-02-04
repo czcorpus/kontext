@@ -148,7 +148,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         });
 
         $('input[class="select-all"]').bind('click', function (event) {
-                hideElem.selectAllCheckBoxes(event.target, $(event.target).attr('data-item-name'));
+                hideElem.selectAllCheckBoxes(event.target, $(event.target).data('item-name'));
         });
 
         $('a#top-level-help-link').bind('click', function (event) {
@@ -163,7 +163,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
         $('img.plus-minus').each(function () {
             $(this).bind('click', function (event) {
-                hideElem.cmdHideElementStore($(this).attr('data-elementid'), $(this).attr('data-storeval'), $(this).attr('data-path'));
+                hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'));
             });
         });
     }

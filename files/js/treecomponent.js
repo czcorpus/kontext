@@ -133,14 +133,14 @@ define(['jquery'], function ($) {
                     jqNewLink;
 
                 $(rootElm).children().each(function () {
-                    if ($(this).attr('data-path') === currPathItem) {
+                    if ($(this).data('path') === currPathItem) {
                         foundElm = this;
                         return;
                     }
                 });
                 if (foundElm === undefined) {
                     newLi = document.createElement('li');
-                    $(newLi).attr('data-path', currPathItem);
+                    $(newLi).data('path', currPathItem);
                     $(rootElm).append(newLi);
 
                     if (pathItems.length > 0) {
@@ -152,7 +152,7 @@ define(['jquery'], function ($) {
                     } else {
                         jqNewLink = $(document.createElement('a'));
                         jqNewLink.attr('href', '#');
-                        jqNewLink.attr('data-id', currPathItem);
+                        jqNewLink.data('id', currPathItem);
                         if (itemDesc) {
                             jqNewLink.attr('title', itemDesc);
                         }
@@ -179,7 +179,7 @@ define(['jquery'], function ($) {
                     rootUl = document.createElement('ul');
 
                 $(selectBoxId).children().each(function () {
-                    var path = $(this).attr('data-path');
+                    var path = $(this).data('path');
                     if (path.indexOf('/') === 0) {
                         path = path.substring(1);
                     }
@@ -237,7 +237,7 @@ define(['jquery'], function ($) {
 
             for (i = 0; i < rootDescendants.length; i += 1) {
                 if (rootDescendants.get(i).nodeName === 'LI'
-                        && $(rootDescendants.get(i)).attr('data-path') === currentValue) {
+                        && $(rootDescendants.get(i)).data('path') === currentValue) {
                     srchItem = rootDescendants.get(i);
                     break;
                 }

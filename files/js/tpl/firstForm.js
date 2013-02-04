@@ -52,7 +52,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies'],
     lib.bindClicks = function (conf) {
         $('ul.submenu a.toggle-submenu-item').each(function () {
             $(this).bind('click', function () {
-                bonito.toggleViewStore($(this).attr('data-id-to-set'));
+                bonito.toggleViewStore($(this).data('id-to-set'));
             });
         });
 
