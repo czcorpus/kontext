@@ -4,7 +4,12 @@
     background-color: white;
 }
 
+table#conclines { border-spacing: 0px; }
+table#conclines tr td { padding: 2px; }
+td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
+
 /* concordance formating */
+
 .ref {
 	white-space:nowrap;
 	cursor: pointer;
