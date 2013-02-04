@@ -253,7 +253,7 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 $('#error').css('display', 'none');
             }
             $(f).find('input,select').each(function () {
-                if ($(this).attr('data-ignore-reset') !== '1') {
+                if ($(this).data('ignore-reset') !== '1') {
                     if ($(this).attr('type') === 'text') {
                         $(this).val('');
                     }
@@ -296,19 +296,19 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                     break;
                 }
             }
-            if ($(initiator).attr('data-action-type') === '1') {
+            if ($(initiator).data('action-type') === '1') {
                 chkStatus = true;
-                $(initiator).attr('data-action-type', 2);
+                $(initiator).data('action-type', 2);
                 tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
-                $(initiator).attr('data-alt-value', tmp);
+                $(initiator).attr('value', $(initiator).data('alt-value'));
+                $(initiator).data('alt-value', tmp);
 
-            } else if ($(initiator).attr('data-action-type') === '2') {
+            } else if ($(initiator).data('action-type') === '2') {
                 chkStatus = false;
-                $(initiator).attr('data-action-type', 1);
+                $(initiator).data('action-type', 1);
                 tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
-                $(initiator).attr('data-alt-value', tmp);
+                $(initiator).attr('value', $(initiator).data('alt-value'));
+                $(initiator).data('alt-value', tmp);
             }
             if (form !== undefined) {
                 $(form).find('input[type="checkbox"][name="' + name + '"]').each(function () {

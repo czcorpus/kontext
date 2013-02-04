@@ -224,9 +224,9 @@ define(['jquery'], function ($) {
                 $(tagLoader.tagDisplay).find('a.backlink').each(function () {
                     $(this).bind('click', function () {
                         var liElms = $(tagLoader.multiSelectComponent.ulElement).find('li:nth-child('
-                                + (parseInt($(this).attr('data-block-idx'), 10) + 1) + ')');
+                                + (parseInt($(this).data('block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
-                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).attr('data-block-id'));
+                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).data('block-id'));
                         }
                     });
                 });
@@ -270,7 +270,7 @@ define(['jquery'], function ($) {
 
                 blockSwitchEventHandlers = {
                     mouseover : function (event) {
-                        var blockId = $(event.target.parentNode).attr('data-block-id'),
+                        var blockId = $(event.target.parentNode).data('block-id'),
                             items;
 
                         items = $(tagLoader.tagDisplay).find('*');
@@ -279,7 +279,7 @@ define(['jquery'], function ($) {
                         }
                     },
                     mouseout : function (event) {
-                        var blockId = $(event.target.parentNode).attr('data-block-id'),
+                        var blockId = $(event.target.parentNode).data('block-id'),
                             items;
 
                         items = $(tagLoader.tagDisplay).find('*');

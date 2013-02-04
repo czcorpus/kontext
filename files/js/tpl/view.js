@@ -17,16 +17,16 @@ define(['jquery', 'tpl/document', 'detail', 'annotconc'], function ($, documentP
         var callback = function () {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function () {
-                    detail.showDetail($(this).attr('data-url'), $(this).attr('data-params'), $(this).attr('data-loadtext'), true, callback);
+                    detail.showDetail($(this).data('url'), $(this).data('params'), $(this).data('loadtext'), true, callback);
                 });
             });
         };
 
         $('td.kw').bind('click', function (event) {
             detail.showDetail(
-                $(event.target).parent().attr('data-url'),
-                $(event.target).parent().attr('data-params'),
-                $(event.target).parent().attr('data-loadtext'),
+                $(event.target).parent().data('url'),
+                $(event.target).parent().data('params'),
+                $(event.target).parent().data('loadtext'),
                 true,
                 callback
             );
@@ -34,15 +34,15 @@ define(['jquery', 'tpl/document', 'detail', 'annotconc'], function ($, documentP
 
         $('td.ref').bind('click', function (event) {
             detail.showDetail(
-                $(event.target).attr('data-url'),
-                $(event.target).attr('data-params'),
-                $(event.target).attr('data-loadtext'),
+                $(event.target).data('url'),
+                $(event.target).data('params'),
+                $(event.target).data('loadtext'),
                 true
             );
         });
 
         $('#hideel').bind('click', detail.closeDetail);
-            $('#detailframe').attr('data-corpname', conf.corpname);
+            $('#detailframe').data('corpname', conf.corpname);
             if (conf.canAnnotate && conf.annotConc) {
                 $('#conclines').observe('mousedown', annotConc.handle_selection);
             }
