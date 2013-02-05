@@ -28,6 +28,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}tables.css" />
     <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
     <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        requirejs.config({
+            baseUrl : '../files/js',
+            paths: {
+                'domReady' : './domReady.min',
+                'jquery': './jquery.min'
+            },
+            shim : {
+                'jquery.cookies' : {
+                    deps : ['jquery'],
+                    exports : 'jaaulde.utils.cookies'
+                }
+            }
+        });
+
+        define('win', [], function () { return window; });
+    </script>
 </head>
 <body>
 <div>
