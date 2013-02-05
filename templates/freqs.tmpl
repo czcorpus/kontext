@@ -126,7 +126,9 @@ $input_hidden
     #end if
   <tr
     #if $i.has_key('class')
-      class="$i.class"
+      class="$i.class datarow"
+    #else
+      class="datarow"
     #end if
   >
     <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
@@ -141,9 +143,9 @@ $input_hidden
       #end if
     #end if
     #for $w in $i.Word
-      <td>$w.n</td>
+      <td class="word">$w.n</td>
     #end for
-    <td align="right">#filter $IntegerFormatter# $i.freq #end filter#</td>
+    <td align="right" class="frequency">#filter $IntegerFormatter# $i.freq #end filter#</td>
     #if $i.has_key('rel')
       <td align="right">$i.rel</td>
     #end if
