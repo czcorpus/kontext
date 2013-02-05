@@ -224,7 +224,7 @@ $word.str#slurp
 
     <div id="result-info">
         $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
-        (#filter $FloatFormatter# $result_relative_freq #end filter#
+        (<span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
         #if $result_arf
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
