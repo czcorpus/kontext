@@ -16,11 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['module', 'jquery', 'test-suite'], function (module, $, ts) {
+define(['jquery', 'test-suite'], function ($, ts) {
 
     ts.add(function () {
-
-        ts.module(module.id);
 
         test( "Correct number of hits on lemma 'dokument'", function() {
             equal(ts.util.stripString($('div#result-info strong').first().text()), '10,976');
