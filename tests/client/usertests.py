@@ -17,11 +17,14 @@
 #
 
 testSuite = (
-    ('http://127.0.0.1/bonito/run.cgi/first?corpname=syn2010&queryselector=iqueryrow&iquery=dokument&lpos=&wpos=&default_attr=word&tag=.*&fc_lemword_window_type=both&fc_lemword_wsize=5&fc_lemword_type=all&fc_pos_window_type=both&fc_pos_wsize=5&fc_pos_type=all&usesubcorp=',
+    ('http://127.0.0.1/bonito/run.cgi/first?corpname=syn2010&queryselector=lemmarow&lemma=dokument&lpos=&wpos=&default_attr=word&tag=.*&fc_lemword_window_type=both&fc_lemword_wsize=5&fc_lemword_type=all&fc_pos_window_type=both&fc_pos_wsize=5&fc_pos_type=all&usesubcorp=',
     'test-concordance.js'),
 
-    ('http://127.0.0.1/bonito/run.cgi/freqs?q=aword%2C[tag%3D%22N..P5.*%22];corpname=syn2010&attrs=word&ctxattrs=word&structs=&refs=%3Dopus.nazev;fcrit=opus.txtype_group+0&fcrit=opus.txtype+0&fcrit=opus.med+0&fcrit=opus.srclang+0;flimit=0;freq_sort=rel;ftt_include_empty=',
-    'test-freq-list.js')
+    ('http://127.0.0.1/bonito/run.cgi/freqml?q=aword%2C%5Blemma%3D"dokument"%5D&corpname=syn2010&attrs=word&ctxattrs=word&structs=sp&refs=%3Dopus.nazev&lemma=dokument&ml=1&flimit=0&freqlevel=1&ml1attr=word&ml1ctx=0<0&ml2attr=word&ml2ctx=0<0&ml3attr=word&ml3ctx=0<0',
+    'test-freq-list.js'),
+
+    ('http://127.0.0.1/bonito/run.cgi/first_form?corpname=syn2010;',
+    'test-main-page.js')
 )
 
 if __name__ == '__main__':
