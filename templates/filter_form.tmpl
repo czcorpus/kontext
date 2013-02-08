@@ -1,0 +1,114 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Concordance: Filter form")#slurp
+#end def
+
+#attr $focus = "hideElem.cmdGetFocusedId()"
+
+#def helpblock
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}filterconc" rel="help">$_("? Help on Filter form")</a></li>
+  #end if
+#end def
+
+#def left_submenu_expert
+  <li>$_("Expert options:")
+    <ul class="submenu">
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('querytypeel', 1);">$_("Query Type")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('texttypeel', 1);" >$_("Text Types")</a></li>
+    </ul>
+  </li>
+#end def
+
+#def main
+#filter WebSafe
+<h3>$_("Concordance Filter")</h3>
+<form id="mainform" action="filter">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+
+<table class="form">
+<tbody>
+<tr class="required">
+  <th>$_("Filter"):</th>
+    <td><label><input type="radio" name="pnfilter" value="p"
+    #if $pnfilter == 'p'
+      checked="checked"
+    #end if
+    /> $_("positive")</label>
+    <label><input type="radio" name="pnfilter" value="n"
+    #if $pnfilter == 'n'
+      checked="checked"
+    #end if
+    /> $_("negative")</label></td></tr>
+    
+<tr>
+  <th>$_("Selected token"):</th>
+    <td><label><input type="radio" name="filfl" value="f" 
+    #if $filfl == 'f'
+      checked="checked"
+    #end if
+    /> $_("first")</label>
+    <label><input type="radio" name="filfl" value="l" 
+    #if $filfl == 'l'
+      checked="checked"
+    #end if
+    />  $_("last")</label></td></tr>
+<tr><th>$_("Search Span"):</th>
+    <td>
+    $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
+    $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
+    </td>
+</tr>
+</tbody>
+#filter None
+$query_node
+#end filter
+</table>
+
+#if $TextTypeSel
+  #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
+  #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
+  <div class="advanced_options$hidden" id="texttypeel">
+  <h3>$_("Text Types")</h3>
+
+    <div class="indent">
+    #filter None
+    $tt_sel
+    #end filter
+    </div>
+
+    </div>
+
+#end if
+
+<div class="buttons">
+  <input class="submit" type="submit" value="$_("Filter Concordance")" />
+  <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
+</div>
+</fieldset>
+</form>
+#end filter
+#end def

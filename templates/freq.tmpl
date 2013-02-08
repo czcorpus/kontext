@@ -1,0 +1,205 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Freqs form")#slurp
+#end def
+
+#attr $focus = "'#submit'"
+
+#def helpblock
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}freqconc" rel="help">$_("? Help on Frequency form")</a></li>
+  #end if
+#end def
+
+#def bodyonload
+require(['popupbox', 'jquery'], function (popupbox, \$) {
+    multiLevelKwicFormUtil.init();
+    \$('a.kwic-alignment-help').each(function () {
+        \$(this).bind('click', function (event) {
+            var msg = "$_('This counts only for multi-word KWICs')";
+            popupbox.createPopupBox(event, 'kwic-alignment-help-box', \$('#toolbar-info'), msg, {
+                'top' : 'attached-bottom',
+                'width' : 'auto',
+                'height' : 'auto'
+            });
+            event.stopPropagation();
+        });
+    });
+});
+#end def
+
+
+#def main
+
+#filter WebSafe
+<h3>$_("Multilevel frequency distribution")</h3>
+<form action="freqml">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+  <input type="hidden" name="ml" value="1" />
+  $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
+  <br/>
+  <hr/>
+<table rules="cols" cellpadding="5"><tr><td>
+  <label><input type="radio" name="freqlevel" value="1"
+  #if $freqlevel == 1
+    checked="checked"
+  #end if
+  /> $_("first level")</label><br/>
+  $_("Attribute"): <select name="ml1attr">
+  #for $a in $AttrList
+    <option value="$a['n']">$_($a['label'])</option>
+  #end for
+  </select><br/>   
+  <label>$_("Ignore case") <input type="checkbox" name="ml1icase" value="i"
+  #if $ml1icase
+    checked="checked"
+  #end if
+  /></label><br/>
+  $_("Position"): <select name="ml1ctx" size="5">
+  #for $p in $Pos_ctxs
+    <option value="$p['ctx']"
+    #if $p['ctx'] == $ml1ctx
+      selected="selected"
+    #end if
+    >$_($p['n'])</option>
+  #end for
+  </select>
+</td><td>
+  <label><input type="radio" name="freqlevel" value="2"
+  #if $freqlevel == 2
+    checked="checked"
+  #end if
+  /> $_("second level")</label><br/>
+  $_("Attribute"): <select name="ml2attr">
+  #for $a in $AttrList
+    <option value="$a['n']">$_($a['label'])</option>
+  #end for
+  </select><br/>   
+  <label>$_("Ignore case") <input type="checkbox" name="ml2icase" value="i"
+  #if $ml2icase
+    checked="checked"
+  #end if
+  /></label><br/>
+  $_("Position"): <select name="ml2ctx" size="5">
+  #for $p in $Pos_ctxs
+    <option value="$p['ctx']"
+    #if $p['ctx'] == $ml2ctx
+      selected="selected"
+    #end if
+    >$_($p['n'])</option>
+  #end for
+  </select>
+</td><td>
+  <label><input type="radio" name="freqlevel" value="3"
+  #if $freqlevel == 3
+    checked="checked"
+  #end if
+  /> $_("third level")</label><br/>
+  $_("Attribute"): <select name="ml3attr">
+  #for $a in $AttrList
+    <option value="$a['n']">$_($a['label'])</option>
+  #end for
+  </select><br/>   
+  <label>$_("Ignore case") <input type="checkbox" name="ml3icase" value="i"
+  #if $ml3icase
+    checked="checked"
+  #end if
+  /></label><br/>
+  $_("Position"): <select name="ml3ctx" size="5">
+  #for $p in $Pos_ctxs
+    <option value="$p['ctx']"
+    #if $p['ctx'] == $ml3ctx
+      selected="selected"
+    #end if
+    >$_($p['n'])</option>
+  #end for
+  </select>
+</td></tr>
+<tr id="kwic-alignment-box" style="display: none">
+    <td>
+        $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
+        <select class="kwic-alignment" id="kwic-alignment-1">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+    <td>
+        $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
+        <select class="kwic-alignment" id="kwic-alignment-2">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+    <td>
+        $_("(Node) start at") <sup><a class="kwic-alignment-help" href="#">?</a></sup>:<br />
+        <select class="kwic-alignment" id="kwic-alignment-3">
+            <option value="left">$_("leftmost KWIC word")</option>
+            <option value="right">$_("rightmost KWIC word")</option>
+        </select>
+    </td>
+</tr>
+</table>
+<div class="buttons">
+  <input class="submit" type="submit" value="$_("Make Frequency List")" id="submit" />
+</div>
+</fieldset>
+</form>
+
+#if $StructAttrList
+<h3>$_("Text Type frequency distribution")</h3>
+<form action="freqtt">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+<table class="form">
+  <tr>
+    <th>$_("Frequency limit"):</th>
+    <td><input type="text" name="flimit" value="$flimit" size="7" /></td>
+  </tr>
+  <tr>
+    <th>$_("Include categories with no hits"):</th>
+    <td><input type="checkbox" name="ftt_include_empty" /></td>
+  </tr>
+  <tr>
+  <td colspan="2">
+  <select name="fttattr" size="8" multiple="multiple">
+  #for $s in $StructAttrList
+    <option value="$s['n']">$_($s['label'])</option>
+  #end for
+  </select></td>
+  </tr>
+</table>
+
+<div class="buttons">
+  <input class="submit" type="submit" value="$_("Make Frequency List")" />
+</div>
+</fieldset>
+</form>
+#end if
+
+#end filter
+#end def

@@ -1,0 +1,235 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Word list")#slurp
+#end def
+
+#attr $focus = "'#next'"
+
+#def headers
+#filter WebSafe
+#set global $new_maxitems = $wlmaxitems / $wlpage
+#set global $url_wlpat = $urlquote($wlpat)
+#set global $url_usesubcorp = $urlquote($usesubcorp)
+#set global $allhref = 'wordlist?%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache)
+
+ #if $processing
+   <meta http-equiv="refresh" content="3;$allhref">
+ #end if
+#end filter
+#end def
+
+#def left_submenu_options
+#filter WebSafe
+  <li><a href="wordlist_form?$allhref[9:]">$_("Change options")</a></li>
+#end filter
+#end def
+
+#def left_submenu_save
+#filter WebSafe
+  <li><a title="$_("Save Word List/Keywords to a text file or XML")" href="savewl_form?$corpname_url&amp;usesubcorp=$url_usesubcorp&amp;ref_corpname=$ref_corpname&amp;ref_usesubcorp=$ref_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlsort=$wlsort&amp;keywords=$keywords;wlpage=$wlpage;wlcache=$wlcache;usearf=$usearf;simple_n=$simple_n">$_("Save")</a></li>
+#end filter
+#end def
+
+#def main
+#filter WebSafe
+#if $keywords
+  <h3>$_("Keywords")</h3>
+#else
+  <h3>$_("Word list")</h3>
+#end if
+  $_("Corpus"): <b>$corpname</b>
+#if $usesubcorp
+  <br/>$_("Subcorpus"): <b>$usesubcorp</b>
+#end if
+#if $keywords
+  <br/>
+  <br/>$_("Reference corpus"):  <b>$ref_corpname</b>
+  #if $ref_usesubcorp
+    <br/>$_("Reference subcorpus"): <b>$ref_usesubcorp</b>
+  #end if
+#end if
+
+#if $processing
+    <div id="progress_message">
+       $_("Subcorpora operations need more preprocessing. It will take a while, please wait.")
+       <p>$_("Once the list has been computed, it will be stored, so will be immediately available next time.")</p>
+       <p>$_("You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation.")</p>
+       <div id="progress_scale">
+       <div id="processbar" style="width:$processing%;"></div>
+       </div> 
+    </div>
+
+<script type="text/javascript"> 
+
+function update_processbar_width(request) {
+    $('#processbar').style.width = request.responseText;
+    if (request.responseText == '100%') {
+        window.location.reload(true);
+    }
+}
+
+function update_processbar() {
+    var params = '$corpname_url&amp;subcname=$usesubcorp' 
+                 + '&amp;attrname=$wlattr'
+    \$.ajax({
+        url : 'wordlist_process',
+        data : params,
+        method:'get',
+        complete: update_processbar_width
+    });
+}
+</script>
+#end if
+
+
+#block navigation($navid="next")
+#if ($getVar('Items', '') or $getVar('Keywords', '')) and not ($wlpage == 1 and $lastpage)
+<div class="bonito-pagination">
+<form action="wordlist">
+<fieldset class="float">
+  #if $wlpage > 1
+    <div class="bonito-pagination-left">
+    <a href="$allhref">$_("<< First")</a> |
+    <a href="$allhref;wlpage=$(int($wlpage) - 1)">$_("< Previous")</a>
+    </div>
+  #end if
+
+<div class="bonito-pagination-core">
+    <input type="hidden" name="corpname" value='$corpname' />
+    <input type="hidden" name="usesubcorp" value='$usesubcorp' />
+    <input type="hidden" name="wlattr" value='$wlattr' />
+    <input type="hidden" name="wlminfreq" value='$wlminfreq' />
+    <input type="hidden" name="wlpat" value='$wlpat' />
+    <input type="hidden" name="wlicase" value='$wlicase' />
+    <input type="hidden" name="wlmaxitems" value='$new_maxitems' />
+    <input type="hidden" name="keywords" value='$keywords' />
+    <input type="hidden" name="wlsort" value='$wlsort' />
+    <input type="hidden" name="ref_corpname" value='$ref_corpname' />
+    <input type="hidden" name="ref_usesubcorp" value='$ref_usesubcorp' />
+    <input type="hidden" name="wlcache" value='$wlcache' />
+    <input type="hidden" name="simple_n" value='$simple_n' />
+    <input type="hidden" name="wltype" value='$wltype,' />
+    <input type="hidden" name="wlnums" value='$wlnums' />
+    <input type="hidden" name="include_nonwords" value='$include_nonwords,' />
+    <input type="hidden" name="blcache" value='$blcache' />
+
+  $_("Page")
+  <input type="text" name="wlpage" value="$wlpage" size="4" />
+  <input type="submit" value="$_("Go")" />
+</div>
+
+  #if not $lastpage
+  <div class="bonito-pagination-right">
+  <a href="$allhref;wlpage=$(int($wlpage) + 1)" id="$navid">$_("Next >")</a>
+  </div>
+  #else
+  <a id="$navid"></a>
+  #end if
+</fieldset>
+</form>
+</div> 
+#end if
+#end block
+
+<table class="result numtab">
+
+#if $Items
+  <thead>
+  <tr>
+    <th><a href="wordlist?$corpname_url;usesubcorp=$url_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlcache=$wlcache;blcache=$blcache;wlnums=$wlnums;include_nonwords=$include_nonwords;wltype=$wltype">$_($wlattr)</a></th>
+    <th><a href="wordlist?$corpname_url;usesubcorp=$url_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlsort=f;wlcache=$wlcache;blcache=$blcache;wlnums=$wlnums;include_nonwords=$include_nonwords;wltype=$wltype">$_("Freq")</a></th>
+  </tr>
+  </thead>
+  #for $i in $Items
+    <tr class="$i.get('class')" >
+    #set $url_str = $urlquote($i.str.replace('"', '\\"'))
+      <td class="left">$i.str</td><td>
+      #if '.' in $wlattr
+        $i.freq
+      #else
+        <a href="first?$corpname_url;usesubcorp=$url_usesubcorp;cql=%22$url_str%22;default_attr=$wlattr;qmcase=1;queryselector=cqlrow">$i.freq</a>
+      #end if
+      </td>
+    </tr>
+  #end for
+
+## keywords
+#elif $Keywords
+  <thead>
+    <tr>
+      <th></th>
+      <th></th>
+      <th colspan="3" border="1"><i>$corpname#if $usesubcorp#:$usesubcorp#end if</i></th>
+      <th></th>
+      <th colspan="3" border="1"><i>$ref_corpname#if $ref_usesubcorp#:$ref_usesubcorp#end if</i></th>
+      <th></th>
+      <th></th>
+    </tr>
+    <tr>
+      <th>$_($wlattr)</th>
+      <th width="10"></th>
+      <th>$_("Freq")</th>
+      <th>$_("Freq/mill")</th>
+      <th width="10"></th>
+      <th>$_("Freq")</th>
+      <th>$_("Freq/mill")</th>
+      <th width="10"></th>
+      <th>$_("Score")</th>
+    </tr>
+  </thead>
+  #for $k in $Keywords
+    <tr
+    #if $k.has_key('class')
+      class="$k['class']"
+    #end if
+    >
+      <td class="left">$k['str']</td>
+      <td></td>
+    #set $url_str = $urlquote($k['str'].replace('"', '\\"'))
+      <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k['freq']</a></td>
+      <td>$k['rel']</td>
+      <td></td>
+      <td>
+      #if $k['freq_ref']
+        <a href="first?$corpname_url;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k['freq_ref']</a>
+      #else
+        0
+      #end if
+      </td>
+      <td>$k['rel_ref']</td>
+      <td></td>
+      <td> $k['score']</td>
+    </tr>
+  #end for
+#else
+## no keywords && no items
+  <i>$_("Nothing found.")</i>
+#end if
+</table>
+#end filter
+
+#filter none
+$navigation("next2")
+#end filter
+
+#end def

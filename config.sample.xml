@@ -1,0 +1,61 @@
+<bonito>
+    <global>
+        <manatee_path>x</manatee_path>
+        <log_path>/var/log/bonito/application.log</log_path>
+        <debug>true</debug>
+        <max_attr_list_size>30</max_attr_list_size>
+    </global>
+    <database>
+        <name>bonito</name>
+        <host>localhost</host>
+        <password>bonito</password>
+        <username>bonito</username>
+    </database>
+    <cache>
+        <clear_interval>3600</clear_interval>
+    </cache>
+    <corpora>
+        <manatee_registry>/var/local/corpora/registry</manatee_registry>
+        <options_dir>/var/local/corpora/registry/options</options_dir>
+        <cache_dir>/var/local/corpora/cache</cache_dir>
+        <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
+        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
+        <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
+        <conc_dir>/var/local/corpora/conc</conc_dir>
+        <wseval_dir></wseval_dir>
+        <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
+        <default_corpus>susanne</default_corpus>
+        <alternative_corpus>spec/susanne</alternative_corpus>
+        <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
+        <speech_data_url>http://@SERVER_NAME/data</speech_data_url>
+        <kwicline_max_context>500</kwicline_max_context>
+        <use_db_whitelist>1</use_db_whitelist>
+
+        <corplist title="">
+            <corplist title="Our corpora">
+		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16"  />
+	    </corplist>
+            <corplist title="Foreign corpora">
+                <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
+		<corpus id="BNC" sentence_struct="s" />
+            </corplist>
+        </corplist>
+
+        <tagsets>
+            <tagset position="0">
+                <label>
+                    <desc lang="en">Position 1</desc>
+                    <desc lang="cs">Pozice 1</desc>
+                </label>
+                <value id="A">
+                    <desc lang="en">adjective</desc>
+                    <desc lang="cs">adjektivum (přídavné jméno)</desc>
+                </value>
+                <!-- ... etc ... -->
+            </tagset>
+            <!-- ... etc ... -->
+        </tagsets>
+    </corpora>
+</bonito>
+

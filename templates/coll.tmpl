@@ -1,0 +1,110 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Collocation form")#slurp
+#end def
+
+#attr $focus = "'submit'"
+
+#def bodyonload
+#filter WebSafe
+#if $saved_attrs
+alert('$_("Selected options successfully saved")');
+#end if
+#end filter
+#end def
+
+#def helpblock
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}collocconc" rel="help">$_("? Help on Collocations")</a></li>
+  #end if
+#end def
+
+#def collblock
+#end def
+
+#def main
+#filter WebSafe
+### menu
+<h3>$_("Collocation candidates")</h3>
+<form id="mainform" action="collx">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+<table class="form">
+<tr>
+  <th>$_("Attribute"):
+  <select name="cattr">
+  #for $a in $Coll_attrlist
+    <option value="$a['n']" #if $cattr == $a['n'] then 'selected="selected"' else ''# >$_($a['label'])</option>
+  #end for
+  </select>
+
+  $_("In the range from"):</th>
+  <td><input type="text" name="cfromw" size="3" value="$cfromw" /> $_("to"): <input type="text" name="ctow" size="3" value="$ctow" />
+  </td>
+</tr>
+<tr>
+  <th>$_("Minimum frequency in corpus"):</th>
+  <td><input type="text" name="cminfreq" value="$cminfreq" size="4" /></td>
+</tr>
+<tr>
+  <th>$_("Minimum frequency in given range"):</th>
+  <td><input type="text" name="cminbgr" value="$cminbgr" size="4"/>
+  </td>
+</tr>
+<tr>
+  <td colspan="2">$_("Show functions"):
+  <select name="cbgrfns" size="6" multiple="multiple">
+    <option value="t" #if 't' in $cbgrfns then 'selected="selected"' else ''# >$_("T-score")</option>
+    <option value="m" #if 'm' in $cbgrfns then 'selected="selected"' else ''# >$_("MI")</option>
+    <option value="3" #if '3' in $cbgrfns then 'selected="selected"' else ''# >$_("MI3")</option>
+    <option value="l" #if 'l' in $cbgrfns then 'selected="selected"' else ''# >$_("log likelihood")</option>
+    <option value="s" #if 's' in $cbgrfns then 'selected="selected"' else ''# >$_("min. sensitivity")</option>
+    <option value="d" #if 'd' in $cbgrfns then 'selected="selected"' else ''# >$_("logDice")</option>
+    <option value="p" #if 'p' in $cbgrfns then 'selected="selected"' else ''# >$_("MI.log_f")</option>
+  </select>
+  $_("Sort by"):
+  <select name="csortfn" size="6" >
+    <option value="t" #if $csortfn == 't' then 'selected="selected"' else ''# >$_("T-score")</option>
+    <option value="m" #if $csortfn == 'm' then 'selected="selected"' else ''# >$_("MI")</option>
+    <option value="3" #if $csortfn == '3' then 'selected="selected"' else ''# >$_("MI3")</option>
+    <option value="l" #if $csortfn == 'l' then 'selected="selected"' else ''# >$_("log likelihood")</option>
+    <option value="s" #if $csortfn == 's' then 'selected="selected"' else ''# >$_("min. sensitivity")</option>
+    <option value="d" #if $csortfn == 'd' then 'selected="selected"' else ''# >$_("logDice")</option>
+    <option value="p" #if $csortfn == 'p' then 'selected="selected"' else ''# >$_("MI.log_f")</option>
+  </select>
+  </td>
+</tr>
+</table>
+
+<div class="buttons">
+  <input type="submit" value="$_("Make Candidate List")" id="submit" />
+  #unless $_open_version
+  <input class="button" type="button" value='$_("Save Options")' onclick="hideElem.redirectToSave(document.getElementById('mainform'), 'save_coll_options')" />
+  #end unless
+</div>
+</fieldset>
+</form>
+#end filter
+#end def

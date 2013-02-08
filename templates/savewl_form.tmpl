@@ -1,0 +1,130 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#if $keywords
+#def title
+$_("Save Keywords")#slurp
+#end def
+#pass
+#else
+#def title
+$_("Save Word List")#slurp
+#end def
+#pass
+#end if
+</title>
+
+#attr $focus = "'#submit'"
+
+#def main
+#filter WebSafe
+<h3>
+#if $keywords
+  $_("Save Keywords")
+#else
+  $_("Save Word List")
+#end if
+</h3>
+<form action="savewl">
+<fieldset>
+#unless $_corpus_architect
+  <input type="hidden" name="corpname" value="$corpname" />
+#end unless
+<input type="hidden" name="wlattr" value="$wlattr" />
+<input type="hidden" name="wlminfreq" value="$wlminfreq" />
+<input type="hidden" name="wlpat" value="$wlpat" />
+<input type="hidden" name="wlicase" value="$wlicase" />
+<input type="hidden" name="wlmaxitems" value="$wlmaxitems" />
+<input type="hidden" name="wlsort" value="$wlsort" />
+<input type="hidden" name="usesubcorp" value="$usesubcorp" />
+<input type="hidden" name="ref_corpname" value="$ref_corpname" />
+<input type="hidden" name="ref_usesubcorp" value="$ref_usesubcorp" />
+<input type="hidden" name="keywords" value="$keywords" />
+<input type="hidden" name="wlcache" value="$wlcache" />
+<input type="hidden" name="usearf" value="$usearf" />
+<input type="hidden" name="simple_n" value="$simple_n" />
+<table class="form">
+  <tr>
+    <th>
+    #if $keywords
+      $_("Save keywords as"):
+    #else
+      $_("Save word list as"):
+    #end if
+    </th>
+    <td>
+      <label>
+        <input type="radio" name="saveformat" value="text"
+	#if $saveformat == 'text'
+	  checked="checked"
+	#end if
+	/> $_("Text")
+      </label>
+      <label>
+        <input type="radio" name="saveformat" value="xml"
+	#if $saveformat == 'xml'
+	  checked="checked"
+	#end if
+	/> $_("XML")
+      </label>
+    </td>
+  </tr>
+  <tr class="separator">
+      <th>$_("Save pages"):</th>
+      <td>
+      <label>
+        <input type="radio" name="pages" value="0"
+        #if $pages == 0
+          checked="checked"
+        #end if
+        /> $_("All")
+      </label>
+      </td>
+    </tr><tr>
+      <td></td>
+      <td>
+      <label>
+        <input type="radio" name="pages" value="1"
+        #if $pages == 1
+          checked="checked"
+        #end if
+        /> $_("Only page"):
+   <input type="text" name="wlpage" value="$wlpage" size="5" />
+      </label>
+      </td>
+    </tr>
+  <tr class="separator">
+    <th>$_("Include heading"):</th>
+    <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
+  </tr>
+  <tr>
+    <th>$_("Maximum number of lines"):</th>
+    <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
+  </tr>
+</table>
+
+<div class="buttons">
+<input type="submit" id="submit" value="#if $keywords then $_("Save Keywords") else $_("Save Word List")#" />
+</div>
+</fieldset>
+</form>
+#end filter
+#end def

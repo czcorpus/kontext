@@ -1,0 +1,231 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Concordance - First query form")#slurp
+#end def
+
+##attr $focus = "function () { var target = null; $('#mainform tr input[type=\"text\"]').each(function () { if ($(this).css('display') !== 'none') { target = $(this); return false; } }); return target; }"
+#attr $focus = """function () {
+        var target = null;
+        $('#mainform tr input[type=\"text\"]').each(function () {
+            if ($(this).css('display') !== 'none') {
+                target = $(this);
+                return false;
+            }
+        });
+        return target;
+    }"""
+
+#def bodyonload
+
+    require(['treecomponent'], function (tc) {
+        var updForm = function (item) {
+            var formAncestor,
+                i,
+                srch,
+                ancestors = \$(item.target).parents();
+
+            for (i = 0; i < ancestors.length; i += 1) {
+                if (ancestors[i].nodeName === 'FORM') {
+                    formAncestor = ancestors[i];
+                    break;
+                }
+            }
+            if (formAncestor !== undefined) {
+                srch = \$(formAncestor).find('*[name="reload"]');
+                if (srch.length > 0) {
+                    \$(srch[0]).attr('value', '1');
+                }
+                srch = \$(formAncestor).find('*[name="usesubcorp"]');
+                if (srch.length > 0) {
+                    \$(srch[0]).attr('value', '');
+                }
+                formAncestor.submit();
+            }
+        }
+        tc.createTreeComponent(\$('form[action="first"] select[name="corpname"]'), null, updForm);
+    });
+
+#end def
+
+#def left_submenu_help
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}ConcordanceQuery" rel="help">? $_("Help on Expert Options")</a></li>
+  #end if
+#end def
+
+#def left_submenu_expert
+  <li>$_("Expert options"):
+    <ul class="submenu">
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('contextel', 1);">$_("Context")</a></li>
+      <li><a onclick="hideElem.cmdHideElementStoreSimple('texttypeel', 1);" >$_("Subcorpora")</a></li>
+    </ul>
+  </li>
+#end def
+
+
+#def main
+#filter WebSafe
+<form id="mainform" action="first">
+<fieldset>
+<table class="form">
+#filter None
+$corp_sel_node
+$query_node
+#end filter
+</table>
+#set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
+#set $hidden = ('contextel' in $showhiddenlistsimple) and ' visible' or ' hidden'
+
+<div class="advanced_options$hidden" id="contextel">
+<h3>$_("Context")</h3>
+
+<div class="indent">
+#if $has_lemmaattr
+  <h4>$_("Lemma filter")</h4>
+#else
+  <h4>$_("Word form filter")</h4>
+#end if
+  <div class="indent">
+  <table class="form">
+    <tr>
+      <th align="left">$_("Window"):</th>
+      <td><select name="fc_lemword_window_type">
+         <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+         <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+         <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+       </select>
+       <select name="fc_lemword_wsize">
+         <option>1</option>
+         <option>2</option>
+         <option>3</option>
+         <option>4</option>
+         <option selected="selected">5</option>
+         <option>7</option>
+         <option>10</option>
+         <option>15</option>
+       </select>
+       $_("tokens").
+      </td>
+    </tr>
+    <tr>
+#if $has_lemmaattr
+      <th align="left">$_("Lemma(s)"):</th>
+#else
+      <th align="left">$_("Word form(s)"):</th>
+#end if
+      <td>
+      <input type="text" name="fc_lemword" />
+      <select name="fc_lemword_type">
+         <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+         <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+         <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+       </select>
+       $_("of these items").
+      </td>
+    </tr>
+  </table>
+  </div>
+
+#if $Wposlist
+  <h4>$_("PoS filter")</h4>
+  <div class="indent">
+  <table class="form">
+    <tr>
+      <th align="left">$_("Window"):</th>
+      <td colspan="2"><select name="fc_pos_window_type">
+         <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+         <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+         <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+       </select>
+       <select name="fc_pos_wsize">
+         <option>1</option>
+         <option>2</option>
+         <option>3</option>
+         <option>4</option>
+         <option selected="selected">5</option>
+         <option>7</option>
+         <option>10</option>
+         <option>15</option>
+       </select>
+       $_("tokens").
+      </td>
+    </tr>
+    <tr>
+      <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
+$_("multiple selection"))</span></th>
+    <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
+    #for $w in $Wposlist
+      <option>$_($w['n'])</option>
+    #end for
+      </select>
+    </td>
+    <td valign="top">
+      <select name="fc_pos_type">
+         <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+         <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+         <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+       </select>
+       $_("of these items").
+      </td>
+    </tr>
+  </table>
+  </div>
+#end if
+</div>
+</div>
+
+
+#if $TextTypeSel
+  #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
+  <div class="advanced_options$hidden" id="texttypeel">
+  <h3>$_("Text Types")</h3>
+
+  <div class="indent">
+  <table><tr>
+  <th>
+  $_("Subcorpus"):
+  #filter None
+  $subcorp_sel
+  #end filter
+  </th></tr>
+<tr><td>
+
+#filter None
+$tt_sel
+#end filter
+
+</td></tr>
+</table>
+</div>
+</div>
+#end if
+
+<div class="buttons">
+<input class="submit" type="submit" value="$_("Make Concordance")" />
+<input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
+</div>
+</fieldset>
+</form>
+#end filter
+#end def

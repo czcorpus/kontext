@@ -1,0 +1,169 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("View options")#slurp
+#end def
+
+#attr $focus = "'#firstattr'"
+
+#def helpblock
+  #if $varExists('helpsite')
+  <li class="context_help"><a href="${helpsite}ViewOptions" rel="help">$_("? Help on View Options")</a></li>
+  #end if
+#end def
+
+#def bodyonload
+#filter WebSafe
+#if $saved_attrs
+alert('$_("Selected options successfully saved")');
+#end if
+#end filter
+#end def
+
+
+#def main
+#filter WebSafe
+<h3>$_("View options")</h3>
+
+<form id="mainform" action='viewattrsx'>
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+<input type='hidden' name='fromp' value='$fromp' />
+  
+  <table><tr>
+    <th>$_("Attributes")</th>
+    #if $Availstructs
+      <th>$_("Structures")</th>
+    #end if
+    <th>$_("References")</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      #set $navid = 'id="firstattr"'
+      #for $a in $Availattrs
+        #set $checked = ($a['checked']) and 'checked="checked"' or ''
+        <label><input type='checkbox' name='setattrs' value='$a['n']' $checked $navid/> $_($a['n'])</label><br/>
+        #set $navid = ''
+      #end for
+      <hr/>
+      $_("Display attributes")<br/>
+      <label><input type='radio' name='allpos' value='all'
+      #if $attr_allpos == 'all'
+        checked="checked"
+      #end if
+      /> $_("For each token")</label><br/>
+      <label><input type='radio' name='allpos' value='kw'
+      #if $attr_allpos == 'kw'
+        checked="checked"
+      #end if
+      /> $_("KWIC tokens only")</label>
+    </td>
+    #if $Availstructs
+    <td valign="top">
+        <select name='setstructs' size="13" multiple="multiple">
+      #for $a in $Availstructs
+        #set $selected = ($a['sel']) and 'selected="selected"' or ''
+        <option value='$a['n']' $selected>&lt;$a['n']&gt; $a['label']</option>
+      #end for
+        </select>
+    </td>
+    #end if
+    <td valign="top"><select name='setrefs' size="13" multiple="multiple">
+    #for $a in $Availrefs
+        #set $selected = ($a['sel']) and 'selected="selected"' or ''
+        <option value='$a['n']' $selected>$_($a['label'])</option>
+    #end for
+    </select>
+    </td>
+  </tr></table>
+<hr/>
+#try
+  #set $nic = $gdexcnt
+#except
+  #set $gdexcnt = ''
+#end try
+  $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
+  $_("KWIC Context size") ($_("positions")): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
+  <input type="hidden" name="ctxunit" value="@pos" />
+  <br /><br />
+  <input type="hidden" name="gdex_enabled" value="0" />
+  <input type="checkbox" name="gdex_enabled" value="1"
+#if $gdex_enabled
+  checked="checked"
+#end if
+  /> $_("Sort good dictionary examples").
+  <table>
+      <tr><td>$_("Number of lines to be sorted"):</td>
+          <td><input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
+          </td></tr>
+      #if $getVar('Availgdexconfs', {})
+      <tr><td>$_("GDEX configuration for current corpus"):</td>
+          <td>         
+#filter None
+$gdexconf_select('gdexconf', $gdexconf)
+#end filter
+          </td>
+      </tr>
+      #end if
+  </table>
+<hr/>
+  <input type="hidden" name="copy_icon" value="0" />
+  <input type="checkbox" name="copy_icon" value="1"
+#if $copy_icon
+  checked="checked"
+#end if
+  /> $_("Icon for one-click sentence copying") <br />
+  <input type="hidden" name="multiple_copy" value="0" />
+  <input type="checkbox" name="multiple_copy" value="1"
+#if $multiple_copy
+  checked="checked"
+#end if
+  /> $_("Allow multiple lines selection")
+  <br /><br />
+  $_("XML template for one-click copying"):
+  <select name="tbl_template">
+     #for $t in $_avail_tbl_templates.split(',')
+       #set $parsed_name = $t.rsplit('_', 2)
+       #if $_corpus_architect or $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
+         <option value="$t"
+         #if $t == $tbl_template
+           selected="selected"
+         #end if
+         >$t</option>
+       #end if
+     #end for
+  </select>
+<br />
+
+<div class="buttons">
+  <input type="submit" value='$_("Change View Options")' />
+  #unless $_open_version
+  <input class="button" type="button" value='$_("Save Options")' onclick="hideElem.redirectToSave(document.getElementById('mainform'), 'save_viewattrs')" />
+  #end unless
+</div>
+</fieldset>
+</form>
+
+#end filter
+#end def

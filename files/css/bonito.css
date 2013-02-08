@@ -1,0 +1,379 @@
+/* Layout override */
+
+#sidebar {
+    width: 12em;
+}
+
+#body {
+    margin-left: 12em;
+}
+
+
+/* Error message */
+#error{
+    border: solid 3px red;
+    background-color: #e88;
+}
+
+.menu_switch,
+.context_help {
+    font-size: 8px;
+    list-style-type: none;
+}
+
+#version {
+    text-align:right;
+    color:#999;
+}
+
+#lc_logo {
+    text-align: right;
+    display: block;
+}
+
+#lc_logo a {
+    color: #999;
+    font-weight: normal;
+}
+/* ****** Word sketches ******* */
+.lemma {
+    font-size: 300%;
+}
+
+.eval_set {
+    font-size: 200%;
+    font-weight: bold;
+}
+
+.note {
+    padding: 0 0 0 1em;
+    color: #555;
+}
+
+.clust {
+    padding: 0 0 0 1em;
+    font-size: 85%;
+}
+
+.highlighted {
+    font-weight: bold;
+    color: red
+}
+
+.backlight {
+    background-color: #fee;
+}
+
+/* **************************** */
+.advanced_options h3 {
+    font-size: 160%;
+    margin: 10px 0px 0px 2px;
+}
+
+.advanced_options h4 {
+    font-size: 120%;
+    margin: 20px 0px 0px 0px; 
+}
+
+.indent {
+    margin-left: 3em;
+}
+
+.no-wrap {
+    white-space: nowrap;
+}
+
+/* Forms */
+table.form th {
+    text-align: left;
+    font-weight: normal;
+    white-space: nowrap;
+    width: 10em;
+}
+
+table.form tr.required th {
+    font-weight: bold;
+}
+
+
+/* Text type selection */
+
+.text-type-top-bar {
+    text-align: right;
+    padding: 5px 10px;
+}
+
+table.envelope {
+    border-collapse: collapse;
+    table-layout: fixed;
+    border:solid 1px black;
+    background-color: #eee;
+    float: left;
+    margin-right: 5px;
+}
+
+table.envelope tbody.scrollable {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    max-height: 300px;
+}
+
+table.envelope thead {
+    background-color: #777777;
+}
+
+table.envelope thead.fixed tr {
+    display: block;
+}
+
+table.envelope td, table.envelope th {
+    white-space: nowrap;
+    margin: 0;
+    padding: 4px 20px 4px 6px;
+}
+
+table.envelope th {
+    color: #ffffff;
+    text-align: left;
+}
+
+table.envelope tr.last-line td {
+    border-style: solid;
+    border-color: #000000;
+    border-width: 1px 0 0 0;
+}
+
+table.envelope td.separ {
+    border-style: solid;
+    border-color: #dddddd;
+    border-width: 0 1px 0 0;
+}
+
+table.envelope .num {
+    text-align: right;
+}
+
+table.envelope tr.even {
+    background-color: #e7e7e7;
+}
+
+table.envelope td input[type="checkbox"] {
+    display: inline;
+    vertical-align: bottom;
+    margin: 0 5px 0 0;
+    padding: 0;
+}
+
+table.envelope td label {
+    margin: inherit;
+    padding: inherit;
+}
+
+table.envelope ul {
+    list-style-type: none;
+    padding-left: 0px;
+    margin :0px;
+}
+
+table.envelope ul ul{
+    padding-left: 16px;
+}
+
+/* Progress Notification */
+#progress_message {
+    border:1px solid green;
+    background-color: #cfc;
+    padding: 1em
+}
+
+#progress_scale {
+    width: 30%;
+    height: 12px;
+    border: 1px solid black;
+    background-color: #999;
+    padding: 1px;
+    margin:.5em;
+}
+
+#processbar {
+    height: 10px;
+    border:1px solid #8f8;
+    background-color: #8f8;
+}
+
+#result-info {
+    margin-bottom: 7px;
+}
+
+/* Navigation panel in Concordance view */
+
+div.bonito-pagination-left {
+    padding-right: 6px;
+    display: inline;
+}
+
+div.bonito-pagination-right {
+    padding-left: 6px;
+    display: inline;
+}
+
+div.bonito-pagination-core {
+    display: inline;
+}
+
+/* Frequency bars*/
+.bar {
+    background-color:#008;
+}
+
+.greybar {
+    background-color:#999;
+}
+
+/* Auto complete */
+div.auto_complete {
+    background: #fff;
+}
+
+div.auto_complete ul {
+    border: 1px solid #999;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    list-style-type:none;
+}
+
+div.auto_complete ul li.selected {
+    background-color: #aaf;
+}
+
+/* Miscelaneous objects */
+div.css_format_help{
+    visibility: hidden;
+    border: solid 1px;
+    width: 200px;
+    background-color: white;
+    position: absolute;
+    padding: 2px;
+    margin: 2px;
+}
+
+#infobox {
+    border: solid 1px #006;
+    padding: .5em
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    color: #777;
+    background-color: #777;
+    padding: 0;
+}
+
+
+.opaque {
+    visibility: hidden;
+}
+
+.warning {
+    color: red
+}
+
+
+.explanation {
+    font-weight: normal;
+}
+/* Right panel at simple_search */
+
+#rightpanel {
+    right: 10px;
+    top: 120px;
+    width: 10%;
+    position: absolute;
+    border: 2px solid;
+    padding: 10px;
+    background-color: #dee;
+}
+
+#rightpanel ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    padding-left: 20px;
+    margin-bottom: 0.5em;
+}
+
+#rightpanel h3 {
+   margin: 0;
+   padding: 0;
+}
+
+#rightpanel hr {
+   margin-top: 5px;
+   margin-bottom: 5px;
+   padding: 0;
+}
+
+div.narrowmain {
+    width: 85%;
+}
+
+.dark {
+	background-color: #600;
+	color: #fff;
+}
+
+table.query {
+	border: solid 1px #600;
+	border-collapse: collapse;
+}
+
+/* WordSketch Difference */
+
+.color_table {
+	border: solid 1px;
+}
+
+.wsdiff_0 {
+	background-color: transparent;
+}
+
+.wsdiff_1 {
+	background-color: #9c9;
+}
+
+.wsdiff_2 {
+	background-color: #7c7;
+}
+
+.wsdiff_3 {
+	background-color: #3c3;
+}
+
+.wsdiff_-1 {
+	background-color: #e99;
+}
+
+.wsdiff_-2 {
+	background-color: #e66;
+}
+
+.wsdiff_-3 {
+	background-color: #e44;
+}
+
+.desc {
+    display : inline;
+}
+
+fieldset.float {
+    border-width: 0px;
+    background-color: transparent;
+}
+
+#query-type-hint {
+    padding-left: 4px;
+}

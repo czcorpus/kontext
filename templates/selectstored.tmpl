@@ -1,0 +1,46 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Select stored concordance")#slurp
+#end def
+
+#def main
+#filter WebSafe
+<b>$_("Corpus"): </b>
+$corpname
+<br/>
+
+#if $selected
+   <b> $_("Selected"):</b> $selected
+   #if $lemma
+     <a href="view?$corpname_url;q=s$selected;annotconc=$annotconc">$_("View conc")</a>
+   #end if
+#end if
+<b><br/>$_("Last Stored Concordances")</b>
+ <ul>
+ #for $l in $LastStoredConcs
+   <li><a href="selectstored?$corpname_url;annotconc=$l['n']">$l['n']</a></li>
+ #end for
+ </ul>
+
+#end filter
+#end def

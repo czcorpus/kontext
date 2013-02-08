@@ -1,0 +1,96 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def text
+$annotconc
+
+  #for $l in $LineGroups
+$l['name']	$l['freq']
+  #end for
+  
+#end def
+
+
+#def title
+$_("Line Group Info")#slurp
+#end def
+
+#attr focus = "'#submit'"
+
+#def bodyargs
+id="bodytag"#slurp
+#end def
+
+#def main
+#filter WebSafe
+
+<i>$_("Annotating"):</i> <b>$annotconc</b>
+
+#for $lg in $LineGroups
+  #if $lg.has_key('pfilter')
+    #set $pfilter = $l['pfilter']
+  #else
+    #set $pfilter = ''
+  #end if
+ <hr/>
+    <table width="300"><tr>
+    <td><b>$lg.name</b></td>  <td align="right">$lg.freq</td>
+    <td align="right">
+      <a href='view?$globals;$q;$pfilter;q=a$annotconc+-$lg.id'>P</a> /
+      <a href='view?$globals;$q;$pfilter;q=a$annotconc+$lg.id'>N</a>
+    </td>
+    </tr></table>
+    #for $s in $lg.get('Sketch',[])
+&nbsp;&nbsp;<i>$s.name:</i>
+      #for $c in $s.Colls# $c['word'], #end for#
+    #end for
+&nbsp;&nbsp;
+      <a href="concsketch?$globals;$q;$pfilter;q=a$annotconc+-$lg.id">word&nbsp;sketch</a></td>
+  #end for
+
+<hr />
+<br />
+<form action="bootstrap">
+<fieldset class="float">
+#if $getVar('auto_annotated','')
+$_("Automatically annotated") <i>$auto_annotated</i> $_("hits").<br/>
+#end if
+
+#filter None
+$input_hidden
+#end filter
+
+   $_("Minscore"): <input name="minbootscore" size="5" value="$minbootscore" />
+   $_("Mindiff"): <input name="minbootdiff" size="5" value="$minbootdiff" />
+   <input type="submit" value="Automatically annotate" id="submit" />
+</fieldset>
+</form>
+
+<br/>
+
+###<form action="rename_annot">
+###   <input type="hidden" name="annotconc" value="$annotconc" />
+###   $_("New name"): <input name="newname" size="40" />
+###   <input type="submit" value="Rename" />
+###</form>
+#end filter
+#end def
+

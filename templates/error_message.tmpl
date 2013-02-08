@@ -1,0 +1,63 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+<!DOCTYPE html>
+<html>
+#filter WebSafe
+<head>
+    <title>$_('Error')</title>
+    #end filter
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ca_bonito_common.css" />
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}tables.css" />
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}forms.css" />
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
+    #if $getVar("menupositi", '') == "top"
+    <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}horizontal.css" />
+    #end if
+    <script src="$files_path/js/hideelem.js" type="text/javascript"></script>
+    <script src="$files_path/js/bonito.js" type="text/javascript"></script>
+    <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div>
+    <table id="topbar">
+        <tr>
+            <td rowspan="2">
+                <a href="../run.cgi/first_form">
+                    <img id="logo" alt="Sketch Engine" src="../files/img/logo.png" />
+                </a>
+            </td>
+            <td id="topbar-navigation">
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+#filter WebSafe
+<div id="error-box">
+<h1>$_('Error')</h1>
+<p>$message</p>
+<p><a href="$_home_url">$_('home page')</a></p>
+</div>
+#end filter
+</body>
+</html>

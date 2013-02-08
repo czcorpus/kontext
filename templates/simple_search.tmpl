@@ -1,0 +1,217 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Concordance")#slurp
+#end def
+
+#attr $focus = "'#ssearch_query'"
+
+#def headers
+#filter WebSafe
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
+#if $righttoleft
+<style>
+.lc {direction: rtl}
+.kw {direction: rtl}
+.rc {direction: rtl}
+</style>
+#end if
+#end filter
+<script src="$files_path/js/detail.js" type="text/javascript"></script>
+<script type="text/javascript">
+\$(document).ready(function() {
+  \$('a.speech-link').each(function (i, item) {
+        \$(item).bind('click', function (event) {
+            open_speech(item);
+            event.stopPropagation();
+        });
+  });
+});
+</script>
+#end def
+
+#def viewblock
+#end def
+
+#def bodyargs
+#filter WebSafe
+id="bodytag"#slurp
+#end filter
+#end def
+
+
+#def main
+#filter WebSafe
+#if $varExists('_ca_topbar')
+    $_("Corpus"): <strong>$corp_full_name</strong>
+    #if $usesubcorp
+        $_("Subcorpus"): <strong>$usesubcorp</strong>
+    #end if
+    <br/>
+    #if $concsize
+        $_("Hits"): <strong>$concsize</strong>
+        #if $concarf
+            ($concarf)
+        #end if
+    #end if
+#end if
+
+
+<div
+#if $Sketches
+  class="narrowmain"
+#end if
+>
+<h3>$_("Concordance lines")</h3>
+## kwic lines (sentence mode)
+<table id="conclines" class="data">
+#set $i = -1
+#for $l in $Lines
+    #set $i = $i + 1
+    #set $i = $Lines.index($l)
+    #set $even = ($i % 2) and 'even' or 'odd'
+    <tr class="$even">
+    <td class="par">
+      #for $ll in $l['Left']
+        #if $ll.has_key('open_link')
+        <a href="$ll['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        #end if
+        #if $ll.has_key('class') and $ll['class']
+          <i class='$ll['class']'>
+        #end if
+        $ll['str']
+        #if $ll.has_key('class') and $ll['class']
+          </i>
+        #end if
+        #if $ll.has_key('close_link')
+        <a href="$ll['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+        #end if
+      #end for
+      #for $k in $l['Kwic']
+        #if $k.has_key('class') and $k['class']
+          <b class='$k['class']'>
+        #end if
+        $k['str']
+        #if $k.has_key('class') and $k['class']
+          </b>
+        #end if
+      #end for
+      #for $rr in $l['Right']
+        #if $rr.has_key('open_link')
+        <a href="$rr['open_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">[</a>
+        #end if
+        #if $rr.has_key('class') and $rr['class']
+          <i class='$rr['class']'>
+        #end if
+        $rr['str']
+        #if $rr.has_key('class') and $rr['class']
+          </i>
+        #end if
+        #if $rr.has_key('close_link')
+        <a href="$rr['close_link']['speech_url']" class="speech-link" title="$_("Click to play audio")">]</a>
+        #end if
+      #end for
+    </td>
+  </tr>
+#end for
+</table>
+<a href="first?corpname=$corpname;iquery=$iquery;queryselector=iqueryrow;viewmode=sen">
+$_(">> More")
+</a>
+</div>
+
+#if $Sketches
+<div id="rightpanel">
+<h3>$_("Collocations")</h3>
+## sketches
+($lemma$lpos)
+<a href="wsketch_form?corpname=$corpname;lemma=$lemma;lpos=$lpos">
+$_("other")
+</a>
+<hr />
+
+#set $index = 0
+#set $gname = ''
+#for $i in $Sketches
+#set $index = $index + 1
+   #if $gname != $i['gramrel'] ## next gramrel
+     #set $gname = $i['gramrel']
+     #if $index > 1
+     </ul>
+     #end if
+     <b>$i['gramrel']</b><ul>
+   #end if
+   <li>$i['word']</li>
+#end for
+#if $index > 1
+</ul>
+#end if
+<a href="wsketch?corpname=$corpname;lemma=$lemma;lpos=$lpos">
+$_(">> More")
+</a>
+</div>
+#end if
+
+
+<hr/>
+<h3>$_("Text Types")</h3>
+## frequencies
+
+<table>
+<tr><td valign="top">
+#set $ii = 0
+#for $b in $freqs.Blocks[:4]
+<table class="result">
+<tr>
+<th align="left">$_($b['Head'][0]['n'])</th><th></th>
+</tr>
+
+  #for $i in $b.get('Items', [])
+  #set $word = $i['Word'][0]['n']
+  #if $word
+  <tr
+    #if $i.has_key('class')
+      class="$i['class']"
+    #end if
+  >
+      <td>$word</td> ## there is always just one word
+      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i['fbar']" alt="${i['fbar']}" />
+      </td>
+  </tr>
+  #end if
+  #end for
+</table>
+  #set $ii = $ii + 1
+  #if $ii % 2 == 0
+    </td></tr><tr><td valign="top">
+  #else
+    </td><td valign="top">
+  #end if
+#end for
+<a href="freqs?$q;$globals;$ttcrit">
+$_(">> More")
+</a>
+</td></tr>
+</table>
+
+#end filter
+#end def

@@ -1,0 +1,130 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Collocations")#slurp
+#end def
+
+#attr $focus = "'next'"
+
+#def collblock
+#end def
+
+#def left_submenu_save
+  <li><a title='$_("Save Collocation candidates to a text file or XML")' href='savecoll_form?$q;$globals&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage'>$_("Save")</a></li>
+#end def
+
+
+#def main
+#filter WebSafe
+#set global $allhref = 'collx?%s;%s;cattr=%s;cbgrfns=%s;cminfreq=%s;cminbgr=%s;cfromw=%s;ctow=%s;csortfn=%s' % ($q, $globals, $cattr, $cbgrfns, $cminfreq, $cminbgr, $cfromw, $ctow, $csortfn)
+
+<h3>$_("Collocation candidates")</h3>
+
+
+#block navigation($navid="next")
+#if $collpage > 1 or not $lastpage
+<div class="bonito-pagination">
+<form action="collx">
+<fieldset class="float">
+#if $collpage > 1
+  <div class="bonito-pagination-left">
+  <a href="$allhref">$_("<< First")</a> |
+  <a href="$allhref;collpage=$(int($collpage) - 1)">$_("< Previous")</a>
+  </div>
+#end if
+
+<div class="bonito-pagination-core">
+  #filter None
+  $input_hidden
+  #end filter
+    <input type="hidden" name="cattr" value='$cattr' />
+    <input type="hidden" name="cbgrfns" value='$cbgrfns' />
+    <input type="hidden" name="cminfreq" value='$cminfreq' />
+    <input type="hidden" name="cminbgr" value='$cminbgr' />
+    <input type="hidden" name="cfromw" value='$cfromw' />
+    <input type="hidden" name="ctow" value='$ctow' />
+    <input type="hidden" name="csortfn" value='$csortfn' />
+
+   $_("Page")
+   <input type="text" name="collpage" value="$collpage" size="4" />
+   <input type="submit" value="$_("Go")" />
+</div>
+
+  #if not $lastpage
+    <div class="bonito-pagination-right">
+    <a href="$allhref;collpage=$(int($collpage) + 1)" id="$navid">$_("Next >")</a>
+    </div>
+  #else
+    <a id="$navid"></a>
+  #end if
+</fieldset>
+</form>
+</div>
+#end if
+#end block
+
+<table class='result numtab'>
+#set $rowNum = 1
+    <tr>
+        <td colspan="2"><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</td>
+        #for $h in $Head
+        <td></td>
+        #end for
+    </tr>
+  <tr><th></th><th></th>
+  #for $h in $Head
+    <th
+    #if $h.has_key('style')
+      $h['style']
+    #end if
+    #if $h.has_key('s')
+      #set $hs = $h['s']
+    #else
+      #set $hs = ''
+    #end if
+    ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h['n'])</a>
+    </th>
+  #end for
+  </tr>
+  #for $i in $Items
+    <tr
+    #if $i.has_key('class')
+      class='$i['class']'
+    #end if
+    >
+        <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
+    #set $rowNum += 1
+      <td><a href='view?$globals;$q;$i['pfilter']'>p</a>/<a href='view?$globals;$q;$i['nfilter']'>n</a></td>
+      <td class='left'>$i['str']</td><td> $i['freq']</td>
+      #for $s in $i['Stats']
+        <td> $s['s']</td>
+      #end for
+    </tr>
+  #end for
+</table>
+#end filter
+
+#filter None
+$navigation("next2")
+#end filter
+
+#end def

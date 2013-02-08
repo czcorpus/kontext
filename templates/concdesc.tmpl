@@ -1,0 +1,59 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Concordance description")#slurp
+#end def
+
+#def main
+#filter WebSafe
+<p>
+<b>$_("Concordance description")</b><br/>
+$_("Corpus"): <b>$corp_full_name</b>
+#if $usesubcorp
+$_("Subcorpus"): <b>$usesubcorp</b>
+#end if
+</p>
+<hr/>
+
+<table class="data" id="concdesc">
+<thead>
+  <tr>
+    <th>$_("Operation")</th>
+    <th>$_("Parameters")</th>
+    <th>$_("Num of Hits")</th>
+  </tr>
+</thead>
+<tbody>
+#for $d in $Desc
+  <tr>
+    <td>$d['op']
+    </td><td>
+    $d['arg']
+    #set $href = 'view?' + $d['tourl'] + ';' + $globals
+    </td><td align="right">
+      <a href="$href">$d['size']</a>
+    </td>
+  </tr>
+#end for
+</tbody></table>
+#end filter
+#end def

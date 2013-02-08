@@ -1,0 +1,166 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#from templating.filters import *
+#extends conc
+
+#def title
+$_("Frequency list")#slurp
+#end def
+
+#attr $focus = "'#next'"
+
+#def left_submenu_save
+#filter WebSafe
+<li><a title="$_("Save Frequency list to a text file or XML")" href="savefreq_form?$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">$_("Save")</a></li>
+#end filter
+#end def
+
+
+#def main
+#filter WebSafe
+#set global $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
+
+<h3>$_("Frequency list")</h3>
+
+<form action="freqs">
+<fieldset class="float">
+#filter None
+$input_hidden
+#end filter
+  #for $f in $FCrit
+        <input type="hidden" name="fcrit" value="$f['fcrit']" />
+  #end for
+        <input type="hidden" name="ml" value="$ml" />
+        <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
+  $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
+  <input type="submit" value="$_("Set limit")" />
+</fieldset>
+</form>
+
+
+#block navigation($navid="next")
+#if $paging and ($fpage > 1 or not $lastpage)
+<div class="bonito-pagination">
+<form action="freqs">
+<fieldset class="float">
+  #if $fpage > 1
+    <div class="bonito-pagination-left">
+    <a href="$allhref">$_("<< First")</a> |
+    <a href="$allhref;fpage=$(int($fpage) - 1)">$_("< Previous")</a>
+    </div>
+  #end if
+
+<div class="bonito-pagination-core">
+  #filter None
+  $input_hidden
+  #end filter
+  #for $fcr in $FCrit
+    <input type="hidden" name="fcrit" value="$fcr['fcrit']" />
+  #end for
+    <input type="hidden" name="flimit" value='$flimit' />
+    <input type="hidden" name="freq_sort" value='$freq_sort' />
+    <input type="hidden" name="ml" value='$ml' />
+
+    $_("Page")
+    <input type="text" name="fpage" value="$fpage" size="4" />
+    <input type="submit" value="$_("Go")" /> 
+</div>
+  
+  #if not $lastpage
+  <div class="bonito-pagination-right">
+    <a href="$allhref;fpage=$(int($fpage) + 1)" id="$navid">$_("Next >")</a>
+  </div>
+  #else
+  <a id="$navid"></a>
+  #end if
+</fieldset>
+</form>
+</div>
+#end if
+#end block
+
+
+
+<table class="result">
+#for $b in $Blocks
+  #set $rowNum = 1
+  #if 'Total' in $b
+  <tr>
+      <td colspan="2"><strong>$_('Total'):</strong> $b['Total'] ($b['TotalPages'] $_('pages'))</td>
+      #for $h in $b['Head']
+      <td></td>
+      #end for
+  </tr>
+  #end if
+  <tr>
+  <th></th>
+  <th></th>
+  #for $h in $b['Head']
+    <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h['s'];ftt_include_empty=$ftt_include_empty"
+        #if 'title' in $h# title="$h['title']" #end if#>
+      $_($h['n'])</a>
+    </th>
+  #end for
+  </tr>
+
+  #for $i in $b.get('Items', [])
+    #if len($i['Word'][0]['n']) == 0:
+      #continue
+    #end if
+  <tr
+    #if $i.has_key('class')
+      class="$i['class']"
+    #end if
+  >
+    <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
+    #set $rowNum += 1
+    <td>
+    #if $i.get('pfilter', '')
+<a href='view?$q;$globals;$i.get('pfilter')'>p</a>/#slurp
+      #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
+<a href='view?$q;$globals;$i.get('nfilter')'>n</a></td>
+      #else
+<span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
+      #end if
+    #end if
+    #for $w in $i['Word']
+      <td>$w['n']</td>
+    #end for
+    <td align="right">#filter $IntegerFormatter# $i['freq'] #end filter#</td>
+    #if $i.has_key('rel')
+      <td align="right">$i['rel']</td>
+    #end if
+    #if $i['norel']
+      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i['fbar']" alt="${i['fbar']}" />
+      </td>
+    #else
+      <td><div class="bar" style="height:${i['freqbar']}px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="$i['freqbar']" width="$i['relbar']" alt="${i['relbar']}" /></td>
+    #end if
+  </tr>
+  #end for
+#end for
+</table>
+#end filter
+
+#filter none
+$navigation("next2")
+#end filter
+
+#end def

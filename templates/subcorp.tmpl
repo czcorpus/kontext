@@ -1,0 +1,95 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Subcorpus Info")#slurp
+#end def
+
+#attr $focus = "'#subcname'"
+
+#def bodyonload
+#filter WebSafe
+show_subcorpinfo();
+#end filter
+#end def
+
+#def main
+#filter WebSafe
+<form id="subcorpform" action="subcorp">
+<fieldset>
+<table class="form">
+#filter None
+$corp_sel_node
+#end filter
+## Subcorpora
+<tbody>
+<tr>
+<th valign="top">
+$_("Subcorpora"):<br/>
+#if $SubcorpList
+<select name="subcname" id="subcname" onchange="show_subcorpinfo();"
+        size="#if len($SubcorpList) == 1 then 2 else len($SubcorpList)#">
+  #for $s in $SubcorpList
+    #set $selected = ($s['n'] == $subcname) and 'selected="selected"' or ''
+    <option $selected>$s['n']</option>
+  #end for
+</select>
+#else
+<i>$_("no subcorpus")</i>
+#end if
+<br/>
+
+     <i>
+     #if not $_open_version
+     <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
+     #end if
+</th>
+
+## Subcorp Info
+<td valign="top">
+<div id="subcorpinfo" class="infobox">
+    #if $subcsize
+      <b>$subcname</b><br/>
+      $subcsize <i>$_("of")</i> $corpsize <i>$_("tokens")</i>
+    #end if
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+
+#if $SubcorpList and not $_open_version
+<div class="buttons">
+  <input type="submit" name="delete" value="$_("Delete Selected")" />
+</div>
+#end if
+</fieldset>
+</form>
+
+<script type="text/javascript">
+function show_subcorpinfo() {
+    \$.get('subcorp_info', \$('#subcorpform').serialize(), function (data) {
+        \$('#subcorpinfo').html(data);
+    });
+}
+</script>
+#end filter
+#end def

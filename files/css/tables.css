@@ -1,0 +1,30 @@
+table.result {
+    border-spacing:0
+}
+
+table.result th {
+    border-bottom: solid 2px gray;
+    padding: 3px 0.5em 2px 0.5em
+}
+
+table.result td {
+    padding: 2px 0.3em 0 0.3em
+}
+
+table.result td.left {
+    text-align: left;
+    font-weight: bold;
+    padding-left: 3px
+}
+
+table.numtab td {
+    text-align: right
+}
+
+table.result tr.even {
+    background-color: #ddd;
+}
+
+td.num {
+    text-align: right;
+}

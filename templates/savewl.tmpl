@@ -1,0 +1,119 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#if $saveformat == 'xml'
+#filter WebSafe
+## XML format
+<?xml version='1.0' encoding='$corpencoding'?>
+
+#if $keywords
+<keywords>
+#else
+<word_list>
+#end if
+#if $heading
+  <heading>
+    <corpus>$corpname</corpus>
+  #if $usesubcorp
+    <subcorpus>$usesubcorp</subcorpus>
+  #end if
+  #if $keywords
+    <ref_corpus>$ref_corpname</ref_corpus>
+    #if $ref_usesubcorp
+    <ref_subcorpus>$ref_usesubcorp</ref_subcorpus>
+    #end if
+  #end if
+  </heading>
+#end if
+#if $Items
+  <items attr="$wlattr">
+  #for $i in $Items
+    <item>
+      <str>$i['str']</str>
+      <freq>$i['freq']</freq>
+    </item>
+  #end for
+  </items>
+#else
+#if $Keywords
+  <items attr="$wlattr">
+  #for $k in $Keywords
+    <item>
+      <str>$k['str']</str>
+      <freq>$k['freq']</freq>
+      <arf>$k['arf']</arf>
+      <arf_mill>$k['arf_mill']</arf_mill>
+      <freq_ref>$k.get('freq_ref', '0')</freq_ref>
+      <arf_ref>$k['arf_ref']</arf_ref>
+      <arf_mill_ref>$k['arf_mill_ref']</arf_mill_ref>
+      <score>$k['score']</score>
+    </item>
+  #end for
+</items>
+#end if
+#end if
+#if $keywords
+</keywords>
+#else
+</word_list>
+#end if
+
+#end filter
+#else
+## Text format
+#if $heading
+  #if $keywords
+\# Keywords
+  #else
+\# Word List
+  #end if
+
+\# Corpus:    $corpname
+
+  #if $usesubcorp
+\# Subcorpus: $usesubcorp
+  #end if
+  #if $keywords
+\# Reference corpus:    $ref_corpname
+
+    #if $ref_usesubcorp
+\# Reference subcorpus: $ref_usesubcorp
+    #end if
+  #end if
+
+#end if
+
+#if $Items
+$wlattr	Freq
+------------------------------
+  #for $i in $Items
+$i['str']	$i['freq']
+  #end for
+#else
+
+  #if $Keywords
+$wlattr	Freq	ARF	ARF/mill	Freq_ref	ARF_ref	ARF/mil_ref	Score
+----------------------------------------------------------------------------------
+    #for $k in $Keywords
+$k['str']	$k['freq']	$k['arf']	$k['arf_mill']	$k.get('freq_ref', '0')	$k['arf_ref']	$k['arf_mill_ref']	$k['score']
+    #end for
+  #end if
+#end if
+
+#end if
+

@@ -1,0 +1,79 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+## XML format
+#if $saveformat == 'xml'
+<?xml version="1.0" encoding="$corpencoding"?>
+
+#filter WebSafe
+<collocations>
+  #if $heading
+  <heading>
+    <corpus>$corpname</corpus>
+    <query>#slurp
+    #for $d in $Desc
+$d['arg']#slurp
+    #end for
+#slurp
+</query>
+    <scores>
+    #for $s in $Scores
+      <score>$s['n']</score>
+    #end for
+    </scores>
+  </heading>
+  #end if
+  <items>
+  #for $i in $Items
+    <item>
+      <str>$i['str']</str>
+      <freq>$i['freq']</freq>
+    #for $ss in $i['Stats']
+      <score>$ss['s']</score>
+    #end for
+    </item>
+  #end for
+  </items>
+</collocations>
+
+#end filter
+#else
+## Text format
+  #if $heading
+\# Collocations
+
+\# Corpus: $corpname
+    #for $d in $Desc
+\# $d['op']:  $d['arg'] $d['size']
+    #end for
+
+  #end if
+  #for $h in $Head
+$h['n']	#slurp
+  #end for
+
+#for $i in $Items
+$i['str']	$i['freq']	#slurp
+  #for $ss in $i['Stats']
+$ss['s']	#slurp
+  #end for
+
+#end for
+
+#end if
+

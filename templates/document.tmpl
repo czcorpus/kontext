@@ -1,0 +1,665 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#import urllib
+#from templating.filters import *
+#attr $focus = ""
+#if $format == 'text'
+$text
+#else:
+<!DOCTYPE html>
+<html>
+#filter WebSafe
+<head>
+<title>$title</title>
+#end filter
+<meta charset="utf-8" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ca_bonito_common.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}tables.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}forms.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
+#if $getVar("menupositi", '') == "top"
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}horizontal.css" />
+#end if
+<script src="$files_path/js/hideelem.js" type="text/javascript"></script>
+<script src="$files_path/js/bonito.js" type="text/javascript"></script>
+<script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+
+#block headers
+#end block
+#if $getVar('ca_headers', '')
+$ca_headers
+#else
+
+<script type="text/javascript">
+requirejs.config({
+    baseUrl : '../files/js',
+    paths: {
+        'domReady' : './domReady.min',
+        'jquery': './jquery.min'
+    }
+});
+
+define('win', [], function () { return window; });
+
+require(['domReady!', 'jquery'], function (domReady, \$) {
+    var multiselect,
+        tagLoader;
+
+    hideElem.targetedLinks();
+    #block bodyonload
+    #end block
+    #if $focus
+    hideElem.focusEx($focus);
+    #end if
+});
+
+
+require(['domReady!', 'multiselect', 'tagbuilder'], function (dr, multiselect, tagbuilder) {
+    var msComponent,
+        tagBuilderComponent,
+        concFormResetButtonActions,
+        widgetMap,
+        queryTypesHints;
+
+    if (\$('#tag-builder-widget').length > 0) {
+        msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
+                { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
+        tagBuilderComponent = tagbuilder.attachTagLoader('$corpname', $num_tag_pos, msComponent, {
+            resetButton : null,
+            backButton : null,
+            hiddenElm : \$('#tag'),
+                tagDisplay : \$('#tag-display')
+    });
+    concFormResetButtonActions = {
+        tagrow : tagBuilderComponent.resetButtonClick
+    };
+    widgetMap = {
+        tagrow : tagBuilderComponent
+    };
+    queryTypesHints = {
+        iqueryrow : '$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')'
+    };
+    hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
+}
+    hideElem.loadHideElementStoreSimple();
+    hideElem.loadHideElementStore('${files_path}');
+
+        \$('#queryselector').bind('change', function () {
+        hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
+    });
+});
+
+#if $getVar('ga_identifier', '')
+    var _gaq = _gaq || [];
+_gaq.push(['_setAccount', '$ga_identifier']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+#end if
+</script>
+#end if
+</head>
+
+<body #block bodyargs##end block#>
+
+
+#if $varExists('_ca_topbar')
+$_ca_topbar
+#else
+<script type="text/javascript">
+    require(['domReady!', 'popupbox', 'jquery'], function (domReady, popupbox, \$) {
+        var msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')',
+        msg2 = function (updatedElement) {
+            $.ajax({
+                url : 'ajax_get_corp_details?corpname=$corpname',
+                success : function (data) {
+                    \$(updatedElement).empty().append(data);
+                },
+                error : function () {
+                    \$(updatedElement).empty().append('$_('Failed to load corpus information.')');
+                }
+            });
+        };
+
+    \$('#positions-help-link').bind('click', function (event) {
+            popupbox.createPopupBox(event, 'positions-help', \$('#toolbar-info'), msg1);
+            event.stopPropagation();
+        });
+    \$('#corpus-desc-link').bind('click', function (event) {
+            popupbox.createPopupBox(event, 'corpus-details-box', \$('#corpus-desc-link'), msg2, {
+                'height' : 'auto',
+                'width' : 'auto'
+            });
+            event.stopPropagation();
+        });
+    });
+</script>
+#filter WebSafe
+<form id="help-search-form" action="" onsubmit="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');">
+    <table id="topbar">
+        <tr>
+            <td rowspan="2">
+                <a href="$_home_url">
+                    <img id="logo" alt="$_("Sketch Engine")" src="$files_path/img/${css_prefix}logo.png" />
+                </a>
+            </td>
+            <td id="topbar-navigation">
+                $_("Search")
+                <input type="text" id="searchhelp" />
+                $_("in")
+                <a href='https://trac.sketchengine.co.uk/' onclick="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');return false;">$_("Help")</a>
+            </td>
+        </tr>
+    </table>
+</form>
+
+<form id="corpus-search-form" action="simple_search">
+    <table id="toolbar">
+        <tr>
+            <td id="toolbar-info">
+                <ul>
+                    <li>$_("User"): <strong>$_user</strong></li>
+                    <li>$_("Corpus"): <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')"><strong>$corp_full_name</strong></a></li>
+                    #if $corp_description
+                    <li>$_('Description'):
+                        #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#<strong>$corp_description</strong>#if $corp_web#</a>#end if#
+                    </li>
+                    #end if
+                    #if $corp_size
+                    <li>$_('Size'): <strong>$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
+                    #end if
+                    #if $usesubcorp
+                    <li>$_('Subcorpus'): <strong>$usesubcorp</strong> ($subcorp_size)</li>
+                    #end if
+                    #if $concsize
+                    <li>$_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong></li>
+                    #if $concarf
+                    <li>($concarf)</li>
+                    #end if
+                    #end if
+                </ul>
+
+            </td>
+        </tr>
+    </table>
+</form>
+#end filter
+#end if
+
+<hr class="hidden" />
+
+
+## left menu
+#filter WebSafe
+<div id="container">
+    <div id="sidebar">
+        <div id="in-sidebar">
+            <ul>
+                <li><a title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Concordance")</a></li>
+                <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
+                #if $has_wsketch
+                <li><a title="$_("Word Sketch query entry form")" href="wsketch_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch")</a></li>
+                <li><a title="$_("Thesaurus query entry form")" href="thes_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Thesaurus")</a></li>
+                <li><a title="$_("Word sketch difference")" href="wsdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Diff")</a></li>
+                #if $can_wseval
+                <li><a title="$_("Word Sketch Evaluation")" href="wseval_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Eval")</a></li>
+                #end if
+                #if $can_annotate
+                <li><a title="$_("Corpus Pattern Analysis")" href="cpa_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Corpus Pattern Analysis")</a></li>
+                #end if
+                #if $alpha_features
+                <li><a title="$_("Word Sketch Patterns")" href="patterns_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch Patterns")</a></li>
+                <li><a title="$_("Word Sketch Text-type difference")" href="wsttdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("WS Text-type diff.")</a></li>
+                #end if
+                #if $getVar('lg_switch_content', '')
+                <script>
+                    var url = window.location.toString();
+                    if (url.indexOf('?') == -1) { url += '?'; }
+                    document.write('<li><a href="' + url +
+                            ';uilang=$lg_switch_content[0]">$lg_switch_content[1]</a></li>')
+                </script>
+                #end if
+                #end if
+                #if $varExists('helpsite')
+                <li class="context_help"><a href="${helpsite}../MainLinkHelp" rel="help">? $_("Help on main menu")</a></li>
+                #end if
+            </ul>
+            <hr/>
+            <div id="submenu">
+                <ul>
+                    #filter WebSafe
+                    #block left_submenu_help
+                    #end block
+                    #block left_submenu_save
+                    #end block
+                    #block left_submenu_options
+                    #end block
+                    #block left_submenu
+                    #end block
+                    #block left_submenu_expert
+                    #end block
+                    #end filter
+                    <li class="menu_switch" onclick="hideElem.cmdSwitchMenu('$files_path')"><a>$_("Switch menu position")</a></li>
+                </ul>
+            </div>
+            #if $varExists('user_menu')
+            <hr />
+            <ul>
+                <li>$_('User'):
+                    <ul style="margin-top: 0">
+                        <li><a href="user_password_form">$_('Password change')</a></li>
+                    </ul>
+                </li>
+            </ul>
+            #end if
+        </div>
+    </div>
+
+    <div id="body">
+        <div id="in-body">
+            #if $error
+            <div id="error">
+                $error
+                <button onclick="history.back(1);">$_("Back")</button>
+            </div>
+            #end if
+            #filter None
+            $main
+            #end filter
+            <div id="version">
+                <div id="lc_logo">
+                    <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
+                        <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
+                    </a></div>
+                $_('Version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+#end filter
+## end of left menu
+
+
+
+
+
+</body>
+</html>
+
+#end if
+
+## ******** Common methods definitions ******** ##
+
+#def corp_sel($onchange=True)
+## Select corpus name
+
+#if $corplist_size == 1
+$corp_full_name</b><br>
+  #unless $_corpus_architect
+    <input type="hidden" name="corpname" value="$corpname" />
+  #end unless
+#else
+<input type="hidden" name="reload" />
+
+<select name="corpname"
+  #if $onchange
+    onchange="this.form.reload.value=1;if(this.form.usesubcorp)this.form.usesubcorp.value='';this.form.submit();"
+  #end if#>
+  #for $c in $Corplist
+    #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
+    <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
+  #end for
+</select>
+#end if
+#end def
+
+#def corp_sel_node
+#filter None
+<tbody>
+#if not $_corpus_architect
+<tr class="required">
+#if $corplist_size > 1
+<th>$_("Corpus"):</th>
+<td>
+#filter None
+$corp_sel
+#end filter
+#else
+<td>
+<input type="hidden" name="corpname" value="$corpname" />
+#end if
+</td>
+</tr>
+</tbody>
+#end if
+#end filter
+#end def
+
+
+#def subcorp_sel($nameid='usesubcorp')
+## Select subcorpus
+
+#if $LastSubcorp
+  <select name="$nameid" id="$nameid">
+    <option value="">$_("None (whole corpus)")</option>
+    #for $l in $LastSubcorp
+      <option
+      #if $l['n'] == $getVar($nameid, '')
+        selected
+      #end if
+      >$l['n']</option>
+    #end for
+    </select>
+    <i>
+    <a href="subcorp?$corpname_url">$_("info")</a>
+    </i>
+#end if
+<i>
+#if not $_open_version
+  <a href="subcorp_form?$corpname_url">$_("create new")</a>
+#end if
+</i>
+#end def
+
+
+#def input_hidden
+## Global form parameters
+
+#for $qq in $Q
+  <input type="hidden" name="q" value="${qq['q'], also='"'}" />
+#end for
+#for $g in $Globals
+  <input type="hidden" name="$g['name']" value="$g['value']" />
+#end for
+#end def
+
+
+#def tt_sel
+## Text Types
+## requires util.js
+  <div class="auto_complete" id="subcorp_auto_complete"></div>
+  #set $showhiddenlist = $getVar("showhidden", '').split(".")
+  <script type="text/javascript">
+  require(['jquery', 'domReady!'], function (\$, dr) {
+    \$('input[class="select-all"]').each(function () {
+        \$(this).bind('click', function (event) {
+            hideElem.selectAllCheckBoxes(event.target, \$(event.target).attr('data-item-name'));
+        });
+    });
+  });
+  </script>
+  <div class="text-type-params">
+  <div class="text-type-top-bar">
+      #for $nn in $TextTypeSel['Normslist']
+        #if $nn.n == $subcnorm
+          <b>
+        #end if
+        <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
+        #if $nn.n == $subcnorm
+          </b>
+        #end if
+      #end for
+  </div>
+  #for $t in $TextTypeSel['Blocks']
+    #for $l in $t['Line']
+
+    <table class="envelope" border="0">
+      <thead class="fixed">
+        <tr>
+        <th>$_($l['label'])</th>
+      #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+        <th></th>
+      #end if
+        </tr>
+      </thead>
+      <tbody class="scrollable">
+      #if $l.attr_doc
+        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
+      #end if
+      #if $l.has_key('Values')
+        #if $l.has_key('hierarchical')
+          <tr><td><ul>
+          #set $hsep = $l['hierarchical']
+          #for $v in $l['Values']
+            #if $v['startdiv']
+              #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
+              <ul id="div_$v['key']" $hidden>
+            #end if
+            <li>
+            #if $v['display_plus']
+            #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
+            <img src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")" onclick="hideElem.cmdHideElementStore('div_$v['key']$hsep$v['label']', 1, '${files_path}');" />
+            #else
+            <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
+            #end if
+            #if $v['v']
+              <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
+                <label for="sca_$l['name']">$_($v['label'])</label>
+              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength')
+                ($v.get('xcnt', ''))
+              #end if
+            #end if
+            #if not $v['display_plus']
+            </li>
+            #end if
+            #for $i in $range($v['enddiv'])
+              </ul></li>
+            #end for
+          #end for
+          </ul></td></tr>
+        #else
+          #set $i = 0
+          #for $v in $l['Values']
+            #if $v['v']
+              <tr  #if $i % 2 == 0 #class="even"#end if#>
+                <td class="separ">
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label>
+                </td>
+              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+                <td class="num">$v.get('xcnt', '')</td>
+              #else
+                <td></td>
+              #end if
+              </tr>
+            #end if
+            #set $i = $i + 1
+          #end for
+        #end if
+      </tbody>
+      <tbody>
+     <tr class="last-line"><td>
+     <input class="select-all" type="button" data-action-type="1" data-item-name="sca_$l['name']" data-alt-value="$_('Deselect all')" value="$_('Select All')" />
+     </td></tr>
+      #else
+        <tr>
+            <td>
+            <input id="scaid_$l['name']" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+            </td>
+        </tr>
+      #end if
+      #if $l.attr_doc
+        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
+      #end if
+    </tbody>
+    </table>
+    #end for
+    <div style="clear: both; height: 20px;">  </div>
+  #end for
+  </div>
+#end def
+
+
+#def query_node
+## basic query node form
+<tbody id="qnode">
+#set $querytype = $getVar("query_type", '')
+#set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
+#set $hidden = ('querytypeel' in $showhiddenlistsimple) and 'visible' or 'hidden'
+<tr class="required" id="querytypeel">
+  <th>$_("Query Type"):</th>
+  <td><select id="queryselector" name="queryselector">
+#set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
+     <option value="iqueryrow" $selected>$_("Basic")</option>
+  #if $has_lemmaattr
+     #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
+     <option value="lemmarow" $selected>$_("Lemma")</option>
+  #end if
+     #set $selected = ($querytype == 'phraserow') and 'selected="selected"' or ''
+     <option value="phraserow" $selected>$_("Phrase")</option>
+     #set $selected = ($querytype == 'wordrow') and 'selected="selected"' or ''
+     <option value="wordrow" $selected>$_("Word Form")</option>
+     #set $selected = ($querytype == 'charrow') and 'selected="selected"' or ''
+     <option value="charrow" $selected>$_("Character")</option>
+     #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
+     <option value="cqlrow" $selected>$_("CQL")</option>
+     #if $tag_builder_support
+        #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
+        <option value="tagrow" $selected>$_("Tag")</option>
+     #end if
+  </select>
+  </td>
+</tr>
+#set $hidden = ($querytype == 'iqueryrow' or $querytype == '' or
+                ($querytype == 'lemmarow' and not $has_lemmaattr)) and 'visible' or 'hidden'
+  <tr class="required $hidden" id="iqueryrow">
+      <th>$_("Query"):</th>
+      <td><input type="text" id="iquery" name="iquery" size="60" value="$iquery" /></td>
+  </tr>
+#if $has_lemmaattr
+  #set $hidden = ($querytype == 'lemmarow') and 'visible' or 'hidden'
+  <tr class="required $hidden" id="lemmarow">
+      <th>$_("Lemma"):</th><td>
+  #if $q
+    <input type="text" name="lemma" size="60" id="lemma" />
+  #else
+    <input type="text" name="lemma" value="$lemma" size="60" id="lemma" />
+  #end if
+  #if $Lposlist
+    <span class="no-wrap">
+    $_("PoS"):<select name="lpos">
+      <option value="">$_("unspecified")</option>
+      #for $lp in $Lposlist
+        <option value="$lp['v']"
+	#if $lp['v'] == $lpos
+	  selected="selected"
+	#end if
+	>$lp['n']</option>
+      #end for
+      </select>
+    </span>
+  #end if
+</td></tr>
+#end if
+#set $hidden = ($querytype == 'phraserow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="phraserow">
+  <th>$_("Phrase"):</th><td>
+  <input type="text" name="phrase" value="$phrase" size="60" id="phrase" />
+</td></tr>
+#set $hidden = ($querytype == 'wordrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="wordrow">
+  <th>$_("Word Form"):</th><td>
+  <input type="text" name="word" value="$word" size="60" id="word" />
+  #if $Wposlist
+    <span class="no-wrap">
+    $_("PoS"):<select name="wpos">
+    <option value="">$_("unspecified")</option>
+    #for $wp in $Wposlist
+      <option value="$wp['v']"
+      #if $wp['v'] == $wpos
+        selected="selected"
+      #end if
+      >$wp['n']</option>
+    #end for
+    </select>
+    </span>
+  #end if
+  <span class="no-wrap">
+  <label>$_("Match case"):</label>
+  <input type="checkbox" name="qmcase" value="1"
+  #if $qmcase
+    checked
+  #end if
+  />
+  </span>
+</td></tr>
+#set $hidden = ($querytype == 'charrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="charrow">
+  <th>$_("Character"):</th><td>
+  <input type="text" name="char" value="$char" size="6" id="char" />
+</td></tr>
+#set $hidden = ($querytype == 'cqlrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="cqlrow">
+  <th title="$_("Corpus Query Language")">$_("CQL"):</th><td>
+  <input type="text" name="cql" value='$cql' size="60" id="cql" />
+  <span class="no-wrap">
+  $_("Default attribute"):<select name="default_attr">
+  #for $a in $AttrList
+    <option value="$a['n']"
+    #if $a['n'] == $default_attr
+      selected="selected"
+    #end if
+    >$_($a['label'])</option>
+  #end for
+  </select>
+#if $tagsetdoc
+  <a href="$tagsetdoc">$_("Tagset summary")</a>
+#end if
+  </span>
+</td></tr>
+<tr class="required $hidden" id="tagrow">
+    <th>$_("Tag"):</th>
+    <td>
+        <div id="tag-display" class="tag-display-block"></div>
+        <div id="tag-builder-widget"><img src="../files/img/ajax-loader.gif" alt="loading tag-builder widget..." title="loading tag-builder widget..." style="width:24px;height:24px;display:block;margin: 0 auto;" /></div>
+        <input id="tag" type="hidden" name="tag" value="$tag" />
+    </td>
+</tr>
+</tbody>
+#end def
+
+#def urlquote($word)
+## quoting strings in URLs
+  #if $type('') == $type($word)
+    #return urllib.quote_plus($word)
+  #else
+    #return urllib.quote_plus($word.encode('utf8'))
+  #end if
+#end def
+
+#def gdexconf_select($select_name, $gdexconf, $tblex=False)
+    #set $onchange = ($tblex) and 'onchange="this.form.submit();"' or ''
+    <select name="$select_name" id="$select_name" $onchange>
+        #if $tblex
+        <option value=" None " >$_("None")</option>
+        #end if
+        #set $selected = ($gdexconf==" default configuration ") and 'selected="selected"' or ''
+        <option value=" default configuration " $selected>$_("default")</option>
+        #for name in $getVar('Availgdexconfs', {})
+            #set $selected = ($name==$gdexconf) and 'selected="selected"' or ''
+            <option $selected value="$name">$name</option>
+        #end for
+    </select>
+#end def

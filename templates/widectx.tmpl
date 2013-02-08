@@ -1,0 +1,38 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#filter WebSafe
+
+#unless $getVar('no_display_links', '')
+  <a href="\#end" onclick="display_in_detail_frame('widectx','$leftlink')">$_("expand left")</a>
+#end unless
+#if $righttoleft
+  <span dir="rtl">
+#end if
+$left <b class="coll">$kwic</b> $right
+#if $righttoleft
+  </span>
+#end if
+#unless $getVar('no_display_links', '')
+  <a name="end" href="\#end" onclick="display_in_detail_frame('widectx', '$rightlink')">$_("expand right")</a>
+  #if $getVar('struct_ctx', '')
+    <br/>
+    <a href="\#end" onclick="display_in_detail_frame('structctx', 'corpname=$corpname;pos=$pos;struct=$struct_ctx')">$_("display whole document")</a>
+  #end if
+#end unless
+#end filter

@@ -1,0 +1,248 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Word List Form")#slurp
+#end def
+
+#attr $focus="'#wlpat'"
+
+#def left_submenu_help
+#filter WebSafe
+    #if $varExists('helpsite')
+    <li class="context_help"><a href="${helpsite}WordList" rel="help">? $_("Help on Word Lists")</a></li>
+    #end if
+#end filter
+#end def
+
+#def left_submenu
+#filter WebSafe
+    <li><a title="$_("Compute a list of all words")" href="wordlist?$globals;wlattr=word;wlsort=f">$_("All words")</a></li>
+  #if $has_lemmaattr
+    <li><a title="$_("Compute a list of all lemmas")" href="wordlist?$globals;wlattr=lemma;wlsort=f">$_("All lemmas")</a></li>
+  #end if
+#end filter
+#end def
+
+#def bodyonload
+#filter WebSafe
+select_output_type('$wltype');
+var updForm = function (item) {
+    var formAncestor,
+    i,
+    srch,
+    ancestors = \$(item.target).parents();
+
+    for (i = 0; i < ancestors.length; i += 1) {
+        if (ancestors[i].nodeName === 'FORM') {
+            formAncestor = ancestors[i];
+            break;
+        }
+    }
+    if (formAncestor !== undefined) {
+        srch = \$(formAncestor).find('*[name="reload"]');
+        if (srch.length > 0) {
+            \$(srch[0]).attr('value', '1');
+        }
+        srch = \$(formAncestor).find('*[name="usesubcorp"]');
+        if (srch.length > 0) {
+            \$(srch[0]).attr('value', '');
+        }
+        formAncestor.submit();
+    }
+}
+require(['treecomponent'], function (tc) {
+    tc.createTreeComponent(\$('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
+});
+#end filter
+#end def
+
+
+#def main
+#filter WebSafe
+<h3>$_("Word list options")</h3>
+<form action="wordlist" id="wordlist_form" method="post" enctype="multipart/form-data">
+<fieldset>
+#filter None
+$input_hidden
+#end filter
+  <input type="hidden" name="wlmaxitems" value="100" />
+  <input type="hidden" name="wlsort" value="f" />
+  <input type="hidden" name="subcnorm" value="freq" />
+<table class="form">
+  #filter None
+  $corp_sel_node
+  #end filter
+<tr class="required">
+  <th align="left">$_("Subcorpus"):</th>
+  <td>
+  #filter None
+  $subcorp_sel
+  #end filter
+  <br/></td>
+</tr>
+<tr class="required">
+<th>$_("Search attribute"):</th>
+  <td><select name="wlattr">
+  <optgroup label="Positional Attributes">
+  #for $a in $Attrlist
+    #set $selected = ($a['n'] == $wlattr) and 'selected' or ''
+    <option value="$a['n']" $selected>$_($a['label'])</option>
+  #end for
+  </optgroup>
+  <optgroup label="Text Types">
+  #for $a in $StructAttrList
+    #set $selected = ($a['n'] == $wlattr) and 'selected' or ''
+    <option value="$a['n']" $selected>$_($a['label'])</option>
+  #end for
+  </optgroup>
+  </select></td>
+</tr></table>
+<hr />
+<table class="form"><tr>
+  <th>$_("Filter wordlist by"):</th><td title="Regular expression pattern">$_("RE pattern"):</td>
+  <td><input type="text" name="wlpat" size="10" value="$wlpat" id="wlpat" /></td>
+</tr><tr>
+  <td></td><td>$_("Minimum frequency"):</td>
+  <td><input type="text" name="wlminfreq" size="10" value="$wlminfreq" /></td>
+</tr><tr>
+  <td></td><td>$_("Whitelist"):</td>
+  <td><input type="file" name="wlfile" size="30" id="wlfile" /></td>
+</tr><tr>
+  <td></td><td>$_("Blacklist"):</td>
+  <td><input type="file" name="wlblacklist" size="30" id="wlblacklist" />
+    <a href="" onclick="show_help_format();return false;">$_("format")</a>
+    <td><div  id="help_format" class="css_format_help">
+    $_("Wordlist whitelists and blacklists must be plain text (.txt), with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.")
+    </div></td>
+  </td>
+</tr><tr><td colspan="3">
+#set $checked = $int($include_nonwords) and 'checked' or ''
+<label><input type="checkbox" name="include_nonwords" value="1" $checked />$_("Include non-words")</label>
+</td></tr></table>
+<hr />
+<table style="display: none"><tr class="required">
+  <th>$_("Frequency figures"):</th>
+  <td colspan="2">
+  #set $checked = ($wlnums == 'frq') and 'checked' or ''
+  <label><input type="radio" name="wlnums" value="frq" $checked />$_("Word counts")</label>
+  #set $checked = ($wlnums == 'docf') and 'checked' or ''
+  <label><input type="radio" name="wlnums" value="docf" $checked />$_("Document counts")</label>
+  #set $checked = ($wlnums == 'arf') and 'checked' or ''
+  <label><input type="radio" name="wlnums" value="arf" $checked />$_("ARF")</label>
+  </td>
+</tr><tr class="required">
+  <th>$_("Output type"):</th>
+  #set $checked = ($wltype == 'simple') and 'checked' or ''
+  <td><label onclick="select_output_type('simple')"><input type="radio" name="wltype" value="simple" $checked id="wltype_simple">$_("Simple")</label></td>
+</tr><tr>
+  #set $checked = ($wltype == 'keywords') and 'checked' or ''
+  <td></td><td><label onclick="select_output_type('keywords')"><input type="radio" name="wltype" value="keywords" $checked  id="wltype_keywords">$_("Keywords")</label></td>
+</tr><tr>
+  <td></td><td style="padding-left: 4em;">$_("Reference (sub)corpus")</td>
+  <td>
+  #if not $getVar('CompatibleCorpora', [])
+    #set $CompatibleCorpora = $Corplist
+  #end if
+
+  <select name="ref_corpname" id="ref_corpname"
+    onchange="this.form.reload.value=1; if(this.form.ref_usesubcorp) this.form.ref_usesubcorp.value=''; this.form.submit();"
+  >
+    #for $c in $CompatibleCorpora
+      #set $selected = ($c['id'] == $ref_corpname) and 'selected="selected"' or ''
+      <option value="$c['id']" $selected>$c['name']</option>
+    #end for
+  </select>
+  <select name="ref_usesubcorp" id="ref_usesubcorp">
+    <option value="">($_("whole corpus"))</option>
+  #if $RefSubcorp
+    #for $l in $RefSubcorp
+       <option>$l['n']</option>
+    #end for
+  #end if
+  </select>
+</tr><tr>
+  <td></td><th style="padding-left: 4em;">$_("SimpleMaths parameter N"):</th>
+  <td><input type="text" name="simple_n" value="$simple_n" id="simple_n" /></td>
+</tr><tr>
+  #set $checked = ($wltype == 'multilevel') and 'checked' or ''
+  <td></td><td><label onclick="select_output_type('multilevel')"><input type="radio" name="wltype" value="multilevel" $checked id="wltype_multilevel">$_("Multilevel")</label></td>
+</tr><tr>
+  <td></td><td colspan="2" style="padding-left: 4em;">
+  #for $i in $range(1,4)
+    <select name="wlstruct_attr$i" id="wlstruct_attr$i">
+    <option value="">---</option>
+    #for $a in $Attrlist
+      #set selected = ''
+      <option value="$a['n']" $selected>$_($a['label'])</option>
+    #end for
+    </select>
+  #end for
+  </td>
+</tr></table>
+<input class="submit" type="submit" value="$_("Make Word List")" />
+</fieldset>
+</form>
+#end filter
+
+<script type="text/javascript">
+window.onload = select_output_type();
+
+function select_output_type() {
+  var wltypes = ['wltype_simple', 'wltype_keywords', 'wltype_multilevel'];
+  var kwinputs = ['ref_corpname', 'ref_usesubcorp', 'simple_n'];
+  var mlinputs = ['wlstruct_attr1', 'wlstruct_attr2', 'wlstruct_attr3'];
+  for(i=0;i<wltypes.length;i++) {
+    if (document.getElementById(wltypes[i]).checked == true)
+      { type = wltypes[i].split('_')[1]; }
+  }
+  if (type == 'simple') {
+    document.getElementById("wordlist_form").action = "wordlist";
+    for(i=0;i<kwinputs.length;i++)
+      { document.getElementById(kwinputs[i]).disabled = true; }
+    for(i=0;i<mlinputs.length;i++)
+      { document.getElementById(mlinputs[i]).disabled = true; }
+  } else if (type == 'keywords') {
+    document.getElementById("wordlist_form").action = "wordlist";
+    for(i=0;i<kwinputs.length;i++)
+      { document.getElementById(kwinputs[i]).disabled = false; }
+    for(i=0;i<mlinputs.length;i++)
+      { document.getElementById(mlinputs[i]).disabled = true; }
+  } else if (type == 'multilevel') {
+    document.getElementById("wordlist_form").action = "struct_wordlist";
+    for(i=0;i<kwinputs.length;i++)
+      { document.getElementById(kwinputs[i]).disabled = true; }
+    for(i=0;i<mlinputs.length;i++)
+      { document.getElementById(mlinputs[i]).disabled = false; }
+  }
+}
+
+function show_help_format() {
+  help_div = document.getElementById('help_format')
+  if (help_div.style.visibility == 'visible') {
+    help_div.style.visibility = 'hidden';
+  } else {
+    help_div.style.visibility = 'visible';
+  }
+}
+</script>
+
+#end def
