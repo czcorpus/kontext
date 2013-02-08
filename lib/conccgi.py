@@ -883,7 +883,6 @@ class ConcCGI (CGIPublisher):
     add_vars['freqs'] = ['concsize'] 
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
         "display a frequecy list"
-        import operator
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -929,6 +928,7 @@ class ConcCGI (CGIPublisher):
         else:
             rel_mode = 0
 
+        corp = self._corp()
         conc = self.call_function (conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
@@ -966,19 +966,24 @@ class ConcCGI (CGIPublisher):
                 begin = range.split('~')[0]
                 if attr.endswith('/i'): icase = '(?i)'; attr = attr[:-2]
                 else: icase = ''; attr = attr.strip('/')
-                for item in block['Items']:
+                for ii, item in enumerate(block['Items']):
                     if not item['freq']: continue
                     if not '.' in attr:
-                        wwords = item['Word'][level]['n'].split('  ') # two spaces
-                        m = re.search('(\d+)([<>].*)$', begin)
-                        if m:
-                            end = str(int(m.group(1)) + len(wwords) - 1) + m.group(2)
-                        else:
-                            end = str(len(wwords) - 1) + '<0'
-                            begin += '<0'
-                        fquery = '%s %s 1 ' % (begin, end)
-                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_query_value(w))
-                                           for w in wwords ])
+                        if attr in corp.get_conf('ATTRLIST').split(','):
+                            wwords = item['Word'][level]['n'].split('  ') # two spaces
+                            m = re.search('(-?\d+)([<>].*)$', begin)
+                            if m:
+                                end = str(int(m.group(1)) + len(wwords) - 1) \
+                                      + m.group(2)
+                            else:
+                                end = str(len(wwords) - 1) + '<0'
+                                begin += '<0'
+                            fquery = '%s %s 1 ' % (begin, end)
+                            fquery += ''.join(['[%s="%s%s"]'
+                                % (attr, icase, escape(escape_query_value(w))) for w in wwords ])
+                        else: # structure number
+                            fquery = '0 0<0 1 [] within <%s #%s/>' % \
+                                      (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
                         fquery = '0 0 1 [] within <%s %s="%s" />' %\
                                  (attr.split('.')[0], attr.split('.')[1],
