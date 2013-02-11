@@ -128,7 +128,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
         msg2 = function (updatedElement) {
             $.ajax({
-                url : 'ajax_get_corp_details?corpname=$corpname',
+                url : 'ajax_get_corp_details?corpname=' + conf.corpname,
                 success : function (data) {
                     $(updatedElement).empty().append(data);
                 },
