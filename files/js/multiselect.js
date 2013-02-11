@@ -128,7 +128,7 @@ define(['jquery'], function ($) {
 
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
-                if (typeof wrapperElem === 'string') {
+                if (typeof wrapperElem === 'string' && wrapperElem.indexOf('#') !== 0) {
                     wrapperElem = $('#' + wrapperElem).get(0);
                 }
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
