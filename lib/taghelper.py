@@ -65,6 +65,19 @@ def tag_variants_file_exists(corpus_name):
 
 def load_tag_descriptions(path, lang):
     """
+    Parameters
+    ----------
+    path : str
+       path to the XML file containing tag descriptions
+
+    lang : str
+       requested language (if not found then EN version is returned)
+
+    Returns
+    -------
+    2-tuple where 1st item is a dictionary with key = "tag position index"
+    and value = list of 2-tuples (attribute ID, description). 2nd item
+    is a dictionary with key = "tag position index" and value is its description
     """
     lang = lang.split('_')[0]
     xml = etree.parse(open(path))
@@ -73,18 +86,18 @@ def load_tag_descriptions(path, lang):
     labels = [None for i in range(len(root))]
     for item in root:
         idx = int(item.attrib['position'])
-        ans[idx] = {}
+        ans[idx] = []
         for v in item:
             if v.tag == 'value':
                 translations = {}
                 for d in v:
                     translations[d.attrib['lang']] = d.text
                 if lang in translations:
-                    ans[idx][v.attrib['id']] = translations[lang]
+                    ans[idx].append((v.attrib['id'], translations[lang]))
                 elif 'en' in translations:
-                    ans[idx][v.attrib['id']] = translations['en']
+                    ans[idx].append((v.attrib['id'], translations['en']))
                 else:
-                    ans[idx][v.attrib['id']] = '[%s]' % _('no description')
+                    ans[idx].append((v.attrib['id'], '[%s]' % _('no description')))
             elif v.tag == 'label':
                 translations = {}
                 for d in v:
@@ -131,9 +144,9 @@ class TagVariantLoader(object):
         Values are cached forever into a JSON file.
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
-        data = '[]'
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translation_table, label_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+        translations, label_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+        item_sequences = tuple([tuple([item[0] for item in position]) for position in translations])
 
         if os.path.exists(path) \
                 and time.time() - os.stat(path).st_ctime > settings.get_int('cache', 'clear_interval'):
@@ -157,16 +170,23 @@ class TagVariantLoader(object):
                     value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
-                    elif i < len(translation_table) and line[i] in translation_table[i]:
-                        ans[i].add((value, '%s - %s' % (line[i], translation_table[i][line[i]])))
+                    elif i < len(translations):
+                        translation_table = dict(translations[i])
+                        if line[i] in translation_table:
+                            ans[i].add((value, '%s - %s' % (line[i], translation_table[line[i]])))
                     else:
                         ans[i].add((value, line[i]))
                         logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
-            ans = [sorted(x, key=lambda item : item[1]) for x in ans]
+            ans_sorted = []
             for i in range(len(ans)):
-                if len(ans[i]) == 1:
-                    ans[i] = ()
-            data = json.dumps({ 'tags' : ans, 'labels' : label_table})
+                cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
+                    if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
+                ans_sorted.append(sorted(ans[i], cmp=cmp_by_seq))
+
+            for i in range(len(ans_sorted)):
+                if len(ans_sorted[i]) == 1:
+                    ans_sorted[i] = ()
+            data = json.dumps({ 'tags' : ans_sorted, 'labels' : label_table})
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
@@ -193,7 +213,8 @@ class TagVariantLoader(object):
                    a dictionary where keys represent tag-string position and values are lists of
                    tuples containing pairs 'ID, description'
         """
-        translation_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))[0]
+        translations = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))[0]
+        item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in translations])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         patt = re.compile(required_pattern)
@@ -208,16 +229,18 @@ class TagVariantLoader(object):
             tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
             for i in range(len(tag_elms)):
                 value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , item[i]))
+                translation_table = dict(translations[i])
                 if i not in ans:
                     ans[i] = set()
                 if item[i] == '-':
                     ans[i].add(('-', ''))
-                elif item[i] in translation_table[i]:
-                    ans[i].add((value, '%s - %s' % (item[i], translation_table[i][item[i]])))
+                elif item[i] in translation_table:
+                    ans[i].add((value, '%s - %s' % (item[i], translation_table[item[i]])))
                 else:
                     ans[i].add((value, '%s - %s' % (item[i], item[i])))
 
         for key in ans:
+            i = int(key)
             used_keys = [x[0] for x in ans[key]]
             if '-' in used_keys:
                 if len(used_keys) == 1:
@@ -226,5 +249,7 @@ class TagVariantLoader(object):
                     ans[key].remove(('-', ''))
             elif len(used_keys) > 1:
                 ans[key].add(('-', ''))
-            ans[key] = sorted(ans[key], key=lambda item: item[1]) if ans[key] is not None else None
+            cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
+                if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
+            ans[key] = sorted(ans[key], cmp=cmp_by_seq) if ans[key] is not None else None
         return { 'tags' : ans, 'labels' : [] }
