@@ -20,30 +20,34 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
             hideElem.focusEx(hideElem.focus);
         }
 
-        if ($('#tag-builder-widget').length > 0) {
-            msComponent = multiselect.createMultiselectComponent('tag-builder-widget',
-                { width : '500px', useNamedCheckboxes : false, allowMultipleOpenedBoxes : false });
-            tagBuilderComponent = tagbuilder.attachTagLoader(conf.corpname, conf.numTagPos, msComponent, {
-                resetButton : null,
-                backButton : null,
-                hiddenElm : $('#tag'),
-                tagDisplay : $('#tag-display')
-            });
-            concFormResetButtonActions = {
-                tagrow : tagBuilderComponent.resetButtonClick
-            };
-            widgetMap = {
-                tagrow : tagBuilderComponent
-            };
-            queryTypesHints = {
-                iqueryrow : conf['queryTypesHints_iqueryrow']
-            };
-            hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
-        }
+        $('input.cql-input').each(function () {
+            if ($(this).parent().find('li.insert-tag').length > 0) {
+                tagbuilder.bindTextInputHelper(
+                    conf.corpname,
+                    conf.numTagPos,
+                    {
+                        inputElement : $(this),
+                        widgetElement : 'tag-widget',
+                        modalWindowElement : 'tag-builder-modal',
+                        insertTagButtonElement : 'insert-tag-button',
+                        tagDisplayElement : 'tag-display'
+                    },
+                    {
+                        width : '556px',
+                        useNamedCheckboxes : false,
+                        allowMultipleOpenedBoxes : false,
+                        padding : 0,
+                        margin : 0
+                    }
+
+                );
+            }
+        });
+
         hideElem.loadHideElementStoreSimple();
         hideElem.loadHideElementStore('${files_path}');
 
-        $('#queryselector').bind('change', function () {
+        $('select.qselector').bind('change', function () {
             hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
         });
 
