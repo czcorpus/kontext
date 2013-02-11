@@ -20,12 +20,14 @@
  * This library provides a clickable 'tag generator' widget.
  * The library depends on multiselect.js - TODO use require.js
  */
-define(['jquery'], function ($) {
+define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, multiselect, simplemodal, caret) {
     'use strict';
 
     var createTagLoader,
         objectIsEmpty,
-        attachTagLoader;
+        attachTagLoader,
+        bindTextInputHelper,
+        displayTagHintButton;
 
     /**
      *
@@ -567,8 +569,54 @@ define(['jquery'], function ($) {
         return tagLoader;
     };
 
+    /**
+     *
+     * @param opt {Object} an object containing keys:
+     *     inputElement - text input element to be enriched by this function
+     *     widgetElement - wrapper element for whole widget
+     *     modalWindowElement - modal box element (where widgetElement is inserted)
+     *     insertTagButtonElement - button to insert tag string into the inputElement
+     *     tagDisplayElement - element where tag value is written
+     *     activateLink
+     * @param multiSelectOpts {Object}
+     * @param corpusName {string}
+     * @param numTagPos {Number}
+     */
+    bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts) {
+        var prop;
+
+        for (prop in opt) {
+            if (opt.hasOwnProperty(prop)
+                    && prop.indexOf('Element') + 'Element'.length === prop.length
+                    && typeof opt[prop] === 'string'
+                    && opt[prop].indexOf('#') !== 0) {
+                opt[prop] = '#' + opt[prop];
+            }
+        }
+
+        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
+            console.log('click...');
+            $(opt.modalWindowElement).modal({
+                onShow : function () {
+                    var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
+                    attachTagLoader(corpusName, numTagPos, msComponent, {
+                        tagDisplay : $(opt.tagDisplayElement)
+                    });
+                    $(opt.insertTagButtonElement).bind('click', function () {
+                        var bef = $(opt.inputElement).val().substring(0, $(opt.inputElement).caret()),
+                            aft = $(opt.inputElement).val().substring($(opt.inputElement).caret());
+                        $(opt.inputElement).val(bef + $(opt.tagDisplayElement).text() + aft);
+                        $.modal.close();
+                        $(opt.inputElement).focus();
+                    });
+                }
+            });
+        });
+    };
+
     return {
-        attachTagLoader : attachTagLoader
+        attachTagLoader : attachTagLoader,
+        bindTextInputHelper : bindTextInputHelper
     };
 
 });
