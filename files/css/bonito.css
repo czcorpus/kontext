@@ -756,3 +756,22 @@ table.result td.left {
     border: solid 3px red;
     background-color: #e88;
 }
+
+ul.cql-toolbox {
+    margin: 0 0 2px 0;
+    padding: 0;
+    list-style-type: none;
+}
+ul.cql-toolbox li {
+    display: inline;
+}
+
+ul.cql-toolbox li a {
+    border: 1px solid #555555;
+    background-color: #00D2FF;
+    color:  #222222;
+    border-radius: 3px;
+    font-size: 75%;
+    text-decoration: none;
+    padding:  2px 5px;
+}
