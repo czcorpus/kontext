@@ -35,6 +35,7 @@ $text
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}forms.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
 
 #block headers
@@ -48,7 +49,8 @@ requirejs.config({
     baseUrl : '../files/js',
     paths: {
         'domReady' : './domReady.min',
-        'jquery': './jquery.min'
+        'jquery': './jquery.min',
+        'simplemodal' : './jquery.simplemodal.min'
     },
     shim : {
         'jquery.cookies' : {
@@ -451,7 +453,7 @@ $corp_sel
 #set $querytype = $getVar("query_type" + $suff, '')
 <tr class="required" id="querytypeel$suff">
   <th>$_("Query Type"):</th>
-  <td><select id="queryselector$suff" name="queryselector$suff">
+  <td><select class="qselector" id="queryselector$suff" name="queryselector$suff">
 #set $selected = ($querytype == 'iqueryrow'+$suff or $querytype == '') and 'selected="selected"' or ''
      <option value="iqueryrow" $selected>$_("Basic")</option>
   #if $has_lemmaattr
@@ -466,10 +468,6 @@ $corp_sel
      <option value="charrow" $selected>$_("Character")</option>
      #set $selected = ($querytype == 'cqlrow'+$suff) and 'selected="selected"' or ''
      <option value="cqlrow" $selected>$_("CQL")</option>
-     #if $tag_builder_support
-        #set $selected = ($querytype == 'tagrow') and 'selected="selected"' or ''
-        <option value="tagrow" $selected>$_("Tag")</option>
-     #end if
   </select>
   </td>
 </tr>
@@ -536,38 +534,46 @@ $corp_sel
   />
   </span>
 </td></tr>
-#set $hidden = ($querytype == 'charrow') and 'visible' or 'hidden'
-<tr class="required $hidden" id="charrow">
+#set $hidden = ($querytype == 'charrow'+$suff) and 'visible' or 'hidden'
+<tr class="required $hidden" id="charrow$suff">
   <th>$_("Character"):</th><td>
-  <input type="text" name="char" value="$char" size="6" id="char" />
+  <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" size="6" id="char$suff" />
 </td></tr>
-#set $hidden = ($querytype == 'cqlrow') and 'visible' or 'hidden'
-<tr class="required $hidden" id="cqlrow">
-  <th title="$_("Corpus Query Language")">$_("CQL"):</th><td>
-  <input type="text" name="cql" value='$cql' size="60" id="cql" />
+#set $hidden = ($querytype == 'cqlrow'+$suff) and 'visible' or 'hidden'
+<tr class="required $hidden" id="cqlrow$suff">
+  <th title="$_("Corpus Query Language")">$_("CQL"):</th>
+  <td>
+    <div id="tag-builder-modal" style="display: none">
+        <h3 style="margin: 0 0 5px 0; text-align:  center">$_('Create a tag')</h3>
+        <div id="tag-display" style="width: 70%; float: left"></div>
+        <button id="insert-tag-button" type="button" style="float: left">Insert</button>
+        <div id="tag-widget" style="height: 500px; overflow: auto;"></div>
+    </div>
+
+    <ul class="cql-toolbox">
+        #if $tag_builder_support
+        <li class="insert-tag"><a href="#">insert tag</a></li>
+        #end if
+        <li class="within"><a href="#">within</a></li>
+    </ul>
+  <input id="cql$suff" class="cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' size="60" />
+#if not $suff
   <span class="no-wrap">
-  $_("Default attribute"):<select name="default_attr">
+  $_("Default attribute"):<select name="default_attr$suff">
   #for $a in $AttrList
-    <option value="$a['n']"
-    #if $a['n'] == $default_attr
+    <option value="$a.n"
+    #if $a.n == $getVar('default_attr' + $suff, '')
       selected="selected"
     #end if
-    >$_($a['label'])</option>
+    >$a.n</option>
   #end for
   </select>
-#if $tagsetdoc
-  <a href="$tagsetdoc">$_("Tagset summary")</a>
-#end if
+  #if $tagsetdoc
+    <a target="_blank" href="$tagsetdoc">$_("Tagset summary")</a>
+  #end if
   </span>
+#end if
 </td></tr>
-<tr class="required $hidden" id="tagrow">
-    <th>$_("Tag"):</th>
-    <td>
-        <div id="tag-display" class="tag-display-block"></div>
-        <div id="tag-builder-widget"><img src="../files/img/ajax-loader.gif" alt="loading tag-builder widget..." title="loading tag-builder widget..." style="width:24px;height:24px;display:block;margin: 0 auto;" /></div>
-        <input id="tag" type="hidden" name="tag" value="$tag" />
-    </td>
-</tr>
 </tbody>
 #end def
 
