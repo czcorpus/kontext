@@ -757,6 +757,10 @@ table.result td.left {
     background-color: #e88;
 }
 
+.cql-input {
+    font-family: monospace;
+}
+
 ul.cql-toolbox {
     margin: 0 0 2px 0;
     padding: 0;
@@ -767,11 +771,26 @@ ul.cql-toolbox li {
 }
 
 ul.cql-toolbox li a {
-    border: 1px solid #555555;
-    background-color: #00D2FF;
-    color:  #222222;
+    border: 1px solid #a6754d;
+    background-color: #fff9ed;
+    color: #a6754d;
     border-radius: 3px;
     font-size: 75%;
     text-decoration: none;
     padding:  2px 5px;
+}
+
+ul.cql-toolbox li a:hover {
+    border: 1px solid #B4383C;
+    color: #B4383C;
+}
+
+button#insert-tag-button,
+button#reset-tag-button {
+    height: 30px;
+    vertical-align: middle;
+}
+
+button#reset-tag-button {
+    color: #FC4F51;
 }

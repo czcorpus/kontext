@@ -30,7 +30,8 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                         widgetElement : 'tag-widget',
                         modalWindowElement : 'tag-builder-modal',
                         insertTagButtonElement : 'insert-tag-button',
-                        tagDisplayElement : 'tag-display'
+                        tagDisplayElement : 'tag-display',
+                        resetButtonElement : 'reset-tag-button'
                     },
                     {
                         width : '556px',
