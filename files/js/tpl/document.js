@@ -8,11 +8,6 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
     var lib = {};
 
     lib.misc = function (conf) {
-        var queryTypesHints = {
-            iqueryrow : conf.messages['queryTypesHints_iqueryrow']
-        }
-
-
         hideElem.targetedLinks();
         if (conf.focus) {
             hideElem.focusEx(hideElem.focus);
@@ -47,10 +42,8 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         hideElem.loadHideElementStore('${files_path}');
 
         $('select.qselector').bind('change', function (event) {
-            hideElem.cmdSwitchQuery(event.target, queryTypesHints);
+            hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints);
         });
-        // initial query selector setting (just like when user changes it manually)
-        hideElem.cmdSwitchQuery($('#queryselector').get(0), queryTypesHints);
 
         // disable submit button after submiting
         $("form").submit(function() {

@@ -1,8 +1,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies'],
-            function ($, treeComponent, bonito, mainPage, cookies) {
+define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies', 'hideelem'],
+            function ($, treeComponent, bonito, mainPage, cookies, hideElem) {
     var lib = {};
 
     lib.misc = function (conf) {
@@ -47,6 +47,9 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies'],
             }
         }
         treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, updForm);
+
+        // initial query selector setting (just like when user changes it manually)
+        hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints);
     };
 
     lib.bindClicks = function (conf) {
