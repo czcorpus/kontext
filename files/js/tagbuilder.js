@@ -596,7 +596,6 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
         }
 
         $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
-            console.log('click...');
             $(opt.modalWindowElement).modal({
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
