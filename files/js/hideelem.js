@@ -153,73 +153,53 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
         },
 
         /**
-         * @param widgets
-         * @param resetButtonActions
+         * @param querySelector
          * @param hints
          */
-        cmdSwitchQuery : function (widgets, resetButtonActions, hints) {
-            var jqQs = $('#queryselector'),
+        cmdSwitchQuery : function (querySelector, hints) {
+            var jqQs = $(querySelector),
+                newidCom,
                 newid,
                 jqFocusElem,
                 oldval,
-                i,
                 elementId,
+                elementIdCom,
                 jqOldElem,
                 jqElem,
                 date;
 
-            widgets = widgets || {};
-            resetButtonActions = resetButtonActions || {};
             hints = hints || {};
-            newid = jqQs.val();
-            jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
+
+            newidCom = jqQs.val();
+            newid = jqQs.val() + jqQs.data('parallel-corp');
+            jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
             oldval = jqFocusElem.val();
 
             $('#conc-form-clear-button').unbind('click');
-            if (resetButtonActions[jqQs.val()]) {
-                $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
+            $('#conc-form-clear-button').bind('click', function () {
                 hideElem.clearForm($('#mainform'));
-
-            } else {
-                $('#conc-form-clear-button').bind('click', function () {
-                    hideElem.clearForm($('#mainform'));
-                });
-            }
+            });
 
             jqQs.find('option').each(function () {
-                elementId = $(this).val();
+                elementId = $(this).val() + jqQs.data('parallel-corp');
+                elementIdCom  = $(this).val();
+
                 jqElem = $('#' + elementId);
                 if (elementId === newid) {
                     jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
                     if (jqElem.hasClass('visible')) {
-                        jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
+                        jqOldElem = $('#' + elementIdCom.substring(0, elementId.length - 3)
+                            + jqQs.data('parallel-corp'));
                         oldval = jqOldElem.val();
                         jqOldElem.val('');
-                        if (widgets.hasOwnProperty(newid)) {
-                            widgets[newid].resetWidget();
-                        }
                         jqElem.removeClass('visible').addClass('hidden');
                     }
                 }
             });
-            // Keep the value of the last query
-            if (jqOldElem && jqOldElem.attr('name') === 'tag') {
-                if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
-                    jqFocusElem.val('[tag="' + oldval + '"]');
 
-                } else {
-                    jqFocusElem.val(oldval);
-                }
-
-            } else if (newid === 'tagrow') {
-                jqFocusElem.val('');
-
-            } else {
-                jqFocusElem.val(oldval);
-            }
-
+            jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
                 $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
                 $('#query-type-hint').bind('click', function (event) {

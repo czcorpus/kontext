@@ -8,11 +8,9 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
     var lib = {};
 
     lib.misc = function (conf) {
-        var msComponent,
-            tagBuilderComponent,
-            concFormResetButtonActions,
-            widgetMap,
-            queryTypesHints;
+        var queryTypesHints = {
+            iqueryrow : conf.messages['queryTypesHints_iqueryrow']
+        }
 
 
         hideElem.targetedLinks();
@@ -48,9 +46,11 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         hideElem.loadHideElementStoreSimple();
         hideElem.loadHideElementStore('${files_path}');
 
-        $('select.qselector').bind('change', function () {
-            hideElem.cmdSwitchQuery(widgetMap, concFormResetButtonActions, queryTypesHints);
+        $('select.qselector').bind('change', function (event) {
+            hideElem.cmdSwitchQuery(event.target, queryTypesHints);
         });
+        // initial query selector setting (just like when user changes it manually)
+        hideElem.cmdSwitchQuery($('#queryselector').get(0), queryTypesHints);
 
         // disable submit button after submiting
         $("form").submit(function() {
