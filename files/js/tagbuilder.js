@@ -577,6 +577,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
      *     modalWindowElement - modal box element (where widgetElement is inserted)
      *     insertTagButtonElement - button to insert tag string into the inputElement
      *     tagDisplayElement - element where tag value is written
+     *     resetButtonElement - element representing the RESET function
      *     activateLink
      * @param multiSelectOpts {Object}
      * @param corpusName {string}
@@ -600,7 +601,8 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
                     attachTagLoader(corpusName, numTagPos, msComponent, {
-                        tagDisplay : $(opt.tagDisplayElement)
+                        tagDisplay : $(opt.tagDisplayElement),
+                        resetButton : $(opt.resetButtonElement)
                     });
                     $(opt.insertTagButtonElement).bind('click', function () {
                         var bef = $(opt.inputElement).val().substring(0, $(opt.inputElement).caret()),
