@@ -794,3 +794,11 @@ button#reset-tag-button {
 button#reset-tag-button {
     color: #FC4F51;
 }
+
+#within-builder-modal {
+    height: 120px;
+}
+
+#tag-builder-modal {
+    height: 565px;
+}

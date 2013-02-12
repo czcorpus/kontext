@@ -546,20 +546,25 @@ $corp_sel
   <th title="$_("Corpus Query Language")">$_("CQL"):</th>
   <td>
     #unless $suff
-    <div id="tag-builder-modal" style="display: none">
+    <div id="tag-builder-modal" class="modal-container" style="display: none">
         <h3>$_('Create a tag')</h3>
         <div id="tag-display" style="width: 70%; float: left; margin-bottom: 5px"></div>
         <button id="insert-tag-button" type="button" style="float: left">Insert into CQL</button>
         <button id="reset-tag-button" type="button" style="float: left">Reset</button>
         <div id="tag-widget" style="height: 500px; overflow: auto;"></div>
     </div>
+    <div id="within-builder-modal" class="modal-container" style="display: none">
+        <h3>$_('Create a within condition')</h3>
+        <span class="selection-container"></span> = <input id="within-value" type="text" />
+        <button id="within-insert-button" type="button">Insert</button>
+    </div>
     #end unless
 
     <ul class="cql-toolbox">
         #if $tag_builder_support
-        <li class="insert-tag"><a href="#">insert tag</a></li>
+        <li class="insert-tag"><a data-bound-input="cql$suff">insert tag</a></li>
         #end if
-        <li class="within"><a href="#">within</a></li>
+        <li class="within"><a data-bound-input="cql$suff">insert &quot;within&quot;</a></li>
     </ul>
   <input id="cql$suff" class="cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' size="60" />
 #if not $suff

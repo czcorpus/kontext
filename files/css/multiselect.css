@@ -90,8 +90,8 @@ ul.multiselect li td.checkbox-cell {
     margin: 0 1px;
 }
 
-#tag-builder-modal h3 {
-    margin: 0 0 5px 0;
+.modal-container h3 {
+    margin: 0 0 8px 0;
     text-align: center;
     color: #000000;
 }

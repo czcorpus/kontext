@@ -13,29 +13,29 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
             hideElem.focusEx(hideElem.focus);
         }
 
-        $('input.cql-input').each(function () {
-            if ($(this).parent().find('li.insert-tag').length > 0) {
-                tagbuilder.bindTextInputHelper(
-                    conf.corpname,
-                    conf.numTagPos,
-                    {
-                        inputElement : $(this),
-                        widgetElement : 'tag-widget',
-                        modalWindowElement : 'tag-builder-modal',
-                        insertTagButtonElement : 'insert-tag-button',
-                        tagDisplayElement : 'tag-display',
-                        resetButtonElement : 'reset-tag-button'
-                    },
-                    {
-                        width : '556px',
-                        useNamedCheckboxes : false,
-                        allowMultipleOpenedBoxes : false,
-                        padding : 0,
-                        margin : 0
-                    }
+        $('.cql-toolbox').each(function () {
+            tagbuilder.bindTextInputHelper(
+                conf.corpname,
+                conf.numTagPos,
+                {
+                    inputElement : $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
+                    widgetElement : 'tag-widget',
+                    modalWindowElement : 'tag-builder-modal',
+                    insertTagButtonElement : 'insert-tag-button',
+                    tagDisplayElement : 'tag-display',
+                    resetButtonElement : 'reset-tag-button'
+                },
+                {
+                    width : '556px',
+                    useNamedCheckboxes : false,
+                    allowMultipleOpenedBoxes : false,
+                    padding : 0,
+                    margin : 0
+                }
 
-                );
-            }
+            );
+
+            lib.bindWithinHelper($(this).find('li.within a'));
         });
 
         hideElem.loadHideElementStoreSimple();
@@ -170,6 +170,44 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         lib.misc(conf);
         lib.bindClicks();
     };
+
+    lib.bindWithinHelper = function (jqLinkElement) {
+        var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
+        jqLinkElement.bind('click', function (event) {
+            $('#within-builder-modal').modal({
+                onShow : function () {
+                    $.get('ajax_get_structs_details?corpname=' + conf.corpname, {}, function (data) {
+                        var prop, html, i;
+
+                        html = '<select id="within-structattr">';
+                        for (prop in data) {
+                            if (data.hasOwnProperty(prop)) {
+                                for (i = 0; i < data[prop].length; i += 1) {
+                                    html += '<option>' + prop + '.' + data[prop][i] + '</option>'
+                                }
+                            }
+                        }
+                        html += '</select>';
+                        $('#within-builder-modal .selection-container').append(html);
+                        $('#within-insert-button').bind('click', function () {
+                            var structattr;
+
+                            structattr = $('#within-structattr').val().split('.');
+                            var wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />',
+                                bef = jqInputElement.val().substring(0, jqInputElement.caret()),
+                                aft = jqInputElement.val().substring(jqInputElement.caret());
+
+                            jqInputElement.val(bef + wthn + aft);
+                            jqInputElement.focus();
+                            $.modal.close();
+                        });
+                    });
+                }
+            });
+            event.stopPropagation();
+            return false;
+        });
+    }
 
     return lib;
 

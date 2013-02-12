@@ -594,8 +594,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
                 opt[prop] = '#' + opt[prop];
             }
         }
-
-        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
+        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function (event) {
             $(opt.modalWindowElement).modal({
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
@@ -606,7 +605,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
                     $(opt.insertTagButtonElement).bind('click', function () {
                         var bef = $(opt.inputElement).val().substring(0, $(opt.inputElement).caret()),
                             aft = $(opt.inputElement).val().substring($(opt.inputElement).caret());
-                        $(opt.inputElement).val(bef + $(opt.tagDisplayElement).text() + aft);
+                        $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
                         $.modal.close();
                         $(opt.inputElement).focus();
                     });
