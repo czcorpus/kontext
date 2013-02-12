@@ -543,6 +543,7 @@ $corp_sel
 <tr class="required $hidden" id="cqlrow$suff">
   <th title="$_("Corpus Query Language")">$_("CQL"):</th>
   <td>
+    #unless $suff
     <div id="tag-builder-modal" style="display: none">
         <h3>$_('Create a tag')</h3>
         <div id="tag-display" style="width: 70%; float: left; margin-bottom: 5px"></div>
@@ -550,6 +551,7 @@ $corp_sel
         <button id="reset-tag-button" type="button" style="float: left">Reset</button>
         <div id="tag-widget" style="height: 500px; overflow: auto;"></div>
     </div>
+    #end unless
 
     <ul class="cql-toolbox">
         #if $tag_builder_support
