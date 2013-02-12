@@ -2040,6 +2040,19 @@ class ConcCGI (UserCGI):
         return ans
     ajax_get_corp_details.template = 'corpus_details.tmpl'
 
+    def ajax_get_structs_details(self):
+        """
+        """
+        ans = {}
+        for item in self._curr_corpus.get_conf('STRUCTATTRLIST').split(','):
+            k, v = item.split('.')
+            if k not in ans:
+                ans[k] = []
+            ans[k].append(v)
+        return ans
+
+    ajax_get_structs_details.return_type = 'json'
+
     def ajax_get_tag_variants(self, pattern=''):
         """
         """
