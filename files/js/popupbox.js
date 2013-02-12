@@ -112,7 +112,8 @@ define(['win', 'jquery'], function (context, $) {
                     width : boxWidth,
                     height: boxHeight,
                     'box-shadow': '2px 2px 1px #444',
-                    'font-size' : fontSize
+                    'font-size' : fontSize,
+                    'white-space' : 'normal'
                 });
 
                 if (options.hasOwnProperty('top')) {
