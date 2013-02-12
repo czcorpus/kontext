@@ -169,7 +169,6 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 date;
 
             hints = hints || {};
-
             newidCom = jqQs.val();
             newid = jqQs.val() + jqQs.data('parallel-corp');
             jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
