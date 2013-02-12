@@ -1109,11 +1109,34 @@ def compute_conc (corp, q, cache_dir, subchash, samplesize, fullsize):
     else:
         return PyConc (corp, q[0][0], q[0][1:], samplesize)
 
+
+def log_conc_request(corp, q):
+    """
+    """
+    import json
+    user = os.getenv('REMOTE_USER')
+    try:
+        action = q[0][0]
+        logging.getLogger('QUERY').info(json.dumps({
+            'user': user,
+            'app': 'noske',
+            'corp': corp.corpname,
+            '_q': action,
+            'q': q[0][1:]}))
+    except Exception as e:
+        logging.getLogger('QUERY').error({
+            'user': user,
+            'corp': corp.corpname,
+            'q': q,
+            'err': str(e)})
+
+
 def get_conc (corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0, \
               cache_dir='cache', samplesize=0, debug=False):
     if not q:
         return None
-    q = tuple (q)
+    q = tuple(q)
+    log_conc_request(corp, q)
     if not minsize:
         if len(q) > 1: # subsequent concordance processing by its methods
                        # needs whole concordance
