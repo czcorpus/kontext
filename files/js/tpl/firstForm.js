@@ -74,7 +74,6 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies', '
             }
         });
 
-
     };
 
     lib.init = function (conf) {
