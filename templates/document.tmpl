@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #encoding UTF-8
 #import urllib
+#import re
 #from templating.filters import *
 #attr $focus = ""
 #if $format == 'text'
@@ -166,7 +167,7 @@ $_ca_topbar
     <div id="sidebar">
         <div id="in-sidebar">
             <ul>
-                <li><a title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Concordance")</a></li>
+                <li><a title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("Concordance")</a></li>
                 <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
                 #if $has_wsketch
                 <li><a title="$_("Word Sketch query entry form")" href="wsketch_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch")</a></li>
@@ -291,12 +292,12 @@ $corp_full_name</b><br>
 <tr class="required">
 #if $corplist_size > 1
 <th>$_("Corpus"):</th>
-<td>
+<td colspan="2">
 #filter None
 $corp_sel
 #end filter
 #else
-<td>
+<td colspan="2">
 <input type="hidden" name="corpname" value="$corpname" />
 #end if
 </td>
@@ -449,7 +450,7 @@ $corp_sel
   </div>
 #end def
 
-#def query_node($suff='')
+#def query_node($suff='',$filter=False)
 ## basic query node form
 <tbody id="qnode$suff">
 #set $querytype = $getVar("query_type" + $suff, '')
@@ -585,6 +586,16 @@ $corp_sel
 #end if
 </td></tr>
 </tbody>
+#if $suff
+<tbody><tr><td colspan="2">
+    <input type="checkbox" name="filter_nonempty$suff" id="filter_nonempty$suff"
+    #if $getVar('filter_nonempty'+$suff, '')
+    checked#slurp
+    #end if
+    />
+    <label for="filter_nonempty$suff">$_('filter out empty lines')</label>
+</td></tr></tbody>
+#end if
 #end def
 
 #def urlquote($word)
@@ -594,6 +605,14 @@ $corp_sel
   #else
     #return urllib.quote_plus($word.encode('utf8'))
   #end if
+#end def
+
+#def url_sub($url, $option_name, $new_value)
+## substituting options in URL to change one particular setting
+    #if not re.search('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, $url)
+        #return $url + ';%s=%s' % ($option_name, $new_value)
+    #end if
+    #return re.sub('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, ';%s=%s;' % ($option_name, $new_value), $url)
 #end def
 
 #def gdexconf_select($select_name, $gdexconf, $tblex=False)

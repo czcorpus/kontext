@@ -21,6 +21,7 @@ import manatee
 import os.path, sys, glob
 from types import UnicodeType
 from hashlib import md5
+from butils import *
 
 class CorpusManager:
     def __init__ (self, corplist=['susanne'], subcpath=[], gdexpath=[]):
@@ -214,12 +215,14 @@ def ws_wordlist (corp, wlmaxitems=100, wlsort=''):
         freq = ws_subc_freq (ws3, corp)
         result.append ((-freq, w1, gramrel, w2, ws3.tell()))
     return add_block_items ([{'w1': w1, 'gramrel': g, 'w2': w2, 'seek': seek,
-                              'freq': -mfreq }
+                              'freq': -mfreq, 'str': ' '.join([w1, g, w2]) }
                              for mfreq, w1, g, w2, seek in sorted (result)])
 
 
 def wordlist (corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
               wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
+    blacklist = set (blacklist)
+    words = set (words)
     attr = corp.get_attr (wlattr)
     if '.' in wlattr: # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
@@ -348,7 +351,7 @@ def texttype_values (corp, subcorpattrs, maxlistsize, list_all=False):
                                 and (corp.get_conf (n+'.TEXTBOXLENGTH')
                                       or attr.id_range() > maxlistsize):
                 attrval ['textboxlength'] = (corp.get_conf (n+'.TEXTBOXLENGTH')
-                                             or 30)
+                                             or 24)
             else: # list of values
                 if corp.get_conf(n+'.NUMERIC'):
                     vals = []

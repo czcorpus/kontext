@@ -17,6 +17,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
 #encoding UTF-8
+#unless $mode_included
 <!DOCTYPE html>
 <html>
 #filter WebSafe
@@ -47,6 +48,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </script>
 </head>
 <body>
+
 <div>
     <table id="topbar">
         <tr>
@@ -61,6 +63,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </table>
 </div>
 
+#end unless
+
+
 
 #filter WebSafe
 <div id="error-box">
@@ -69,5 +74,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <p><a href="$_home_url">$_('home page')</a></p>
 </div>
 #end filter
+
+#unless $mode_included
 </body>
 </html>
+#end unless

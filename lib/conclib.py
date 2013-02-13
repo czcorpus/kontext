@@ -25,6 +25,7 @@ import math
 
 import manatee
 import settings
+from butils import *
 
 try:
     import fcntl
@@ -448,7 +449,6 @@ def kwiclines(
         rightwords = postproc_kwicline_part(
             corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right',
             filter_out_speech_tag, last_left_speech_id)[0]
-        logging.getLogger(__name__).info(rightwords)
         kwicwords = tokens2strclass(kl.get_kwic())
         if righttoleft:
             # change order for "English" context of "English" keywords
@@ -1238,8 +1238,9 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
             r, w = os.fdopen(r, 'r'), os.fdopen(w, 'w')
             if os.fork() == 0:  # child
                 r.close()  # child writes
-                setproctitle("bonito concordance;corp:%s;action:%s;params:%s;"
-                             % (corp.get_conffile(), q[0][0], q[0][1:]))
+                title = "bonito concordance;corp:%s;action:%s;params:%s;" \
+                        % (corp.get_conffile(), q[0][0], q[0][1:])
+                setproctitle(title.encode("utf-8"))
                 # close stdin/stdout/stderr so that the webserver closes
                 # connection to client when parent ends
                 os.close(0)
@@ -1516,12 +1517,103 @@ def get_detail_context(corp, pos, hitlen=1,
     return data
 
 
-if __name__ == '__main__':
+def fcs_search(corp, fcs_query, max_rec, start):
+    "aux function for federated content search: operation=searchRetrieve"
+    if not fcs_query:
+        raise Exception(7, '', 'Mandatory parameter not supplied')
+    query = fcs_query.replace('+', ' ') # convert URL spaces
+    exact_match = False # attr=".*value.*"
+    if 'exact' in query.lower() and not '=' in query: # lemma EXACT "dog"
+        pos = query.lower().index('exact') # first occurence of EXACT
+        query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
+        exact_match = True
+    rq = '' # query for manatee
+    try: # parse query
+        if '=' in query: # lemma=word | lemma="word" | lemma="w1 w2" | word=""
+            attr, term = query.split('=')
+            attr = attr.strip()
+            term = term.strip()
+        else: # "w1 w2" | "word" | word
+            attr = 'lemma'
+            term = query.strip()
+        if '"' in attr:
+            raise Exception
+        if '"' in term: # "word" | "word1 word2" | "" | "it is \"good\""
+            if term[0] != '"' or term[-1] != '"': # check q. marks
+                raise Exception
+            term = term[1:-1].strip() # remove quotation marks
+            if ' ' in term: # multi-word term
+                if exact_match:
+                    rq = ' '.join(['[%s="%s"]' % (attr, t)
+                                   for t in term.split()])
+                else:
+                    rq = ' '.join(['[%s=".*%s.*"]' % (attr, t)
+                                   for t in term.split()])
+            elif term.strip() == '': # ""
+                raise Exception # empty term
+            else: # one-word term
+                if exact_match:
+                    rq = '[%s="%s"]' % (attr, term)
+                else:
+                    rq = '[%s=".*%s.*"]' % (attr, term)
+        else: # must be single-word term
+            if ' ' in term:
+                raise Exception
+            if exact_match: # build query
+                rq = '[%s="%s"]' % (attr, term)
+            else:
+                rq = '[%s=".*%s.*"]' % (attr, term)
+    except: # there was a problem when parsing
+        raise Exception(10, query, 'Query syntax error')
+    if not attr in corp.get_conf('ATTRLIST'):
+        raise Exception(16, attr, 'Unsupported index')
+    try: # try to get concordance
+        conc = get_conc(corp, q=['q' + rq])
+    except Exception, e:
+        raise Exception(10, repr(e), 'Query syntax error')
+    page = kwicpage(conc) # convert concordance
+    if len(page['Lines']) < start:
+        raise Exception(61, '', 'First record position out of range')
+    return [(kwicline['Left'][0]['str'], kwicline['Kwic'][0]['str'],
+             kwicline['Right'][0]['str'], kwicline['ref'])
+            for kwicline in page['Lines']][start:][:max_rec]
+
+
+def fcs_scan(corpname, scan_query, max_ter, start):
+    "aux function for federated content search: operation=scan"
+    if not scan_query:
+        raise Exception(7, '', 'Mandatory parameter not supplied')
+    query = scan_query.replace('+', ' ') # convert URL spaces
+    exact_match = False
+    if 'exact' in query.lower() and not '=' in query: # lemma ExacT "dog"
+        pos = query.lower().index('exact') # first occurence of EXACT
+        query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
+        exact_match = True
+    corp = manatee.Corpus(corpname)
+    attrs = corp.get_conf('ATTRLIST').split(',') # list of available attrs
+    try:
+        if '=' in query:
+            attr, value = query.split('=')
+            attr = attr.strip()
+            value = value.strip()
+        else: # must be in format attr = value
+            raise Exception
+        if '"' in attr:
+            raise Exception
+        if '"' in value:
+            if value[0] == '"' and value[-1] == '"':
+                value = value[1:-1].strip()
+            else:
+                raise Exception
+    except Exception, e:
+        raise Exception(10, scan_query, 'Query syntax error')
+    if not attr in attrs:
+        raise Exception(16, attr, 'Unsupported index')
     import corplib
-    cm = corplib.CorpusManager()
-    # cc = PyConc('bnc:text', 'l', 'pokus')
-    # cc = PyConc('susanne', 'q', '"dream"')
-    cc = PyConc(cm.get_Corpus('bnc'), 'l', 'help')
-    # printkwic (cc)
-    # print cc.collocs()
-    pass
+    if exact_match:
+        wlpattern = '^' + value + '$'
+    else:
+        wlpattern = '.*' + value + '.*'
+    wl = corplib.wordlist(corp, wlattr=attr, wlpat=wlpattern, wlsort='f')
+    return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
+
