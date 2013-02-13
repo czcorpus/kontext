@@ -112,16 +112,21 @@ id="bodytag"#slurp
 #end def
 
 #def align_heading($viewmode, $KWICCorps)
-  #if $getVar('Par_conc_corpnames', [])
-    <tr>
+#if $getVar('Par_conc_corpnames', [])
+<tr>
     #for $i, $c in enumerate($Par_conc_corpnames)
-      <td></td>
-      <td #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>      
-      <a href="view?$q;$globals;q=x-$c.n;maincorp=$c.n"><b>$c.label</b></td></a></td>
-      #if $copy_icon and $i == 0 # <td></td> #end if#
+    #if not $refs_up# <td></td> #end if#
+    <td #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
+    #if $c.n in $KWICCorps
+    <a href="view?$q;$globals;q=x-$c.n;maincorp=$c.n"><b>$c.label</b></a>
+    #else
+    <a href="filter_form?$q;$globals;maincorp=$c.n;within=1"><b>$c.label</b></a>
+    #end if
+    </td>
+    #if $copy_icon and $i == 0 # <td></td> #end if#
     #end for
-    </tr>
-  #end if
+</tr>
+#end if
 #end def
 
 #def display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $longcorpname)
