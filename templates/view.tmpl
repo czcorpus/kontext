@@ -58,9 +58,13 @@ soundManager.setup({
 
 #def left_submenu_options
   <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_("View options")</a>
-    <ul class="submenu">
-      <li><a title="$_("Swap concordance view mode")" href="view?$q;$globals;fromp=$fromp;changeviewmode=1">$_("KWIC/Sentence")</a></li>
-    </ul>
+      <ul class="submenu">
+          <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
+          <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
+          #if $align
+          <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+          #end if
+      </ul>
   </li>
 #end def
 
@@ -120,11 +124,11 @@ id="bodytag"#slurp
   #end if
 #end def
 
-#def display_conc_line($l, $corpname, $viewmode, $KWICCorps)
-  #if $viewmode == 'kwic' and $corpname in $KWICCorps
-    <td class="lc #if $corpname == $maincorp#maincorp#end if#" >
+#def display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $longcorpname)
+  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
+    <td class="lc #if $basecorpname == $maincorp#maincorp#end if#" >
   #else
-    <td class="par #if $corpname == $maincorp#maincorp#end if#">
+    <td class="par #if $basecorpname == $maincorp#maincorp#end if#">
     #if $annotconc
       <span class="groupbox" data-pos="$l.toknum">
       $l.linegroup</span>
@@ -145,14 +149,17 @@ id="bodytag"#slurp
     <a href="$ll.close_link.speech_url" class="speech-link" title="$_("Click to play audio")">]</a>
     #end if
   #end for
-  #if $viewmode == 'kwic' and $corpname in $KWICCorps
-    </td><td class="kw #if $corpname == $maincorp#maincorp#end if#"
-             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname" data-loadtext="$_('Loading...')">
+  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
+    </td><td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
+             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
   #else
-    <span data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$corpname" data-loadtext="$_('Loading...')">
+    #if not $l.Kwic
+    <i class="note">$_('<--not translated-->')</i>
+    #end if
+    <span data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
   #end if
   #for $k in $l.Kwic
-    #if $k.get('class', '') and $corpname in $KWICCorps
+    #if $k.get('class', '') and $basecorpname in $KWICCorps
       <b class='$k.class'>
     #end if
     $k.str
@@ -160,8 +167,8 @@ id="bodytag"#slurp
       </b>
     #end if
   #end for
-  #if $viewmode == 'kwic' and $corpname in $KWICCorps
-    </td><td class="rc #if $corpname == $maincorp#maincorp#end if#">
+  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
+    </td><td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
     #if $annotconc
       <span class="groupbox" data-pos="$l.toknum">$l.linegroup</span>
     #end if
@@ -331,7 +338,9 @@ $word.str#slurp
 #end block
 
 ## concordance lines
-#set $KWICCorps = list($getVar('CollCorps', [$corpname]))
+#set $basecorpname = $corpname.split('/')[-1]
+#set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
+#set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
 <table id="conclines">
 #filter None
 $align_heading($viewmode, $KWICCorps)
@@ -341,16 +350,37 @@ $align_heading($viewmode, $KWICCorps)
       <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
       <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">$l.ref</td>
       #filter None
-        $display_conc_line($l, $corpname, $viewmode, $KWICCorps)
-        $oneclick_line($l, $i)
-        #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-          #if $ll.ref
-            <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
-          #else
-            <td></td>
-          #end if
-          $display_conc_line($ll, $Par_conc_corpnames[$ii+1].n, $viewmode, $KWICCorps)
-        #end for
+        #if $refs_up
+          <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
+            #if $copy_icon# <td></td> #end if#
+            #for $ii,$ll in $enumerate($l.get('Align', []))
+                #set $bcname = $Par_conc_corpnames[$ii+1].n
+                #if $ll.ref
+                    <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
+                #else
+                    <td></td>
+                #end if
+            #end for
+            </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+            $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+            $oneclick_line($l, $i)
+            #for $ii,$ll in $enumerate($l.get('Align', []))
+                #set $bcname = $Par_conc_corpnames[$ii+1].n
+                $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+            #end for
+        #else ## standard display of refs
+            $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+            $oneclick_line($l, $i)
+            #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
+              #set $bcname = $Par_conc_corpnames[$ii+1].n
+              #if $ll.ref
+                <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
+              #else
+                <td></td>
+              #end if
+              $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+            #end for
+        #end if
       #end filter
       </tr>
     #end for

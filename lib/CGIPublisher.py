@@ -125,6 +125,7 @@ class CGIPublisher:
     _locale_dir = u'locale/'
     _tmp_dir = u'/tmp'
     _corpus_architect = 0
+    _url_parameters = []
     exceptmethod = None
     debug = None
     precompile_template = 1
@@ -212,7 +213,7 @@ class CGIPublisher:
                 na[a] = getattr (self, a)
         return na
 
-    def parse_parameters (self, selectorname=None, cookies=None, 
+    def parse_parameters(self, selectorname=None, cookies=None,
                           environ=os.environ, post_fp=None):
         self.environ = environ
         named_args = {}
@@ -230,6 +231,7 @@ class CGIPublisher:
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
         for k in form.keys():
+            self._url_parameters.append(k)
             # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
@@ -309,7 +311,8 @@ class CGIPublisher:
                     'corplist_size' : '?',
                     'Corplist' : [],
                     'corp_description' : '',
-                    'corp_size' : ''
+                    'corp_size' : '',
+                    'mode_included' : True
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 

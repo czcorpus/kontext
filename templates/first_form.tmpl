@@ -107,23 +107,26 @@ require(['jquery', 'domReady!'], function (\$, dr) {
 });
 </script>
 #if $Aligned
-  <fieldset>
+  <fieldset class="parallel">
   <legend>$_('Parallel Query')</legend>
   <table class="form">
   #set $sel_aln = $align.split(',')
   #for $a in $Aligned
-    <tr><td valign="top">
-    <label><input type="checkbox" name="sel_aligned" value="$a.n"
-            #if $a.n in $sel_aln# checked #end if# />
-    <b>$a.label</b> ($a.n)</label>
-    </td><td valign="top">
-    <select name="pcq_pos_neg_$a.n" style="display:none;">
-    <option value="pos">$_('Contains')</option>
-    <option value="neg">$_('Does NOT contain')</option>
-    </select>
-    </td>
-    <td>
-    <table class="form" id="qtable_$a.n" style="display:none">$query_node('_'+$a.n)</table></td></tr>
+    <tr>
+        <td valign="top" colspan="2">
+            <label><input type="checkbox" name="sel_aligned" value="$a.n" #if $a.n in $sel_aln# checked #end if# />
+                <b>$a.label</b> ($a.n)</label>
+        </td>
+        <td valign="top">
+            <select name="pcq_pos_neg_$a.n" style="display:none;">
+                <option value="pos">$_('Contains')</option>
+                <option value="neg">$_('Does NOT contain')</option>
+            </select>
+        </td>
+        <td>
+            <table class="form" id="qtable_$a.n" style="display:none">$query_node('_'+$a.n)</table>
+        </td>
+    </tr>
   #end for
   </table>
   </fieldset>
@@ -171,7 +174,7 @@ require(['jquery', 'domReady!'], function (\$, dr) {
       <th align="left">$_("Word form(s)"):</th>
 #end if
       <td>
-      <input type="text" name="fc_lemword" />
+      <input type="text" name="fc_lemword" class="fc_lemword" />
       <select name="fc_lemword_type">
          <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
          <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>

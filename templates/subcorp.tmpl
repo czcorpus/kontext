@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Subcorpus Info")#slurp
 #end def
 
-#attr $focus = "'#subcname'"
-
 #def bodyonload
 #filter WebSafe
 show_subcorpinfo();#slurp
@@ -32,64 +30,73 @@ show_subcorpinfo();#slurp
 #end def
 
 #def main
+<script type="text/javascript">
+    jQuery(document).ready(function () {
+        jQuery('#subcname').focus();
+    });
+</script>
 #filter WebSafe
 <form id="subcorpform" action="subcorp">
-<fieldset>
-<table class="form">
-#filter None
-$corp_sel_node
-#end filter
-## Subcorpora
-<tbody>
-<tr>
-<th valign="top">
-$_("Subcorpora"):<br/>
-#if $SubcorpList
-<select name="subcname" id="subcname" onchange="show_subcorpinfo();"
-        size="#if len($SubcorpList) == 1 then 2 else min(len($SubcorpList), 25)#">
-  #for $s in $SubcorpList
-    #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
-    <option $selected>$s.n</option>
-  #end for
-</select>
-#else
-<i>$_("no subcorpus")</i>
-#end if
-<br/>
+    <table class="form">
+        #filter None
+        $corp_sel_node
+        #end filter
+        ## Subcorpora
+        <tbody>
+        <tr>
+            <th valign="top">
+                $_("Subcorpora"):<br/>
+                <input type="hidden" name="delete" value="true" />
+                #if $SubcorpList
+                <select name="subcname" id="subcname" onchange="show_subcorpinfo();"
+                        size="#if len($SubcorpList) == 1 then 2 else min(len($SubcorpList), 25)#">
+                    #for $s in $SubcorpList
+                    #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
+                    <option $selected>$s.n</option>
+                    #end for
+                </select>
+                #else
+                <i>$_("no subcorpus")</i>
+                #end if
+                <br/>
 
-     <i>
-     #if not $_anonymous
-     <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
-     #end if
-</th>
+                <i>
+                    #if not $_anonymous
+                    <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
+                #end if
+            </th>
 
-## Subcorp Info
-<td valign="top">
-<div id="subcorpinfo" class="infobox">
-    #if $subcsize
-      <b>$subcname</b><br/>
-      $subcsize <i>$_("of")</i> $corpsize <i>$_("tokens")</i>
+            ## Subcorp Info
+            <td valign="top">
+                <div id="subcorpinfo" class="infobox">
+                    #if $subcsize
+                    <b>$subcname</b><br/>
+                    $subcsize <i>$_("of")</i> $corpsize <i>$_("tokens")</i>
+                    #end if
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    #if $SubcorpList and not $_anonymous
+    <div class="buttons">
+        <input type="submit" value="$_("Delete Selected")" />
+    </div>
     #end if
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-
-#if $SubcorpList and not $_anonymous
-<div class="buttons">
-  <input type="submit" name="delete" value="$_("Delete Selected")" />
-</div>
-#end if
-</fieldset>
 </form>
 
 <script type="text/javascript">
-function show_subcorpinfo() {
-    \$.get('subcorp_info', \$('#subcorpform').serialize(), function (data) {
-        \$('#subcorpinfo').html(data);
-    });
-}
+    function show_subcorpinfo() {
+        jQuery.ajax({
+            url: 'subcorp_info',
+            data: jQuery('#subcorpform').serialize(),
+            type: 'GET',
+            complete: function (data) {
+                jQuery('#subcorpinfo').html(data.responseText);
+            }
+        });
+    }
 </script>
 #end filter
 #end def

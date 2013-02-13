@@ -20,16 +20,14 @@ import locale
 from types import ListType
 import logging
 import math
+from butils import *
 
 from CGIPublisher import CGIPublisher, JsonEncodedData, UserActionException
-import corplib
-import conclib
-import version
 import settings
 import taghelper
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
-def escape (s):
+def escape(s):
     return escape_regexp.sub(r'\\\g<0>', s)
     
 
@@ -41,9 +39,9 @@ except locale.Error:
     def formatnum (f):
         return '%.f' % f
 
-def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
+def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
-    attrpart = '%s%s/%s%s ' % (prefix, attr, icase, bward)
+    attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
     if not ctx:
         ctx = '%i%s' % (pos, fromcode.get (fcode, '0'))
     if '~' in ctx and '.' in attr:
@@ -150,7 +148,7 @@ class ConcCGI (UserCGI):
     tag = ''
     default_attr = None
     save = 1
-    async = 0
+    async = 1
     spos = 3
     skey = u'rc'
     qmcase = 0
@@ -258,7 +256,10 @@ class ConcCGI (UserCGI):
     def _add_globals (self, result):
         UserCGI._add_globals (self, result)
 
-        thecorp = self._corp()
+        if self.maincorp:
+            thecorp = conclib.manatee.Corpus(self.maincorp)
+        else:
+            thecorp = self._corp()
         result['q'] = self.urlencode ([('q', q) for q in self.q])
         result['Q'] = [{'q': q} for q in self.q]
         result['corpname_url'] = 'corpname=' + self.corpname
@@ -374,10 +375,10 @@ class ConcCGI (UserCGI):
     senleftctx_tpl = '-1:%s'
     senrightctx_tpl = '1:%s'
     viewmode = 'kwic'
-    changeviewmode = 0
     align = ''
     sel_aligned = []
     maincorp = ''
+    refs_up = 0
 
     def simple_search (self):
         "simple search result -- all in one"
@@ -422,16 +423,15 @@ class ConcCGI (UserCGI):
     
     def view (self, tpl_params={}):
         "kwic view"
-        if self.changeviewmode:
-            self.viewmode = {'sen':'kwic',
-                             'kwic': 'sen'}.get (self.viewmode, 'kwic')
-            self._cookieattrs.append ('viewmode')
         self.righttoleft = False
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
             self.rightctx = self.kwicrightctx
             if self._corp().get_conf ('RIGHTTOLEFT'):
                 self.righttoleft = True
+        elif self.viewmode == 'align' and self.align:
+            self.leftctx = 'a,%s' % os.path.basename(self.corpname)
+            self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
             sentence_struct = settings.get_corpus_info(self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
@@ -486,17 +486,27 @@ class ConcCGI (UserCGI):
                                'label': conclib.manatee.Corpus(w).get_conf(
                                                                   'NAME') or w }
                          for w in self._corp().get_conf ('ALIGNED').split(',')]
-        if self.align and not self.maincorp: self.maincorp = self.corpname
+        if self.align and not self.maincorp:
+            self.maincorp = os.path.basename(self.corpname)
         return out
     add_vars['view'] = ['orig_query']
 
     def first_form(self):
         out = {}
         if self._corp().get_conf ('ALIGNED'):
-            out['Aligned'] = [{'n': w,
-                               'label': conclib.manatee.Corpus(w).get_conf(
-                                   'NAME') or w }
-                              for w in self._corp().get_conf ('ALIGNED').split(',')]
+            out['Aligned'] = []
+            for al in self._corp().get_conf ('ALIGNED').split(','):
+                alcorp = conclib.manatee.Corpus(al)
+                out['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
+                                       'n': al})
+                attrlist = alcorp.get_conf('ATTRLIST').split(',')
+                poslist = self.cm.corpconf_pairs (alcorp, 'WPOSLIST')
+                out['Wposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
+                if 'lempos' in attrlist:
+                    poslist = self.cm.corpconf_pairs (alcorp, 'LPOSLIST')
+                out['Lposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
+                out['has_lemmaattr_'+al] = 'lempos' in attrlist \
+                    or 'lemma' in attrlist
         return out
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
@@ -517,11 +527,13 @@ class ConcCGI (UserCGI):
         for j in range (i+1, len(self.q)):
             if self.q[j][0] in ('pn'):
                 return {'concsize': concsize, 'sampled_size': 0,
-                        'relconcsize': 0}
+                        'relconcsize': 0, 'fullsize': fullsize,
+                        'finished': conc.finished()}
         if sampled_size:
             orig_conc = self.call_function (conclib.get_conc, (self._corp(),),
                 q=self.q[:i])
             concsize = orig_conc.size()
+            fullsize = orig_conc.fullsize()
         return {'sampled_size': sampled_size, 'concsize': concsize,
                 'relconcsize':1000000.0 * fullsize / self._corp().search_size(),
                 'fullsize': fullsize, 'finished': conc.finished()}
@@ -587,9 +599,9 @@ class ConcCGI (UserCGI):
             self.ctxattrs = 'word'
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
-        self._cookieattrs.extend (['attrs', 'ctxattrs', 'structs',
+        self._cookieattrs.extend(['attrs', 'ctxattrs', 'structs',
                                    'pagesize', 'copy_icon', 'multiple_copy',
-                                   'gdex_enabled', 'gdexcnt', 'gdexconf'])
+                                   'gdex_enabled', 'gdexcnt', 'gdexconf', 'refs_up'])
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -614,7 +626,7 @@ class ConcCGI (UserCGI):
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
                             'refs',
                             'kwicleftctx', 'kwicrightctx', 'multiple_copy',
-                            'tbl_template', 'ctxunit'],
+                            'tbl_template', 'ctxunit', 'refs_up'],
                             self.corpname)
         out = self.viewattrs()
         out['saved_attrs'] = 1
@@ -767,14 +779,17 @@ class ConcCGI (UserCGI):
                 raise ConcError (_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
         if queryselector == 'charrow':
+            if not char:
+                raise ConcError (_('No char entered'))
             return '[word=".*%s.*"]' % char
         elif queryselector == 'tagrow':
             return '[tag="%s"]' % self.tag
         return cql
 
 
-    def _compile_query(self, qtype=None):
-        if not self.is_err_corpus(): return self._compile_basic_query(qtype)
+    def _compile_query(self, qtype=None, cname=''):
+        if not self.is_err_corpus():
+            return self._compile_basic_query(qtype, cname=cname)
         self._cookieattrs.append ('cup_hl')
         err_code = getattr(self, 'cup_err_code', '')
         err = getattr(self, 'cup_err', '')
@@ -867,12 +882,18 @@ class ConcCGI (UserCGI):
         else:
             ttquery = ''
         par_query = ''
+        nopq = []
         for al_corpname in self.sel_aligned:
-            if getattr(self, 'pcq_pos_neg_' + al_corpname) == 'pos': wnot = ''
-            else: wnot = '!'
+            if getattr(self, 'pcq_pos_neg_' + al_corpname) == 'pos':
+                wnot = ''
+            else:
+                wnot = '!'
             pq = self._compile_basic_query(suff='_'+al_corpname,
                                            cname=al_corpname)
-            if pq: par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+            if pq:
+                par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+            if not pq or wnot:
+                nopq.append(al_corpname)
         self.q = [qbase + self._compile_query() + ttquery + par_query]
 
         if fc_lemword_window_type == 'left':
@@ -905,6 +926,12 @@ class ConcCGI (UserCGI):
                            [wposlist.get(t,'') for t in fc_pos],
                            '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                            fc_pos_type)
+        for al_corpname in self.sel_aligned:
+            if al_corpname in nopq and getattr(self,
+                                               'filter_nonempty_' + al_corpname, ''):
+                self.q.append('x-%s' % al_corpname)
+                self.q.append('p0 0 1 []')
+                self.q.append('x-%s' % self.corpname)
 
     def first (self, fc_lemword_window_type='',
                      fc_lemword_wsize=0,
@@ -928,14 +955,17 @@ class ConcCGI (UserCGI):
     first.template = 'view.tmpl'
     add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
 
-    def filter_form (self):
+    def filter_form(self, within=0):
         self.lemma = ''
         self.lpos = ''
-        return {}
+        out = {'within': within}
+        if within and not self.error:
+            out['error'] = _('Please specify positive filter to switch')
+        return out
     add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
 
     def filter (self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
-            inclkwic=False):
+            inclkwic=False, within=0):
         "Positive/Negative filter"
         if pnfilter not in ('p','n'):
             raise ConcError (_('Select Positive or Negative filter type'))
@@ -944,15 +974,23 @@ class ConcCGI (UserCGI):
         rank = {'f':1, 'l':-1}.get (filfl, 1)
         texttypes = self._texttype_query()
         try:
-            query = self._compile_query()
+            query = self._compile_query(cname=self.maincorp)
         except ConcError:
             if texttypes: query = '[]'; filfpos='0'; filtpos='0'
             else: raise ConcError (_('No query entered.'))
         query +=  ' '.join (['within <%s %s />' % nq for nq in texttypes])
-        self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
-                                          rank, query))
-        try: return self.view()
-        except: del self.q[-1]; raise
+        if within:
+            wquery = ' within %s:(%s)' % (self.maincorp or self.corpname, query)
+            self.q[0] += wquery
+        else:
+            self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
+                                              rank, query))
+        try:
+            return self.view()
+        except:
+            if within: self.q[0] = self.q[0][:-len(wquery)]
+            else: del self.q[-1]
+            raise
     filter.template = 'view.tmpl'
     add_vars['filter'] = ['orig_query']
 
@@ -1044,34 +1082,69 @@ class ConcCGI (UserCGI):
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-            ## generating positive and negative filter references
+        ## generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
             for level, (attr, range) in enumerate(zip(attrs, ranges)):
                 begin = range.split('~')[0]
-                if attr.endswith('/i'): icase = '(?i)'; attr = attr[:-2]
-                else: icase = ''; attr = attr.strip('/')
-                for item in block['Items']:
+                if '~' in range: end = range.split('~')[1]
+                else: end = begin
+                attr = attr.split("/")
+                if len(attr) > 1 and "i" in attr[1]: icase = '(?i)'
+                else: icase = ''
+                attr = attr[0]
+                for ii, item in enumerate(block['Items']):
                     if not item['freq']: continue
                     if not '.' in attr:
-                        wwords = item['Word'][level]['n'].split('  ') # two spaces
-                        m = re.search('(\d+)([<>].*)$', begin)
-                        if m:
-                            end = str(int(m.group(1)) + len(wwords) - 1) + m.group(2)
-                        else:
-                            end = str(len(wwords) - 1) + '<0'
-                            begin += '<0'
-                        fquery = '%s %s 1 ' % (begin, end)
-                        fquery += ''.join(['[%s="%s%s"]' % (attr, icase, escape_query_value(w))
-                                           for w in wwords ])
+                        if attr in corp.get_conf('ATTRLIST').split(','):
+                            wwords = item['Word'][level]['n'].split('  ') # two spaces
+                            fquery = '%s %s 0 ' % (begin, end)
+                            fquery += ''.join(['[%s="%s%s"]'
+                                               % (attr, icase, escape(w)) for w in wwords ])
+                        else: # structure number
+                            fquery = '0 0 1 [] within <%s #%s/>' % \
+                                     (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
-                        fquery = '0 0 1 [] within <%s %s="%s" />' %\
-                                 (attr.split('.')[0], attr.split('.')[1],
-                                  item['Word'][0]['n'])
-                    fquery = self.urlencode(fquery)
-                    item['pfilter'] += ';q=p%s' % fquery
-                    item['nfilter'] += ';q=n%s' % fquery
+                        structname, attrname = attr.split('.')
+                        if corp.get_conf(structname + '.NESTED'):
+                            block['unprecise'] = True
+                        fquery = '0 0 1 [] within <%s %s="%s" />' \
+                                 % (structname, attrname,
+                                    escape(item['Word'][0]['n']))
+                    if not item['freq']: continue
+                    efquery = self.urlencode(fquery)
+                    item['pfilter'] += ';q=p%s' % efquery
+                    if len(attrs) == 1 and item['freq'] <= conc.size():
+                        item['nfilter'] += ';q=n%s' % efquery
+            # adding no error, no correction (originally for CUP)
+        errs, corrs, err_block, corr_block = 0, 0, -1, -1
+        for b_index, block in enumerate(result['Blocks']):
+            curr_fcrit = fcrit[b_index]
+            if curr_fcrit.split()[0] == 'err.type':
+                err_block = b_index
+                for item in block['Items']: errs += item['freq']
+            elif curr_fcrit.split()[0] == 'corr.type':
+                corr_block = b_index
+                for item in block['Items']: corrs += item['freq']
+        freq = conc.size() - errs - corrs
+        if freq > 0 and err_block > -1 and corr_block > -1:
+            pfilter = ';q=p0 0 1 ([] within ! <err/>) within ! <corr/>'
+            cc = self.call_function(conclib.get_conc, (corp,),
+                                    q=self.q + [pfilter[3:]])
+            freq = cc.size()
+            err_nfilter, corr_nfilter = '', ''
+            if freq != conc.size():
+                err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
+                corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
+            result['Blocks'][err_block]['Items'].append(
+                {'Word': [{'n': 'no error' }], 'freq': freq,
+                 'pfilter': pfilter, 'nfilter': err_nfilter,
+                 'norel': 1, 'fbar' :0} )
+            result['Blocks'][corr_block]['Items'].append(
+                {'Word': [{'n': 'no correction' }], 'freq': freq,
+                 'pfilter': pfilter, 'nfilter': corr_nfilter,
+                 'norel': 1, 'fbar' :0} )
         return result
 
     add_vars['savefreq_form'] = ['concsize'] 
@@ -1112,7 +1185,7 @@ class ConcCGI (UserCGI):
         l = locals()
         fcrit = ' '.join([onelevelcrit ('', l['ml%dattr'%i],
                                         l['ml%dctx'%i], l['ml%dpos'%i],
-                                        l['ml%dfcode'%i], l['ml%dicase'%i])
+                                        l['ml%dfcode'%i], l['ml%dicase'%i], 'e')
                          for i in range(1, freqlevel+1)])
         result = self.freqs ([fcrit], flimit, '', 1)
         result['ml'] = 1
@@ -1137,7 +1210,10 @@ class ConcCGI (UserCGI):
     
     def coll (self):
         "collocations form"
-        corp = self._corp()
+        if self.maincorp:
+            corp = conclib.manatee.Corpus(self.maincorp)
+        else:
+            corp = self._corp()
         colllist = corp.get_conf('ATTRLIST').split(',')
         out = {'Coll_attrlist': [{'n': n,
                                   'label': corp.get_conf (n+'.LABEL') or n}
@@ -1257,12 +1333,13 @@ class ConcCGI (UserCGI):
             else:
                 out = ('', lines[-1])
             logfile.close()
-        else: out = ('', '')
-        return out
+        else:
+            out = ('', '')
+        return ':'.join(map(str.strip, out))
 
     def kill_histogram_processing(self):
         import glob
-        pid = self.check_histogram_processing()[0].strip()
+        pid = self.check_histogram_processing().split(':')[0]
         if pid:
             try:
                 os.kill(int(pid), 9)
@@ -1297,7 +1374,8 @@ class ConcCGI (UserCGI):
             id = hist.get_id()
             if id not in histlist_ids:
                 histlist_ids.append(id)
-                out['Histlist'].append({'name': hist.get_attr('HR'), 'id': id})
+                out['Histlist'].append({'name': hist.get_attr('HR') or id,
+                                        'id': id})
         return out 
 
     wlminfreq = 5
@@ -1326,7 +1404,7 @@ class ConcCGI (UserCGI):
 
     def findx_upload_form(self):
         out = {}
-        out['processing'] = self.check_histogram_processing()[1]
+        out['processing'] = self.check_histogram_processing().split(':')[1]
         return out
 
 
@@ -1346,7 +1424,7 @@ class ConcCGI (UserCGI):
             cache_file = open(filename, 'w')
             cache_file.write(wlfile)
             cache_file.close()
-            wlwords = [w.strip() for w in wlfile.split('\n')]
+            wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
         if wlcache: # read from a cache file
             filename = os.path.join(self.cache_dir, wlcache)
             cache_file = open(filename)
@@ -1421,8 +1499,11 @@ class ConcCGI (UserCGI):
             else: result['lastpage'] = 0; result_list = result_list[:-1]
             self.wlmaxitems -= 1
             if '.' in self.wlattr: self.wlnums = orig_wlnums
-            result['wlattr_label'] = self._corp().get_conf(
-                                           self.wlattr+'.LABEL') or self.wlattr
+            try:
+                result['wlattr_label'] = self._corp().get_conf(
+                    self.wlattr+'.LABEL') or self.wlattr
+            except:
+                result['wlattr_label'] = self.wlattr
             return result
         except corplib.MissingSubCorpFreqFile, subcmiss:
             self.wlmaxitems -= 1
@@ -1738,6 +1819,7 @@ class ConcCGI (UserCGI):
             rctx = rightctx
 
         conc = self.call_function (conclib.get_conc, (self._corp(), self.samplesize))
+        conc.switch_aligned (os.path.basename(self.corpname))
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="conc.xml"'
@@ -2070,3 +2152,124 @@ class ConcCGI (UserCGI):
 
         return JsonEncodedData(ans)
     ajax_get_tag_variants.return_type = 'json'
+
+def fcs(self, operation='explain', version='', recordPacking='xml',
+        extraRequestData='', query='', startRecord='', responsePosition='',
+        recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
+    "Federated content search API function (www.clarin.eu/fcs)"
+
+    # default values
+    self._headers['Content-Type'] = 'application/XML'
+    corpname = 'brown'
+    numberOfRecords = 0
+    current_version = 1.2
+    # supported parameters for all operations
+    sup_pars = ['operation', 'stylesheet', 'version', 'extraRequestData']
+    # implicit result sent to template
+    out = {'operation': operation, 'version': current_version,
+           'recordPacking': recordPacking, 'result': [],
+           'error': False, 'numberOfRecords': numberOfRecords,
+           'server_name': self.environ.get('SERVER_NAME', ''),
+           'server_port': self.environ.get('SERVER_PORT', '80'),
+           'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
+    try:
+        # check version
+        if version and current_version < float(version):
+            raise Exception(5, version, 'Unsupported version')
+
+        # check integer parameters
+        if maximumRecords != '':
+            try:
+                maximumRecords = int(maximumRecords)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            maximumRecords = 250
+        out['maximumRecords'] = maximumRecords
+        if maximumTerms != '':
+            try:
+                maximumTerms = int(maximumTerms)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            maximumTerms = 100
+        out['maximumTerms'] = maximumTerms
+        if startRecord != '':
+            try:
+                startRecord = int(startRecord)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            startRecord = 0
+        out['startRecord'] = startRecord
+        if responsePosition != '':
+            try:
+                responsePosition = int(responsePosition)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            responsePosition = 0
+        out['responsePosition'] = responsePosition
+
+        # set content-type in HTTP header
+        if recordPacking == 'string':
+            self._headers['Content-Type'] = 'text/plain'
+        elif recordPacking == 'xml':
+            self._headers['Content-Type'] = 'application/XML'
+        else:
+            raise Exception(71, 'Unsupported record packing')
+
+        # provide info about service
+        if operation == 'explain' or not operation:
+            sup_pars.append('recordPacking') # other supported parameters
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                #if extraRequestData:
+            #    corpname = extraRequestData
+            corp = conclib.manatee.Corpus(corpname)
+            out['result'] = corp.get_conf('ATTRLIST').split(',')
+            out['numberOfRecords'] = len(out['result'])
+
+        # wordlist for a given attribute
+        elif operation == 'scan':
+        # check supported parameters
+            sup_pars.extend(['scanClause', 'responsePosition',
+                             'maximumTerms'])
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                #if extraRequestData:
+            #    corpname = extraRequestData
+            out['result'] = conclib.fcs_scan(corpname, scanClause,
+                                             maximumTerms, responsePosition)
+
+        # simple concordancer
+        elif operation == 'searchRetrieve':
+        # check supported parameters
+            sup_pars.extend(['query', 'startRecord', 'maximumRecords',
+                             'recordPacking', 'recordSchema', 'resultSetTTL'])
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+            cm = corplib.CorpusManager(corplist=[corpname])
+            corp = cm.get_Corpus(corpname)
+            out['result'] = conclib.fcs_search(corp, query,
+                                               maximumRecords, startRecord)
+            out['numberOfRecords'] = len(out['result'])
+
+        # unsupported operation
+        else:
+            out['operation'] = 'explain' # show within explain template
+            raise Exception(4, '', 'Unsupported operation')
+        return out
+
+    # catch exception and amend diagnostics in template
+    except Exception as e:
+        out['error'] = True
+        try: # concrete error, catch message from lower levels
+            out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
+        except: # general error
+            out['code'], out['details'] = 1, repr(e)
+            out['msg'] = 'General system error'
+        return out
