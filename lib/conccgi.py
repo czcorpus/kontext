@@ -1844,6 +1844,8 @@ class ConcCGI (UserCGI):
         contains_speech = settings.has_configured_speech(self._curr_corpus)
         return self.call_function (conclib.kwicpage, (self._curr_corpus, conc, contains_speech), fromp=fromp,
                                    pagesize=ps, labelmap=labelmap, align=[],
+                                   alignlist=[self.cm.get_Corpus(c)
+                                        for c in self.align.split(',') if c],
                                    leftctx=lctx, rightctx=rctx)
     add_vars['saveconc'] = ['Desc', 'concsize']
 
