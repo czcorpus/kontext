@@ -20,7 +20,7 @@
  * This library provides a clickable 'tag generator' widget.
  * The library depends on multiselect.js - TODO use require.js
  */
-define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, multiselect, simplemodal, caret) {
+define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multiselect, simplemodal, bonito) {
     'use strict';
 
     var createTagLoader,
@@ -595,6 +595,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
             }
         }
         $(opt.inputElement).parent().find('.insert-tag a').bind('click', function (event) {
+            var caretPos = bonito.getCaretPosition($(opt.inputElement));
             $(opt.modalWindowElement).modal({
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
@@ -603,8 +604,8 @@ define(['jquery', 'multiselect', 'simplemodal', 'jquery.caret'], function ($, mu
                         resetButton : $(opt.resetButtonElement)
                     });
                     $(opt.insertTagButtonElement).bind('click', function () {
-                        var bef = $(opt.inputElement).val().substring(0, $(opt.inputElement).caret()),
-                            aft = $(opt.inputElement).val().substring($(opt.inputElement).caret());
+                        var bef = $(opt.inputElement).val().substring(0, caretPos),
+                            aft = $(opt.inputElement).val().substring(caretPos);
                         $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
                         $.modal.close();
                         $(opt.inputElement).focus();
