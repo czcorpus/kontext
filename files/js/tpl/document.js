@@ -163,6 +163,17 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                 hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'));
             });
         });
+
+        $('#switch-language-box a').each(function () {
+            $(this).bind('click', function () {
+                var expirationDate = new Date();
+                expirationDate.setTime(expirationDate.getTime() + 3600 * 1000 * 24 * 365);
+                cookies.set('uilang', $(this).data('lang'), {
+                    expiresAt: expirationDate
+                });
+                window.location.reload();
+            });
+        });
     };
 
     lib.init = function (conf) {
