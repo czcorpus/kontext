@@ -604,9 +604,16 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                         resetButton : $(opt.resetButtonElement)
                     });
                     $(opt.insertTagButtonElement).bind('click', function () {
-                        var bef = $(opt.inputElement).val().substring(0, caretPos),
+                        var bef, aft;
+
+                        if ($(opt.inputElement).val()) {
+                            bef = $(opt.inputElement).val().substring(0, caretPos),
                             aft = $(opt.inputElement).val().substring(caretPos);
-                        $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
+                            $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
+
+                        } else {
+                            $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
+                        }
                         $.modal.close();
                         $(opt.inputElement).focus();
                     });
