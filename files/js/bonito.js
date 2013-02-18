@@ -127,7 +127,37 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
             cookies.set(id + '_view', 'show', opts);
             $('#' + id).show();
         }
-    }
+    };
+
+    /**
+     * Returns position (in number of characters) of cursor in a text input
+     *
+     * @param {Element|jQuery} inputElm
+     * @return {number} position of cursor (starting from zero)
+     */
+    lib.getCaretPosition = function (inputElm) {
+        var range,
+            jqInputElm;
+
+        if (inputElm instanceof jQuery) {
+            jqInputElm = inputElm;
+            inputElm = inputElm.get(0);
+
+        } else {
+            jqInputElm = $(inputElm);
+        }
+        if (window.getSelection) {
+            jqInputElm.focus();
+            return inputElm.selectionStart;
+
+        } else if (document.selection) { // < IE9
+            jqInputElm.focus();
+            range = document.selection.createRange();
+            range.moveStart('character', -jqInputElm.val().length);
+            return range.text.length;
+        }
+        return 0;
+    };
 
     return lib;
 

@@ -1,8 +1,8 @@
 /**
  * This module contains functionality related directly to the document.tmpl template
  */
-define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'jquery.cookies'],
-        function (win, $, hideElem, multiselect, tagbuilder, popupbox, cookies) {
+define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito'],
+        function (win, $, hideElem, multiselect, tagbuilder, popupbox, cookies, bonito) {
    'use strict';
 
     var lib = {};
@@ -116,7 +116,6 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
     };
 
-
     lib.bindClicks = function () {
         var msg2;
 
@@ -164,7 +163,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                 hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'));
             });
         });
-    }
+    };
 
     lib.init = function (conf) {
         lib.misc(conf);
@@ -174,6 +173,8 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
     lib.bindWithinHelper = function (jqLinkElement) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
         jqLinkElement.bind('click', function (event) {
+            var caretPos = bonito.getCaretPosition(jqInputElement);
+
             $('#within-builder-modal').modal({
                 onShow : function () {
                     $.get('ajax_get_structs_details?corpname=' + conf.corpname, {}, function (data) {
@@ -194,8 +195,8 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
                             structattr = $('#within-structattr').val().split('.');
                             var wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />',
-                                bef = jqInputElement.val().substring(0, jqInputElement.caret()),
-                                aft = jqInputElement.val().substring(jqInputElement.caret());
+                                bef = jqInputElement.val().substring(0, caretPos),
+                                aft = jqInputElement.val().substring(caretPos);
 
                             jqInputElement.val(bef + wthn + aft);
                             jqInputElement.focus();
