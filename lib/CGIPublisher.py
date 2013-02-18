@@ -312,7 +312,7 @@ class CGIPublisher:
                     'Corplist' : [],
                     'corp_description' : '',
                     'corp_size' : '',
-                    'mode_included' : True
+                    'mode_included' : False
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
