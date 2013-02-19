@@ -235,18 +235,18 @@ $word.str#slurp
 
 #def main
 #filter WebSafe
-    $_("Corpus"): <strong>$corp_full_name</strong>
-    #if $usesubcorp
-        $_("Subcorpus"): <strong>$usesubcorp</strong>
-    #end if
-    <br/>
-	#if $q[2] == "R"
-		#set $online_sample = True
-	#else
-		#set $online_sample = False
-	#end if
-
     <div id="result-info">
+        $_("Corpus"): <strong>$corp_full_name</strong>
+        #if $usesubcorp
+            $_("Subcorpus"): <strong>$usesubcorp</strong>
+        #end if
+        <br/>
+        #if $q[2] == "R"
+            #set $online_sample = True
+        #else
+            #set $online_sample = False
+        #end if
+
         $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
         (<span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
@@ -390,11 +390,6 @@ $align_heading($viewmode, $KWICCorps)
       </tr>
     #end for
     </table>
-#else
-<div id="message-box">
-    <h1>Info</h1>
-    <p>$_('Empty result')</p>
-</div>
 #end if
 
 #filter None
