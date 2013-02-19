@@ -31,7 +31,8 @@ else:
         fcntl.lockf (file, fcntl.LOCK_UN, 0, 0, 0)
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
-def escape (s):
+
+def escape(s):
     """ Escape CQL attribute value to protect it against RE evaluation """
     return escape_regexp.sub(r'\\\g<0>', s)
 

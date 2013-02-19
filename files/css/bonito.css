@@ -270,31 +270,44 @@ h3 a:focus, h3 a:focus img {
 
 /* ERROR */
 
-#error, #notification {
+#error .frame,
+#notification .frame {
     display: inline-block;
-    background-color: #EAB7B7; 
+    border-radius: 4px;
+    background-color: #FFE3E1;
     margin: 0px 0px 1.5em 0px;
-    color: #A32424;
-    padding: 1em 20px 1em 1em;
+    color: #FF5050;
+    padding: 1em 5px 1em 1em;
     font-weight: bold;
     border: solid 1px #A32424;
 }
 
-#notification {
+#notification .frame {
     background-color: #FFFF99;
     color: black;
     border-color: black;
 }
 
-#error span { 
-    margin: 0px 4em 0px 1em;
+#error span,
+#notification span {
+    margin: 0px 2em 0px 1em;
     float: left; 
     max-width: 700px;
 }
 
 #notification span { font-weight: normal; }
-#error img { float: left; }
-#error #close-icon { float: right; }
+
+#error img,
+#notification img {
+    float: left;
+}
+
+#error a.close-icon,
+#notification a.close-icon
+{
+    float: right;
+    margin-left: 10px;
+}
 
 .menu_switch, .context_help {
     font-size: 9px;
@@ -749,12 +762,6 @@ table.result td.left {
 
 #contextel, #wsmoreel, #texttypeel, #thesmoreel, #wsdiffadvel, #patternsadvel { 
     display: none; 
-}
-
-/* Error message */
-#error {
-    border: solid 3px red;
-    background-color: #e88;
 }
 
 .cql-input {

@@ -230,8 +230,24 @@ $_ca_topbar
     <div id="content">
         #if $error
         <div id="error">
-            $error
-            <button>$_("Back")</button>
+            <div class="frame">
+                <img class="icon" alt="Error" src="../files/img/error-icon.png">
+                <span>$error</span>
+                <a class="close-icon">
+                    <img src="../files/img/close-icon.png" />
+                </a>
+            </div>
+        </div>
+        #end if
+        #if $varExists('notification') and $notification
+        <div id="notification">
+            <div class="frame">
+                <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
+                <span>$notification</span>
+                <a class="close-icon">
+                    <img src="../files/img/close-icon.png" />
+                </a>
+            </div>
         </div>
         #end if
         #filter None

@@ -488,6 +488,8 @@ class ConcCGI (UserCGI):
                          for w in self._corp().get_conf ('ALIGNED').split(',')]
         if self.align and not self.maincorp:
             self.maincorp = os.path.basename(self.corpname)
+        if len(out['Lines']) == 0:
+            out['notification'] = _('Empty result')
         return out
     add_vars['view'] = ['orig_query']
 
@@ -1025,20 +1027,20 @@ class ConcCGI (UserCGI):
         def escape_query_value(s):
             ans = s
             t = {
-                '"' : r'\"',
-                '<' : r'\<',
-                '>' : r'\>',
-                '.' : r'\.',
-                ',' : r'\,',
-                '?' : r'\?',
-                '*' : r'\*',
-                '[' : r'\[',
-                ']' : r'\]',
-                '{' : r'\{',
-                '}' : r'\}',
-                '+' : r'\+',
-                ')' : r'\)',
-                '(' : r'\(',
+                '"': r'\"',
+                '<': r'\<',
+                '>': r'\>',
+                '.': r'\.',
+                ',': r'\,',
+                '?': r'\?',
+                '*': r'\*',
+                '[': r'\[',
+                ']': r'\]',
+                '{': r'\{',
+                '}': r'\}',
+                '+': r'\+',
+                ')': r'\)',
+                '(': r'\(',
             }
             for k, v in t.items():
                 ans = ans.replace(k, v)
@@ -1097,17 +1099,17 @@ class ConcCGI (UserCGI):
                 for ii, item in enumerate(block['Items']):
                     if not item['freq']: continue
                     if not '.' in attr:
-                        if attr in corp.get_conf('ATTRLIST').split(','):
+                        if attr in self._corp().get_conf('ATTRLIST').split(','):
                             wwords = item['Word'][level]['n'].split('  ') # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, escape(w)) for w in wwords ])
+                                               % (attr, icase, escape_query_value(escape(w))) for w in wwords])
                         else: # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
                         structname, attrname = attr.split('.')
-                        if corp.get_conf(structname + '.NESTED'):
+                        if self._corp().get_conf(structname + '.NESTED'):
                             block['unprecise'] = True
                         fquery = '0 0 1 [] within <%s %s="%s" />' \
                                  % (structname, attrname,
@@ -1130,7 +1132,7 @@ class ConcCGI (UserCGI):
         freq = conc.size() - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
             pfilter = ';q=p0 0 1 ([] within ! <err/>) within ! <corr/>'
-            cc = self.call_function(conclib.get_conc, (corp,),
+            cc = self.call_function(conclib.get_conc, (self._corp(),),
                                     q=self.q + [pfilter[3:]])
             freq = cc.size()
             err_nfilter, corr_nfilter = '', ''

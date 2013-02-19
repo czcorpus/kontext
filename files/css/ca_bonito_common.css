@@ -416,7 +416,6 @@ div.buttons {
 }
 
 #error-box,
-#message-box,
 .error-box {
     width: 40%;
     margin: 5% auto 0 auto;
@@ -434,16 +433,7 @@ div.buttons {
     color: #cc2b22;
 }
 
-#message-box {
-    border-color: #99ccee;
-    border-style: solid;
-    border-width: 1px 0 1px 0;
-    background-color: #ffffff;
-    color: #2068af;
-}
-
-#error-box h1,
-#message-box h1 {
+#error-box h1 {
     margin: 0;
     font-size: 12pt;
     font-weight: normal;
@@ -454,11 +444,6 @@ div.buttons {
 #error-box h1 {
     background-color: #cc2b22;
     color: #eeeeee;
-}
-
-#message-box h1 {
-    background-color: #99ccee;
-    color: #2068af;
 }
 
 #error-box p {
