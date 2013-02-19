@@ -155,7 +155,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         });
 
         $('#error button').bind('click', function (event) {
-            win.history.back(1);
+            win.history.back();
         });
 
         $('img.plus-minus').each(function () {
