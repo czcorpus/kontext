@@ -594,29 +594,44 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                 opt[prop] = '#' + opt[prop];
             }
         }
-        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function (event) {
-            var caretPos = bonito.getCaretPosition($(opt.inputElement));
+        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
+            var caretPos = bonito.getCaretPosition($(opt.inputElement)),
+                insertTagClickAction,
+                buttonEnterAction;
+
+           insertTagClickAction = function () {
+                var bef, aft;
+
+                if ($(opt.inputElement).val()) {
+                    bef = $(opt.inputElement).val().substring(0, caretPos),
+                        aft = $(opt.inputElement).val().substring(caretPos);
+                    $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
+
+                } else {
+                    $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
+                }
+                $.modal.close();
+               $(document).off('keypress', buttonEnterAction);
+                $(opt.inputElement).focus();
+            };
+
+            buttonEnterAction = function (event) {
+                if (event.which === 13) {
+                    insertTagClickAction(event);
+                }
+            };
+
             $(opt.modalWindowElement).modal({
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
+
                     attachTagLoader(corpusName, numTagPos, msComponent, {
                         tagDisplay : $(opt.tagDisplayElement),
                         resetButton : $(opt.resetButtonElement)
                     });
-                    $(opt.insertTagButtonElement).bind('click', function () {
-                        var bef, aft;
 
-                        if ($(opt.inputElement).val()) {
-                            bef = $(opt.inputElement).val().substring(0, caretPos),
-                            aft = $(opt.inputElement).val().substring(caretPos);
-                            $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
-
-                        } else {
-                            $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
-                        }
-                        $.modal.close();
-                        $(opt.inputElement).focus();
-                    });
+                    $(opt.insertTagButtonElement).one('click', insertTagClickAction);
+                    $(document).on('keypress', buttonEnterAction);
                 }
             });
         });

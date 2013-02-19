@@ -214,12 +214,39 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
     lib.bindWithinHelper = function (jqLinkElement) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
         jqLinkElement.bind('click', function (event) {
-            var caretPos = bonito.getCaretPosition(jqInputElement);
+            var caretPos = bonito.getCaretPosition(jqInputElement),
+                clickAction,
+                buttonEnterAction;
+
+            clickAction = function (event) {
+                var structattr,
+                    wthn,
+                    bef,
+                    aft;
+
+                structattr = $('#within-structattr').val().split('.');
+                wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />',
+                    bef = jqInputElement.val().substring(0, caretPos),
+                    aft = jqInputElement.val().substring(caretPos);
+
+                jqInputElement.val(bef + wthn + aft);
+                jqInputElement.focus();
+                $.modal.close();
+                $(document).off('keypress', buttonEnterAction);
+            };
+
+            buttonEnterAction = function (event) {
+                if (event.which === 13) {
+                    clickAction(event);
+                }
+            };
 
             $('#within-builder-modal').modal({
                 onShow : function () {
                     $.get('ajax_get_structs_details?corpname=' + conf.corpname, {}, function (data) {
-                        var prop, html, i;
+                        var prop,
+                            html,
+                            i;
 
                         html = '<select id="within-structattr">';
                         for (prop in data) {
@@ -231,18 +258,8 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                         }
                         html += '</select>';
                         $('#within-builder-modal .selection-container').append(html);
-                        $('#within-insert-button').bind('click', function () {
-                            var structattr;
-
-                            structattr = $('#within-structattr').val().split('.');
-                            var wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />',
-                                bef = jqInputElement.val().substring(0, caretPos),
-                                aft = jqInputElement.val().substring(caretPos);
-
-                            jqInputElement.val(bef + wthn + aft);
-                            jqInputElement.focus();
-                            $.modal.close();
-                        });
+                        $('#within-insert-button').one('click', clickAction);
+                        $(document).on('keypress', buttonEnterAction);
                     });
                 }
             });
