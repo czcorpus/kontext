@@ -5,6 +5,7 @@ syntax: glob
 doc
 *.pyc
 config.xml
+.directory
 
 syntax: regexp
 
