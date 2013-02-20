@@ -1,13 +1,16 @@
 /**
  * This module contains functionality related directly to the document.tmpl template
  */
-define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito'],
-        function (win, $, hideElem, multiselect, tagbuilder, popupbox, cookies, bonito) {
-   'use strict';
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
+        'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, simpleModalNone) {
+    'use strict';
 
     var lib = {};
 
-
+    /**
+     *
+     * @param item
+     */
     lib.updForm = function (item) {
         var formAncestor,
             i,
@@ -33,6 +36,10 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         }
     };
 
+    /**
+     *
+     * @param {object} conf
+     */
     lib.misc = function (conf) {
         hideElem.targetedLinks();
         if (conf.focus) {
@@ -61,7 +68,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
             );
 
-            lib.bindWithinHelper($(this).find('li.within a'));
+            lib.bindWithinHelper($(this).find('li.within a'), conf.corpname);
         });
 
         hideElem.loadHideElementStoreSimple();
@@ -71,31 +78,14 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
             hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints);
         });
 
-        // disable submit button after submiting
-        $("form").submit(function() {
-            $('input[type=submit]', this).attr('disabled', 'disabled');
-        });
-
-        // enable button on unload (tweak for bfcache in FF)
-        $(window).unload(function () {
-            $('input[type=submit]').removeAttr('disabled');
-        });
-
-        // enable disabled buttons again after ESC
-        $(win.document).keyup(function(e) {
-            if (e.keyCode == 27) {
-                $('input[type=submit]').removeAttr('disabled');
-            }
-        });
-
         // switch between horiz | vert (implicit) menu, change cookies
         $('.menu_switch a').bind('click', function () {
             if (cookies.get('menupos') === 'top') {
                 $('#sidebar').removeClass('horizontal');
                 $('#in-sidebar').removeClass('horizontal');
                 cookies.del('menupos');
-            }
-            else {
+
+            } else {
                 $('#sidebar').toggleClass('horizontal');
                 $('#in-sidebar').toggleClass('horizontal');
                 cookies.set('menupos', 'top');
@@ -120,8 +110,9 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
             });
             // disable all empty inputs
             $('input').each(function () {
-                if ($(this).val() == '')
+                if ($(this).val() === '') {
                     $(this).attr('disabled', true);
+                }
             });
         });
 
@@ -129,20 +120,27 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         (function () {
             var key,
                 el;
-            for (key in jQuery.cookies.get()) { // for all cookies
-                el = key.replace('_view', ''); // remove end '_view'
-                if ($('#' + el).length != 0) { // element exists
-                    if ($.cookies.get(key) == 'show') {
-                        $('#' + el).show();
+            for (key in cookies.get()) { // for all cookies
+                if (cookies.get().hasOwnProperty(key)) {
+                    el = key.replace('_view', ''); // remove end '_view'
+                    if ($('#' + el).length !== 0) { // element exists
+                        if ($.cookies.get(key) === 'show') {
+                            $('#' + el).show();
+                        } else {
+                            $('#' + el).hide();
+                        }
                     }
-                    else { $('#' + el).hide(); }
                 }
             }
         }());
 
     };
 
-    lib.bindClicks = function () {
+    /**
+     *
+     * @param {object} conf
+     */
+    lib.bindClicks = function (conf) {
         var msg2;
 
         msg2 = function (updatedElement) {
@@ -171,7 +169,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
         });
 
         $('input[class="select-all"]').bind('click', function (event) {
-                hideElem.selectAllCheckBoxes(event.target, $(event.target).data('item-name'));
+            hideElem.selectAllCheckBoxes(event.target, $(event.target).data('item-name'));
         });
 
         $('a#top-level-help-link').bind('click', function (event) {
@@ -201,17 +199,17 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                 cookies.set('uilang', $(this).data('lang'), {
                     expiresAt: expirationDate
                 });
-                window.location.reload();
+                win.location.reload();
             });
         });
     };
 
-    lib.init = function (conf) {
-        lib.misc(conf);
-        lib.bindClicks();
-    };
-
-    lib.bindWithinHelper = function (jqLinkElement) {
+    /**
+     *
+     * @param {jQuery} jqLinkElement
+     * @param {string} corpusName
+     */
+    lib.bindWithinHelper = function (jqLinkElement, corpusName) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
         jqLinkElement.bind('click', function (event) {
             var caretPos = bonito.getCaretPosition(jqInputElement),
@@ -225,9 +223,9 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                     aft;
 
                 structattr = $('#within-structattr').val().split('.');
-                wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />',
-                    bef = jqInputElement.val().substring(0, caretPos),
-                    aft = jqInputElement.val().substring(caretPos);
+                wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />';
+                bef = jqInputElement.val().substring(0, caretPos);
+                aft = jqInputElement.val().substring(caretPos);
 
                 jqInputElement.val(bef + wthn + aft);
                 jqInputElement.focus();
@@ -243,7 +241,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
 
             $('#within-builder-modal').modal({
                 onShow : function () {
-                    $.get('ajax_get_structs_details?corpname=' + conf.corpname, {}, function (data) {
+                    $.get('ajax_get_structs_details?corpname=' + corpusName, {}, function (data) {
                         var prop,
                             html,
                             i;
@@ -252,7 +250,7 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
                         for (prop in data) {
                             if (data.hasOwnProperty(prop)) {
                                 for (i = 0; i < data[prop].length; i += 1) {
-                                    html += '<option>' + prop + '.' + data[prop][i] + '</option>'
+                                    html += '<option>' + prop + '.' + data[prop][i] + '</option>';
                                 }
                             }
                         }
@@ -266,7 +264,16 @@ define(['win', 'jquery', 'hideelem', 'multiselect', 'tagbuilder', 'popupbox', 'j
             event.stopPropagation();
             return false;
         });
-    }
+    };
+
+    /**
+     *
+     * @param {object} conf
+     */
+    lib.init = function (conf) {
+        lib.misc(conf);
+        lib.bindClicks(conf);
+    };
 
     return lib;
 

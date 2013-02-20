@@ -1,8 +1,10 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies', 'hideelem'],
-            function ($, treeComponent, bonito, mainPage, cookies, hideElem) {
+define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', 'hideelem'], function ($,
+        treeComponent, bonito, mainPage, cookies, hideElem) {
+    'use strict';
+
     var lib = {};
 
     lib.misc = function (conf) {
@@ -30,17 +32,17 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies', '
 
     lib.bindClicks = function (conf) {
         $('ul.submenu a.toggle-submenu-item').each(function () {
-            $(this).bind('click', function () {
+            $(this).on('click', function () {
                 bonito.toggleViewStore($(this).data('id-to-set'));
             });
         });
 
-        $('#switch_err_stand').bind('click', function () {
-            if ($(this).text() == conf.labelStdQuery) {
-            $('#qnode').show();
-                  $('#cup_err_menu').hide();
-                  $(this).text(conf.labelErrorQuery);
-                  cookies.set("errstdq", "std");
+        $('#switch_err_stand').on('click', function () {
+            if ($(this).text() === conf.labelStdQuery) {
+                $('#qnode').show();
+                $('#cup_err_menu').hide();
+                $(this).text(conf.labelErrorQuery);
+                cookies.set("errstdq", "std");
 
             } else {
                 $('#qnode').hide();
@@ -49,7 +51,6 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document' ,'jquery.cookies', '
                 cookies.set("errstdq", "err");
             }
         });
-
     };
 
     lib.init = function (conf) {
