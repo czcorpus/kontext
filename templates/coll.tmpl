@@ -28,7 +28,7 @@ $_("Collocation form")#slurp
 #def bodyonload
 #filter WebSafe
 #if $saved_attrs
-alert('$_("Selected options successfully saved")');
+alert('$_("Selected options successfully saved")')#slurp
 #end if
 #end filter
 #end def
@@ -44,8 +44,14 @@ alert('$_("Selected options successfully saved")');
 
 #def main
 #filter WebSafe
-### menu
-<h3>$_("Collocation candidates")</h3>
+<h3>$_("Collocation candidates")
+    #if $varExists('helpsite')
+    <a href="${helpsite}collocconc" rel="help" title='$_("? Help on Collocations")' target="_blank" name="help_icon" id="help_icon">
+      <img src="$files_path/img/help.png" alt='$_("? Help on Collocations")' />
+    </a>
+    #end if
+</h3>
+
 <form id="mainform" action="collx">
 <fieldset>
 #filter None
@@ -56,7 +62,7 @@ $input_hidden
   <th>$_("Attribute"):
   <select name="cattr">
   #for $a in $Coll_attrlist
-    <option value="$a['n']" #if $cattr == $a['n'] then 'selected="selected"' else ''# >$_($a['label'])</option>
+    <option value="$a.n" #if $cattr == $a.n then 'selected="selected"' else ''# >$a.label</option>
   #end for
   </select>
 
@@ -70,8 +76,9 @@ $input_hidden
 </tr>
 <tr>
   <th>$_("Minimum frequency in given range"):</th>
-  <td><input type="text" name="cminbgr" value="$cminbgr" size="4"/>
-  </td>
+  <td>
+      <input type="text" name="cminbgr" value="$cminbgr" size="4"/>
+    </td>
 </tr>
 <tr>
   <td colspan="2">$_("Show functions"):
@@ -100,7 +107,7 @@ $input_hidden
 
 <div class="buttons">
   <input type="submit" value="$_("Make Candidate List")" id="submit" />
-  #unless $_open_version
+  #unless $_anonymous
   <input class="button" type="button" value='$_("Save Options")' onclick="hideElem.redirectToSave(document.getElementById('mainform'), 'save_coll_options')" />
   #end unless
 </div>

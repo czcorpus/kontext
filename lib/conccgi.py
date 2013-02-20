@@ -10,29 +10,24 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-import os
-import re
-import locale
+from usercgi import UserCGI
+import corplib, conclib, version
+import os, re
 from sys import stderr
 import time
 import glob
+import locale
 from types import ListType
 import logging
 import math
+from butils import *
 
 from CGIPublisher import CGIPublisher, JsonEncodedData, UserActionException
-import corplib
-import conclib
-import version
 import settings
 import taghelper
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
-def escape (s):
+def escape(s):
     return escape_regexp.sub(r'\\\g<0>', s)
     
 
@@ -44,9 +39,9 @@ except locale.Error:
     def formatnum (f):
         return '%.f' % f
 
-def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
+def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
-    attrpart = '%s%s/%s%s ' % (prefix, attr, icase, bward)
+    attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
     if not ctx:
         ctx = '%i%s' % (pos, fromcode.get (fcode, '0'))
     if '~' in ctx and '.' in attr:
@@ -57,125 +52,124 @@ def onelevelcrit (prefix, attr, ctx, pos, fcode, icase, bward=''):
 class ConcError (Exception):
     def __init__ (self, msg):
         self.message = msg
-        
 
-class ConcCGI (CGIPublisher):
+
+class ConcCGI (UserCGI):
 
     _global_vars = ['corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
                     'structs', 'refs', 'lemma', 'lpos', 'pagesize',
                     'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
-                    'gdexcnt', 'gdexconf']
-    _open_version = 0
-    # (due to Cheetah) added attributes
-    error = ''
-    fc_lemword_window_type = 'both'
-    fc_lemword_type = 'all'
+                    'gdexcnt', 'gdexconf', 'iquery', 'maincorp']
+    error = u''
+    fc_lemword_window_type = u'both'
+    fc_lemword_type = u'all'
     fc_lemword_wsize=5,
-    fc_lemword='',
-    fc_pos_window_type = 'both'
-    fc_pos_type = 'all'
+    fc_lemword=u'',
+    fc_pos_window_type = u'both'
+    fc_pos_type = u'all'
     fc_pos_wsize=5,
     fc_pos=[],
     ml = 0
-    concarf = ''
+    concarf = u''
     Aligned = []
-    prevlink = ''
-    nextlink = ''
-    concsize = ''
+    prevlink = u''
+    nextlink = u''
+    concsize = u''
+    samplesize = 10000000 #10M
     Lines = []
-    fromp = '1'
-    numofpages = ''
-    Page = []
-    pnfilter = 'p'
-    filfl = 'f'
-    filfpos = '-5'
-    filtpos = '5'
-    sicase = ''
-    sbward = ''
-    ml1icase = ''
-    ml2icase = ''
-    ml3icase = ''
-    ml1bward = ''
-    ml2bward = ''
-    ml3bward = ''
-    freq_sort = ''
+    fromp = u'1'
+    numofpages = u''
+    pnfilter = u'p'
+    filfl = u'f'
+    filfpos = u'-5'
+    filtpos = u'5'
+    sicase = u''
+    sbward = u''
+    ml1icase = u''
+    ml2icase = u''
+    ml3icase = u''
+    ml4icase = u''
+    ml1bward = u''
+    ml2bward = u''
+    ml3bward = u''
+    freq_sort = u''
     heading = 0
-    saveformat = 'text'
-    wlattr = ''
-    wlpat = ''
+    saveformat = u'text'
+    wlattr = u''
+    wlpat = u''
     wlpage = 1
-    wlcache = ''
-    blcache = ''
+    wlcache = u''
+    blcache = u''
     simple_n = 1
     usearf = 0
     collpage = 1
     fpage = 1
     fmaxitems = 50
-    ftt_include_empty = ''
+    ftt_include_empty = u''
     subcsize = 0
     processing = 0 
-    ref_usesubcorp = ''
-    wlsort = ''
-    keywords = ''
+    ref_usesubcorp = u''
+    wlsort = u''
+    keywords = u''
     Keywords = []
-    ref_corpname = ''
+    ref_corpname = u''
     Items = []
-    showmwlink = ''
-    format = ''
-    selected = ''
+    format = u''
+    selected = u''
     saved_attrs = 0
                      # save options
     pages = 0
-    leftctx = ''
-    rightctx = ''
+    leftctx = u''
+    rightctx = u''
     numbering = 0
     align_kwic = 0
-    stored = ''
+    stored = u''
     # end
 
     add_vars = {}
-    corpname = 'susanne'
-    corplist = ['susanne', 'bnc']
-    usesubcorp = ''
-    subcorp_size = None
-    subcname = ''
+    corpname = u'susanne'
+    corplist = [u'susanne', u'bnc']
+    usesubcorp = u''
+    subcname = u''
     subcpath = []
-    _conc_dir = ''
-    _home_url = '../run.cgi/first_form'
-    files_path = '../files'
-    css_prefix = ''
-    iquery = ''
-    queryselector = 'iqueryrow'
-    lemma = ''
-    lpos = ''
-    phrase = ''
-    char = ''
-    word = ''
-    wpos = ''
-    cql = ''
+    _conc_dir = u''
+    _home_url = u'../run.cgi/first_form'
+    files_path = u'../files'
+    css_prefix = u''
+    iquery = u''
+    queryselector = u'iqueryrow'
+    lemma = u''
+    lpos = u''
+    phrase = u''
+    char = u''
+    word = u''
+    wpos = u''
+    cql = u''
     tag = ''
     default_attr = None
     save = 1
+    async = 1
     spos = 3
-    skey = 'rc'
+    skey = u'rc'
     qmcase = 0
-    rlines = '250'
-    attrs = 'word'
-    ctxattrs = 'word'
-    attr_allpos = 'kw'
-    allpos = 'kw'
-    structs = 'p,g'
+    rlines = u'250'
+    attrs = u'word'
+    ctxattrs = u'word'
+    attr_allpos = u'kw'
+    allpos = u'kw'
+    structs = u'p,g,err,corr'
     q = []
     pagesize = 20
-    gdexconf = ''
+    gdexconf = u''
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
     gdexcnt = 100
     gdex_enabled = 0
     alt_gdexconf = None
     copy_icon = 0
-    _avail_tbl_templates = ''
+    _avail_tbl_templates = u''
     multiple_copy = 0
-    wlsendmail = ''
+    wlsendmail = u''
+    cup_hl = u'q'
 
     sortlevel=1
     flimit = 0
@@ -183,32 +177,35 @@ class ConcCGI (CGIPublisher):
     ml1pos = 1
     ml2pos = 1
     ml3pos = 1
-    ml1ctx = '0~0>0'
-    ml2ctx = '0~0>0'
-    ml3ctx = '0~0>0'
-    tbl_template = 'none'
+    ml4pos = 1
+    ml1ctx = u'0~0>0'
+    ml2ctx = u'0~0>0'
+    ml3ctx = u'0~0>0'
+    ml4ctx = u'0~0>0'
+    tbl_template = u'none'
+    errcodes_link = u''
+    hidenone = 1
+    helpsite=u'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     can_annotate = 0
     enable_sadd = 0
-    annotconc = ''
-    annotconc_init_labels = ('x', 'u')
-    annotconc_num_label_suffixes = ('.e',)
+    annotconc = u''
+    annotconc_init_labels = (u'x', u'u')
+    annotconc_num_label_suffixes = (u'.e',)
     #annotconc_info_umask = 022
     annotconc_info_umask = 0111  #XXX renumbering from CPA editor
 
     alpha_features = 0
 
-
-    add_vars['wsketch_form'] = ['LastSubcorp']
-    add_vars['wsketch'] = ['LastSubcorp']
-    add_vars['mwsketch_form'] = ['LastSubcorp']
-    add_vars['mwsketch'] = ['LastSubcorp']
-    add_vars['wsdiff'] = ['LastSubcorp']
-    add_vars['save_ws_options'] = ['LastSubcorp']
-    add_vars['findx_upload'] = ['LastSubcorp']
+    add_vars['wsketch_form'] = [u'LastSubcorp']
+    add_vars['wsketch'] = [u'LastSubcorp']
+    add_vars['wsdiff'] = [u'LastSubcorp']
+    add_vars['save_ws_options'] = [u'LastSubcorp']
+    add_vars['save_wsdiff_options'] = [u'LastSubcorp']
+    add_vars['findx_upload'] = [u'LastSubcorp']
     
     def __init__ (self, environ):
-        CGIPublisher.__init__(self, environ=environ)
+        UserCGI.__init__(self, environ=environ)
         self.cm = corplib.CorpusManager (self.corplist, self.subcpath, 
                                          self.gdexpath)
         self._curr_corpus = None
@@ -247,14 +244,8 @@ class ConcCGI (CGIPublisher):
         return self._curr_corpus
 
     def _set_defaults (self):
-        try:
-            corp = self._corp()
-            if not self.__dict__.has_key('refs'):
-                self.refs = corp.get_conf('SHORTREF')
-            self._headers ['Content-Type'] = 'text/html; charset=utf-8'
-#                                  (corp.get_conf('ENCODING') or 'iso-8859-1')
-        except:
-            self.refs = '#'
+        if not self.__dict__.has_key('refs'):
+            self.refs = self._corp().get_conf('SHORTREF')
 
     def _correct_parameters (self):
         if self.annotconc == '--NONE--':
@@ -263,9 +254,12 @@ class ConcCGI (CGIPublisher):
 
     
     def _add_globals (self, result):
-        CGIPublisher._add_globals (self, result)
+        UserCGI._add_globals (self, result)
 
-        thecorp = self._corp()
+        if self.maincorp:
+            thecorp = conclib.manatee.Corpus(self.maincorp)
+        else:
+            thecorp = self._corp()
         result['q'] = self.urlencode ([('q', q) for q in self.q])
         result['Q'] = [{'q': q} for q in self.q]
         result['corpname_url'] = 'corpname=' + self.corpname
@@ -282,9 +276,9 @@ class ConcCGI (CGIPublisher):
                                  and thecorp.get_conf('WSBASE') != 'none')
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
         result['can_wseval'] = getattr(self, '_can_wseval', '')
-        # these were in add_undefined
+        result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
         result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
-                            settings.get_bool('corpora', 'use_db_whitelist'))
+            settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min (len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf ('NAME')
                                    or self.corpname)
@@ -319,6 +313,7 @@ class ConcCGI (CGIPublisher):
                                   or 'lemma' in attrlist
         result['default_attr'] = thecorp.get_conf('DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
+            if listname in result: continue
             result [listname] = \
                    [{'label': thecorp.get_conf (n+'.LABEL') or n, 'n': n}
                     for n in thecorp.get_conf (listname.upper()).split(',')
@@ -343,7 +338,7 @@ class ConcCGI (CGIPublisher):
 
 
     def add_undefined (self, result, methodname):
-        CGIPublisher.add_undefined (self, result, methodname)
+        UserCGI.add_undefined (self, result, methodname)
         result['methodname'] = methodname
         if self.add_vars.has_key (methodname):
             names = self.add_vars[methodname]
@@ -351,42 +346,39 @@ class ConcCGI (CGIPublisher):
             return
 
         if 'Desc' in names:
-            result['Desc'] = [{'op': o, 'arg': a, 'churl': u1, 'tourl': u2,
-                               'size': s}
+            result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+                               'tourl': self.urlencode(u2), 'size': s}
                               for o,a,u1,u2,s in
                               conclib.get_conc_desc (self.q,
                                                      corpname=self.corpname,
                                                      cache_dir=self.cache_dir,
                                                      subchash=getattr(self._corp(), "subchash", None))]
-        thecorp = self._corp()
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in names:
-            result['LastSubcorp'] = self.cm.last_subcorp_names (self.corpname)
+            result['LastSubcorp'] = self.cm.subcorp_names (self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) +1, 20)
 
-        if 'concsize' in names:
-           conc = self.call_function (conclib.get_conc,
-                (self._corp(),))
-           if conc :
-               result['concsize'] = conc.size()
-
-        if 'concsize' in names or 'orig_query' in names:
+        if 'orig_query' in names:
            conc_desc = conclib.get_conc_desc (self.q,
                        corpname=self.corpname,
                        cache_dir=self.cache_dir,
                        subchash=getattr(self._corp(), "subchash", None))
            if len(conc_desc) > 1:
-               result['tourl'] = conc_desc[0][3]
+               result['tourl'] = self.urlencode(conc_desc[0][3])
+        if methodname.startswith('first'):
+            result['show_cup_menu'] = self.is_err_corpus()
 
     kwicleftctx = '-5'
     kwicrightctx = '5'
     senleftctx_tpl = '-1:%s'
     senrightctx_tpl = '1:%s'
     viewmode = 'kwic'
-    changeviewmode = 0
     align = ''
+    sel_aligned = []
+    maincorp = ''
+    refs_up = 0
 
     def simple_search (self):
         "simple search result -- all in one"
@@ -407,11 +399,12 @@ class ConcCGI (CGIPublisher):
         if subcorpattrs != '#':
             fattrs.extend(subcorpattrs.replace('|',',').split(','))
         wsattr = corp.get_conf ('WSATTR')
-        if wsattr:
-            fattrs.append(wsattr)
+        fattrs.append(wsattr)
         fcrits = ['%s 0' % a for a in fattrs]
-        self.q.append('r10000') # speeds-up computing frequency
+        self.q.append('r1000') # speeds-up computing frequency
         result['freqs'] = self.freqs(fcrit=fcrits, ml=1)
+        for block in result['freqs']['Blocks']:
+            block['Items'] = block['Items'][:10]
             #sketches
         self.numoflines = 10
         result ['Sketches'] = []
@@ -430,16 +423,15 @@ class ConcCGI (CGIPublisher):
     
     def view (self, tpl_params={}):
         "kwic view"
-        if self.changeviewmode:
-            self.viewmode = {'sen':'kwic',
-                             'kwic': 'sen'}.get (self.viewmode, 'kwic')
-            self._cookieattrs.append ('viewmode')
         self.righttoleft = False
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
             self.rightctx = self.kwicrightctx
             if self._corp().get_conf ('RIGHTTOLEFT'):
                 self.righttoleft = True
+        elif self.viewmode == 'align' and self.align:
+            self.leftctx = 'a,%s' % os.path.basename(self.corpname)
+            self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
             sentence_struct = settings.get_corpus_info(self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
@@ -460,8 +452,9 @@ class ConcCGI (CGIPublisher):
                 if self.q[i].startswith('s*') or self.q[i][0] == 'e':
                     del self.q[i]
                 i += 1
-            
+
         conc = self.call_function (conclib.get_conc, (self._corp(),))
+        conc.switch_aligned (os.path.basename(self.corpname))
         labelmap = {}
         if self.annotconc:
             if self._selectstored (self.annotconc):
@@ -477,43 +470,98 @@ class ConcCGI (CGIPublisher):
                 self.annotconc = ''
         #print >>stderr, 'view.labels:%s' % labelmap
         contains_speech = settings.has_configured_speech(self._curr_corpus)
-        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), labelmap=labelmap,
+        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), 
+								labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                         for c in self.align.split(',') if c],
                                  copy_icon=self.copy_icon,
                                  tbl_template=self.tbl_template)
-        del conc
+        out['Sort_idx'] = self.call_function (conclib.get_sort_idx, (conc,),
+                                                      enc=self.self_encoding())
+        out.update(self.get_conc_sizes(conc))
         if self.viewmode == 'sen':
             conclib.add_block_items (out['Lines'], block_size=1)
         if self._corp().get_conf ('ALIGNED'):
-            out['Aligned'] = [{'n': w} for w in
-                              self._corp().get_conf ('ALIGNED').split(',')]
-            #if self.align:
-            #    self._cookieattrs.append ('align')
-        out.update(tpl_params)
+            out['Aligned'] = [{'n': w,
+                               'label': conclib.manatee.Corpus(w).get_conf(
+                                                                  'NAME') or w }
+                         for w in self._corp().get_conf ('ALIGNED').split(',')]
+        if self.align and not self.maincorp:
+            self.maincorp = os.path.basename(self.corpname)
+        if len(out['Lines']) == 0:
+            out['notification'] = _('Empty result')
         return out
     add_vars['view'] = ['orig_query']
-    
+
+    def first_form(self):
+        out = {}
+        if self._corp().get_conf ('ALIGNED'):
+            out['Aligned'] = []
+            for al in self._corp().get_conf ('ALIGNED').split(','):
+                alcorp = conclib.manatee.Corpus(al)
+                out['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
+                                       'n': al})
+                attrlist = alcorp.get_conf('ATTRLIST').split(',')
+                poslist = self.cm.corpconf_pairs (alcorp, 'WPOSLIST')
+                out['Wposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
+                if 'lempos' in attrlist:
+                    poslist = self.cm.corpconf_pairs (alcorp, 'LPOSLIST')
+                out['Lposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
+                out['has_lemmaattr_'+al] = 'lempos' in attrlist \
+                    or 'lemma' in attrlist
+        return out
+    add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
+
+    def get_cached_conc_sizes (self):
+        self._headers['Content-Type']= 'text/plain'
+        cs = self.call_function (conclib.get_cached_conc_sizes,(self._corp(),))
+        return "\n".join(map(str,[cs["finished"], cs["concsize"],
+                                  cs["relconcsize"], cs["fullsize"]]))
+
+    def get_conc_sizes(self, conc):
+        i = 1
+        concsize = conc.size()
+        fullsize = conc.fullsize()
+        sampled_size = 0
+        while i < len(self.q) and not self.q[i].startswith('r'): i += 1
+        if i < len(self.q): sampled_size = concsize
+        j = i + 1
+        for j in range (i+1, len(self.q)):
+            if self.q[j][0] in ('pn'):
+                return {'concsize': concsize, 'sampled_size': 0,
+                        'relconcsize': 0, 'fullsize': fullsize,
+                        'finished': conc.finished()}
+        if sampled_size:
+            orig_conc = self.call_function (conclib.get_conc, (self._corp(),),
+                q=self.q[:i])
+            concsize = orig_conc.size()
+            fullsize = orig_conc.fullsize()
+        return {'sampled_size': sampled_size, 'concsize': concsize,
+                'relconcsize':1000000.0 * fullsize / self._corp().search_size(),
+                'fullsize': fullsize, 'finished': conc.finished()}
+
+
     def concdesc (self):
-        return {'Desc': [{'op': o, 'arg': a, 'churl': u1, 'tourl': u2,
-                          'size': s}
+        return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+                          'tourl': self.urlencode(u2), 'size': s}
                          for o,a,u1,u2,s in
                          conclib.get_conc_desc (self.q,
                                                 corpname=self.corpname,
                                                 cache_dir=self.cache_dir,
                                                 subchash=getattr(self._corp(), "subchash", None))]
                 }
-
-    add_vars['viewattrs'] = ['concsize'] 
+        
     def viewattrs (self):
         "attrs, refs, structs form"
-        corp = self._corp()
-        availattr = corp.get_conf('ATTRLIST').split(',')
-        attrslist = self.attrs.split(',')
-        out = {'Availattrs': [{'n':n,  'checked': 
-                               (((n in attrslist) and 'checked') or '')} 
-                              for n in availattr]}
-        
+        from tbl_settings import tbl_labels
+        out = {}
+        if self.maincorp:
+            corp = corplib.manatee.Corpus(self.maincorp)
+            out['AttrList'] = [{'label': corp.get_conf (n+'.LABEL') or n, 'n':n}
+                               for n in corp.get_conf ('ATTRLIST').split(',')
+                               if n]
+        else:
+            corp = self._corp()
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = self.structs.split(',')
         out['Availstructs'] = [{'n': n,
@@ -524,20 +572,19 @@ class ConcCGI (CGIPublisher):
         
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.refs.split(',')
-        out['Availrefs'] = [{'n': '#',  'label': 'Token number', 'sel': 
+        out['Availrefs'] = [{'n': '#',  'label': _('Token number'), 'sel': 
                              ((('#' in reflist) and 'selected') or '')}] + \
                              [{'n': '=' + n,  'sel': 
                                ((('=' + n in reflist) and 'selected') or ''),
                                'label': (corp.get_conf (n+'.LABEL') or n)} 
                               for n in availref if n and n != '#']
-        ctx_elems = self.kwicrightctx.split(':')
-        out['newctxsize'] = ctx_elems[0]
-        if len(ctx_elems) > 1:
-            out['ctxunit'] = ctx_elems[1]
-        else:
-            out['ctxunit'] = ''
-
+        doc = corp.get_conf('DOCSTRUCTURE')
+        if doc in availstruct:
+            out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
+                'sel': (doc in reflist and 'selected' or '')})
+        out['newctxsize'] = self.kwicleftctx[1:]
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
+        out['tbl_labels'] = tbl_labels
         return out
 
     def set_new_viewattrs (self, setattrs=[], allpos='', setstructs=[],
@@ -554,9 +601,9 @@ class ConcCGI (CGIPublisher):
             self.ctxattrs = 'word'
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
-        self._cookieattrs.extend (['attrs', 'ctxattrs', 'structs',
+        self._cookieattrs.extend(['attrs', 'ctxattrs', 'structs',
                                    'pagesize', 'copy_icon', 'multiple_copy',
-                                   'gdex_enabled', 'gdexcnt', 'gdexconf'])
+                                   'gdex_enabled', 'gdexcnt', 'gdexconf', 'refs_up'])
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -581,7 +628,7 @@ class ConcCGI (CGIPublisher):
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
                             'refs',
                             'kwicleftctx', 'kwicrightctx', 'multiple_copy',
-                            'tbl_template', 'ctxunit'],
+                            'tbl_template', 'ctxunit', 'refs_up'],
                             self.corpname)
         out = self.viewattrs()
         out['saved_attrs'] = 1
@@ -591,10 +638,7 @@ class ConcCGI (CGIPublisher):
 
     def sort (self):
         "sort concordance form"
-        attrlist = self._corp().get_conf('ATTRLIST').split(',')
-        out = {'Sort_attrlist': [{'n':n} for n in attrlist],
-               'Pos_ctxs': conclib.pos_ctxs(1,1)}
-        return out
+        return {'Pos_ctxs': conclib.pos_ctxs(1,1)}
 
     def sortx (self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         "simple sort concordance"
@@ -633,26 +677,44 @@ class ConcCGI (CGIPublisher):
 
     mlsortx.template = 'view.tmpl'
 
-    def _compile_query (self, qtype=None):
+    def is_err_corpus(self):
+        availstruct = self._corp().get_conf('STRUCTLIST').split(',')
+        if not ('err' in availstruct and 'corr' in availstruct):
+            return False
+        return True
+
+    def _compile_basic_query (self, qtype=None, suff='', cname=''):
+        queryselector = getattr(self, 'queryselector' + suff)
+        iquery = getattr(self, 'iquery' + suff, '')
+        lemma = getattr(self, 'lemma' + suff, '')
+        lpos = getattr(self, 'lpos' + suff, '')
+        phrase = getattr(self, 'phrase' + suff, '')
+        qmcase = getattr(self, 'qmcase' + suff, '')
+        word = getattr(self, 'word' + suff, '')
+        wpos = getattr(self, 'wpos' + suff, '')
+        char = getattr(self, 'char' + suff, '')
+        cql = getattr(self, 'cql' + suff, '')
         queries = {
             'cql': '%(cql)s',
             'lemma': '[lempos="%(lemma)s%(lpos)s"]',
             'wordform': '[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
             'wordformonly': '[%(wordattr)s="%(word)s"]',
             }
-        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql', 'tag'):
-            if self.queryselector == a + 'row':
-                if getattr(self, a, ''):
-                    setattr (self, a, getattr (self, a).strip())
+        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql'):
+            if queryselector == a + 'row':
+                if getattr(self, a+suff, ''):
+                    setattr (self, a+suff, getattr (self, a+suff).strip())
+                elif suff:
+                    return ''
                 else:
                     raise ConcError (_('No query entered.'))
         if qtype:
             return queries[qtype] % self.clone_self()
-        thecorp = self._corp()
+        thecorp = cname and self.cm.get_Corpus (cname) or self._corp()
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict (self.cm.corpconf_pairs (thecorp, 'WPOSLIST'))
         lposlist = dict (self.cm.corpconf_pairs (thecorp, 'LPOSLIST'))
-        if self.queryselector == 'iqueryrow':
+        if queryselector == 'iqueryrow':
             if 'lc' in attrlist:
                 if 'lemma_lc' in attrlist:
                     qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
@@ -665,9 +727,9 @@ class ConcCGI (CGIPublisher):
                     qitem = '[word="(?i)%(q)s"|lemma="(?i)%(q)s"]'
                 else:
                     qitem = '[word="(?i)%(q)s"]'
-            if '--' not in self.iquery:
+            if '--' not in iquery:
                 return ''.join([qitem % {'q':escape(q)}
-                                for q in self.iquery.split()])
+                                for q in iquery.split()])
             else:
                 def split_tridash (word, qitem):
                     if '--' not in word:
@@ -678,58 +740,96 @@ class ConcCGI (CGIPublisher):
                                                     qitem % {'q':w2}, 
                                                     qitem % {'q':w1+'-'+w2})
                 return ''.join([split_tridash(escape(q), qitem)
-                                for q in self.iquery.split()])
+                                for q in iquery.split()])
 
-        if self.queryselector == 'lemmarow':
-            if self.lpos is '':
-                return '[lemma="%s"]' % self.lemma
+        if queryselector == 'lemmarow':
+            if not lpos:
+                return '[lemma="%s"]' % lemma
             if 'lempos' in attrlist:
                 try:
-                    if self.lpos in lposlist.values():
-                        lpos = self.lpos
-                    else:
-                        lpos = lposlist [self.lpos]
+                    if not lpos in lposlist.values():
+                        lpos = lposlist [lpos]
                 except KeyError:
-                    raise ConcError (_('Undefined lemma PoS')
-                                                         + ' "%s"' % self.lpos)
-                return '[lempos="%s%s"]' % (self.lemma, lpos)
-            else:
+                    raise ConcError (_('Undefined lemma PoS') + ' "%s"' % lpos)
+                return '[lempos="%s%s"]' % (lemma, lpos)
+            else: # XXX
                 try:
-                    if self.lpos in wposlist.values():
-                        wpos = self.lpos
+                    if lpos in wposlist.values():
+                        wpos = lpos
                     else:
-                        wpos = wposlist [self.lpos]
+                        wpos = wposlist [lpos]
                 except KeyError:
                     raise ConcError (_('Undefined word form PoS')
-                                                          + ' "%s"' %self.lpos)
-                return '[lemma="%s" & tag="%s"]' % (self.lemma, wpos)
-        if self.queryselector == 'phraserow':
-            return '"' + '" "'.join (self.phrase.split()) + '"'
-        if self.queryselector == 'wordrow':
-            if self.qmcase:
-                wordattr = 'word="%s"' % self.word
+                                                          + ' "%s"' % lpos)
+                return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
+        if queryselector == 'phraserow':
+            return '"' + '" "'.join (phrase.split()) + '"'
+        if queryselector == 'wordrow':
+            if qmcase:
+                wordattr = 'word="%s"' % word
             else:
                 if 'lc' in attrlist:
-                    wordattr = 'lc="%s"' % self.word
+                    wordattr = 'lc="%s"' % word
                 else:
-                    wordattr = 'word="(?i)%s"' % self.word
-            if self.wpos is '':
+                    wordattr = 'word="(?i)%s"' % word
+            if not wpos:
                 return '[%s]' % wordattr
             try:
-                if self.wpos in wposlist.values():
-                    wpos = self.wpos
-                else:
-                    wpos = wposlist [self.wpos]
+                if not wpos in wposlist.values():
+                    wpos = wposlist [wpos]
             except KeyError:
-                raise ConcError (_('Undefined word form PoS')
-                                                         + ' "%s"' % self.wpos)
+                raise ConcError (_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
-        if self.queryselector == 'charrow':
-            return '[word=".*%s.*"]' % self.char
-        if self.queryselector == 'tagrow':
+        if queryselector == 'charrow':
+            if not char:
+                raise ConcError (_('No char entered'))
+            return '[word=".*%s.*"]' % char
+        elif queryselector == 'tagrow':
             return '[tag="%s"]' % self.tag
-        return self.cql
-        
+        return cql
+
+
+    def _compile_query(self, qtype=None, cname=''):
+        if not self.is_err_corpus():
+            return self._compile_basic_query(qtype, cname=cname)
+        self._cookieattrs.append ('cup_hl')
+        err_code = getattr(self, 'cup_err_code', '')
+        err = getattr(self, 'cup_err', '')
+        corr = getattr(self, 'cup_corr', '')
+        switch = getattr(self, 'errcorr_switch', '')
+        if not err_code and not err and not corr:
+            cql = self._compile_basic_query(qtype)
+            if self.queryselector != 'cqlrow':
+                cql = cql.replace('][', '] (<corr/>)? [')
+                cql = cql.replace('](', '] (<corr/>)? (')
+                cql = cql.replace('] [', '] (<corr/>)? [')
+            return cql
+        # compute error query
+        corr_restr = corr or (err_code and switch == 'c')
+        err_restr = err or (err_code and switch == 'e')
+        if err_code: corr_within = '<corr type="%s"/>' % err_code
+        else: corr_within = '<corr/>'
+        if err_code: err_within = '<err type="%s"/>' % err_code
+        else: err_within = '<err/>'
+        err_containing = ''; corr_containing = ''
+        if err:
+            self.iquery = err; self.queryselector = 'iqueryrow'
+            err_containing = ' containing ' + self._compile_basic_query(qtype)
+        if corr:
+            self.iquery = corr; self.queryselector = 'iqueryrow'
+            corr_containing = ' containing ' + self._compile_basic_query(qtype)
+        err_query =  '(%s%s)' % (err_within, err_containing)
+        corr_query = '(%s%s)' % (corr_within, corr_containing)
+        fullstruct = '(%s%s)' % (err_query, corr_query)
+        if self.cup_hl == 'e' or (self.cup_hl == 'q' and err_restr
+                                                     and not corr_restr):
+            return '%s within %s' % (err_query, fullstruct)
+        elif self.cup_hl == 'c' or (self.cup_hl == 'q' and corr_restr
+                                                       and not err_restr):
+            return '%s within %s' % (corr_query, fullstruct)
+        else: # highlight both
+            return fullstruct
+
 
     def query (self, qtype='cql'):
         "perform query"
@@ -756,22 +856,24 @@ class ConcCGI (CGIPublisher):
             if not items:
                 return
             if fctxtype == 'any':
-                self.q.append ('p%s [%s]' %
+                self.q.append ('P%s [%s]' %
                                (ctx, '|'.join (['%s="%s"' % (attrname, i)
                                                 for i in items])))
             elif fctxtype == 'none':
-                self.q.append ('n%s [%s]' %
+                self.q.append ('N%s [%s]' %
                           (ctx, '|'.join (['%s="%s"' % (attrname, i)
                                            for i in items])))
             elif fctxtype == 'all':
                 for i in items:
-                    self.q.append ('p%s [%s="%s"]' % (ctx, attrname, i))
+                    self.q.append ('P%s [%s="%s"]' % (ctx, attrname, i))
                 
         if 'lemma' in self._corp().get_conf('ATTRLIST').split(','):
             lemmaattr = 'lemma'
         else:
             lemmaattr = 'word'
         wposlist = dict (self.cm.corpconf_pairs (self._corp(), 'WPOSLIST'))
+        if self.queryselector == 'phraserow':
+            self.default_attr = 'word' # XXX to be removed with new first form
         if self.default_attr:
             qbase = 'a%s,' % self.default_attr 
         else:
@@ -781,7 +883,20 @@ class ConcCGI (CGIPublisher):
             ttquery = ' '.join (['within <%s %s />' % nq for nq in texttypes])
         else:
             ttquery = ''
-        self.q = [qbase + self._compile_query() + ttquery]
+        par_query = ''
+        nopq = []
+        for al_corpname in self.sel_aligned:
+            if getattr(self, 'pcq_pos_neg_' + al_corpname) == 'pos':
+                wnot = ''
+            else:
+                wnot = '!'
+            pq = self._compile_basic_query(suff='_'+al_corpname,
+                                           cname=al_corpname)
+            if pq:
+                par_query += ' within%s %s:%s' % (wnot, al_corpname, pq)
+            if not pq or wnot:
+                nopq.append(al_corpname)
+        self.q = [qbase + self._compile_query() + ttquery + par_query]
 
         if fc_lemword_window_type == 'left':
             append_filter (lemmaattr,
@@ -813,7 +928,12 @@ class ConcCGI (CGIPublisher):
                            [wposlist.get(t,'') for t in fc_pos],
                            '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                            fc_pos_type)
-
+        for al_corpname in self.sel_aligned:
+            if al_corpname in nopq and getattr(self,
+                                               'filter_nonempty_' + al_corpname, ''):
+                self.q.append('x-%s' % al_corpname)
+                self.q.append('p0 0 1 []')
+                self.q.append('x-%s' % self.corpname)
 
     def first (self, fc_lemword_window_type='',
                      fc_lemword_wsize=0,
@@ -831,42 +951,51 @@ class ConcCGI (CGIPublisher):
                              fc_pos_wsize,
                              fc_pos_type,
                              fc_pos)
-
+        if self.sel_aligned: self.align = ','.join(self.sel_aligned)
         return self.view()
     
     first.template = 'view.tmpl'
     add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
 
-    def filter_form (self):
+    def filter_form(self, within=0):
         self.lemma = ''
         self.lpos = ''
-        return {}
+        out = {'within': within}
+        if within and not self.error:
+            out['error'] = _('Please specify positive filter to switch')
+        return out
     add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
 
-    def filter (self, pnfilter='', filfl='f', filfpos='-5', filtpos='5'):
+    def filter (self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
+            inclkwic=False, within=0):
         "Positive/Negative filter"
         if pnfilter not in ('p','n'):
             raise ConcError (_('Select Positive or Negative filter type'))
+        if not inclkwic:
+            pnfilter = pnfilter.upper()
         rank = {'f':1, 'l':-1}.get (filfl, 1)
         texttypes = self._texttype_query()
         try:
-            query = self._compile_query()
+            query = self._compile_query(cname=self.maincorp)
         except ConcError:
             if texttypes: query = '[]'; filfpos='0'; filtpos='0'
             else: raise ConcError (_('No query entered.'))
         query +=  ' '.join (['within <%s %s />' % nq for nq in texttypes])
-        if not self.default_attr:
-            self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos, rank, query))
+        if within:
+            wquery = ' within %s:(%s)' % (self.maincorp or self.corpname, query)
+            self.q[0] += wquery
         else:
-            self.q.append ('%s%s %s %i %s,%s' % (pnfilter, filfpos, filtpos, rank, self.default_attr, query))
+            self.q.append ('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
+                                              rank, query))
         try:
             return self.view()
-        except Exception, e:
-            del self.q[-1]; raise
+        except:
+            if within: self.q[0] = self.q[0][:-len(wquery)]
+            else: del self.q[-1]
+            raise
     filter.template = 'view.tmpl'
     add_vars['filter'] = ['orig_query']
 
-    add_vars['reduce'] = ['concsize'] 
     def reduce (self, rlines='250'):
         "random sample"
         self.q.append ('r' + rlines)
@@ -874,15 +1003,13 @@ class ConcCGI (CGIPublisher):
        
     reduce.template = 'view.tmpl'
 
-    add_vars['freq'] = ['concsize'] 
     def freq (self):
         "frequency list form"
-        return {'Pos_ctxs': conclib.pos_ctxs(1,1)}
+        return {'Pos_ctxs': conclib.pos_ctxs(1,1,6)}
 
     fcrit = []
-    add_vars['freqs'] = ['concsize'] 
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
-        "display a frequecy list"
+        "display a frequency list"
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -900,20 +1027,20 @@ class ConcCGI (CGIPublisher):
         def escape_query_value(s):
             ans = s
             t = {
-                '"' : r'\"',
-                '<' : r'\<',
-                '>' : r'\>',
-                '.' : r'\.',
-                ',' : r'\,',
-                '?' : r'\?',
-                '*' : r'\*',
-                '[' : r'\[',
-                ']' : r'\]',
-                '{' : r'\{',
-                '}' : r'\}',
-                '+' : r'\+',
-                ')' : r'\)',
-                '(' : r'\(',
+                '"': r'\"',
+                '<': r'\<',
+                '>': r'\>',
+                '.': r'\.',
+                ',': r'\,',
+                '?': r'\?',
+                '*': r'\*',
+                '[': r'\[',
+                ']': r'\]',
+                '{': r'\{',
+                '}': r'\}',
+                '+': r'\+',
+                ')': r'\)',
+                '(': r'\(',
             }
             for k, v in t.items():
                 ans = ans.replace(k, v)
@@ -928,7 +1055,6 @@ class ConcCGI (CGIPublisher):
         else:
             rel_mode = 0
 
-        corp = self._corp()
         conc = self.call_function (conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode ([('fcrit', self.rec_recode(cr))
@@ -958,46 +1084,76 @@ class ConcCGI (CGIPublisher):
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-            ## generating positive and negative filter references
+        ## generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
             for level, (attr, range) in enumerate(zip(attrs, ranges)):
                 begin = range.split('~')[0]
-                if attr.endswith('/i'): icase = '(?i)'; attr = attr[:-2]
-                else: icase = ''; attr = attr.strip('/')
+                if '~' in range: end = range.split('~')[1]
+                else: end = begin
+                attr = attr.split("/")
+                if len(attr) > 1 and "i" in attr[1]: icase = '(?i)'
+                else: icase = ''
+                attr = attr[0]
                 for ii, item in enumerate(block['Items']):
                     if not item['freq']: continue
                     if not '.' in attr:
-                        if attr in corp.get_conf('ATTRLIST').split(','):
+                        if attr in self._corp().get_conf('ATTRLIST').split(','):
                             wwords = item['Word'][level]['n'].split('  ') # two spaces
-                            m = re.search('(-?\d+)([<>].*)$', begin)
-                            if m:
-                                end = str(int(m.group(1)) + len(wwords) - 1) \
-                                      + m.group(2)
-                            else:
-                                end = str(len(wwords) - 1) + '<0'
-                                begin += '<0'
-                            fquery = '%s %s 1 ' % (begin, end)
+                            fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                % (attr, icase, escape(escape_query_value(w))) for w in wwords ])
+                                               % (attr, icase, escape_query_value(escape(w))) for w in wwords])
                         else: # structure number
-                            fquery = '0 0<0 1 [] within <%s #%s/>' % \
-                                      (attr, item['Word'][0]['n'].split('#')[1])
+                            fquery = '0 0 1 [] within <%s #%s/>' % \
+                                     (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
-                        fquery = '0 0 1 [] within <%s %s="%s" />' %\
-                                 (attr.split('.')[0], attr.split('.')[1],
-                                  item['Word'][0]['n'])
-                    fquery = self.urlencode(fquery)
-                    item['pfilter'] += ';q=p%s' % fquery
-                    item['nfilter'] += ';q=n%s' % fquery
+                        structname, attrname = attr.split('.')
+                        if self._corp().get_conf(structname + '.NESTED'):
+                            block['unprecise'] = True
+                        fquery = '0 0 1 [] within <%s %s="%s" />' \
+                                 % (structname, attrname,
+                                    escape(item['Word'][0]['n']))
+                    if not item['freq']: continue
+                    efquery = self.urlencode(fquery)
+                    item['pfilter'] += ';q=p%s' % efquery
+                    if len(attrs) == 1 and item['freq'] <= conc.size():
+                        item['nfilter'] += ';q=n%s' % efquery
+            # adding no error, no correction (originally for CUP)
+        errs, corrs, err_block, corr_block = 0, 0, -1, -1
+        for b_index, block in enumerate(result['Blocks']):
+            curr_fcrit = fcrit[b_index]
+            if curr_fcrit.split()[0] == 'err.type':
+                err_block = b_index
+                for item in block['Items']: errs += item['freq']
+            elif curr_fcrit.split()[0] == 'corr.type':
+                corr_block = b_index
+                for item in block['Items']: corrs += item['freq']
+        freq = conc.size() - errs - corrs
+        if freq > 0 and err_block > -1 and corr_block > -1:
+            pfilter = ';q=p0 0 1 ([] within ! <err/>) within ! <corr/>'
+            cc = self.call_function(conclib.get_conc, (self._corp(),),
+                                    q=self.q + [pfilter[3:]])
+            freq = cc.size()
+            err_nfilter, corr_nfilter = '', ''
+            if freq != conc.size():
+                err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
+                corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
+            result['Blocks'][err_block]['Items'].append(
+                {'Word': [{'n': 'no error' }], 'freq': freq,
+                 'pfilter': pfilter, 'nfilter': err_nfilter,
+                 'norel': 1, 'fbar' :0} )
+            result['Blocks'][corr_block]['Items'].append(
+                {'Word': [{'n': 'no correction' }], 'freq': freq,
+                 'pfilter': pfilter, 'nfilter': corr_nfilter,
+                 'norel': 1, 'fbar' :0} )
         return result
 
     add_vars['savefreq_form'] = ['concsize'] 
     def savefreq_form (self, fcrit=[]):
         return {'FCrit': [{'fcrit': cr} for cr in fcrit]}
 
-    def savefreq (self, fcrit=[], flimit=0, freq_sort='', ml=0, heading=0,
+    def savefreq (self, fcrit=[], flimit=0, freq_sort='', ml=0,
                   saveformat='text', maxsavelines=1000):
         "save a frequecy list"
         if self.pages:
@@ -1005,15 +1161,19 @@ class ConcCGI (CGIPublisher):
         else:
             self.fpage = 1
             self.fmaxitems = maxsavelines
+        self.wlwords, self.wlcache = self.get_wl_words()
+        self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
+                                                                    'blcache'))
+        if self.wlattr: self.make_wl_query() # multilevel wordlist
         result = self.freqs (fcrit, flimit, freq_sort, ml)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="freq.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="freq.xml"'
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
         else:
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="freq.txt"'
+            self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
         return result
     add_vars['savefreq'] = ['Desc']
     
@@ -1021,18 +1181,16 @@ class ConcCGI (CGIPublisher):
                 ml1attr='word', ml1pos=1, ml1icase='', ml1fcode='rc',
                 ml2attr='word', ml2pos=1, ml2icase='', ml2fcode='rc',
                 ml3attr='word', ml3pos=1, ml3icase='', ml3fcode='rc',
-                ml1ctx='0', ml2ctx='0', ml3ctx='0'):
-        "multilevel frequecy list"
-        fcrit = onelevelcrit ('', ml1attr, ml1ctx, ml1pos, ml1fcode, ml1icase)
-        if freqlevel > 1:
-            fcrit += onelevelcrit (' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
-                                   ml2icase)
-            if freqlevel > 2:
-                fcrit += onelevelcrit (' ', ml3attr, ml3ctx, ml3pos,
-                                       ml3fcode, ml3icase)
+                ml4attr='word', ml4pos=1, ml4icase='', ml4fcode='rc',
+                ml1ctx='0', ml2ctx='0', ml3ctx='0', ml4ctx='0'):
+        "multilevel frequency list"
+        l = locals()
+        fcrit = ' '.join([onelevelcrit ('', l['ml%dattr'%i],
+                                        l['ml%dctx'%i], l['ml%dpos'%i],
+                                        l['ml%dfcode'%i], l['ml%dicase'%i], 'e')
+                         for i in range(1, freqlevel+1)])
         result = self.freqs ([fcrit], flimit, '', 1)
         result['ml'] = 1
-        #result['concsize'] = self.
         return result
     freqml.template = 'freqs.tmpl'
 
@@ -1052,10 +1210,12 @@ class ConcCGI (CGIPublisher):
     cminbgr = 3
     citemsperpage = 50
     
-    add_vars['coll'] = ['concsize'] 
     def coll (self):
         "collocations form"
-        corp = self._corp()
+        if self.maincorp:
+            corp = conclib.manatee.Corpus(self.maincorp)
+        else:
+            corp = self._corp()
         colllist = corp.get_conf('ATTRLIST').split(',')
         out = {'Coll_attrlist': [{'n': n,
                                   'label': corp.get_conf (n+'.LABEL') or n}
@@ -1175,12 +1335,13 @@ class ConcCGI (CGIPublisher):
             else:
                 out = ('', lines[-1])
             logfile.close()
-        else: out = ('', '')
-        return out
+        else:
+            out = ('', '')
+        return ':'.join(map(str.strip, out))
 
     def kill_histogram_processing(self):
         import glob
-        pid = self.check_histogram_processing()[0].strip()
+        pid = self.check_histogram_processing().split(':')[0]
         if pid:
             try:
                 os.kill(int(pid), 9)
@@ -1215,7 +1376,8 @@ class ConcCGI (CGIPublisher):
             id = hist.get_id()
             if id not in histlist_ids:
                 histlist_ids.append(id)
-                out['Histlist'].append({'name': hist.get_attr('HR'), 'id': id})
+                out['Histlist'].append({'name': hist.get_attr('HR') or id,
+                                        'id': id})
         return out 
 
     wlminfreq = 5
@@ -1228,25 +1390,29 @@ class ConcCGI (CGIPublisher):
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
-        out = {'Attrlist': [{'n': n, 'label': corp.get_conf (n+'.LABEL') or n}
-                            for n in attrlist]}
             # set reference corpus and reference subcorp list (for keywords)
+        out = {}
         if not ref_corpname: ref_corpname = self.corpname
-        refcm = corplib.CorpusManager ([ref_corpname], self.subcpath)
-        out['RefSubcorp'] = refcm.last_subcorp_names (ref_corpname)
+        if hasattr(self, 'compatible_corpora'):
+            refcm = corplib.CorpusManager (
+                      [str(c) for c in self.compatible_corpora], self.subcpath)
+            out['CompatibleCorpora'] = refcm.corplist_with_names()
+        else:
+            refcm = corplib.CorpusManager ([ref_corpname], self.subcpath)
+        out['RefSubcorp'] = refcm.subcorp_names (ref_corpname)
         out['ref_corpname'] = ref_corpname
         return out
     add_vars['wordlist_form'] = ['LastSubcorp']
 
     def findx_upload_form(self):
         out = {}
-        out['processing'] = self.check_histogram_processing()[1]
+        out['processing'] = self.check_histogram_processing().split(':')[1]
         return out
 
 
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
             # gets arbitrary list of words for wordlist
-        wlfile = getattr(self, attrnames[0], '')
+        wlfile = getattr(self, attrnames[0], '').encode('utf8')
         wlcache = getattr(self, attrnames[1], '')
         filename = wlcache; wlwords = []
         if wlfile: # save a cache file
@@ -1254,14 +1420,15 @@ class ConcCGI (CGIPublisher):
                 from hashlib import md5
             except ImportError:
                 from md5 import new as md5
-            filename = os.path.join(self.cache_dir, self.corpname,
+            filename = os.path.join(self.cache_dir,
                                     md5(wlfile).hexdigest() + '.wordlist')
+            if not os.path.isdir(self.cache_dir): os.makedirs (self.cache_dir)
             cache_file = open(filename, 'w')
             cache_file.write(wlfile)
             cache_file.close()
-            wlwords = [w.strip() for w in wlfile.split('\n')]
+            wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
         if wlcache: # read from a cache file
-            filename = os.path.join(self.cache_dir, self.corpname, wlcache)
+            filename = os.path.join(self.cache_dir, wlcache)
             cache_file = open(filename)
             wlwords = [w.strip() for w in cache_file]
             cache_file.close()
@@ -1276,6 +1443,7 @@ class ConcCGI (CGIPublisher):
                   ref_corpname='', ref_usesubcorp='', wlpage=1):
         if not wlpat: self.wlpat = '.*'
         if '.' in self.wlattr:
+            orig_wlnums = self.wlnums
             if wltype != 'simple':
                 raise ConcError(_('Text types are limited to Simple output'))
             if self.wlnums == 'arf':
@@ -1284,6 +1452,14 @@ class ConcCGI (CGIPublisher):
                 self.wlnums = 'doc sizes'
             elif self.wlnums == 'docf':
                 self.wlnums = 'frq'
+        if self.wlattr == 'ws_collocations' and self.wlnums != 'frq':
+            raise ConcError('Word sketch keywords are available '
+                            'with raw word counts only')
+        lastpage = 0
+        if self._anonymous and wlpage >= 10: # limit paged lists
+            wlpage = 10; self.wlpage = 10; lastpage = 1
+        elif self._anonymous and self.wlmaxitems > 1000: # limit saved lists
+            wlpage = 1; self.wlpage = 1; self.wlmaxitems = 1000
         wlstart = (wlpage - 1) * self.wlmaxitems
         self.wlmaxitems =  self.wlmaxitems * wlpage + 1 # +1 = end detection
         try:
@@ -1291,44 +1467,85 @@ class ConcCGI (CGIPublisher):
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                                     'blcache'))
             if wltype == 'keywords':
-                out = self.call_function (corplib.subc_keywords_onstr,
-                           ( self.cm.get_Corpus (corpname, usesubcorp),
-                             self.cm.get_Corpus (ref_corpname, ref_usesubcorp),
-                             self.wlattr ))[wlstart:]
-                if len(out) < self.wlmaxitems/wlpage: lastpage = 1
-                else: lastpage = 0; out = out[:-1]
-                self.wlmaxitems -= 1
-                return {'Keywords':[{'str': w, 'score': round(s,1),
-                                     'freq': round(f, 1),
-                                     'freq_ref': round(fr, 1),
-                                     'rel': round(rel, 1),
-                                     'rel_ref': round(relref, 1) }
-                                 for s, rel, relref, i, iref, f, fr, w in out],
-                        'lastpage': lastpage}
-
-            if self.wlwords and self.wlpat == '.*': self.wlsort = ''
-            result =  {'Items': self.call_function (corplib.wordlist,
+                args = ( self.cm.get_Corpus (self.corpname, usesubcorp),
+                         self.cm.get_Corpus (ref_corpname, ref_usesubcorp) )
+                if self.wlattr == 'ws_collocations':
+                    kw_func = getattr(corplib, 'ws_keywords')
+                else:
+                    kw_func = getattr(corplib, 'subc_keywords_onstr')
+                    args = args + (self.wlattr,)
+                out = self.call_function (kw_func, args)[wlstart:]
+                ref_name = self.cm.get_Corpus (ref_corpname).get_conf('NAME')
+                result = {'Keywords':[{'str': w, 'score': round(s,1),
+                                       'freq': round(f, 1),
+                                       'freq_ref': round(fr, 1),
+                                       'rel': round(rel, 1),
+                                       'rel_ref': round(relref, 1) }
+                                      for s, rel, relref, f, fr, w in out],
+                          'ref_corp_full_name': ref_name
+                         }
+                result_list = result['Keywords']
+            else: # ordinary list
+                if self.wlattr == 'ws_collocations':
+                    result = {'Items': self.call_function (corplib.ws_wordlist,
+                                                    (self._corp(),))[wlstart:]}
+                else:
+                    if hasattr(self, 'wlfile') and self.wlpat == '.*':
+                        self.wlsort = ''
+                    result =  {'Items': self.call_function (corplib.wordlist,
                                        (self._corp(), self.wlwords))[wlstart:]}
-            if self.wlwords: result['wlcache'] = self.wlcache
-            if self.blacklist: result['blcache'] = self.blcache
-            if len(result['Items']) < self.wlmaxitems/wlpage:
-                result['lastpage'] = 1
-            else:
-                result['lastpage'] = 0; result['Items'] = result['Items'][:-1]
+                    if self.wlwords: result['wlcache'] = self.wlcache
+                    if self.blacklist: result['blcache'] = self.blcache
+                result_list = result['Items']
+            if len(result_list) < self.wlmaxitems/wlpage: result['lastpage'] = 1
+            else: result['lastpage'] = 0; result_list = result_list[:-1]
             self.wlmaxitems -= 1
+            if '.' in self.wlattr: self.wlnums = orig_wlnums
+            try:
+                result['wlattr_label'] = self._corp().get_conf(
+                    self.wlattr+'.LABEL') or self.wlattr
+            except:
+                result['wlattr_label'] = self.wlattr
             return result
         except corplib.MissingSubCorpFreqFile, subcmiss:
-            out = corplib.build_arf_db (subcmiss.args[0], self.wlattr)
+            self.wlmaxitems -= 1
+            if self.wlattr == 'ws_collocations':
+                out = corplib.build_arf_db (subcmiss.args[0], 'hashws')
+            else:
+                corp = self._corp()
+                try: doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
+                except: raise ConcError('DOCSTRUCTURE not set correctly')
+                out = corplib.build_arf_db (subcmiss.args[0], self.wlattr)
             if out: processing = out[1].strip('%')
             else: processing = '0'
-            return { 'processing': processing }
+            return { 'processing': processing == '100' and '99' or processing }
 
     wlstruct_attr1 = ''
     wlstruct_attr2 = ''
     wlstruct_attr3 = ''
 
+    def make_wl_query(self):
+        qparts = []
+        if self.wlpat: qparts.append('%s="%s"' % (self.wlattr, self.wlpat))
+        if not self.include_nonwords:
+            qparts.append('%s!="%s"' % (self.wlattr,
+                                        self._corp().get_conf('NONWORDRE')))
+        if self.wlwords:
+            qq = ['%s=="%s"' % (self.wlattr, w.strip()) for w in self.wlwords]
+            qparts.append('(' + '|'.join(qq) + ')')
+        for w in self.blacklist:
+            qparts.append('%s!=="%s"' % (self.wlattr, w.strip()))
+        self.q = ['q[' + '&'.join(qparts) + ']']
+
     def struct_wordlist (self):
         self.exceptmethod = 'wordlist_form'
+        if self.fcrit:
+            self.wlwords, self.wlcache = self.get_wl_words()
+            self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
+                                                                    'blcache'))
+            self.make_wl_query()
+            return self.freqs (self.fcrit, self.flimit, self.freq_sort, 1)
+
         if '.' in self.wlattr:
             raise ConcError('Text types are limited to Simple output')
         if self.wlnums != 'frq':
@@ -1343,37 +1560,27 @@ class ConcCGI (CGIPublisher):
         if not self.wlstruct_attr2: level = 1
         if not self.wlpat and not self.wlwords:
             raise ConcError(_('You must specify either a pattern or a file to get the multilevel wordlist'))
-        qparts = []
-        if self.wlpat: qparts.append('%s="%s"' % (self.wlattr, self.wlpat))
-        if not self.include_nonwords:
-            qparts.append('%s!="%s"' % (self.wlattr,
-                                        self._corp().get_conf('NONWORDRE')))
-        if self.wlwords:
-            qq = ['%s=="%s"' % (self.wlattr, w.strip()) for w in self.wlwords]
-            qparts.append('(' + '|'.join(qq) + ')')
-        for w in self.blacklist:
-            qparts.append('%s!=="%s"' % (self.wlattr, w.strip()))
-        self.q = ['q[' + '&'.join(qparts) + ']']
+        self.make_wl_query()
         self.flimit = self.wlminfreq
         return  self.freqml (flimit=self.wlminfreq, freqlevel=level,
                 ml1attr=self.wlstruct_attr1, ml2attr=self.wlstruct_attr2,
                 ml3attr=self.wlstruct_attr3)
     struct_wordlist.template = 'freqs.tmpl'
 
-    def savewl (self, maxsavelines=1000, wlpat='', keywords='', corpname='',
+    def savewl (self, maxsavelines=1000, wlpat='', wltype='simple',
                 usesubcorp='', ref_corpname='', ref_usesubcorp='',
-                saveformat='text', heading=0):
+                saveformat='text'):
         'save word list'
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="wl.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="wl.xml"'
         else:
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="wl.txt"'
+            self._headers['Content-Disposition'] = 'attachment; filename="wl.txt"'
         if not self.pages:
             self.wlpage = 1
             self.wlmaxitems = maxsavelines
-        return self.wordlist(wlpat, keywords, corpname, usesubcorp,
+        return self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                              ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
      
     def wordlist_process (self, attrname=''):
@@ -1418,7 +1625,7 @@ class ConcCGI (CGIPublisher):
                               for i in range (struct.size())])
 
         def compute_norm (attrname, attr, val):
-            valid = attr.str2id(str(val))
+            valid = attr.str2id(unicode(val))
             r = corp.filter_query (struct.attr_val (attrname, valid))
             cnt = 0
             while not r.end():
@@ -1444,8 +1651,8 @@ class ConcCGI (CGIPublisher):
     def get_normslist(self, structname):
         corp = self._corp()
         normsliststr = corp.get_conf ('DOCNORMS')
-        normslist = [{'n':'freq', 'label': _('Document counts') },
-                     {'n':'tokens', 'label':_('Tokens') }]
+        normslist = [{'n':'freq', 'label': _('Document counts')},
+                     {'n':'tokens', 'label': _('Tokens')}]
         if normsliststr:
             normslist += [{'n': n, 'label': corp.get_conf (structname + '.'
                                                           + n + '.LABEL') or n}
@@ -1453,8 +1660,8 @@ class ConcCGI (CGIPublisher):
         else:
             try:
                 corp.get_attr(structname + ".wordcount")
-                normslist.append({'n':'wordcount', 'label':'Word counts'})
-            except:# conclib.manatee.AttrNotFound:
+                normslist.append({'n':'wordcount', 'label': _('Word counts')})
+            except:
                 pass
         return normslist
 
@@ -1502,7 +1709,7 @@ class ConcCGI (CGIPublisher):
                 for a in dir(self) if a.startswith ('sca_')]
         structs = {}
         for sa, v in scas:
-            if type(v) is type('') and '|' in v:
+            if type(v) in (type(''), type(u'')) and '|' in v:
                 v = v.split('|')
             s, a = sa.split('.')
             if type(v) is type([]):
@@ -1541,11 +1748,7 @@ class ConcCGI (CGIPublisher):
             for e in ('.subc', '.used'):
                 if os.path.isfile (base + e):
                     os.unlink (base + e)
-        if within_condition and within_struct:
-            tt_query = [(within_struct, within_condition)]
-        else:
-            tt_query = self._texttype_query()
-
+        tt_query = self._texttype_query()
         if create and not subcname:
             raise ConcError (_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
@@ -1563,7 +1766,6 @@ class ConcCGI (CGIPublisher):
         # XXX ignoring more structures
         if not tt_query:
             raise ConcError (_('Nothing specified!'))
-
         structname, subquery = tt_query[0]
         if type(path) == unicode:
             path = path.encode("utf-8")
@@ -1571,16 +1773,10 @@ class ConcCGI (CGIPublisher):
                                              subquery):
             finalname = '%s:%s' % (basecorpname, subcname)
             sc = self.cm.get_Corpus (finalname)
-            return {
-                'subcorp': finalname,
-                'corpsize': formatnum (sc.size()),
-                'subcsize': formatnum (sc.search_size()),
-                'SubcorpList': self.cm.subcorp_names (self.corpname),
-                'method' : method,
-                'within_condition' : within_condition,
-                'within_struct' : within_struct,
-                'subcname' : subcname
-            }
+            return {'subcorp': finalname,
+                    'corpsize': formatnum (sc.size()),
+                    'subcsize': formatnum (sc.search_size()),
+                    'SubcorpList': self.cm.subcorp_names (self.corpname)}
         else:
             raise ConcError (_('Empty subcorpus!'))
 
@@ -1589,11 +1785,9 @@ class ConcCGI (CGIPublisher):
         return {'subcorp': subcname,
                 'corpsize': formatnum (sc.size()),
                 'subcsize': formatnum (sc.search_size())}
-#    subcorp_info.template = """<b><TMPL_VAR subcname></b><br>
-#        <TMPL_VAR subcsize> <i>of</i> <TMPL_VAR corpsize> <i>tokens</i>"""
 
     def attr_vals (self, avattr='', avpat=''):
-        self._headers['Content-Type'] = ' text/html'
+        self._headers['Content-Type'] = 'application/json'
         return corplib.attr_vals(self.corpname, avattr, avpat)
 
     def delsubc_form (self):
@@ -1615,7 +1809,7 @@ class ConcCGI (CGIPublisher):
 
     maxsavelines=1000
     def saveconc (self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
-                  heading=0, align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+                  align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
 
         if leftctx.find(':') == -1:  # '#' would not pass the addressline
             lctx = leftctx + '#'
@@ -1626,13 +1820,14 @@ class ConcCGI (CGIPublisher):
         else:
             rctx = rightctx
 
-        conc = self.call_function (conclib.get_conc, (self._corp(),))
+        conc = self.call_function (conclib.get_conc, (self._corp(), self.samplesize))
+        conc.switch_aligned (os.path.basename(self.corpname))
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="conc.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="conc.xml"'
         else:
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="conc.txt"'
+            self._headers['Content-Disposition'] = 'attachment; filename="conc.txt"'
         ps = self.pagesize
         if pages:
             if maxsavelines < self.pagesize:
@@ -1651,6 +1846,8 @@ class ConcCGI (CGIPublisher):
         contains_speech = settings.has_configured_speech(self._curr_corpus)
         return self.call_function (conclib.kwicpage, (self._curr_corpus, conc, contains_speech), fromp=fromp,
                                    pagesize=ps, labelmap=labelmap, align=[],
+                                   alignlist=[self.cm.get_Corpus(c)
+                                        for c in self.align.split(',') if c],
                                    leftctx=lctx, rightctx=rctx)
     add_vars['saveconc'] = ['Desc', 'concsize']
 
@@ -1735,7 +1932,7 @@ class ConcCGI (CGIPublisher):
 
     def _save_lngroup_log (self, log):
         logf = open (self._storeconc_path() + '.log', 'a')
-        conclib.flck_ex_lock(logf)
+        flck_ex_lock(logf)
         actionid = hex(hash(tuple(log)))[2:]
         logf.write('Time: %s\n' % time.strftime('%Y-%m-%d %H:%M:%S'))
         logf.write('User: %s\n' % self._user)
@@ -1743,7 +1940,7 @@ class ConcCGI (CGIPublisher):
         for toknum, orggrp in log:
             logf.write('%d\t%d\n' % (toknum, orggrp))
         logf.write('End: #%s#\n' % actionid)
-        conclib.flck_unlock(logf)
+        flck_unlock(logf)
         #print >>stderr, 'locking log file finished', 
         logf.close()
         return actionid
@@ -1763,9 +1960,9 @@ class ConcCGI (CGIPublisher):
                 log.append((toknum, conc.set_linegroup_at_pos (toknum, lngrp)))
         actionid = self._save_lngroup_log (log)
         conc.save (self._storeconc_path() + '.conc', 1)
+        self.format = 'json'
         return {'actionid': actionid, 'count': len(log)}
-    undolngroupaction.return_type = 'json'
-
+        
     def setlngroup (self, toknum='', group=0):
         if not self.annotconc:
             return 'No concordance selected'
@@ -1777,8 +1974,8 @@ class ConcCGI (CGIPublisher):
         actionid = self._save_lngroup_log (log)
         conc.save (self._storeconc_path() + '.conc', 1)
         lab = conc.labelmap.get (group, group)
+        self.format = 'json'
         return {'actionid': actionid, 'label': lab, 'count': len(log)}
-    setlngroup.return_type = 'json'
 
     def setlngroupglobally (self, group=0):
         if not self.annotconc:
@@ -1797,8 +1994,8 @@ class ConcCGI (CGIPublisher):
         anot.set_linegroup_from_conc (conc)
         anot.save (self._storeconc_path() + '.conc', 1)
         lab = anot.labelmap.get (group, group)
+        self.format = 'json'
         return {'actionid': actionid, 'label': lab, 'count': len(log)}
-    setlngroupglobally.return_type = 'json'
 
     def addlngrouplabel (self, annotconc='', newlabel=''):
         ipath = self._storeconc_path() + '.info'
@@ -1929,16 +2126,18 @@ class ConcCGI (CGIPublisher):
         return ans
     ajax_get_corp_details.template = 'corpus_details.tmpl'
 
-    def test_tags(self, corpname=''):
+    def ajax_get_structs_details(self):
         """
         """
-        import cgi
-        form = cgi.FieldStorage()
-        for k in form.keys():
-            logging.getLogger(__name__).info('form %s -> %s' % (k, form[k]))
-        return { 'corpus_name' : self.corpname if self.corpname else corpname,
-                 'num_tag_pos' : settings.get_corpus_info(self.corpname)['num_tag_pos'] }
-    test_tags.template = 'tqbtest.tmpl'
+        ans = {}
+        for item in self._curr_corpus.get_conf('STRUCTATTRLIST').split(','):
+            k, v = item.split('.')
+            if k not in ans:
+                ans[k] = []
+            ans[k].append(v)
+        return ans
+
+    ajax_get_structs_details.return_type = 'json'
 
     def ajax_get_tag_variants(self, pattern=''):
         """
@@ -1957,3 +2156,124 @@ class ConcCGI (CGIPublisher):
 
         return JsonEncodedData(ans)
     ajax_get_tag_variants.return_type = 'json'
+
+def fcs(self, operation='explain', version='', recordPacking='xml',
+        extraRequestData='', query='', startRecord='', responsePosition='',
+        recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
+    "Federated content search API function (www.clarin.eu/fcs)"
+
+    # default values
+    self._headers['Content-Type'] = 'application/XML'
+    corpname = 'brown'
+    numberOfRecords = 0
+    current_version = 1.2
+    # supported parameters for all operations
+    sup_pars = ['operation', 'stylesheet', 'version', 'extraRequestData']
+    # implicit result sent to template
+    out = {'operation': operation, 'version': current_version,
+           'recordPacking': recordPacking, 'result': [],
+           'error': False, 'numberOfRecords': numberOfRecords,
+           'server_name': self.environ.get('SERVER_NAME', ''),
+           'server_port': self.environ.get('SERVER_PORT', '80'),
+           'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
+    try:
+        # check version
+        if version and current_version < float(version):
+            raise Exception(5, version, 'Unsupported version')
+
+        # check integer parameters
+        if maximumRecords != '':
+            try:
+                maximumRecords = int(maximumRecords)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            maximumRecords = 250
+        out['maximumRecords'] = maximumRecords
+        if maximumTerms != '':
+            try:
+                maximumTerms = int(maximumTerms)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            maximumTerms = 100
+        out['maximumTerms'] = maximumTerms
+        if startRecord != '':
+            try:
+                startRecord = int(startRecord)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            startRecord = 0
+        out['startRecord'] = startRecord
+        if responsePosition != '':
+            try:
+                responsePosition = int(responsePosition)
+            except:
+                raise Exception(6, '', 'Unsupported parameter value')
+        else:
+            responsePosition = 0
+        out['responsePosition'] = responsePosition
+
+        # set content-type in HTTP header
+        if recordPacking == 'string':
+            self._headers['Content-Type'] = 'text/plain'
+        elif recordPacking == 'xml':
+            self._headers['Content-Type'] = 'application/XML'
+        else:
+            raise Exception(71, 'Unsupported record packing')
+
+        # provide info about service
+        if operation == 'explain' or not operation:
+            sup_pars.append('recordPacking') # other supported parameters
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                #if extraRequestData:
+            #    corpname = extraRequestData
+            corp = conclib.manatee.Corpus(corpname)
+            out['result'] = corp.get_conf('ATTRLIST').split(',')
+            out['numberOfRecords'] = len(out['result'])
+
+        # wordlist for a given attribute
+        elif operation == 'scan':
+        # check supported parameters
+            sup_pars.extend(['scanClause', 'responsePosition',
+                             'maximumTerms'])
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                #if extraRequestData:
+            #    corpname = extraRequestData
+            out['result'] = conclib.fcs_scan(corpname, scanClause,
+                                             maximumTerms, responsePosition)
+
+        # simple concordancer
+        elif operation == 'searchRetrieve':
+        # check supported parameters
+            sup_pars.extend(['query', 'startRecord', 'maximumRecords',
+                             'recordPacking', 'recordSchema', 'resultSetTTL'])
+            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+            if unsup_pars:
+                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+            cm = corplib.CorpusManager(corplist=[corpname])
+            corp = cm.get_Corpus(corpname)
+            out['result'] = conclib.fcs_search(corp, query,
+                                               maximumRecords, startRecord)
+            out['numberOfRecords'] = len(out['result'])
+
+        # unsupported operation
+        else:
+            out['operation'] = 'explain' # show within explain template
+            raise Exception(4, '', 'Unsupported operation')
+        return out
+
+    # catch exception and amend diagnostics in template
+    except Exception as e:
+        out['error'] = True
+        try: # concrete error, catch message from lower levels
+            out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
+        except: # general error
+            out['code'], out['details'] = 1, repr(e)
+            out['msg'] = 'General system error'
+        return out

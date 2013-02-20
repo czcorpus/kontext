@@ -94,29 +94,29 @@ $_("Collocations")#slurp
   #for $h in $Head
     <th
     #if $h.has_key('style')
-      $h['style']
+      $h.style
     #end if
     #if $h.has_key('s')
-      #set $hs = $h['s']
+      #set $hs = $h.s
     #else
       #set $hs = ''
     #end if
-    ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h['n'])</a>
+    ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h.n)</a>
     </th>
   #end for
   </tr>
   #for $i in $Items
     <tr
     #if $i.has_key('class')
-      class='$i['class']'
+      class='$i.class'
     #end if
     >
         <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
     #set $rowNum += 1
-      <td><a href='view?$globals;$q;$i['pfilter']'>p</a>/<a href='view?$globals;$q;$i['nfilter']'>n</a></td>
-      <td class='left'>$i['str']</td><td> $i['freq']</td>
-      #for $s in $i['Stats']
-        <td> $s['s']</td>
+      <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
+      <td class='left'>$i.str</td><td> $i.freq</td>
+      #for $s in $i.Stats
+        <td> $s.s</td>
       #end for
     </tr>
   #end for

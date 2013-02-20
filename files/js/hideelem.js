@@ -1,11 +1,12 @@
 /**
  *
  */
-(function (context) {
+define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, cookies) {
     'use strict';
 
+    var hideElem;
 
-    context.hideElem = {
+    hideElem = {
 
         /**
          *
@@ -14,25 +15,28 @@
          * @param path
          */
         cmdHideElementStore : function (elementid, storeval, path) {
-            var elem = window.document.getElementById(elementid),
-                img = window.document.getElementById(elementid + 'img'),
-                cookieval = context.getCookieValue('showhidden'),
-                date;
+            var elem = $('#' + elementid),
+                img = $('#' + elementid + 'img'),
+                cookieval = cookies.get('showhidden');
 
+            if (!cookieval) {
+                cookieval = '';
+            }
             cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
             if (elem.className.match("hidden")) {
                 elem.className = elem.className.replace("hidden", "visible");
                 img.src = path + "/img/minus.png";
                 cookieval += elementid + ".";
+
             } else {
                 elem.className = elem.className.replace("visible", "hidden");
                 img.src = path + "/img/plus.png";
             }
             if (storeval) {
-                date = new Date();
-                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = "showhidden=" + cookieval
-                        + "; expires=" + date.toGMTString();
+                var date = new Date();
+                date.setDate(date.getDate() + 30);
+                var opts = { domain: '', path: '/', expiresAt: date, secure: false};
+                cookies.set('showhidden', cookieval, opts);
             }
         },
 
@@ -42,7 +46,7 @@
          */
         loadHideElementStore : function (path) {
             var cookie = {},
-                ids = context.getCookieValue('showhidden').split('.'),
+                ids = bonito.getCookieValue('showhidden').split('.'),
                 i,
                 id,
                 elem,
@@ -81,8 +85,8 @@
          * @param storeval
          */
         cmdHideElementStoreSimple : function (elementid, storeval) {
-            var elem = window.document.getElementById(elementid),
-                cookieval = context.getCookieValue('showhidsim'),
+            var elem = win.document.getElementById(elementid),
+                cookieval = bonito.getCookieValue('showhidsim'),
                 date;
 
             cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
@@ -105,7 +109,7 @@
          */
         loadHideElementStoreSimple : function () {
             var cookie = {},
-                ids = context.getCookieValue("showhidsim").split('.'),
+                ids = bonito.getCookieValue("showhidsim").split('.'),
                 i,
                 all_elements,
                 onclick,
@@ -139,83 +143,62 @@
          * @return {String}
          */
         cmdGetFocusedId : function () {
-            var oldid = context.getCookieValue("query_type"),
+            var oldid = bonito.getCookieValue("query_type"),
                 id = oldid.substring(0, oldid.length - 3);
 
-            if (window.document.getElementById(id)) {
+            if (win.document.getElementById(id)) {
                 return oldid.substring(0, oldid.length - 3);
             }
             return 'iquery';
         },
 
         /**
-         * @param widgets
-         * @param resetButtonActions
+         * @param querySelector
          * @param hints
          */
-        cmdSwitchQuery : function (widgets, resetButtonActions, hints) {
-            var jqQs = $('#queryselector'),
+        cmdSwitchQuery : function (querySelector, hints) {
+            var jqQs = $(querySelector),
+                newidCom,
                 newid,
                 jqFocusElem,
                 oldval,
-                i,
                 elementId,
+                elementIdCom,
                 jqOldElem,
                 jqElem,
                 date;
 
-            widgets = widgets || {};
-            resetButtonActions = resetButtonActions || {};
             hints = hints || {};
-            newid = jqQs.val();
-            jqFocusElem = $('#' + newid.substring(0, newid.length - 3));
+            newidCom = jqQs.val();
+            newid = jqQs.val() + jqQs.data('parallel-corp');
+            jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
             oldval = jqFocusElem.val();
 
             $('#conc-form-clear-button').unbind('click');
-            if (resetButtonActions[jqQs.val()]) {
-                $('#conc-form-clear-button').bind('click', resetButtonActions[jqQs.val()]);
-                context.hideElem.clearForm($('#mainform'));
-
-            } else {
-                $('#conc-form-clear-button').bind('click', function () {
-                    context.hideElem.clearForm($('#mainform'));
-                });
-            }
+            $('#conc-form-clear-button').bind('click', function () {
+                hideElem.clearForm($('#mainform'));
+            });
 
             jqQs.find('option').each(function () {
-                elementId = $(this).val();
+                elementId = $(this).val() + jqQs.data('parallel-corp');
+                elementIdCom  = $(this).val();
+
                 jqElem = $('#' + elementId);
                 if (elementId === newid) {
                     jqElem.removeClass('hidden').addClass('visible');
 
                 } else {
                     if (jqElem.hasClass('visible')) {
-                        jqOldElem = $('#' + elementId.substring(0, elementId.length - 3));
+                        jqOldElem = $('#' + elementIdCom.substring(0, elementId.length - 3)
+                            + jqQs.data('parallel-corp'));
                         oldval = jqOldElem.val();
                         jqOldElem.val('');
-                        if (widgets.hasOwnProperty(newid)) {
-                            widgets[newid].resetWidget();
-                        }
                         jqElem.removeClass('visible').addClass('hidden');
                     }
                 }
             });
-            // Keep the value of the last query
-            if (jqOldElem && jqOldElem.attr('name') === 'tag') {
-                if (oldval && oldval !== '.*' && oldval.indexOf('[tag') !== 0) {
-                    jqFocusElem.val('[tag="' + oldval + '"]');
 
-                } else {
-                    jqFocusElem.val(oldval);
-                }
-
-            } else if (newid === 'tagrow') {
-                jqFocusElem.val('');
-
-            } else {
-                jqFocusElem.val(oldval);
-            }
-
+            jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
                 $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
                 $('#query-type-hint').bind('click', function (event) {
@@ -232,7 +215,7 @@
 
             date = new Date();
             date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = 'query_type=' + newid
+            win.document.cookie = 'query_type=' + newid
                     + '; expires=' + date.toGMTString();
 
             jqFocusElem.focus();
@@ -249,7 +232,7 @@
                 $('#error').css('display', 'none');
             }
             $(f).find('input,select').each(function () {
-                if ($(this).attr('data-ignore-reset') !== '1') {
+                if ($(this).data('ignore-reset') !== '1') {
                     if ($(this).attr('type') === 'text') {
                         $(this).val('');
                     }
@@ -262,46 +245,6 @@
                 }
             });
             $('#queryselector').val(prevRowType);
-        },
-
-        /**
-         *
-         * @param path
-         */
-        cmdSwitchMenu : function (path) {
-            var styleSheets = document.styleSheets,
-                horizontal_style = null,
-                i,
-                position,
-                v_css,
-                date;
-
-            for (i = 0; i < styleSheets.length; i += 1) {
-                if (styleSheets[i].href.search('horizontal.css') > -1) {
-                    horizontal_style = styleSheets[i];
-                }
-            }
-            if (horizontal_style === null) {
-                position = 'top';
-                v_css  = document.createElement('link');
-                v_css.rel = 'stylesheet';
-                v_css.type = 'text/css';
-                v_css.href = path + '/css/horizontal.css';
-                document.getElementsByTagName('head')[0].appendChild(v_css);
-
-            } else if (horizontal_style.disabled) {
-                position = 'top';
-                horizontal_style.disabled = false;
-
-            } else {
-                position = 'left';
-                horizontal_style.disabled = true;
-            }
-
-            date = new Date();
-            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = "menupositi=" + position
-                            + "; expires=" + date.toGMTString();
         },
 
         /**
@@ -332,19 +275,19 @@
                     break;
                 }
             }
-            if ($(initiator).attr('data-action-type') === '1') {
+            if ($(initiator).data('action-type') === '1') {
                 chkStatus = true;
-                $(initiator).attr('data-action-type', 2);
+                $(initiator).data('action-type', 2);
                 tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
-                $(initiator).attr('data-alt-value', tmp);
+                $(initiator).attr('value', $(initiator).data('alt-value'));
+                $(initiator).data('alt-value', tmp);
 
-            } else if ($(initiator).attr('data-action-type') === '2') {
+            } else if ($(initiator).data('action-type') === '2') {
                 chkStatus = false;
-                $(initiator).attr('data-action-type', 1);
+                $(initiator).data('action-type', 1);
                 tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).attr('data-alt-value'));
-                $(initiator).attr('data-alt-value', tmp);
+                $(initiator).attr('value', $(initiator).data('alt-value'));
+                $(initiator).data('alt-value', tmp);
             }
             if (form !== undefined) {
                 $(form).find('input[type="checkbox"][name="' + name + '"]').each(function () {
@@ -361,10 +304,10 @@
             var lookfor = document.getElementById('searchhelp').value;
 
             if (lookfor) {
-                window.open('http://www.google.com/#q=site%3Atrac.sketchengine.co.uk+' +
+                win.open('http://www.google.com/#q=site%3Atrac.sketchengine.co.uk+' +
                                                     lookfor.replace(/ /g, '+'));
             } else {
-                window.open(generic);
+                win.open(generic);
             }
         },
 
@@ -416,9 +359,11 @@
             } else {
                 jqTargetElem = $(target);
             }
-            if (jqTargetElem.length > 0 && context.hideElem.elementIsFocusableFormInput(jqTargetElem)) {
+            if (jqTargetElem.length > 0 && hideElem.elementIsFocusableFormInput(jqTargetElem)) {
                 jqTargetElem.focus();
             }
         }
     };
-}(window));
+
+    return hideElem;
+});

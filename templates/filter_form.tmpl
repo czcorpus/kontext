@@ -44,12 +44,16 @@ $_("Concordance: Filter form")#slurp
 #filter WebSafe
 <h3>$_("Concordance Filter")</h3>
 <form id="mainform" action="filter">
+<input type="hidden" name="within" value="$within" />
 <fieldset>
 #filter None
 $input_hidden
 #end filter
 
 <table class="form">
+#if $within
+<input type="hidden" name="pnfilter" value="p"/>
+#else ## ordinary filter
 <tbody>
 <tr class="required">
   <th>$_("Filter"):</th>
@@ -80,9 +84,11 @@ $input_hidden
     <td>
     $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
     $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
+    <input type="checkbox" name="inclkwic" value="True" checked="checked" /> $_("include KWIC")
     </td>
 </tr>
 </tbody>
+#end if
 #filter None
 $query_node
 #end filter

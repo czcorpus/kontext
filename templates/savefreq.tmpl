@@ -35,11 +35,11 @@ $d.get('arg')#slurp
 #end if
   #for $b in $Blocks
   <block>
-    <name>$b['blockname']</name>
+    <name>$b.blockname</name>
     <items>
-      #for $i in $b['Items']
+      #for $i in $b.Items
       <item>
-        #for $w in $i['Word']
+        #for $w in $i.Word
 	  <str>$w.n</str>
 	#end for
 	  <freq>$i.freq</freq>
@@ -69,13 +69,13 @@ $d.get('arg')#slurp
 #end if
 #for $b in $Blocks
 
-  #for $h in $b['Head']
+  #for $h in $b.Head
 $h.get('n')	#slurp
   #end for
 
 -------------------------------------------------------
-  #for $i in $b['Items']
-    #for $w in $i['Word']
+  #for $i in $b.Items
+    #for $w in $i.Word
 $w.get('n')	#slurp
     #end for
 $i.get('freq')	#slurp

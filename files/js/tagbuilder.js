@@ -20,12 +20,14 @@
  * This library provides a clickable 'tag generator' widget.
  * The library depends on multiselect.js - TODO use require.js
  */
-define(['jquery'], function ($) {
+define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multiselect, simpleModal, bonito) {
     'use strict';
 
     var createTagLoader,
         objectIsEmpty,
-        attachTagLoader;
+        attachTagLoader,
+        bindTextInputHelper,
+        displayTagHintButton;
 
     /**
      *
@@ -224,9 +226,9 @@ define(['jquery'], function ($) {
                 $(tagLoader.tagDisplay).find('a.backlink').each(function () {
                     $(this).bind('click', function () {
                         var liElms = $(tagLoader.multiSelectComponent.ulElement).find('li:nth-child('
-                                + (parseInt($(this).attr('data-block-idx'), 10) + 1) + ')');
+                                + (parseInt($(this).data('block-idx'), 10) + 1) + ')');
                         if (liElms.length === 1) {
-                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).attr('data-block-id'));
+                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).data('block-id'));
                         }
                     });
                 });
@@ -270,7 +272,7 @@ define(['jquery'], function ($) {
 
                 blockSwitchEventHandlers = {
                     mouseover : function (event) {
-                        var blockId = $(event.target.parentNode).attr('data-block-id'),
+                        var blockId = $(event.target.parentNode).data('block-id'),
                             items;
 
                         items = $(tagLoader.tagDisplay).find('*');
@@ -279,7 +281,7 @@ define(['jquery'], function ($) {
                         }
                     },
                     mouseout : function (event) {
-                        var blockId = $(event.target.parentNode).attr('data-block-id'),
+                        var blockId = $(event.target.parentNode).data('block-id'),
                             items;
 
                         items = $(tagLoader.tagDisplay).find('*');
@@ -567,8 +569,77 @@ define(['jquery'], function ($) {
         return tagLoader;
     };
 
+    /**
+     *
+     * @param opt {Object} an object containing keys:
+     *     inputElement - text input element to be enriched by this function
+     *     widgetElement - wrapper element for whole widget
+     *     modalWindowElement - modal box element (where widgetElement is inserted)
+     *     insertTagButtonElement - button to insert tag string into the inputElement
+     *     tagDisplayElement - element where tag value is written
+     *     resetButtonElement - element representing the RESET function
+     *     activateLink
+     * @param multiSelectOpts {Object}
+     * @param corpusName {string}
+     * @param numTagPos {Number}
+     */
+    bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts) {
+        var prop;
+
+        for (prop in opt) {
+            if (opt.hasOwnProperty(prop)
+                    && prop.indexOf('Element') + 'Element'.length === prop.length
+                    && typeof opt[prop] === 'string'
+                    && opt[prop].indexOf('#') !== 0) {
+                opt[prop] = '#' + opt[prop];
+            }
+        }
+        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
+            var caretPos = bonito.getCaretPosition($(opt.inputElement)),
+                insertTagClickAction,
+                buttonEnterAction;
+
+            insertTagClickAction = function () {
+                var bef, aft;
+
+                if ($(opt.inputElement).val()) {
+                    bef = $(opt.inputElement).val().substring(0, caretPos);
+                    aft = $(opt.inputElement).val().substring(caretPos);
+                    $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
+
+                } else {
+                    $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
+                }
+                simpleModal.close();
+                $(document).off('keypress', buttonEnterAction);
+                $(opt.inputElement).focus();
+            };
+
+            buttonEnterAction = function (event) {
+                if (event.which === 13) {
+                    insertTagClickAction(event);
+                }
+            };
+
+            $(opt.modalWindowElement).modal({
+                onShow : function () {
+                    var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
+
+                    attachTagLoader(corpusName, numTagPos, msComponent, {
+                        tagDisplay : $(opt.tagDisplayElement),
+                        resetButton : $(opt.resetButtonElement)
+                    });
+
+                    $(opt.insertTagButtonElement).one('click', insertTagClickAction);
+                    $(document).on('keypress', buttonEnterAction);
+                }
+            });
+        });
+    };
+
     return {
-        attachTagLoader : attachTagLoader
+        attachTagLoader : attachTagLoader,
+        bindTextInputHelper : bindTextInputHelper
     };
 
 });

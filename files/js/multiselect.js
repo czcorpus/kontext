@@ -128,7 +128,7 @@ define(['jquery'], function ($) {
 
                 multiSelect.useNamedCheckboxes = opt.hasOwnProperty('useNamedCheckboxes') ? opt.useNamedCheckboxes : true;
                 multiSelect.allowMultipleOpenedBoxes = opt.allowMultipleOpenedBoxes;
-                if (typeof wrapperElem === 'string') {
+                if (typeof wrapperElem === 'string' && wrapperElem.indexOf('#') !== 0) {
                     wrapperElem = $('#' + wrapperElem).get(0);
                 }
                 marginStyle = opt.hasOwnProperty('margin') ? opt.margin : '5px';
@@ -210,7 +210,7 @@ define(['jquery'], function ($) {
                     overflow : 'hidden',
                     clear : 'both'
                 });
-                $(liElement).attr('data-block-id', blockId);
+                $(liElement).data('block-id', blockId);
                 $(multiSelect.ulElement).append(liElement);
                 switchLink = document.createElement('A');
                 $(switchLink).attr('class', 'switch-link');
@@ -369,7 +369,7 @@ define(['jquery'], function ($) {
                     multiSelect.activeBlockId = blockId;
                     if (multiSelect.getNumSelected(blockId) === 0) {
                         $(multiSelect.defaultValues[blockId]).attr('value',
-                            $(multiSelect.defaultValues[blockId]).attr('data-orig-value'));
+                            $(multiSelect.defaultValues[blockId]).data('orig-value'));
                         $(multiSelect.blockSwitchLinks[blockId]).attr('class', 'switch-link');
 
                     } else {
@@ -409,7 +409,7 @@ define(['jquery'], function ($) {
              * @param value {String}
              */
             setDefaultValue : function (blockId, value) {
-                $(multiSelect.defaultValues[blockId]).attr('data-orig-value', value);
+                $(multiSelect.defaultValues[blockId]).data('orig-value', value);
                 if ($(multiSelect.defaultValues[blockId]).attr('value')) {
                     $(multiSelect.defaultValues[blockId]).attr('value', value);
                 }

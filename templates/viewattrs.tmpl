@@ -61,9 +61,9 @@ $input_hidden
   <tr>
     <td valign="top">
       #set $navid = 'id="firstattr"'
-      #for $a in $Availattrs
-        #set $checked = ($a['checked']) and 'checked="checked"' or ''
-        <label><input type='checkbox' name='setattrs' value='$a['n']' $checked $navid/> $_($a['n'])</label><br/>
+      #for $a in $AttrList
+        #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
+        <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
         #set $navid = ''
       #end for
       <hr/>
@@ -83,16 +83,16 @@ $input_hidden
     <td valign="top">
         <select name='setstructs' size="13" multiple="multiple">
       #for $a in $Availstructs
-        #set $selected = ($a['sel']) and 'selected="selected"' or ''
-        <option value='$a['n']' $selected>&lt;$a['n']&gt; $a['label']</option>
+        #set $selected = ($a.sel) and 'selected="selected"' or ''
+        <option value='$a.n' $selected>&lt;${$a.label or $a.n}&gt;</option>
       #end for
         </select>
     </td>
     #end if
     <td valign="top"><select name='setrefs' size="13" multiple="multiple">
     #for $a in $Availrefs
-        #set $selected = ($a['sel']) and 'selected="selected"' or ''
-        <option value='$a['n']' $selected>$_($a['label'])</option>
+        #set $selected = ($a.sel) and 'selected="selected"' or ''
+        <option value='$a.n' $selected>$a.label</option>
     #end for
     </select>
     </td>
@@ -150,7 +150,7 @@ $gdexconf_select('gdexconf', $gdexconf)
          #if $t == $tbl_template
            selected="selected"
          #end if
-         >$t</option>
+         >$tbl_labels.get($t, $t)</option>
        #end if
      #end for
   </select>
@@ -158,7 +158,7 @@ $gdexconf_select('gdexconf', $gdexconf)
 
 <div class="buttons">
   <input type="submit" value='$_("Change View Options")' />
-  #unless $_open_version
+  #unless $_anonymous
   <input class="button" type="button" value='$_("Save Options")' onclick="hideElem.redirectToSave(document.getElementById('mainform'), 'save_viewattrs')" />
   #end unless
 </div>

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+logging_templates = ['ukwac_mcd', 'fidaplus_slovene', 'ANW_INL']
+
 tbl_refs = { 'oec_oup_shogakukan': '=doc.dialect.MAP_OUP,=div.url',
              'ANW_INL': '=doc.id,=doc.bronentitel,=doc.datering,=doc.variant,=doc.auteur,=doc.url',
              'iztok_caja': '=doc.domain,=doc.id',
@@ -13,3 +15,10 @@ tbl_refs = { 'oec_oup_shogakukan': '=doc.dialect.MAP_OUP,=div.url',
 
 tbl_structs = { 'cupclc': 'g,err,corr',
               }
+
+tbl_labels = { 'cupclc': 'source info',
+               'cupcic': 'source info',
+               'cupcsc': 'source info',
+               'cupcac': 'source info',
+               'vanilla2': 'no source info',
+             }

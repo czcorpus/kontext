@@ -15,228 +15,185 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+define(['jquery', 'win'], function ($, win) {
 
-function show_undo_action(request) {
-    Element.show($('annot_undo'));
-    eval('res=' + request.responseText);
-    $('annot_undo_count').innerHTML = res.count;
-    $('groupmenu').actionid = res.actionid;
-}
-
-function assing_group(grpid, grplabel) {
-    var grpmenu=$('groupmenu');
-    var params = 'annotconc=' + grpmenu.annotconc
-		 + '&corpname=' + grpmenu.corpname + '&group=' + grpid;
-    var method_name = 'setlngroup';
-    var onCompletefn = null;
-    if (grpmenu.firstparam == 'select') {
-	if ($('num_of_selected_lines').innerHTML != 0) {
-	    params += '&toknum=' + get_selected_toknums();
-	    show_assigned_globally(grplabel, false);
- 	} else {
-	    method_name += 'globally';
-	    params += '&' + grpmenu.queryparams;
-	    show_assigned_globally(grplabel, true);
-	}
-	onCompletefn = show_undo_action;
-    } else if (grpmenu.firstparam[0] == 'w' ) {
-	// word sketch annotation -> from conc
-	method_name += 'globally';
-	params += '&q=' + grpmenu.firstparam;
-	onCompletefn = show_undo_action;
-    } else {
-            params += '&toknum=' + grpmenu.firstparam;
-	    Element.hide($('annot_undo'));
-    }
-    $.ajax({
-        url : method_name,
-        data : params,
-        method: 'get',
-	    complete: onCompletefn
-    });
-    grpmenu.sourceel.innerHTML = grplabel;
-    close_menu(grpmenu);
-}
-
-function assigned_callback(request) {
-}
+    var lib = {};
 
 
-function close_menu(grpmenu) {
-    grpmenu.style.visibility = 'hidden';
-    $(grpmenu.sourceel).unbind('mouseout', cancel_menu)
-    var element = grpmenu.sourceel;
-    while (element.parentNode && (!element.tagName || element.tagName != 'TR'))
-        element = element.parentNode;
-    if (element.tagName && element.tagName == 'TR')
-        Element.removeClassName(element, 'highlight');
-}
+    lib.show_undo_action = function (request) {
+        $('#annot_undo').show();
+        eval('res=' + request.responseText);
+        $('#annot_undo_count').html(res.count);
+        $('#groupmenu').attr('actionid', res.actionid);
+    };
 
-function highlight_parent_row(element) {
-    while (element.parentNode && (!element.tagName || element.tagName != 'TR'))
-        element = element.parentNode;
-    Element.addClassName(element, 'highlight');
-}
+    lib.assign_group = function (grpid, grplabel) {
+        var grpmenu = $('#groupmenu'),
+            pars = 'annotconc=' + grpmenu.attr('annotconc') + '&corpname=' +
+                grpmenu.attr('corpname') + '&group=' + grpid,
+            method = 'setlngroup',
+            cmplt_fn = null;
 
+        if ($(win.document).data('param') == 'select') {
+	        if ($('#num_of_selected_lines').html() != 0) {
+	            pars += '&toknum=' + get_selected_toknums();
+	            lib.show_assigned_globally(grplabel, false);
 
-function cancel_menu(event) {
-     var grpmenu = $('groupmenu');
-     if (!grpmenu || !grpmenu.sourceel){ return;}
-     var x = Event.pointerX(event);
-     var y = Event.pointerY(event);
-     if (!Position.within(grpmenu.sourceel, x, y)
-         && !Position.within(grpmenu, x, y)) {
-	 close_menu(grpmenu);
-     }
-}
+ 	        } else {
+	            method += 'globally';
+	            pars += '&' + grpmenu.attr('queryparams');
+	            lib.show_assigned_globally(grplabel, true);
+	        }
+	        cmplt_fn = lib.show_undo_action;
 
-function show_groupmenu(element, pos) {
-    grpmenu = $('groupmenu');  
-    if(!grpmenu.style.position || grpmenu.style.position == 'absolute') {
-        var offsets = Position.cumulativeOffset(element);
-        grpmenu.style.left = offsets[0] + 'px';
-        grpmenu.style.top  = (offsets[1] + element.offsetHeight) + 'px';
-        grpmenu.style.position = 'absolute';
-	grpmenu.style.visibility = 'visible';
-	grpmenu.sourceel = element;
-	grpmenu.firstparam = pos;
-	$(element).bind('mouseout', cancel_menu);
-	if (pos != 'select') {
-	    highlight_parent_row(element);
-        }
-	return false;
-    }
-}
-
-function update_groupmenu(request) {
-    $('groupmenu').innerHTML = request.responseText;
-    $('newlabel').value = '';
-}
-
-function add_new_annotation_label() {
-    var grpmenu=$('groupmenu');
-    var newlabelel = $('newlabel');
-    var params = 'annotconc=' + grpmenu.annotconc 
-		 + '&corpname=' + grpmenu.corpname
-                 + '&newlabel=' + newlabelel.value;
-    $.ajax({
-        url : 'addlngrouplabel',
-        data: params,
-        method:'get',
-        complete: update_groupmenu
-    });
-}
-
-var current_line;
-function handle_selection(event) {
-    event = event || window.event;
-    var column = Event.findElement(event, 'TD');
-    if (!column.className || Element.hasClassName(column, 'ref')
-        || Element.hasClassName(column, 'kw'))
-	return;
-    if (column.className && Element.hasClassName(column, 'rc')) {
-	column = Event.findElement(event, 'SPAN');
-	if (column.className && Element.hasClassName(column, 'groupbox'))
-	    return;
-    }
-    var line = Event.findElement(event, 'TR');
-    var count = $('num_of_selected_lines');
-    if (event.shiftKey && current_line) {
-	var lines = $('conclines').rows;
-	if (current_line > line.rowIndex) {
-	    for (var i=line.rowIndex; i < current_line; i++)
-		Element.addClassName(lines[i], 'selected');
-	} else {
-	    for (var i=line.rowIndex; i > current_line; i--)
-		Element.addClassName(lines[i], 'selected');
-	}
-	count.innerHTML = 0;
-	for (var i=0; i < lines.length; i++) {
-            if (Element.hasClassName(lines[i], 'selected'))
-		count.innerHTML++;
-	}
-        if (count.innerHTML == 0) {
-	    Element.hide($('number_selected'));
-	    Element.show($('number_globally'));
         } else {
-	    Element.show($('number_selected'));
-	    Element.hide($('number_globally'));
-	}
-    } else {
-        if (Element.hasClassName(line, 'selected')) {
-            Element.removeClassName(line, 'selected');
-            count.innerHTML--;
-            if (count.innerHTML == 0) {
-	        Element.hide($('number_selected'));
-                Element.show($('number_globally'));
+            if ($(win.document).data('param')[0] == 'w' ) {
+	            method += 'globally';
+	            pars += '&q=' + $(win.document).data('param');
+	            cmplt_fn = lib.show_undo_action;
+
+            } else {
+                pars += '&toknum=' + $(win.document).data('param');
+	            $('#annot_undo').hide();
             }
+        }
+
+        $.ajax({ url: method, type: 'GET', data: pars, complete: cmplt_fn});
+        $($(win.document).data('sourceel')).html(grplabel);
+        lib.close_menu();
+        lib.clear_selection();
+    };
+
+    lib.close_menu = function () {
+        $('#groupmenu').hide();
+        $($(win.document).data('sourceel')).closest('tr').removeClass('highlight');
+    };
+
+    lib.show_groupmenu = function (element, pos) {
+        grpmenu = $('#groupmenu');
+        var offset = $(element).offset();
+        grpmenu.show();
+        grpmenu.offset({ left: offset.left, top: offset.top });
+        $(win.document).data('sourceel', element);
+        $(win.document).data('param', pos.toString());
+        if (pos != 'select') {
+            $(element).closest('tr').addClass('highlight');
+        }
+        return false;
+    };
+
+    lib.add_new_annotation_label = function () {
+        var grpmenu = $('#groupmenu');
+        var newlabelel = $('#newlabel');
+        var params = 'annotconc=' + grpmenu.attr('annotconc')
+		        + '&corpname=' + grpmenu.attr('corpname')
+                + '&newlabel=' + newlabelel.val();
+        $.ajax({url: 'addlngrouplabel', data: params, type: 'GET',
+            complete: function (data) {
+                $('#groupmenu').html(data.responseText);
+                $('#newlabel').val('');
+            }
+        });
+    }
+
+    var currline = -1;
+
+    lib.handle_selection = function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var line = $(event.target).closest('tr');
+        var countel = $('#num_of_selected_lines');
+        if (event.shiftKey && currline != -1) {
+	        var lines = $('.concline');
+	        if (currline > getIndex(line)) {
+	            for (var i = getIndex(line); i < currline; i++) {
+                    $(lines[i]).addClass('selected');
+                }
+
+	        } else {
+	            for (var i = getIndex(line); i > currline; i--) {
+                    $(lines[i]).addClass('selected');
+                }
+	        }
+            var c = $('tr.selected').length;
+	        countel.html(c);
+            if (c == 0) {
+	            $('#number_selected').hide();
+	            $('#number_globally').show();
+
+            } else {
+                $('#number_selected').show();
+	            $('#number_globally').hide();
+	        }
+
         } else {
-            Element.addClassName(line, 'selected');
-            if (count.innerHTML == 0) {
-	        Element.show($('number_selected'));
-                Element.hide($('number_globally'));
+            if (line.hasClass('selected')) {
+                line.removeClass('selected');
+                var c = $('tr.selected').length;
+                if (c == 0) {
+                    $('#number_selected').hide();
+                    $('#number_globally').show();
+                }
+                countel.html(c);
+
+            } else {
+                line.addClass('selected');
+                var c = $('tr.selected').length;
+                if (c >= 1) {
+                    $('#number_selected').show();
+                    $('#number_globally').hide();
+                }
+                countel.html(c);
             }
-            count.innerHTML++;
         }
-    }
-    current_line = line.rowIndex;
-    Event.stop(event);
-}
+        currline = getIndex(line);
+    };
 
-function clear_selection() {
-    var lines = $('conclines').rows;
-    for (var i=0; i < lines.length; i++)
- 	Element.removeClassName(lines[i], 'selected');
-    $('num_of_selected_lines').innerHTML = 0;
-    Element.hide($('number_selected'));
-    Element.show($('number_globally'));
-}
+    lib.getIndex = function (line) {
+        return $(line).prevAll().length;
+    };
 
-function get_selected_toknums() {
-    var lines = $('conclines').rows;
-    var toknums = '';
-    for (var i=0; i < lines.length; i++)
-	if (Element.hasClassName(lines[i], 'selected'))
-	     toknums += '+' + lines[i].getAttribute('toknum');
-    return toknums;
-}
+    lib.clear_selection = function () {
+        $('.concline').removeClass('selected');
+        $('#num_of_selected_lines').html(0);
+        $('#number_selected').hide();
+        $('#number_globally').show();
+    };
 
-function show_assigned_globally(grlabel, alllines) {
-    var lines = $('conclines').rows;
-    for (var i=0; i < lines.length; i++)
-        if (alllines || Element.hasClassName(lines[i], 'selected')) {
-	    var el = findElementWithClass (lines[i], 'groupbox');
-            if (el) el.innerHTML = grlabel;
-	    if (! alllines)
-	        Element.removeClassName(lines[i], 'selected');
-        }
-    $('num_of_selected_lines').innerHTML = 0;
-    Element.hide($('number_selected'));
-    Element.show($('number_globally'));
-}
+    lib.get_selected_toknums = function () {
+        var toknums = '';
+        $('.concline').each(function () {
+            if ($(this).hasClass('selected')) {
+                toknums += '+' + $(this).attr('toknum');
+            }
+        });
+        return toknums;
+    };
 
-function findElementWithClass(element, className) {
-    if (element.tagName && Element.hasClassName(element, className)) {
-	return element;
-    }
-    var childs = element.childNodes;
-    for (var i=0; i < childs.length; i++) {
-	var c = findElementWithClass(childs.item(i), className);
-	if (c) return c;
-    }
-    return false;
-}
+    lib.show_assigned_globally = function (grlabel, alllines) {
+        $('.concline').each(function () {
+            if (alllines || $(this).hasClass('selected')) {
+                if ($(this).find('.groupbox')) {
+                    $(this).find('.groupbox').html(grlabel);
+                }
+	            if (!alllines) {
+                    $(this).removeClass('selected');
+                }
+            }
+        });
+        $('#num_of_selected_lines').html(0);
+        $('#number_selected').hide();
+        $('#number_globally').show();
+    };
 
+    lib.undo_last_action = function () {
+        var grpmenu = $('#groupmenu');
+        var params = 'annotconc=' + grpmenu.attr('annotconc') + '&corpname=' +
+            grpmenu.attr('corpname') + '&action=' + grpmenu.attr('actionid');
+        $.ajax({url: 'undolngroupaction', data: params, type: 'GET'});
+        $('#annot_undo').hide();
+    };
 
-function undo_last_action() {
-    var grpmenu=$('groupmenu');
-    var params = 'annotconc=' + grpmenu.annotconc 
-		 + '&corpname=' + grpmenu.corpname
-                 + '&action=' + grpmenu.actionid;
-    $.ajax({
-        url : 'undolngroupaction',
-        data : params,
-        method:'get'
-    });
-    Element.hide($('annot_undo'));
-}
+    return lib;
+
+});
