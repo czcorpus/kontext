@@ -89,10 +89,6 @@ soundManager.setup({
 #end def
 
 #def bodyonload
-#if not $finished and $async and $save and not $sampled_size
-;reloadHits()#slurp
-#end if
-
 require(['tpl/view'], function(pageSelf) {
     conf.annotconc = "$annotconc";
     conf.q = "$q";
@@ -103,6 +99,22 @@ require(['tpl/view'], function(pageSelf) {
     #end if
 
     pageSelf.init(conf);
+
+    #if not $finished and $async and $save and not $sampled_size
+    conf.messages.using_random = '$_("using random")';
+    conf.messages.using_first = '$_("using first")';
+    conf.messages.use_random = '$_("Use random")';
+    conf.messages.instead = '$_("instead")';
+    conf.messages.per_million = '$_("million")';
+    conf.messages.counting = ' ($_("counting ..."))';
+    conf.messages.lines_only = ' $_("lines only").';
+    conf.numLines = $len($Lines);
+    conf.q = '$q';
+    conf.q2 = '$q[2]';
+    conf.q2toEnd = '$q[2:]';
+    conf.globals = '$globals';
+    pageSelf.reloadHits(conf);
+    #end if
 });
 
 #end def
