@@ -67,7 +67,7 @@ class BonitoCGI (WSEval, UserCGI):
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     def __init__ (self, user=None, environ=os.environ):
-        UserCGI.__init__ (self, user)
+        UserCGI.__init__ (self, environ=environ, user=user)
         ConcCGI.__init__ (self, environ=environ)
 
     def _user_defaults (self, user):
@@ -77,7 +77,13 @@ class BonitoCGI (WSEval, UserCGI):
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
 def get_uilang(locale_dir):
-    lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE','')
+    import Cookie
+
+    cookies = Cookie.SimpleCookie(os.environ.get('HTTP_COOKIE',''))
+    if 'uilang' in cookies and cookies['uilang'].value:
+        lgs_string = cookies['uilang'].value
+    else:
+        lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
     if lgs_string == '':
         return '' # english
     lgs_string = re.sub(';q=[^,]*', '', lgs_string)

@@ -45,7 +45,7 @@ $_("Frequency list")#slurp
 $input_hidden
 #end filter
   #for $f in $FCrit
-        <input type="hidden" name="fcrit" value="$f['fcrit']" />
+        <input type="hidden" name="fcrit" value="$f.fcrit" />
   #end for
         <input type="hidden" name="ml" value="$ml" />
         <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
@@ -72,7 +72,7 @@ $input_hidden
   $input_hidden
   #end filter
   #for $fcr in $FCrit
-    <input type="hidden" name="fcrit" value="$fcr['fcrit']" />
+    <input type="hidden" name="fcrit" value="$fcr.fcrit" />
   #end for
     <input type="hidden" name="flimit" value='$flimit' />
     <input type="hidden" name="freq_sort" value='$freq_sort' />
@@ -103,8 +103,8 @@ $input_hidden
   #set $rowNum = 1
   #if 'Total' in $b
   <tr>
-      <td colspan="2"><strong>$_('Total'):</strong> $b['Total'] ($b['TotalPages'] $_('pages'))</td>
-      #for $h in $b['Head']
+      <td colspan="2"><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</td>
+      #for $h in $b.Head
       <td></td>
       #end for
   </tr>
@@ -112,21 +112,23 @@ $input_hidden
   <tr>
   <th></th>
   <th></th>
-  #for $h in $b['Head']
-    <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h['s'];ftt_include_empty=$ftt_include_empty"
-        #if 'title' in $h# title="$h['title']" #end if#>
-      $_($h['n'])</a>
+  #for $h in $b.Head
+    <th><a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h.s;ftt_include_empty=$ftt_include_empty"
+        #if 'title' in $h# title="$h.title" #end if#>
+      $_($h.n)</a>
     </th>
   #end for
   </tr>
 
   #for $i in $b.get('Items', [])
-    #if len($i['Word'][0]['n']) == 0:
+    #if len($i.Word[0]['n']) == 0:
       #continue
     #end if
   <tr
     #if $i.has_key('class')
-      class="$i['class']"
+      class="$i.class datarow"
+    #else
+      class="datarow"
     #end if
   >
     <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
@@ -140,18 +142,18 @@ $input_hidden
 <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
       #end if
     #end if
-    #for $w in $i['Word']
-      <td>$w['n']</td>
+    #for $w in $i.Word
+      <td class="word">$w.n</td>
     #end for
-    <td align="right">#filter $IntegerFormatter# $i['freq'] #end filter#</td>
+    <td align="right" class="frequency">#filter $IntegerFormatter# $i.freq #end filter#</td>
     #if $i.has_key('rel')
-      <td align="right">$i['rel']</td>
+      <td align="right">$i.rel</td>
     #end if
-    #if $i['norel']
-      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i['fbar']" alt="${i['fbar']}" />
+    #if $i.norel
+      <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i.fbar" alt="${i['fbar']}" />
       </td>
     #else
-      <td><div class="bar" style="height:${i['freqbar']}px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="$i['freqbar']" width="$i['relbar']" alt="${i['relbar']}" /></td>
+      <td><div class="bar" style="height:${i['freqbar']}px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="$i.freqbar" width="$i.relbar" alt="${i['relbar']}" /></td>
     #end if
   </tr>
   #end for

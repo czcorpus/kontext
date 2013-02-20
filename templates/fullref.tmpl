@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 <table id="full_ref">
 #for $r in $Refs
-  <tr><td><b>$_($r['name'])</b></td><td>
+  <tr><td><b>$_($r.name)</b></td><td>
   #if $r.val.startswith('http://')
     <a href="$r.val">$r.val</a>
   #else

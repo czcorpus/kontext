@@ -42,18 +42,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   <li><a title="$_("Make a query on the current concordance.")" href="filter_form?$q;$globals">$_("Filter")</a></li>
 #end block
 #block freqblock
-  <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_("Frequency")</a>
+<li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_("Frequency")</a>
     <ul class="submenu">
-      #if $corp_uses_tag
-      <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag+0~0>0;ml=0">$_("Node tags")</a></li>
-      #end if
-      <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word+0~0>0;ml=0">$_("Node forms")</a></li>
-      <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
-      #if $ttcrit
-      <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
-      #end if
+        #if 'tag' in [x['n'] for x in $AttrList]
+        <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=1">$_("Node tags")</a></li>
+        #end if
+        <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=1">$_("Node forms")</a></li>
+        #if '.' in $fcrit_shortref.split('/')[0]
+        <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=1">$_("Doc IDs")</a></li>
+        #end if
+        #if $ttcrit
+        <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+        #end if
     </ul>
-  </li>
+</li>
 #end block
 #block collblock
   <li><a title="$_("Collocation candidates")" href="coll?$q;$globals">$_("Collocations")</a></li>

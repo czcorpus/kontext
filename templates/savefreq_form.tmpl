@@ -34,7 +34,7 @@ $_("Save Frequency List")#slurp
 $input_hidden
 #end filter
 #for $f in $FCrit
-  <input type="hidden" name="fcrit" value="$f['fcrit']" />
+  <input type="hidden" name="fcrit" value="$f.fcrit" />
 #end for
 #set $paging = 0
 #if $len($FCrit) == 1

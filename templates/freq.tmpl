@@ -32,25 +32,14 @@ $_("Freqs form")#slurp
 #end def
 
 #def bodyonload
-require(['popupbox', 'jquery'], function (popupbox, \$) {
-    multiLevelKwicFormUtil.init();
-    \$('a.kwic-alignment-help').each(function () {
-        \$(this).bind('click', function (event) {
-            var msg = "$_('This counts only for multi-word KWICs')";
-            popupbox.createPopupBox(event, 'kwic-alignment-help-box', \$('#toolbar-info'), msg, {
-                'top' : 'attached-bottom',
-                'width' : 'auto',
-                'height' : 'auto'
-            });
-            event.stopPropagation();
-        });
-    });
+require(['tpl/freq'], function (pageSelf) {
+    conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
+
+    pageSelf.init(conf);
 });
 #end def
 
-
 #def main
-
 #filter WebSafe
 <h3>$_("Multilevel frequency distribution")</h3>
 <form action="freqml">
@@ -70,7 +59,7 @@ $input_hidden
   /> $_("first level")</label><br/>
   $_("Attribute"): <select name="ml1attr">
   #for $a in $AttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select><br/>   
   <label>$_("Ignore case") <input type="checkbox" name="ml1icase" value="i"
@@ -80,11 +69,11 @@ $input_hidden
   /></label><br/>
   $_("Position"): <select name="ml1ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml1ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml1ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select>
 </td><td>
@@ -95,7 +84,7 @@ $input_hidden
   /> $_("second level")</label><br/>
   $_("Attribute"): <select name="ml2attr">
   #for $a in $AttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select><br/>   
   <label>$_("Ignore case") <input type="checkbox" name="ml2icase" value="i"
@@ -105,11 +94,11 @@ $input_hidden
   /></label><br/>
   $_("Position"): <select name="ml2ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml2ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml2ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select>
 </td><td>
@@ -120,7 +109,7 @@ $input_hidden
   /> $_("third level")</label><br/>
   $_("Attribute"): <select name="ml3attr">
   #for $a in $AttrList
-    <option value="$a['n']">$_($a['label'])</option>
+    <option value="$a.n">$_($a.label)</option>
   #end for
   </select><br/>   
   <label>$_("Ignore case") <input type="checkbox" name="ml3icase" value="i"
@@ -130,11 +119,11 @@ $input_hidden
   /></label><br/>
   $_("Position"): <select name="ml3ctx" size="5">
   #for $p in $Pos_ctxs
-    <option value="$p['ctx']"
-    #if $p['ctx'] == $ml3ctx
+    <option value="$p.ctx"
+    #if $p.ctx == $ml3ctx
       selected="selected"
     #end if
-    >$_($p['n'])</option>
+    >$_($p.n)</option>
   #end for
   </select>
 </td></tr>
@@ -188,7 +177,7 @@ $input_hidden
   <td colspan="2">
   <select name="fttattr" size="8" multiple="multiple">
   #for $s in $StructAttrList
-    <option value="$s['n']">$_($s['label'])</option>
+    <option value="$s.n">$_($s.label)</option>
   #end for
   </select></td>
   </tr>

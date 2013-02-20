@@ -27,13 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <corpus>$corpname</corpus>
     <query>#slurp
     #for $d in $Desc
-$d['arg']#slurp
+$d.arg#slurp
     #end for
 #slurp
 </query>
     <scores>
     #for $s in $Scores
-      <score>$s['n']</score>
+      <score>$s.n</score>
     #end for
     </scores>
   </heading>
@@ -41,10 +41,10 @@ $d['arg']#slurp
   <items>
   #for $i in $Items
     <item>
-      <str>$i['str']</str>
-      <freq>$i['freq']</freq>
-    #for $ss in $i['Stats']
-      <score>$ss['s']</score>
+      <str>$i.str</str>
+      <freq>$i.freq</freq>
+    #for $ss in $i.Stats
+      <score>$ss.s</score>
     #end for
     </item>
   #end for
@@ -59,18 +59,18 @@ $d['arg']#slurp
 
 \# Corpus: $corpname
     #for $d in $Desc
-\# $d['op']:  $d['arg'] $d['size']
+\# $d.op:  $d.arg $d.size
     #end for
 
   #end if
   #for $h in $Head
-$h['n']	#slurp
+$h.n	#slurp
   #end for
 
 #for $i in $Items
-$i['str']	$i['freq']	#slurp
-  #for $ss in $i['Stats']
-$ss['s']	#slurp
+$i.str	$i.freq	#slurp
+  #for $ss in $i.Stats
+$ss.s	#slurp
   #end for
 
 #end for
