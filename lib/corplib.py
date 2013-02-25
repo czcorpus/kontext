@@ -96,11 +96,12 @@ class CorpusManager:
         for item in paths:
             c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
+                id_prefix = subdir_map[c] if c in subdir_map else ''
                 try:
                     corp = manatee.Corpus(c)
                     size = locale.format('%d', corp.size(), grouping=True)
                     size = _('%s positions') % size.decode('utf-8')
-                    cl.append({'id': '%s%s' % (subdir_map[c], c),
+                    cl.append({'id': '%s%s' % (id_prefix, c),
                                'name': corp.get_conf('NAME') or c,
                                'desc': corp.get_info(),
                                'size': size,
@@ -108,8 +109,8 @@ class CorpusManager:
                     })
                 except Exception, e:
                     import logging
-                    logging.getLogger(__name__).warn(e)
-                    cl.append({'id': '%s%s' % (subdir_map[c], c), 'name': c, 'path': path, 'desc': '', 'size': ''})
+                    logging.getLogger(__name__).warn('%s: %s' % (type(e).__name__, e))
+                    cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
         return cl
 
     def subcorpora (self, corpname):
