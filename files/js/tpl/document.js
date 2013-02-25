@@ -9,31 +9,16 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
-     * @param item
+     * @param {Event} event
      */
-    lib.updForm = function (item) {
-        var formAncestor,
-            i,
-            srch,
-            ancestors = $(item.target).parents();
+    lib.updForm = function (event) {
+        var jqActiveElm = $(event.target);
 
-        for (i = 0; i < ancestors.length; i += 1) {
-            if (ancestors[i].nodeName === 'FORM') {
-                formAncestor = ancestors[i];
-                break;
-            }
+        $('input[name="reload"]').val('1');
+        if (jqActiveElm.closest('form').attr('usesubcorp')) {
+            jqActiveElm.closest('form').attr('usesubcorp', '');
         }
-        if (formAncestor !== undefined) {
-            srch = $(formAncestor).find('*[name="reload"]');
-            if (srch.length > 0) {
-                $(srch[0]).attr('value', '1');
-            }
-            srch = $(formAncestor).find('*[name="usesubcorp"]');
-            if (srch.length > 0) {
-                $(srch[0]).attr('value', '');
-            }
-            formAncestor.submit();
-        }
+        jqActiveElm.closest('form').submit();
     };
 
     /**
@@ -100,18 +85,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         // remove empty and unused parameters from URL before mainform submit
         $('form').submit(function () { // run before submit
-            $('#mainform input[name="sel_aligned"]').each(function () { // iterate over names of aligned corpora
-                if ($(this).is(':not(:checked)')) { // for those not checked for querying
-                    var corpn = $(this).val(); // get corpus name
+            $('#mainform input[name="sel_aligned"]').each(function () {
+                var corpn;
+
+                if ($(this).is(':not(:checked)')) {
+                    corpn = $(this).val();
                     $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true); // disable -> remove from URL
                     $('select[name=queryselector_' + corpn + ']').attr('disabled', true); // dtto
                     $('#qtable_' + corpn).find('input').attr('disabled', true); // dtto
-                }
-            });
-            // disable all empty inputs
-            $('input').each(function () {
-                if ($(this).val() === '') {
-                    $(this).attr('disabled', true);
                 }
             });
         });
