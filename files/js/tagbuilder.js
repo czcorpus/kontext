@@ -20,14 +20,13 @@
  * This library provides a clickable 'tag generator' widget.
  * The library depends on multiselect.js - TODO use require.js
  */
-define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multiselect, simpleModal, bonito) {
+define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multiselect, simpleModalNone, bonito) {
     'use strict';
 
     var createTagLoader,
         objectIsEmpty,
         attachTagLoader,
-        bindTextInputHelper,
-        displayTagHintButton;
+        bindTextInputHelper;
 
     /**
      *
@@ -610,7 +609,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                 } else {
                     $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
                 }
-                simpleModal.close();
+                $.modal.close();
                 $(document).off('keypress', buttonEnterAction);
                 $(opt.inputElement).focus();
             };
