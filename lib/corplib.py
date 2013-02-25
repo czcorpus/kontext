@@ -81,11 +81,6 @@ class CorpusManager:
         return dict (self.corpconf_pairs (corp, label)).get (item)
 
     def corplist_with_names (self, paths, use_db_whitelist=True):
-        #subc = manatee.StrVector()
-        #for s in self.subcpath:
-        #    manatee.find_subcorpora (s, subc)
-        #corpora = self.corplist + map (None, subc)
-        #corpora.sort()
         simple_names = []
         subdir_map = {}
 
@@ -98,27 +93,23 @@ class CorpusManager:
                 simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
-        for item in paths: # self.corplist
+        for item in paths:
             c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
                 try:
                     corp = manatee.Corpus(c)
                     size = locale.format('%d', corp.size(), grouping=True)
-                    size = _('%s positions')  % size.decode('utf-8')
-                    if corp.get_conf('ENCODING') and corp.get_conf('ENCODING').lower() != 'utf-8':
-                        desc = corp.get_info().decode(corp.get_conf('ENCODING'))
-                    else:
-                        desc = corp.get_info()
-                    cl.append ({'id': '%s%s' % (subdir_map[c], c),
-                                'name': corp.get_conf('NAME') or c,
-                                'desc' : desc,
-                                'size' : size,
-                                'path' : path
+                    size = _('%s positions') % size.decode('utf-8')
+                    cl.append({'id': '%s%s' % (subdir_map[c], c),
+                               'name': corp.get_conf('NAME') or c,
+                               'desc': corp.get_info(),
+                               'size': size,
+                               'path': path
                     })
                 except Exception, e:
                     import logging
                     logging.getLogger(__name__).warn(e)
-                    cl.append ({'id': c, 'name': c, 'path' : path, 'desc' : '', 'size' : ''})
+                    cl.append({'id': '%s%s' % (subdir_map[c], c), 'name': c, 'path': path, 'desc': '', 'size': ''})
         return cl
 
     def subcorpora (self, corpname):
