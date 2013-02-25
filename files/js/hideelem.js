@@ -181,23 +181,19 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
 
             jqQs.find('option').each(function () {
                 elementId = $(this).val() + jqQs.data('parallel-corp');
-                elementIdCom  = $(this).val();
-
+                elementIdCom  = $(this).val().substring(0,  $(this).val().length - 3);
                 jqElem = $('#' + elementId);
+
                 if (elementId === newid) {
                     jqElem.removeClass('hidden').addClass('visible');
 
-                } else {
-                    if (jqElem.hasClass('visible')) {
-                        jqOldElem = $('#' + elementIdCom.substring(0, elementId.length - 3)
-                            + jqQs.data('parallel-corp'));
-                        oldval = jqOldElem.val();
-                        jqOldElem.val('');
-                        jqElem.removeClass('visible').addClass('hidden');
-                    }
+                } else if (jqElem.hasClass('visible')) {
+                    jqOldElem = $('#' + elementIdCom + jqQs.data('parallel-corp'));
+                    oldval = jqOldElem.val();
+                    jqOldElem.val('');
+                    jqElem.removeClass('visible').addClass('hidden');
                 }
             });
-
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
                 $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
