@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
-
 #encoding UTF-8
 #import urllib
 #import re
@@ -38,13 +37,11 @@ $text
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
-
 #block headers
 #end block
 #if $getVar('ca_headers', '')
 $ca_headers
 #else
-
 <script type="text/javascript">
 requirejs.config({
     baseUrl : '../files/js',
@@ -84,9 +81,9 @@ require(['domReady!', 'tpl/document'], function (domReady, pageself) {
 });
 #end block
 
-// google stuff
 #if $getVar('ga_identifier', '')
-    var _gaq = _gaq || [];
+// google analytics stuff
+var _gaq = _gaq || [];
 _gaq.push(['_setAccount', '$ga_identifier']);
 _gaq.push(['_trackPageview']);
 
@@ -100,8 +97,7 @@ _gaq.push(['_trackPageview']);
 #end if
 </head>
 
-<body #block bodyargs##end block#>
-
+<body>
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else
