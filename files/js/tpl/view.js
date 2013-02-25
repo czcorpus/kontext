@@ -23,7 +23,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
             });
         };
 
-        $('td.kw').bind('click', function (event) {
+        $('td.kw,td.par,td.coll').bind('click', function (event) {
             detail.showDetail(
                 $(event.target).parent().data('url'),
                 $(event.target).parent().data('params'),
