@@ -274,8 +274,8 @@ def get_corplist():
         corpora = []
 
         for i in c:
-            if i[0] == '@':
-                i = i[1:len(i)]
+            if i[0].startswith('@'):
+                i = i[1:]
                 cursor.execute(fq("""SELECT corpora.name
                 FROM corplist,relation,corpora
                 WHERE corplist.id=relation.corplist
