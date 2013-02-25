@@ -185,9 +185,11 @@ a.speech-link:hover {
 .audio-controls {
     -moz-border-radius: 5px;
     border-radius: 5px;
-    background-color: #99CCEE;
+    border: 1px solid #767284;
+    background-color: #FFFFCC;
     padding: 4px 8px;
     overflow: hidden;
+    box-shadow: 3px 3px 4px #767284;
 }
 
 .audio-controls a.img-button-play,
@@ -203,23 +205,23 @@ a.speech-link:hover {
 }
 
 .audio-controls a.img-button-play {
-    background-image: url('../img/media_start.jpg');
+    background-image: url('../img/media_start.png');
 }
 
 .audio-controls a.img-button-play-b {
-    background-image: url('../img/media_start_b.jpg');
+    background-image: url('../img/media_start_b.png');
 }
 
 .audio-controls a.img-button-pause {
-    background-image: url('../img/media_pause.jpg');
+    background-image: url('../img/media_pause.png');
 }
 
 .audio-controls a.img-button-pause-b {
-    background-image: url('../img/media_pause_b.jpg');
+    background-image: url('../img/media_pause_b.png');
 }
 
 .audio-controls a.img-button-stop {
-    background-image: url('../img/media_stop.jpg');
+    background-image: url('../img/media_stop.png');
 }
 
 #audio-error-confirm {
