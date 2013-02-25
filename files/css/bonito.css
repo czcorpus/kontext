@@ -809,3 +809,7 @@ button#reset-tag-button {
 #tag-builder-modal {
     height: 565px;
 }
+
+.tree-component {
+    box-shadow: 2px 2px 3px #444444;
+}
