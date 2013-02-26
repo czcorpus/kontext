@@ -336,8 +336,9 @@ class ConcCGI (UserCGI):
         result['tag_builder_support'] = taghelper.tag_variants_file_exists(self.corpname)
         return result
 
-
     def add_undefined (self, result, methodname):
+        import logging
+        logging.getLogger(__name__).info('add_undefined(): %s' % self.add_vars)
         UserCGI.add_undefined (self, result, methodname)
         result['methodname'] = methodname
         if self.add_vars.has_key (methodname):
@@ -356,9 +357,18 @@ class ConcCGI (UserCGI):
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
+
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names (self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) +1, 20)
+
+
+        logging.getLogger(__name__).info('names: %s' % names)
+        if 'concsize' in names:
+            conc = self.call_function (conclib.get_conc,
+                                       (self._corp(),))
+            if conc :
+                result['concsize'] = conc.size()
 
         if 'orig_query' in names:
            conc_desc = conclib.get_conc_desc (self.q,
@@ -586,6 +596,7 @@ class ConcCGI (UserCGI):
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
         out['tbl_labels'] = tbl_labels
         return out
+    add_vars['viewattrs'] = ['concsize']
 
     def set_new_viewattrs (self, setattrs=[], allpos='', setstructs=[],
                     setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
@@ -639,6 +650,7 @@ class ConcCGI (UserCGI):
     def sort (self):
         "sort concordance form"
         return {'Pos_ctxs': conclib.pos_ctxs(1,1)}
+    add_vars['sort'] = ['concsize']
 
     def sortx (self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         "simple sort concordance"
@@ -1000,12 +1012,14 @@ class ConcCGI (UserCGI):
         "random sample"
         self.q.append ('r' + rlines)
         return self.view({ 'rlines_info' : _('random <strong>%s</strong> displayed') % rlines })
+    add_vars['reduce'] = ['concsize']
        
     reduce.template = 'view.tmpl'
 
     def freq (self):
         "frequency list form"
         return {'Pos_ctxs': conclib.pos_ctxs(1,1,6)}
+    add_vars['freq'] = ['concsize']
 
     fcrit = []
     def freqs (self, fcrit=[], flimit=0, freq_sort='', ml=0):
@@ -1222,8 +1236,7 @@ class ConcCGI (UserCGI):
                                  for n in colllist],
                'Pos_ctxs': conclib.pos_ctxs(1,1)}
         return out
-
-    add_vars['collx'] = ['concsize']
+    add_vars['coll'] = ['concsize']
 
     def collx (self, csortfn='d', cbgrfns=['t','m', 'd']):
         "list collocations"
@@ -1241,6 +1254,7 @@ class ConcCGI (UserCGI):
         else:
             result['lastpage'] = 1
         return result
+    add_vars['collx'] = ['concsize']
 
 
     def save_coll_options(self, cbgrfns=['t','m']):
