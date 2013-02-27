@@ -32,8 +32,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         }
 
         $('.cql-toolbox').each(function () {
+            var corpName,
+                cqlInputId = $(this).closest('td').find("input.cql-input").attr('id');
+
+            if (cqlInputId === 'cql') {
+                corpName = conf.corpname;
+
+            } else {
+                corpName = cqlInputId.substring(4);
+            }
             tagbuilder.bindTextInputHelper(
-                conf.corpname,
+                corpName,
                 conf.numTagPos,
                 {
                     inputElement : $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
@@ -50,7 +59,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     padding : 0,
                     margin : 0
                 }
-
             );
 
             lib.bindWithinHelper($(this).find('li.within a'), conf.corpname);
