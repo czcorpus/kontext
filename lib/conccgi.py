@@ -333,7 +333,6 @@ class ConcCGI (UserCGI):
                                                ('usesubcorp', self.usesubcorp),
                                              ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
-        result['tag_builder_support'] = taghelper.tag_variants_file_exists(self.corpname)
         return result
 
     def add_undefined (self, result, methodname):
@@ -519,6 +518,7 @@ class ConcCGI (UserCGI):
                 out['Lposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
                 out['has_lemmaattr_'+al] = 'lempos' in attrlist \
                     or 'lemma' in attrlist
+        out['tag_builder_support'] = taghelper.tag_variants_file_exists(self.corpname)
         return out
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
