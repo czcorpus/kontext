@@ -579,7 +579,7 @@ $corp_sel
     #end unless
 
     <ul class="cql-toolbox">
-        #if $tag_builder_support
+        #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
         <li class="insert-tag"><a data-bound-input="cql$suff">insert tag</a></li>
         #end if
         <li class="within"><a data-bound-input="cql$suff">insert &quot;within&quot;</a></li>

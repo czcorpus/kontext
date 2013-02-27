@@ -518,8 +518,15 @@ class ConcCGI (UserCGI):
                 out['Lposlist_'+al] = [{'n':x[0], 'v':x[1]} for x in poslist]
                 out['has_lemmaattr_'+al] = 'lempos' in attrlist \
                     or 'lemma' in attrlist
-        out['tag_builder_support'] = taghelper.tag_variants_file_exists(self.corpname)
+
+        out['tag_builder_support'] = {
+            '': taghelper.tag_variants_file_exists(self.corpname)
+        }
+        if 'Aligned' in out:
+            for item in out['Aligned']:
+                out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
         return out
+
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
     def get_cached_conc_sizes (self):
