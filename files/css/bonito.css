@@ -50,7 +50,10 @@ img {
 
 #topbar a, #sidebar a {
     color: #000;
-    font-weight: bold;
+    text-decoration: underline;
+}
+
+#sidebar a:hover {
     text-decoration: none;
 }
 
@@ -92,8 +95,8 @@ img {
 #toolbar {
     width: 100%;
     background-color: #fff;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
+    border-top: 1px solid #AAAAAA;
+    border-bottom: 1px solid #AAAAAA;
 }
 
 #toolbar-info {
@@ -113,8 +116,7 @@ img {
 }
 
 #toolbar-info, #corpus-search {
-    padding-left: 1em;
-    padding-right: 1em;
+    padding: 0.3em 1em 0.3em 1em;
 }
 
 #corpus-search select { width: 15em; }
@@ -129,12 +131,10 @@ img {
     padding: 0 1em 0 0;
 }
 
-#sidebar { float: left; }
-
 #in-sidebar {
     padding: 1em;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
+    border-right: 1px solid #AAAAAA;
+    border-bottom: 1px solid #AAAAAA;
     min-height: 50em;
     position: relative;
 }
@@ -147,7 +147,9 @@ img {
     line-height: 1.5em;
 }
 
-#sidebar .submenu { margin: 0 0 .3em .3em; }
+#sidebar .submenu {
+    margin: 0 0 .3em 1em;
+}
 
 #sidebar .menu_switch {
     position: absolute;
@@ -194,7 +196,10 @@ table.data th {
 
 /* from here definitions are for bonito only */
 
-#sidebar { width: 10em; }
+#sidebar {
+    width: 12em;
+    float: left;
+}
 
 /* HORIZONTAL MENU */
 
@@ -206,7 +211,7 @@ table.data th {
 }
 
 #in-sidebar.horizontal {
-    border: 0px solid #000;
+    border: 0px solid #AAAAAA;
     position: static;
     min-height: 3em;
 }
@@ -247,7 +252,7 @@ table.data th {
 
 #sidebar.horizontal li:hover .submenu {
     visibility: visible;
-    z-index: 100
+    z-index: 100;
 }
 
 /* CONTENT */
@@ -312,6 +317,11 @@ h3 a:focus, h3 a:focus img {
 .menu_switch, .context_help {
     font-size: 9px;
     list-style-type: none;
+}
+
+.context_help {
+    text-align: right;
+    float: right;
 }
 
 #footer { color:#999; }
@@ -641,8 +651,8 @@ div.css_format_help {
 hr {
     border: 0;
     height: 1px;
-    color: black;
-    background-color: black;
+    color: #6091B2;
+    background-color: #6091B2;
     padding: 0;
 }
 
@@ -812,4 +822,54 @@ button#reset-tag-button {
 
 .tree-component {
     box-shadow: 2px 2px 3px #444444;
+}
+
+#toolbar-info a.corpus-desc {
+    color : inherit;
+    text-decoration: underline;
+}
+
+#toolbar-info a.corpus-desc:hover {
+    text-decoration: none;
+}
+
+#corpus-details-box h2 {
+    margin: 0 0 10px 0;
+    text-align: center;
+}
+
+#corpus-details-box td.numeric {
+    text-align: right;
+    padding-left: 10px;
+}
+
+#corpus-details-box table.wrapper {
+    margin: 0 auto;
+}
+
+#corpus-details-box table.wrapper td {
+    vertical-align: top;
+}
+
+#corpus-details-box table.attrib-list {
+    border-collapse: collapse;
+}
+
+#corpus-details-box table.attrib-list th.attrib-heading {
+    background-color: transparent;
+    text-align: center;
+    color: #444;
+    font-size: 110%;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: #000;
+}
+
+#corpus-details-box table.attrib-list th {
+    text-align: center;
+    padding: 2px 10px;
+    border-color: #FFF;
+    border-style: solid;
+    border-width: 1px 0 1px 0;
+    background-color: #EFEFEF;
 }
