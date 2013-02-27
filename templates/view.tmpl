@@ -123,7 +123,7 @@ require(['tpl/view'], function(pageSelf) {
 <tr>
     #for $i, $c in enumerate($Par_conc_corpnames)
     #if not $refs_up# <td></td> #end if#
-    <td #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if# style="min-width: 280px">
+    <td class="concordance-col-heading" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
     #if $c.n in $KWICCorps
     <a href="view?$q;$globals;q=x-$c.n;maincorp=$c.n"><b>$c.label</b></a>
     #else
