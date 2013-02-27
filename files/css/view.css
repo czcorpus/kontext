@@ -243,3 +243,7 @@ a.speech-link:hover {
 .audio-controls a.audio-error-confirm:hover {
     color: #FFFFFF !important;
 }
+
+table#conclines .concordance-col-heading {
+    min-width: 280px;
+}
