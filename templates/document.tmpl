@@ -246,20 +246,21 @@ $_ca_topbar
         #filter None
         $main
         #end filter
-        <div id="footer">
-            <div id="app-version">
-                <div id="lc_logo">
-                    <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
-                        <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
-                    </a></div>
-                $_('Version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
-                <div id="switch-language-box">$_("Language"):
-                    <a data-lang="en">English</a> |
-                    <a data-lang="cs">česky</a>
-                </div>
-            </div>
+    </div>
+    <div id="footer">
+        <span id="switch-language-box">$_("Language"):
+            <a data-lang="en">English</a> |
+            <a data-lang="cs">česky</a>,
+        </span>
+        <span id="app-version">
+            $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
+        </span>
+        <br />
+        <span id="lc_logo">
+            <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
+                <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
+            </a></span>
 
-        </div>
     </div>
 </div>
 #end filter
