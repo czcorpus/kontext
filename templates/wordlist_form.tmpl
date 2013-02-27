@@ -28,7 +28,7 @@ $_("Word List Form")#slurp
 #def left_submenu_help
 #filter WebSafe
     #if $varExists('helpsite')
-    <a href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank">
+    <a class="context_help" href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank">
       <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
     </a>
     #end if
@@ -82,7 +82,7 @@ require(['treecomponent'], function (tc) {
 #filter WebSafe
 <h3>$_("Word list options")
     #if $varExists('helpsite')
-    <a href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank" name="help_icon" id="help_icon">
+    <a class="context_help" href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank" name="help_icon" id="help_icon">
       <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
     </a>
     #end if

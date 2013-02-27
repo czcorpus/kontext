@@ -30,7 +30,6 @@ $text
 <title>$title</title>
 #end filter
 <meta charset="utf-8" />
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ca_bonito_common.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}tables.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}forms.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
@@ -189,7 +188,7 @@ $_ca_topbar
                 #end if
                 #end if
                 #if $varExists('helpsite')
-                <li class="context_help"><a href="${helpsite}../MainLinkHelp" rel="help">? $_("Help on main menu")</a></li>
+                <li class="context_help"><a href="${helpsite}../MainLinkHelp" rel="help"><img src="../files/img/help.png" alt="$_("Help on main menu")" title="$_("Help on main menu")" /></a></li>
                 #end if
             </ul>
             <hr/>

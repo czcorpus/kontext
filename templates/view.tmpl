@@ -27,7 +27,8 @@ $_("Concordance")#slurp
 #attr $focus = "'#next'"
 
 #def headers
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css"
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
 <script src="$files_path/js/tblex.js" type="text/javascript"></script>
 <script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
 #if $can_annotate and $annotconc
@@ -57,8 +58,9 @@ soundManager.setup({
 #end def
 
 #def left_submenu_options
-  <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_("View options")</a>
+  <li><strong>$_("View")</strong>
       <ul class="submenu">
+          <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')</a></li>
           <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
           <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
           #if $align
@@ -69,8 +71,9 @@ soundManager.setup({
 #end def
 
 #def viewblock
-  <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_("Sort")</a>
+  <li><strong>$_("Sort")</strong>
     <ul class="submenu">
+      <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Custom')</a></li>
       <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc;sicase=i">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
         | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc;sicase=i">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
       <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw;sicase=i">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
