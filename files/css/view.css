@@ -1,6 +1,7 @@
 #conclines {
     font-size: 100%;
     background-color: white;
+    border: 1px solid #DDDDDD;
 }
 
 table#conclines { border-spacing: 0px; }
