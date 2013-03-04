@@ -46,7 +46,7 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
         </a>
       #end if
       </li>
-      <li><a class="toggle-submenu-item" data-id-to-set="texttypeel">$_("Text Types")</a>
+      <li><a class="toggle-submenu-item" data-id-to-set="texttypeel">$_("Subcorpus")</a>
       #if $varExists('helpsite')
         <a href="${helpsite}ConcordanceQuery#ExpertOptions" rel="help" target="_blank" title='$_("? Help on Text Types")'>
           <img src="$files_path/img/help.png" alt='$_("? Help on Expert options")' />
@@ -243,11 +243,11 @@ $_("multiple selection"))</span></th>
 
 #if $TextTypeSel
   <fieldset class="advanced_options" id="texttypeel">
-  <legend>$_("Text Types")</legend>
+  <legend>$_("Subcorpus")</legend>
 
   <table><tr>
   <th>
-  $_("Subcorpus"):
+  $_("Available subcorpora"):
   #filter None
   $subcorp_sel
   #end filter

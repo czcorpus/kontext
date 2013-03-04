@@ -318,7 +318,7 @@ $corp_sel
 
 #if $LastSubcorp
   <select name="$nameid" id="$nameid">
-    <option value="">$_("None (whole corpus)")</option>
+    <option value="">$_("whole corpus")</option>
     #for $l in $LastSubcorp
       <option
       #if $l.n == $getVar($nameid, '')
