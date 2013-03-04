@@ -37,7 +37,7 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
 #end def
 
 #def left_submenu_expert
-  <li>$_("Expert options"):
+  <li><strong>$_("Expert options"):</strong>
     <ul class="submenu">
       <li><a class="toggle-submenu-item" data-id-to-set="contextel">$_("Context")</a>
       #if $varExists('helpsite')
@@ -63,6 +63,16 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
         </li>
       #end if
     </ul>
+    #if $varExists('user_menu')
+    <hr />
+    <ul>
+        <li><strong>$_('User'):</strong>
+            <ul style="margin-top: 0">
+                <li><a href="user_password_form">$_('Password change')</a></li>
+            </ul>
+        </li>
+    </ul>
+    #end if
   </li>
 #end def
 
