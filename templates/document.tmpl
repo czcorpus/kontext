@@ -384,7 +384,8 @@ $corp_sel
       #end if
       #if $l.has_key('Values')
         #if $l.has_key('hierarchical')
-          <tr><td><ul>
+          <tr><td>
+              <ul>
           #set $hsep = $l['hierarchical']
           #for $v in $l['Values']
             #if $v['startdiv']
@@ -417,7 +418,7 @@ $corp_sel
         #else
           #set $i = 0
           #for $v in $l['Values']
-            #if $v['v']
+            #if 'v' in $v
               <tr  #if $i % 2 == 0 #class="even"#end if#>
                 <td class="separ">
                     <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" /><label for="sca.$i.$l['name']">$_($v['v'])</label>
