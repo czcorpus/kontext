@@ -125,7 +125,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
 
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         import crypt
-        
+
         user_data = settings.get_user_data()
         if not user_data:
             raise Exception(_('Unknown user'))
