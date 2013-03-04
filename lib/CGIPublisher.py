@@ -93,13 +93,27 @@ def q_help(page, lang): # html code for context help
    + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
 
 
+class RequestProcessingException(Exception):
+    def __init__(self, message, **data):
+        Exception.__init__(self, message)
+        self.data = data
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+
 class CheetahResponseFile:
     def __init__(self, outfile):
         if has_cheetah_unicode_internals:
             outfile = codecs.getwriter("utf-8")(outfile)
         self.outfile = outfile
+
     def response(self):
         return self.outfile
+
 
 class JsonEncodedData(object):
     """
@@ -111,6 +125,7 @@ class JsonEncodedData(object):
 
     def __repr__(self):
         return self.data
+
 
 class UserActionException(Exception):
     pass
@@ -268,16 +283,23 @@ class CGIPublisher:
             raise Exception('access denied')
         return path
 
-    def run_unprotected (self, path=None, selectorname=None):
-        if path is None:
-            path = self.import_req_path()
-        named_args = self.parse_parameters (selectorname)
-        methodname, tmpl, result = self.process_method (path[0], path, named_args)
-        return_type = self.get_method_metadata(methodname, 'return_type')
-        self.output_headers(return_type)
-        self.output_result (methodname, tmpl, result, return_type)
+    def run_unprotected(self, path=None, selectorname=None):
+        tmpl = None
+        methodname = None
+        try:
+            if path is None:
+                path = self.import_req_path()
+            named_args = self.parse_parameters (selectorname)
+            methodname, tmpl, result = self.process_method (path[0], path, named_args)
+            return_type = self.get_method_metadata(methodname, 'return_type')
+            self.output_headers(return_type)
+            self.output_result(methodname, tmpl, result, return_type)
+        except Exception as e:
+            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
-    def run (self, path=None, selectorname=None):
+
+
+    def run(self, path=None, selectorname=None):
         """
         This method wraps run_unprotected by try-except and presents
         only brief error messages to the user.
@@ -286,7 +308,7 @@ class CGIPublisher:
             path = self.import_req_path()
         try:
             self.run_unprotected(path, selectorname)
-        except Exception as e:
+        except RequestProcessingException as err:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
 
@@ -295,24 +317,25 @@ class CGIPublisher:
                 self.output_headers(return_type=return_type)
                 self.headers_sent = True
 
-            if settings.is_debug_mode() or type(e) is UserActionException:
-                message = u'%s' % e
+            if settings.is_debug_mode() or type(err) is UserActionException:
+                message = u'%s' % err
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
 
-            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
+            logging.getLogger(__name__).error(u'%s\n%s' % (err, ''.join(self.get_traceback())))
 
             if return_type == 'json':
-                print(json.dumps({'error': self.rec_recode('%s' % e, 'utf-8', True) }))
+                print(json.dumps({'error': self.rec_recode('%s' % err, 'utf-8', True) }))
             else:
                 tpl_data = {
-                    'message' : message,
-                    'corp_full_name' : '?',
-                    'corplist_size' : '?',
-                    'Corplist' : [],
-                    'corp_description' : '',
-                    'corp_size' : '',
-                    'mode_included' : False
+                    'message': message,
+                    'corp_full_name': '?',
+                    'corplist_size': '?',
+                    'Corplist': [],
+                    'corp_description': '',
+                    'corp_size': '',
+                    'mode_included': bool(err['tmpl']),
+                    'method_name': err['methodname']
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
