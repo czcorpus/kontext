@@ -98,7 +98,8 @@
     width:15em;
 }
 
-#error .frame,#notification .frame {
+#error .frame,
+#notification .frame {
     background-color:#FFE3E1;
     border:solid 1px #A32424;
     border-radius:4px;
@@ -109,7 +110,8 @@
     padding:1em 5px 1em 1em;
 }
 
-#error a.close-icon,#notification a.close-icon {
+#error a.close-icon,
+#notification a.close-icon {
     float:right;
     margin-left:10px;
 }
@@ -122,6 +124,19 @@
     float:left;
     margin:0 2em 0 1em;
     max-width:700px;
+}
+
+#error.system-error .frame {
+    display: block;
+    margin: 30px auto;
+    width: 50%;
+    overflow: hidden;
+}
+
+#error.system-error .frame p {
+    display: inline;
+    padding: 0 10px;
+    width: 70%;
 }
 
 #footer,#lc_logo a {

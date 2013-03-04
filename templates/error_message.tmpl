@@ -66,11 +66,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #filter WebSafe
-<div id="error-box">
-<h1>$_('Error')</h1>
-<p>$message</p>
-<p><a href="$_home_url">$_('home page')</a></p>
+<div id="error" class="system-error">
+    <div class="frame">
+        <img class="icon" alt="Error" src="../files/img/error-icon.png">
+        <p>$message</p>
+        <a href="$_home_url" class="close-icon" title="$_('home page')">
+            <img src="../files/img/close-icon.png" />
+        </a>
+    </div>
 </div>
+
 #end filter
 
 #unless $mode_included
