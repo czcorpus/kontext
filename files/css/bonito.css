@@ -34,7 +34,7 @@
 
 #content form {
     background-color:#DEE;
-    border:solid 1px #000;
+    border:solid 1px #C7E5E5;
     display:inline-block;
     margin:0 0 1em;
     min-width:510px;
@@ -546,8 +546,12 @@
     position:relative;
 }
 
-.cql-input {
+input.cql-input {
     font-family:monospace;
+}
+
+input#cql {
+    padding: 6px 2px 2px 2px;
 }
 
 .dark {
@@ -680,6 +684,10 @@ body {
     font-size:12px;
     margin:0;
     padding:0;
+}
+
+button, input[type='button'], input[type='submit'] {
+    padding: 3px 5px;
 }
 
 button#insert-tag-button,button#reset-tag-button {
@@ -976,15 +984,26 @@ ul.cql-toolbox {
 
 ul.cql-toolbox li a {
     background-color:#fff9ed;
-    border:1px solid #a6754d;
-    border-radius:3px;
+    border-style: solid;
+    border-color: #a6754d;
+    border-width: 1px 1px 0 1px;
+    border-radius:3px 3px 0 0;
     color:#a6754d;
     font-size:75%;
     padding:2px 5px;
     text-decoration:none;
+    margin: 0;
 }
 
 ul.cql-toolbox li a:hover {
     border:1px solid #B4383C;
     color:#B4383C;
+}
+
+tr#cqlrow td {
+    padding-top: 10px;
+}
+
+input#cql {
+    margin: 0;
 }
