@@ -522,6 +522,7 @@ class ConcCGI (UserCGI):
         out['tag_builder_support'] = {
             '': taghelper.tag_variants_file_exists(self.corpname)
         }
+        out['user_menu'] = True
         if 'Aligned' in out:
             for item in out['Aligned']:
                 out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
