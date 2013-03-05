@@ -362,7 +362,11 @@ $align_heading($viewmode, $KWICCorps)
 #if $len($Lines) > 0
     #for $i, $l in $enumerate($Lines)
       <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-      <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">$l.ref</td>
+      <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
+          #for $i in range(0, $len($l.ref))#
+          <span title="$l.ref[$i][0]">#if $l.ref[$i][1]#$l.ref[$i][1]#else#$empty_attr_value_placeholder#end if#</span>#if $i < $len($l.ref) - 1#,#end if#
+          #end for
+      </td>
       #filter None
         #if $refs_up
           <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
