@@ -30,6 +30,10 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
     conf.labelStdQuery = '$_("Std. Query")';
     conf.labelErrorQuery = '$_("Error Query")';
     firstForm.init(conf);
+    firstForm.bindParallelCorporaCheckBoxes(conf);
+    #if $getVar('show_cup_menu', '')
+        firstForm.showCupMenu(conf);
+    #end if
 });
 #end def
 
@@ -86,56 +90,29 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
 </table>
 #if $getVar('show_cup_menu', '')
     $cup_err_menu
-    <script type="text/javascript">
-    require(['jquery', 'domReady!'], function (\$, dr) {
-        if (\$.cookies.get('errstdq') == 'std') {
-            \$('#cup_err_menu').hide();
-            \$('#switch_err_stand').text('$_("Error Query")');
-
-        } else {
-            \$('#qnode').hide();
-        }
-    });
-    </script>
 #end if
 ## script for hiding/showing parallel query nodes
-<script type="text/javascript">
-require(['jquery', 'domReady!'], function (\$, dr) {
-    \$('input[name=sel_aligned]').each(function(){
-        if (\$(this).is(':checked')) {
-            \$('select[name=pcq_pos_neg_' + \$(this).val() +
-                    '],#qtable_' + \$(this).val()).show();
-        }
-    });
-    \$('input[name=sel_aligned]').change(function() {
-        \$('select[name=pcq_pos_neg_' + \$(this).val() +
-                '],#qtable_' + \$(this).val()).toggle();
-    });
-});
-</script>
 #if $Aligned
   <fieldset class="parallel">
-  <legend>$_('Parallel Query')</legend>
-  <table class="form">
+
+  <div id="add-searched-lang-widget">
+      <button type="button">$_('Add')</button>
+      language <select>
+          #for $a in $Aligned
+          <option value="$a.n">$a.label</option>
+          #end for
+      </select>
+  </div>
   #set $sel_aln = $align.split(',')
   #for $a in $Aligned
-    <tr>
-        <td valign="top" colspan="2">
-            <label><input type="checkbox" name="sel_aligned" value="$a.n" #if $a.n in $sel_aln# checked #end if# />
-                <b>$a.label</b> ($a.n)</label>
-        </td>
-        <td valign="top">
-            <select name="pcq_pos_neg_$a.n" style="display:none;">
-                <option value="pos">$_('Contains')</option>
-                <option value="neg">$_('Does NOT contain')</option>
-            </select>
-        </td>
-        <td>
-            <table class="form" id="qtable_$a.n" style="display:none">$query_node('_'+$a.n)</table>
-        </td>
-    </tr>
+  <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
+    <div class="heading">
+        <a class="close-button"><img src="../files/img/close-icon.png" /></a><h3>$a.label ($a.n)</h3>
+    </div>
+    <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
+    <table class="form">$query_node('_'+$a.n)</table>
+  </div>
   #end for
-  </table>
   </fieldset>
 #end if
 

@@ -103,11 +103,12 @@
     background-color:#FFE3E1;
     border:solid 1px #A32424;
     border-radius:4px;
+    box-shadow:2px 2px 3px #444;
     color:#FF5050;
     display:inline-block;
     font-weight:700;
     margin:0 0 1.5em;
-    padding:1em 5px 1em 1em;
+    padding: 1em 5px 1em 1em;
 }
 
 #error a.close-icon,
@@ -238,6 +239,31 @@
 
 #notification span {
     font-weight:400;
+}
+
+#add-searched-lang-widget {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#mainform .parallel-corp-lang {
+    border-style: solid;
+    border-color: #C7E5E5;
+    border-width: 1px 0 1px 0;
+}
+
+#mainform .parallel-corp-lang .close-button {
+    float: right;
+}
+
+#mainform .parallel-corp-lang .heading {
+    margin: 10px 0 0 0;
+    text-align: center;
+}
+
+#mainform .parallel-corp-lang .heading h3 {
+    display: inline;
+    margin-left: 10px;
 }
 
 #processbar {
@@ -912,6 +938,8 @@ table.form th {
     white-space:nowrap;
     width:10em;
 }
+
+
 
 table.form tr.required th {
     font-weight:700;
