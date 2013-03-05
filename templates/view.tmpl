@@ -363,9 +363,7 @@ $align_heading($viewmode, $KWICCorps)
     #for $i, $l in $enumerate($Lines)
       <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
       <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
-          #for $i in range(0, $len($l.ref))#
-          <span title="$l.ref[$i][0]">#if $l.ref[$i][1]#$l.ref[$i][1]#else#$empty_attr_value_placeholder#end if#</span>#if $i < $len($l.ref) - 1#,#end if#
-          #end for
+          $l.ref
       </td>
       #filter None
         #if $refs_up

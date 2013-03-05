@@ -491,7 +491,7 @@ def kwiclines(
 
         lines.append({'toknum': kl.get_pos(),
                       'hitlen': non1hitlen(kl.get_kwiclen()),
-                      'ref': [s.split('=', 1) if '=' in s else (s, '') for s in kl.get_refs().split(',')],
+                      'ref': kl.get_refs(),
                       'Tbl_refs': list(kl.get_ref_list()),
                       leftlabel: leftwords,
                       'Kwic': kwicwords,
