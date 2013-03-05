@@ -459,6 +459,20 @@ $corp_sel
 #def query_node($suff='',$filter=False)
 ## basic query node form
 <tbody>
+
+#if $suff
+<tr class="required">
+    <th></th>
+    <td>
+        <select name="pcq_pos_neg$suff">
+            <option value="pos">$_('Contains')</option>
+            <option value="neg">$_('Does NOT contain')</option>
+        </select>
+    </td>
+</tr>
+#end if
+
+
 #set $querytype = $getVar("query_type" + $suff, '')
 
 <tr class="required" id="querytypeel$suff">
@@ -481,17 +495,7 @@ $corp_sel
   </select>
   </td>
 </tr>
-#if $suff
-<tr class="required">
-    <th>$_('Predicate'):</th>
-    <td>
-        <select name="pcq_pos_neg$suff">
-            <option value="pos">$_('Contains')</option>
-            <option value="neg">$_('Does NOT contain')</option>
-        </select>
-    </td>
-</tr>
-#end if
+
 #set $hidden = ($querytype == 'iqueryrow'+$suff or $querytype == '' or
                 ($querytype == 'lemmarow'+$suff and not $has_lemmaattr)) and 'visible' or 'hidden'
   <tr class="required $hidden" id="iqueryrow$suff">
