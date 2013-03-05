@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003-2009 Pavel Rychly
+ * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2003-2009  Pavel Rychly
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
