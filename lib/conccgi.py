@@ -588,8 +588,8 @@ class ConcCGI (UserCGI):
         reflist = self.refs.split(',')
         out['Availrefs'] = [{'n': '#',  'label': _('Token number'), 'sel': 
                              ((('#' in reflist) and 'selected') or '')}] + \
-                             [{'n': '' + n,  'sel':
-                               ((('' + n in reflist) and 'selected') or ''),
+                             [{'n': '=' + n,  'sel':
+                               ((('=' + n in reflist) and 'selected') or ''),
                                'label': (corp.get_conf(n + '.LABEL') or n)}
                               for n in availref if n and n != '#']
         doc = corp.get_conf('DOCSTRUCTURE')
