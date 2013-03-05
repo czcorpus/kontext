@@ -1,5 +1,25 @@
+/*
+ * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2003-2009  Pavel Rychly
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 /**
  * This module contains functionality related directly to the document.tmpl template
+ *
  */
 define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
         'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, simpleModalNone) {
@@ -94,16 +114,29 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         // remove empty and unused parameters from URL before mainform submit
         $('form').submit(function () { // run before submit
             $('#mainform input[name="sel_aligned"]').each(function () {
-                var corpn;
+                var corpn = $(this).data('corpus'),
+                    queryType;
 
                 if (!$(this).val()) {
-                    corpn = $(this).data('corpus');
-                    $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true); // disable -> remove from URL
-                    $('select[name=queryselector_' + corpn + ']').attr('disabled', true); // dtto
-                    $('#qnode_' + corpn).find('input').attr('disabled', true); // dtto
+                    $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true);
+                    $('select[name=queryselector_' + corpn + ']').attr('disabled', true);
+                    $('#qnode_' + corpn).find('input').attr('disabled', true);
+                    $(this).attr('disabled', true);
+
+                    $(this).parent().find('input[type="text"]').each(function () {
+                        $(this).attr('disabled', true);
+                    });
+
+                } else {
+                    queryType = $(this).parent().find('#queryselector_' + corpn).val();
+                    queryType = queryType.substring(0, queryType.length - 3);
+                    $('#qnode_' + corpn).find('input[type="text"]').each(function () {
+                        if ($(this).attr('class') !== queryType + '-input') {
+                            $(this).attr('disabled', true);
+                        }
+                    });
                 }
             });
-            // return false;
         });
 
         // show or hide elements according to cookies
