@@ -224,16 +224,12 @@ class CGIPublisher:
     def call_method(self, method, args, named_args):
         na = named_args.copy()
         correct_types(na, function_defaults(method), 1)
-        #print >> sys.stderr, 'CGIPublisher: call_method %s %s %s' % \
-        #      (method, args[1:], na)
         return apply(method, args[1:], na)
 
     def call_function(self, func, args, **named_args):
         na = self.clone_self()
         na.update(named_args)
         correct_types(na, function_defaults(func), 1)
-        #print >> sys.stderr, 'CGIPublisher: call_function %s %s %s %i' % \
-        #      (func, args, na, isclass(func))
         return apply(func, args, na)
 
     def clone_self(self):

@@ -423,7 +423,6 @@ def kwiclines(
             return 'ltr' in strclass['class'].split()
     else:
         leftlabel, rightlabel = 'Left', 'Right'
-
     kl = manatee.KWICLines(conc, leftctx, rightctx, attrs, ctxattrs,
                            all_structs, refs)
 
@@ -492,7 +491,7 @@ def kwiclines(
 
         lines.append({'toknum': kl.get_pos(),
                       'hitlen': non1hitlen(kl.get_kwiclen()),
-                      'ref': kl.get_refs(),
+                      'ref': [s.split('=', 1) if '=' in s else (s, '') for s in kl.get_refs().split(',')],
                       'Tbl_refs': list(kl.get_ref_list()),
                       leftlabel: leftwords,
                       'Kwic': kwicwords,

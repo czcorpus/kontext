@@ -195,6 +195,8 @@ class ConcCGI (UserCGI):
     #annotconc_info_umask = 022
     annotconc_info_umask = 0111  #XXX renumbering from CPA editor
 
+    empty_attr_value_placeholder = ''
+
     alpha_features = 0
 
     add_vars['wsketch_form'] = [u'LastSubcorp']
@@ -209,6 +211,7 @@ class ConcCGI (UserCGI):
         self.cm = corplib.CorpusManager (self.corplist, self.subcpath, 
                                          self.gdexpath)
         self._curr_corpus = None
+        self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
 
     def preprocess_values(self, form):
         if self._corpus_architect: return
@@ -471,7 +474,6 @@ class ConcCGI (UserCGI):
             else:
                 self._cookieattrs.append ('annotconc')
                 self.annotconc = ''
-        #print >>stderr, 'view.labels:%s' % labelmap
         contains_speech = settings.has_configured_speech(self._curr_corpus)
         out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), 
 								labelmap=labelmap,
@@ -563,7 +565,7 @@ class ConcCGI (UserCGI):
                                                 subchash=getattr(self._corp(), "subchash", None))]
                 }
         
-    def viewattrs (self):
+    def viewattrs(self):
         "attrs, refs, structs form"
         from tbl_settings import tbl_labels
         out = {}
@@ -586,9 +588,9 @@ class ConcCGI (UserCGI):
         reflist = self.refs.split(',')
         out['Availrefs'] = [{'n': '#',  'label': _('Token number'), 'sel': 
                              ((('#' in reflist) and 'selected') or '')}] + \
-                             [{'n': '=' + n,  'sel': 
-                               ((('=' + n in reflist) and 'selected') or ''),
-                               'label': (corp.get_conf (n+'.LABEL') or n)} 
+                             [{'n': '' + n,  'sel':
+                               ((('' + n in reflist) and 'selected') or ''),
+                               'label': (corp.get_conf(n + '.LABEL') or n)}
                               for n in availref if n and n != '#']
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
@@ -1681,7 +1683,7 @@ class ConcCGI (UserCGI):
                 pass
         return normslist
 
-    def subcorp_form (self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
+    def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
         """
         Parameters
         ----------
@@ -1705,19 +1707,19 @@ class ConcCGI (UserCGI):
             return {
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
-                'structs_and_attrs' : structs_and_attrs,
-                'method' : method,
-                'within_condition' : '',
-                'within_struct' : '',
-                'subcname' : ''
+                'structs_and_attrs': structs_and_attrs,
+                'method': method,
+                'within_condition': '',
+                'within_struct': '',
+                'subcname': ''
             }
         return {
             'TextTypeSel': tt_sel,
-            'structs_and_attrs' : structs_and_attrs,
-            'method' : method,
-            'within_condition' : within_condition,
-            'within_struct' : within_struct,
-            'subcname' : subcname
+            'structs_and_attrs': structs_and_attrs,
+            'method': method,
+            'within_condition': within_condition,
+            'within_struct': within_struct,
+            'subcname': subcname
         }
 
     def _texttype_query (self):
