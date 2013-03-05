@@ -96,13 +96,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             $('#mainform input[name="sel_aligned"]').each(function () {
                 var corpn;
 
-                if ($(this).is(':not(:checked)')) {
-                    corpn = $(this).val();
+                if (!$(this).val()) {
+                    corpn = $(this).data('corpus');
                     $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true); // disable -> remove from URL
                     $('select[name=queryselector_' + corpn + ']').attr('disabled', true); // dtto
-                    $('#qtable_' + corpn).find('input').attr('disabled', true); // dtto
+                    $('#qnode_' + corpn).find('input').attr('disabled', true); // dtto
                 }
             });
+            // return false;
         });
 
         // show or hide elements according to cookies

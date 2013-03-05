@@ -7,6 +7,9 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
 
     var lib = {};
 
+    /**
+     * @param conf
+     */
     lib.misc = function (conf) {
 
         // let's override the focus
@@ -30,6 +33,9 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
         hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints);
     };
 
+    /**
+     * @param {object} conf
+     */
     lib.bindClicks = function (conf) {
         $('ul.submenu a.toggle-submenu-item').each(function () {
             $(this).on('click', function () {
@@ -53,6 +59,45 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
         });
     };
 
+    /**
+     *
+     */
+    lib.bindParallelCorporaCheckBoxes = function () {
+        $('#add-searched-lang-widget button[type="button"]').on('click', function (event) {
+            var v = $('#add-searched-lang-widget select').val(),
+                jqHiddenStatus = $('#qnode_' + v + ' input[name="sel_aligned"]');
+            $('#qnode_' + v).show();
+            jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
+            $('#qnode_' + v + ' a.close-button').on('click', function () {
+                $('#qnode_' + v).hide();
+                jqHiddenStatus.val('');
+            });
+        });
+        $('input[name="sel_aligned"]').each(function() {
+            if ($(this).val()) {
+                $('select[name=pcq_pos_neg_' + $(this).data('corpus') + '],#qtable_' + $(this).data('corpus')).show();
+            }
+        });
+    };
+
+    /**
+     *
+     * @param {object} conf
+     */
+    lib.showCupMenu = function (conf) {
+        if ($.cookies.get('errstdq') == 'std') {
+            $('#cup_err_menu').hide();
+            $('#switch_err_stand').text(conf.messages.labelErrorQuery);
+
+        } else {
+            $('#qnode').hide();
+        }
+    };
+
+    /**
+     *
+     * @param {object} conf
+     */
     lib.init = function (conf) {
         lib.misc(conf);
         lib.bindClicks(conf);
