@@ -336,8 +336,6 @@ class ConcCGI (UserCGI):
         return result
 
     def add_undefined (self, result, methodname):
-        import logging
-        logging.getLogger(__name__).info('add_undefined(): %s' % self.add_vars)
         UserCGI.add_undefined (self, result, methodname)
         result['methodname'] = methodname
         if self.add_vars.has_key (methodname):
@@ -356,13 +354,9 @@ class ConcCGI (UserCGI):
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
-
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names (self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) +1, 20)
-
-
-        logging.getLogger(__name__).info('names: %s' % names)
         if 'concsize' in names:
             conc = self.call_function (conclib.get_conc,
                                        (self._corp(),))
