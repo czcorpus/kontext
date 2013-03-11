@@ -25,8 +25,11 @@
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
-        <default_corpus>susanne</default_corpus>
-        <alternative_corpus>spec/susanne</alternative_corpus>
+        <default_corpora>
+            <item>susanne</item>
+            <item>spec/susanne</item>
+            <item>anothercorpus</item>
+        </default_corpora>
         <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
         <speech_data_url>http://@SERVER_NAME/data</speech_data_url>
         <kwicline_max_context>500</kwicline_max_context>
