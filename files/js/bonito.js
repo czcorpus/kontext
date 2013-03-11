@@ -23,28 +23,6 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
     var lib = {};
 
     /**
-     *
-     * @param cookiename
-     * @return {String}
-     */
-    lib.getCookieValue = function (cookiename) {
-        var allcookies = win.document.cookie,
-            pos = allcookies.indexOf(cookiename + "="),
-            start,
-            end;
-
-        if (pos !== -1) {
-            start = pos + cookiename.length + 1;
-            end = allcookies.indexOf(";", start);
-            if (end === -1) {
-                end = allcookies.length;
-            }
-            return allcookies.substring(start, end);
-        }
-        return ".";
-    };
-
-    /**
      * This objects serves as a service object for "multi-level KWIC HTML form".
      * It in fact fixes some flaws of original bonito2 application without massive rewriting of
      * related HTML templates and controller logic.
@@ -110,22 +88,24 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
     };
 
     /**
-     * toggle show / hide and update cookie
+     * toggle show / hide and update user settings
+     *
      * @param id
      * @param status
+     * @param {object} userConfig object accepting get/set methods to store/retrieve user settings
      */
-    lib.toggleViewStore = function (id, status) {
+    lib.toggleViewStore = function (id, status, userConfig) {
         var exp = new Date(),
             opts;
 
         exp.setDate(exp.getDate() + 1); // expires in 1 day
         opts = { domain: '', path: '/', expiresAt: exp, secure: false };
         if ($('#' + id).is(':visible') || status === ':hidden') { // toggle visible and hidden
-            cookies.set(id + '_view', 'hide', opts);
+            userConfig.set(id + '_view', 'hide', opts);
             $('#' + id).hide();
         }
         else if ($('#' + id).is(':hidden') || status === ':visible') {
-            cookies.set(id + '_view', 'show', opts);
+            userConfig.set(id + '_view', 'show', opts);
             $('#' + id).show();
         }
     };

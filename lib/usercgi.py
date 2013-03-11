@@ -90,7 +90,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
         else:
             tosave = [(opt, self.__dict__[opt]) for opt in optlist
                            if self.__dict__.has_key (opt)]
-        opt_filepath = os.path.join (self._options_dir, self._user)
+        opt_filepath = os.path.join(self._options_dir, self._user)
         options = {}
         load_opt_file(options, opt_filepath)
         options.update(tosave)

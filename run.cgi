@@ -20,6 +20,7 @@ import cgitb
 import sys
 import os
 import re
+import json
 
 sys.path.insert(0, './lib')
 
@@ -77,12 +78,15 @@ class BonitoCGI (WSEval, UserCGI):
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
 def get_uilang(locale_dir):
-    import Cookie
-
-    cookies = Cookie.SimpleCookie(os.environ.get('HTTP_COOKIE',''))
-    if 'uilang' in cookies and cookies['uilang'].value:
-        lgs_string = cookies['uilang'].value
+    """
+    loads user language from user settings or from browser's configuration
+    """
+    user_settings = CGIPublisher.load_user_settings_cookie(os.environ.get('HTTP_COOKIE',''))
+    if 'uilang' in user_settings:
+        lgs_string = user_settings['uilang']
     else:
+        lgs_string = None
+    if not lgs_string:
         lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
     if lgs_string == '':
         return '' # english

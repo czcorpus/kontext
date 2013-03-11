@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Concordance: Filter form")#slurp
 #end def
 
-#attr $focus = "hideElem.cmdGetFocusedId()"
-
 #def helpblock
   #if $varExists('helpsite')
   <li class="context_help"><a href="${helpsite}filterconc" rel="help">$_("? Help on Filter form")</a></li>
@@ -32,12 +30,19 @@ $_("Concordance: Filter form")#slurp
 #end def
 
 #def left_submenu_expert
-  <li>$_("Expert options:")
+  <li><strong>$_("Expert options:")</strong>
     <ul class="submenu">
-      <li><a onclick="hideElem.cmdHideElementStoreSimple('querytypeel', 1);">$_("Query Type")</a></li>
-      <li><a onclick="hideElem.cmdHideElementStoreSimple('texttypeel', 1);" >$_("Text Types")</a></li>
+      <li><a id="text-type-el-link">$_("Text Types")</a></li>
     </ul>
   </li>
+#end def
+
+#def bodyonload
+require(['jquery', 'tpl/filterForm'], function (\$, filterForm) {
+    ## conf is defined in document.tmpl
+    filterForm.init(conf);
+});
+
 #end def
 
 #def main

@@ -23,18 +23,14 @@ $_("Save Concordance Form")#slurp
 #end def
 
 #def bodyonload
-loadHideElementStore('${files_path}');show_hide()#slurp
+require(['jquery', 'tpl/saveconcForm'], function (\$, saveconcForm) {
+    ## conf object is defined within document.tmpl
+    conf.files_path = '${files_path}';
+    saveconcForm.init(conf);
+});
 #end def
 
 #def main
-<script type="text/javascript">
-    jQuery(document).ready(function () {
-        jQuery('input[type="submit"]').focus();
-        if (jQuery.cookies.get('concdesc_view') == 'show') {
-            jQuery('#concdescplusminus').attr('src', '$files_path/img/minus.png');
-        }
-    });
-</script>
 #filter WebSafe
 <h3>$_("Save Concordance")
     #if $varExists('helpsite')

@@ -4,7 +4,7 @@
 
 .application input {
     border: solid 1px #32427e;
-    padding: 1px
+    padding: 1px;
 }
 
 .application input[type="submit"] {
@@ -186,6 +186,10 @@
 #in-sidebar.horizontal hr {
     clear:both;
     margin:10px 0;
+}
+
+#in-sidebar ul li {
+    padding: 2px 0;
 }
 
 #infobox {

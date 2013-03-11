@@ -58,6 +58,7 @@ requirejs.config({
 define('win', [], function () { return window; });
 
 var conf = {};
+conf['rootPath'] = "$root_path";
 conf['corpname'] = "$corpname";
 conf['numTagPos'] = $num_tag_pos;
 conf['messages'] = {};
@@ -619,7 +620,7 @@ $corp_sel
     <label for="filter_nonempty$suff">$_('filter out empty lines')</label>
 </td></tr></tbody>
 #end if
-#end def
+#end def ## query_node
 
 #def urlquote($word)
 ## quoting strings in URLs

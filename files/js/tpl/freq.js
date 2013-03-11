@@ -18,11 +18,12 @@
  */
 
 
-define(['popupbox', 'jquery', 'bonito'], function (popupbox, $, bonito) {
+define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, popupbox, $, bonito) {
 
     var lib = {};
 
     lib.init = function (conf) {
+        mainPage.init(conf);
         bonito.multiLevelKwicFormUtil.init();
         $('a.kwic-alignment-help').each(function () {
             $(this).bind('click', function (event) {
