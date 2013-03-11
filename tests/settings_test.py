@@ -9,7 +9,6 @@ from MySQLdb import connections
 import conf
 conf.init()
 import settings
-import conclib
 
 
 class TestSettingsModule(unittest.TestCase):
@@ -81,15 +80,22 @@ class TestSettingsModule(unittest.TestCase):
         dc = settings.get_default_corpus(corplist)
         self.assertEquals(None, dc)
 
-        # default_corpus is in the corplist
+        # 1st item from <default_corpora> is in the list
         corplist = ['syn2008', 'syn2010', 'omezeni/syn2010', 'syn', 'foo']
         dc = settings.get_default_corpus(corplist)
         self.assertEquals('syn2010', dc)
 
-        # default_corpus is not in the corplist but alternative_corpus is there
+        # 2nd item from <default_corpora> is in the list
         corplist = ['syn2008', 'omezeni/syn2010', 'syn', 'foo']
         dc = settings.get_default_corpus(corplist)
         self.assertEquals('omezeni/syn2010', dc)
+
+        # 3rd item from <default_corpora> is in the list
+        corplist = ['syn2008', 'omezeni/oral2013', 'syn', 'foo']
+        dc = settings.get_default_corpus(corplist)
+        self.assertEquals('omezeni/oral2013', dc)
+
+
 
     def test_get_corplist(self):
         """
