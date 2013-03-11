@@ -44,9 +44,6 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
             return target;
         };
 
-        // init 'parent page scripts'
-        mainPage.init(conf);
-
         treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, mainPage.updForm);
 
         // initial query selector setting (just like when user changes it manually)

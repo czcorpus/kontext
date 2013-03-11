@@ -89,8 +89,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $('select.qselector').bind('change', function (event) {
             hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
         });
-
-        $('.menu_switch a').bind('click', function () {
+        $('.menu_switch a').on('click', function () {
+            console.log(lib.userSettings.get('menupos'));
             if (lib.userSettings.get('menupos') === 'top') {
                 $('#sidebar').removeClass('horizontal');
                 $('#in-sidebar').removeClass('horizontal');
@@ -298,12 +298,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
             set : function (key, value) {
                 lib.userSettings.data[key] = value;
-                cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
             },
 
             del : function (key) {
                 delete(lib.userSettings.data[key]);
-                cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
             }
         };
 

@@ -183,7 +183,7 @@ class UserActionException(Exception):
 class CGIPublisher:
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
-    _user_settings = []
+    _user_settings = {}
     _template_dir = u'cmpltmpl/'
     _locale_dir = u'locale/'
     _tmp_dir = u'/tmp'
@@ -199,6 +199,7 @@ class CGIPublisher:
     _anonymous = 0
     _authenticated = 0
     _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
+    menupos = ''
 
 
     def __init__(self, environ=os.environ):
@@ -277,6 +278,7 @@ class CGIPublisher:
         self.environ = environ
 
         named_args = load_user_settings_cookie(environ.get('HTTP_COOKIE', ''))
+        self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
         self.preprocess_values(form) # values needed before recoding
