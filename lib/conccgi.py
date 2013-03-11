@@ -2197,8 +2197,7 @@ class ConcCGI(UserCGI):
     def ajax_get_corp_details(self):
         """
         """
-        #self.format = 'json'
-        corp_conf_info = settings.get_corpus_info(self._curr_corpus.corpname)
+        corp_conf_info = settings.get_corpus_info(self._corp().corpname)
         ans = {
             'corpname': self._curr_corpus.get_conf('NAME'),
             'corpus': self._curr_corpus.get_info(),
@@ -2210,7 +2209,7 @@ class ConcCGI(UserCGI):
         try:
             ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).id_range()) for item in
                                self._curr_corpus.get_conf('ATTRLIST').split(',')]
-        except RuntimeError, e:
+        except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = [(_('Failed to load'), '')]
         ans['structlist'] = [(item, self._curr_corpus.get_struct(item).size()) for item in
