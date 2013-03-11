@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', 'hideelem'], function ($,
-        treeComponent, bonito, mainPage, cookies, hideElem) {
+define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], function ($,
+        treeComponent, bonito, mainPage, hideElem) {
     'use strict';
 
     var lib = {};
@@ -50,7 +50,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
         treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, mainPage.updForm);
 
         // initial query selector setting (just like when user changes it manually)
-        hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints);
+        hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints, mainPage.userSettings);
     };
 
     /**
@@ -59,7 +59,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
     lib.bindClicks = function (conf) {
         $('ul.submenu a.toggle-submenu-item').each(function () {
             $(this).on('click', function () {
-                bonito.toggleViewStore($(this).data('id-to-set'));
+                bonito.toggleViewStore($(this).data('id-to-set'), null, mainPage.userSettings);
             });
         });
 
@@ -68,13 +68,13 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
                 $('#qnode').show();
                 $('#cup_err_menu').hide();
                 $(this).text(conf.labelErrorQuery);
-                cookies.set("errstdq", "std");
+                mainPage.userSettings.set("errstdq", "std");
 
             } else {
                 $('#qnode').hide();
                 $('#cup_err_menu').show();
                 $(this).text(conf.labelStdQuery);
-                cookies.set("errstdq", "err");
+                mainPage.userSettings.set("errstdq", "err");
             }
         });
     };
@@ -105,7 +105,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
      * @param {object} conf
      */
     lib.showCupMenu = function (conf) {
-        if ($.cookies.get('errstdq') == 'std') {
+        if (mainPage.userSettings.get('errstdq') == 'std') {
             $('#cup_err_menu').hide();
             $('#switch_err_stand').text(conf.messages.labelErrorQuery);
 
@@ -119,6 +119,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'jquery.cookies', '
      * @param {object} conf
      */
     lib.init = function (conf) {
+        mainPage.init(conf);
         lib.misc(conf);
         lib.bindClicks(conf);
     };

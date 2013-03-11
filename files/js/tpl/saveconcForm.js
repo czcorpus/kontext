@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,23 +16,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, popupbox, $, bonito) {
+/**
+ * This module contains functionality related directly to the first_form.tmpl template
+ */
+define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) {
+    'use strict';
 
     var lib = {};
 
     lib.init = function (conf) {
         mainPage.init(conf);
-        bonito.multiLevelKwicFormUtil.init();
-        $('a.kwic-alignment-help').each(function () {
-            $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#toolbar-info'), conf.messages['msg'], {
-                    'top' : 'attached-bottom',
-                    'width' : 'auto',
-                    'height' : 'auto'
-                });
-                event.stopPropagation();
-            });
-        });
+        hideElem.loadHideElementStore(conf.files_path, mainPage.userSettings);
+
+        $('input[type="submit"]').focus();
+        if (mainPage.userSettings.get('concdesc_view') == 'show') {
+            $('#concdescplusminus').attr('src', conf.files_path + '/img/minus.png');
+        }
     };
 
     return lib;

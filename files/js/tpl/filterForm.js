@@ -17,24 +17,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, popupbox, $, bonito) {
+/**
+ * This module contains functionality related directly to the filter_form.tmpl template
+ *
+ */
+define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
+    'use strict';
 
     var lib = {};
 
-    lib.init = function (conf) {
-        mainPage.init(conf);
-        bonito.multiLevelKwicFormUtil.init();
-        $('a.kwic-alignment-help').each(function () {
-            $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#toolbar-info'), conf.messages['msg'], {
-                    'top' : 'attached-bottom',
-                    'width' : 'auto',
-                    'height' : 'auto'
-                });
-                event.stopPropagation();
-            });
+    lib.bindClicks = function (conf) {
+
+        $('#text-type-el-link').on('click', function () {
+            bonito.toggleViewStore('texttypeel', null, mainPage.userSettings);
         });
     };
+
+    lib.init = function (conf) {
+        mainPage.init(conf);
+        lib.bindClicks(conf);
+    }
+
 
     return lib;
 });

@@ -32,13 +32,11 @@ $_("View options")#slurp
 #end def
 
 #def bodyonload
-#filter WebSafe
-#if $saved_attrs
-alert('$_("Selected options successfully saved")');
-#end if
-#end filter
+require(['jquery', 'tpl/viewattrs'], function (\$, viewAttrs) {
+    ## conf object is defined within document.tmpl
+    viewAttrs.init(conf);
+});
 #end def
-
 
 #def main
 #filter WebSafe
@@ -159,7 +157,7 @@ $gdexconf_select('gdexconf', $gdexconf)
 <div class="buttons">
   <input type="submit" value='$_("Change View Options")' />
   #unless $_anonymous
-  <input class="button" type="button" value='$_("Save Options")' onclick="hideElem.redirectToSave(document.getElementById('mainform'), 'save_viewattrs')" />
+  <input id="save-options-button" class="button" type="button" value='$_("Save Options")' />
   #end unless
 </div>
 </fieldset>

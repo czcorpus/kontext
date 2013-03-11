@@ -33,11 +33,12 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
          * @param elementid
          * @param storeval
          * @param path
+         * @param {object} userSettings an object providing get/set methods to retrieve/store user configuration
          */
-        cmdHideElementStore : function (elementid, storeval, path) {
+        cmdHideElementStore : function (elementid, storeval, path, userSettings) {
             var elem = $('#' + elementid),
                 img = $('#' + elementid + 'img'),
-                cookieval = cookies.get('showhidden');
+                cookieval = userSettings.get('showhidden');
 
             if (!cookieval) {
                 cookieval = '';
@@ -53,20 +54,18 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 img.src = path + "/img/plus.png";
             }
             if (storeval) {
-                var date = new Date();
-                date.setDate(date.getDate() + 30);
-                var opts = { domain: '', path: '/', expiresAt: date, secure: false};
-                cookies.set('showhidden', cookieval, opts);
+                userSettings.set('showhidden', cookieval, userSettings);
             }
         },
 
         /**
          *
          * @param path
+         * @param {object} userSettings an object providing get/set methods to retrieve/store user settings
          */
-        loadHideElementStore : function (path) {
+        loadHideElementStore : function (path, userSettings) {
             var cookie = {},
-                ids = bonito.getCookieValue('showhidden').split('.'),
+                ids = userSettings.get('showhidden').split('.'),
                 i,
                 id,
                 elem,
@@ -101,44 +100,15 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
 
         /**
          *
-         * @param elementid
-         * @param storeval
-         */
-        cmdHideElementStoreSimple : function (elementid, storeval) {
-            var elem = win.document.getElementById(elementid),
-                cookieval = bonito.getCookieValue('showhidsim'),
-                date;
-
-            cookieval = cookieval.replace(new RegExp("\\." + elementid + "\\.", "g"), ".");
-            if (elem.className.match("hidden")) {
-                elem.className = elem.className.replace("hidden", "visible");
-                cookieval += elementid + ".";
-            } else {
-                elem.className = elem.className.replace("visible", "hidden");
-            }
-            if (storeval) {
-                date = new Date();
-                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-                document.cookie = "showhidsim=" + cookieval
-                        + "; expires=" + date.toGMTString();
-            }
-        },
-
-        /**
-         *
          */
         loadHideElementStoreSimple : function () {
             var cookie = {},
-                ids = bonito.getCookieValue("showhidsim").split('.'),
                 i,
                 all_elements,
                 onclick,
                 id,
                 elem;
 
-            for (i = 0; i < ids.length; i += 1) {
-                cookie[ids[i]] = 1;
-            }
             all_elements = document.getElementsByTagName("a");
             for (i = 0; i < all_elements.length; i += 1) {
                 onclick = all_elements[i].onclick;
@@ -159,11 +129,11 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
         },
 
         /**
-         *
+         * @param {object} userSettings
          * @return {String}
          */
-        cmdGetFocusedId : function () {
-            var oldid = bonito.getCookieValue("query_type"),
+        cmdGetFocusedId : function (userSettings) {
+            var oldid = userSetings.get("query_type"),
                 id = oldid.substring(0, oldid.length - 3);
 
             if (win.document.getElementById(id)) {
@@ -175,8 +145,9 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
         /**
          * @param querySelector
          * @param hints
+         * @param {object} userSettings
          */
-        cmdSwitchQuery : function (querySelector, hints) {
+        cmdSwitchQuery : function (querySelector, hints, userSettings) {
             var jqQs = $(querySelector),
                 newidCom,
                 newid,
@@ -229,11 +200,7 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 $('#query-type-hint').remove();
             }
 
-            date = new Date();
-            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            win.document.cookie = 'query_type=' + newid
-                    + '; expires=' + date.toGMTString();
-
+            userSettings.set('query_type', newid);
             jqFocusElem.focus();
         },
 

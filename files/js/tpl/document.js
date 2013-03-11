@@ -85,28 +85,26 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         });
 
         hideElem.loadHideElementStoreSimple();
-        hideElem.loadHideElementStore('${files_path}');
 
         $('select.qselector').bind('change', function (event) {
-            hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints);
+            hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
         });
 
-        // switch between horiz | vert (implicit) menu, change cookies
         $('.menu_switch a').bind('click', function () {
-            if (cookies.get('menupos') === 'top') {
+            if (lib.userSettings.get('menupos') === 'top') {
                 $('#sidebar').removeClass('horizontal');
                 $('#in-sidebar').removeClass('horizontal');
-                cookies.del('menupos');
+                lib.userSettings.del('menupos');
 
             } else {
                 $('#sidebar').toggleClass('horizontal');
                 $('#in-sidebar').toggleClass('horizontal');
-                cookies.set('menupos', 'top');
+                lib.userSettings.set('menupos', 'top');
             }
         });
 
-        // change to horizontal menu if cookie is set to "top"
-        if (cookies.get("menupos") === "top") {
+        // change to horizontal menu if setting is set to "top"
+        if (lib.userSettings.get("menupos") === "top") {
             $('#sidebar').addClass('horizontal');
             $('#in-sidebar').addClass('horizontal');
         }
@@ -139,24 +137,19 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             });
         });
 
-        // show or hide elements according to cookies
-        (function () {
-            var key,
-                el;
-            for (key in cookies.get()) { // for all cookies
-                if (cookies.get().hasOwnProperty(key)) {
-                    el = key.replace('_view', ''); // remove end '_view'
-                    if ($('#' + el).length !== 0) { // element exists
-                        if ($.cookies.get(key) === 'show') {
-                            $('#' + el).show();
-                        } else {
-                            $('#' + el).hide();
-                        }
-                    }
+        // show or hide elements according to settings cookies
+
+        $.each(lib.userSettings.data, function (property, value) {
+            var el = property.replace('_view', ''); // remove end '_view'
+            if ($('#' + el).length !== 0) { // element exists
+                if (lib.userSettings.get(value) === 'show') {
+                    $('#' + el).show();
+
+                } else {
+                    $('#' + el).hide();
                 }
             }
-        }());
-
+        });
     };
 
     /**
@@ -211,17 +204,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         $('img.plus-minus').each(function () {
             $(this).bind('click', function (event) {
-                hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'));
+                hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'),
+                        lib.userSettings);
             });
         });
 
         $('#switch-language-box a').each(function () {
             $(this).bind('click', function () {
-                var expirationDate = new Date();
-                expirationDate.setTime(expirationDate.getTime() + 3600 * 1000 * 24 * 365);
-                cookies.set('uilang', $(this).data('lang'), {
-                    expiresAt: expirationDate
-                });
+                lib.userSettings.set('uilang', $(this).data('lang'));
                 win.location.reload();
             });
         });
@@ -294,6 +284,29 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * @param {object} conf
      */
     lib.init = function (conf) {
+
+        lib.userSettings = {
+            data : cookies.get('user_settings'),
+
+            cookieParams : {
+                path: conf.rootPath
+            },
+
+            get : function (key) {
+                return lib.userSettings.data[key];
+            },
+
+            set : function (key, value) {
+                lib.userSettings.data[key] = value;
+                cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+            },
+
+            del : function (key) {
+                delete(lib.userSettings.data[key]);
+                cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+            }
+        };
+
         lib.misc(conf);
         lib.bindClicks(conf);
     };

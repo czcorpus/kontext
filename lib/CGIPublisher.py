@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
+from lib2to3.fixes.fix_urllib import FixUrllib
 
 import os
 import sys
@@ -23,7 +23,7 @@ from inspect import isclass
 import Cookie
 import codecs
 import imp
-from urllib import urlencode, quote_plus
+from urllib import urlencode, quote_plus, unquote, quote
 import json
 import logging
 
@@ -108,6 +108,39 @@ def q_help(page, lang): # html code for context help
            + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
 
 
+def load_user_settings_cookie(cookie_data):
+    """
+    Loads user settings from cookies
+
+    Parameters
+    ----------
+
+    cookie_data : str
+       raw cookie data
+
+    Returns
+    -------
+
+    user_settings : dict
+       a dictionary containing all values stored as a JSON string in user_settings cookie
+    """
+    ck = BonitoCookie(cookie_data)
+    return json.loads(ck['user_settings'].value) if ck.has_key('user_settings') else {}
+
+
+class BonitoCookie(Cookie.BaseCookie):
+    """
+    Cookie handler which encodes and decodes strings
+    as URI components.
+    """
+    def value_decode(self, val):
+        return unquote(val), val
+
+    def value_encode(self, val):
+        strval = str(val)
+        return strval, quote(strval)
+
+
 class RequestProcessingException(Exception):
     def __init__(self, message, **data):
         Exception.__init__(self, message)
@@ -150,7 +183,7 @@ class UserActionException(Exception):
 class CGIPublisher:
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
-    _cookieattrs = []
+    _user_settings = []
     _template_dir = u'cmpltmpl/'
     _locale_dir = u'locale/'
     _tmp_dir = u'/tmp'
@@ -239,16 +272,11 @@ class CGIPublisher:
                 na[a] = getattr(self, a)
         return na
 
-    def parse_parameters(self, selectorname=None, cookies=None,
+    def parse_parameters(self, selectorname=None,
                          environ=os.environ, post_fp=None):
         self.environ = environ
-        named_args = {}
-        if cookies:
-            named_args.update(cookies)
-        else:
-            ck = Cookie.SimpleCookie(self.environ.get('HTTP_COOKIE', ''))
-            for k, v in ck.items():
-                named_args[k] = v.value
+
+        named_args = load_user_settings_cookie(environ.get('HTTP_COOKIE', ''))
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
         self.preprocess_values(form) # values needed before recoding
@@ -308,6 +336,7 @@ class CGIPublisher:
             self.output_headers(return_type)
             self.output_result(methodname, tmpl, result, return_type)
         except Exception as e:
+            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
     def run(self, path=None, selectorname=None):
@@ -332,8 +361,6 @@ class CGIPublisher:
                 message = u'%s' % err
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
-
-            logging.getLogger(__name__).error(u'%s\n%s' % (err, ''.join(self.get_traceback())))
 
             if return_type == 'json':
                 print(json.dumps({'error': self.rec_recode('%s' % err, 'utf-8', True)}))
@@ -386,7 +413,7 @@ class CGIPublisher:
             if not self.exceptmethod and self.is_template(methodname + '_form'):
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
-                raise e
+                   raise e
             self.error = self.rec_recode(e.message, enc='utf-8') or str(e)
             # may be localized
             em, self.exceptmethod = self.exceptmethod, None
@@ -454,13 +481,16 @@ class CGIPublisher:
 
     def output_headers(self, return_type='html', outf=sys.stdout):
         # Cookies
-        cookies = Cookie.SimpleCookie()
-        for k in self._cookieattrs:
+        cookies = BonitoCookie()
+        user_settings = {}
+        for k in self._user_settings:
             if self.__dict__.has_key(k):
-                cookies[k] = self.__dict__[k]
-                cookies[k]['expires'] = 5 * 24 * 3600
+                user_settings[k] = self.__dict__[k]
+        cookies['user_settings'] = json.dumps(user_settings)
+        cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
         if cookies and outf:
             outf.write(cookies.output() + '\n')
+            pass
 
         # Headers
         if return_type == 'json':
