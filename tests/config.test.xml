@@ -11,6 +11,9 @@
         <password>bonito</password>
         <username>bonito</username>
     </database>
+    <cache>
+        <clear_interval>61</clear_interval>
+    </cache>
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <options_dir>/var/local/corpora/registry/options</options_dir>
@@ -22,8 +25,11 @@
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
-        <default_corpus>syn2010</default_corpus>
-        <alternative_corpus>omezeni/syn2010</alternative_corpus>
+        <default_corpora>
+            <item>syn2010</item>
+            <item>omezeni/syn2010</item>
+            <item>omezeni/oral2013</item>
+        </default_corpora>
         <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
         <speech_data_url>http://127.0.0.1/data</speech_data_url>
         <kwicline_max_context>500</kwicline_max_context>

@@ -146,6 +146,11 @@ def parse_config(path):
             data = []
             parse_corplist(item, data=data)
             _conf['corpora_hierarchy'] = data
+        elif item.tag == 'default_corpora':
+            data = []
+            for item in item.findall('item'):
+                data.append(item.text)
+            _conf['corpora']['default_corpora'] = data
         else:
             _conf['corpora'][item.tag] = item.text
 
@@ -194,7 +199,8 @@ def get_corpus_info(corp_name):
 
 def get_default_corpus(corplist):
     """
-    Returns name of the default corpus to be offered to a user
+    Returns name of the default corpus to be offered to a user. Select first
+    corpus from the list which is conform with user's access rights
 
     Parameters
     ----------
@@ -206,15 +212,14 @@ def get_default_corpus(corplist):
     str
       name of the corpus to be used as a default one
     """
-    # set default corpus
+    default_corp_list = get('corpora', 'default_corpora')
     if get_bool('corpora', 'use_db_whitelist'):
-        if get('corpora', 'default_corpus') in corplist:
-            return get('corpora', 'default_corpus')
-        elif get('corpora', 'alternative_corpus') in corplist:
-            return get('corpora', 'alternative_corpus')
+        for item in default_corp_list:
+            if item in corplist:
+                return item
         return None
     else:
-        return get('corpora', 'default_corpus')
+        return get('corpora', 'default_corpora')[0]
 
 
 def create_salt(length=2):
