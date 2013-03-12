@@ -28,6 +28,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
     var lib = {};
 
     /**
+     * Tests whether the host environment is Internet Explorer "version (or less)"
+     */
+    lib.isInternetExplorerUpTo = function (version) {
+        return $.browser.msie && parseInt($.browser.version, 10) <= version;
+    };
+
+    /**
      *
      * @param {Event} event
      */
