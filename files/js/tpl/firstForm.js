@@ -33,7 +33,6 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
         createAddLanguageClickHandler,
         activeParallelCorporaSettingKey = 'active_parallel_corpora';
 
-
     /**
      *
      * @param {function} callback
@@ -92,18 +91,23 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
      */
     createAddLanguageClickHandler = function (forcedCorpusId) {
         return function () {
-            var corpusId;
+            var corpusId,
+                jqHiddenStatus;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
-            var jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
+            jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
 
             addActiveParallelCorpus(corpusId);
+            $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+
             $('#qnode_' + corpusId).show();
             jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
             $('#qnode_' + corpusId + ' a.close-button').on('click', function () {
                 $('#qnode_' + corpusId).hide();
                 jqHiddenStatus.val('');
                 removeActiveParallelCorpus(corpusId);
+                $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+
             });
             if (mainPage.isInternetExplorerUpTo(8)) {
                 // refresh content in IE < 9
