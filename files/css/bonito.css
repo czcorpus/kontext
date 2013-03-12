@@ -780,6 +780,13 @@ fieldset legend {
     white-space:normal;
 }
 
+#mainform legend {
+    font-weight: normal;
+    padding: 4px 10px 4px 10px;
+    background-color: #C7E5E5;
+    border-radius: 3px;
+}
+
 fieldset p {
     width:500px;
 }
@@ -943,6 +950,10 @@ table.envelope tr.last-line td {
     border-color:#000;
     border-style:solid;
     border-width:1px 0 0;
+}
+
+table.form {
+    margin-top: 10px;
 }
 
 table.form th {
