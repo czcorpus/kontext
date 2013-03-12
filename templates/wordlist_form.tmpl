@@ -45,36 +45,11 @@ $_("Word List Form")#slurp
 #end def
 
 #def bodyonload
-#filter WebSafe
-select_output_type('$wltype');
-var updForm = function (item) {
-    var formAncestor,
-    i,
-    srch,
-    ancestors = \$(item.target).parents();
-
-    for (i = 0; i < ancestors.length; i += 1) {
-        if (ancestors[i].nodeName === 'FORM') {
-            formAncestor = ancestors[i];
-            break;
-        }
-    }
-    if (formAncestor !== undefined) {
-        srch = \$(formAncestor).find('*[name="reload"]');
-        if (srch.length > 0) {
-            \$(srch[0]).attr('value', '1');
-        }
-        srch = \$(formAncestor).find('*[name="usesubcorp"]');
-        if (srch.length > 0) {
-            \$(srch[0]).attr('value', '');
-        }
-        formAncestor.submit();
-    }
-}
-require(['treecomponent'], function (tc) {
-    tc.createTreeComponent(\$('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
+require(['jquery', 'tpl/wordlistForm'], function (\$, wordlistForm) {
+    ## conf object is defined within document.tmpl
+    conf.wltype = "$wltype";
+    wordlistForm.init(conf);
 });
-#end filter
 #end def
 
 
@@ -138,7 +113,7 @@ $input_hidden
 </tr><tr>
   <td></td><td>$_("Blacklist"):</td>
   <td><input type="file" name="wlblacklist" size="30" id="wlblacklist" />
-    <a href="" onclick="show_help_format();return false;">$_("format")</a>
+    <a id="show-help-format-link" href="">$_("format")</a>
     <td><div  id="help_format" class="css_format_help">
     $_("Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.")
     </div></td>
@@ -161,10 +136,10 @@ $input_hidden
 </tr><tr class="required">
   <th>$_("Output type"):</th>
   #set $checked = ($wltype == 'simple') and 'checked' or ''
-  <td><label onclick="select_output_type('simple')"><input type="radio" name="wltype" value="simple" $checked id="wltype_simple">$_("Simple")</label></td>
+  <td><label id="select-output-type-simple"><input type="radio" name="wltype" value="simple" $checked id="wltype_simple">$_("Simple")</label></td>
 </tr><tr>
   #set $checked = ($wltype == 'keywords') and 'checked' or ''
-  <td></td><td><label onclick="select_output_type('keywords')"><input type="radio" name="wltype" value="keywords" $checked  id="wltype_keywords">$_("Keywords")</label></td>
+  <td></td><td><label id="select-output-type-keywords"><input type="radio" name="wltype" value="keywords" $checked  id="wltype_keywords">$_("Keywords")</label></td>
 </tr><tr>
   <td></td><td style="padding-left: 4em;">$_("Reference (sub)corpus")</td>
   <td>
@@ -193,7 +168,7 @@ $input_hidden
   <td><input type="text" name="simple_n" value="$simple_n" id="simple_n" /></td>
 </tr><tr>
   #set $checked = ($wltype == 'multilevel') and 'checked' or ''
-  <td></td><td><label onclick="select_output_type('multilevel')"><input type="radio" name="wltype" value="multilevel" $checked id="wltype_multilevel">$_("Multilevel")</label></td>
+  <td></td><td><label id="select-output-type-multilevel"><input type="radio" name="wltype" value="multilevel" $checked id="wltype_multilevel">$_("Multilevel")</label></td>
 </tr><tr>
   <td></td><td colspan="2" style="padding-left: 4em;">
   #for $i in $range(1,4)
@@ -213,46 +188,5 @@ $input_hidden
 </div>
 </form>
 #end filter
-
-<script type="text/javascript">
-
-function select_output_type() {
-  var wltypes = ['wltype_simple', 'wltype_keywords', 'wltype_multilevel'];
-  var kwinputs = ['ref_corpname', 'ref_usesubcorp', 'simple_n'];
-  var mlinputs = ['wlstruct_attr1', 'wlstruct_attr2', 'wlstruct_attr3'];
-  for(i=0;i<wltypes.length;i++) {
-    if (document.getElementById(wltypes[i]).checked == true)
-      { type = wltypes[i].split('_')[1]; }
-  }
-  if (type == 'simple') {
-    document.getElementById("wordlist_form").action = "wordlist";
-    for(i=0;i<kwinputs.length;i++)
-      { document.getElementById(kwinputs[i]).disabled = true; }
-    for(i=0;i<mlinputs.length;i++)
-      { document.getElementById(mlinputs[i]).disabled = true; }
-  } else if (type == 'keywords') {
-    document.getElementById("wordlist_form").action = "wordlist";
-    for(i=0;i<kwinputs.length;i++)
-      { document.getElementById(kwinputs[i]).disabled = false; }
-    for(i=0;i<mlinputs.length;i++)
-      { document.getElementById(mlinputs[i]).disabled = true; }
-  } else if (type == 'multilevel') {
-    document.getElementById("wordlist_form").action = "struct_wordlist";
-    for(i=0;i<kwinputs.length;i++)
-      { document.getElementById(kwinputs[i]).disabled = true; }
-    for(i=0;i<mlinputs.length;i++)
-      { document.getElementById(mlinputs[i]).disabled = false; }
-  }
-}
-
-function show_help_format() {
-  help_div = document.getElementById('help_format')
-  if (help_div.style.visibility == 'visible') {
-    help_div.style.visibility = 'hidden';
-  } else {
-    help_div.style.visibility = 'visible';
-  }
-}
-</script>
 
 #end def
