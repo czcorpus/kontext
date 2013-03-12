@@ -89,6 +89,10 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
                 $('#qnode_' + v).hide();
                 jqHiddenStatus.val('');
             });
+            if (mainPage.isInternetExplorerUpTo(8)) {
+                // refresh content in IE < 9
+                $('#content').css('overflow', 'visible').css('overflow', 'auto');
+            }
         });
         $('input[name="sel_aligned"]').each(function() {
             if ($(this).val()) {
