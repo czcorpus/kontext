@@ -28,8 +28,9 @@ define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
 
     lib.bindClicks = function (conf) {
 
-        $('#text-type-el-link').on('click', function () {
+        $('#text-type-el-link').on('click', function (event) {
             bonito.toggleViewStore('texttypeel', null, mainPage.userSettings);
+            $(event.target).toggleClass('toggled');
         });
     };
 
