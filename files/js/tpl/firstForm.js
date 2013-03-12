@@ -149,8 +149,9 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
      */
     lib.bindClicks = function (conf) {
         $('ul.submenu a.toggle-submenu-item').each(function () {
-            $(this).on('click', function () {
+            $(this).on('click', function (event) {
                 bonito.toggleViewStore($(this).data('id-to-set'), null, mainPage.userSettings);
+                $(event.target).toggleClass('toggled');
             });
         });
 

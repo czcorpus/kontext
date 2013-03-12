@@ -708,6 +708,12 @@ a:hover {
     text-decoration:underline;
 }
 
+a.toggled {
+    padding-left: 20px;
+    background-image: url(../img/Black_check.png);
+    background-repeat: no-repeat;
+}
+
 body {
     background-color:#eee;
     font-family:"Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
