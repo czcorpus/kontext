@@ -156,8 +156,7 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 elementId,
                 elementIdCom,
                 jqOldElem,
-                jqElem,
-                date;
+                jqElem;
 
             hints = hints || {};
             newidCom = jqQs.val();
