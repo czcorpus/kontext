@@ -480,8 +480,8 @@ class ConcCGI(UserCGI):
             else:
                 self._user_settings.append('annotconc')
                 self.annotconc = ''
-        contains_speech = settings.has_configured_speech(self._curr_corpus)
-        out = self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech),
+        contains_speech = settings.has_configured_speech(self._corp())
+        out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                             for c in self.align.split(',') if c],
@@ -1762,7 +1762,7 @@ class ConcCGI(UserCGI):
         """
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
-        for s, a in [t.split('.') for t in self._curr_corpus.get_conf('STRUCTATTRLIST').split(',')]:
+        for s, a in [t.split('.') for t in self._corp().get_conf('STRUCTATTRLIST').split(',')]:
             if not s in structs_and_attrs:
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
@@ -1927,8 +1927,8 @@ class ConcCGI(UserCGI):
                 labelmap = anot.labelmap
             except conclib.manatee.FileAccessError:
                 pass
-        contains_speech = settings.has_configured_speech(self._curr_corpus)
-        return self.call_function(conclib.kwicpage, (self._curr_corpus, conc, contains_speech), fromp=fromp,
+        contains_speech = settings.has_configured_speech(self._corp())
+        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
                                   pagesize=ps, labelmap=labelmap, align=[],
                                   alignlist=[self.cm.get_Corpus(c)
                                              for c in self.align.split(',') if c],
@@ -2199,21 +2199,21 @@ class ConcCGI(UserCGI):
         """
         corp_conf_info = settings.get_corpus_info(self._corp().corpname)
         ans = {
-            'corpname': self._curr_corpus.get_conf('NAME'),
-            'corpus': self._curr_corpus.get_info(),
-            'size': self._curr_corpus.size(),
+            'corpname': self._corp().get_conf('NAME'),
+            'corpus': self._corp().get_info(),
+            'size': self._corp().size(),
             'attrlist': [],
             'structlist': [],
             'corp_web': corp_conf_info['web'] if corp_conf_info is not None else ''
         }
         try:
-            ans['attrlist'] = [(item, self._curr_corpus.get_attr(item).id_range()) for item in
-                               self._curr_corpus.get_conf('ATTRLIST').split(',')]
+            ans['attrlist'] = [(item, self._corp().get_attr(item).id_range()) for item in
+                               self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = [(_('Failed to load'), '')]
-        ans['structlist'] = [(item, self._curr_corpus.get_struct(item).size()) for item in
-                             self._curr_corpus.get_conf('STRUCTLIST').split(',')]
+        ans['structlist'] = [(item, self._corp().get_struct(item).size()) for item in
+                             self._corp().get_conf('STRUCTLIST').split(',')]
 
         return ans
 
@@ -2223,7 +2223,7 @@ class ConcCGI(UserCGI):
         """
         """
         ans = {}
-        for item in self._curr_corpus.get_conf('STRUCTATTRLIST').split(','):
+        for item in self._corp().get_conf('STRUCTATTRLIST').split(','):
             k, v = item.split('.')
             if k not in ans:
                 ans[k] = []
