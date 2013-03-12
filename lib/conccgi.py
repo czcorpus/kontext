@@ -624,9 +624,9 @@ class ConcCGI(UserCGI):
             self.ctxattrs = 'word'
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
-        self._user_settings.extend(['attrs', 'ctxattrs', 'structs',
-                                    'pagesize', 'copy_icon', 'multiple_copy',
-                                    'gdex_enabled', 'gdexcnt', 'gdexconf', 'refs_up'])
+        self._user_settings.update(dict([(x, '') for x in ['attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon',
+                                                           'multiple_copy', 'gdex_enabled', 'gdexcnt', 'gdexconf',
+                                                           'refs_up']]))
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -634,7 +634,7 @@ class ConcCGI(UserCGI):
                     _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
-            self._user_settings.extend(['kwicleftctx', 'kwicrightctx', 'ctxunit'])
+            self._user_settings.update([(x, '') for x in ['kwicleftctx', 'kwicrightctx', 'ctxunit']])
 
     def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[],
                    newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
