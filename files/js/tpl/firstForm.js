@@ -21,11 +21,96 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], function ($,
-        treeComponent, bonito, mainPage, hideElem) {
+define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], function ($, treeComponent, bonito, mainPage,
+                                                                                    hideElem) {
     'use strict';
 
-    var lib = {};
+    var lib = {},
+        addActiveParallelCorpus,
+        removeActiveParallelCorpus,
+        getActiveParallelCorpora,
+        callOnParallelCorporaList,
+        createAddLanguageClickHandler,
+        activeParallelCorporaSettingKey = 'active_parallel_corpora';
+
+
+    /**
+     *
+     * @param {function} callback
+     * @return returns what callback returns
+     */
+    callOnParallelCorporaList = function (callback) {
+        var itemList = mainPage.userSettings.get(activeParallelCorporaSettingKey) || [];
+
+        if (typeof itemList !== 'object') {
+            itemList = itemList.split(',');
+        }
+        return callback(itemList);
+    };
+
+    /**
+     *
+     */
+    getActiveParallelCorpora = function () {
+        return callOnParallelCorporaList(function (itemList) {
+            return itemList;
+        });
+    };
+
+    /**
+     * @param {string} corpusName
+     */
+    addActiveParallelCorpus = function (corpusName) {
+        callOnParallelCorporaList(function (itemList) {
+            if (itemList.indexOf(corpusName) === -1) {
+                itemList.push(corpusName);
+            }
+            mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+        });
+    };
+
+    /**
+     * @param {string} corpusName
+     */
+    removeActiveParallelCorpus = function (corpusName) {
+        callOnParallelCorporaList(function (itemList) {
+            if (itemList.indexOf(corpusName) >= 0) {
+                itemList.splice(itemList.indexOf(corpusName), 1);
+            }
+            mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+        });
+    };
+
+    /**
+     * Creates function (i.e. you must call it first to be able to use it)
+     * to handle the "add language" action.
+     *
+     * @param {string} forcedCorpusId optional parameter to force corpus to be added (otherwise
+     * it is chosen based on "#add-searched-lang-widget select" select box value). It is useful
+     * in case you want to call the handler manually.
+     * @return {function} handler function
+     */
+    createAddLanguageClickHandler = function (forcedCorpusId) {
+        return function () {
+            var corpusId;
+
+            corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
+            var jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
+
+            addActiveParallelCorpus(corpusId);
+            $('#qnode_' + corpusId).show();
+            jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
+            $('#qnode_' + corpusId + ' a.close-button').on('click', function () {
+                $('#qnode_' + corpusId).hide();
+                jqHiddenStatus.val('');
+                removeActiveParallelCorpus(corpusId);
+            });
+            if (mainPage.isInternetExplorerUpTo(8)) {
+                // refresh content in IE < 9
+                $('#content').css('overflow', 'visible').css('overflow', 'auto');
+            }
+        };
+    };
 
     /**
      * @param conf
@@ -48,6 +133,11 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
 
         // initial query selector setting (just like when user changes it manually)
         hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints, mainPage.userSettings);
+
+        // open currently used languages for parallel corpora
+        $.each(getActiveParallelCorpora(), function (i, item) {
+            createAddLanguageClickHandler(item)();
+        });
     };
 
     /**
@@ -80,19 +170,9 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
      *
      */
     lib.bindParallelCorporaCheckBoxes = function () {
-        $('#add-searched-lang-widget button[type="button"]').on('click', function (event) {
-            var v = $('#add-searched-lang-widget select').val(),
-                jqHiddenStatus = $('#qnode_' + v + ' input[name="sel_aligned"]');
-            $('#qnode_' + v).show();
-            jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-            $('#qnode_' + v + ' a.close-button').on('click', function () {
-                $('#qnode_' + v).hide();
-                jqHiddenStatus.val('');
-            });
-            if (mainPage.isInternetExplorerUpTo(8)) {
-                // refresh content in IE < 9
-                $('#content').css('overflow', 'visible').css('overflow', 'auto');
-            }
+
+        $('#add-searched-lang-widget button[type="button"]').each(function () {
+            $(this).on('click', createAddLanguageClickHandler());
         });
         $('input[name="sel_aligned"]').each(function() {
             if ($(this).val()) {
