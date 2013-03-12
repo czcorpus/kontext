@@ -35,6 +35,24 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
     };
 
     /**
+     * Displays 'standard' error message box
+     *
+     * @param {string} message a message to be displayed
+     */
+    lib.showErrorMessage = function (message) {
+        var html = '<div id="error"><div class="frame">'
+            + '<img class="icon" alt="Error" src="../files/img/error-icon.png">'
+            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
+            + '</div></div>';
+
+        $('#content #error').remove();
+        $('#content').prepend(html);
+        $('#error a.close-icon').bind('click', function (event) {
+            $('#error').remove();
+        });
+    };
+
+    /**
      *
      * @param {Event} event
      */
@@ -85,6 +103,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     allowMultipleOpenedBoxes : false,
                     padding : 0,
                     margin : 0
+                },
+                function (message) {
+                    lib.showErrorMessage(message || conf.messages.failed_to_contact_server);
                 }
             );
 
@@ -261,23 +282,39 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
             $('#within-builder-modal').modal({
                 onShow : function () {
-                    $.get('ajax_get_structs_details?corpname=' + corpusName, {}, function (data) {
-                        var prop,
-                            html,
-                            i;
+                    $.ajax({
+                        url : 'ajax_get_structs_details?corpname=' + corpusName,
+                        data : {},
+                        method : 'get',
+                        dataType : 'json',
+                        success : function (data) {
+                            var prop,
+                                html,
+                                i;
 
-                        html = '<select id="within-structattr">';
-                        for (prop in data) {
-                            if (data.hasOwnProperty(prop)) {
-                                for (i = 0; i < data[prop].length; i += 1) {
-                                    html += '<option>' + prop + '.' + data[prop][i] + '</option>';
+                            if (data.hasOwnProperty('error')) {
+                                $.modal.close();
+                                lib.showErrorMessage(data['error']);
+
+                            } else {
+                                html = '<select id="within-structattr">';
+                                for (prop in data) {
+                                    if (data.hasOwnProperty(prop)) {
+                                        for (i = 0; i < data[prop].length; i += 1) {
+                                            html += '<option>' + prop + '.' + data[prop][i] + '</option>';
+                                        }
+                                    }
                                 }
+                                html += '</select>';
+                                $('#within-builder-modal .selection-container').append(html);
+                                $('#within-insert-button').one('click', clickAction);
+                                $(document).on('keypress', buttonEnterAction);
                             }
+                        },
+                        error : function () {
+                            $.modal.close();
+                            lib.showErrorMessage(conf.messages.failed_to_contact_server);
                         }
-                        html += '</select>';
-                        $('#within-builder-modal .selection-container').append(html);
-                        $('#within-insert-button').one('click', clickAction);
-                        $(document).on('keypress', buttonEnterAction);
                     });
                 }
             });

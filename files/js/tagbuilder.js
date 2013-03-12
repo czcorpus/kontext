@@ -51,9 +51,10 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
      * @param hiddenElm ID or element itself
      * @param tagDisplay
      * @param multiSelectComponent {Object}
+     * @param {function} errorCallback
      * @return {Object}
      */
-    createTagLoader = function (corpusName, numTagPos, hiddenElm, tagDisplay, multiSelectComponent) {
+    createTagLoader = function (corpusName, numTagPos, hiddenElm, tagDisplay, multiSelectComponent, errorCallback) {
 
         var tagLoader,
             i;
@@ -113,6 +114,11 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
              *
              */
             tagDisplay : null,
+
+            /**
+             *
+             */
+            errorCallback : function () {},
 
             /**
              * Encodes form status into a list of regular expressions (one for each position)
@@ -324,55 +330,47 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                     }
                 }
 
-                if (data.hasOwnProperty('error')) {
-                    errorBox = document.createElement('li');
-                    $(errorBox).attr('class', 'error-box');
-                    $(errorBox).empty().append(data.error);
-                    $(tagLoader.multiSelectComponent.ulElement).append(errorBox);
+                for (i = 0; i < getResponseLength(data.tags); i += 1) {
+                    blockId = 'position_' + i;
+                    if ($.inArray(blockId, tagLoader.activeBlockHistory) === -1) {
 
-                } else {
-                    for (i = 0; i < getResponseLength(data.tags); i += 1) {
-                        blockId = 'position_' + i;
-                        if ($.inArray(blockId, tagLoader.activeBlockHistory) === -1) {
-
-                            if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                                if (data.labels[i] !== undefined && data.labels[i] !== null) {
-                                    blockLabel = (i + 1) + ' - ' + data.labels[i];
-                                } else {
-                                    blockLabel = (i + 1);
-                                }
-                                tagLoader.multiSelectComponent.addBlock(blockId, blockLabel, null, blockSwitchEventHandlers);
-
+                        if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
+                            if (data.labels[i] !== undefined && data.labels[i] !== null) {
+                                blockLabel = (i + 1) + ' - ' + data.labels[i];
                             } else {
-                                tagLoader.multiSelectComponent.clearBlock(blockId);
+                                blockLabel = (i + 1);
                             }
-                            if (data.tags[i].length > 0) {
-                                blockLength = data.tags[i].length;
-                                for (j = 0; j < data.tags[i].length; j += 1) {
-                                    if (data.tags[i][j][0] !== '-') {
-                                        tagLoader.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
-                                        if (prevSelects.hasOwnProperty(blockId) && $.inArray(data.tags[i][j][0], prevSelects[blockId]) > -1) {
-                                            tagLoader.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
+                            tagLoader.multiSelectComponent.addBlock(blockId, blockLabel, null, blockSwitchEventHandlers);
 
-                                        } else {
-                                            tagLoader.multiSelectComponent.uncheckItem(blockId, data.tags[i][j][0]);
-                                        }
+                        } else {
+                            tagLoader.multiSelectComponent.clearBlock(blockId);
+                        }
+                        if (data.tags[i].length > 0) {
+                            blockLength = data.tags[i].length;
+                            for (j = 0; j < data.tags[i].length; j += 1) {
+                                if (data.tags[i][j][0] !== '-') {
+                                    tagLoader.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
+                                    if (prevSelects.hasOwnProperty(blockId) && $.inArray(data.tags[i][j][0], prevSelects[blockId]) > -1) {
+                                        tagLoader.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
 
                                     } else {
-                                        blockLength -= 1;
-                                        tagLoader.multiSelectComponent.setDefaultValue(blockId, data.tags[i][j][0]);
+                                        tagLoader.multiSelectComponent.uncheckItem(blockId, data.tags[i][j][0]);
                                     }
+
+                                } else {
+                                    blockLength -= 1;
+                                    tagLoader.multiSelectComponent.setDefaultValue(blockId, data.tags[i][j][0]);
                                 }
-                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');
-
-                            } else {
-                                tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                             }
-                        }
+                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');
 
-                        if (typeof callback === 'function') {
-                            callback(blockId, prevSelects);
+                        } else {
+                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
                         }
+                    }
+
+                    if (typeof callback === 'function') {
+                        callback(blockId, prevSelects);
                     }
                 }
             },
@@ -389,10 +387,21 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                         url : url,
                         data : params,
                         method : 'get',
+                        dataType : 'json',
                         // requestHeaders: {Accept: 'application/json'},
-                        complete : function (data) {
-                            tagLoader.initialValues = $.parseJSON(data.responseText);
-                            callback(tagLoader.initialValues);
+                        success : function (data) {
+                            if (data.hasOwnProperty('error')) {
+                                $.modal.close();
+                                tagLoader.errorCallback(data.error);
+
+                            } else {
+                                tagLoader.initialValues = data;
+                                callback(tagLoader.initialValues);
+                            }
+                        },
+                        error : function (data) {
+                            $.modal.close();
+                            tagLoader.errorCallback();
                         }
                     });
 
@@ -521,6 +530,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
      *     backButton     : ID or element itself for the "back" button
      *     tagDisplay     : ID or element itself for the "tag display" box
      *     hiddenElm      : ID or element itself
+     *     errorCallback  : function to be called in case of an error
      * @return {tagLoader}
      */
     attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
@@ -564,6 +574,10 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
             $(opt.backButton).bind('click', tagLoader.backButtonClick);
         }
 
+        if (typeof opt.errorCallback === 'function') {
+            tagLoader.errorCallback = opt.errorCallback;
+        }
+
         updateConcordanceQuery();
         return tagLoader;
     };
@@ -581,8 +595,9 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
      * @param multiSelectOpts {Object}
      * @param corpusName {string}
      * @param numTagPos {Number}
+     * @param {function} errorCallback
      */
-    bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts) {
+    bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts, errorCallback) {
         var prop;
 
         for (prop in opt) {
@@ -626,7 +641,8 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
 
                     attachTagLoader(corpusName, numTagPos, msComponent, {
                         tagDisplay : $(opt.tagDisplayElement),
-                        resetButton : $(opt.resetButtonElement)
+                        resetButton : $(opt.resetButtonElement),
+                        errorCallback : errorCallback
                     });
 
                     $(opt.insertTagButtonElement).one('click', insertTagClickAction);
