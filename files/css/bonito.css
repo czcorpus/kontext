@@ -709,8 +709,9 @@ a:hover {
 }
 
 a.toggled {
-    padding-left: 20px;
+    padding-right: 16px;
     background-image: url(../img/Black_check.png);
+    background-position: 100%;
     background-repeat: no-repeat;
 }
 
