@@ -647,6 +647,11 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
 
                     $(opt.insertTagButtonElement).one('click', insertTagClickAction);
                     $(document).on('keypress', buttonEnterAction);
+                },
+                onClose : function () {
+                    $(document).off('keypress', buttonEnterAction);
+                    $.modal.close();
+                    $(opt.inputElement).focus();
                 }
             });
         });

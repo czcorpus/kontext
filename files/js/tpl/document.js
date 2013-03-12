@@ -316,6 +316,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                             lib.showErrorMessage(conf.messages.failed_to_contact_server);
                         }
                     });
+                },
+
+                onClose : function () {
+                    $(document).off('keypress', buttonEnterAction);
+                    $.modal.close();
+                    jqInputElement.focus();
                 }
             });
             event.stopPropagation();
