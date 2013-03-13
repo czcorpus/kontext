@@ -205,6 +205,8 @@ class ConcCGI(UserCGI):
 
     alpha_features = 0
 
+    shuffle = 0
+
     add_vars['wsketch_form'] = [u'LastSubcorp']
     add_vars['wsketch'] = [u'LastSubcorp']
     add_vars['wsdiff'] = [u'LastSubcorp']
@@ -435,6 +437,8 @@ class ConcCGI(UserCGI):
 
     def view(self, tpl_params={}):
         "kwic view"
+        if 'f' in self.q:
+            self.shuffle = 1
         self.righttoleft = False
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
@@ -464,7 +468,6 @@ class ConcCGI(UserCGI):
                 if self.q[i].startswith('s*') or self.q[i][0] == 'e':
                     del self.q[i]
                 i += 1
-
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
         labelmap = {}
@@ -929,6 +932,8 @@ class ConcCGI(UserCGI):
             if not pq or wnot:
                 nopq.append(al_corpname)
         self.q = [qbase + self._compile_query() + ttquery + par_query]
+        if self.shuffle:
+            self.q.append('f')
 
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
@@ -975,6 +980,7 @@ class ConcCGI(UserCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
+
         self.set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
@@ -983,7 +989,8 @@ class ConcCGI(UserCGI):
                              fc_pos_wsize,
                              fc_pos_type,
                              fc_pos)
-        if self.sel_aligned: self.align = ','.join(self.sel_aligned)
+        if self.sel_aligned:
+            self.align = ','.join(self.sel_aligned)
         return self.view()
 
     first.template = 'view.tmpl'
