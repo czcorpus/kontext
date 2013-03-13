@@ -439,6 +439,8 @@ class ConcCGI(UserCGI):
         "kwic view"
         if 'f' in self.q:
             self.shuffle = 1
+        elif self.shuffle:
+            self.q.append('f')
         self.righttoleft = False
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
@@ -614,7 +616,7 @@ class ConcCGI(UserCGI):
     add_vars['viewattrs'] = ['concsize']
 
     def set_new_viewattrs(self, setattrs=[], allpos='', setstructs=[],
-                          setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
+                          setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         if ctxunit == '@pos':
             ctxunit = ''
         self.attrs = ','.join(setattrs)
@@ -627,9 +629,11 @@ class ConcCGI(UserCGI):
             self.ctxattrs = 'word'
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
+        self.shuffle = shuffle
+
         self._user_settings.update(dict([(x, '') for x in ['attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon',
                                                            'multiple_copy', 'gdex_enabled', 'gdexcnt', 'gdexconf',
-                                                           'refs_up']]))
+                                                           'refs_up', 'shuffle']]))
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -640,22 +644,21 @@ class ConcCGI(UserCGI):
             self._user_settings.update([(x, '') for x in ['kwicleftctx', 'kwicrightctx', 'ctxunit']])
 
     def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[],
-                   newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
+                   newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
-                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit)
+                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
         return self.view()
 
     viewattrsx.template = 'view.tmpl'
 
     def save_viewattrs(self, setattrs=[], allpos='', setstructs=[],
-                       setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit=''):
+                       setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
-                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit)
+                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'pagesize',
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
-                            'refs',
-                            'kwicleftctx', 'kwicrightctx', 'multiple_copy',
-                            'tbl_template', 'ctxunit', 'refs_up'],
+                            'refs', 'kwicleftctx', 'kwicrightctx', 'multiple_copy',
+                            'tbl_template', 'ctxunit', 'refs_up', 'shuffle'],
                            self.corpname)
         out = self.viewattrs()
         out['notification'] = _('Selected options successfully saved')
@@ -932,8 +935,8 @@ class ConcCGI(UserCGI):
             if not pq or wnot:
                 nopq.append(al_corpname)
         self.q = [qbase + self._compile_query() + ttquery + par_query]
-        if self.shuffle:
-            self.q.append('f')
+        #if self.shuffle:
+        #    self.q.append('f')
 
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,

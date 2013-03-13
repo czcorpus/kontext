@@ -486,7 +486,7 @@ class CGIPublisher:
         cookies = BonitoCookie()
         user_settings = {}
         for k in self._user_settings:
-            if self.__dict__.has_key(k):
+            if k in self.__dict__:
                 user_settings[k] = self.__dict__[k]
         cookies['user_settings'] = json.dumps(user_settings)
         cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')

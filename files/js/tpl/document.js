@@ -166,7 +166,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         });
 
         // show or hide elements according to settings cookies
-
         $.each(lib.userSettings.data, function (property, value) {
             var el = property.replace('_view', ''); // remove end '_view'
             if ($('#' + el).length !== 0) { // element exists

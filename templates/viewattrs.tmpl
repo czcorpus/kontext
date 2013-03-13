@@ -125,6 +125,9 @@ $gdexconf_select('gdexconf', $gdexconf)
       </tr>
       #end if
   </table>
+  <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
+  <label for="always-shuffle">$_("Always shuffle concordance results").</label> <br />
+
 <hr/>
   <input type="hidden" name="copy_icon" value="0" />
   <input type="checkbox" name="copy_icon" value="1"
