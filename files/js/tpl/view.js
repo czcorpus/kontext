@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], function ($, jqueryPeriodic, documentPage,
-                                                                                       detail, annotConc) {
+define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'simplemodal'], function ($, jqueryPeriodic,
+            documentPage, detail, annotConc, simpleModalNone) {
     'use strict';
 
     var lib = {};
@@ -61,12 +61,46 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
             );
         });
 
+        $('#conclines a.copy-button').on('click', function (event) {
+            var url = $(event.target).data('url'),
+                data = $(event.target).data('params');
+
+            $('#content #copy-conc-modal').remove();
+            $('#content').append('<div id="copy-conc-modal">'
+                + '<strong>' + conf.messages.ctrlc_to_copy + '</strong><br />'
+                + '<textarea id="text-to-copy" rows="8" cols="70"></textarea>'
+                + '</div>');
+
+            $('#copy-conc-modal').modal({
+                onShow : function () {
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        data: data,
+                        dataType : 'json',
+                        success: function (data) {
+                            var rawText = '...';
+                            $.each(data.content, function (i, item) {
+                               rawText += item.str;
+                            });
+                            rawText += '...';
+                            $('#text-to-copy').val(rawText).select();
+                        }
+                    });
+                },
+                onClose : function () {
+                    $.modal.close();
+                    $('#content #copy-conc-modal').remove();
+                }
+            });
+        });
+
         $('#hideel').bind('click', detail.closeDetail);
-            $('#detailframe').data('corpname', conf.corpname);
-            if (conf.canAnnotate && conf.annotConc) {
-                $('#conclines').observe('mousedown', annotConc.handle_selection);
-            }
-            $('a.speech-link').each(function () {
+        $('#detailframe').data('corpname', conf.corpname);
+        if (conf.canAnnotate && conf.annotConc) {
+            $('#conclines').observe('mousedown', annotConc.handle_selection);
+        }
+        $('a.speech-link').each(function () {
             $(this).bind('click', function (event) {
                 detail.openSpeech(this);
                 event.stopPropagation();
@@ -85,7 +119,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
         }
 
         if (conf.annotConc) {
-            $('td.rc span.groupbox').each (function () {
+            $('td.rc span.groupbox').each(function () {
                 $(this).bind('click', function (event) {
                     annotConc.show_groupmenu(event.target, $(this).data('pos'));
                 });
@@ -115,7 +149,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
                 annotConc.undo_last_action();
             });
 
-            $('#groupmenu .assign-group').each (function () {
+            $('#groupmenu .assign-group').each(function () {
                 $(this).bind('click', function (event) {
                     annotConc.assign_group($(this).data('grpid'), $(this).data('grplabel'));
                 });
@@ -129,14 +163,16 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
      * @param {string|number} nStr number string (/\d+(.\d*)?)
      * @return {string} number string with thousands separated by the ',' (comma) character
      */
-    lib.addCommas = function(nStr) {
-        var x, x1, x2;
+    lib.addCommas = function (nStr) {
+        var x,
+            x1,
+            x2,
+            rgx = /(\d+)(\d{3})/;
 
         nStr += '';
         x = nStr.split('.');
         x1 = x[0];
         x2 = x.length > 1 ? '.' + x[1] : '';
-        var rgx = /(\d+)(\d{3})/;
         while (rgx.test(x1)) {
             x1 = x1.replace(rgx, '$1' + ',' + '$2');
         }
@@ -148,14 +184,14 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
      */
     lib.reloadHits = function (conf) {
         var freq = 100,
-        countup = 30;
+            countup = 30;
 
-        jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function() {
+        jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
                 url: 'get_cached_conc_sizes?' + conf.q + ';' + conf.globals,
                 type: 'POST',
                 periodic: this,
-                complete: function(data) {
+                complete: function (data) {
                     var sizes,
                         end,
                         newCSize,
@@ -178,11 +214,11 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
                     if (sizes.length !== 4) {
                         return;
                     }
-                    end = parseInt(sizes[0]);
-                    newCSize = parseInt(sizes[1]);
+                    end = parseInt(sizes[0], 10);
+                    newCSize = parseInt(sizes[1], 10);
                     relCSize = parseFloat(sizes[2]);
-                    newFSize = parseInt(sizes[3]);
-                    if (end === NaN || newCSize === NaN || relCSize === NaN || newFSize === NaN) {
+                    newFSize = parseInt(sizes[3], 10);
+                    if (end.isNaN() || newCSize.isNaN() || relCSize.isNaN() || newFSize.isNaN()) {
                         return;
                     }
                     if (end) {
@@ -192,13 +228,13 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
                     jqFSize = $('#fullsize');
                     jqNPages = $('.numofpages');
                     jqLPage = $('#lastpage');
-                    inc = Math.round((newCSize - parseInt(jqCSize.attr('title'))) /
+                    inc = Math.round((newCSize - parseInt(jqCSize.attr('title'), 10)) /
                         (freq * 1000 / countup));
                     newNPages = Math.ceil(newCSize / conf.numLines);
-                    nPagesN = parseInt(jqNPages.attr('title'));
+                    nPagesN = parseInt(jqNPages.attr('title'), 10);
                     pgInc = (newNPages - nPagesN) / (freq * 1000.0 / countup);
                     incConcSize = function (newCSize, newNPages, end, pginc) {
-                        var csizen = parseInt(jqCSize.attr('title'));
+                        var csizen = parseInt(jqCSize.attr('title'), 10);
 
                         jqCSize.html(conf.messages.using_random);
                         if (csizen >= newCSize) {
@@ -222,7 +258,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
                         nPagesT = lib.addCommas(nPagesT);
                         jqNPages.text(nPagesT);
                         setTimeout(function () { incConcSize(newCSize, newNPages, end, pginc); }, countup);
-                    }
+                    };
                     if (newFSize > 0) {
                         if (conf.q2 !== "R") {
                             l = lib.addCommas(newCSize);
@@ -240,7 +276,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc'], fun
                             return;
                         }
                     }
-                    fSizeN = parseInt(jqFSize.attr('title'));
+                    fSizeN = parseInt(jqFSize.attr('title'), 10);
                     inc = (newCSize - fSizeN) / (freq * 1000 / countup);
                     function incSize(newcsize, newnpages, end, inc) {
                         fSizeN += inc;
