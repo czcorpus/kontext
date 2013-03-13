@@ -42,13 +42,7 @@ from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
-try:
-    from wseval import WSEval
-except:
-    class WSEval(ConcCGI):
-        pass
-
-class BonitoCGI (WSEval, UserCGI):
+class BonitoCGI (ConcCGI, UserCGI):
 
     # UserCGI options
     _options_dir = settings.get('corpora', 'options_dir')
@@ -67,7 +61,7 @@ class BonitoCGI (WSEval, UserCGI):
 
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
-    def __init__ (self, user=None, environ=os.environ):
+    def __init__(self, user=None, environ=os.environ):
         UserCGI.__init__ (self, environ=environ, user=user)
         ConcCGI.__init__ (self, environ=environ)
 
