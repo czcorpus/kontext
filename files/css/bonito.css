@@ -1067,3 +1067,11 @@ input#cql {
 #copy-conc-modal textarea {
     margin: 10px;
 }
+
+span.notice-shuffled {
+    background-color: #FFFF99;
+    color: #000000;
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid #AAAAAA;
+}
