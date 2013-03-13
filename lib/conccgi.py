@@ -1347,6 +1347,12 @@ class ConcCGI(UserCGI):
         return self.call_function(conclib.get_detail_context, (self._corp(),
                                                                pos))
 
+    def widectx_raw(self, pos=0):
+        data = conclib.get_detail_context(self._corp(), pos)
+        return data
+    widectx_raw.return_type = 'json'
+
+
     def fullref(self, pos=0):
         "display a full reference"
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))

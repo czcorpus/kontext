@@ -563,14 +563,14 @@
     text-align:right;
 }
 
-.copy_button {
-    background:url(../img/copy.png) 0 0 no-repeat;
+.copy-button {
+    background:url(../img/edit-copy.png) 0 0 no-repeat;
     display:block;
     height:16px;
     width:16px;
 }
 
-.copy_button.selected {
+.copy-button.selected {
     background-position:-16px 0;
 }
 
@@ -1058,4 +1058,12 @@ tr#cqlrow td {
 
 input#cql {
     margin: 0;
+}
+
+#copy-conc-modal {
+    font-size: 8pt;
+}
+
+#copy-conc-modal textarea {
+    margin: 10px;
 }

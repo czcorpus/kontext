@@ -94,6 +94,7 @@ soundManager.setup({
 require(['tpl/view'], function(pageSelf) {
     conf.annotconc = "$annotconc";
     conf.q = "$q";
+    conf.messages.ctrlc_to_copy = "$_('Press Ctrl+C to copy the text')";
 
     #if $can_annotate and $annotconc
     conf.canAnnotate = $can_annotate;
@@ -207,36 +208,11 @@ require(['tpl/view'], function(pageSelf) {
   </td>
 #end def
 
-#def oneclick_line($l, $i)
+#def oneclick_line($l, $i, $longcorpname)
   #if $copy_icon
-    <td><div class="copy_div"><a href="#" class="copy_button" id="$i"></a></div>
-      #for $ref_i, $ref in $enumerate($l.get('Tbl_refs', []))
-<span id="ref$i-$ref_i" class="hidden">$ref</span>
-      #end for
-<span id="sent$i" class="hidden">#slurp
-      #for $word in $l.Sen_Left
-#slurp
-$word.str#slurp
-      #end for
-#slurp
-#if $l.Kwic and $l.Kwic[0]['str'].startswith(' ')
-  #set $l['Kwic'][0]['str'] = $l.Kwic[0]['str'].strip()
- <b>#slurp
-#else
-<b>#slurp
-#end if
-      #for $word in $l.Kwic
-#slurp
-$word.str#slurp
-      #end for
-#slurp
-</b>#slurp
-      #for $word in $l.Sen_Right
-#slurp
-$word.str#slurp
-      #end for
-#slurp
-</span></td>
+    <td>
+        <div class="copy_div"><a id="$i" class="copy-button" data-url="widectx_raw" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')"></a></div>
+    </td>
   #end if
 
 #end def
@@ -378,14 +354,14 @@ $align_heading($viewmode, $KWICCorps)
             #end for
             </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
             $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-            $oneclick_line($l, $i)
+            $oneclick_line($l, $i, $corpname)
             #for $ii,$ll in $enumerate($l.get('Align', []))
                 #set $bcname = $Par_conc_corpnames[$ii+1].n
                 $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
             #end for
         #else ## standard display of refs
             $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-            $oneclick_line($l, $i)
+            $oneclick_line($l, $i, $corpname)
             #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
               #set $bcname = $Par_conc_corpnames[$ii+1].n
               #if $ll.ref
