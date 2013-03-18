@@ -1069,9 +1069,8 @@ input#cql {
 }
 
 span.notice-shuffled {
-    background-color: #FFFF99;
-    color: #000000;
-    padding: 2px 5px;
+    padding-left: 5px;
+    padding-right: 5px;
     border-radius: 3px;
-    border: 1px solid #AAAAAA;
+    border: 1px solid #CCCCCC;
 }
