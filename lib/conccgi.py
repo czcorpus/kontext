@@ -1847,16 +1847,28 @@ class ConcCGI(UserCGI):
                 if os.path.isfile(base + e):
                     os.unlink(base + e)
         tt_query = self._texttype_query()
+        basecorpname = self.corpname.split(':')[0]
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
-            or (subcname and not delete and not create)):
-            subcList = self.cm.subcorp_names(self.corpname)
-            if subcList:
-                subcname = subcList[0]['n']
-            return {'subcname': subcname,
-                    'SubcorpList': self.cm.subcorp_names(self.corpname)}
-        basecorpname = self.corpname.split(':')[0]
+                or (subcname and not delete and not create)):
+            subc_list = self.cm.subcorp_names(basecorpname)
+            if subc_list:
+                subcname = subc_list[0]['n']
+                sc = self.cm.get_Corpus(basecorpname)
+                corp_size = formatnum(sc.size())
+                subcorp_size = formatnum(sc.search_size())
+            else:
+                subc_list = []
+                corp_size = 0
+                subcorp_size = 0
+
+            return {
+                'subcname': subcname,
+                'corpsize': corp_size,
+                'subcsize': subcorp_size,
+                'SubcorpList': subc_list
+            }
         path = os.path.join(self.subcpath[-1], basecorpname)
         if not os.path.isdir(path):
             os.makedirs(path)
@@ -1878,11 +1890,12 @@ class ConcCGI(UserCGI):
         else:
             raise ConcError(_('Empty subcorpus!'))
 
-    def subcorp_info(self, subcname=''):
+    def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
-        return {'subcorp': subcname,
-                'corpsize': formatnum(sc.size()),
-                'subcsize': formatnum(sc.search_size())}
+        return {'subCorpusName': subcname,
+                'corpusSize': formatnum(sc.size()),
+                'subCorpusSize': formatnum(sc.search_size())}
+    ajax_subcorp_info.return_type = 'json'
 
     def attr_vals(self, avattr='', avpat=''):
         self._headers['Content-Type'] = 'application/json'
