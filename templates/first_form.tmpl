@@ -83,6 +83,9 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
 
 #filter WebSafe
 <form id="mainform" action="first">
+#if $shuffle
+    <input type="hidden" name="shuffle" value="1" />
+#end if
 <table class="form">
 #filter None
   $corp_sel_node
