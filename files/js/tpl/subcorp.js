@@ -23,7 +23,9 @@
 define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
     var lib = {};
 
-
+    /**
+     * 
+     */
     lib.showSubcorpInfo = function () {
         $.ajax({
             url: 'ajax_subcorp_info',
@@ -38,12 +40,15 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
         });
     };
 
+    /**
+     *
+     * @param conf
+     */
     lib.init = function (conf) {
         $('#subcname').focus();
         lib.showSubcorpInfo();
-
         $('#subcname').on('change', lib.showSubcorpInfo);
-
+        treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'), null, mainPage.updForm);
     };
 
     return lib;
