@@ -2589,3 +2589,6 @@ msgstr "NEobsahuje"
 
 msgid "filter out empty lines"
 msgstr "odfiltrovat prázdné řádky"
+
+msgid "size information"
+msgstr "informace o velikosti"

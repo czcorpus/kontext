@@ -24,79 +24,66 @@ $_("Subcorpus Info")#slurp
 #end def
 
 #def bodyonload
-#filter WebSafe
-show_subcorpinfo();#slurp
-#end filter
+require(['tpl/subcorp'], function(pageSelf) {
+    pageSelf.init(conf);
+});
 #end def
 
 #def main
-<script type="text/javascript">
-    jQuery(document).ready(function () {
-        jQuery('#subcname').focus();
-    });
-</script>
 #filter WebSafe
 <form id="subcorpform" action="subcorp">
+    <input type="hidden" name="delete" value="true" />
+
     <table class="form">
+        ## corpus selection field
         #filter None
         $corp_sel_node
         #end filter
-        ## Subcorpora
+
         <tbody>
         <tr>
-            <th valign="top">
-                $_("Subcorpora"):<br/>
-                <input type="hidden" name="delete" value="true" />
+            <th>$_("Subcorpora"):</th>
+            <td>
                 #if $SubcorpList
-                <select name="subcname" id="subcname" onchange="show_subcorpinfo();"
-                        size="#if len($SubcorpList) == 1 then 2 else min(len($SubcorpList), 25)#">
+                <select name="subcname" id="subcname"
+                        size="#if len($SubcorpList) < 4 then 4 else min(len($SubcorpList), 25)#">
                     #for $s in $SubcorpList
                     #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
                     <option $selected>$s.n</option>
                     #end for
                 </select>
                 #else
-                <i>$_("no subcorpus")</i>
+                    <select size="4" disabled="disabled">
+                    <option>&lt;$_("no subcorpus")&gt;</option>
+                    </select>
                 #end if
-                <br/>
-
-                <i>
-                    #if not $_anonymous
-                    <a href="subcorp_form?$corpname_url">$_("create new")</a></i>
+            </td>
+            <td id="subcorpinfo">
+                #if $subcsize
+                <strong class="subc-name">$subcname</strong> - $_('size information'):<br />
+                <strong class="subc-size">$subcsize</strong>
+                <em>$_("of")</em> <span class="corp-size">$corpsize</span> $_('tokens')
                 #end if
-            </th>
 
-            ## Subcorp Info
-            <td valign="top">
-                <div id="subcorpinfo" class="infobox">
-                    #if $subcsize
-                    <b>$subcname</b><br/>
-                    $subcsize <i>$_("of")</i> $corpsize <i>$_("tokens")</i>
-                    #end if
+                #if $SubcorpList and not $_anonymous
+                <div class="buttons">
+                    <input type="submit" value="$_("Delete Selected")" />
                 </div>
+                #end if
+
+            </td>
+        </tr>
+        <tr>
+            <th></th>
+            <td colspan="2">
+                #if not $_anonymous
+                <i><a href="subcorp_form?$corpname_url">$_("create new")</a></i>
+                #end if
             </td>
         </tr>
         </tbody>
     </table>
-
-    #if $SubcorpList and not $_anonymous
-    <div class="buttons">
-        <input type="submit" value="$_("Delete Selected")" />
-    </div>
-    #end if
 </form>
 
-<script type="text/javascript">
-    function show_subcorpinfo() {
-        jQuery.ajax({
-            url: 'subcorp_info',
-            data: jQuery('#subcorpform').serialize(),
-            type: 'GET',
-            complete: function (data) {
-                jQuery('#subcorpinfo').html(data.responseText);
-            }
-        });
-    }
-</script>
 #end filter
 #end def

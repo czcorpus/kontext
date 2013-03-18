@@ -1075,3 +1075,12 @@ span.notice-shuffled {
     border-radius: 3px;
     border: 1px solid #CCCCCC;
 }
+
+table.form th,
+table.form td {
+    padding: 5px 15px;
+}
+
+table.form th {
+    font-weight: bold;
+}
