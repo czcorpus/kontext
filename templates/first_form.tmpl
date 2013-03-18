@@ -100,7 +100,7 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
 
   <div id="add-searched-lang-widget">
       <button type="button">$_('Add')</button>
-      language <select>
+      $_('language') <select>
           #for $a in $Aligned
           <option value="$a.n">$a.label</option>
           #end for
@@ -110,7 +110,7 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
   #for $a in $Aligned
   <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
     <div class="heading">
-        <a class="close-button"><img src="../files/img/close-icon.png" /></a><h3>$a.label ($a.n)</h3>
+        <a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a><h3>$a.label ($a.n)</h3>
     </div>
     <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
     <table class="form">$query_node('_'+$a.n)</table>

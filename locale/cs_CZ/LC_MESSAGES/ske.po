@@ -2532,3 +2532,60 @@ msgstr "Základní"
 
 msgid "Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well."
 msgstr "Typ dotazu <em>základní</em> je vhodný pro první seznámení s korpusem. Vyhledá vložený výraz jako slovní tvar bez ohledu na velikost písmen; jde-li zároveň o základní slovníkový tvar (lemma), vyhledají se také všechny jeho tvary."
+
+msgid "Add"
+msgstr "Přidat"
+
+msgid "language"
+msgstr "jazyk"
+
+msgid "insert tag"
+msgstr "vložit tag"
+
+msgid "insert \"within\""
+msgstr "vložit \"within\""
+
+msgid "Insert"
+msgstr "Vložit"
+
+msgid "Create a within condition"
+msgstr "Vytvořit within podmínku"
+
+msgid "Create a tag"
+msgstr "Vytvořit tag"
+
+msgid "Insert into CQL"
+msgstr "Vložit do CQL"
+
+msgid "Reset"
+msgstr "Smazat"
+
+msgid "View"
+msgstr "Zobrazení"
+
+msgid "Custom"
+msgstr "Vlastní"
+
+msgid "Sentence"
+msgstr "Věta"
+
+msgid "Alignment"
+msgstr "Zarovnání"
+
+msgid "Result is shuffled"
+msgstr "Výsledek je promíchán"
+
+msgid "Always shuffle concordance results"
+msgstr "Vždy promíchat konkordanční řádky"
+
+msgid "Remove the language"
+msgstr "Odstranit tento jazyk"
+
+msgid "Contains"
+msgstr "Obsahuje"
+
+msgid "Does NOT contain"
+msgstr "NEobsahuje"
+
+msgid "filter out empty lines"
+msgstr "odfiltrovat prázdné řádky"

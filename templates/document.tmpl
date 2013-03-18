@@ -588,9 +588,9 @@ $corp_sel
 
     <ul class="cql-toolbox">
         #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
-        <li class="insert-tag"><a data-bound-input="cql$suff">insert tag</a></li>
+        <li class="insert-tag"><a data-bound-input="cql$suff">$_('insert tag')</a></li>
         #end if
-        <li class="within"><a data-bound-input="cql$suff">insert &quot;within&quot;</a></li>
+        <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
     </ul>
   <input id="cql$suff" class="cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' size="70" />
 #if not $suff
