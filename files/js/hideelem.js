@@ -241,45 +241,6 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
 
         /**
          *
-         * @param initiator
-         * @param name
-         */
-        selectAllCheckBoxes : function (initiator, name) {
-            var i,
-                form,
-                ancestors = $(initiator).parents(),
-                chkStatus,
-                tmp;
-
-            for (i = 0; i < ancestors.length; i += 1) {
-                if (ancestors[i].nodeName === 'FORM') {
-                    form = ancestors[i];
-                    break;
-                }
-            }
-            if ($(initiator).data('action-type') === '1') {
-                chkStatus = true;
-                $(initiator).data('action-type', 2);
-                tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).data('alt-value'));
-                $(initiator).data('alt-value', tmp);
-
-            } else if ($(initiator).data('action-type') === '2') {
-                chkStatus = false;
-                $(initiator).data('action-type', 1);
-                tmp = $(initiator).attr('value');
-                $(initiator).attr('value', $(initiator).data('alt-value'));
-                $(initiator).data('alt-value', tmp);
-            }
-            if (form !== undefined) {
-                $(form).find('input[type="checkbox"][name="' + name + '"]').each(function () {
-                    $(this).attr('checked', chkStatus);
-                });
-            }
-        },
-
-        /**
-         *
          * @param generic
          */
         cmdHelp : function (generic) {

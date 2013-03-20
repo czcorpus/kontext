@@ -2592,3 +2592,6 @@ msgstr "odfiltrovat prázdné řádky"
 
 msgid "size information"
 msgstr "informace o velikosti"
+
+msgid "Invert selection"
+msgstr "Invertovat výběr"
