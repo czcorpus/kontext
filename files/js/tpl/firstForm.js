@@ -73,7 +73,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
      */
     removeActiveParallelCorpus = function (corpusName) {
         callOnParallelCorporaList(function (itemList) {
-            if (itemList.indexOf(corpusName) >= 0) {
+            if ($.inArray(corpusName) >= 0) {
                 itemList.splice(itemList.indexOf(corpusName), 1);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
