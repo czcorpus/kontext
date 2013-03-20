@@ -217,6 +217,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
         mainPage.init(conf);
         lib.misc(conf);
         lib.bindClicks(conf);
+        lib.bindParallelCorporaCheckBoxes();
     };
 
 

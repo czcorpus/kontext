@@ -30,7 +30,6 @@ require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
     conf.labelStdQuery = '$_("Std. Query")';
     conf.labelErrorQuery = '$_("Error Query")';
     firstForm.init(conf);
-    firstForm.bindParallelCorporaCheckBoxes(conf);
     #if $getVar('show_cup_menu', '')
         firstForm.showCupMenu(conf);
     #end if
