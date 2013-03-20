@@ -62,10 +62,11 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
          *
          * @param path
          * @param {object} userSettings an object providing get/set methods to retrieve/store user settings
+         * @todo this is untested
          */
         loadHideElementStore : function (path, userSettings) {
             var cookie = {},
-                ids = userSettings.get('showhidden').split('.'),
+                ids = userSettings.get('showhidden') || '',
                 i,
                 id,
                 elem,
@@ -73,6 +74,7 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 onclick,
                 all_elements;
 
+            ids = ids.split('.');
             for (i = 0; i < ids.length; i += 1) {
                 cookie[ids[i]] = 1;
             }
