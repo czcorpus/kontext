@@ -25,7 +25,25 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, simpleModalNone) {
     'use strict';
 
-    var lib = {};
+    var toggleSelectAllLabel,
+        lib = {};
+
+    /**
+     *
+     */
+    toggleSelectAllLabel = function (buttonElm) {
+        var tmpLabel = $(buttonElm).attr('value'),
+            currValue = $(buttonElm).data('status');
+
+        $(buttonElm).attr('value', $(buttonElm).data('alt-label'));
+        $(buttonElm).data('alt-label', tmpLabel);
+        if (currValue == 1) {
+            $(buttonElm).data('status', 2);
+
+        } else {
+            $(buttonElm).data('status', 1);
+        }
+    };
 
     /**
      * Tests whether the host environment is Internet Explorer "version (or less)"
@@ -64,6 +82,30 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             jqActiveElm.closest('form').attr('usesubcorp', '');
         }
         jqActiveElm.closest('form').submit();
+    };
+
+    /**
+     * @param jqParents where to search for input checkboxes
+     */
+    lib.autoUpdateSelectAll = function (jqParents) {
+        jqParents.each(function () {
+            var button = $(this).find('input[type="button"]'),
+                parent = this;
+            $(this).find('input[type="checkbox"]').on('click', function () {
+                var jqCheckboxes = $(parent).find('input[type="checkbox"]'),
+                    jqChecked = $(parent).find('input[type="checkbox"]:checked'),
+                    tmpLabel;
+
+                if (jqChecked.length === jqCheckboxes.length) {
+                    toggleSelectAllLabel(button);
+
+                } else if (jqChecked.length < jqCheckboxes.length) {
+                    if ($(button).data('status') == 2) {
+                        toggleSelectAllLabel(button);
+                    }
+                }
+            });
+        });
     };
 
     /**
@@ -113,6 +155,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         });
 
         hideElem.loadHideElementStoreSimple();
+
+        // update checkboxes in subcorp form to make (select all)/(deselect all) updated according to user's selection
+        lib.autoUpdateSelectAll($('table.envelope'));
 
         $('select.qselector').bind('change', function (event) {
             hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
@@ -203,6 +248,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             event.stopPropagation();
         });
 
+        // Activates pop-up box with basic corpus information
         $('#corpus-desc-link').bind('click', function (event) {
             popupbox.createPopupBox(event, 'corpus-details-box', $('#corpus-desc-link'), msg2, {
                 'height' : 'auto',
@@ -211,8 +257,19 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             event.stopPropagation();
         });
 
+        // 'Select all' buttons for structural attribute lists
         $('input[class="select-all"]').bind('click', function (event) {
-            hideElem.selectAllCheckBoxes(event.target, $(event.target).data('item-name'));
+            var parent = $(event.target).closest('table.envelope'),
+                jqCheckboxes = parent.find('input[type="checkbox"]');
+
+            if ($(event.target).data('status') == '1') {
+                jqCheckboxes.attr('checked', 'checked');
+                toggleSelectAllLabel(event.target);
+
+            } else if ($(event.target).data('status') == '2') {
+                jqCheckboxes.removeAttr('checked');
+                toggleSelectAllLabel(event.target);
+            }
         });
 
         $('a#top-level-help-link').bind('click', function (event) {
@@ -221,10 +278,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             return false;
         });
 
+        // Removes the 'error box'
         $('#error a.close-icon').bind('click', function (event) {
             $('#error').remove();
         });
 
+        // Removes the 'notification box'
         $('#notification a.close-icon').bind('click', function (event) {
             $('#notification').remove();
         });
@@ -236,6 +295,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             });
         });
 
+        // Footer's language switch
         $('#switch-language-box a').each(function () {
             $(this).bind('click', function () {
                 lib.userSettings.set('uilang', $(this).data('lang'));
