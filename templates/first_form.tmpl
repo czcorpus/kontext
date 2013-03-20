@@ -25,7 +25,7 @@ $_("Concordance - First query form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/firstForm'], function (\$, firstForm) {
+require(['tpl/firstForm'], function (firstForm) {
     ## conf object is defined within document.tmpl
     conf.labelStdQuery = '$_("Std. Query")';
     conf.labelErrorQuery = '$_("Error Query")';
