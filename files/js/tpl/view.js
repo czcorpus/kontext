@@ -27,14 +27,14 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
     var lib = {};
 
     lib.misc = function (conf) {
-        $(document).ready(function () {
-            $('#groupmenu').attr('annotconc', conf.annotconc);
-            $('#groupmenu').attr('corpname', conf.corpname);
-            $('#groupmenu').attr('queryparams', conf.q);
-            $('#groupmenu').mouseleave(lib.close_menu);
-        });
+        var callback;
 
-        var callback = function () {
+        $('#groupmenu').attr('annotconc', conf.annotconc);
+        $('#groupmenu').attr('corpname', conf.corpname);
+        $('#groupmenu').attr('queryparams', conf.q);
+        $('#groupmenu').mouseleave(lib.close_menu);
+
+        callback = function () {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function () {
                     detail.showDetail($(this).data('url'), $(this).data('params'), $(this).data('loadtext'), true, callback);
