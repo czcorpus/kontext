@@ -24,7 +24,7 @@ $_("Subcorpus Info")#slurp
 #end def
 
 #def bodyonload
-require(['tpl/subcorp'], function(pageSelf) {
+require(['tpl/subcorp', 'domReady!'], function(pageSelf, domReady) {
     pageSelf.init(conf);
 });
 #end def

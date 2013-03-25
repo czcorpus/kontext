@@ -45,7 +45,7 @@ $_("Word List Form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/wordlistForm'], function (\$, wordlistForm) {
+require(['jquery', 'tpl/wordlistForm', 'domReady!'], function (\$, wordlistForm, domReady) {
     ## conf object is defined within document.tmpl
     conf.wltype = "$wltype";
     wordlistForm.init(conf);

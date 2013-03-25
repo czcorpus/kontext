@@ -38,7 +38,7 @@ $_("Concordance: Filter form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/filterForm'], function (\$, filterForm) {
+require(['jquery', 'tpl/filterForm', 'domReady!'], function (\$, filterForm, domReady) {
     ## conf is defined in document.tmpl
     filterForm.init(conf);
 });

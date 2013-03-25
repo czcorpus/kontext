@@ -23,7 +23,7 @@ $_("Save Concordance Form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/saveconcForm'], function (\$, saveconcForm) {
+require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm, domReady) {
     ## conf object is defined within document.tmpl
     conf.files_path = '${files_path}';
     saveconcForm.init(conf);
