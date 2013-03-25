@@ -222,6 +222,21 @@ class ConcCGI(UserCGI):
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
 
+    def log_request(self):
+        """
+        logs user's request by storing URL parameters, user settings and user name
+        """
+        import json
+        import datetime
+
+        ans = {
+            'date' : datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': os.getenv('REMOTE_USER'),
+            'params': dict([item.split('=', 1) for item in os.getenv('QUERY_STRING').split('&')]),
+            'settings': self._user_settings
+        }
+        logging.getLogger('QUERY').info(json.dumps(ans))
+
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
@@ -437,6 +452,7 @@ class ConcCGI(UserCGI):
 
     def view(self, tpl_params={}):
         "kwic view"
+        self.log_request()
         if 'f' in self.q:
             self.shuffle = 1
         elif self.shuffle:
@@ -983,7 +999,7 @@ class ConcCGI(UserCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
-
+        self.log_request()
         self.set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
