@@ -32,7 +32,7 @@ $_("Sort form")#slurp
 #end def
 
 #def bodyonload
-require(['tpl/sort'], function (pageSelf) {
+require(['tpl/sort', 'domReady!'], function (pageSelf, domReady) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
 
     pageSelf.init(conf);

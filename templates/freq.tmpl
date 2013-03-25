@@ -32,7 +32,7 @@ $_("Freqs form")#slurp
 #end def
 
 #def bodyonload
-require(['tpl/freq'], function (pageSelf) {
+require(['tpl/freq', 'domReady!'], function (pageSelf, domReady) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
 
     pageSelf.init(conf);

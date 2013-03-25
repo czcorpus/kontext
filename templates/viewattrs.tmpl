@@ -32,7 +32,7 @@ $_("View options")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/viewattrs'], function (\$, viewAttrs) {
+require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domReady) {
     ## conf object is defined within document.tmpl
     viewAttrs.init(conf);
 });

@@ -91,7 +91,7 @@ soundManager.setup({
 #end def
 
 #def bodyonload
-require(['tpl/view'], function(pageSelf) {
+require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     conf.annotconc = "$annotconc";
     conf.q = "$q";
     conf.messages.ctrlc_to_copy = "$_('Press Ctrl+C to copy the text')";

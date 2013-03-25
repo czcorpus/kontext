@@ -28,7 +28,7 @@ $_("Create Subcorpus")#slurp
 
 #def bodyonload
 
-require(['tpl/subcorpForm'], function(pageSelf) {
+require(['tpl/subcorpForm', 'domReady!'], function(pageSelf, domReady) {
     conf.inputMethod = "$method";
     conf.messages['available_messages'] = "$_('available attributes')";
     pageSelf.init(conf);
