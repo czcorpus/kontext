@@ -2595,3 +2595,12 @@ msgstr "informace o velikosti"
 
 msgid "Invert selection"
 msgstr "Invertovat výběr"
+
+msgid "include empty lines"
+msgstr "zobrazit prázdné řádky"
+
+msgid "The selection condition you have specified is too long. Please create a subcorpus instead."
+msgstr "Podmínka generovaná vaším výběrem je příliš dlouhá. Vytvořte prosím místo ní subkorpus."
+
+msgid "Open the subcorpus form"
+msgstr "Přejít na formulář subkorpusu"
