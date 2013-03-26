@@ -1084,3 +1084,11 @@ table.form td {
 table.form th {
     font-weight: bold;
 }
+
+#alt-form {
+    padding: 10px;
+}
+
+#alt-form p {
+    font-size: 120%;
+}
