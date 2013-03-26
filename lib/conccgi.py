@@ -1799,8 +1799,16 @@ class ConcCGI(UserCGI):
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
 
+        out = {}
+        if os.environ['REQUEST_METHOD'] == 'POST':
+            out['checked_sca'] = {}
+            for p in self._url_parameters:
+                if p.startswith('sca_'):
+                    for checked_value in getattr(self, p):
+                        out['checked_sca'][checked_value] = True
+
         if tt_sel.has_key('error'):
-            return {
+            out.update({
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
                 'structs_and_attrs': structs_and_attrs,
@@ -1808,15 +1816,17 @@ class ConcCGI(UserCGI):
                 'within_condition': '',
                 'within_struct': '',
                 'subcname': ''
-            }
-        return {
-            'TextTypeSel': tt_sel,
-            'structs_and_attrs': structs_and_attrs,
-            'method': method,
-            'within_condition': within_condition,
-            'within_struct': within_struct,
-            'subcname': subcname
-        }
+            })
+        else:
+            out.update({
+                'TextTypeSel': tt_sel,
+                'structs_and_attrs': structs_and_attrs,
+                'method': method,
+                'within_condition': within_condition,
+                'within_struct': within_struct,
+                'subcname': subcname
+            })
+        return out
 
     def _texttype_query(self):
         scas = [(a[4:], getattr(self, a))
