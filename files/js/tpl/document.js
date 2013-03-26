@@ -207,6 +207,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                         }
                     });
                 }
+
+                $('.parallel-corp-lang').each(function () {
+                    if ($(this).css('display') === 'none') {
+                        $(this).remove();
+                    }
+                });
+
             });
         });
 

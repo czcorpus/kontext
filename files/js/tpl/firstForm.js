@@ -184,13 +184,36 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
 
         $('#make-concordance-button').on('click', function (event) {
             var data = $('#mainform').serialize().split('&'),
-                cleanData = '';
-            $.each(data, function (i, val) {
-                var items = val.split('=', 2);
-                if (items.length === 2) {
-                    cleanData += items[0] + '=' + items[1];
+                cleanData = '',
+                unusedLangs = {},
+                belongsToUnusedLanguage;
+
+            $('.parallel-corp-lang').each(function () {
+                if ($(this).css('display') === 'none') {
+                    unusedLangs[$(this).attr('id').substr(6)] = true;
                 }
             });
+
+            belongsToUnusedLanguage = function (paramName) {
+                var p;
+
+                for (p in unusedLangs) {
+                    if (unusedLangs.hasOwnProperty(p)) {
+                        if (paramName.indexOf(p) > -1) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+
+            $.each(data, function (i, val) {
+                var items = val.split('=', 2);
+                if (items.length === 2 && items[1] && !belongsToUnusedLanguage(items[0])) {
+                    cleanData += '&' + items[0] + '=' + items[1];
+                }
+            });
+
             if (cleanData.length > lib.maxEncodedParamsLength) {
                 $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
                     + conf.messages.too_long_condition + '</p>'
