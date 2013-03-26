@@ -620,12 +620,12 @@ $corp_sel
 </tbody>
 #if $suff
 <tbody><tr><td colspan="2">
-    <input type="checkbox" name="filter_nonempty$suff" id="filter_nonempty$suff"
-    #if $getVar('filter_nonempty'+$suff, '')
+    <input type="checkbox" name="include_empty$suff" id="include_empty$suff"
+    #if $getVar('include_empty'+$suff, '')
     checked#slurp
     #end if
     />
-    <label for="filter_nonempty$suff">$_('filter out empty lines')</label>
+    <label for="include_empty$suff">$_('include empty lines')</label>
 </td></tr></tbody>
 #end if
 #end def ## query_node
