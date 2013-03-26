@@ -183,7 +183,15 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
         });
 
         $('#make-concordance-button').on('click', function (event) {
-            if ($('#mainform').serialize().length > lib.maxEncodedParamsLength) {
+            var data = $('#mainform').serialize().split('&'),
+                cleanData = '';
+            $.each(data, function (i, val) {
+                var items = val.split('=', 2);
+                if (items.length === 2) {
+                    cleanData += items[0] + '=' + items[1];
+                }
+            });
+            if (cleanData.length > lib.maxEncodedParamsLength) {
                 $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
                     + conf.messages.too_long_condition + '</p>'
                     + '<button id="alt-form-open-subcorp-form" type="submit">' + conf.messages.open_the_subcorpus_form + '</button>'
