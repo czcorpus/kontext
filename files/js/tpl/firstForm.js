@@ -222,6 +222,10 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
 
                 $('#alt-form-open-subcorp-form').on('click', function () {
                     $('#alt-form').remove();
+                    $(window).unload(function () {
+                        $.modal.close();
+                        $('#mainform').attr('method', 'GET').action('first');
+                    });
                     $('#mainform').attr('method', 'POST').attr('action', 'subcorp_form').submit();
                 });
 
