@@ -29,6 +29,9 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
     ## conf object is defined within document.tmpl
     conf.labelStdQuery = '$_("Std. Query")';
     conf.labelErrorQuery = '$_("Error Query")';
+    conf.messages.too_long_condition = '$_('The selection condition you have specified is too long. Please create a subcorpus first.')';
+    conf.messages.cancel = '$_("Cancel")';
+    conf.messages.open_the_subcorpus_form = '$_("Open the subcorpus form")';
     firstForm.init(conf);
     #if $getVar('show_cup_menu', '')
         firstForm.showCupMenu(conf);
@@ -242,7 +245,7 @@ $tt_sel
 #end if
 
 <div class="buttons">
-<input class="submit" type="submit" value="$_("Make Concordance")" />
+<input id="make-concordance-button" class="submit" type="submit" value="$_("Make Concordance")" />
 <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
 </div>
 </form>

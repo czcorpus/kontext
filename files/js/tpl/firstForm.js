@@ -21,8 +21,9 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], function ($, treeComponent, bonito, mainPage,
-                                                                                    hideElem) {
+define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simplemodal'], function ($, treeComponent,
+                                                                                                   bonito, mainPage,
+                                                                                                   hideElem, _sm) {
     'use strict';
 
     var lib = {},
@@ -32,6 +33,8 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
         callOnParallelCorporaList,
         createAddLanguageClickHandler,
         activeParallelCorporaSettingKey = 'active_parallel_corpora';
+
+    lib.maxEncodedParamsLength = 1500;
 
     /**
      *
@@ -176,6 +179,34 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem'], functi
                 $('#cup_err_menu').show();
                 $(this).text(conf.labelStdQuery);
                 mainPage.userSettings.set("errstdq", "err");
+            }
+        });
+
+        $('#make-concordance-button').on('click', function (event) {
+            if ($('#mainform').serialize().length > lib.maxEncodedParamsLength) {
+                $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
+                    + conf.messages.too_long_condition + '</p>'
+                    + '<button id="alt-form-open-subcorp-form" type="submit">' + conf.messages.open_the_subcorpus_form + '</button>'
+                    + '<button id="alt-form-cancel" type="button">' + conf.messages.cancel + '</button></div>');
+
+                $('#alt-form-open-subcorp-form').on('click', function () {
+                    $('#alt-form').remove();
+                    $('#mainform').attr('method', 'POST').attr('action', 'subcorp_form').submit();
+                });
+
+                $('#alt-form-cancel').on('click', function () {
+                    $.modal.close();
+                });
+
+                $('#alt-form').modal({
+                    onClose : function () {
+                        $.modal.close();
+                        $('#alt-form').remove();
+                    }
+                });
+
+                event.stopPropagation();
+                return false;
             }
         });
     };
