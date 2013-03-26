@@ -985,8 +985,8 @@ class ConcCGI(UserCGI):
                           '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                           fc_pos_type)
         for al_corpname in self.sel_aligned:
-            if al_corpname in nopq and getattr(self,
-                                               'filter_nonempty_' + al_corpname, ''):
+            if al_corpname in nopq and not getattr(self,
+                                               'include_empty_' + al_corpname, ''):
                 self.q.append('x-%s' % al_corpname)
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
