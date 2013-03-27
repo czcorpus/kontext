@@ -21,6 +21,8 @@
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
 define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
+    'use strict';
+
     var lib = {};
 
     /**
@@ -42,9 +44,8 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
 
     /**
      *
-     * @param conf
      */
-    lib.init = function (conf) {
+    lib.init = function () {
         $('#subcname').focus();
         lib.showSubcorpInfo();
         $('#subcname').on('change', lib.showSubcorpInfo);

@@ -21,9 +21,14 @@
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
 define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
+    'use strict';
+
     var lib = {};
 
-
+    /**
+     *
+     * @param item
+     */
     lib.updForm = function (item) {
         var formAncestor,
             i,
@@ -49,46 +54,62 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
         }
     };
 
-    lib.switchToInputMethod = function (value) {
-        if (value === 'raw') {
-            $('#subc-spec-row').css({ display : 'table-row' });
-            $('table.text-type-params').each(function (i, item) {
-                $(item).css({ display : 'none'});
-            });
-            showWithinHint({ element : function () { return $('within-struct-selector'); } });
+    /**
+     *
+     * @param conf
+     */
+    lib.createFuncSwitchToInputMethod = function (conf) {
+        return function (value) {
+            if (value === 'raw') {
+                $('#subc-spec-row').css({ display : 'table-row' });
+                $('table.text-type-params').each(function (i, item) {
+                    $(item).css({ display : 'none'});
+                });
+                lib.createFuncShowWithinHint(conf)({ element : function () { return $('within-struct-selector'); } });
 
-        } else if (value === 'gui') {
-            $('#subc-spec-row').css({ display : 'none' });
-            $('table.text-type-params').each(function (i, item) {
-                $(item).css({ display : 'table'});
-            });
+            } else if (value === 'gui') {
+                $('#subc-spec-row').css({ display : 'none' });
+                $('table.text-type-params').each(function (i, item) {
+                    $(item).css({ display : 'table'});
+                });
+                if ($('within-select-hint-row')) {
+                    $('within-select-hint-row').remove();
+                }
+            }
+        };
+    };
+
+    /**
+     *
+     * @param conf
+     * @returns {Function}
+     */
+    lib.createFuncShowWithinHint = function (conf) {
+        return function (event) {
+            var findValueOption = function (value) {
+                var i, options;
+
+                options = event.element().select('option[value="' + value + '"]');
+                for (i = 0; i < options.length; i += 1) {
+                    if (options[i].readAttribute('value') === value) {
+                        return options[i].readAttribute('title');
+                    }
+                }
+                return '';
+            };
             if ($('within-select-hint-row')) {
                 $('within-select-hint-row').remove();
             }
-        }
-    };
-
-    lib.showWithinHint = function (event) {
-        var findValueOption = function (value) {
-            var i, options;
-
-            options = event.element().select('option[value="' + value + '"]');
-            for (i = 0; i < options.length; i += 1) {
-                if (options[i].readAttribute('value') === value) {
-                    return options[i].readAttribute('title');
-                }
-            }
-            return '';
+            $('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>'
+                + '<div style="width: 70%">' + conf.messages.available_attributes
+                + ': <strong>' + findValueOption($(event.element()).val()) + '</strong></div></td>' });
         };
-        if ($('within-select-hint-row')) {
-            $('within-select-hint-row').remove();
-        }
-        $('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>'
-            + '<div style="width: 70%">' + conf.messages['available_attributes']
-            + ': <strong>' + findValueOption($(event.element()).val()) + '</strong></div></td>' });
-
     };
 
+    /**
+     *
+     * @param conf
+     */
     lib.misc = function (conf) {
         treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), null, mainPage.updForm);
 
@@ -96,19 +117,26 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
 
         $('input.method-select').each(function (i, item) {
             $(item).bind('click', function (event) {
-                lib.switchToInputMethod($(event.target).val());
+                lib.createFuncSwitchToInputMethod(conf)($(event.target).val());
             });
         });
 
-        $('#within-struct-selector').bind('change', lib.showWithinHint);
+        $('#within-struct-selector').bind('change', lib.createFuncShowWithinHint(conf));
 
-        lib.switchToInputMethod(conf.inputMethod);
+        lib.createFuncSwitchToInputMethod(conf)(conf.inputMethod);
     };
 
-    lib.bindClicks = function (conf) {
+    /**
+     *
+     */
+    lib.bindClicks = function () {
 
     };
 
+    /**
+     *
+     * @param conf
+     */
     lib.init = function (conf) {
         mainPage.init(conf);
         lib.misc(conf);

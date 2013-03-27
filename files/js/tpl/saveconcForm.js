@@ -29,7 +29,7 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) 
         hideElem.loadHideElementStore(conf.files_path, mainPage.userSettings);
 
         $('input[type="submit"]').focus();
-        if (mainPage.userSettings.get('concdesc_view') == 'show') {
+        if (mainPage.userSettings.get('concdesc_view') === 'show') {
             $('#concdescplusminus').attr('src', conf.files_path + '/img/minus.png');
         }
     };

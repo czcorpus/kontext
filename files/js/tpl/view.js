@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'simplemodal'], function ($, jqueryPeriodic,
-            documentPage, detail, annotConc, simpleModalNone) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'simplemodal'], function (win, $,
+            jqueryPeriodic, documentPage, detail, annotConc, _sm) {
     'use strict';
 
     var lib = {};
@@ -81,7 +81,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
                         success: function (data) {
                             var rawText = '...';
                             $.each(data.content, function (i, item) {
-                               rawText += item.str;
+                                rawText += item.str;
                             });
                             rawText += '...';
                             $('#text-to-copy').val(rawText).select();
@@ -208,7 +208,8 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
                         incConcSize,
                         l,
                         fSizeN,
-                        nPagesT;
+                        nPagesT,
+                        incSize;
 
                     sizes = data.responseText.split('\n');
                     if (sizes.length !== 4) {
@@ -257,7 +258,7 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
                         jqNPages.attr('title', nPagesT);
                         nPagesT = lib.addCommas(nPagesT);
                         jqNPages.text(nPagesT);
-                        setTimeout(function () { incConcSize(newCSize, newNPages, end, pginc); }, countup);
+                        win.setTimeout(function () { incConcSize(newCSize, newNPages, end, pginc); }, countup);
                     };
                     if (newFSize > 0) {
                         if (conf.q2 !== "R") {
@@ -271,14 +272,14 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
                         } else {
                             incConcSize(newCSize, newNPages, end, pgInc);
                             if (end) {
-                                setTimeout(this.periodic.cancel, 1000);
+                                win.setTimeout(this.periodic.cancel, 1000);
                             }
                             return;
                         }
                     }
                     fSizeN = parseInt(jqFSize.attr('title'), 10);
                     inc = (newCSize - fSizeN) / (freq * 1000 / countup);
-                    function incSize(newcsize, newnpages, end, inc) {
+                    incSize = function (newcsize, newnpages, end, inc) {
                         fSizeN += inc;
                         if (fSizeN >= newcsize) {
                             jqFSize.attr('title', newcsize);
@@ -303,11 +304,11 @@ define(['jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc', 'sim
                         jqNPages.attr('title', nPagesT);
                         nPagesT = lib.addCommas(nPagesT);
                         jqNPages.text(nPagesT);
-                        setTimeout(function () { incSize(newcsize, newnpages, end, inc); }, countup);
-                    }
+                        win.setTimeout(function () { incSize(newcsize, newnpages, end, inc); }, countup);
+                    };
                     incSize(newCSize, newNPages, end, inc);
                     if (end) {
-                        setTimeout(this.periodic.cancel, 1000);
+                        win.setTimeout(this.periodic.cancel, 1000);
                     }
                 },
                 dataType: 'text'

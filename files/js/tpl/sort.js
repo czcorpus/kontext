@@ -18,6 +18,7 @@
  */
 
 define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, popupbox, $, bonito) {
+    'use strict';
 
     var lib = {};
 
@@ -26,7 +27,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
         bonito.multiLevelKwicFormUtil.init();
         $('a.kwic-alignment-help').each(function () {
             $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#toolbar-info'), conf.messages['msg'], {
+                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#toolbar-info'), conf.messages.msg, {
                     'top' : 'attached-bottom',
                     'width' : 'auto',
                     'height' : 'auto'

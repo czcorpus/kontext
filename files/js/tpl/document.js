@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
-        'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, simpleModalNone) {
+        'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, _sm) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -37,7 +37,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         $(buttonElm).attr('value', $(buttonElm).data('alt-label'));
         $(buttonElm).data('alt-label', tmpLabel);
-        if (currValue == 1) {
+        if (currValue === 1) {
             $(buttonElm).data('status', 2);
 
         } else {
@@ -93,14 +93,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 parent = this;
             $(this).find('input[type="checkbox"]').on('click', function () {
                 var jqCheckboxes = $(parent).find('input[type="checkbox"]'),
-                    jqChecked = $(parent).find('input[type="checkbox"]:checked'),
-                    tmpLabel;
+                    jqChecked = $(parent).find('input[type="checkbox"]:checked');
 
                 if (jqChecked.length === jqCheckboxes.length) {
                     toggleSelectAllLabel(button);
 
                 } else if (jqChecked.length < jqCheckboxes.length) {
-                    if ($(button).data('status') == 2) {
+                    if ($(button).data('status') === 2) {
                         toggleSelectAllLabel(button);
                     }
                 }
@@ -151,7 +150,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 }
             );
 
-            lib.bindWithinHelper($(this).find('li.within a'), conf.corpname);
+            lib.bindWithinHelper($(this).find('li.within a'), conf.corpname, conf.messages);
         });
 
         hideElem.loadHideElementStoreSimple();
@@ -245,13 +244,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     $(updatedElement).empty().append(data);
                 },
                 error : function () {
-                    $(updatedElement).empty().append(conf.messages['failed_to_load_corpus_info']);
+                    $(updatedElement).empty().append(conf.messages.failed_to_load_corpus_info);
                 }
             });
         };
 
         $('#positions-help-link').bind('click', function (event) {
-            popupbox.createPopupBox(event, 'positions-help', $('#toolbar-info'), conf.messages['msg1']);
+            popupbox.createPopupBox(event, 'positions-help', $('#toolbar-info'), conf.messages.msg1);
             event.stopPropagation();
         });
 
@@ -269,11 +268,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             var parent = $(event.target).closest('table.envelope'),
                 jqCheckboxes = parent.find('input[type="checkbox"]');
 
-            if ($(event.target).data('status') == '1') {
+            if ($(event.target).data('status') === 1) {
                 jqCheckboxes.attr('checked', 'checked');
                 toggleSelectAllLabel(event.target);
 
-            } else if ($(event.target).data('status') == '2') {
+            } else if ($(event.target).data('status') === 2) {
                 jqCheckboxes.removeAttr('checked');
                 toggleSelectAllLabel(event.target);
             }
@@ -315,8 +314,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      *
      * @param {jQuery} jqLinkElement
      * @param {string} corpusName
+     * @param {object} translatMessages
      */
-    lib.bindWithinHelper = function (jqLinkElement, corpusName) {
+    lib.bindWithinHelper = function (jqLinkElement, corpusName, translatMessages) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
         jqLinkElement.bind('click', function (event) {
             var caretPos = bonito.getCaretPosition(jqInputElement),
@@ -337,7 +337,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 jqInputElement.val(bef + wthn + aft);
                 jqInputElement.focus();
                 $.modal.close();
-                $(document).off('keypress', buttonEnterAction);
+                $(win.document).off('keypress', buttonEnterAction);
             };
 
             buttonEnterAction = function (event) {
@@ -360,7 +360,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
                             if (data.hasOwnProperty('error')) {
                                 $.modal.close();
-                                lib.showErrorMessage(data['error']);
+                                lib.showErrorMessage(data.error);
 
                             } else {
                                 html = '<select id="within-structattr">';
@@ -374,18 +374,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                                 html += '</select>';
                                 $('#within-builder-modal .selection-container').append(html);
                                 $('#within-insert-button').one('click', clickAction);
-                                $(document).on('keypress', buttonEnterAction);
+                                $(win.document).on('keypress', buttonEnterAction);
                             }
                         },
                         error : function () {
                             $.modal.close();
-                            lib.showErrorMessage(conf.messages.failed_to_contact_server);
+                            lib.showErrorMessage(translatMessages.failed_to_contact_server);
                         }
                     });
                 },
 
                 onClose : function () {
-                    $(document).off('keypress', buttonEnterAction);
+                    $(win.document).off('keypress', buttonEnterAction);
                     $.modal.close();
                     jqInputElement.focus();
                 }
@@ -418,7 +418,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             },
 
             del : function (key) {
-                delete(lib.userSettings.data[key]);
+                delete (lib.userSettings.data[key]);
                 $.cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
             }
         };
