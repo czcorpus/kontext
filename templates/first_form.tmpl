@@ -99,7 +99,7 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
 ## script for hiding/showing parallel query nodes
 #if $Aligned
   <fieldset class="parallel">
-
+  <legend>$_('Aligned languages')</legend>
   <div id="add-searched-lang-widget">
       <button type="button">$_('Add')</button>
       $_('language') <select>
@@ -112,7 +112,7 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
   #for $a in $Aligned
   <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
     <div class="heading">
-        <a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a><h3>$a.label ($a.n)</h3>
+        <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a></h3>
     </div>
     <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
     <table class="form">$query_node('_'+$a.n)</table>
@@ -129,11 +129,10 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
 <fieldset class="advanced_options" id="contextel">
 <legend>$_("Context")</legend>
 
-<fieldset>
 #if $has_lemmaattr
-  <legend>$_("Lemma filter")</legend>
+  <h3>$_("Lemma filter")</h3>
 #else
-  <legend>$_("Word form filter")</legend>
+  <h3>$_("Word form filter")</h3>
 #end if
   <table class="form">
     <tr>
@@ -173,11 +172,9 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
       </td>
     </tr>
   </table>
-</fieldset>
 
 #if $Wposlist
-<fieldset>
-  <legend>$_("PoS filter")</legend>
+  <h3>$_("PoS filter")</h3>
   <table class="form">
     <tr>
       <th align="left">$_("Window"):</th>
@@ -218,7 +215,6 @@ $_("multiple selection"))</span></th>
       </td>
     </tr>
   </table>
-  </fieldset>
 #end if
 </fieldset>
 

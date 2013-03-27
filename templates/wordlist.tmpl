@@ -106,7 +106,7 @@ function update_processbar() {
 #if ($getVar('Items', '') or $getVar('Keywords', '')) and not ($wlpage == 1 and $lastpage)
 <div class="bonito-pagination">
 <form action="wordlist">
-<fieldset class="float">
+<fieldset class="float anonymous">
   #if $wlpage > 1
     <div class="bonito-pagination-left">
     <a href="$allhref">$_("<< First")</a> |

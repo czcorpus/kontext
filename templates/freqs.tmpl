@@ -40,7 +40,7 @@ $_("Frequency list")#slurp
 <h3>$_("Frequency list")</h3>
 
 <form action="freqs">
-<fieldset class="float">
+<fieldset class="float anonymous">
 #filter None
 $input_hidden
 #end filter
@@ -59,7 +59,7 @@ $input_hidden
 #if $paging and ($fpage > 1 or not $lastpage)
 <div class="bonito-pagination">
 <form action="freqs">
-<fieldset class="float">
+<fieldset class="float anonymous">
   #if $fpage > 1
     <div class="bonito-pagination-left">
     <a href="$allhref">$_("<< First")</a> |
