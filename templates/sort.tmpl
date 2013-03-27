@@ -43,7 +43,7 @@ require(['tpl/sort', 'domReady!'], function (pageSelf, domReady) {
 #filter WebSafe
 <h3>$_("Simple Sort")</h3>
 <form action="sortx">
-<fieldset>
+<fieldset class="anonymous">
 #filter None
 $input_hidden
 #end filter
@@ -104,7 +104,7 @@ $input_hidden
 
 <h3>$_("Multilevel sort")</h3>
 <form action="mlsortx">
-<fieldset>
+<fieldset class="anonymous">
 #filter None
 $input_hidden
 #end filter
@@ -286,7 +286,7 @@ $input_hidden
 #if $annotconc
 <h3>$_("Line group sort") </h3>
 <form action="mlsortx">
-<fieldset>
+<fieldset class="anonymous">
 </fieldset>
 </form>
 #end if

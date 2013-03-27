@@ -34,7 +34,7 @@
 
 #content form {
     background-color:#DEE;
-    border:solid 1px #C7E5E5;
+    border:solid 1px #D5E6E6;
     display:inline-block;
     margin:0 0 1em;
     min-width:510px;
@@ -115,6 +115,13 @@
 #notification a.close-icon {
     float:right;
     margin-left:10px;
+}
+
+#contextel a.close-icon {
+    float: right;
+    margin: 0 3px 0 0;
+    position: relative;
+    top: -10px;
 }
 
 #error img,#notification img {
@@ -250,24 +257,22 @@
     margin-bottom: 20px;
 }
 
-#mainform .parallel-corp-lang {
-    border-style: solid;
-    border-color: #C7E5E5;
-    border-width: 1px 0 1px 0;
+#mainform .parallel-corp-lang .heading h3 {
+    background-color: #D5E6E6;
+    padding: 3px 10px;
+    border-radius: 5px;
+    margin: 5px 20px;
+    font-weight: normal;
 }
 
 #mainform .parallel-corp-lang .close-button {
     float: right;
+    margin-right: 5px;
 }
 
 #mainform .parallel-corp-lang .heading {
     margin: 10px 0 0 0;
     text-align: center;
-}
-
-#mainform .parallel-corp-lang .heading h3 {
-    display: inline;
-    margin-left: 10px;
 }
 
 #processbar {
@@ -471,13 +476,15 @@
     height:120px;
 }
 
-.advanced_options h3 {
-    font-size:160%;
+fieldset h3 {
+    text-align: center;
+    font-size: 11pt;
     margin:10px 0 0 2px;
 }
 
-.advanced_options h4 {
-    font-size:120%;
+fieldset h4 {
+    text-align: center;
+    font-size: 9pt;
     margin:20px 0 0;
 }
 
@@ -757,10 +764,18 @@ div.narrowmain {
 }
 
 fieldset {
-    background-color:#dee;
-    border:none;
-    margin:14px 0 6px;
-    padding:0 0 0 14px;
+    background-color: #dee;
+    border: none;
+    margin: 14px 0 6px;
+    padding: 0 0 0 14px;
+    border-style: solid;
+    border-color: #6D8E8E;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+fieldset.anonymous {
+    border: none;
 }
 
 fieldset fieldset {
@@ -768,27 +783,17 @@ fieldset fieldset {
     margin:6px 10px 6px 6px;
 }
 
-fieldset fieldset legend {
-    font-size:small;
-}
-
-fieldset legend {
-    font-size:130%;
-    font-weight:700;
-    margin-left:-11px;
-    padding:0 0 5px;
-    white-space:normal;
-}
-
 #mainform legend {
-    font-weight: normal;
-    padding: 4px 10px 4px 10px;
-    background-color: #C7E5E5;
-    border-radius: 3px;
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 3px 8px 3px 8px;
+    margin: 0;
+    color: #6D8E8E;
+    letter-spacing: 0.08em;
 }
 
 fieldset p {
-    width:500px;
+    width: 500px;
 }
 
 fieldset.float {
@@ -891,7 +896,7 @@ table.data tr.odd:hover {
 
 table.envelope {
     background-color:#eee;
-    border:solid 1px #000;
+    border:solid 1px #D5E6E6;
     border-collapse:collapse;
     float:left;
     margin-right:5px;

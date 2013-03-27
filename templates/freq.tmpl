@@ -43,7 +43,7 @@ require(['tpl/freq', 'domReady!'], function (pageSelf, domReady) {
 #filter WebSafe
 <h3>$_("Multilevel frequency distribution")</h3>
 <form action="freqml">
-<fieldset>
+<fieldset class="anonymous">
 #filter None
 $input_hidden
 #end filter
@@ -160,7 +160,7 @@ $input_hidden
 #if $StructAttrList
 <h3>$_("Text Type frequency distribution")</h3>
 <form action="freqtt">
-<fieldset>
+<fieldset class="anonymous">
 #filter None
 $input_hidden
 #end filter
