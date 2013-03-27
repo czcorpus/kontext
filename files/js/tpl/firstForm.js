@@ -237,7 +237,8 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
                     onClose : function () {
                         $.modal.close();
                         $('#alt-form').remove();
-                    }
+                    },
+                    minHeight : 120
                 });
 
                 event.stopPropagation();
