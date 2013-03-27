@@ -80,7 +80,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
     removeActiveParallelCorpus = function (corpusName) {
         callOnParallelCorporaList(function (itemList) {
             if ($.inArray(corpusName, itemList) >= 0) {
-                itemList.splice(itemList.indexOf(corpusName), 1);
+                itemList.splice($.inArray(corpusName, itemList), 1);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
         });
@@ -115,7 +115,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
                 $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
 
             });
-            if (mainPage.isInternetExplorerUpTo(8)) {
+            if (!$.support.cssFloat) {
                 // refresh content in IE < 9
                 $('#content').css('overflow', 'visible').css('overflow', 'auto');
             }
