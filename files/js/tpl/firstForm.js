@@ -21,9 +21,12 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simplemodal'], function ($, treeComponent,
-                                                                                                   bonito, mainPage,
-                                                                                                   hideElem, _sm) {
+define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $,
+                                                                                                          treeComponent,
+                                                                                                          bonito,
+                                                                                                          mainPage,
+                                                                                                          hideElem,
+                                                                                                          _sm) {
     'use strict';
 
     var lib = {},
@@ -222,7 +225,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
 
                 $('#alt-form-open-subcorp-form').on('click', function () {
                     $('#alt-form').remove();
-                    $(window).unload(function () {
+                    $(win).unload(function () {
                         $.modal.close();
                         $('#mainform').attr('method', 'GET').action('first');
                     });
@@ -267,7 +270,7 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
      * @param {object} conf
      */
     lib.showCupMenu = function (conf) {
-        if (mainPage.userSettings.get('errstdq') == 'std') {
+        if (mainPage.userSettings.get('errstdq') === 'std') {
             $('#cup_err_menu').hide();
             $('#switch_err_stand').text(conf.messages.labelErrorQuery);
 
@@ -286,7 +289,6 @@ define(['jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simple
         lib.bindClicks(conf);
         lib.bindParallelCorporaCheckBoxes();
     };
-
 
     return lib;
 });

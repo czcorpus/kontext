@@ -26,7 +26,10 @@ define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
 
     var lib = {};
 
-    lib.bindClicks = function (conf) {
+    /**
+     *
+     */
+    lib.bindClicks = function () {
 
         $('#text-type-el-link').on('click', function (event) {
             bonito.toggleViewStore('texttypeel', null, mainPage.userSettings);
@@ -34,11 +37,14 @@ define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
         });
     };
 
+    /**
+     *
+     * @param conf page configuration data
+     */
     lib.init = function (conf) {
         mainPage.init(conf);
-        lib.bindClicks(conf);
-    }
-
+        lib.bindClicks();
+    };
 
     return lib;
 });

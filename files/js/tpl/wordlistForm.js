@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
+define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, mainPage, treeComponent) {
     'use strict';
 
     var lib = {},
@@ -70,35 +70,35 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
             type;
 
         for (i = 0; i < wltypes.length; i += 1) {
-            if (document.getElementById(wltypes[i]).checked == true) {
+            if (win.document.getElementById(wltypes[i]).checked === true) {
                 type = wltypes[i].split('_')[1];
             }
         }
         if (type === 'simple') {
-            document.getElementById("wordlist_form").action = "wordlist";
+            win.document.getElementById("wordlist_form").action = "wordlist";
             for (i = 0; i < kwinputs.length; i += 1) {
-                document.getElementById(kwinputs[i]).disabled = true;
+                win.document.getElementById(kwinputs[i]).disabled = true;
             }
             for (i = 0; i < mlinputs.length; i += 1) {
-                document.getElementById(mlinputs[i]).disabled = true;
+                win.document.getElementById(mlinputs[i]).disabled = true;
             }
 
-        } else if (type == 'keywords') {
-            document.getElementById("wordlist_form").action = "wordlist";
+        } else if (type === 'keywords') {
+            win.document.getElementById("wordlist_form").action = "wordlist";
             for (i = 0; i < kwinputs.length; i += 1) {
-                document.getElementById(kwinputs[i]).disabled = false;
+                win.document.getElementById(kwinputs[i]).disabled = false;
             }
             for (i = 0; i < mlinputs.length; i += 1) {
-                document.getElementById(mlinputs[i]).disabled = true;
+                win.document.getElementById(mlinputs[i]).disabled = true;
             }
 
-        } else if (type == 'multilevel') {
-            document.getElementById("wordlist_form").action = "struct_wordlist";
+        } else if (type === 'multilevel') {
+            win.document.getElementById("wordlist_form").action = "struct_wordlist";
             for (i = 0; i < kwinputs.length; i += 1) {
-                document.getElementById(kwinputs[i]).disabled = true;
+                win.document.getElementById(kwinputs[i]).disabled = true;
             }
             for (i = 0; i < mlinputs.length; i += 1) {
-                document.getElementById(mlinputs[i]).disabled = false;
+                win.document.getElementById(mlinputs[i]).disabled = false;
             }
         }
     };
@@ -107,9 +107,9 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
      *
      */
     showHelpFormat = function () {
-        var help_div = document.getElementById('help_format');
+        var help_div = win.document.getElementById('help_format');
 
-        if (help_div.style.visibility == 'visible') {
+        if (help_div.style.visibility === 'visible') {
             help_div.style.visibility = 'hidden';
 
         } else {
@@ -127,11 +127,10 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
 
     /**
      *
-     * @param conf
      */
-    lib.bindClicks = function (conf) {
+    lib.bindClicks = function () {
         $('#show-help-format-link').on('click', function () {
-           showHelpFormat();
+            showHelpFormat();
         });
         $('#select-output-type-simple').on('click', function () {
             selectOutputType('simple');
@@ -152,7 +151,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
         mainPage.init(conf);
         lib.bindClicks(conf);
         treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
-    }
+    };
 
     return lib;
 });

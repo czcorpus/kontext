@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'hideelem'], function ($, documentPage, hideElem) {
+define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, documentPage, hideElem) {
     'use strict';
 
     var lib = {};
@@ -27,9 +27,9 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, documentPage, hideEl
     /**
      *
      */
-    lib.bindClicks = function (conf) {
+    lib.bindClicks = function () {
         $('#save-options-button').on('click', function () {
-            hideElem.redirectToSave(document.getElementById('mainform'), 'save_viewattrs');
+            hideElem.redirectToSave(win.document.getElementById('mainform'), 'save_viewattrs');
         });
     };
 
@@ -39,7 +39,7 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, documentPage, hideEl
      */
     lib.init = function (conf) {
         documentPage.init(conf);
-        lib.bindClicks(conf);
+        lib.bindClicks();
     };
 
     return lib;
