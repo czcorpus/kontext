@@ -1026,7 +1026,9 @@ class ConcCGI(UserCGI):
 
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
                inclkwic=False, within=0):
-        "Positive/Negative filter"
+        """
+        Positive/Negative filter
+        """
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
