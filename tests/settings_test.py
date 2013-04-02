@@ -180,3 +180,11 @@ class TestSettingsModule(unittest.TestCase):
         settings._conf['database']['adapter'] = 'sqlite'
         q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
         self.assertEqual('SELECT * FROM foo WHERE name = ?', q)
+
+    def test_administrators_parsing(self):
+        """
+        """
+        tmp = settings.get('global', 'administrators')
+        self.assertEqual('johndoe', tmp[0])
+        self.assertEqual('janedoe', tmp[1])
+        self.assertEqual(2, len(tmp))

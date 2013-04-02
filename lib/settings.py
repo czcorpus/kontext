@@ -133,7 +133,10 @@ def parse_config(path):
     xml = etree.parse(open(path))
     _conf['global'] = {}
     for item in xml.find('global'):
-        _conf['global'][item.tag] = item.text
+        if item.tag == 'administrators':
+            _conf['global'][item.tag] = [x.text for x in item]
+        else:
+            _conf['global'][item.tag] = item.text
     _conf['database'] = {}
     for item in xml.find('database'):
         _conf['database'][item.tag] = item.text
