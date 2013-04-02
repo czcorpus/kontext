@@ -155,7 +155,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
         });
         $('.menu_switch a').on('click', function () {
-            console.log(lib.userSettings.get('menupos'));
             if (lib.userSettings.get('menupos') === 'top') {
                 $('#sidebar').removeClass('horizontal');
                 $('#in-sidebar').removeClass('horizontal');

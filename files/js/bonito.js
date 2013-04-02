@@ -95,17 +95,12 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
      * @param {object} userConfig object accepting get/set methods to store/retrieve user settings
      */
     lib.toggleViewStore = function (id, status, userConfig) {
-        var exp = new Date(),
-            opts;
-
-        exp.setDate(exp.getDate() + 1); // expires in 1 day
-        opts = { domain: '', path: '/', expiresAt: exp, secure: false };
         if ($('#' + id).is(':visible') || status === ':hidden') { // toggle visible and hidden
-            userConfig.set(id + '_view', 'hide', opts);
+            userConfig.set(id + '_view', 'hide');
             $('#' + id).hide();
-        }
-        else if ($('#' + id).is(':hidden') || status === ':visible') {
-            userConfig.set(id + '_view', 'show', opts);
+
+        } else if ($('#' + id).is(':hidden') || status === ':visible') {
+            userConfig.set(id + '_view', 'show');
             $('#' + id).show();
         }
     };

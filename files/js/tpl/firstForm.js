@@ -152,6 +152,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         // open the 'subcorpus' and 'context' items if found in settings
         $('#submenu a.toggle-submenu-item').each(function () {
             var id = $(this).data('id-to-set');
+
             if (mainPage.userSettings.get(id + '_view') === 'show') {
                 bonito.toggleViewStore(id, null, mainPage.userSettings);
                 $(this).toggleClass('toggled');
