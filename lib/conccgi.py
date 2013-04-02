@@ -450,13 +450,28 @@ class ConcCGI(UserCGI):
                 result['Sketches'] = []
         return result
 
-    def view(self, tpl_params={}):
-        "kwic view"
+    def view(self, view_params={}):
+        """
+        kwic view
+
+        Parameters
+        ----------
+
+        view_params : dict
+            parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
+        """
         self.log_request()
-        if 'f' in self.q:
-            self.shuffle = 1
-        elif self.shuffle:
+        for k, v in view_params.items():
+            if k in self.__dict__:
+                self.__dict__[k] = v
+
+        if self.shuffle == 1:
             self.q.append('f')
+        elif self.shuffle == 0 and 'f' in self.q:
+            del(self.q[self.q.index('f')])
+        elif 'f' in self.q:
+            self.shuffle = 1
+
         self.righttoleft = False
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
@@ -663,7 +678,7 @@ class ConcCGI(UserCGI):
                    newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
                                setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
-        return self.view()
+        return self.view(view_params={'shuffle': shuffle})
 
     viewattrsx.template = 'view.tmpl'
 
@@ -1062,9 +1077,11 @@ class ConcCGI(UserCGI):
     add_vars['filter'] = ['orig_query']
 
     def reduce(self, rlines='250'):
-        "random sample"
+        """
+        random sample
+        """
         self.q.append('r' + rlines)
-        return self.view({'rlines_info': _('random <strong>%s</strong> displayed') % rlines})
+        return self.view()
 
     add_vars['reduce'] = ['concsize']
 
