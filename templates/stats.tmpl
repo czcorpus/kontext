@@ -23,11 +23,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Subcorpus Info")#slurp
 #end def
 
+
 #def bodyonload
+require(['tpl/stats', 'domReady!'], function(pageSelf, domReady) {
+    pageSelf.init(conf);
+});
 #end def
 
 #def main
 <h1>$_('System usage statistics')</h1>
+
+
+<form id="stats-filter" method="GET">
+    <dl>
+        <dt>$_('from date') (yyyy-mm-dd):</dt>
+        <dd><input type="text" name="from_date" value="$from_date" size="12" /></dd>
+
+        <dt>$_('to date') (yyyy-mm-dd):</dt>
+        <dd><input type="text" name="to_date" value="$to_date" size="12" /></dd>
+
+        <dt>$_('min. occurences'):</dt>
+        <dd><input type="text" name="min_occur" value="$min_occur" size="4" /></dd>
+    </dl>
+    <button type="submit">$_('Filter')</button>
+    <button id="clear-filter-form-button" type="button">$_('Clear form')</button>
+</form>
 
 <h2>$_('Daily usage')</h2>
 

@@ -1097,3 +1097,11 @@ table.form th {
 #alt-form p {
     font-size: 120%;
 }
+
+#stats-filter dl dt {
+    font-size: 8pt;
+}
+
+#stats-filter dl dd {
+    margin: 0 0 10px 0;
+}

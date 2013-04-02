@@ -18,6 +18,7 @@
 import re
 import json
 import sys
+import datetime
 
 
 def update_count(d, key):
@@ -68,7 +69,7 @@ def get_max_min(values):
     return min_val, max_val
 
 
-def load(path):
+def load(path, from_date, to_date, min_occur):
     f = open(path, 'r')
     stats = {
         'date_counts': {},
@@ -76,15 +77,25 @@ def load(path):
         'corpora_counts': {},
         'query_type_counts': {}
     }
+    if from_date:
+        from_date = datetime.datetime.strptime(from_date, '%Y-%m-%d')
+    if to_date:
+        to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d')
+    if not min_occur:
+        min_occur = 0
+    else:
+        min_occur = int(min_occur)
     for line in f:
         q_ans = re.search(r'^.+\[QUERY\]\s+INFO:\s*(.+)$', line)
         if q_ans is not None:
             d = json.loads(q_ans.groups()[0])
             if 'date' in d:
-                analyze_line(d, stats)
+                item_date = datetime.datetime.strptime(d['date'].split(' ')[0], '%Y-%m-%d')
+                if (not from_date or item_date >= from_date) and (not to_date or item_date <= to_date):
+                    analyze_line(d, stats)
 
     out = {}
     for section, data in stats.items():
-        out[section] = sorted([(k2, v2) for k2, v2 in data.items()], key=lambda x: x[0])
+        out[section] = sorted([(k2, v2) for k2, v2 in data.items() if v2 >= min_occur], key=lambda x: x[0])
 
     return out
