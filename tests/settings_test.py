@@ -16,6 +16,7 @@ class TestSettingsModule(unittest.TestCase):
     """
 
     def setUp(self):
+        settings.load('default', './config.test.xml')
         settings._conf['database']['adapter'] = 'mysql'
         self.mysql_mocker = mox.Mox()
         self.dbcon_mocker = mox.Mox()
@@ -94,8 +95,6 @@ class TestSettingsModule(unittest.TestCase):
         corplist = ['syn2008', 'omezeni/oral2013', 'syn', 'foo']
         dc = settings.get_default_corpus(corplist)
         self.assertEquals('omezeni/oral2013', dc)
-
-
 
     def test_get_corplist(self):
         """
@@ -185,6 +184,12 @@ class TestSettingsModule(unittest.TestCase):
         """
         """
         tmp = settings.get('global', 'administrators')
-        self.assertEqual('johndoe', tmp[0])
-        self.assertEqual('janedoe', tmp[1])
+        self.assertEqual('user_1', tmp[0])
+        self.assertEqual('user_2', tmp[1])
         self.assertEqual(2, len(tmp))
+
+    def test_administrators_empty(self):
+        """
+        """
+        settings.load('default', './config.test-2.xml')
+        self.assertEqual((), settings.get('global', 'administrators'))
