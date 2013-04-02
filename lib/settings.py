@@ -134,7 +134,7 @@ def parse_config(path):
     _conf['global'] = {}
     for item in xml.find('global'):
         if item.tag == 'administrators':
-            _conf['global'][item.tag] = [x.text for x in item]
+            _conf['global'][item.tag] = tuple([x.text for x in item])
         else:
             _conf['global'][item.tag] = item.text
     _conf['database'] = {}
@@ -311,11 +311,20 @@ def get_corplist():
         _corplist = corpora
     return _corplist
 
+
 def user_has_access_to(corpname):
     """
     Tests whether the current user has access to provided corpus name
     """
     return corpname in get_corplist() or not get_bool('corpora', 'use_db_whitelist')
+
+
+def user_is_administrator():
+    """
+    Tests whether the current user's name belongs to the 'administrators' group
+    """
+    return _user in get('global', 'administrators')
+
 
 def is_debug_mode():
     """
@@ -325,6 +334,7 @@ def is_debug_mode():
     """
     value = get('global', 'debug')
     return value is not None and value.lower() in ('true', '1')
+
 
 def has_configured_speech(corpus):
     """

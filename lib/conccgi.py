@@ -2309,123 +2309,145 @@ class ConcCGI(UserCGI):
     ajax_get_tag_variants.return_type = 'json'
 
 
-def fcs(self, operation='explain', version='', recordPacking='xml',
-        extraRequestData='', query='', startRecord='', responsePosition='',
-        recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
-    "Federated content search API function (www.clarin.eu/fcs)"
+    def fcs(self, operation='explain', version='', recordPacking='xml',
+            extraRequestData='', query='', startRecord='', responsePosition='',
+            recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
+        "Federated content search API function (www.clarin.eu/fcs)"
 
-    # default values
-    self._headers['Content-Type'] = 'application/XML'
-    corpname = 'brown'
-    numberOfRecords = 0
-    current_version = 1.2
-    # supported parameters for all operations
-    sup_pars = ['operation', 'stylesheet', 'version', 'extraRequestData']
-    # implicit result sent to template
-    out = {'operation': operation, 'version': current_version,
-           'recordPacking': recordPacking, 'result': [],
-           'error': False, 'numberOfRecords': numberOfRecords,
-           'server_name': self.environ.get('SERVER_NAME', ''),
-           'server_port': self.environ.get('SERVER_PORT', '80'),
-           'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
-    try:
-        # check version
-        if version and current_version < float(version):
-            raise Exception(5, version, 'Unsupported version')
+        # default values
+        self._headers['Content-Type'] = 'application/XML'
+        corpname = 'brown'
+        numberOfRecords = 0
+        current_version = 1.2
+        # supported parameters for all operations
+        sup_pars = ['operation', 'stylesheet', 'version', 'extraRequestData']
+        # implicit result sent to template
+        out = {'operation': operation, 'version': current_version,
+               'recordPacking': recordPacking, 'result': [],
+               'error': False, 'numberOfRecords': numberOfRecords,
+               'server_name': self.environ.get('SERVER_NAME', ''),
+               'server_port': self.environ.get('SERVER_PORT', '80'),
+               'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
+        try:
+            # check version
+            if version and current_version < float(version):
+                raise Exception(5, version, 'Unsupported version')
 
-        # check integer parameters
-        if maximumRecords != '':
-            try:
-                maximumRecords = int(maximumRecords)
-            except:
-                raise Exception(6, '', 'Unsupported parameter value')
+            # check integer parameters
+            if maximumRecords != '':
+                try:
+                    maximumRecords = int(maximumRecords)
+                except:
+                    raise Exception(6, '', 'Unsupported parameter value')
+            else:
+                maximumRecords = 250
+            out['maximumRecords'] = maximumRecords
+            if maximumTerms != '':
+                try:
+                    maximumTerms = int(maximumTerms)
+                except:
+                    raise Exception(6, '', 'Unsupported parameter value')
+            else:
+                maximumTerms = 100
+            out['maximumTerms'] = maximumTerms
+            if startRecord != '':
+                try:
+                    startRecord = int(startRecord)
+                except:
+                    raise Exception(6, '', 'Unsupported parameter value')
+            else:
+                startRecord = 0
+            out['startRecord'] = startRecord
+            if responsePosition != '':
+                try:
+                    responsePosition = int(responsePosition)
+                except:
+                    raise Exception(6, '', 'Unsupported parameter value')
+            else:
+                responsePosition = 0
+            out['responsePosition'] = responsePosition
+
+            # set content-type in HTTP header
+            if recordPacking == 'string':
+                self._headers['Content-Type'] = 'text/plain'
+            elif recordPacking == 'xml':
+                self._headers['Content-Type'] = 'application/XML'
+            else:
+                raise Exception(71, 'Unsupported record packing')
+
+            # provide info about service
+            if operation == 'explain' or not operation:
+                sup_pars.append('recordPacking') # other supported parameters
+                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+                if unsup_pars:
+                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                    #if extraRequestData:
+                #    corpname = extraRequestData
+                corp = conclib.manatee.Corpus(corpname)
+                out['result'] = corp.get_conf('ATTRLIST').split(',')
+                out['numberOfRecords'] = len(out['result'])
+
+            # wordlist for a given attribute
+            elif operation == 'scan':
+            # check supported parameters
+                sup_pars.extend(['scanClause', 'responsePosition',
+                                 'maximumTerms'])
+                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+                if unsup_pars:
+                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                    #if extraRequestData:
+                #    corpname = extraRequestData
+                out['result'] = conclib.fcs_scan(corpname, scanClause,
+                                                 maximumTerms, responsePosition)
+
+            # simple concordancer
+            elif operation == 'searchRetrieve':
+            # check supported parameters
+                sup_pars.extend(['query', 'startRecord', 'maximumRecords',
+                                 'recordPacking', 'recordSchema', 'resultSetTTL'])
+                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
+                if unsup_pars:
+                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
+                cm = corplib.CorpusManager(corplist=[corpname])
+                corp = cm.get_Corpus(corpname)
+                out['result'] = conclib.fcs_search(corp, query,
+                                                   maximumRecords, startRecord)
+                out['numberOfRecords'] = len(out['result'])
+
+            # unsupported operation
+            else:
+                out['operation'] = 'explain' # show within explain template
+                raise Exception(4, '', 'Unsupported operation')
+            return out
+
+        # catch exception and amend diagnostics in template
+        except Exception as e:
+            out['error'] = True
+            try: # concrete error, catch message from lower levels
+                out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
+            except: # general error
+                out['code'], out['details'] = 1, repr(e)
+                out['msg'] = 'General system error'
+            return out
+
+    def stats(self):
+        if settings.user_is_administrator():
+            import system_stats
+            data = system_stats.load(settings.get('global', 'log_path'))
+            maxmin = {}
+            for label, section in data.items():
+                maxmin[label] = system_stats.get_max_min(section)
+
+            out = {
+                'stats': data,
+                'minmax': maxmin
+            }
+
+
+            logging.getLogger(__name__).info(maxmin)
+            # TODO
         else:
-            maximumRecords = 250
-        out['maximumRecords'] = maximumRecords
-        if maximumTerms != '':
-            try:
-                maximumTerms = int(maximumTerms)
-            except:
-                raise Exception(6, '', 'Unsupported parameter value')
-        else:
-            maximumTerms = 100
-        out['maximumTerms'] = maximumTerms
-        if startRecord != '':
-            try:
-                startRecord = int(startRecord)
-            except:
-                raise Exception(6, '', 'Unsupported parameter value')
-        else:
-            startRecord = 0
-        out['startRecord'] = startRecord
-        if responsePosition != '':
-            try:
-                responsePosition = int(responsePosition)
-            except:
-                raise Exception(6, '', 'Unsupported parameter value')
-        else:
-            responsePosition = 0
-        out['responsePosition'] = responsePosition
-
-        # set content-type in HTTP header
-        if recordPacking == 'string':
-            self._headers['Content-Type'] = 'text/plain'
-        elif recordPacking == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-        else:
-            raise Exception(71, 'Unsupported record packing')
-
-        # provide info about service
-        if operation == 'explain' or not operation:
-            sup_pars.append('recordPacking') # other supported parameters
-            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-            if unsup_pars:
-                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                #if extraRequestData:
-            #    corpname = extraRequestData
-            corp = conclib.manatee.Corpus(corpname)
-            out['result'] = corp.get_conf('ATTRLIST').split(',')
-            out['numberOfRecords'] = len(out['result'])
-
-        # wordlist for a given attribute
-        elif operation == 'scan':
-        # check supported parameters
-            sup_pars.extend(['scanClause', 'responsePosition',
-                             'maximumTerms'])
-            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-            if unsup_pars:
-                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                #if extraRequestData:
-            #    corpname = extraRequestData
-            out['result'] = conclib.fcs_scan(corpname, scanClause,
-                                             maximumTerms, responsePosition)
-
-        # simple concordancer
-        elif operation == 'searchRetrieve':
-        # check supported parameters
-            sup_pars.extend(['query', 'startRecord', 'maximumRecords',
-                             'recordPacking', 'recordSchema', 'resultSetTTL'])
-            unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-            if unsup_pars:
-                raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-            cm = corplib.CorpusManager(corplist=[corpname])
-            corp = cm.get_Corpus(corpname)
-            out['result'] = conclib.fcs_search(corp, query,
-                                               maximumRecords, startRecord)
-            out['numberOfRecords'] = len(out['result'])
-
-        # unsupported operation
-        else:
-            out['operation'] = 'explain' # show within explain template
-            raise Exception(4, '', 'Unsupported operation')
+            out = {'error': _('You don\'t have enough privileges to see this page.')}
         return out
 
-    # catch exception and amend diagnostics in template
-    except Exception as e:
-        out['error'] = True
-        try: # concrete error, catch message from lower levels
-            out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
-        except: # general error
-            out['code'], out['details'] = 1, repr(e)
-            out['msg'] = 'General system error'
-        return out
+    stats.template = 'stats.tmpl'
