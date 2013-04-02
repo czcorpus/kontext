@@ -262,11 +262,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 jqCheckboxes = parent.find('input[type="checkbox"]');
 
             if ($(event.target).data('status') === 1) {
-                jqCheckboxes.attr('checked', 'checked');
+                jqCheckboxes.prop('checked', true);
                 toggleSelectAllLabel(event.target);
 
             } else if ($(event.target).data('status') === 2) {
-                jqCheckboxes.removeAttr('checked');
+                jqCheckboxes.removeProp('checked');
                 toggleSelectAllLabel(event.target);
             }
         });
