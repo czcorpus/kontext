@@ -124,7 +124,6 @@ if __name__ == '__main__':
             locale_dir = gettext.bindtextdomain('ske')
 
     os.environ['LANG'] = get_uilang(locale_dir)
-    logger.info('lang: %s' % os.environ['LANG'])
     settings.set('session', 'lang', os.environ['LANG'] if os.environ['LANG'] else 'en')
     os.environ['LC_ALL'] = os.environ['LANG']
     formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
