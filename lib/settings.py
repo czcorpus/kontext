@@ -97,10 +97,12 @@ def get_bool(section, key):
         '0' : False
     }[get(section, str(key).lower())]
 
+
 def get_int(section, key):
     """
     """
     return int(get(section, key))
+
 
 def parse_corplist(root, path='/', data=[]):
     """
@@ -134,9 +136,12 @@ def parse_config(path):
     _conf['global'] = {}
     for item in xml.find('global'):
         if item.tag == 'administrators':
-            _conf['global'][item.tag] = tuple([x.text for x in item])
+            tmp = tuple([x.text for x in item])
+            _conf['global'][item.tag] = tmp if tmp is not None else ()
         else:
             _conf['global'][item.tag] = item.text
+    if not 'administrators' in _conf['global']:
+        _conf['global']['administrators'] = ()
     _conf['database'] = {}
     for item in xml.find('database'):
         _conf['database'][item.tag] = item.text
@@ -157,6 +162,7 @@ def parse_config(path):
         else:
             _conf['corpora'][item.tag] = item.text
 
+
 def load(user, conf_path='config.xml'):
     """
     Loads application's configuration from provided file
@@ -173,6 +179,7 @@ def load(user, conf_path='config.xml'):
     parse_config(conf_path)
     os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
+
 
 def get_corpus_info(corp_name):
     """
@@ -199,6 +206,7 @@ def get_corpus_info(corp_name):
         if item['id'] == corp_name:
             return item
     return None
+
 
 def get_default_corpus(corplist):
     """

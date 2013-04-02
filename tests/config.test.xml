@@ -4,8 +4,8 @@
         <log_path>/var/log/bonito/application.log</log_path>
         <debug>true</debug>
         <administrators>
-            <user>johndoe</user>
-            <user>janedoe</user>
+            <user>user_1</user>
+            <user>user_2</user>
         </administrators>
     </global>
     <database>
