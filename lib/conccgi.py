@@ -230,7 +230,7 @@ class ConcCGI(UserCGI):
         import datetime
 
         ans = {
-            'date' : datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+            'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
             'user': os.getenv('REMOTE_USER'),
             'params': dict([item.split('=', 1) for item in os.getenv('QUERY_STRING').split('&')]),
             'settings': self._user_settings
@@ -999,7 +999,6 @@ class ConcCGI(UserCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
-        self.log_request()
         self.set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
