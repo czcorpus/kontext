@@ -2447,22 +2447,22 @@ class ConcCGI(UserCGI):
                 out['msg'] = 'General system error'
             return out
 
-    def stats(self):
+    def stats(self, from_date='', to_date='', min_occur=''):
+
         if settings.user_is_administrator():
             import system_stats
-            data = system_stats.load(settings.get('global', 'log_path'))
+            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
             maxmin = {}
             for label, section in data.items():
                 maxmin[label] = system_stats.get_max_min(section)
 
             out = {
                 'stats': data,
-                'minmax': maxmin
+                'minmax': maxmin,
+                'from_date': from_date,
+                'to_date': to_date,
+                'min_occur': min_occur
             }
-
-
-            logging.getLogger(__name__).info(maxmin)
-            # TODO
         else:
             out = {'error': _('You don\'t have enough privileges to see this page.')}
         return out
