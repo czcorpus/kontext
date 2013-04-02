@@ -2605,5 +2605,5 @@ msgstr "Podmínka generovaná vaším výběrem je příliš dlouhá. Vytvořte 
 msgid "Open the subcorpus form"
 msgstr "Přejít na formulář subkorpusu"
 
-msgid "Aligned languages"
-msgstr "Zarovnané jazyky"
+msgid "Aligned corpora"
+msgstr "Zarovnané korpusy"
