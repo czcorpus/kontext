@@ -1186,7 +1186,6 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
-
     # try to locate concordance in cache
     if save:
         toprocess, conc = get_cached_conc(
@@ -1204,7 +1203,6 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                 fullsize = c.fullsize()
     else:
         async = 0
-
     # cache miss or not used
     if not conc:
         toprocess = 1
@@ -1293,7 +1291,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                 add_to_map(cache_dir, pid_dir, subchash, q[:1], conc.size())
                 os.remove(pidfile.name)
                 pidfile.close()
-    # process subsequent concordance actions
+    # process subsequent concordance actions (e.g. sample)
     for act in range(toprocess, len(q)):
         command = q[act][0]
         getattr(conc, 'command_' + command)(q[act][1:])
