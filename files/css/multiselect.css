@@ -1,0 +1,97 @@
+ul.multiselect {
+    list-style-type : none;
+    margin : 0;
+    padding : 0;
+    font-size: 9pt;
+}
+
+ul.multiselect li {
+}
+
+ul.multiselect li span.status-text {
+    padding-left : 5px;
+    color : #777;
+    font-weight : normal;
+    text-align : right;
+    float : right;
+}
+
+ul.multiselect a.switch-link  {
+    display: block;
+    padding: 2px 5px;
+    margin: 1px;
+    text-decoration : none;
+    color: #444444;
+    background-color: #edf7f7;
+    border-radius: 3px;
+    border: 1px solid #B7CCCC;
+}
+
+ul.multiselect a.switch-link:hover {
+    background-color: #fff9ed;
+}
+
+ul.multiselect a.used {
+    background-color: #a64d4d;
+    color: #ffffff;
+}
+
+ul.multiselect a.used span.status-text {
+    color: #ffffff;
+}
+
+ul.multiselect a.used:hover {
+    color: #888888;
+}
+
+ul.multiselect a.active {
+    background-color: #fff9ed;
+}
+
+ul.multiselect li table {
+    border-collapse: collapse;
+    margin-right: 10px;
+    float: right;
+    width: 90%;
+}
+
+ul.multiselect li td {
+    /* border: 1px solid #dedede; */
+    border-style: solid;
+    border-color: #edf7f7;
+    border-width: 0 0 1px 0;
+    padding: 2px 5px;
+}
+
+ul.multiselect li td.checkbox-cell {
+    width: 15px;
+}
+
+.tag-display-box {
+    font-size: 15pt;
+    font-family: "Courier New", Courier, monospace;
+    background-color: #ffffff;
+    border: 1px solid #979f9f;
+    padding: 2px;
+}
+
+.tag-display-box a.backlink:hover,
+.tag-display-box a.called,
+.tag-display-box span.called {
+    text-decoration: none;
+    background-color: #fffcf5 !important;
+}
+
+.tag-display-box a.backlink,
+.tag-display-box span.backlink {
+    text-decoration: none;
+    background-color: transparent;
+    padding: 1px 2px;
+    margin: 0 1px;
+}
+
+.modal-container h3 {
+    margin: 0 0 8px 0;
+    text-align: center;
+    color: #000000;
+}
