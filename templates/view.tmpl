@@ -121,6 +121,13 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 });
 #end def
 
+#def sampleblock
+  #if len($getVar('Par_conc_corpnames', [])) == 0
+    <li><a title="$_("Make a random sample from the concordance.")" href="reduce_form?$q;$globals">$_("Sample")</a></li>
+  #end if
+#end def
+
+
 #def align_heading($viewmode, $KWICCorps)
 #if $getVar('Par_conc_corpnames', [])
 <tr>
