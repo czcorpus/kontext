@@ -85,9 +85,7 @@ soundManager.setup({
       #end for
       #set $mlsortref = $mlsortref + 'sortlevel=%d' % $i
       <li><a title="$_("Sort according to the 'References' field")" href="mlsortx?$q;$globals;$mlsortref">$_("References")</a></li>
-      #if not $shuffle
       <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
-      #end if
     </ul>
   </li>
 #end def
