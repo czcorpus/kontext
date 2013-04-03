@@ -247,7 +247,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
         <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
         #end if
-        #if $shuffle
+        #if $shuffle_notification
         | <span class="notice-shuffled">$_('Result is shuffled')</span>
         #end if
     </div>
