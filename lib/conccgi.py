@@ -465,12 +465,13 @@ class ConcCGI(UserCGI):
             if k in self.__dict__:
                 self.__dict__[k] = v
 
-        if self.shuffle == 1:
+        if 'f' in self.q and self.q.index('f') != self.q.index('f', -1):
+            del(self.q[self.q.index('f', -1)])
+        if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
-        elif self.shuffle == 0 and 'f' in self.q:
+        elif self.shuffle == -1 and 'f' in self.q:  # (shuffle == -1) means "set the value to 0"
             del(self.q[self.q.index('f')])
-        elif 'f' in self.q:
-            self.shuffle = 1
+            self.shuffle = 0
 
         self.righttoleft = False
         if self.viewmode == 'kwic':
@@ -608,7 +609,9 @@ class ConcCGI(UserCGI):
         }
 
     def viewattrs(self):
-        "attrs, refs, structs form"
+        """
+        attrs, refs, structs form
+        """
         from tbl_settings import tbl_labels
 
         out = {}
