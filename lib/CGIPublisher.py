@@ -281,7 +281,7 @@ class CGIPublisher:
         self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
-        self.preprocess_values(form) # values needed before recoding
+        self.preprocess_values(form)  # values needed before recoding
         self._setup_user(self.corpname)
         if form.has_key('json'):
             json_data = json.loads(form.getvalue('json'))
