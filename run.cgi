@@ -106,8 +106,7 @@ if __name__ == '__main__':
     # logging setup
     logger = logging.getLogger('') # root logger
     hdlr = handlers.RotatingFileHandler(settings.get('global', 'log_path'), maxBytes=(1 << 23), backupCount=50)
-    formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
-    hdlr.setFormatter(formatter)
+    hdlr.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
 
