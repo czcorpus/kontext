@@ -15,6 +15,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+v=`cheetah version`
+array=(${v//./ })
+v1=$((${array[0]} * 1000 + ${array[1]}))
+if [[ (($v1 < 2004)) ]]
+then
+  echo "ERROR: Application requires Cheetah Template 2.2.0 or newer"
+  exit 1
+fi
+
 for f in `ls templates/*.tmpl`
 do
     cheetah compile --odir cmpltmpl --idir templates $(basename $f)

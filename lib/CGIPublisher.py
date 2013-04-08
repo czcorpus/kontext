@@ -30,29 +30,8 @@ import logging
 import settings
 
 
-# According to Cheetag changelog, Cheetah should use Unicode in its internals since version 2.2.0
-# If you experience it also in any previous version, change it here:
-# NOTE: YOU MUST RECOMPILE TEMPLATES WHEN SWITCHING FROM A VERSION < 2.2.0 TO A VERSION >= 2.2.0 OR VICE VERSA
-try:
-    from Cheetah import VersionTuple
-
-    major, minor, bugfix, _status, _statusNr = VersionTuple
-except ImportError:
-    from Cheetah import Version
-
-    try:
-        major, minor, bugfix = map(int, Version.split("."))
-    except ValueError:
-        major, minor, bugfix = 0, 0, 0 # 2.0rc8 ;-)
-if (major, minor, bugfix) >= (2, 2, 0):
-    has_cheetah_unicode_internals = True
-else:
-    has_cheetah_unicode_internals = False
-
-
 def replace_dot_error_handler(err):
     return u'.', err.end
-
 
 codecs.register_error('replacedot', replace_dot_error_handler)
 
@@ -75,7 +54,7 @@ def correct_types(args, defaults, del_nondef=0, selector=0):
     corr_func = {type(0): int, type(0.0): float, ListType: lambda x: [x]}
     for full_k, v in args.items():
         if selector:
-            k = full_k.split(':')[-1] # filter out selector
+            k = full_k.split(':')[-1]  # filter out selector
         else:
             k = full_k
         if k.startswith('_') or type(defaults.get(k, None)) is MethodType:
@@ -128,6 +107,30 @@ def load_user_settings_cookie(cookie_data):
     return json.loads(ck['user_settings'].value) if ck.has_key('user_settings') else {}
 
 
+def log_request(user_settings, action_name):
+    """
+    Logs user's request by storing URL parameters, user settings and user name
+
+    Parameters
+    ----------
+    user_settings: dict
+        settings stored in user's cookie
+    action_name: str
+        name of the action
+    """
+    import json
+    import datetime
+
+    ans = {
+        'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+        'action': action_name,
+        'user': os.getenv('REMOTE_USER'),
+        'params': dict([item.split('=', 1) for item in os.getenv('QUERY_STRING').split('&')]),
+        'settings': user_settings
+    }
+    logging.getLogger('QUERY').info(json.dumps(ans))
+
+
 class BonitoCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -142,6 +145,9 @@ class BonitoCookie(Cookie.BaseCookie):
 
 
 class RequestProcessingException(Exception):
+    """
+    General error in user's request processing
+    """
     def __init__(self, message, **data):
         Exception.__init__(self, message)
         self.data = data
@@ -155,9 +161,7 @@ class RequestProcessingException(Exception):
 
 class CheetahResponseFile:
     def __init__(self, outfile):
-        if has_cheetah_unicode_internals:
-            outfile = codecs.getwriter("utf-8")(outfile)
-        self.outfile = outfile
+        self.outfile = codecs.getwriter("utf-8")(outfile)
 
     def response(self):
         return self.outfile
@@ -177,10 +181,17 @@ class JsonEncodedData(object):
 
 
 class UserActionException(Exception):
+    """
+    This exception should cover general errors occurring in CGIPublisher's action methods'
+    """
     pass
 
 
 class CGIPublisher:
+    """
+    This object serves as a controller of the application. It handles action->method mapping,
+    target method processing, result rendering, generates required http headers etc.
+    """
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
     _user_settings = {}
@@ -201,7 +212,6 @@ class CGIPublisher:
     _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
     menupos = ''
 
-
     def __init__(self, environ=os.environ):
         self.environ = environ
         self.headers_sent = False
@@ -212,6 +222,7 @@ class CGIPublisher:
             if os.path.isdir(p):
                 self._locale_dir = p
             else:
+                import gettext
                 # This will set the system default locale directory as a side-effect:
                 gettext.install(domain='ske', unicode=True)
                 # hereby we retrieve the system default locale directory back:
@@ -283,7 +294,7 @@ class CGIPublisher:
                                 environ=self.environ, fp=post_fp)
         self.preprocess_values(form)  # values needed before recoding
         self._setup_user(self.corpname)
-        if form.has_key('json'):
+        if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
         for k in form.keys():
@@ -327,6 +338,10 @@ class CGIPublisher:
         return path
 
     def run_unprotected(self, path=None, selectorname=None):
+        """
+        Runs an HTTP-mapped action in a mode which does wrap
+        error processing (i.e. it may throw an exception).
+        """
         tmpl = None
         methodname = None
         try:
@@ -334,6 +349,13 @@ class CGIPublisher:
                 path = self.import_req_path()
             named_args = self.parse_parameters(selectorname)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
+
+            if hasattr(self, '_user_settings'):
+                user_settings = getattr(self, '_user_settings')
+            else:
+                user_settings = {}
+            log_request(user_settings, '%s' % methodname)
+
             return_type = self.get_method_metadata(methodname, 'return_type')
             self.output_headers(return_type)
             self.output_result(methodname, tmpl, result, return_type)
@@ -343,7 +365,7 @@ class CGIPublisher:
 
     def run(self, path=None, selectorname=None):
         """
-        This method wraps run_unprotected by try-except and presents
+        This method wraps run_unprotected by try-except clause and presents
         only brief error messages to the user.
         """
         if path is None:
@@ -380,6 +402,9 @@ class CGIPublisher:
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
     def process_method(self, methodname, pos_args, named_args):
+        """
+        This method handles mapping between HTTP actions and CGIPublisher's methods
+        """
         reload = {'headers': 'wordlist_form'}
 
         if getattr(self, 'reload', None):
@@ -421,25 +446,7 @@ class CGIPublisher:
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method(em, pos_args, named_args)
 
-    def get_uilang(self):
-        if self.uilang:
-            return self.uilang
-        lgs_string = self.environ.get('HTTP_ACCEPT_LANGUAGE', '')
-        if lgs_string == '':
-            return '' # english
-        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-        lgs = lgs_string.split(',')
-        lgdirs = os.listdir(self._locale_dir)
-        for lg in lgs:
-            lg = lg.replace('-', '_').lower()
-            if lg.startswith('en'): # english
-                return ''
-            for lgdir in lgdirs:
-                if lgdir.lower().startswith(lg):
-                    return lgdir
-        return ''
-
-    def recode_input(self, x, decode=1): # converts query into corpencoding
+    def recode_input(self, x, decode=1):  # converts query into corpencoding
         if self._corpus_architect and decode: return x
         if type(x) is ListType:
             return [self.recode_input(v, decode) for v in x]
@@ -451,9 +458,10 @@ class CGIPublisher:
         return x
 
     def rec_recode(self, x, enc='', utf8_out=False):
-        if has_cheetah_unicode_internals and not utf8_out:
+        if not utf8_out:
             return x
-        if not enc: enc = self.self_encoding()
+        if not enc:
+            enc = self.self_encoding()
         if isinstance(x, TupleType) or isinstance(x, ListType):
             return [self.rec_recode(e, enc, utf8_out) for e in x]
         if isinstance(x, DictType):
@@ -471,7 +479,9 @@ class CGIPublisher:
         return x
 
     def urlencode(self, key_val_pairs):
-        """recode values of key-value pairs and run urlencode from urllib"""
+        """
+        Recodes values of key-value pairs and encodes them (by urllib.urlencode)
+        """
         enc = self.self_encoding()
         if type(key_val_pairs) is UnicodeType: # urllib.quote does not support unicode
             key_val_pairs = key_val_pairs.encode("utf-8")
@@ -482,7 +492,10 @@ class CGIPublisher:
                           for (k, v) in key_val_pairs])
 
     def output_headers(self, return_type='html', outf=sys.stdout):
-        # Cookies
+        """
+        Generates proper content-type signature and
+        creates a cookie to store user's settings
+        """
         cookies = BonitoCookie()
         user_settings = {}
         for k in self._user_settings:
@@ -512,7 +525,7 @@ class CGIPublisher:
             if type(result) != JsonEncodedData:
                 json.dump(self.rec_recode(result, utf8_out=True), outf)
             else:
-                print >> outf, result # this is obsolete
+                print >> outf, result  # this is obsolete
 
         # Template
         elif type(result) is DictType:
@@ -548,6 +561,7 @@ class CGIPublisher:
 
     def get_traceback(self):
         """
+        Returns python-generated traceback information
         """
         import traceback
 
@@ -555,12 +569,13 @@ class CGIPublisher:
         return traceback.format_exception(err_type, err_value, err_trace)
 
     def methods(self, params=0):
-        """list all methods with a doc string"""
+        """
+        Lists all the methods with a doc string
+        """
         methodlist = []
         cldict = self.__class__.__dict__
-        for m in [x for x in cldict.keys()
-                  if not x.startswith('_') and hasattr(cldict[x], '__doc__') \
-                and callable(cldict[x])]:
+        for m in [x for x in cldict.keys() if not x.startswith('_') and hasattr(cldict[x], '__doc__')
+                  and callable(cldict[x])]:
             mm = {'name': m, 'doc': cldict[m].__doc__}
             if params:
                 try:

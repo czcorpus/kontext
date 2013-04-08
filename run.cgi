@@ -131,10 +131,7 @@ if __name__ == '__main__':
     try: translat._catalog[''] = ''
     except AttributeError: pass
 
-    if CGIPublisher.has_cheetah_unicode_internals:
-        __builtin__.__dict__['_'] = translat.ugettext
-    else:
-        __builtin__.__dict__['_'] = translat.gettext
+    __builtin__.__dict__['_'] = translat.ugettext
 
     if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
         import cProfile, pstats, tempfile

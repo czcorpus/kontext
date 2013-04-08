@@ -222,21 +222,6 @@ class ConcCGI(UserCGI):
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
 
-    def log_request(self):
-        """
-        logs user's request by storing URL parameters, user settings and user name
-        """
-        import json
-        import datetime
-
-        ans = {
-            'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
-            'user': os.getenv('REMOTE_USER'),
-            'params': dict([item.split('=', 1) for item in os.getenv('QUERY_STRING').split('&')]),
-            'settings': self._user_settings
-        }
-        logging.getLogger('QUERY').info(json.dumps(ans))
-
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
@@ -460,7 +445,6 @@ class ConcCGI(UserCGI):
         view_params : dict
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
-        self.log_request()
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
@@ -2272,7 +2256,6 @@ class ConcCGI(UserCGI):
         return self.lngroupinfo(newname)
 
     rename_annot.template = 'lngroupinfo.tmpl'
-
 
     def ajax_get_corp_details(self):
         """
