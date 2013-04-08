@@ -71,7 +71,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
                 itemList.push(corpusName);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if (itemList.length === 1) {
+            if ($('fieldset.parallel').length === 1) {
                 $('#default-view-mode').remove();
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
             }
