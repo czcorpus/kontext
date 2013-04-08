@@ -1038,6 +1038,10 @@ class ConcCGI(UserCGI):
         out = {'within': within}
         if within and not self.error:
             out['error'] = _('Please specify positive filter to switch')
+        # TODO dirty hack ...
+        if self.align:
+            main_corp = 'x-%s' % self.maincorp
+            self.q = [item for item in self.q if item != main_corp] + [main_corp]
         return out
 
     add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
