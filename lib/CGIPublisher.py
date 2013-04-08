@@ -125,7 +125,7 @@ def log_request(user_settings, action_name):
         'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
         'action': action_name,
         'user': os.getenv('REMOTE_USER'),
-        'params': dict([item.split('=', 1) for item in os.getenv('QUERY_STRING').split('&')]),
+        'params': dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]]),
         'settings': user_settings
     }
     logging.getLogger('QUERY').info(json.dumps(ans))
