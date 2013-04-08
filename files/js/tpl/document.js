@@ -193,18 +193,16 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     queryType = $(this).parent().find('#queryselector_' + corpn).val();
                     queryType = queryType.substring(0, queryType.length - 3);
                     $('#qnode_' + corpn).find('input[type="text"]').each(function () {
-                        if ($(this).attr('class') !== queryType + '-input') {
+                        if (!$(this).hasClass(queryType + '-input')) {
                             $(this).attr('disabled', true);
                         }
                     });
                 }
-
                 $('.parallel-corp-lang').each(function () {
                     if ($(this).css('display') === 'none') {
                         $(this).remove();
                     }
                 });
-
             });
         });
 
