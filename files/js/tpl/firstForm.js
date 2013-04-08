@@ -67,7 +67,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
      */
     addActiveParallelCorpus = function (corpusName) {
         callOnParallelCorporaList(function (itemList) {
-            if ($.inArray(corpusName, itemList) === -1) {
+            if (corpusName && $.inArray(corpusName, itemList) === -1) {
                 itemList.push(corpusName);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
