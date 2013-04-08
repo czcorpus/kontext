@@ -1,0 +1,68 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#filter WebSafe
+
+#unless $getVar('no_display_links', '')
+  <a class="expand-link" href="\#end" data-url="widectx" data-params="$leftlink&corpname=$corpname">$_("expand left")</a>
+#end unless
+#if $righttoleft
+  <span dir="rtl">
+#end if
+
+#set $deletewrap = $getVar('deletewrap', False)
+#if $wrapdetail and $deletewrap
+  #set $wrapend = $wrapdetail[0] + '/' + $wrapdetail[1:]
+#end if
+
+#for $seg in $content
+  #if $seg.has_key('class') and $seg.class
+    #set $toprint = $seg.str
+    #if $deletewrap
+      #set $toprint = $toprint.replace($wrapend, '')
+    #end if
+    #if $wrapdetail and $wrapdetail in $toprint
+      #set $taglist = $toprint.split($wrapdetail)
+      #for $i, $s in enumerate($taglist)
+        <i class="$seg.class">$s</i>
+        #if $i + 1 < len($taglist)
+          <br/>
+          #if not $deletewrap
+            <i class='$seg.class'>$wrapdetail</i>
+          #end if
+        #end if
+      #end for
+    #else
+      <i class="$seg.class">$toprint</i>
+    #end if
+  #else
+    $seg.str
+  #end if
+#end for
+
+#if $righttoleft
+  </span>
+#end if
+#unless $getVar('no_display_links', '')
+  <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$rightlink&corpname=$corpname")">$_("expand right")</a>
+  #if $getVar('struct_ctx', '')
+    <br/>
+    <a href="\#end" id="ctx-link" data-url="structctx" data-params="corpname=$corpname;pos=$pos;struct=$struct_ctx">$_("display whole document")</a>
+  #end if
+#end unless
+#end filter

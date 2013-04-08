@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script type="text/javascript" src="../../files/js/prototype.min.js"></script>
+        <script type="text/javascript" src="../../files/js/treecomponent.js"></script>
+        <script type="text/javascript">
+            \$(document).ready(function() {
+                var tst = function (item) {
+                    var formAncestor,
+                        i,
+                        srch,
+                        ancestors = item.currentTarget.ancestors();
+                    for (i = 0; i < ancestors.length; i += 1) {
+                        if (ancestors[i].nodeName === 'FORM') {
+                            formAncestor = ancestors[i];
+                            break;
+                        }
+                    }
+                    if (formAncestor !== undefined) {
+                        //.reload.value = 1;
+                        srch = formAncestor.select('*[name="firstname"]');
+                        if (srch.length > 0) {
+                            $(srch[0]).attr('value', '1');
+                        }
+                        srch = formAncestor.select('*[name="usesubcorp"]');
+                        if (srch.length > 0) {
+                            $(srch[0]).attr('value', '');
+                        }
+                        formAncestor.submit();
+                    }
+                }
+                createTreeComponent($$('select[name="corpus-name"]'), null, tst);
+                makeListExpandable('stuff');
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Expandable tree component test</h1>
+        <h2>Transformation of a &lt;select&gt;</h2>
+        <form action="" method="get">
+            <input type="text" name="firstname" />
+            <select name="corpus-name" id="select-box-orig" style="">
+                <option data-path="/folderA" title="This is item 1" value="item-1">item 1</option>
+                <option data-path="/folderA" title="This is item 2 with little bit longer description. Lorem ipsum dolor sit amet" value="item-2">item 2</option>
+                <option data-path="/folderB" title="This is item 3" value="item-3">item 3</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="item-4">item 4</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="item-5">item 5</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="omezeni/item-6">item 6</option>
+                <option data-path="/folderD/folderD.1/folderD.1.I" value="omezeni/item-7">item 7</option>
+                <option data-path="/folderD/folderD.1/folderD.1.I" value="omezeni/item-8">item 8</option>
+            </select>
+            <select name="corpus-name" class="select-box">
+                <option data-path="/folderU" value="item-1">item 1</option>
+                <option data-path="/folderU" value="item-2">item 2</option>
+                <option data-path="/folderV" value="item-3">item 3</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I/" value="item-4">item 4</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I" value="item-5">item 5</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I" value="item-6">item 6</option>
+                <option data-path="/folderX/folderX.1/folderX.1.I" value="item-7">item 7</option>
+                <option data-path="/folderX/folderX.1/folderX.1.I" value="item-8">item 8</option>
+            </select>
+        </form>
+
+        <h2>Expandability of an existing &lt;ul&gt;</h2>
+        <ul id="stuff">
+            <li><a href="#">item A</a></li>
+            <li>item B
+                <ul>
+                    <li><a href="">item B.1</a></li>
+                    <li><a href="#">item B.2</a></li>
+                    <li><a href="#">item B.3</a></li>
+                </ul>
+            </li>
+            <li>item C
+                <ul>
+                    <li>item C.1
+                        <ul>
+                            <li><a href="#">item C.1.I</a></li>
+                            <li>item C.1.II
+                                <ul>
+                                    <li><a href="#">item C.1.II.&alpha;</a></li>
+                                </ul>
+
+                            </li>
+                            <li><a href="#">item C.1.III</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li>item D
+                <ul>
+                    <li><a href="#">item D.1</a></li>
+                    <li><a href="#">item D.2</a></li>
+                </ul>
+            </li>
+        </ul>
+    </body>
+</html>
