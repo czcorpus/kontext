@@ -994,7 +994,6 @@ class ConcCGI(UserCGI):
                 self.q.append('x-%s' % al_corpname)
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
-        logging.getLogger(__name__).info('q: %s' % (self.q,))
 
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
