@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #filter WebSafe
 
 #unless $getVar('no_display_links', '')
-  <a class="expand-link" href="\#end" data-url="widectx" data-params="$leftlink&corpname=$corpname">$_("expand left")</a>
+  <a class="expand-link" href="\#end" data-url="widectx" data-params="$leftlink&corpname=$corpname" data-loadtext="$_('Loading...')">$_("expand left")</a>
 #end unless
 #if $righttoleft
   <span dir="rtl">
@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   </span>
 #end if
 #unless $getVar('no_display_links', '')
-  <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$rightlink&corpname=$corpname")">$_("expand right")</a>
+  <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$rightlink&corpname=$corpname")" data-loadtext="$_('Loading...')">$_("expand right")</a>
   #if $getVar('struct_ctx', '')
     <br/>
     <a href="\#end" id="ctx-link" data-url="structctx" data-params="corpname=$corpname;pos=$pos;struct=$struct_ctx">$_("display whole document")</a>
