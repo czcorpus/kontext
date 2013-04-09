@@ -101,6 +101,47 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
     };
 
     /**
+     * Disables (if state === true) or enables (if state === false)
+     * all empty/unused form fields. This is used to reduce number of passed parameters,
+     * especially in case of parallel corpora.
+     *
+     * @param state {boolean}
+     */
+    lib.setAlignedCorporaFieldsDisabledState = function (state) {
+        $('#mainform input[name="sel_aligned"]').each(function () {
+            var corpn = $(this).data('corpus'),
+                queryType;
+
+            // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
+            if (!$(this).val()) {
+                $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', state);
+                $('select[name=queryselector_' + corpn + ']').attr('disabled', state);
+                $('#qnode_' + corpn).find('input').attr('disabled', state);
+                $(this).attr('disabled', state);
+
+                $(this).parent().find('input[type="text"]').each(function () {
+                    $(this).attr('disabled', state);
+                });
+
+            } else {
+                queryType = $(this).parent().find('#queryselector_' + corpn).val();
+                queryType = queryType.substring(0, queryType.length - 3);
+                $('#qnode_' + corpn).find('input[type="text"]').each(function () {
+                    if (!$(this).hasClass(queryType + '-input')) {
+                        $(this).attr('disabled', state);
+                    }
+                });
+            }
+        });
+        // now let's disable unused corpora completely
+        $('.parallel-corp-lang').each(function () {
+            if ($(this).css('display') === 'none') {
+                $(this).find('input,select').attr('disabled', state);
+            }
+        });
+    };
+
+    /**
      *
      * @param {object} conf
      */
@@ -175,34 +216,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         // remove empty and unused parameters from URL before mainform submit
         $('form').submit(function () { // run before submit
-            $('#mainform input[name="sel_aligned"]').each(function () {
-                var corpn = $(this).data('corpus'),
-                    queryType;
-
-                if (!$(this).val()) {
-                    $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', true);
-                    $('select[name=queryselector_' + corpn + ']').attr('disabled', true);
-                    $('#qnode_' + corpn).find('input').attr('disabled', true);
-                    $(this).attr('disabled', true);
-
-                    $(this).parent().find('input[type="text"]').each(function () {
-                        $(this).attr('disabled', true);
-                    });
-
-                } else {
-                    queryType = $(this).parent().find('#queryselector_' + corpn).val();
-                    queryType = queryType.substring(0, queryType.length - 3);
-                    $('#qnode_' + corpn).find('input[type="text"]').each(function () {
-                        if (!$(this).hasClass(queryType + '-input')) {
-                            $(this).attr('disabled', true);
-                        }
-                    });
-                }
-                $('.parallel-corp-lang').each(function () {
-                    if ($(this).css('display') === 'none') {
-                        $(this).remove();
-                    }
-                });
+            lib.setAlignedCorporaFieldsDisabledState(true);
+            $(win).on('unload', function () {
+                lib.setAlignedCorporaFieldsDisabledState(false);
             });
         });
 

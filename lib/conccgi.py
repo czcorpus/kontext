@@ -906,7 +906,9 @@ class ConcCGI(UserCGI):
                         fc_pos_wsize=0,
                         fc_pos_type='',
                         fc_pos=[]):
-        'first query screen'
+        """
+        first query screen
+        """
 
         def append_filter(attrname, items, ctx, fctxtype):
             if not items:
@@ -992,6 +994,7 @@ class ConcCGI(UserCGI):
                 self.q.append('x-%s' % al_corpname)
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
+        logging.getLogger(__name__).info('q: %s' % (self.q,))
 
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
