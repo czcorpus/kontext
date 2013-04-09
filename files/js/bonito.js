@@ -98,10 +98,12 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
         if ($('#' + id).is(':visible') || status === ':hidden') { // toggle visible and hidden
             userConfig.set(id + '_view', 'hide');
             $('#' + id).hide();
+            $('#' + id + ' input,#' + id + ' select').attr('disabled', true);
 
         } else if ($('#' + id).is(':hidden') || status === ':visible') {
             userConfig.set(id + '_view', 'show');
             $('#' + id).show();
+            $('#' + id + ' input,#' + id + ' select').attr('disabled', false);
         }
     };
 
