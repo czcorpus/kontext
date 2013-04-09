@@ -71,7 +71,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
                 itemList.push(corpusName);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if ($('fieldset.parallel').length === 1) {
+            if ($('div.parallel-corp-lang:visible').length > 0) {
                 $('#default-view-mode').remove();
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
             }
@@ -87,7 +87,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
                 itemList.splice($.inArray(corpusName, itemList), 1);
             }
             mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if (itemList.length === 0) {
+            if ($('div.parallel-corp-lang:visible').length === 0) {
                 $('#default-view-mode').remove();
             }
         });
@@ -108,23 +108,27 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
                 jqHiddenStatus;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
-            jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
 
-            addActiveParallelCorpus(corpusId);
-            $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+            if (corpusId) {
+                jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
 
-            $('#qnode_' + corpusId).show();
-            jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-            $('#qnode_' + corpusId + ' a.close-button').on('click', function () {
-                $('#qnode_' + corpusId).hide();
-                jqHiddenStatus.val('');
-                removeActiveParallelCorpus(corpusId);
-                $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                $('#qnode_' + corpusId).show();
+                addActiveParallelCorpus(corpusId);
+                $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
 
-            });
-            if (!$.support.cssFloat) {
-                // refresh content in IE < 9
-                $('#content').css('overflow', 'visible').css('overflow', 'auto');
+
+                jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
+                $('#qnode_' + corpusId + ' a.close-button').on('click', function () {
+                    $('#qnode_' + corpusId).hide();
+                    jqHiddenStatus.val('');
+                    removeActiveParallelCorpus(corpusId);
+                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+
+                });
+                if (!$.support.cssFloat) {
+                    // refresh content in IE < 9
+                    $('#content').css('overflow', 'visible').css('overflow', 'auto');
+                }
             }
         };
     };
