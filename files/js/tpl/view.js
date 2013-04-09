@@ -42,11 +42,20 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
             });
         };
 
-        $('td.kw b,td.par b,td.coll b').bind('click', function (event) {
+        $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
+            var jqRealTarget = null;
+
+            if ($(event.target).data('url')) {
+                jqRealTarget = $(event.target);
+
+            } else if ($(event.target).parent().data('url')) {
+                jqRealTarget = $(event.target).parent();
+            }
+
             detail.showDetail(
-                $(event.target).parent().data('url'),
-                $(event.target).parent().data('params'),
-                $(event.target).parent().data('loadtext'),
+                jqRealTarget.data('url'),
+                jqRealTarget.data('params'),
+                jqRealTarget.data('loadtext'),
                 true,
                 callback
             );
