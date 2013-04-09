@@ -178,7 +178,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #if not $l.Kwic
     <i class="note">$_('<--not translated-->')</i>
     #end if
-    <span data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
+    <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
   #end if
   #for $k in $l.Kwic
     #if $k.get('class', '') and $basecorpname in $KWICCorps
