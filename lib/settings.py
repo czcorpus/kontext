@@ -203,7 +203,7 @@ def get_corpus_info(corp_name):
     else:
         corp_name = tmp[0]
     for item in _conf['corpora_hierarchy']:
-        if item['id'] == corp_name:
+        if item['id'].lower() == corp_name.lower():
             return item
     return None
 
