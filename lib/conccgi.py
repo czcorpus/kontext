@@ -222,6 +222,21 @@ class ConcCGI(UserCGI):
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
 
+    def _attach_tag_builder(self, tpl_out):
+        """
+        Parameters
+        ----------
+        tpl_out : dict
+            data to be used when building an output page from a template
+        """
+        tpl_out['tag_builder_support'] = {
+            '': taghelper.tag_variants_file_exists(self.corpname)
+        }
+        tpl_out['user_menu'] = True
+        if 'Aligned' in tpl_out:
+            for item in tpl_out['Aligned']:
+                tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
+
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
@@ -542,14 +557,8 @@ class ConcCGI(UserCGI):
                 out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 out['has_lemmaattr_' + al] = 'lempos' in attrlist \
                     or 'lemma' in attrlist
-
-        out['tag_builder_support'] = {
-            '': taghelper.tag_variants_file_exists(self.corpname)
-        }
+        self._attach_tag_builder(out)
         out['user_menu'] = True
-        if 'Aligned' in out:
-            for item in out['Aligned']:
-                out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
         return out
 
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
@@ -1034,6 +1043,7 @@ class ConcCGI(UserCGI):
         if self.align:
             main_corp = 'x-%s' % self.maincorp
             self.q = [item for item in self.q if item != main_corp] + [main_corp]
+        self._attach_tag_builder(out)
         return out
 
     add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
