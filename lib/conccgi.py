@@ -673,19 +673,25 @@ class ConcCGI(UserCGI):
                        setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
                                setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+
+        out = self.viewattrs()
+        if self.shuffle == -1:
+            self.shuffle = 0
         self._save_options(['attrs', 'ctxattrs', 'structs', 'pagesize',
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
                             'refs', 'kwicleftctx', 'kwicrightctx', 'multiple_copy',
                             'tbl_template', 'ctxunit', 'refs_up', 'shuffle'],
                            self.corpname)
-        out = self.viewattrs()
+
         out['notification'] = _('Selected options successfully saved')
         return out
 
     save_viewattrs.template = 'viewattrs.tmpl'
 
     def sort(self):
-        "sort concordance form"
+        """
+        sort concordance form
+        """
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     add_vars['sort'] = ['concsize']
