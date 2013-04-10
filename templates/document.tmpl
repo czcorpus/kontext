@@ -547,7 +547,7 @@ $corp_sel
 #set $hidden = ($querytype == 'wordrow'+$suff) and 'visible' or 'hidden'
 <tr class="required $hidden" id="wordrow$suff">
   <th>$_("Word Form"):</th><td>
-  <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" size="60" id="word$suff" class="phrase-input keyboardInput" />
+  <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" size="60" id="word$suff" class="word-input keyboardInput" />
   #if $Wposlist
     <span class="no-wrap">
     $_("PoS"):<select name="wpos$suff">
