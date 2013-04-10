@@ -1106,28 +1106,6 @@ class ConcCGI(UserCGI):
             attr_list = set(self._corp().get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
-        def escape_query_value(s):
-            ans = s
-            t = {
-                '"': r'\"',
-                '<': r'\<',
-                '>': r'\>',
-                '.': r'\.',
-                ',': r'\,',
-                '?': r'\?',
-                '*': r'\*',
-                '[': r'\[',
-                ']': r'\]',
-                '{': r'\{',
-                '}': r'\}',
-                '+': r'\+',
-                ')': r'\)',
-                '(': r'\(',
-            }
-            for k, v in t.items():
-                ans = ans.replace(k, v)
-            return ans
-
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
             fcrit_is_all_nonstruct = (fcrit_is_all_nonstruct and is_non_structural_attr(fcrit_item))
@@ -1186,11 +1164,11 @@ class ConcCGI(UserCGI):
                     if not item['freq']: continue
                     if not '.' in attr:
                         if attr in self._corp().get_conf('ATTRLIST').split(','):
-                            wwords = item['Word'][level]['n'].split('  ') # two spaces
+                            wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, escape_query_value(escape(w))) for w in wwords])
-                        else: # structure number
+                                               % (attr, icase, escape(w)) for w in wwords])
+                        else:  # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
@@ -1332,6 +1310,11 @@ class ConcCGI(UserCGI):
             result['lastpage'] = 0
         else:
             result['lastpage'] = 1
+
+        for item in result['Items']:
+            item["pfilter"] = self.urlencode(item["pfilter"])
+            item["nfilter"] = self.urlencode(item["nfilter"])
+
         return result
 
     add_vars['collx'] = ['concsize']

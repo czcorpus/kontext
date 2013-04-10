@@ -683,16 +683,11 @@ class PyConc (manatee.Concordance):
     def command_P(self, options):
         self.pn_filter(options, 1, True)
 
-    def pn_filter(self, options, ispositive, excludekwic=False):
-        lctx, rctx, rank, query = options.split(None, 3)
-        query_elems = re.split(r'(?<!\\),', query)
-        if len(query_elems) > 1:
-            self.corp.set_default_attr(query_elems[0])
-            query = query_elems[1]
-        else:
-            query = query_elems[0]
-        collnum = self.numofcolls() + 1
-        self.set_collocation(collnum, query + ';', lctx, rctx, int(rank))
+    def pn_filter(self, options, ispositive, excludekwic = False):
+        lctx, rctx, rank, query = options.split (None, 3)
+        collnum = self.numofcolls() +1
+        self.set_collocation(collnum, query + ';', lctx, rctx, int(rank),
+                             excludekwic)
         self.delete_pnfilter(collnum, ispositive)
 
     def get_attr_values_sizes(self, full_attr_name):
@@ -912,8 +907,8 @@ class PyConc (manatee.Concordance):
                     {'str': colls.get_item(), 'freq': colls.get_cnt(),
                      'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
                                for s in cbgrfns],
-                     'pfilter': qfilter % ('p', colls.get_item()),
-                     'nfilter': qfilter % ('n', colls.get_item())
+                     'pfilter': qfilter % ('P', escape(colls.get_item())),
+                     'nfilter': qfilter % ('N', escape(colls.get_item()))
                      })
             colls.next()
             i += 1
