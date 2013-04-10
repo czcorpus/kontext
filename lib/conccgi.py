@@ -303,6 +303,7 @@ class ConcCGI(UserCGI):
         result['can_wseval'] = getattr(self, '_can_wseval', '')
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
         result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
+                                                         fix_encoding_name(self._corp().get_conf('ENCODING')),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min(len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf('NAME')
@@ -1503,7 +1504,9 @@ class ConcCGI(UserCGI):
         if hasattr(self, 'compatible_corpora'):
             refcm = corplib.CorpusManager(
                 [str(c) for c in self.compatible_corpora], self.subcpath)
-            out['CompatibleCorpora'] = refcm.corplist_with_names()
+            out['CompatibleCorpora'] = refcm.corplist_with_names(settings.get('corpora_hierarchy'),
+                                                                 fix_encoding_name(self._corp().get_conf('ENCODING')),
+                                                                 settings.get_bool('corpora', 'use_db_whitelist'))
         else:
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)

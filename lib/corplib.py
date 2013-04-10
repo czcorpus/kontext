@@ -21,7 +21,6 @@ import manatee
 import os.path, sys, glob
 from types import UnicodeType
 from hashlib import md5
-from butils import *
 
 class CorpusManager:
     def __init__ (self, corplist=['susanne'], subcpath=[], gdexpath=[]):
@@ -78,9 +77,22 @@ class CorpusManager:
         return [val[i:i+2] for i in range (0, len(val), 2)]
 
     def corpattrlist (self, corp):
-        return dict (self.corpconf_pairs (corp, label)).get (item)
+        return dict(self.corpconf_pairs (corp, label)).get(item)
 
-    def corplist_with_names (self, paths, use_db_whitelist=True):
+    def corplist_with_names(self, paths, current_corp_encoding, use_db_whitelist=True):
+        """
+        Parameters
+        ----------
+        paths : list of dicts ('id' -> ?, 'path' -> ?, 'sentence_struct' -> ?)
+            data from corpora hierarchy XML
+
+        current_corp_encoding : str
+            text encoding used in currently selected corpus
+
+        use_db_witelist : bool
+            if True then access is limited according to the data (specified per user)
+            found in the database
+        """
         simple_names = []
         subdir_map = {}
 
@@ -97,19 +109,23 @@ class CorpusManager:
             c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
                 id_prefix = subdir_map[c] if c in subdir_map else ''
+                corp_name = '?'
                 try:
                     corp = manatee.Corpus(c)
-                    size = locale.format('%d', corp.size(), grouping=True)
-                    size = _('%s positions') % size.decode('utf-8')
+                    corp_name = corp.get_conf('NAME') or c
+                    size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
+                    corp_info = corp.get_info().encode(current_corp_encoding)
+
                     cl.append({'id': '%s%s' % (id_prefix, c),
-                               'name': corp.get_conf('NAME') or c,
-                               'desc': corp.get_info(),
+                               'name': corp_name,
+                               'desc': corp_info,
                                'size': size,
                                'path': path
                     })
                 except Exception, e:
                     import logging
-                    logging.getLogger(__name__).warn('%s: %s' % (type(e).__name__, e))
+                    logging.getLogger(__name__).warn('Failed to fetch info about %s with error %s (%s)'
+                                                     % (corp_name, type(e).__name__, e))
                     cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
         return cl
 
@@ -671,13 +687,15 @@ def build_arf_db (corp, attrname):
     else:
         return None
 
-def build_arf_db_status (corp, attrname):
-    logfilename = subcorp_base_file (corp, attrname) + '.build'
-    if os.path.isfile (logfilename):
+
+def build_arf_db_status(corp, attrname):
+    logfilename = subcorp_base_file(corp, attrname) + '.build'
+    if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
     else:
         return 0, '100%'
+
 
 if __name__ == '__main__':
     import manatee

@@ -46,3 +46,19 @@ try:
     from setproctitle import setproctitle
 except ImportError:
     setproctitle = lambda x: None
+
+
+def fix_encoding_name(enc_name):
+    """
+    Manatee uses names like "iso8859-2" while Python requires "iso-8859-2".
+
+    Parameters
+    ----------
+    enc_name : str
+        non-standard name of the encoding (e.g. iso8859-2)
+
+    Returns
+    -------
+    correct_encoding_name : str
+    """
+    return re.sub(r'^iso([0-9\-]+)$', r'iso-\1', enc_name.lower())
