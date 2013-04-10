@@ -1500,7 +1500,8 @@ class ConcCGI(UserCGI):
         attrlist = corp.get_conf('ATTRLIST').split(',')
         # set reference corpus and reference subcorp list (for keywords)
         out = {}
-        if not ref_corpname: ref_corpname = self.corpname
+        if not ref_corpname:
+            ref_corpname = self.corpname
         if hasattr(self, 'compatible_corpora'):
             refcm = corplib.CorpusManager(
                 [str(c) for c in self.compatible_corpora], self.subcpath)
