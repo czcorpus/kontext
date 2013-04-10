@@ -21,6 +21,7 @@ import manatee
 import os.path, sys, glob
 from types import UnicodeType
 from hashlib import md5
+from butils import fix_encoding_name
 
 class CorpusManager:
     def __init__ (self, corplist=['susanne'], subcpath=[], gdexpath=[]):
@@ -114,7 +115,11 @@ class CorpusManager:
                     corp = manatee.Corpus(c)
                     corp_name = corp.get_conf('NAME') or c
                     size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
-                    corp_info = corp.get_info().encode(current_corp_encoding)
+
+                    if current_corp_encoding != fix_encoding_name(corp.get_conf('ENCODING')):
+                        corp_info = corp.get_info().encode(current_corp_encoding)
+                    else:
+                        corp_info = corp.get_info()
 
                     cl.append({'id': '%s%s' % (id_prefix, c),
                                'name': corp_name,
@@ -129,14 +134,13 @@ class CorpusManager:
                     cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
         return cl
 
-    def subcorpora (self, corpname):
+    def subcorpora(self, corpname):
         # we must encode for glob.glob otherwise it fails for non-ascii files
         enc_corpname = corpname.encode("utf-8")
         subc = []
         for sp in self.subcpath:
             subc += glob.glob (os.path.join (sp, enc_corpname, '*.subc'))
-        subc += glob.glob (os.path.join (
-                self.default_subcpath (corpname).encode("utf-8"), '*.subc'))
+        subc += glob.glob (os.path.join(self.default_subcpath(corpname).encode("utf-8"), '*.subc'))
         return sorted(subc)
 
     def subcorp_names (self, corpname):
