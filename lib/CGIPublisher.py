@@ -472,7 +472,7 @@ class CGIPublisher:
             return [self.rec_recode(e, enc, utf8_out) for e in x]
         if isinstance(x, DictType):
             d = {}
-            for key, value in x.iteritems():
+            for key, value in x.items():
                 if key in ['corp_full_name', 'Corplist']:
                     d[key] = value
                 else:
