@@ -1963,16 +1963,6 @@ class ConcCGI(UserCGI):
 
     def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
                  align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
-
-        if leftctx.find(':') == -1:  # '#' would not pass the addressline
-            lctx = leftctx + '#'
-        else:
-            lctx = leftctx
-        if rightctx.find(':') == -1:
-            rctx = rightctx + '#'
-        else:
-            rctx = rightctx
-
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         conc.switch_aligned(os.path.basename(self.corpname))
         if saveformat == 'xml':
@@ -2001,7 +1991,7 @@ class ConcCGI(UserCGI):
                                   pagesize=ps, labelmap=labelmap, align=[],
                                   alignlist=[self.cm.get_Corpus(c)
                                              for c in self.align.split(',') if c],
-                                  leftctx=lctx, rightctx=rctx)
+                                  leftctx=leftctx, rightctx=rightctx)
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
