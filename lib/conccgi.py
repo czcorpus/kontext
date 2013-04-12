@@ -1821,7 +1821,7 @@ class ConcCGI(UserCGI):
                     for checked_value in getattr(self, p):
                         out['checked_sca'][checked_value] = True
 
-        if tt_sel.has_key('error'):
+        if 'error' in tt_sel:
             out.update({
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
@@ -1886,7 +1886,10 @@ class ConcCGI(UserCGI):
             for e in ('.subc', '.used'):
                 if os.path.isfile(base + e):
                     os.unlink(base + e)
-        tt_query = self._texttype_query()
+        if within_condition and within_struct:
+            tt_query = [(within_struct, within_condition)]
+        else:
+            tt_query = self._texttype_query()
         basecorpname = self.corpname.split(':')[0]
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
