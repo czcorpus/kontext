@@ -100,9 +100,9 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
             if ($('within-select-hint-row')) {
                 $('within-select-hint-row').remove();
             }
-            $('subc-spec-row').insert({ after : '<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>'
+            $('subc-spec-row').append('<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>'
                 + '<div style="width: 70%">' + conf.messages.available_attributes
-                + ': <strong>' + findValueOption($(event.element()).val()) + '</strong></div></td>' });
+                + ': <strong>' + findValueOption($(event.element()).val()) + '</strong></div></td>');
         };
     };
 
