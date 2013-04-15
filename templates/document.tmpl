@@ -492,7 +492,7 @@ $corp_sel
   <td><select class="qselector" id="queryselector$suff" name="queryselector$suff" data-parallel-corp="$suff">
 #set $selected = ($querytype == 'iqueryrow'+$suff or $querytype == '') and 'selected="selected"' or ''
      <option value="iqueryrow" $selected>$_("Basic")</option>
-  #if $has_lemmaattr
+  #if $getVar('has_lemmaattr' + $suff, '')
      #set $selected = ($querytype == 'lemmarow'+$suff) and 'selected="selected"' or ''
      <option value="lemmarow" $selected>$_("Lemma")</option>
   #end if
