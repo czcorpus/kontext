@@ -560,6 +560,7 @@ class ConcCGI(UserCGI):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
+        out.update(dict([(k, v) for k, v in self._user_settings.items() if k.startswith('query_type_')]))
         return out
 
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']

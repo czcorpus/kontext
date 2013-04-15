@@ -201,7 +201,12 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
                 $('#query-type-hint').remove();
             }
 
-            userSettings.set('query_type', newid);
+            if (jqQs.data('parallel-corp')) {
+                userSettings.set('query_type' + jqQs.data('parallel-corp'), $(querySelector).val());
+
+            } else {
+                userSettings.set('query_type', newid);
+            }
             jqFocusElem.focus();
         },
 
