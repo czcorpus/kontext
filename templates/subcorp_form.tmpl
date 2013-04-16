@@ -1,0 +1,91 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+#from templating.filters import *
+
+#def title
+$_("Create Subcorpus")#slurp
+#end def
+
+#attr focus = "'#subcname'"
+
+#def bodyonload
+
+require(['tpl/subcorpForm', 'domReady!'], function(pageSelf, domReady) {
+    conf.inputMethod = "$method";
+    conf.messages['available_messages'] = "$_('available attributes')";
+    pageSelf.init(conf);
+});
+
+#end def
+
+#def main
+#filter WebSafe
+#if $_anonymous
+<br /><br />$_("Sorry, creating user subcorpora is not available in the open version")
+#else
+
+<form action="subcorp" method="POST">
+<fieldset class="anonymous">
+<table class="form">
+#filter None
+$corp_sel_node
+#end filter
+<tbody>
+<tr class="required">
+<th style="width: 20%">$_("New subcorpus name"):</th>
+<td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>
+</tr>
+<tr>
+    <th>$_('Specify subcorpus using'):</th>
+    <td>
+        <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
+        <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
+    </td>
+</tr>
+<tr id="subc-spec-row">
+    <th>$_('Condition within')
+        <select id="within-struct-selector" name="within_struct">
+            #for key, value in $structs_and_attrs.items()
+            <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
+            #end for
+        </select>:
+    </th>
+    <td>
+        <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
+    </td>
+</tr>
+</tbody>
+</table>
+<input type="hidden" name="create" value="True" />
+
+#filter None
+$tt_sel
+#end filter
+
+<div class="buttons">
+<input type="submit" value="$_("Create Subcorpus")" />
+</div>
+</fieldset>
+</form>
+
+#end if
+#end filter
+#end def
