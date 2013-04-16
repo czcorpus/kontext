@@ -282,10 +282,7 @@ $corp_full_name</b><br>
 #else
 <input type="hidden" name="reload" />
 
-<select name="corpname"
-  #if $onchange
-    onchange="this.form.reload.value=1;if(this.form.usesubcorp)this.form.usesubcorp.value='';this.form.submit();"
-  #end if#>
+<select name="corpname">
   #for $c in $Corplist
     #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
     <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
