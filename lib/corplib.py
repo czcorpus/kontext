@@ -25,8 +25,6 @@ from hashlib import md5
 
 import manatee
 
-from butils import fix_encoding_name
-
 
 class CorpusManager:
     def __init__(self, corplist=['susanne'], subcpath=[], gdexpath=[]):
@@ -86,7 +84,7 @@ class CorpusManager:
             val = ''
         return [val[i:i + 2] for i in range(0, len(val), 2)]
 
-    def corplist_with_names(self, paths, current_corp_encoding, use_db_whitelist=True):
+    def corplist_with_names(self, paths, use_db_whitelist=True):
         """
         Parameters
         ----------
@@ -112,6 +110,11 @@ class CorpusManager:
                 simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
+        # we have to store current encoding because each instantiated
+        # corpus requires that the encoding is set via the manatee module
+        # function setEncoding() which messes up all currently instantiated
+        # corpora with different encodings...
+        orig_encoding = manatee.getEncoding()
         for item in paths:
             c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
@@ -119,13 +122,11 @@ class CorpusManager:
                 corp_name = '?'
                 try:
                     corp = manatee.Corpus(c)
+                    manatee.setEncoding(corp.get_conf('ENCODING'))
                     corp_name = corp.get_conf('NAME') or c
                     size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
+                    corp_info = corp.get_info()
 
-                    if current_corp_encoding != fix_encoding_name(corp.get_conf('ENCODING')):
-                        corp_info = corp.get_info().encode(current_corp_encoding)
-                    else:
-                        corp_info = corp.get_info()
 
                     cl.append({'id': '%s%s' % (id_prefix, c),
                                'name': corp_name,
@@ -134,11 +135,12 @@ class CorpusManager:
                                'path': path
                     })
                 except Exception, e:
+                    manatee.setEncoding(orig_encoding)
                     import logging
-
                     logging.getLogger(__name__).warn('Failed to fetch info about %s with error %s (%s)'
                                                      % (corp_name, type(e).__name__, e))
                     cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
+        manatee.setEncoding(orig_encoding)
         return cl
 
     def subcorpora(self, corpname):
