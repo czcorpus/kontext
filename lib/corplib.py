@@ -86,9 +86,6 @@ class CorpusManager:
             val = ''
         return [val[i:i + 2] for i in range(0, len(val), 2)]
 
-    def corpattrlist(self, corp):
-        return dict(self.corpconf_pairs(corp, label)).get(item)
-
     def corplist_with_names(self, paths, current_corp_encoding, use_db_whitelist=True):
         """
         Parameters
