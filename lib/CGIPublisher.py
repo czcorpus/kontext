@@ -426,7 +426,7 @@ class CGIPublisher:
             return (methodname,
                     getattr(method, 'template', methodname + '.tmpl'),
                     self.call_method(method, pos_args, named_args))
-        except Exception, e:
+        except Exception as e:
             logging.getLogger(__name__).error(''.join(self.get_traceback()))
 
             return_type = self.get_method_metadata(methodname, 'return_type')
@@ -441,8 +441,14 @@ class CGIPublisher:
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
                    raise e
-            self.error = self.rec_recode(e.message, enc='utf-8') or str(e)
-            # may be localized
+
+            try:
+                self.error = u'%s' % e
+            except UnicodeDecodeError:
+                # Some error messages are not in utf8. In such cases we rather use general error
+                # message which is enough because detailed information is already logged on server.
+                self.error = _('Failed to process your request. Please try again later or contact system support.')
+
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method(em, pos_args, named_args)
 
@@ -466,7 +472,7 @@ class CGIPublisher:
             return [self.rec_recode(e, enc, utf8_out) for e in x]
         if isinstance(x, DictType):
             d = {}
-            for key, value in x.iteritems():
+            for key, value in x.items():
                 if key in ['corp_full_name', 'Corplist']:
                     d[key] = value
                 else:

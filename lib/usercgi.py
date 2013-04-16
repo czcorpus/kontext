@@ -65,41 +65,47 @@ class UserCGI (CGIPublisher.CGIPublisher):
             except: setattr (self, k, v)
         if self._user: self._user = str(self._user)
 
-    def _setup_user (self, corpname=''):
+    def _setup_user(self, corpname=''):
         if self._ca_user_info:
             self._has_access = 0
             self._get_ca_user_info(corpname)
         if not self._user:
-            self._user = os.getenv ('REMOTE_USER','-')
+            self._user = os.getenv('REMOTE_USER', '-')
             if self._user == '-':
                 self._user = self._default_user
         user = self._user
         options = {}
-        load_opt_file (options, os.path.join (self._options_dir,
-                                              self._default_user))
+        load_opt_file(options, os.path.join(self._options_dir,
+                                            self._default_user))
         if user is not self._default_user:
-            load_opt_file (options, os.path.join (self._options_dir, user))
-        CGIPublisher.correct_types (options, self.clone_self(), selector=1)
-        self._user_defaults (user)
-        self.__dict__.update (options)
+            load_opt_file(options, os.path.join(self._options_dir, user))
+        CGIPublisher.correct_types(options, self.clone_self(), selector=1)
+        self._user_defaults(user)
+        self.__dict__.update(options)
 
-    def _save_options (self, optlist=[], selector=''):
+    def _save_options(self, optlist=[], selector=''):
+        """
+        Saves user's options to a file on server
+        """
         if selector:
             tosave = [(selector + ':' + opt, self.__dict__[opt])
-                           for opt in optlist if self.__dict__.has_key (opt)]
+                      for opt in optlist if opt in self.__dict__]
         else:
             tosave = [(opt, self.__dict__[opt]) for opt in optlist
-                           if self.__dict__.has_key (opt)]
+                      if opt in self.__dict__]
         opt_filepath = os.path.join(self._options_dir, self._user)
         options = {}
         load_opt_file(options, opt_filepath)
         options.update(tosave)
 
         opt_lines = []
-        for k, v in options.iteritems():
-            if isinstance(v, unicode): v = v.encode('utf8')
+        for k, v in options.items():
+            if isinstance(v, unicode):
+                v = v.encode('utf8')
             opt_lines.append(str(k) + '\t' + str(v))
         opt_lines.sort()
+        import logging
+        logging.getLogger(__name__).info('options: %s' % opt_filepath)
         opt_file = open(opt_filepath, 'w')
         opt_file.write('\n'.join(opt_lines))
         opt_file.close()
@@ -107,21 +113,6 @@ class UserCGI (CGIPublisher.CGIPublisher):
     def save_global_attrs(self):
         options = [a for a in self.attrs2save if not a.startswith('_')]
         self._save_options(options, '')
-
-    def send_mail(self, subject, msg):
-        import smtplib
-        full_msg = "From: Sketch Engine <support@sketchengine.co.uk>" + \
-                   "\nTo: " + self._email + \
-                   "\nSubject: " + subject + \
-                   "\n\nDear SketchEngine user,\n\n" + msg + \
-                   "\n\nThis message was created automatically, do not " + \
-                   "respond to it.\n\n" + \
-                   "Sketch Engine <http://www.sketchengine.co.uk/>\n" + \
-                   "Bringing Corpora to the Masses\n"
-        server = smtplib.SMTP('localhost')
-        server.sendmail('support@sketchengine.co.uk',
-                        self._email, full_msg)
-        server.quit()
 
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         import crypt
