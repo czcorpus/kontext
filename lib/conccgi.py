@@ -237,14 +237,24 @@ class ConcCGI(UserCGI):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
+    def _get_op_desc(self):
+        """
+        Returns description of current operation
+        """
+        return [{'op': o, 'arg': a, 'churl': self.urlencode(u1), 'tourl': self.urlencode(u2), 'size': s}
+                for o, a, u1, u2, s in conclib.get_conc_desc(self.q, corpname=self.corpname,
+                                                             cache_dir=self.cache_dir,
+                                                             subchash=getattr(self._corp(), "subchash", None),
+                                                             translate=False)]
+
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
-        if form.has_key('json'):
+        if 'json' in form:
             import json
 
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
-        if form.has_key('corpname') and not cn:
+        if 'corpname' in form and not cn:
             cn = form.getvalue('corpname')
         if cn:
             if isinstance(cn, ListType):
@@ -368,15 +378,6 @@ class ConcCGI(UserCGI):
             names = self.add_vars[methodname]
         else:
             return
-
-        if 'Desc' in names:
-            result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
-                               'tourl': self.urlencode(u2), 'size': s}
-                              for o, a, u1, u2, s in
-                              conclib.get_conc_desc(self.q,
-                                                    corpname=self.corpname,
-                                                    cache_dir=self.cache_dir,
-                                                    subchash=getattr(self._corp(), "subchash", None))]
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
@@ -1237,7 +1238,9 @@ class ConcCGI(UserCGI):
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
                  saveformat='text', maxsavelines=1000):
-        "save a frequecy list"
+        """
+        save a frequecy list
+        """
         if self.pages:
             if maxsavelines < self.fmaxitems: self.fmaxitems = maxsavelines
         else:
@@ -1246,7 +1249,8 @@ class ConcCGI(UserCGI):
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
-        if self.wlattr: self.make_wl_query() # multilevel wordlist
+        if self.wlattr:
+            self.make_wl_query()  # multilevel wordlist
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
@@ -1256,6 +1260,7 @@ class ConcCGI(UserCGI):
         else:
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
+        result['Desc'] = self._get_op_desc()
         return result
 
     add_vars['savefreq'] = ['Desc']
@@ -1360,6 +1365,7 @@ class ConcCGI(UserCGI):
         else:
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'inline; filename="coll.txt"'
+        result['Desc'] = self._get_op_desc()
         return result
 
     add_vars['savecoll'] = ['Desc', 'concsize']
@@ -1989,11 +1995,12 @@ class ConcCGI(UserCGI):
             except conclib.manatee.FileAccessError:
                 pass
         contains_speech = settings.has_configured_speech(self._corp())
-        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                  pagesize=ps, labelmap=labelmap, align=[],
-                                  alignlist=[self.cm.get_Corpus(c)
-                                             for c in self.align.split(',') if c],
-                                  leftctx=leftctx, rightctx=rightctx)
+        out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+                                 pagesize=ps, labelmap=labelmap, align=[],
+                                 alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
+                                 leftctx=leftctx, rightctx=rightctx)
+        out['Desc'] = self._get_op_desc()
+        return out
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
@@ -2017,9 +2024,12 @@ class ConcCGI(UserCGI):
         labels = '<concinfo>\n<labels>\n%s\n</labels>\n</concinfo>\n' % labels
         open(cpath + '.info', 'w').write(labels)
         os.umask(um)
-        #print >>stderr, 'save conc: "%s"' % cpath
         self._user_settings.append('annotconc')
-        return {'stored': storeconcname}
+        out = {
+            'stored': storeconcname,
+            'Desc': self._get_op_desc()
+        }
+        return out
 
     storeconc.template = 'saveconc_form.tmpl'
     add_vars['storeconc'] = ['Desc']
