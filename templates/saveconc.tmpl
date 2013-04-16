@@ -48,6 +48,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <heading>
         <corpus>$corpname</corpus>
         <hits>$concsize</hits>
+        <relative_freq note="$result_relative_freq_rel_to">$result_relative_freq</relative_freq>
+        #if $result_arf != ''
+        <arf>$result_arf</arf>
+        #end if
         <query>#slurp
             #for $d in $Desc
             $d.arg $d.size #slurp
@@ -106,8 +110,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #else
 ## Text format
 #if $heading
-\# $_('Corpus'): $corp_full_name
+\# Corpus: $corp_full_name
 \# Hits: $concsize
+\# Relative frequency: $result_relative_freq ($result_relative_freq_rel_to)
+#if $result_arf != ''
+\# ARF: $result_arf
+#end if
+
 #for $d in $Desc
 \#      $d.op    $d.arg $d.size
 #end for
