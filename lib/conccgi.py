@@ -222,6 +222,21 @@ class ConcCGI(UserCGI):
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
 
+    def _attach_tag_builder(self, tpl_out):
+        """
+        Parameters
+        ----------
+        tpl_out : dict
+            data to be used when building an output page from a template
+        """
+        tpl_out['tag_builder_support'] = {
+            '': taghelper.tag_variants_file_exists(self.corpname)
+        }
+        tpl_out['user_menu'] = True
+        if 'Aligned' in tpl_out:
+            for item in tpl_out['Aligned']:
+                tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
+
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
@@ -288,6 +303,7 @@ class ConcCGI(UserCGI):
         result['can_wseval'] = getattr(self, '_can_wseval', '')
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
         result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
+                                                         fix_encoding_name(self._corp().get_conf('ENCODING')),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min(len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf('NAME')
@@ -542,14 +558,9 @@ class ConcCGI(UserCGI):
                 out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 out['has_lemmaattr_' + al] = 'lempos' in attrlist \
                     or 'lemma' in attrlist
-
-        out['tag_builder_support'] = {
-            '': taghelper.tag_variants_file_exists(self.corpname)
-        }
+        self._attach_tag_builder(out)
         out['user_menu'] = True
-        if 'Aligned' in out:
-            for item in out['Aligned']:
-                out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
+        out.update(dict([(k, v) for k, v in self._user_settings.items() if k.startswith('query_type_')]))
         return out
 
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
@@ -673,19 +684,25 @@ class ConcCGI(UserCGI):
                        setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         self.set_new_viewattrs(setattrs, allpos, setstructs,
                                setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+
+        out = self.viewattrs()
+        if self.shuffle == -1:
+            self.shuffle = 0
         self._save_options(['attrs', 'ctxattrs', 'structs', 'pagesize',
                             'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
                             'refs', 'kwicleftctx', 'kwicrightctx', 'multiple_copy',
                             'tbl_template', 'ctxunit', 'refs_up', 'shuffle'],
                            self.corpname)
-        out = self.viewattrs()
+
         out['notification'] = _('Selected options successfully saved')
         return out
 
     save_viewattrs.template = 'viewattrs.tmpl'
 
     def sort(self):
-        "sort concordance form"
+        """
+        sort concordance form
+        """
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     add_vars['sort'] = ['concsize']
@@ -906,7 +923,9 @@ class ConcCGI(UserCGI):
                         fc_pos_wsize=0,
                         fc_pos_type='',
                         fc_pos=[]):
-        'first query screen'
+        """
+        first query screen
+        """
 
         def append_filter(attrname, items, ctx, fctxtype):
             if not items:
@@ -1026,6 +1045,7 @@ class ConcCGI(UserCGI):
         if self.align:
             main_corp = 'x-%s' % self.maincorp
             self.q = [item for item in self.q if item != main_corp] + [main_corp]
+        self._attach_tag_builder(out)
         return out
 
     add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
@@ -1104,28 +1124,6 @@ class ConcCGI(UserCGI):
             attr_list = set(self._corp().get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
-        def escape_query_value(s):
-            ans = s
-            t = {
-                '"': r'\"',
-                '<': r'\<',
-                '>': r'\>',
-                '.': r'\.',
-                ',': r'\,',
-                '?': r'\?',
-                '*': r'\*',
-                '[': r'\[',
-                ']': r'\]',
-                '{': r'\{',
-                '}': r'\}',
-                '+': r'\+',
-                ')': r'\)',
-                '(': r'\(',
-            }
-            for k, v in t.items():
-                ans = ans.replace(k, v)
-            return ans
-
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
             fcrit_is_all_nonstruct = (fcrit_is_all_nonstruct and is_non_structural_attr(fcrit_item))
@@ -1184,11 +1182,11 @@ class ConcCGI(UserCGI):
                     if not item['freq']: continue
                     if not '.' in attr:
                         if attr in self._corp().get_conf('ATTRLIST').split(','):
-                            wwords = item['Word'][level]['n'].split('  ') # two spaces
+                            wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, escape_query_value(escape(w))) for w in wwords])
-                        else: # structure number
+                                               % (attr, icase, escape(w)) for w in wwords])
+                        else:  # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
                     else: # text types
@@ -1330,6 +1328,11 @@ class ConcCGI(UserCGI):
             result['lastpage'] = 0
         else:
             result['lastpage'] = 1
+
+        for item in result['Items']:
+            item["pfilter"] = self.urlencode(item["pfilter"])
+            item["nfilter"] = self.urlencode(item["nfilter"])
+
         return result
 
     add_vars['collx'] = ['concsize']
@@ -1498,11 +1501,14 @@ class ConcCGI(UserCGI):
         attrlist = corp.get_conf('ATTRLIST').split(',')
         # set reference corpus and reference subcorp list (for keywords)
         out = {}
-        if not ref_corpname: ref_corpname = self.corpname
+        if not ref_corpname:
+            ref_corpname = self.corpname
         if hasattr(self, 'compatible_corpora'):
             refcm = corplib.CorpusManager(
                 [str(c) for c in self.compatible_corpora], self.subcpath)
-            out['CompatibleCorpora'] = refcm.corplist_with_names()
+            out['CompatibleCorpora'] = refcm.corplist_with_names(settings.get('corpora_hierarchy'),
+                                                                 fix_encoding_name(self._corp().get_conf('ENCODING')),
+                                                                 settings.get_bool('corpora', 'use_db_whitelist'))
         else:
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
@@ -1816,7 +1822,7 @@ class ConcCGI(UserCGI):
                     for checked_value in getattr(self, p):
                         out['checked_sca'][checked_value] = True
 
-        if tt_sel.has_key('error'):
+        if 'error' in tt_sel:
             out.update({
                 'error': tt_sel['error'],
                 'TextTypeSel': tt_sel,
@@ -1881,7 +1887,10 @@ class ConcCGI(UserCGI):
             for e in ('.subc', '.used'):
                 if os.path.isfile(base + e):
                     os.unlink(base + e)
-        tt_query = self._texttype_query()
+        if within_condition and within_struct:
+            tt_query = [(within_struct, within_condition)]
+        else:
+            tt_query = self._texttype_query()
         basecorpname = self.corpname.split(':')[0]
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
@@ -1958,16 +1967,6 @@ class ConcCGI(UserCGI):
 
     def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
                  align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
-
-        if leftctx.find(':') == -1:  # '#' would not pass the addressline
-            lctx = leftctx + '#'
-        else:
-            lctx = leftctx
-        if rightctx.find(':') == -1:
-            rctx = rightctx + '#'
-        else:
-            rctx = rightctx
-
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         conc.switch_aligned(os.path.basename(self.corpname))
         if saveformat == 'xml':
@@ -1996,7 +1995,7 @@ class ConcCGI(UserCGI):
                                   pagesize=ps, labelmap=labelmap, align=[],
                                   alignlist=[self.cm.get_Corpus(c)
                                              for c in self.align.split(',') if c],
-                                  leftctx=lctx, rightctx=rctx)
+                                  leftctx=leftctx, rightctx=rightctx)
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
