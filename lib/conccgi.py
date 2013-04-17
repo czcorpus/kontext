@@ -59,7 +59,7 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
 
 class ConcError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        Exception.__init__(self, msg)
 
 
 class ConcCGI(UserCGI):
