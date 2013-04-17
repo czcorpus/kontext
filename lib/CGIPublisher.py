@@ -404,6 +404,13 @@ class CGIPublisher:
     def process_method(self, methodname, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and CGIPublisher's methods
+
+        Returns
+        -------
+        result : tuple of 3 elements
+          0 = method name
+          1 = template name
+          2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
 
@@ -452,6 +459,7 @@ class CGIPublisher:
                 logging.getLogger(__name__).warn('error: %s' % self.error)
                 em, self.exceptmethod = self.exceptmethod, None
                 return self.process_method(em, pos_args, named_args)
+
 
     def recode_input(self, x, decode=1):  # converts query into corpencoding
         if self._corpus_architect and decode: return x

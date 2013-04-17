@@ -61,16 +61,16 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     lib.createFuncSwitchToInputMethod = function (conf) {
         return function (value) {
             if (value === 'raw') {
-                $('#subc-spec-row').css({ display : 'table-row' });
+                $('#subc-spec-section').css({ display : '' });
                 $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : 'none'});
+                    $(item).css({ display : null});
                 });
                 lib.createFuncShowWithinHint(conf)({ element : function () { return $('within-struct-selector'); } });
 
             } else if (value === 'gui') {
-                $('#subc-spec-row').css({ display : 'none' });
+                $('#subc-spec-section').css({ display : 'none' });
                 $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : 'table'});
+                    $(item).css({ display : null});
                 });
                 if ($('within-select-hint-row')) {
                     $('within-select-hint-row').remove();
@@ -129,8 +129,26 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindClicks = function (conf) {
+        // existing within conditions with the 'close link'
+        $('#subc-spec-section .within-selection a.close-link').on('click', function (event) {
+            $(event.target).closest('tr.within-selection').remove();
+        });
 
+        // functionality to add new within conditions
+        $('#another-subc-condition-button').on('click', function () {
+            var jqNewConditionItem = $('#subc-spec-section .within-selection:first').clone(); // always clone fixed item
+
+            jqNewConditionItem.find('.struct-selector').prepend('<span>' + conf.messages.and + '</span>');
+            jqNewConditionItem.find('td:last').append('<a class="close-link">'
+                + '<img src="../files/img/close-icon.png" alt="' + conf.messages.close
+                + '" title="' + conf.messages.close + '" /></a>');
+            jqNewConditionItem.find('a.close-link').on('click', function (event) {
+                $(event.target).closest('tr.within-selection').remove();
+            });
+            jqNewConditionItem.find('input[name="within_condition"]').val('');
+            $('#subc-spec-section .within-selection:last').after(jqNewConditionItem);
+        });
     };
 
     /**

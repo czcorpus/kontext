@@ -1105,3 +1105,7 @@ table.form th {
 #stats-filter dl dd {
     margin: 0 0 10px 0;
 }
+
+#subc-spec-section th.struct-selector {
+    text-align: right;
+}

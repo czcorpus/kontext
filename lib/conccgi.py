@@ -58,6 +58,14 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
 
 
 class ConcError(Exception):
+    """
+    Represents general concordance exception
+
+    Parameters
+    ----------
+    msg : str
+      standard error message (just like in case of Exception)
+    """
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
@@ -1798,7 +1806,7 @@ class ConcCGI(UserCGI):
                 pass
         return normslist
 
-    def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
+    def subcorp_form(self, subcorpattrs='', subcname='', within_condition=[], within_struct=[], method='gui'):
         """
         Parameters
         ----------
@@ -1867,7 +1875,7 @@ class ConcCGI(UserCGI):
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
 
-    def subcorp(self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
+    def subcorp(self, subcname='', delete='', create=False, within_condition=[], within_struct=[], method=''):
         """
         Parameters
         ----------
@@ -1891,8 +1899,8 @@ class ConcCGI(UserCGI):
             for e in ('.subc', '.used'):
                 if os.path.isfile(base + e):
                     os.unlink(base + e)
-        if within_condition and within_struct:
-            tt_query = [(within_struct, within_condition)]
+        if len(within_condition) > 0 and len(within_struct) > 0:
+            tt_query = [(x1, x2) for x1, x2 in zip(within_struct, within_condition)]
         else:
             tt_query = self._texttype_query()
         basecorpname = self.corpname.split(':')[0]
