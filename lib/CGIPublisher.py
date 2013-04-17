@@ -437,20 +437,21 @@ class CGIPublisher:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
                 return (methodname, None,
                         {'error': json_msg})
-            if not self.exceptmethod and self.is_template(methodname + '_form'):
-                self.exceptmethod = methodname + '_form'
-            if settings.is_debug_mode() or not self.exceptmethod:
-                   raise e
+            else:
+                if not self.exceptmethod and self.is_template(methodname + '_form'):
+                    self.exceptmethod = methodname + '_form'
+                if settings.is_debug_mode() or not self.exceptmethod:
+                       raise e
 
-            try:
-                self.error = u'%s' % e
-            except UnicodeDecodeError:
-                # Some error messages are not in utf8. In such cases we rather use general error
-                # message which is enough because detailed information is already logged on server.
-                self.error = _('Failed to process your request. Please try again later or contact system support.')
-
-            em, self.exceptmethod = self.exceptmethod, None
-            return self.process_method(em, pos_args, named_args)
+                try:
+                    self.error = u'%s' % e
+                except UnicodeDecodeError:
+                    # Some error messages are not in utf8. In such cases we rather use general error
+                    # message which is enough because detailed information is already logged on server.
+                    self.error = _('Failed to process your request. Please try again later or contact system support.')
+                logging.getLogger(__name__).warn('error: %s' % self.error)
+                em, self.exceptmethod = self.exceptmethod, None
+                return self.process_method(em, pos_args, named_args)
 
     def recode_input(self, x, decode=1):  # converts query into corpencoding
         if self._corpus_architect and decode: return x
