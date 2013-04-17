@@ -899,10 +899,10 @@ class PyConc (manatee.Concordance):
         items = []
         colls = manatee.CollocItems(self, cattr, csortfn, cminfreq, cminbgr,
                                     cfromw, ctow, 2 ** 29)
-        qfilter = 'q=%%s%i %i 1 [%s="%%s"]' % (cfromw, ctow, cattr)
+        qfilter = '%%s%i %i 1 [%s="%%s"]' % (cfromw, ctow, cattr)
         i = 0
         while not colls.eos():
-            if i >= from_idx and i < from_idx + max_lines:
+            if from_idx <= i < from_idx + max_lines:
                 items.append(
                     {'str': colls.get_item(), 'freq': colls.get_cnt(),
                      'Stats': [{'s': '%.3f' % colls.get_bgr(s)}

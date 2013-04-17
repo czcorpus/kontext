@@ -1329,8 +1329,8 @@ class ConcCGI(UserCGI):
             result['lastpage'] = 1
 
         for item in result['Items']:
-            item["pfilter"] = self.urlencode(item["pfilter"])
-            item["nfilter"] = self.urlencode(item["nfilter"])
+            item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
+            item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
 
         return result
 
