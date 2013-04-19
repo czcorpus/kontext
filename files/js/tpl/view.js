@@ -228,7 +228,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
                     newCSize = parseInt(sizes[1], 10);
                     relCSize = parseFloat(sizes[2]);
                     newFSize = parseInt(sizes[3], 10);
-                    if (end.isNaN() || newCSize.isNaN() || relCSize.isNaN() || newFSize.isNaN()) {
+                    if (isNaN(end) || isNaN(newCSize) || isNaN(relCSize) || isNaN(newFSize)) {
                         return;
                     }
                     if (end) {
