@@ -82,7 +82,7 @@ class ConcCGI(UserCGI):
     prevlink = u''
     nextlink = u''
     concsize = u''
-    samplesize = 10000000 #10M
+    samplesize = 0  # orig 1e7
     Lines = []
     fromp = u'1'
     numofpages = u''
