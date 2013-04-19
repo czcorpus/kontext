@@ -192,135 +192,48 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
      *
      */
     lib.reloadHits = function (conf) {
-        var freq = 100,
-            countup = 30;
+        var freq = 500;
+
+        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.counting + '" title="' + conf.messages.counting + '" />');
 
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
                 url: 'get_cached_conc_sizes?' + conf.q + ';' + conf.globals,
                 type: 'POST',
                 periodic: this,
-                complete: function (data) {
-                    var sizes,
-                        end,
-                        newCSize,
-                        relCSize,
-                        newFSize,
-                        jqCSize,
-                        jqFSize,
-                        jqNPages,
-                        jqLPage,
-                        inc,
-                        newNPages,
-                        nPagesN,
-                        pgInc,
-                        incConcSize,
-                        l,
-                        fSizeN,
-                        nPagesT,
-                        incSize;
+                success: function (data) {
+                    var l;
 
-                    sizes = data.responseText.split('\n');
-                    if (sizes.length !== 4) {
-                        return;
-                    }
-                    end = parseInt(sizes[0], 10);
-                    newCSize = parseInt(sizes[1], 10);
-                    relCSize = parseFloat(sizes[2]);
-                    newFSize = parseInt(sizes[3], 10);
-                    if (isNaN(end) || isNaN(newCSize) || isNaN(relCSize) || isNaN(newFSize)) {
-                        return;
-                    }
-                    if (end) {
+                    if (data.end) {
                         freq = 5;
                     }
-                    jqCSize = $('#concsize');
-                    jqFSize = $('#fullsize');
-                    jqNPages = $('.numofpages');
-                    jqLPage = $('#lastpage');
-                    inc = Math.round((newCSize - parseInt(jqCSize.attr('title'), 10)) /
-                        (freq * 1000 / countup));
-                    newNPages = Math.ceil(newCSize / conf.numLines);
-                    nPagesN = parseInt(jqNPages.attr('title'), 10);
-                    pgInc = (newNPages - nPagesN) / (freq * 1000.0 / countup);
-                    incConcSize = function (newCSize, newNPages, end, pginc) {
-                        var csizen = parseInt(jqCSize.attr('title'), 10);
 
-                        jqCSize.html(conf.messages.using_random);
-                        if (csizen >= newCSize) {
-                            jqCSize.attr('title', newCSize);
-                            jqCSize.append(lib.addCommas(newCSize));
-                            if (!end) {
-                                jqCSize.append(conf.messages.counting);
-                            }
-                            jqCSize.append(conf.messages.lines_only);
-                            jqLPage.attr('href', "view?" + conf.q + ";" + conf.globals + ";fromp=" + newNPages);
-                            jqNPages.attr('title', lib.addCommas(newNPages));
-                            return;
-                        }
-                        jqCSize.attr('title', (csizen + inc).toString());
-                        jqCSize.append(lib.addCommas(jqCSize.attr('title')) + ' ' + conf.messages.counting
-                                + ' ' + conf.messages.lines_only + '.');
-                        nPagesN += pginc;
-                        nPagesT = Math.ceil(nPagesN).toString();
-                        jqLPage.attr('href', "view?" + conf.q + ";" + conf.globals + ";fromp=" + nPagesT);
-                        jqNPages.attr('title', nPagesT);
-                        nPagesT = lib.addCommas(nPagesT);
-                        jqNPages.text(nPagesT);
-                        win.setTimeout(function () { incConcSize(newCSize, newNPages, end, pginc); }, countup);
-                    };
-                    if (newFSize > 0) {
-                        if (conf.q2 !== "R") {
-                            l = lib.addCommas(newCSize);
-                            jqCSize.html(conf.messages.using_first + l +
-                                conf.messages.lines_only + '. <a href="view?' +
-                                'q=R' + conf.q2toEnd + ';' + conf.globals + '">' + conf.messages.use_random + ' ' +
-                                l + ' ' + conf.messages.instead + '.</a>');
-                            newCSize = newFSize;
+                    $('#result-info span.ipm').html(data.relconcsize.toFixed(2));
+                    $('.numofpages').html(Math.ceil(data.concsize / conf.numLines));
 
-                        } else {
-                            incConcSize(newCSize, newNPages, end, pgInc);
-                            if (end) {
-                                win.setTimeout(this.periodic.cancel, 1000);
-                            }
-                            return;
-                        }
+                    if (data.fullsize > 0) {
+                        $('#fullsize').html(data.fullsize);
+                        $('#toolbar-hits').html(data.fullsize);
+
+                    } else {
+                        $('#fullsize').html(data.concsize);
+                        $('#toolbar-hits').html(data.concsize);
                     }
-                    fSizeN = parseInt(jqFSize.attr('title'), 10);
-                    inc = (newCSize - fSizeN) / (freq * 1000 / countup);
-                    incSize = function (newcsize, newnpages, end, inc) {
-                        fSizeN += inc;
-                        if (fSizeN >= newcsize) {
-                            jqFSize.attr('title', newcsize);
-                            jqFSize.html(lib.addCommas(newcsize));
-                            if (!end) {
-                                jqFSize.append(' (' + conf.messages.counting + ')');
-                            }
-                            $('#relconcsize').html('('
-                                + lib.addCommas(relCSize.toFixed(1).toString())
-                                + ' ' + conf.messages.per_million + ')');
-                            jqLPage.attr('href', "view?' + conf.q + ';' + conf.globals + ';fromp=" + newnpages);
-                            jqNPages.attr('title', newnpages);
-                            newnpages = lib.addCommas(newnpages);
-                            jqNPages.text(newnpages);
-                            return;
-                        }
-                        jqFSize.attr('title', Math.ceil(fSizeN));
-                        jqFSize.html(lib.addCommas(jqFSize.attr('title')) + ' (' + conf.messages.counting + ')');
-                        nPagesN += pgInc;
-                        nPagesT = Math.ceil(nPagesN).toString();
-                        jqLPage.attr('href', "view?" + conf.q + ";" + conf.globals + ";fromp=" + nPagesT);
-                        jqNPages.attr('title', nPagesT);
-                        nPagesT = lib.addCommas(nPagesT);
-                        jqNPages.text(nPagesT);
-                        win.setTimeout(function () { incSize(newcsize, newnpages, end, inc); }, countup);
-                    };
-                    incSize(newCSize, newNPages, end, inc);
-                    if (end) {
+
+                    if (data.fullsize > 0 && conf.q2 !== "R") {
+                        l = lib.addCommas(data.concsize);
+                        $('#conc-calc-info').html(conf.messages.using_first + ' ' + l +
+                            conf.messages.lines_only + ' <a href="view?' +
+                            'q=R' + conf.q2toEnd + ';' + conf.globals + '">' + conf.messages.use_random + ' ' +
+                            l + ' ' + conf.messages.instead + '.</a>');
+                    }
+
+                    if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
+                        $('#loader').empty();
                     }
                 },
-                dataType: 'text'
+                dataType: 'json'
             });
         });
     };

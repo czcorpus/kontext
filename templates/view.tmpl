@@ -105,7 +105,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 
     #if not $finished and $async and $save and not $sampled_size
     conf.messages.using_random = '$_("using random")';
-    conf.messages.using_first = '$_("using first")';
+    conf.messages.using_first = '$_("Using first")';
     conf.messages.use_random = '$_("Use random")';
     conf.messages.instead = '$_("instead")';
     conf.messages.per_million = '$_("million")';
@@ -238,7 +238,22 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #set $online_sample = False
         #end if
 
-        $_('Hits'): <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter# $concsize #end filter#</strong>
+        $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter# $concsize #end filter#</strong>
+        <span id="conc-calc-info" title="$concsize">#slurp
+	    #if $concsize != $fullsize
+		    #set $l=$locale.format("%d",$concsize,grouping=True)
+		    #if not $online_sample
+			    $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
+		    #else
+			    $_('using random') $l#slurp
+			    #if not $finished
+				    ($_('counting') ...)#slurp
+			    #end if
+			    $_('lines only')#slurp
+		    #end if
+	    #end if
+	    </span>
+
         (<span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
         #if $result_arf
