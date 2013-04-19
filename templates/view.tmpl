@@ -258,7 +258,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
         #if $result_arf
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-        <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
+        <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
         #end if
         #if $shuffle_notification
         | <span class="notice-shuffled">$_('Result is shuffled')</span>

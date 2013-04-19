@@ -195,6 +195,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
         var freq = 500;
 
         $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.counting + '" title="' + conf.messages.counting + '" />');
+        $('#arf').empty().html(conf.messages.counting);
 
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
