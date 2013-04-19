@@ -565,10 +565,15 @@ class ConcCGI(UserCGI):
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
     def get_cached_conc_sizes(self):
-        self._headers['Content-Type'] = 'text/plain'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
-        return "\n".join(map(str, [cs["finished"], cs["concsize"],
-                                   cs["relconcsize"], cs["fullsize"]]))
+
+        return {
+            'finished': int(cs["finished"]),
+            'concsize': cs["concsize"],
+            'relconcsize': cs["relconcsize"],
+            'fullsize': cs["fullsize"]
+        }
+    get_cached_conc_sizes.return_type = 'json'
 
     def get_conc_sizes(self, conc):
         i = 1
