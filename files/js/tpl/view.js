@@ -231,6 +231,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
                     if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
                         $('#loader').empty();
+                        win.location.reload(); // TODO this is just a hotfix
                     }
                 },
                 dataType: 'json'
