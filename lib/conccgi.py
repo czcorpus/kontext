@@ -1502,7 +1502,9 @@ class ConcCGI(UserCGI):
     blacklist = []
 
     def wordlist_form(self, ref_corpname=''):
-        "Word List Form"
+        """
+        Word List Form
+        """
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -1576,23 +1578,23 @@ class ConcCGI(UserCGI):
             raise ConcError('Word sketch keywords are available '
                             'with raw word counts only')
         lastpage = 0
-        if self._anonymous and wlpage >= 10: # limit paged lists
-            wlpage = 10;
-            self.wlpage = 10;
+        if self._anonymous and wlpage >= 10:  # limit paged lists
+            wlpage = 10
+            self.wlpage = 10
             lastpage = 1
-        elif self._anonymous and self.wlmaxitems > 1000: # limit saved lists
-            wlpage = 1;
-            self.wlpage = 1;
+        elif self._anonymous and self.wlmaxitems > 1000:  # limit saved lists
+            wlpage = 1
+            self.wlpage = 1
             self.wlmaxitems = 1000
         wlstart = (wlpage - 1) * self.wlmaxitems
-        self.wlmaxitems = self.wlmaxitems * wlpage + 1 # +1 = end detection
+        self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                               'blcache'))
             if wltype == 'keywords':
-                args = ( self.cm.get_Corpus(self.corpname, usesubcorp),
-                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp) )
+                args = (self.cm.get_Corpus(self.corpname, usesubcorp),
+                        self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
                 if self.wlattr == 'ws_collocations':
                     kw_func = getattr(corplib, 'ws_keywords')
                 else:
@@ -1609,7 +1611,7 @@ class ConcCGI(UserCGI):
                           'ref_corp_full_name': ref_name
                 }
                 result_list = result['Keywords']
-            else: # ordinary list
+            else:  # ordinary list
                 if self.wlattr == 'ws_collocations':
                     result = {'Items': self.call_function(corplib.ws_wordlist,
                                                           (self._corp(),))[wlstart:]}
@@ -1618,22 +1620,25 @@ class ConcCGI(UserCGI):
                         self.wlsort = ''
                     result = {'Items': self.call_function(corplib.wordlist,
                                                           (self._corp(), self.wlwords))[wlstart:]}
-                    if self.wlwords: result['wlcache'] = self.wlcache
-                    if self.blacklist: result['blcache'] = self.blcache
+                    if self.wlwords:
+                        result['wlcache'] = self.wlcache
+                    if self.blacklist:
+                        result['blcache'] = self.blcache
                 result_list = result['Items']
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0; result_list = result_list[:-1]
             self.wlmaxitems -= 1
-            if '.' in self.wlattr: self.wlnums = orig_wlnums
+            if '.' in self.wlattr:
+                self.wlnums = orig_wlnums
             try:
                 result['wlattr_label'] = self._corp().get_conf(
                     self.wlattr + '.LABEL') or self.wlattr
-            except:
+            except Exception:
                 result['wlattr_label'] = self.wlattr
             return result
-        except corplib.MissingSubCorpFreqFile, subcmiss:
+        except corplib.MissingSubCorpFreqFile as subcmiss:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
                 out = corplib.build_arf_db(subcmiss.args[0], 'hashws')
