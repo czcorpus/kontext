@@ -33,8 +33,10 @@ class CorpusManager:
         self.gdexdict = dict(gdexpath)
 
     def default_subcpath(self, corp):
-        if type(corp) is not manatee.Corpus: corp = self.get_Corpus(corp)
-        if corp.get_conf('SUBCBASE'): return corp.get_conf('SUBCBASE')
+        if type(corp) is not manatee.Corpus:
+            corp = self.get_Corpus(corp)
+        if corp.get_conf('SUBCBASE'):
+            return corp.get_conf('SUBCBASE')
         cpath = corp.get_conf('PATH')
         return os.path.join(cpath, 'subcorp')
 
@@ -194,11 +196,14 @@ def ws_subc_freq(wmap3, corp):
 
 def ws_find_triple(wmap1, id1, id2, id3):
     # WARNING: ids has to be bigger than the current position in wmap
-    if not wmap1.findid(id1): return None
+    if not wmap1.findid(id1):
+        return None
     wmap2 = wmap1.nextlevel()
-    if not wmap2.findid(id2): return None
+    if not wmap2.findid(id2):
+        return None
     wmap3 = wmap2.nextlevel()
-    if not wmap3.findid(id3): return None
+    if not wmap3.findid(id3):
+        return None
     return wmap3
 
 
@@ -225,6 +230,7 @@ def ws_wordlist(corp, wlmaxitems=100, wlsort=''):
     wmap.terms_lexicon(freqs_file, lex_file, result_str, wlmaxitems)
 
     # find out seek and cnt
+
     ws1 = wmap.WMap(corp.get_conf('WSBASE'), 0, 0, 0, corp.get_conffile())
     result_parsed = []
     for item in result_str:
@@ -247,7 +253,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
     blacklist = set(blacklist)
     words = set(words)
     attr = corp.get_attr(wlattr)
-    if '.' in wlattr: # attribute of a structure
+    if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
             normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
@@ -256,10 +262,10 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
             normvals = dict([(struct.beg(i), 1) for i in range(struct.size())])
         attrfreq = dict([(i, doc_sizes(corp, struct, wlattr, i, normvals))
                          for i in range(attr.id_range())])
-    else: # positional attribute
+    else:  # positional attribute
         attrfreq = frq_db(corp, wlattr, wlnums)
     items = []
-    if words and wlpat == '.*': # word list just for given words
+    if words and wlpat == '.*':  # word list just for given words
         for word in words:
             if wlsort == 'f':
                 if len(items) > 5 * wlmaxitems:
@@ -279,7 +285,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                     items.append((round(frq, 1), word))
                 else:
                     items.append((frq, word))
-    else: # word list according to pattern
+    else:  # word list according to pattern
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
