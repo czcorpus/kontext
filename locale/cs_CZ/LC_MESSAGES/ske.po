@@ -2607,3 +2607,6 @@ msgstr "Přejít na formulář subkorpusu"
 
 msgid "Aligned corpora"
 msgstr "Zarovnané korpusy"
+
+msgid "calculating..."
+msgstr "probíhá výpočet..."

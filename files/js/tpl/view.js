@@ -194,8 +194,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
     lib.reloadHits = function (conf) {
         var freq = 500;
 
-        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.counting + '" title="' + conf.messages.counting + '" />');
-        $('#arf').empty().html(conf.messages.counting);
+        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.calculating + '" title="' + conf.messages.calculating + '" style="width: 24px; height: 24px" />');
+        $('#arf').empty().html(conf.messages.calculating);
 
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
@@ -232,7 +232,10 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
                     if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
                         $('#loader').empty();
-                        win.location.reload(); // TODO this is just a hotfix
+                        /* TODO: Currently, we are unable to update ARF on the fly which means we
+                         * have to reload the page once all the server calculations are finished.
+                         */
+                        win.location.reload();
                     }
                 },
                 dataType: 'json'
