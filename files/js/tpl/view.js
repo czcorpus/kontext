@@ -218,7 +218,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
                     }
 
                     $('#result-info span.ipm').html(data.relconcsize.toFixed(2));
-                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / conf.numLines));
+                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / conf.numLines)));
 
                     if (data.fullsize > 0) {
                         $('#fullsize').html(num2Str(data.fullsize));
