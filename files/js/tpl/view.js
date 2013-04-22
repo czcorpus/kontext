@@ -197,28 +197,36 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
         $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.calculating + '" title="' + conf.messages.calculating + '" style="width: 24px; height: 24px" />');
         $('#arf').empty().html(conf.messages.calculating);
 
+        /*
+         * Checks periodically for the current state of a concordance calculation
+         */
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
                 url: 'get_cached_conc_sizes?' + conf.q + ';' + conf.globals,
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
-                    var l;
+                    var l,
+                        num2Str;
+
+                    num2Str = function (n) {
+                        return documentPage.formatNum(n, data.thousandsSeparator, data.radixSeparator);
+                    };
 
                     if (data.end) {
                         freq = 5;
                     }
 
                     $('#result-info span.ipm').html(data.relconcsize.toFixed(2));
-                    $('.numofpages').html(Math.ceil(data.concsize / conf.numLines));
+                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / conf.numLines));
 
                     if (data.fullsize > 0) {
-                        $('#fullsize').html(data.fullsize);
-                        $('#toolbar-hits').html(data.fullsize);
+                        $('#fullsize').html(num2Str(data.fullsize));
+                        $('#toolbar-hits').html(num2Str(data.fullsize));
 
                     } else {
-                        $('#fullsize').html(data.concsize);
-                        $('#toolbar-hits').html(data.concsize);
+                        $('#fullsize').html(num2Str(data.concsize));
+                        $('#toolbar-hits').html(num2Str(data.concsize));
                     }
 
                     if (data.fullsize > 0 && conf.q2 !== "R") {
