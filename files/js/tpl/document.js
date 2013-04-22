@@ -143,6 +143,34 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
+     * @param number {number|string}
+     * @param {string} groupSepar separator character for thousands groups
+     * @param {string} radixSepar separator character for integer and fractional parts
+     * @returns {string}
+     */
+    lib.formatNum = function (number, groupSepar, radixSepar) {
+        var i,
+            offset = 0,
+            len,
+            numParts,
+            s;
+
+        numParts = number.toString().split('.');
+        s = numParts[0].split('').reverse();
+        len = s.length;
+        for (i = 3; i < len; i += 3) {
+            s.splice(i + offset, 0, groupSepar);
+            offset += 1;
+        }
+        s = s.reverse().join('');
+        if (numParts[1] !== undefined) {
+            s += radixSepar + numParts[1];
+        }
+        return s;
+    };
+
+    /**
+     *
      * @param {object} conf
      */
     lib.misc = function (conf) {
