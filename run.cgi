@@ -49,7 +49,6 @@ class BonitoCGI (ConcCGI, UserCGI):
 
     # ConcCGI options
     cache_dir = settings.get('corpora', 'cache_dir')
-    subcpath = [ settings.get('corpora', 'subcpath') ]
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
 	# set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
