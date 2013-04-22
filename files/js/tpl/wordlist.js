@@ -29,8 +29,9 @@ define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
      * @param corpNameUrl
      * @param subcName
      * @param attrName
+     * @param reloadUrl
      */
-    lib.updateProcessBar = function (corpNameUrl, subcName, attrName) {
+    lib.updateProcessBar = function (corpNameUrl, subcName, attrName, reloadUrl) {
         var params = corpNameUrl + '&amp;usesubcorp=' + subcName + '&amp;attrname=' + attrName;
 
         jqueryPeriodic({ period: 1000, decay: 1.2, max_period: 60000 }, function () {
@@ -41,7 +42,7 @@ define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
                 complete : function (request) {
                     $('#processbar').css('width', request.responseText);
                     if (request.responseText === '100%') {
-                        win.location.reload();
+                        win.location = reloadUrl;
                     }
                 }
             });
@@ -50,7 +51,7 @@ define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
 
     lib.init = function (conf) {
         lib.startWatching = function () {
-            lib.updateProcessBar(conf.corpnameUrl, conf.subcName, conf.attrName);
+            lib.updateProcessBar(conf.corpnameUrl, conf.subcName, conf.attrName, conf.reloadUrl);
         };
     };
 

@@ -1588,6 +1588,8 @@ class ConcCGI(UserCGI):
             self.wlmaxitems = 1000
         wlstart = (wlpage - 1) * self.wlmaxitems
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
+        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s' \
+                                   % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
@@ -1602,24 +1604,24 @@ class ConcCGI(UserCGI):
                     args = args + (self.wlattr,)
                 out = self.call_function(kw_func, args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
-                result = {'Keywords': [{'str': w, 'score': round(s, 1),
+                result.update({'Keywords': [{'str': w, 'score': round(s, 1),
                                         'freq': round(f, 1),
                                         'freq_ref': round(fr, 1),
                                         'rel': round(rel, 1),
                                         'rel_ref': round(relref, 1)}
                                        for s, rel, relref, f, fr, w in out],
                           'ref_corp_full_name': ref_name
-                }
+                })
                 result_list = result['Keywords']
             else:  # ordinary list
                 if self.wlattr == 'ws_collocations':
-                    result = {'Items': self.call_function(corplib.ws_wordlist,
-                                                          (self._corp(),))[wlstart:]}
+                    result.update({'Items': self.call_function(corplib.ws_wordlist,
+                                                          (self._corp(),))[wlstart:]})
                 else:
                     if hasattr(self, 'wlfile') and self.wlpat == '.*':
                         self.wlsort = ''
-                    result = {'Items': self.call_function(corplib.wordlist,
-                                                          (self._corp(), self.wlwords))[wlstart:]}
+                    result.update({'Items': self.call_function(corplib.wordlist,
+                                                          (self._corp(), self.wlwords))[wlstart:]})
                     if self.wlwords:
                         result['wlcache'] = self.wlcache
                     if self.blacklist:
@@ -1637,6 +1639,7 @@ class ConcCGI(UserCGI):
                     self.wlattr + '.LABEL') or self.wlattr
             except Exception:
                 result['wlattr_label'] = self.wlattr
+
             return result
         except corplib.MissingSubCorpFreqFile as subcmiss:
             self.wlmaxitems -= 1
@@ -1653,7 +1656,8 @@ class ConcCGI(UserCGI):
                 processing = out[1].strip('%')
             else:
                 processing = '0'
-            return {'processing': processing == '100' and '99' or processing}
+            result.update({'processing': processing == '100' and '99' or processing})
+            return result
 
     wlstruct_attr1 = ''
     wlstruct_attr2 = ''
