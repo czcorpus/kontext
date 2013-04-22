@@ -40,7 +40,6 @@ define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
                 method : 'get',
                 complete : function (request) {
                     $('#processbar').css('width', request.responseText);
-                    console.log(request);
                     if (request.responseText === '100%') {
                         win.location.reload();
                     }
