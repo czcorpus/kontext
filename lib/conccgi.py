@@ -25,7 +25,7 @@ import corplib
 import conclib
 import version
 from butils import *
-from CGIPublisher import CGIPublisher, JsonEncodedData, UserActionException
+from CGIPublisher import JsonEncodedData, UserActionException
 import settings
 import taghelper
 
@@ -1588,7 +1588,7 @@ class ConcCGI(UserCGI):
             self.wlmaxitems = 1000
         wlstart = (wlpage - 1) * self.wlmaxitems
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
-        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s' \
+        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
                                    % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
