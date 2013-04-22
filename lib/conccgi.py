@@ -572,8 +572,8 @@ class ConcCGI(UserCGI):
             'concsize': cs["concsize"],
             'relconcsize': cs["relconcsize"],
             'fullsize': cs["fullsize"],
-            'thousandsSeparator': locale.localeconv['thousands_sep'],
-            'radixSeparator': locale.localeconv['decimal_point']
+            'thousandsSeparator': locale.localeconv()['thousands_sep'],
+            'radixSeparator': locale.localeconv()['decimal_point']
         }
     get_cached_conc_sizes.return_type = 'json'
 
