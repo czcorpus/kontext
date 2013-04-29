@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the wordlist.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document'], function (win, $, jqueryPeriodic, documentPage) {
     'use strict';
 
     var lib = {};
@@ -50,6 +50,7 @@ define(['win', 'jquery', 'jquery.periodic'], function (win, $, jqueryPeriodic) {
     };
 
     lib.init = function (conf) {
+        documentPage.init(conf);
         lib.startWatching = function () {
             lib.updateProcessBar(conf.corpnameUrl, conf.subcName, conf.attrName, conf.reloadUrl);
         };
