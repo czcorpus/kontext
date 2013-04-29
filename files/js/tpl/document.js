@@ -247,9 +247,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             lib.setAlignedCorporaFieldsDisabledState(true);
             $(win).on('unload', function () {
                 lib.setAlignedCorporaFieldsDisabledState(false);
-                // following line is present because of Firefox which is caching form state and
-                // JS-added elements confuse it.
-                $('input[type="hidden"][name="corpname"]').remove();
             });
         });
 

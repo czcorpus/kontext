@@ -17,7 +17,7 @@
  */
 
 
-define(['jquery'], function ($) {
+define(['jquery', 'win'], function ($, win) {
     'use strict';
 
     /**
@@ -378,8 +378,12 @@ define(['jquery'], function ($) {
             treeComponentInstance = createTreeComponentInstance();
             treeComponentInstance.init(rootUl);
             $(rootUl.parentNode).append(selectParser.hiddenInput);
+            // following handler is present because of Firefox
+            // which is caching form state and JS-added elements confuse it.
+            $(win).on('unload', function () {
+                $(selectParser.hiddenInput).remove();
+            });
             expandSelected(treeComponentInstance, $(selectParser.hiddenInput).val(), rootUl);
-
         });
     }
 
