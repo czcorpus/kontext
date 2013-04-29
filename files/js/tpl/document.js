@@ -247,6 +247,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             lib.setAlignedCorporaFieldsDisabledState(true);
             $(win).on('unload', function () {
                 lib.setAlignedCorporaFieldsDisabledState(false);
+                // following line is present because of Firefox which is caching form state and
+                // JS-added elements confuse it.
+                $('input[type="hidden"][name="corpname"]').remove();
             });
         });
 
@@ -254,11 +257,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $.each(lib.userSettings.data, function (property, value) {
             var el = property.replace('_view', ''); // remove end '_view'
             if ($('#' + el).length !== 0) { // element exists
-                if (lib.userSettings.get(value) === 'show') {
+                if (lib.userSettings.get(property) === 'show') {
                     $('#' + el).show();
+                    $('#submenu a.toggle-submenu-item[data-id-to-set=' + el + ']').addClass('toggled');
 
                 } else {
                     $('#' + el).hide();
+                    $('#submenu a.toggle-submenu-item[data-id-to-set=' + el + ']').removeClass('toggled');
                 }
             }
         });
@@ -434,7 +439,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * @param {object} conf
      */
     lib.init = function (conf) {
-
         lib.userSettings = {
             data : cookies.get('user_settings'),
 
