@@ -272,8 +272,6 @@ class CGIPublisher:
         ans = apply(method, args[1:], na)
         if type(ans) == dict and tpl_data is not None:
             ans.update(tpl_data)
-        import logging
-        logging.getLogger(__name__).debug(ans)
         return ans
 
     def call_function(self, func, args, **named_args):
