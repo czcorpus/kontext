@@ -1900,8 +1900,8 @@ class ConcCGI(UserCGI):
         if delete:
             base = os.path.join(self.subcpath[-1], self.corpname, subcname)
             for e in ('.subc', '.used'):
-                if os.path.isfile(base + e):
-                    os.unlink(base + e)
+                if os.path.isfile((base + e).encode('utf-8')):
+                    os.unlink((base + e).encode('utf-8'))
         if within_condition and within_struct:
             tt_query = [(within_struct, within_condition)]
         else:
@@ -1912,8 +1912,11 @@ class ConcCGI(UserCGI):
         if (not subcname or (not tt_query and delete)
                 or (subcname and not delete and not create)):
             subc_list = self.cm.subcorp_names(basecorpname)
+            for item in subc_list:
+                item['selected'] = False
             if subc_list:
                 subcname = subc_list[0]['n']
+                subc_list[0]['selected'] = True
                 sc = self.cm.get_Corpus(basecorpname)
                 corp_size = formatnum(sc.size())
                 subcorp_size = formatnum(sc.search_size())
@@ -1926,7 +1929,8 @@ class ConcCGI(UserCGI):
                 'subcname': subcname,
                 'corpsize': corp_size,
                 'subcsize': subcorp_size,
-                'SubcorpList': subc_list
+                'SubcorpList': subc_list,
+                'fetchSubcInfo': 'false'  # this is ok (it is used as a JavaScript value)
             }
         path = os.path.join(self.subcpath[-1], basecorpname)
         if not os.path.isdir(path):
@@ -1942,10 +1946,16 @@ class ConcCGI(UserCGI):
                                             subquery):
             finalname = '%s:%s' % (basecorpname, subcname)
             sc = self.cm.get_Corpus(finalname)
-            return {'subcorp': finalname,
-                    'corpsize': formatnum(sc.size()),
-                    'subcsize': formatnum(sc.search_size()),
-                    'SubcorpList': self.cm.subcorp_names(self.corpname)}
+            subc_list = self.cm.subcorp_names(self.corpname)
+            for item in subc_list:
+                item['selected'] = True if item['n'].decode('utf-8') == subcname else False
+            return {
+                'subcorp': finalname,
+                'corpsize': formatnum(sc.size()),
+                'subcsize': formatnum(sc.search_size()),
+                'SubcorpList': subc_list,
+                'fetchSubcInfo': 'true'  # this is ok (it is used as a JavaScript value)
+            }
         else:
             raise ConcError(_('Empty subcorpus!'))
 
