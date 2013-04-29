@@ -266,10 +266,15 @@ class CGIPublisher:
             pass
         result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
 
-    def call_method(self, method, args, named_args):
+    def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
         correct_types(na, function_defaults(method), 1)
-        return apply(method, args[1:], na)
+        ans = apply(method, args[1:], na)
+        if type(ans) == dict and tpl_data is not None:
+            ans.update(tpl_data)
+        import logging
+        logging.getLogger(__name__).debug(ans)
+        return ans
 
     def call_function(self, func, args, **named_args):
         na = self.clone_self()
@@ -401,7 +406,7 @@ class CGIPublisher:
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
-    def process_method(self, methodname, pos_args, named_args):
+    def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
         This method handles mapping between HTTP actions and CGIPublisher's methods
 
@@ -413,7 +418,8 @@ class CGIPublisher:
           2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
-
+        if tpl_data is None:
+            tpl_data = {}
         if getattr(self, 'reload', None):
             self.reload = None
             if methodname != 'subcorp':
@@ -432,7 +438,7 @@ class CGIPublisher:
         try:
             return (methodname,
                     getattr(method, 'template', methodname + '.tmpl'),
-                    self.call_method(method, pos_args, named_args))
+                    self.call_method(method, pos_args, named_args, tpl_data))
         except Exception as e:
             logging.getLogger(__name__).error(''.join(self.get_traceback()))
 
@@ -444,22 +450,15 @@ class CGIPublisher:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
                 return (methodname, None,
                         {'error': json_msg})
-            else:
-                if not self.exceptmethod and self.is_template(methodname + '_form'):
-                    self.exceptmethod = methodname + '_form'
-                if settings.is_debug_mode() or not self.exceptmethod:
-                       raise e
+            if not self.exceptmethod and self.is_template(methodname + '_form'):
+                tpl_data['error'] = e.message if type(e.message) == unicode else e.message.decode('utf-8')
+                self.exceptmethod = methodname + '_form'
+            if settings.is_debug_mode() or not self.exceptmethod:
+                   raise e
 
-                try:
-                    self.error = u'%s' % e
-                except UnicodeDecodeError:
-                    # Some error messages are not in utf8. In such cases we rather use general error
-                    # message which is enough because detailed information is already logged on server.
-                    self.error = _('Failed to process your request. Please try again later or contact system support.')
-                logging.getLogger(__name__).warn('error: %s' % self.error)
-                em, self.exceptmethod = self.exceptmethod, None
-                return self.process_method(em, pos_args, named_args)
-
+            self.error = e.message if type(e.message) == unicode else e.message.decode('utf-8')
+            em, self.exceptmethod = self.exceptmethod, None
+            return self.process_method(em, pos_args, named_args, tpl_data)
 
     def recode_input(self, x, decode=1):  # converts query into corpencoding
         if self._corpus_architect and decode: return x

@@ -45,9 +45,11 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     /**
      *
      */
-    lib.init = function () {
+    lib.init = function (conf) {
         $('#subcname').focus();
-        lib.showSubcorpInfo();
+        if (conf.fetchSubcInfo) {
+            lib.showSubcorpInfo();
+        }
         $('#subcname').on('change', lib.showSubcorpInfo);
         treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'), null, mainPage.updForm);
     };

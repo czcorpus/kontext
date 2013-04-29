@@ -33,8 +33,10 @@ class CorpusManager:
         self.gdexdict = dict(gdexpath)
 
     def default_subcpath(self, corp):
-        if type(corp) is not manatee.Corpus: corp = self.get_Corpus(corp)
-        if corp.get_conf('SUBCBASE'): return corp.get_conf('SUBCBASE')
+        if type(corp) is not manatee.Corpus:
+            corp = self.get_Corpus(corp)
+        if corp.get_conf('SUBCBASE'):
+            return corp.get_conf('SUBCBASE')
         cpath = corp.get_conf('PATH')
         return os.path.join(cpath, 'subcorp')
 
@@ -172,11 +174,22 @@ class CorpusManager:
         scsize = os.path.getsize(scpath)
         scdata = open(scpath).read()
 
-        for f in glob.glob(basedir + '/*/%s/*.subc' % subcorp.corpname):
-            if f == scpath: continue
-            if os.path.getsize(f) != scsize: continue
-            if [s for s in wanted_suff
-                if not os.path.isfile(f[:-4] + wanted_infix + '.' + s)]:
+        subc_dir = '%s/*/%s/*.subc' % (basedir, subcorp.corpname)
+        if type(subc_dir) == unicode:
+            subc_dir = subc_dir.encode('utf-8')
+        if type(scpath) == unicode:
+            scpath = scpath.encode('utf-8')
+        if type(wanted_infix) == unicode:
+            wanted_infix = wanted_infix.encode('utf-8')
+
+        for f in glob.glob(subc_dir):
+            if f == scpath:
+                continue
+            if os.path.getsize(f) != scsize:
+                continue
+            f_no_suff = (f.decode('utf-8')[:-4]).encode('utf-8')
+
+            if [s for s in wanted_suff if not os.path.isfile(f_no_suff + wanted_infix + '.' + s)]:
                 continue
                 # now, f has same size and all wanted suffixes exist
             if open(f).read() == scdata:
@@ -194,11 +207,14 @@ def ws_subc_freq(wmap3, corp):
 
 def ws_find_triple(wmap1, id1, id2, id3):
     # WARNING: ids has to be bigger than the current position in wmap
-    if not wmap1.findid(id1): return None
+    if not wmap1.findid(id1):
+        return None
     wmap2 = wmap1.nextlevel()
-    if not wmap2.findid(id2): return None
+    if not wmap2.findid(id2):
+        return None
     wmap3 = wmap2.nextlevel()
-    if not wmap3.findid(id3): return None
+    if not wmap3.findid(id3):
+        return None
     return wmap3
 
 
@@ -225,6 +241,7 @@ def ws_wordlist(corp, wlmaxitems=100, wlsort=''):
     wmap.terms_lexicon(freqs_file, lex_file, result_str, wlmaxitems)
 
     # find out seek and cnt
+
     ws1 = wmap.WMap(corp.get_conf('WSBASE'), 0, 0, 0, corp.get_conffile())
     result_parsed = []
     for item in result_str:
@@ -247,7 +264,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
     blacklist = set(blacklist)
     words = set(words)
     attr = corp.get_attr(wlattr)
-    if '.' in wlattr: # attribute of a structure
+    if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
             normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
@@ -256,10 +273,10 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
             normvals = dict([(struct.beg(i), 1) for i in range(struct.size())])
         attrfreq = dict([(i, doc_sizes(corp, struct, wlattr, i, normvals))
                          for i in range(attr.id_range())])
-    else: # positional attribute
+    else:  # positional attribute
         attrfreq = frq_db(corp, wlattr, wlnums)
     items = []
-    if words and wlpat == '.*': # word list just for given words
+    if words and wlpat == '.*':  # word list just for given words
         for word in words:
             if wlsort == 'f':
                 if len(items) > 5 * wlmaxitems:
@@ -279,7 +296,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                     items.append((round(frq, 1), word))
                 else:
                     items.append((frq, word))
-    else: # word list according to pattern
+    else:  # word list according to pattern
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
@@ -488,10 +505,17 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
 
 
 def subcorp_base_file(corp, attrname):
+    """
+    Returns
+    -------
+    path : str
+        subcorpus path as a 8-bit string (i.e. unicode paths are encoded)
+    """
     if hasattr(corp, 'spath'):
-        return corp.spath[:-4] + attrname
+        ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
-        return corp.get_conf('PATH') + attrname
+        ans = corp.get_conf('PATH') + attrname
+    return ans.encode('utf-8')
 
 
 class MissingSubCorpFreqFile(Exception):
@@ -501,7 +525,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq'):
     import array
 
-    filename = subcorp_base_file(corp, attrname) + '.' + nums
+    filename = (subcorp_base_file(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
     if nums == 'arf':
         frq = array.array('f')
         try:
@@ -720,7 +744,10 @@ def build_arf_db(corp, attrname):
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
-    sys.stderr.write('build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename))
+
+    tmp = 'build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename.decode('utf-8'))
+    sys.stderr.write(tmp.encode('utf-8'))
+
     pid = os.fork()
     if pid == 0:
         import daemonize

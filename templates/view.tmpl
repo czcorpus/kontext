@@ -105,11 +105,11 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 
     #if not $finished and $async and $save and not $sampled_size
     conf.messages.using_random = '$_("using random")';
-    conf.messages.using_first = '$_("using first")';
+    conf.messages.using_first = '$_("Using first")';
     conf.messages.use_random = '$_("Use random")';
     conf.messages.instead = '$_("instead")';
     conf.messages.per_million = '$_("million")';
-    conf.messages.counting = ' ($_("counting ..."))';
+    conf.messages.calculating = ' $_("calculating...")';
     conf.messages.lines_only = ' $_("lines only").';
     conf.numLines = $len($Lines);
     conf.q = '$q';
@@ -238,12 +238,27 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #set $online_sample = False
         #end if
 
-        $_('Hits'): <strong>#filter $IntegerFormatter# $concsize #end filter#</strong>
+        $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter# $concsize #end filter#</strong>
+        <span id="conc-calc-info" title="$concsize">#slurp
+	    #if $concsize != $fullsize
+		    #set $l=$locale.format("%d",$concsize,grouping=True)
+		    #if not $online_sample
+			    $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
+		    #else
+			    $_('using random') $l#slurp
+			    #if not $finished
+				    $_('counting') ...#slurp
+			    #end if
+			    $_('lines only')#slurp
+		    #end if
+	    #end if
+	    </span>
+
         (<span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
         <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
         #if $result_arf
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-        <strong>#filter $IntegerFormatter# $result_arf #end filter#</strong>
+        <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
         #end if
         #if $shuffle_notification
         | <span class="notice-shuffled">$_('Result is shuffled')</span>
@@ -306,7 +321,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
       $_("Page")
       <input type="text" name="fromp" value="$fromp" size="4" />
       #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
-      $_("of") <span name="numofpages" title="$numofpages">$l_numofpages</span>
+      $_("of") <span class="numofpages" title="$numofpages">$l_numofpages</span>
       <input type="submit" value="$_("Go")" />
     </div>
 
