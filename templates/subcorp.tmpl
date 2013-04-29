@@ -25,6 +25,7 @@ $_("Subcorpus Info")#slurp
 
 #def bodyonload
 require(['tpl/subcorp', 'domReady!'], function(pageSelf, domReady) {
+    conf.fetchSubcInfo = $fetchSubcInfo;
     pageSelf.init(conf);
 });
 #end def
@@ -48,8 +49,12 @@ require(['tpl/subcorp', 'domReady!'], function(pageSelf, domReady) {
                 <select name="subcname" id="subcname"
                         size="#if len($SubcorpList) < 4 then 4 else min(len($SubcorpList), 25)#">
                     #for $s in $SubcorpList
-                    #set $selected = ($s.n == $subcname) and 'selected="selected"' or ''
-                    <option $selected>$s.n</option>
+                    #if $s.selected
+                      #set $selected = ' selected="selected"'
+                    #else
+                      #set $selected = ''
+                    #end if
+                    <option${selected}>$s.n</option>
                     #end for
                 </select>
                 #else
