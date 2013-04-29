@@ -444,18 +444,12 @@ class CGIPublisher:
                 return (methodname, None,
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname + '_form'):
-                tpl_data['error'] = str(e)
+                tpl_data['error'] = e.message if type(e.message) == unicode else e.message.decode('utf-8')
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
                    raise e
 
-            try:
-                self.error = u'%s' % e
-            except UnicodeDecodeError:
-                # Some error messages are not in utf8. In such cases we rather use general error
-                # message which is enough because detailed information is already logged on server.
-                self.error = _('Failed to process your request. Please try again later or contact system support.')
-
+            self.error = e.message if type(e.message) == unicode else e.message.decode('utf-8')
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method(em, pos_args, named_args, tpl_data)
 
