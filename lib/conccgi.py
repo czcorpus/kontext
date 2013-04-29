@@ -25,7 +25,7 @@ import corplib
 import conclib
 import version
 from butils import *
-from CGIPublisher import CGIPublisher, JsonEncodedData, UserActionException
+from CGIPublisher import JsonEncodedData, UserActionException
 import settings
 import taghelper
 
@@ -58,16 +58,8 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
 
 
 class ConcError(Exception):
-    """
-    Represents general concordance exception
-
-    Parameters
-    ----------
-    msg : str
-      standard error message (just like in case of Exception)
-    """
     def __init__(self, msg):
-        Exception.__init__(self, msg)
+        super(ConcError, self).__init__(msg)
 
 
 class ConcCGI(UserCGI):
@@ -90,7 +82,7 @@ class ConcCGI(UserCGI):
     prevlink = u''
     nextlink = u''
     concsize = u''
-    samplesize = 10000000 #10M
+    samplesize = 0  # orig 1e7
     Lines = []
     fromp = u'1'
     numofpages = u''
@@ -245,24 +237,14 @@ class ConcCGI(UserCGI):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
-    def _get_op_desc(self):
-        """
-        Returns description of current operation
-        """
-        return [{'op': o, 'arg': a, 'churl': self.urlencode(u1), 'tourl': self.urlencode(u2), 'size': s}
-                for o, a, u1, u2, s in conclib.get_conc_desc(self.q, corpname=self.corpname,
-                                                             cache_dir=self.cache_dir,
-                                                             subchash=getattr(self._corp(), "subchash", None),
-                                                             translate=False)]
-
     def preprocess_values(self, form):
         if self._corpus_architect: return
         cn = ''
-        if 'json' in form:
+        if form.has_key('json'):
             import json
 
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
-        if 'corpname' in form and not cn:
+        if form.has_key('corpname') and not cn:
             cn = form.getvalue('corpname')
         if cn:
             if isinstance(cn, ListType):
@@ -386,6 +368,15 @@ class ConcCGI(UserCGI):
             names = self.add_vars[methodname]
         else:
             return
+
+        if 'Desc' in names:
+            result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+                               'tourl': self.urlencode(u2), 'size': s}
+                              for o, a, u1, u2, s in
+                              conclib.get_conc_desc(self.q,
+                                                    corpname=self.corpname,
+                                                    cache_dir=self.cache_dir,
+                                                    subchash=getattr(self._corp(), "subchash", None))]
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
@@ -576,8 +567,17 @@ class ConcCGI(UserCGI):
     def get_cached_conc_sizes(self):
         self._headers['Content-Type'] = 'text/plain'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
-        return "\n".join(map(str, [cs["finished"], cs["concsize"],
-                                   cs["relconcsize"], cs["fullsize"]]))
+
+        return {
+            'finished': int(cs["finished"]),
+            'concsize': cs["concsize"],
+            'relconcsize': cs["relconcsize"],
+            'fullsize': cs["fullsize"],
+            'thousandsSeparator': u'%s' % locale.localeconv()['thousands_sep'].decode('utf-8'),
+            'radixSeparator': u'%s' % locale.localeconv()['decimal_point'].decode('utf-8')
+        }
+    
+    get_cached_conc_sizes.return_type = 'json'
 
     def get_conc_sizes(self, conc):
         i = 1
@@ -1246,9 +1246,7 @@ class ConcCGI(UserCGI):
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
                  saveformat='text', maxsavelines=1000):
-        """
-        save a frequecy list
-        """
+        "save a frequecy list"
         if self.pages:
             if maxsavelines < self.fmaxitems: self.fmaxitems = maxsavelines
         else:
@@ -1257,8 +1255,7 @@ class ConcCGI(UserCGI):
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
-        if self.wlattr:
-            self.make_wl_query()  # multilevel wordlist
+        if self.wlattr: self.make_wl_query() # multilevel wordlist
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
@@ -1268,7 +1265,6 @@ class ConcCGI(UserCGI):
         else:
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
-        result['Desc'] = self._get_op_desc()
         return result
 
     add_vars['savefreq'] = ['Desc']
@@ -1342,8 +1338,8 @@ class ConcCGI(UserCGI):
             result['lastpage'] = 1
 
         for item in result['Items']:
-            item["pfilter"] = self.urlencode(item["pfilter"])
-            item["nfilter"] = self.urlencode(item["nfilter"])
+            item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
+            item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
 
         return result
 
@@ -1373,7 +1369,6 @@ class ConcCGI(UserCGI):
         else:
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'inline; filename="coll.txt"'
-        result['Desc'] = self._get_op_desc()
         return result
 
     add_vars['savecoll'] = ['Desc', 'concsize']
@@ -1508,7 +1503,9 @@ class ConcCGI(UserCGI):
     blacklist = []
 
     def wordlist_form(self, ref_corpname=''):
-        "Word List Form"
+        """
+        Word List Form
+        """
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -1582,23 +1579,25 @@ class ConcCGI(UserCGI):
             raise ConcError('Word sketch keywords are available '
                             'with raw word counts only')
         lastpage = 0
-        if self._anonymous and wlpage >= 10: # limit paged lists
-            wlpage = 10;
-            self.wlpage = 10;
+        if self._anonymous and wlpage >= 10:  # limit paged lists
+            wlpage = 10
+            self.wlpage = 10
             lastpage = 1
-        elif self._anonymous and self.wlmaxitems > 1000: # limit saved lists
-            wlpage = 1;
-            self.wlpage = 1;
+        elif self._anonymous and self.wlmaxitems > 1000:  # limit saved lists
+            wlpage = 1
+            self.wlpage = 1
             self.wlmaxitems = 1000
         wlstart = (wlpage - 1) * self.wlmaxitems
-        self.wlmaxitems = self.wlmaxitems * wlpage + 1 # +1 = end detection
+        self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
+        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
+                                   % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                               'blcache'))
             if wltype == 'keywords':
-                args = ( self.cm.get_Corpus(self.corpname, usesubcorp),
-                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp) )
+                args = (self.cm.get_Corpus(self.corpname, usesubcorp),
+                        self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
                 if self.wlattr == 'ws_collocations':
                     kw_func = getattr(corplib, 'ws_keywords')
                 else:
@@ -1606,40 +1605,44 @@ class ConcCGI(UserCGI):
                     args = args + (self.wlattr,)
                 out = self.call_function(kw_func, args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
-                result = {'Keywords': [{'str': w, 'score': round(s, 1),
+                result.update({'Keywords': [{'str': w, 'score': round(s, 1),
                                         'freq': round(f, 1),
                                         'freq_ref': round(fr, 1),
                                         'rel': round(rel, 1),
                                         'rel_ref': round(relref, 1)}
                                        for s, rel, relref, f, fr, w in out],
                           'ref_corp_full_name': ref_name
-                }
+                })
                 result_list = result['Keywords']
-            else: # ordinary list
+            else:  # ordinary list
                 if self.wlattr == 'ws_collocations':
-                    result = {'Items': self.call_function(corplib.ws_wordlist,
-                                                          (self._corp(),))[wlstart:]}
+                    result.update({'Items': self.call_function(corplib.ws_wordlist,
+                                                          (self._corp(),))[wlstart:]})
                 else:
                     if hasattr(self, 'wlfile') and self.wlpat == '.*':
                         self.wlsort = ''
-                    result = {'Items': self.call_function(corplib.wordlist,
-                                                          (self._corp(), self.wlwords))[wlstart:]}
-                    if self.wlwords: result['wlcache'] = self.wlcache
-                    if self.blacklist: result['blcache'] = self.blcache
+                    result.update({'Items': self.call_function(corplib.wordlist,
+                                                          (self._corp(), self.wlwords))[wlstart:]})
+                    if self.wlwords:
+                        result['wlcache'] = self.wlcache
+                    if self.blacklist:
+                        result['blcache'] = self.blcache
                 result_list = result['Items']
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0; result_list = result_list[:-1]
             self.wlmaxitems -= 1
-            if '.' in self.wlattr: self.wlnums = orig_wlnums
+            if '.' in self.wlattr:
+                self.wlnums = orig_wlnums
             try:
                 result['wlattr_label'] = self._corp().get_conf(
                     self.wlattr + '.LABEL') or self.wlattr
-            except:
+            except Exception:
                 result['wlattr_label'] = self.wlattr
+
             return result
-        except corplib.MissingSubCorpFreqFile, subcmiss:
+        except corplib.MissingSubCorpFreqFile as subcmiss:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
                 out = corplib.build_arf_db(subcmiss.args[0], 'hashws')
@@ -1654,7 +1657,8 @@ class ConcCGI(UserCGI):
                 processing = out[1].strip('%')
             else:
                 processing = '0'
-            return {'processing': processing == '100' and '99' or processing}
+            result.update({'processing': processing == '100' and '99' or processing})
+            return result
 
     wlstruct_attr1 = ''
     wlstruct_attr2 = ''
@@ -1806,7 +1810,7 @@ class ConcCGI(UserCGI):
                 pass
         return normslist
 
-    def subcorp_form(self, subcorpattrs='', subcname='', within_condition=[], within_struct=[], method='gui'):
+    def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
         """
         Parameters
         ----------
@@ -1875,7 +1879,7 @@ class ConcCGI(UserCGI):
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
 
-    def subcorp(self, subcname='', delete='', create=False, within_condition=[], within_struct=[], method=''):
+    def subcorp(self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
         """
         Parameters
         ----------
@@ -1897,10 +1901,10 @@ class ConcCGI(UserCGI):
         if delete:
             base = os.path.join(self.subcpath[-1], self.corpname, subcname)
             for e in ('.subc', '.used'):
-                if os.path.isfile(base + e):
-                    os.unlink(base + e)
-        if len(within_condition) > 0 and len(within_struct) > 0:
-            tt_query = [(x1, x2) for x1, x2 in zip(within_struct, within_condition)]
+                if os.path.isfile((base + e).encode('utf-8')):
+                    os.unlink((base + e).encode('utf-8'))
+        if within_condition and within_struct:
+            tt_query = [(within_struct, within_condition)]
         else:
             tt_query = self._texttype_query()
         basecorpname = self.corpname.split(':')[0]
@@ -1909,8 +1913,11 @@ class ConcCGI(UserCGI):
         if (not subcname or (not tt_query and delete)
                 or (subcname and not delete and not create)):
             subc_list = self.cm.subcorp_names(basecorpname)
+            for item in subc_list:
+                item['selected'] = False
             if subc_list:
                 subcname = subc_list[0]['n']
+                subc_list[0]['selected'] = True
                 sc = self.cm.get_Corpus(basecorpname)
                 corp_size = formatnum(sc.size())
                 subcorp_size = formatnum(sc.search_size())
@@ -1923,7 +1930,8 @@ class ConcCGI(UserCGI):
                 'subcname': subcname,
                 'corpsize': corp_size,
                 'subcsize': subcorp_size,
-                'SubcorpList': subc_list
+                'SubcorpList': subc_list,
+                'fetchSubcInfo': 'false'  # this is ok (it is used as a JavaScript value)
             }
         path = os.path.join(self.subcpath[-1], basecorpname)
         if not os.path.isdir(path):
@@ -1939,10 +1947,16 @@ class ConcCGI(UserCGI):
                                             subquery):
             finalname = '%s:%s' % (basecorpname, subcname)
             sc = self.cm.get_Corpus(finalname)
-            return {'subcorp': finalname,
-                    'corpsize': formatnum(sc.size()),
-                    'subcsize': formatnum(sc.search_size()),
-                    'SubcorpList': self.cm.subcorp_names(self.corpname)}
+            subc_list = self.cm.subcorp_names(self.corpname)
+            for item in subc_list:
+                item['selected'] = True if item['n'].decode('utf-8') == subcname else False
+            return {
+                'subcorp': finalname,
+                'corpsize': formatnum(sc.size()),
+                'subcsize': formatnum(sc.search_size()),
+                'SubcorpList': subc_list,
+                'fetchSubcInfo': 'true'  # this is ok (it is used as a JavaScript value)
+            }
         else:
             raise ConcError(_('Empty subcorpus!'))
 
@@ -2003,12 +2017,11 @@ class ConcCGI(UserCGI):
             except conclib.manatee.FileAccessError:
                 pass
         contains_speech = settings.has_configured_speech(self._corp())
-        out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                 pagesize=ps, labelmap=labelmap, align=[],
-                                 alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                 leftctx=leftctx, rightctx=rightctx)
-        out['Desc'] = self._get_op_desc()
-        return out
+        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+                                  pagesize=ps, labelmap=labelmap, align=[],
+                                  alignlist=[self.cm.get_Corpus(c)
+                                             for c in self.align.split(',') if c],
+                                  leftctx=leftctx, rightctx=rightctx)
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
@@ -2032,12 +2045,9 @@ class ConcCGI(UserCGI):
         labels = '<concinfo>\n<labels>\n%s\n</labels>\n</concinfo>\n' % labels
         open(cpath + '.info', 'w').write(labels)
         os.umask(um)
+        #print >>stderr, 'save conc: "%s"' % cpath
         self._user_settings.append('annotconc')
-        out = {
-            'stored': storeconcname,
-            'Desc': self._get_op_desc()
-        }
-        return out
+        return {'stored': storeconcname}
 
     storeconc.template = 'saveconc_form.tmpl'
     add_vars['storeconc'] = ['Desc']

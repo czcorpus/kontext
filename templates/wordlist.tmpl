@@ -31,10 +31,6 @@ $_("Word list")#slurp
 #set global $url_wlpat = $urlquote($wlpat)
 #set global $url_usesubcorp = $urlquote($usesubcorp)
 #set global $allhref = 'wordlist?%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache)
-
- #if $processing
-   <meta http-equiv="refresh" content="3;$allhref">
- #end if
 #end filter
 #end def
 
@@ -49,6 +45,20 @@ $_("Word list")#slurp
   <li><a title="$_("Save Word List/Keywords to a text file or XML")" href="savewl_form?$corpname_url&amp;usesubcorp=$url_usesubcorp&amp;ref_corpname=$ref_corpname&amp;ref_usesubcorp=$ref_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlsort=$wlsort&amp;keywords=$keywords;wlpage=$wlpage;wlcache=$wlcache;usearf=$usearf;simple_n=$simple_n">$_("Save")</a></li>
 #end filter
 #end def
+
+#def bodyonload
+require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
+    conf.corpnameUrl = "$corpname_url";
+    conf.subcName = "$usesubcorp";
+    conf.attrName = "$wlattr";
+    conf.reloadUrl = "$reload_url";
+    pageSelf.init(conf);
+    #if $processing
+    pageSelf.startWatching();
+    #end if
+});
+#end def
+
 
 #def main
 #filter WebSafe
@@ -74,31 +84,11 @@ $_("Word list")#slurp
        $_("Subcorpora operations need more preprocessing. It will take a while, please wait.")
        <p>$_("Once the list has been computed, it will be stored, so will be immediately available next time.")</p>
        <p>$_("You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation.")</p>
+       <img src="../files/img/ajax-loader.gif" alt="$_('calculating ...')" title="$_('calculating ...')" style="width: 24px; height: 24px; margin-right: 40px" />
        <div id="progress_scale">
-       <div id="processbar" style="width:$processing%;"></div>
+            <div id="processbar" style="width:$processing%;"></div>
        </div> 
     </div>
-
-<script type="text/javascript"> 
-
-function update_processbar_width(request) {
-    $('#processbar').style.width = request.responseText;
-    if (request.responseText == '100%') {
-        window.location.reload(true);
-    }
-}
-
-function update_processbar() {
-    var params = '$corpname_url&amp;subcname=$usesubcorp' 
-                 + '&amp;attrname=$wlattr'
-    \$.ajax({
-        url : 'wordlist_process',
-        data : params,
-        method:'get',
-        complete: update_processbar_width
-    });
-}
-</script>
 #end if
 
 
@@ -221,7 +211,7 @@ function update_processbar() {
       <td> $k.score</td>
     </tr>
   #end for
-#else
+#elif not $processing
 ## no keywords && no items
   <i>$_("Nothing found.")</i>
 #end if

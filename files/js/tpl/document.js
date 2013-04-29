@@ -143,6 +143,34 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
+     * @param number {number|string}
+     * @param {string} groupSepar separator character for thousands groups
+     * @param {string} radixSepar separator character for integer and fractional parts
+     * @returns {string}
+     */
+    lib.formatNum = function (number, groupSepar, radixSepar) {
+        var i,
+            offset = 0,
+            len,
+            numParts,
+            s;
+
+        numParts = number.toString().split('.');
+        s = numParts[0].split('').reverse();
+        len = s.length;
+        for (i = 3; i < len; i += 3) {
+            s.splice(i + offset, 0, groupSepar);
+            offset += 1;
+        }
+        s = s.reverse().join('');
+        if (numParts[1] !== undefined) {
+            s += radixSepar + numParts[1];
+        }
+        return s;
+    };
+
+    /**
+     *
      * @param {object} conf
      */
     lib.misc = function (conf) {
@@ -226,11 +254,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $.each(lib.userSettings.data, function (property, value) {
             var el = property.replace('_view', ''); // remove end '_view'
             if ($('#' + el).length !== 0) { // element exists
-                if (lib.userSettings.get(value) === 'show') {
+                if (lib.userSettings.get(property) === 'show') {
                     $('#' + el).show();
+                    $('#submenu a.toggle-submenu-item[data-id-to-set=' + el + ']').addClass('toggled');
 
                 } else {
                     $('#' + el).hide();
+                    $('#submenu a.toggle-submenu-item[data-id-to-set=' + el + ']').removeClass('toggled');
                 }
             }
         });
@@ -406,7 +436,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * @param {object} conf
      */
     lib.init = function (conf) {
-
         lib.userSettings = {
             data : cookies.get('user_settings'),
 
