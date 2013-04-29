@@ -206,8 +206,12 @@ define(['jquery'], function ($) {
      * object related to the "item click" action is passed to this function)
      */
     function createTreeComponent(selResult, title, customCallback) {
-        var selectParser = createSelectParserInstance();
-        function getTitleOfSelectedItem(selectBoxElement) {
+        var selectParser = createSelectParserInstance(),
+            getTitleOfSelectedItem,
+            expandSelected;
+
+
+        getTitleOfSelectedItem = function (selectBoxElement) {
             var descendants,
                 currValue = null,
                 i,
@@ -226,9 +230,9 @@ define(['jquery'], function ($) {
                 }
             }
             return null;
-        }
+        };
 
-        function expandSelected(treeComponentInstance, currentValue, rootElm) {
+        expandSelected = function (treeComponentInstance, currentValue, rootElm) {
             var rootDescendants = $(rootElm).find('li'),
                 itemAncestors,
                 srchItem = null,
@@ -263,7 +267,7 @@ define(['jquery'], function ($) {
                     }
                 }
             }
-        }
+        };
 
         selResult.each(function () {
             var inputName = $(this).attr('name'),
@@ -373,7 +377,7 @@ define(['jquery'], function ($) {
             switchComponentVisibility(rootUl);
             treeComponentInstance = createTreeComponentInstance();
             treeComponentInstance.init(rootUl);
-            $(rootUl.parentNode).prepend(selectParser.hiddenInput);
+            $(rootUl.parentNode).append(selectParser.hiddenInput);
             expandSelected(treeComponentInstance, $(selectParser.hiddenInput).val(), rootUl);
 
         });
