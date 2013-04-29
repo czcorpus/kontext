@@ -174,11 +174,22 @@ class CorpusManager:
         scsize = os.path.getsize(scpath)
         scdata = open(scpath).read()
 
-        for f in glob.glob(basedir + '/*/%s/*.subc' % subcorp.corpname):
-            if f == scpath: continue
-            if os.path.getsize(f) != scsize: continue
-            if [s for s in wanted_suff
-                if not os.path.isfile(f[:-4] + wanted_infix + '.' + s)]:
+        subc_dir = '%s/*/%s/*.subc' % (basedir, subcorp.corpname)
+        if type(subc_dir) == unicode:
+            subc_dir = subc_dir.encode('utf-8')
+        if type(scpath) == unicode:
+            scpath = scpath.encode('utf-8')
+        if type(wanted_infix) == unicode:
+            wanted_infix = wanted_infix.encode('utf-8')
+
+        for f in glob.glob(subc_dir):
+            if f == scpath:
+                continue
+            if os.path.getsize(f) != scsize:
+                continue
+            f_no_suff = (f.decode('utf-8')[:-4]).encode('utf-8')
+
+            if [s for s in wanted_suff if not os.path.isfile(f_no_suff + wanted_infix + '.' + s)]:
                 continue
                 # now, f has same size and all wanted suffixes exist
             if open(f).read() == scdata:
@@ -494,10 +505,17 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
 
 
 def subcorp_base_file(corp, attrname):
+    """
+    Returns
+    -------
+    path : str
+        subcorpus path as a 8-bit string (i.e. unicode paths are encoded)
+    """
     if hasattr(corp, 'spath'):
-        return corp.spath[:-4] + attrname
+        ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
-        return corp.get_conf('PATH') + attrname
+        ans = corp.get_conf('PATH') + attrname
+    return ans.encode('utf-8')
 
 
 class MissingSubCorpFreqFile(Exception):
@@ -507,7 +525,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq'):
     import array
 
-    filename = subcorp_base_file(corp, attrname) + '.' + nums
+    filename = (subcorp_base_file(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
     if nums == 'arf':
         frq = array.array('f')
         try:
@@ -726,7 +744,10 @@ def build_arf_db(corp, attrname):
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
-    sys.stderr.write('build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename))
+
+    tmp = 'build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename.decode('utf-8'))
+    sys.stderr.write(tmp.encode('utf-8'))
+
     pid = os.fork()
     if pid == 0:
         import daemonize
