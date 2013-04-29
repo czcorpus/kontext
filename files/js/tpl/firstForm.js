@@ -137,7 +137,6 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
      * @param conf
      */
     lib.misc = function (conf) {
-
         // let's override the focus
         conf.focus = function () {
             var target = null;
@@ -151,23 +150,12 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         };
 
         treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, mainPage.updForm);
-
         // initial query selector setting (just like when user changes it manually)
         hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints, mainPage.userSettings);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
             createAddLanguageClickHandler(item)();
-        });
-
-        // open the 'subcorpus' and 'context' items if found in settings
-        $('#submenu a.toggle-submenu-item').each(function () {
-            var id = $(this).data('id-to-set');
-
-            if (mainPage.userSettings.get(id + '_view') === 'show') {
-                bonito.toggleViewStore(id, null, mainPage.userSettings);
-                $(this).toggleClass('toggled');
-            }
         });
     };
 
