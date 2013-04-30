@@ -64,6 +64,13 @@ require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm,
                     #end if
                     /> $_("XML")
                 </label>
+                <label>
+                    <input type="radio" name="saveformat" value="csv"
+                     #if $saveformat == 'csv'
+                    checked="checked"
+                    #end if
+                    /> CSV
+                </label>
             </td>
         </tr>
         <tr class="separator">
