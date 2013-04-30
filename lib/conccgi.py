@@ -215,7 +215,7 @@ class ConcCGI(UserCGI):
     add_vars['findx_upload'] = [u'LastSubcorp']
 
     def __init__(self, environ):
-        UserCGI.__init__(self, environ=environ)
+        super(UserCGI, self).__init__(environ=environ)
         self.cm = corplib.CorpusManager(self.corplist, self.subcpath,
                                         self.gdexpath)
         self._curr_corpus = None
