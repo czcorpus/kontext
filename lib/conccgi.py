@@ -1993,35 +1993,92 @@ class ConcCGI(UserCGI):
 
     def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
                  align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
-        conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-        conc.switch_aligned(os.path.basename(self.corpname))
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.xml"'
-        else:
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.txt"'
-        ps = self.pagesize
-        if pages:
-            if maxsavelines < self.pagesize:
+
+        def process_lang(root, left_key, kwic_key, right_key):
+            if type(root) is dict:
+                root = (root,)
+
+            for item in root:
+                row = [item['ref']]
+                left_str = ' '.join([x['str'] for x in item[left_key]])
+                kwic_str = ' '.join([x['str'] for x in item[kwic_key]])
+                right_str = ' '.join([x['str'] for x in item[right_key]])
+                row.append('%s %s %s' % (left_str, kwic_str, right_str))
+            return row
+
+        try:
+            conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+            conc.switch_aligned(os.path.basename(self.corpname))
+
+            ps = self.pagesize
+            if pages:
+                if maxsavelines < self.pagesize:
+                    ps = maxsavelines
+            else:
+                fromp = 1
                 ps = maxsavelines
-        else:
-            fromp = 1
-            ps = maxsavelines
-        labelmap = {}
-        if self.annotconc:
-            try:
-                anot = self._get_annotconc()
-                conc.set_linegroup_from_conc(anot)
-                labelmap = anot.labelmap
-            except conclib.manatee.FileAccessError:
-                pass
-        contains_speech = settings.has_configured_speech(self._corp())
-        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                  pagesize=ps, labelmap=labelmap, align=[],
-                                  alignlist=[self.cm.get_Corpus(c)
-                                             for c in self.align.split(',') if c],
-                                  leftctx=leftctx, rightctx=rightctx)
+            labelmap = {}
+            if self.annotconc:
+                try:
+                    anot = self._get_annotconc()
+                    conc.set_linegroup_from_conc(anot)
+                    labelmap = anot.labelmap
+                except conclib.manatee.FileAccessError:
+                    pass
+            contains_speech = settings.has_configured_speech(self._corp())
+            data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+                                      pagesize=ps, labelmap=labelmap, align=[],
+                                      alignlist=[self.cm.get_Corpus(c)
+                                                 for c in self.align.split(',') if c],
+                                      leftctx=leftctx, rightctx=rightctx)
+
+            mkfilename = lambda suffix: 'concordance-%s.%s' % (self.corpname, suffix)
+
+            if saveformat == 'xml':
+                self._headers['Content-Type'] = 'application/xml'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
+                ans = data
+            elif saveformat == 'text':
+                self._headers['Content-Type'] = 'text/plain'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
+                ans = data
+            elif saveformat == 'csv':
+                self._headers['Content-Type'] = 'text/csv'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
+                format_column = lambda s: '"%s"' % s.strip().replace('"', '""')
+                ans = []
+
+                if len(data['Lines']) > 0:
+                    if 'Left' in data['Lines'][0] and len(data['Lines'][0]['Left']) > 0:
+                        left_key = 'Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Right'
+                    elif 'Sen_Left' in data['Lines'][0] and len(data['Lines'][0]['Sen_Left']) > 0:
+                        left_key = 'Sen_Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Sen_Right'
+                    else:
+                        raise ConcError(_('Invalid data'))
+
+                    for i in range(len(data['Lines'])):
+                        line = data['Lines'][i]
+                        if numbering:
+                            row = [str(i + 1)]
+                        else:
+                            row = []
+                        row += process_lang(line, left_key, kwic_key, right_key)
+                        if 'Align' in line:
+                            row += process_lang(line['Align'], left_key, kwic_key, right_key)
+                        ans.append(';'.join(map(format_column, row)) + ';')
+                ans = {'data': ans}
+            else:
+                raise UserActionException(_('Unknown export data type'))
+            return ans
+        except Exception as e:
+            self._headers['Content-Type'] = 'text/html'
+            del(self._headers['Content-Disposition'])
+            raise e
+
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 

@@ -107,7 +107,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 </concordance>
 
 #end filter
-#else
+#elif $saveformat == 'text'
 ## Text format
 #if $heading
 \# Corpus: $corp_full_name
@@ -183,4 +183,10 @@ $ll.str #slurp
         #end if
 
         #end for
-        #end if
+
+#elif $saveformat == 'csv'
+## kwic lines #################
+#for $row in $data
+$row
+#end for
+#end if  ## saveformat
