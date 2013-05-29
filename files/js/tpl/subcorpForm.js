@@ -122,8 +122,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
         });
 
         $('#within-struct-selector').bind('change', lib.createFuncShowWithinHint(conf));
-
-        lib.createFuncSwitchToInputMethod(conf)(conf.inputMethod);
+        lib.createFuncSwitchToInputMethod(conf)($('input[name="method"]:checked').val());
     };
 
     /**
