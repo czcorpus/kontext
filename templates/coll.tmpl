@@ -82,6 +82,7 @@ $input_hidden
     <option value="s" #if 's' in $cbgrfns then 'selected="selected"' else ''# >$_("min. sensitivity")</option>
     <option value="d" #if 'd' in $cbgrfns then 'selected="selected"' else ''# >$_("logDice")</option>
     <option value="p" #if 'p' in $cbgrfns then 'selected="selected"' else ''# >$_("MI.log_f")</option>
+    <option value="r" #if 'r' in $cbgrfns then 'selected="selected"' else ''# >$_("relative freq.")</option>
   </select>
   $_("Sort by"):
   <select name="csortfn" size="6" >
@@ -92,6 +93,7 @@ $input_hidden
     <option value="s" #if $csortfn == 's' then 'selected="selected"' else ''# >$_("min. sensitivity")</option>
     <option value="d" #if $csortfn == 'd' then 'selected="selected"' else ''# >$_("logDice")</option>
     <option value="p" #if $csortfn == 'p' then 'selected="selected"' else ''# >$_("MI.log_f")</option>
+    <option value="r" #if $csortfn == 'r' then 'selected="selected"' else ''# >$_("relative freq.")</option>
   </select>
   </td>
 </tr>
