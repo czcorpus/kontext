@@ -189,7 +189,7 @@ a.speech-link:hover {
     background-color: #FFFFCC;
     padding: 4px 8px;
     overflow: hidden;
-    box-shadow: 3px 3px 4px #767284;
+    box-shadow: 3px 3px 4px #aaa;
 }
 
 .audio-controls a.img-button-play,

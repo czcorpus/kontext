@@ -29,14 +29,14 @@
     display:block;
     margin:0;
     overflow:auto;
-    padding:1.5em;
+    padding: 25px 20px;
 }
 
 #content form {
     background-color:#DEE;
     border:solid 1px #D5E6E6;
     display:inline-block;
-    margin:0 0 1em;
+    margin:0 0 10px;
     min-width:510px;
     padding:1em;
 }
@@ -103,7 +103,7 @@
     background-color:#FFE3E1;
     border:solid 1px #A32424;
     border-radius:4px;
-    box-shadow:2px 2px 3px #444;
+    box-shadow:2px 2px 3px #aaa;
     color:#FF5050;
     display:inline-block;
     font-weight:700;
@@ -154,7 +154,7 @@
 #footer {
     border-style: solid;
     border-width: 1px 0 0 0;
-    border-color: #AAAAAA;
+    border-color: #cccccc;
     clear: both;
     padding: 0.3em 1em;
     text-align: right;
@@ -178,9 +178,8 @@
 }
 
 #in-sidebar {
-    border-right:1px solid #AAA;
     min-height:50em;
-    padding:1em;
+    padding: 5px;
     position:relative;
 }
 
@@ -328,6 +327,7 @@
 }
 
 #sidebar {
+    margin: 3px 10px 10px 3px;
     float:left;
     width:12em;
 }
@@ -417,10 +417,10 @@
 
 #toolbar {
     background-color:#fff;
-    border-bottom:1px solid #AAA;
+    border-bottom: 1px solid #AAA;
     border-top:1px solid #AAA;
-    background-image: linear-gradient(180deg, #CCCCCC, #FFFFFF);
-    background-image: -webkit-linear-gradient(270deg, #CCCCCC, #FFFFFF);
+    background-image: linear-gradient(180deg, #DEDEDE, #f6f6f6);
+    background-image: -webkit-linear-gradient(270deg, #DEDEDE, #f6f6f6);
     width:100%;
 }
 
@@ -566,7 +566,6 @@ fieldset h4 {
 }
 
 .context_help {
-    float:right;
     text-align:right;
 }
 
@@ -667,7 +666,7 @@ input#cql {
 }
 
 .tree-component {
-    box-shadow:2px 2px 3px #444;
+    box-shadow:2px 2px 3px #aaa;
 }
 
 .warning {
@@ -725,9 +724,9 @@ a.toggled {
 }
 
 body {
-    background-color:#eee;
+    background-color:#f2f2f2;
     font-family:"Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
-    font-size:12px;
+    font-size: 12px;
     margin:0;
     padding:0;
 }
@@ -769,7 +768,7 @@ fieldset {
     margin: 14px 0 6px;
     padding: 0 0 0 14px;
     border-style: solid;
-    border-color: #6D8E8E;
+    border-color: #87ADAD;
     border-width: 1px;
     border-radius: 3px;
 }
@@ -1106,6 +1105,26 @@ table.form th {
     margin: 0 0 10px 0;
 }
 
-#subc-spec-section th.struct-selector {
-    text-align: right;
+.hint-box {
+    position: absolute;
+    color: #333;
+    background-color: #FFF;
+    box-shadow: 2px 2px 1px #aaa;
+    white-space: normal;
+    border : 1px solid #DDD;
+}
+
+table.colloc-metrics {
+    float: left;
+    margin-right: 10px;
+    border: 1px solid #87ADAD;
+}
+
+table.colloc-metrics td,
+table.colloc-metrics th {
+    padding: 3px 5px;
+}
+
+table.colloc-metrics label {
+    display: block;
 }
