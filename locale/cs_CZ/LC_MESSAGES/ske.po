@@ -995,6 +995,9 @@ msgstr "Zadání nového dotazu"
 msgid "Concordance"
 msgstr "Konkordance"
 
+msgid "New query"
+msgstr "Nový dotaz"
+
 #: cmpltmpl/leftmenu.py:147
 msgid "Various methods for creating word lists"
 msgstr "Vytváření frekvenčních seznamů"
@@ -1722,8 +1725,8 @@ msgid "XML template for one-click copying"
 msgstr "XML šablona pro výběr jedním klikem"
 
 #: cmpltmpl/viewattrs.py:436
-msgid "Change View Options"
-msgstr "Změnit volby zobrazení"
+msgid "Apply View Options"
+msgstr "Použít volby zobrazení"
 
 #: cmpltmpl/view.py:187
 msgid "Concordance view settings"
@@ -2036,7 +2039,7 @@ msgstr "Jakmile je seznam spočítán, je také uložen, aby byl při dalším p
 
 #: cmpltmpl/wordlist.py:369
 msgid "You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation."
-msgstr "Můžete toto okno zavřít. Opakování dotazu na seznam slov nebo klíčová slovana stejném subkorpusu zobrazí průběh výpočtu."
+msgstr "Můžete toto okno zavřít. Opakování dotazu na seznam slov nebo klíčová slova na stejném subkorpusu zobrazí průběh výpočtu."
 
 #: cmpltmpl/wordlist.py:568
 #: cmpltmpl/wordlist.py:587
@@ -2610,3 +2613,13 @@ msgstr "Zarovnané korpusy"
 
 msgid "calculating..."
 msgstr "probíhá výpočet..."
+
+msgid "Available subcorpora"
+msgstr "Dostupné subkorpusy"
+
+msgid "whole corpus"
+msgstr "celý korpus"
+
+msgid "Please specify positive filter to switch"
+msgstr "Pro změnu jazyka je nutné zadat pozitivní filtr"
+
