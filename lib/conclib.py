@@ -891,7 +891,7 @@ class PyConc (manatee.Concordance):
                     'l': 'log likelihood',
                     's': 'min. sensitivity',
                     'p': 'MI.log_f',
-                    'r': 'relative freq.',
+                    'r': 'relative freq. [%]',
                     'f': 'absolute freq.',
                     'd': 'logDice',
                     }
