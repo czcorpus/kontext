@@ -26,7 +26,8 @@ from hashlib import md5
 import manatee
 
 
-class CorpusManager:
+class CorpusManager(object):
+
     def __init__(self, corplist=['susanne'], subcpath=[], gdexpath=[]):
         self.corplist = corplist
         self.subcpath = subcpath
@@ -45,7 +46,7 @@ class CorpusManager:
             corpname, subcname = corpname.split(':', 1)
         corp = manatee.Corpus(corpname)
         manatee.setEncoding(corp.get_conf('ENCODING'))
-        corp.corpname = str(corpname) # never unicode (paths)
+        corp.corpname = str(corpname)  # never unicode (paths)
         corp.cm = self
         dsubcpath = self.default_subcpath(corp)
         if subcname:

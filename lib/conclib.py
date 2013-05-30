@@ -1304,20 +1304,24 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
     return conc
 
 
-def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None):
-    desctext = {'q': _('Query'),
-                'a': _('Query'),
-                'r': _('Random sample'),
-                's': _('Sort'),
-                'f': _('Shuffle'),
-                'n': _('Negative filter'),
-                'N': _('Negative filter (excluding KWIC)'),
-                'p': _('Positive filter'),
-                'P': _('Positive filter (excluding KWIC)'),
-                'w': _('Word sketch item'),
-                't': _('Word sketch texttype item'),
-                'e': _('GDEX'),
-                'x': _('Switch KWIC'),
+def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate=True):
+    if translate:
+        _t = lambda s: _(s)
+    else:
+        _t = lambda s: s
+    desctext = {'q': _t('Query'),
+                'a': _t('Query'),
+                'r': _t('Random sample'),
+                's': _t('Sort'),
+                'f': _t('Shuffle'),
+                'n': _t('Negative filter'),
+                'N': _t('Negative filter (excluding KWIC)'),
+                'p': _t('Positive filter'),
+                'P': _t('Positive filter (excluding KWIC)'),
+                'w': _t('Word sketch item'),
+                't': _t('Word sketch texttype item'),
+                'e': _t('GDEX'),
+                'x': _t('Switch KWIC'),
                 }
     forms = {'q': ('first_form', 'cql'),
              'a': ('first_form', 'cql'),

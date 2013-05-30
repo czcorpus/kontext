@@ -159,7 +159,7 @@ class RequestProcessingException(Exception):
         self.data[key] = value
 
 
-class CheetahResponseFile:
+class CheetahResponseFile(object):
     def __init__(self, outfile):
         self.outfile = codecs.getwriter("utf-8")(outfile)
 
@@ -187,7 +187,7 @@ class UserActionException(Exception):
     pass
 
 
-class CGIPublisher:
+class CGIPublisher(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
@@ -407,6 +407,13 @@ class CGIPublisher:
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
         This method handles mapping between HTTP actions and CGIPublisher's methods
+
+        Returns
+        -------
+        result : tuple of 3 elements
+          0 = method name
+          1 = template name
+          2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
         if tpl_data is None:
@@ -537,7 +544,9 @@ class CGIPublisher:
             self._add_globals(result)
             self.add_undefined(result, methodname)
             result = self.rec_recode(result)
-            for attr in dir(self): # recoding self
+            custom_attributes = [a for a in CGIPublisher.__dict__.keys() if not a.startswith('__')
+                                 and not a.endswith('__')]
+            for attr in custom_attributes:  # recoding self
                 setattr(self, attr, self.rec_recode(getattr(self, attr)))
 
             if template.endswith('.tmpl'):
