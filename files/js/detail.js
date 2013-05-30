@@ -41,6 +41,7 @@ define(['jquery'], function ($) {
                 data: params,
                 complete: function (data) {
                     $('#detailframecontent').html(data.responseText);
+                    $(document).on('keyup', self.escKeyEventHandler);
                     if (callback) {
                         callback();
                     }
@@ -50,9 +51,19 @@ define(['jquery'], function ($) {
 
         /**
          *
+         */
+        escKeyEventHandler : function (event) {
+            if (event.keyCode === 27) {
+                self.closeDetail(event);
+            }
+        },
+
+        /**
+         *
          * @param event
          */
         closeDetail : function (event) {
+            $(document).off('keyup', self.escKeyEventHandler);
             $('#detailframe').fadeOut(100);
             event.stopPropagation();
         },
