@@ -1917,7 +1917,7 @@ class ConcCGI(UserCGI):
             if subc_list:
                 subcname = subc_list[0]['n']
                 subc_list[0]['selected'] = True
-                sc = self.cm.get_Corpus(basecorpname)
+                sc = self.cm.get_Corpus('%s:%s' % (basecorpname, subcname))
                 corp_size = formatnum(sc.size())
                 subcorp_size = formatnum(sc.search_size())
             else:
