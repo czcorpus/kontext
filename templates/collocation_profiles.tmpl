@@ -1,0 +1,74 @@
+#*
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Collocation profiles")#slurp
+#end def
+
+#def bodyonload
+#end def
+
+#def headers
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}colloc.css" />
+#end def
+
+#def left_submenu_help
+#end def
+
+#def left_submenu_expert
+
+#end def
+
+#def main
+<h1>$_('Collocation profiles')</h1>
+<p>conc size: $conc_size</p>
+
+<table id="collocation-profiles">
+    <tr>
+        <th colspan="2">$_('auto focus opt. range')</th>
+        <th>$_('collocation words')</th>
+        <th>$_('LLR')</th>
+        <th>$_('predominant syntagmatic pattern')</th>
+    </tr>
+    <tr>
+        #filter None#<th>&#8592;</th>
+        <th>&#8594;</th>#end filter#
+        <th></th>
+        <th></th>
+        <th></th>
+    </tr>
+    #for $cluster_data in $profiles#
+        <tr>
+        #for $collocator in $cluster_data[1]
+            <td>$collocator.left_opt</td>
+            <td>$collocator.right_opt</td>
+            <td><strong class="collocator">$collocator.collocator_words[0]</strong>
+                #for $s in $collocator.collocator_words[1:]# <span class="collocator">$s</span> #end for#</td>
+            <td>$collocator.cohesion</td>
+            <td>#filter None# $cluster_data[0].smart_label #end filter#</td>
+        #end for
+        </tr>
+    #end for
+</table>
+
+
+#end def

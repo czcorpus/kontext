@@ -535,7 +535,7 @@ class ConcCGI(UserCGI):
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
             out['notification'] = _('Empty result')
-
+        out['conc'] = conc
         out['shuffle_notification'] = True if 'f' in self.q else False
         return out
 
@@ -563,6 +563,64 @@ class ConcCGI(UserCGI):
         return out
 
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
+
+
+    def collocation_profiles_form(self, pages=0, fromp=1, has_speech=0,
+                 align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+        """
+        """
+        conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+        conc.sync()
+        return {
+            'corpname': self.corpname,
+            'query': self.q
+        }
+
+    collocation_profiles_form.template = 'collocation_profiles_form.tmpl'
+
+    def collocation_profiles(self, pages=0, fromp=1, has_speech=0,
+                 align_kwic=0, numbering=0, leftctx='40', rightctx='40', granularity='', confidence='', clustering='',
+                 auto_focus=''):
+        """
+        """
+        import pycpc
+        import manatee
+
+        conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+        conc.sync()
+        #kl = manatee.KWICLines(conc, leftctx, rightctx, attrs, ctxattrs, all_structs, refs)
+        left_ctx = '-5'
+        right_ctx = '5'
+        kl = manatee.KWICLines(conc, left_ctx, right_ctx, 'word', 'word', '=opus.nazev,=opus.preklad,=opus.srclang', '')
+
+        confidence = {'high': pycpc.CCONF_HIGH, 'low': pycpc.CCONF_LOW, 'none': pycpc.CCONF_NONE}[confidence]
+        granularity = {'high': pycpc.CGRAN_HIGH, 'medium': pycpc.CGRAN_MEDIUM, 'low': pycpc.CGRAN_LOW}[granularity]
+        clustering = {'unique': pycpc.CCLUS_UNIQUE, 'multiple': pycpc.CCLUS_MULTIPLE}[clustering]
+        auto_focus = 1 if auto_focus else 0
+
+        analysis_params = pycpc.AnalysisParams()
+        analysis_params.kwicLineCount = conc.size()
+        analysis_params.corpusSize = self._corp().size()
+        analysis_params.leftContext = int(left_ctx)
+        analysis_params.rightContext = int(right_ctx)
+        analysis_params.autoFocus = auto_focus
+        analysis_params.confidence = confidence
+        analysis_params.granularity = granularity
+        analysis_params.clustering = clustering
+        analysis_params.fuzzyClusterName = 'non specific'
+
+        calc_handler = pycpc.colloc_initialize_with_kwiclines(kl, analysis_params)
+        if calc_handler:
+            pycpc.colloc_calculate(calc_handler)
+            ans = pycpc.colloc_collect_results(calc_handler)
+            pycpc.colloc_close(calc_handler)
+
+        profiles = conclib.cluster_colloc_results(ans)
+
+        return {'profiles': profiles,
+                'conc_size': conc.size()}
+
+    collocation_profiles.template = 'collocation_profiles.tmpl'
 
     def get_cached_conc_sizes(self):
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
@@ -1597,12 +1655,8 @@ class ConcCGI(UserCGI):
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.corpname, usesubcorp),
                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
-                if self.wlattr == 'ws_collocations':
-                    kw_func = getattr(corplib, 'ws_keywords')
-                else:
-                    kw_func = getattr(corplib, 'subc_keywords_onstr')
-                    args = args + (self.wlattr,)
-                out = self.call_function(kw_func, args)[wlstart:]
+                args = args + (self.wlattr,)
+                out = self.call_function('subc_keywords_onstr', args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
                 result.update({'Keywords': [{'str': w, 'score': round(s, 1),
                                         'freq': round(f, 1),
@@ -1614,23 +1668,19 @@ class ConcCGI(UserCGI):
                 })
                 result_list = result['Keywords']
             else:  # ordinary list
-                if self.wlattr == 'ws_collocations':
-                    result.update({'Items': self.call_function(corplib.ws_wordlist,
-                                                          (self._corp(),))[wlstart:]})
-                else:
-                    if hasattr(self, 'wlfile') and self.wlpat == '.*':
-                        self.wlsort = ''
-                    result.update({'Items': self.call_function(corplib.wordlist,
-                                                          (self._corp(), self.wlwords))[wlstart:]})
-                    if self.wlwords:
-                        result['wlcache'] = self.wlcache
-                    if self.blacklist:
-                        result['blcache'] = self.blcache
+                if hasattr(self, 'wlfile') and self.wlpat == '.*':
+                    self.wlsort = ''
+                result.update({'Items': self.call_function(corplib.wordlist,
+                                                      (self._corp(), self.wlwords))[wlstart:]})
+                if self.wlwords:
+                    result['wlcache'] = self.wlcache
+                if self.blacklist:
+                    result['blcache'] = self.blcache
                 result_list = result['Items']
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
-                result['lastpage'] = 0; result_list = result_list[:-1]
+                result['lastpage'] = 0
             self.wlmaxitems -= 1
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums

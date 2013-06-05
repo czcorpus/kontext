@@ -1,0 +1,400 @@
+#collocation-profiles table.table {
+}
+
+#collocation-profiles td {
+    font-size: 10pt;
+    font-family: arial;
+    white-space: nowrap;
+    background-color: #FBFBFB;
+}
+
+#collocation-profiles li.clusterListItem {
+    font-family: arial;
+}
+
+#collocation-profiles ul.clusterList {
+    list-style-position: outside;
+    list-style-type: circle;
+}
+
+#collocation-profiles p.info,
+#collocation-profiles ul.info,
+#collocation-profiles li.info,
+#collocation-profiles td.info {
+    font-size: 8pt;
+    font-family: arial;
+    white-space: normal;
+    background-color: #FBFBFB;
+    margin-top: 4pt;
+    margin-bottom: 0px;
+}
+
+#collocation-profiles p.whiteinfo,
+#collocation-profiles ul.whiteinfo,
+#collocation-profiles li.whiteinfo,
+#collocation-profiles td.whiteinfo {
+    font-size: 8pt;
+    font-family: arial;
+    white-space: normal;
+    background-color: #FFFFFF;
+    margin-top: 4pt;
+    margin-bottom: 0px;
+}
+
+#collocation-profiles span.statmsgBig,
+#collocation-profiles td.statmsgBig {
+    font-size: 14pt;
+    font-family: arial;
+    white-space: normal;
+    background-color: #FF9933;
+}
+
+#collocation-profiles span.statmsg,
+#collocation-profiles td.statmsg {
+    font-size: 8pt;
+    font-family: arial;
+    white-space: normal;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.fl {
+    font-size: 10pt;
+    font-family: arial;
+    white-space: nowrap;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.fr {
+    font-size: 10pt;
+    font-family: arial;
+    white-space: nowrap;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.gamma {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.dl {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+    color: #CCCCCC;
+}
+
+#collocation-profiles td.dr {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+    color: #CCCCCC;
+}
+
+#collocation-profiles td.damma {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+    color: #CCCCCC;
+}
+
+#collocation-profiles th.info,
+#collocation-profiles td.coll {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.freq {
+    font-size: 10pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles a.simcoll,
+#collocation-profiles td.simcoll {
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+    text-decoration: none;
+}
+
+#collocation-profiles td.simcoll4,
+#collocation-profiles a.simcoll4 {
+    color: rgb(0%, 0%, 0%);
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+    text-decoration: none;
+}
+
+#collocation-profiles td.simcoll3,
+#collocation-profiles a.simcoll3 {
+    color: rgb(15%, 15%, 15%);
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+    text-decoration: none;
+}
+
+#collocation-profiles td.simcoll2,
+#collocation-profiles a.simcoll2 {
+    color: rgb(30%, 30%, 30%);
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+    text-decoration: none;
+}
+
+#collocation-profiles td.simcoll1,
+#collocation-profiles a.simcoll1 {
+    color: rgb(50%, 50%, 50%);
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+    text-decoration: none;
+}
+
+#collocation-profiles td.simcoll0,
+#collocation-profiles a.simcoll0 {
+    color: rgb(70%, 70%, 70%);
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+    text-decoration: none;
+}
+
+#collocation-profiles div.flipold {
+    font-size: 10pt;
+    font-family: arial;
+    text-align: center;
+    cursor: pointer;
+    color: blue;
+    font-weight: bolder;
+    background-color: #EE8888;
+}
+
+#collocation-profiles div.flip,
+#collocation-profiles span.button {
+    border: 1px solid;
+    border-color: #FDD #633 #333 #FCC;
+    padding: 0 3px;
+    font: bold 8px verdana, sans-serif;
+    color: #FFF;
+    cursor: pointer;
+    background: #F00;
+    text-decoration: none;
+    margin: 0;
+}
+
+#collocation-profiles input.param,
+#collocation-profiles td.param,
+#collocation-profiles select.param,
+#collocation-profiles select.navig {
+    font-size: 10pt;
+    font-weight: bold;
+    font-family: arial;
+    color: #000000;
+    margin: 1pt;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles td.parhead {
+    font-size: 10pt;
+    font-family: arial;
+    color: #222222;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles th.delim,
+#collocation-profiles td.delim {
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #F4F4F4;
+}
+
+#collocation-profiles span.tiny,
+#collocation-profiles input.tiny,
+#collocation-profiles div.tiny {
+    font-size: 8pt;
+    font-family: arial;
+    color: #000000;
+}
+
+#collocation-profiles a.wList,
+#collocation-profiles span.wList {
+    font-size: 8pt;
+    font-family: arial;
+    color: black;
+    text-decoration: none;
+}
+
+#collocation-profiles div.headref,
+#collocation-profiles span.headref {
+    font-size: 10pt;
+    font-family: arial;
+    font-weight: bold;
+    vertical-align: middle;
+    color: black;
+    background-color: #EEEEEE;
+}
+
+#collocation-profiles span.collapsed {
+    font-size: 8pt;
+    font-family: arial;
+    color: #DDDDDD;
+}
+
+#collocation-profiles span.titleTerm {
+    font-size: 8pt;
+    font-family: arial;
+    font-weight: bold;
+    color: black;
+}
+
+#collocation-profiles span.collapsedTerm {
+    font-size: 8pt;
+    font-family: arial;
+    color: #444488;
+}
+
+#collocation-profiles span.collapsedNonTerm {
+    font-size: 8pt;
+    font-family: arial;
+    color: #DDDDDD;
+}
+
+#collocation-profiles span.expanded {
+    font-size: 8pt;
+    font-family: arial;
+    color: black;
+}
+
+#collocation-profiles span.expandedRoot {
+    font-size: 8pt;
+    font-family: arial;
+    color: green;
+}
+
+#collocation-profiles span.reg {
+    font-size: 8pt;
+    font-family: arial;
+    color: #666666;
+}
+
+#collocation-profiles span.ref {
+    color: rgb(70%, 20%, 20%);
+    background-color: yellow;
+}
+
+#collocation-profiles span.pac {
+    color: rgb(20%, 20%, 70%);
+    background-color: #80FF60;
+}
+
+#collocation-profiles span.slcol {
+    color: rgb(20%, 20%, 70%);
+}
+
+#collocation-profiles span.slfi4 {
+    color: rgb(0%, 0%, 0%);
+}
+
+#collocation-profiles span.slfi3 {
+    color: rgb(10%, 10%, 10%);
+}
+
+#collocation-profiles span.slfi2 {
+    color: rgb(20%, 20%, 20%);
+}
+
+#collocation-profiles span.slfi1 {
+    color: rgb(40%, 40%, 40%);
+}
+
+#collocation-profiles span.slfi0 {
+    color: rgb(60%, 60%, 60%);
+}
+
+#collocation-profiles td.sp {
+    white-space: nowrap;
+}
+
+#collocation-profiles td.spra {
+    text-align: right;
+}
+
+#collocation-profiles span.slra4 {
+    color: rgb(0%, 0%, 0%);
+}
+
+#collocation-profiles span.slra3 {
+    color: rgb(15%, 15%, 15%);
+}
+
+#collocation-profiles span.slra2 {
+    color: rgb(30%, 30%, 30%);
+}
+
+#collocation-profiles span.slra1 {
+    color: rgb(50%, 50%, 50%);
+}
+
+#collocation-profiles span.slra0 {
+    color: rgb(70%, 70%, 70%);
+}
+
+#collocation-profiles div.matched {
+    font-size: 8pt;
+    font-family: arial;
+    background-color: #EEEEEE;
+    color: #000000;
+}
+
+#collocation-profiles body.navig,
+#collocation-profiles form.navig {
+    border: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+#collocation-profiles a.letters {
+    color: rgb(70%, 70%, 70%);
+    text-decoration: none;
+}
+
+#collocation-profiles *.titleStyleL {
+    font-family: arial;
+    font-weight: bold;
+    font-size: 8pt;
+    text-align: left;
+    overflow: auto;
+}
+
+#collocation-profiles *.copy {
+    font-family: arial;
+    font-size: 8pt;
+    text-align: left;
+    color: graytext;
+    overflow: auto;
+    background-color: #F4F4F4;
+}
+
+#collocation-profiles *.tinyRef {
+    font-family: arial;
+    font-size: 7pt;
+    text-align: left;
+    text-decoration: none;
+    color: #CCCCCC;
+    margin-top: 0cm;
+    overflow: auto;
+}
+
+#collocation-profiles p.keywordsStyle {
+    font-family: arial;
+    font-weight: normal;
+    font-size: 7pt;
+    color: white;
+    background-color: white;
+    overflow: auto;
+}

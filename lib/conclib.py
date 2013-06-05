@@ -1587,3 +1587,38 @@ def fcs_scan(corpname, scan_query, max_ter, start):
     wl = corplib.wordlist(corp, wlattr=attr, wlpat=wlpattern, wlsort='f')
     return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
+
+def cluster_colloc_results(results):
+    """
+    """
+    def convert_encoding(s, from_enc='iso-8859-2'):
+        if s is not None:
+            return s.decode(from_enc)
+        return None
+
+    ans = []
+    keys = set()
+    for orig_item in sorted(results, key=lambda x: x.cluster_id, reverse=False):
+        item = {}
+        item['kwicid'] = orig_item.kwic_id
+        item['text'] = convert_encoding(orig_item.kwic_line)
+        item['smart_label'] = convert_encoding(orig_item.smart_label)
+        item['cluster_id'] = orig_item.cluster_id
+        key = tuple([x.cl_id for x in orig_item.collocators])
+
+        if not key in keys:
+            keys.add(key)
+            ans.append((item, []))
+            coll = orig_item.collocators[0]
+            if coll is not None:
+                t = {'collocator_words': [],
+                     'cohesion': coll.cohesion,
+                     'left_opt': coll.left_opt,
+                     'right_opt': coll.right_opt}
+                for i in range(len(orig_item.collocators)):
+                    if orig_item.collocators[i].collocator != 'non specific':
+                        t['collocator_words'].append(convert_encoding(orig_item.collocators[i].collocator))
+                if len(t['collocator_words']) == 0:
+                    t['collocator_words'].append('')
+                ans[-1][1].append(t)
+    return ans
