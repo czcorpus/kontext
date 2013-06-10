@@ -18,6 +18,12 @@
     <cache>
         <clear_interval>61</clear_interval>
     </cache>
+    <modules>
+        <module id="pycpc" active="true" />
+        <module id="foo" active="1" />
+        <module id="bar" active="0" />
+        <module id="another" />
+    </modules>
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <options_dir>/var/local/corpora/registry/options</options_dir>
