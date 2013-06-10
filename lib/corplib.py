@@ -224,41 +224,6 @@ def add_block_items(items, attr='class', val='even', block_size=3):
     return items
 
 
-def ws_wordlist(corp, wlmaxitems=100, wlsort=''):
-    import wmap
-
-    csize = corp.search_size()
-    basewsbase = os.path.basename(corp.get_conf('WSBASE'))
-    freqs_file = subcorp_base_file(corp, basewsbase + '.hfrq')
-    lex_file = subcorp_base_file(corp, basewsbase + '.hlex')
-
-    if not os.path.isfile(freqs_file): # not computed
-        raise MissingSubCorpFreqFile(corp)
-    if os.path.isfile(subcorp_base_file(corp, 'hashws.build')):
-        raise MissingSubCorpFreqFile(corp) # computation in progress
-
-    result_str = wmap.StrVector()
-    wmap.terms_lexicon(freqs_file, lex_file, result_str, wlmaxitems)
-
-    # find out seek and cnt
-
-    ws1 = wmap.WMap(corp.get_conf('WSBASE'), 0, 0, 0, corp.get_conffile())
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2 = item.split('\t')[:3]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2))
-    result = []
-    for id1, id2, id3, w1, gramrel, w2 in sorted(result_parsed):
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: continue
-        freq = ws_subc_freq(ws3, corp)
-        result.append((-freq, w1, gramrel, w2, ws3.tell()))
-    return add_block_items([{'w1': w1, 'gramrel': g, 'w2': w2, 'seek': seek,
-                             'freq': -mfreq, 'str': ' '.join([w1, g, w2])}
-                            for mfreq, w1, g, w2, seek in sorted(result)])
-
-
 def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
              wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
     blacklist = set(blacklist)
@@ -600,63 +565,6 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
             items.append((score, rel, relref, i, iref, f[i], fref_iref, w))
     items.sort(reverse=True)
     return items[:wlmaxitems]
-
-
-def ws_keywords(sc, scref, wlminfreq=10, wlmaxitems=100, simple_n=100):
-    import wmap
-
-    basewsbase = os.path.basename(sc.get_conf('WSBASE'))
-    ref_basewsbase = os.path.basename(scref.get_conf('WSBASE'))
-    freqs_file = subcorp_base_file(sc, basewsbase + '.hfrq')
-    lex_file = subcorp_base_file(sc, basewsbase + '.hlex')
-    ref_freqs_file = subcorp_base_file(scref, ref_basewsbase + '.hfrq')
-
-    if not os.path.isfile(freqs_file): # not computed
-        raise MissingSubCorpFreqFile(sc)
-    if not os.path.isfile(ref_freqs_file):
-        raise MissingSubCorpFreqFile(scref)
-    if os.path.isfile(subcorp_base_file(sc, 'hashws.build')):
-        raise MissingSubCorpFreqFile(sc) # computation in progress
-    if os.path.isfile(subcorp_base_file(scref, 'hashws.build')):
-        raise MissingSubCorpFreqFile(scref)
-
-    result_str = wmap.StrVector()
-    wmap.extrms(freqs_file, ref_freqs_file, lex_file, result_str, wlmaxitems,
-                simple_n)
-
-    # find out seek and cnt -- firstly for sc ...
-    ws1 = wmap.WMap(sc.get_conf('WSBASE'), 0, 0, 0, sc.get_conffile())
-    size = sc.search_size()
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2, score = item.strip().split('\t')[:4]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2, float(score)))
-    result = {}
-    for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: continue
-        freq = ws_subc_freq(ws3, sc)
-        result[(-score, w1, gramrel, w2)] = [freq, float(freq) * 1000000 / size,
-                                             ws3.tell()]
-        # ... and then for scref
-    ws1 = wmap.WMap(scref.get_conf('WSBASE'), 0, 0, 0, scref.get_conffile())
-    size = scref.search_size()
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2, score = item.strip().split('\t')[:4]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2, float(score)))
-    for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
-        if not (-score, w1, gramrel, w2) in result: continue
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: result[(-score, w1, gramrel, w2)].extend([0, 0, 0])
-        freq = ws_subc_freq(ws3, scref)
-        result[(-score, w1, gramrel, w2)].extend(
-            [freq, float(freq) * 1000000 / size, ws3.tell()])
-    return [(-k[0], v[1], v[4], v[0], v[3], '%s\t%s\t%s\t%d' % (k[1], k[2],
-                                                                k[3], v[2]))
-            for k, v in sorted(result.items())]
 
 
 def create_ws_db(corp, logfilename):
