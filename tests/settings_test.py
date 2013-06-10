@@ -193,3 +193,14 @@ class TestSettingsModule(unittest.TestCase):
         """
         settings.load('default', './config.test-2.xml')
         self.assertEqual((), settings.get('global', 'administrators'))
+
+    def test_modules_configuration(self):
+        """
+        """
+        self.assertTrue('pycpc' in settings.get('modules'))
+        self.assertTrue('foo' in settings.get('modules'))
+        self.assertEqual(2, len(settings.get('modules')))
+
+    def test_missing_modules_configuration(self):
+        settings.load('default', './config.test-2.xml')
+        self.assertEqual((), settings.get('modules'))

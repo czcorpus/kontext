@@ -46,6 +46,7 @@ def fq(q):
         'sqlite': q % { 'p' : '?' }
     }[_conf['database']['adapter']]
 
+
 def create_db_connection():
     """
     Opens database connection according to the application setup.
@@ -65,6 +66,7 @@ def create_db_connection():
         import sqlite3
         return sqlite3.connect(get('database', 'name'))
 
+
 def get(section, key=None, default=None):
     """
     Gets a configuration value.
@@ -82,19 +84,21 @@ def get(section, key=None, default=None):
         return _conf[section][key]
     return default
 
+
 def set(section, key, value):
     if not section in _conf:
         _conf[section] = {}
     _conf[section][key] = value
 
+
 def get_bool(section, key):
     """
     """
     return {
-        'true' : True,
-        '1' : True,
-        'false' : False,
-        '0' : False
+        'true': True,
+        '1': True,
+        'false': False,
+        '0': False
     }[get(section, str(key).lower())]
 
 
@@ -133,6 +137,8 @@ def parse_config(path):
     """
     """
     xml = etree.parse(open(path))
+
+    # global settings
     _conf['global'] = {}
     for item in xml.find('global'):
         if item.tag == 'administrators':
@@ -142,12 +148,26 @@ def parse_config(path):
             _conf['global'][item.tag] = item.text
     if not 'administrators' in _conf['global']:
         _conf['global']['administrators'] = ()
+
+    # database settings
     _conf['database'] = {}
     for item in xml.find('database'):
         _conf['database'][item.tag] = item.text
+
+    # cache settings
     _conf['cache'] = {}
     for item in xml.find('cache'):
         _conf['cache'][item.tag] = item.text
+
+    # application modules
+    _conf['modules'] = []
+    modules = xml.find('modules') if xml.find('modules') is not None else ()
+    for item in modules:
+        if 'active' in item.attrib and (item.attrib['active'].lower() == 'true' or item.attrib['active'] == '1'):
+            _conf['modules'].append(item.attrib['id'])
+    _conf['modules'] = tuple(_conf['modules'])
+
+    # corpora settings (including corpora hierarchy)
     _conf['corpora'] = {}
     for item in xml.find('corpora'):
         if item.tag == 'corplist':
