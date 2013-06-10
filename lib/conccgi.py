@@ -566,20 +566,20 @@ class ConcCGI(UserCGI):
 
 
     def collocation_profiles_form(self, pages=0, fromp=1, has_speech=0,
-                 align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+                 align_kwic=0, numbering=0, leftctx='-5', rightctx='5'):
         """
         """
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         conc.sync()
         return {
-            'corpname': self.corpname,
-            'query': self.q
+            'left_ctx': leftctx,
+            'right_ctx': rightctx
         }
 
     collocation_profiles_form.template = 'collocation_profiles_form.tmpl'
 
     def collocation_profiles(self, pages=0, fromp=1, has_speech=0,
-                 align_kwic=0, numbering=0, leftctx='40', rightctx='40', granularity='', confidence='', clustering='',
+                 align_kwic=0, numbering=0, leftctx='', rightctx='', granularity='', confidence='', clustering='',
                  auto_focus=''):
         """
         """
@@ -588,10 +588,10 @@ class ConcCGI(UserCGI):
 
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         conc.sync()
-        #kl = manatee.KWICLines(conc, leftctx, rightctx, attrs, ctxattrs, all_structs, refs)
-        left_ctx = '-5'
-        right_ctx = '5'
-        kl = manatee.KWICLines(conc, left_ctx, right_ctx, 'word', 'word', '=opus.nazev,=opus.preklad,=opus.srclang', '')
+
+        left_ctx = int(leftctx)
+        right_ctx = int(rightctx)
+        kl = manatee.KWICLines(conc, str(left_ctx), str(right_ctx), 'word', 'word', '', '')
 
         confidence = {'high': pycpc.CCONF_HIGH, 'low': pycpc.CCONF_LOW, 'none': pycpc.CCONF_NONE}[confidence]
         granularity = {'high': pycpc.CGRAN_HIGH, 'medium': pycpc.CGRAN_MEDIUM, 'low': pycpc.CGRAN_LOW}[granularity]
