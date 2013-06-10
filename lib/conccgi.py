@@ -359,6 +359,7 @@ class ConcCGI(UserCGI):
                                               ('usesubcorp', self.usesubcorp),
         ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['app_modules'] = settings.get('modules')
         return result
 
     def add_undefined(self, result, methodname):
