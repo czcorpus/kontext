@@ -1105,22 +1105,3 @@ table.form th {
 #stats-filter dl dd {
     margin: 0 0 10px 0;
 }
-
-table#collocation-profiles {
-    border-collapse: collapse;
-}
-
-table#collocation-profiles tr {
-    border-bottom: 1px solid #EEEEEE;
-}
-
-table#collocation-profiles td,
-table#collocation-profiles th {
-    padding: 3px 2px;
-}
-
-#collocation-profiles .collocator {
-    border: 1px solid #D1DBE7;
-    border-radius: 5px;
-    padding: 2px 3px;
-}

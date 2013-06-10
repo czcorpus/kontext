@@ -39,31 +39,23 @@ $_("Collocation profiles")#slurp
 #end def
 
 #def main
-<h1>$_('Collocation profiles')</h1>
+<h3>$_('Collocation profiles')</h3>
 <p>conc size: $conc_size</p>
 
 <table id="collocation-profiles">
     <tr>
-        <th colspan="2">$_('auto focus opt. range')</th>
+        <th>$_('auto focus opt. range')</th>
         <th>$_('collocation words')</th>
         <th>$_('LLR')</th>
         <th>$_('predominant syntagmatic pattern')</th>
     </tr>
-    <tr>
-        #filter None#<th>&#8592;</th>
-        <th>&#8594;</th>#end filter#
-        <th></th>
-        <th></th>
-        <th></th>
-    </tr>
     #for $cluster_data in $profiles#
         <tr>
         #for $collocator in $cluster_data[1]
-            <td>$collocator.left_opt</td>
-            <td>$collocator.right_opt</td>
-            <td><strong class="collocator">$collocator.collocator_words[0]</strong>
+            <td class="auto-focus-interval"><span class="interval">[</span>$collocator.left_opt .. $collocator.right_opt<span class="interval">]</span></td>
+            <td><strong class="collocator" title="$_('Strongest cohesion')">$collocator.collocator_words[0]</strong>
                 #for $s in $collocator.collocator_words[1:]# <span class="collocator">$s</span> #end for#</td>
-            <td>$collocator.cohesion</td>
+            <td class="num">$collocator.cohesion</td>
             <td>#filter None# $cluster_data[0].smart_label #end filter#</td>
         #end for
         </tr>

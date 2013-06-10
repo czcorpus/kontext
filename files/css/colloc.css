@@ -1,11 +1,43 @@
-#collocation-profiles table.table {
+table#collocation-profiles {
+    border-collapse: collapse;
 }
 
-#collocation-profiles td {
-    font-size: 10pt;
+table#collocation-profiles tr {
+    border-bottom: 1px solid #EEEEEE;
+}
+
+table#collocation-profiles td,
+table#collocation-profiles th {
     font-family: arial;
     white-space: nowrap;
+    padding: 4px 3px;
     background-color: #FBFBFB;
+    border-left: 1px solid #EEEEEE;
+}
+
+span.interval {
+    font-size: 130%;
+}
+
+.num {
+    text-align: right;
+}
+
+.auto-focus-interval {
+    text-align: center;
+}
+
+#collocation-profiles .collocator {
+    border: 1px solid #D1DBE7;
+    border-radius: 5px;
+    padding: 2px 3px;
+}
+
+#collocation-profiles strong.collocator {
+    font-weight: normal;
+    border: 1px solid #F6D5B6;
+    border-radius: 5px;
+    padding: 2px 3px;
 }
 
 #collocation-profiles li.clusterListItem {

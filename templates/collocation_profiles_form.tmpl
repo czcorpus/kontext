@@ -39,48 +39,56 @@ $_("Collocation profiles")#slurp
 #end def
 
 #def main
-<h1>$_('Collocation profiles')</h1>
-<form action="collocation_profiles" method="GET">
+<h3>$_('Collocation profiles')</h3>
+<form id="mainform" action="collocation_profiles" method="GET">
     #filter None
     $input_hidden
     #end filter
-
-    <table>
-        <tr>
-            <th>$_('Granularity')</th>
-            <td>
-                <select name="granularity">
-                    <option value="high">$_('High')</option>
-                    <option value="medium">$_('Medium')</option>
-                    <option value="low">$_('Low')</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <th>$_('Confidence')</th>
-            <td>
-                <select name="confidence">
-                    <option value="high">$_('High')</option>
-                    <option value="low">$_('Low')</option>
-                    <option value="none">$_('None')</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <th>$_('Clustering')</th>
-            <td>
-                <select name="clustering">
-                    <option value="unique">$_('Unique')</option>
-                    <option value="multiple">$_('Multiple')</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <th>$_('Auto-focus')</th>
-            <td><input type="checkbox" name="auto_focus" value="1" checked="checked" /></td>
-        </tr>
-    </table>
-
+    <fieldset>
+        <legend>$_('Analysis parameters')</legend>
+        <table>
+            <tr>
+                <th>$_('Context range'):</th>
+                <td>
+                    <input type="text" name="leftctx" value="$leftctx" size="2" /> -
+                    <input type="text" name="rightctx" value="$rightctx" size="2" />
+                </td>
+            </tr>
+            <tr>
+                <th>$_('Granularity'):</th>
+                <td>
+                    <select name="granularity">
+                        <option value="high">$_('High')</option>
+                        <option value="medium">$_('Medium')</option>
+                        <option value="low">$_('Low')</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>$_('Confidence'):</th>
+                <td>
+                    <select name="confidence">
+                        <option value="high">$_('High')</option>
+                        <option value="low">$_('Low')</option>
+                        <option value="none">$_('None')</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>$_('Clustering type'):</th>
+                <td>
+                    <select name="clustering">
+                        <option value="unique">$_('Unique')</option>
+                        <option value="multiple">$_('Multiple')</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>$_('Auto-focus'):</th>
+                <td><input type="checkbox" name="auto_focus" value="1" checked="checked" /></td>
+            </tr>
+        </table>
+    </fieldset>
     <button type="submit">$_('Analyze')</button>
 </form>
 
