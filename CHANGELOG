@@ -1,0 +1,14 @@
+version 0.2
+-------------------------------------------------------------------------------
+
+  * new user-friendly widget to create queries on tags
+  * new audio player (based on the soundmanager 2 library)
+  * support for SQLite-based backend
+  * removed custom simplejson implementation (Py 2.6+ provides one by default)
+  * JavaScript module dependency is now handled by the RequireJS library
+  * switched application's client-side code from the Prototype.js to the jQuery
+
+version 0.1.4
+-------------------------------------------------------------------------------
+
+  * first official release
