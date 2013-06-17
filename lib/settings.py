@@ -163,7 +163,7 @@ def parse_config(path):
             _conf['corpora'][item.tag] = item.text
 
 
-def load(user, conf_path='config.xml'):
+def load(user, conf_path='../config.xml'):
     """
     Loads application's configuration from provided file
 
