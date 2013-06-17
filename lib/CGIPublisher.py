@@ -195,8 +195,8 @@ class CGIPublisher:
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
     _user_settings = {}
-    _template_dir = u'cmpltmpl/'
-    _locale_dir = u'locale/'
+    _template_dir = u'../cmpltmpl/'
+    _locale_dir = u'../locale/'
     _tmp_dir = u'/tmp'
     _corpus_architect = 0
     _url_parameters = []
