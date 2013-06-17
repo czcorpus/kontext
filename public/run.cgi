@@ -22,7 +22,8 @@ import os
 import re
 import json
 
-sys.path.insert(0, './lib')
+sys.path.insert(0, '../lib')
+sys.path.insert(0, '..')
 
 import settings
 settings.load(os.getenv('REMOTE_USER'))
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
 
     # locale
-    locale_dir = 'locale/' # TODO
+    locale_dir = '../locale/' # TODO
     if not os.path.isdir (locale_dir):
         p = os.path.join (os.path.dirname (__file__), locale_dir)
         if os.path.isdir (p):
