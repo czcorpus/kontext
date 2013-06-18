@@ -95,7 +95,7 @@ def add_block_items(items, attr='class', val='even', block_size=3):
 
 
 def kwicpage(
-    corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5', attrs='word',
+    corpus, conc, has_speech=False, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
     ctxattrs='word', refs='#', structs='p', pagesize=20,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
         tbl_template='none', hidenone=0):
@@ -111,7 +111,9 @@ def kwicpage(
     has_speech : bool
       sets whether the corpus concordance is derived from contains speech files
     fromp : int
-      page number
+      page number (starts from 1)
+    line_offset : int
+      first line of the listing (starts from 0)
     leftctx : str, optional (default is '-5')
       how many characters/positions/whatever_struct_attrs display on the left side
     rightctx : str, optional (default is '5')
@@ -153,10 +155,10 @@ def kwicpage(
     out = {'Lines':
            kwiclines(
                corpus, conc, has_speech, (
-                   fromp - 1) * pagesize, fromp * pagesize,
+                   fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
            leftctx, rightctx, attrs, ctxattrs, refs, structs,
            labelmap, righttoleft, alignlist)}
-    add_aligns(corpus, out, conc, (fromp - 1) * pagesize, fromp * pagesize,
+    add_aligns(corpus, out, conc, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                leftctx, rightctx, attrs, ctxattrs, refs, structs,
                labelmap, righttoleft, alignlist)
     if copy_icon:
@@ -165,7 +167,7 @@ def kwicpage(
         sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
         sen_lines = kwiclines(
-            corpus, conc, has_speech, (fromp - 1) * pagesize, fromp * pagesize,
+            corpus, conc, has_speech, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
             '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
