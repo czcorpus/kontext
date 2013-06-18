@@ -1988,35 +1988,56 @@ class ConcCGI(UserCGI):
         return 'Done'
 
     delsubc.template = 'subcorp_form'
-
     maxsavelines = 1000
 
-    def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
-                 align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+    def saveconc_form(self, from_line=1, to_line=''):
+        conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+        if not to_line:
+            to_line = conc.size()
+
+        return {'from_line': from_line, 'to_line':to_line}
+
+    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+
+        def merge_conc_line_parts(items):
+            """
+            converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
+                {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+            """
+            ans = ''
+            for item in items:
+                if 'class' in item and item['class'] != 'attr':
+                    ans += ' %s' % item['str'].strip()
+                else:
+                    ans += '%s' % item['str'].strip()
+            return ans.strip()
 
         def process_lang(root, left_key, kwic_key, right_key):
             if type(root) is dict:
                 root = (root,)
 
+            row = []
             for item in root:
-                row = [item['ref']]
-                left_str = ' '.join([x['str'] for x in item[left_key]])
-                kwic_str = ' '.join([x['str'] for x in item[kwic_key]])
-                right_str = ' '.join([x['str'] for x in item[right_key]])
-                row.append('%s %s %s' % (left_str, kwic_str, right_str))
+                if 'ref' in item:
+                    row.append(item['ref'])
+                row.append(merge_conc_line_parts(item[left_key]))
+                row.append(merge_conc_line_parts(item[kwic_key]))
+                row.append(merge_conc_line_parts(item[right_key]))
             return row
 
         try:
             conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
             conc.switch_aligned(os.path.basename(self.corpname))
+            from_line = int(from_line)
+            to_line = int(to_line)
 
-            ps = self.pagesize
-            if pages:
-                if maxsavelines < self.pagesize:
-                    ps = maxsavelines
-            else:
-                fromp = 1
-                ps = maxsavelines
+            tpl_data = {'from_line': from_line, 'to_line': to_line}
+
+            if from_line < 1 or to_line > conc.size() or from_line >= to_line:
+                raise UserActionException(_('Invalid range entered: [%s, %s]') % (from_line, to_line))
+            page_size = to_line - (from_line - 1)
+            fromp = 1
+            line_offset = (from_line - 1)
             labelmap = {}
             if self.annotconc:
                 try:
@@ -2027,27 +2048,27 @@ class ConcCGI(UserCGI):
                     pass
             contains_speech = settings.has_configured_speech(self._corp())
             data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                      pagesize=ps, labelmap=labelmap, align=[],
+                                      pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
                                       alignlist=[self.cm.get_Corpus(c)
                                                  for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
             mkfilename = lambda suffix: 'concordance-%s.%s' % (self.corpname, suffix)
-
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
-                ans = data
+                tpl_data.update(data)
             elif saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
-                ans = data
+                tpl_data.update(data)
             elif saveformat == 'csv':
+                from butils import UnicodeCSVWriter, Writeable
+
                 self._headers['Content-Type'] = 'text/csv'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
-                format_column = lambda s: '"%s"' % s.strip().replace('"', '""')
-                ans = []
-
+                csv_buff = Writeable()
+                csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
                 if len(data['Lines']) > 0:
                     if 'Left' in data['Lines'][0] and len(data['Lines'][0]['Left']) > 0:
                         left_key = 'Left'
@@ -2063,20 +2084,21 @@ class ConcCGI(UserCGI):
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
                         if numbering:
-                            row = [str(i + 1)]
+                            row = [str(i + from_line)]
                         else:
                             row = []
                         row += process_lang(line, left_key, kwic_key, right_key)
                         if 'Align' in line:
                             row += process_lang(line['Align'], left_key, kwic_key, right_key)
-                        ans.append(';'.join(map(format_column, row)) + ';')
-                ans = {'data': ans}
+                        csv_writer.writerow(row)
+                tpl_data.update({'data': [row.decode('utf-8') for row in csv_buff.rows]})
             else:
                 raise UserActionException(_('Unknown export data type'))
-            return ans
+            return tpl_data
         except Exception as e:
             self._headers['Content-Type'] = 'text/html'
-            del(self._headers['Content-Disposition'])
+            if 'Content-Disposition' in self._headers:
+                del(self._headers['Content-Disposition'])
             raise e
 
 
@@ -2104,7 +2126,7 @@ class ConcCGI(UserCGI):
         os.umask(um)
         #print >>stderr, 'save conc: "%s"' % cpath
         self._user_settings.append('annotconc')
-        return {'stored': storeconcname}
+        return {'stored': storeconcname, 'conc_size': conc.size()}
 
     storeconc.template = 'saveconc_form.tmpl'
     add_vars['storeconc'] = ['Desc']

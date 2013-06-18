@@ -74,3 +74,11 @@ class UnicodeCSVWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+class Writeable(object):
+    def __init__(self):
+        self.rows = []
+
+    def write(self, s):
+        self.rows.append(s)
