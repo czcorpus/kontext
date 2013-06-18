@@ -550,7 +550,7 @@ class CGIPublisher(object):
                 setattr(self, attr, self.rec_recode(getattr(self, attr)))
 
             if template.endswith('.tmpl'):
-                class_name = template[:-5] # appropriate module import
+                class_name = template[:-5]  # appropriate module import
                 file, pathname, description = \
                     imp.find_module(class_name, [self._template_dir])
                 module = imp.load_module(class_name, file, pathname, description)
