@@ -1316,10 +1316,10 @@ class ConcCGI(UserCGI):
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
             for item in result['Blocks'][0]['Items']:
-                csv_writer.writerow([str(w['n']) for w in item['Word']] + [str(item['freq']), str(item['rel'])])
+                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item['rel'])])
 
 
-            tpl_data = {'csv_rows': csv_buff.rows}
+            tpl_data = {'csv_rows': [row.decode('utf-8') for row in csv_buff.rows]}
 
         return tpl_data
 
