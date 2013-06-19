@@ -2625,3 +2625,6 @@ msgstr "Pro změnu jazyka je nutné zadat pozitivní filtr"
 
 msgid "Range [%s, %s] is invalid. It must be non-empty and within [%s, %s]."
 msgstr "Interval [%s, %s] je neplatný. Musí být neprázdný a z rozsahu [%s, %s]."
+
+msgid "Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s"
+msgstr "Interval [%s, %s] je neplatný. Musí být neprázdný a levá hodnota musí být větší nebo rovna %s."

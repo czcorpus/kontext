@@ -63,15 +63,21 @@ def validate_range(actual_range, max_range):
     Parameters
     ----------
     actual_range : 2-tuple
-    max_range : 2-tuple
+    max_range : 2-tuple (if second value is None, that validation of the value is omitted
 
     Returns
     -------
     None if everything is OK else UserActionException instance
     """
-    if actual_range[0] < max_range[0] or actual_range[1] > max_range[1] or actual_range[0] > actual_range[1]:
-        return UserActionException(_('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].')
-                                   % (actual_range + max_range))
+    if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
+            or actual_range[0] > actual_range[1]:
+        if max_range[1] is not None:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
+                    % (actual_range + max_range)
+        else:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s') \
+                    % (actual_range + (max_range[0], ))
+        return UserActionException(msg)
     return None
 
 
@@ -1290,7 +1296,7 @@ class ConcCGI(UserCGI):
         to_line = int(to_line)
 
         result = self.freqs(fcrit, flimit, freq_sort, ml)
-        err = validate_range((from_line, to_line), (1, len(result['Blocks'][0]['Items'])))
+        err = validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
 
@@ -1398,8 +1404,6 @@ class ConcCGI(UserCGI):
         result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
                               cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
                               from_idx=collstart, max_lines=num_fetch_lines)
-        #import debug
-        #result = debug.data
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1445,7 +1449,7 @@ class ConcCGI(UserCGI):
         from_line = int(from_line)
         to_line = int(to_line)
         num_lines = to_line - from_line + 1
-        err = None # TODO validate_range((from_line, to_line), (1, len(ans['Items'])))
+        err = validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
 
