@@ -57,6 +57,23 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     return attrpart + ctx
 
 
+def validate_range(actual_range, max_range):
+    """
+    Parameters
+    ----------
+    actual_range : 2-tuple
+    max_range : 2-tuple
+
+    Returns
+    -------
+    None if everything is OK else UserActionException instance
+    """
+    if actual_range[0] < max_range[0] or actual_range[1] > max_range[1] or actual_range[0] > actual_range[1]:
+        return UserActionException(_('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].')
+                                   % (actual_range + max_range))
+    return None
+
+
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
@@ -1113,7 +1130,7 @@ class ConcCGI(UserCGI):
     add_vars['freq'] = ['concsize']
     fcrit = []
 
-    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0):
+    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
         """
@@ -1121,8 +1138,10 @@ class ConcCGI(UserCGI):
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
-                if i % 2 == 0: attrs.append(item)
-                if i % 2 == 1: ranges.append(item)
+                if i % 2 == 0:
+                    attrs.append(item)
+                if i % 2 == 1:
+                    ranges.append(item)
             return attrs, ranges
 
         def is_non_structural_attr(criteria):
@@ -1155,8 +1174,8 @@ class ConcCGI(UserCGI):
         if not result['Blocks'][0]: raise ConcError(_('Empty list'))
         if len(result['Blocks']) == 1: # paging
             items_per_page = self.fmaxitems
-            fstart = (self.fpage - 1) * self.fmaxitems
-            self.fmaxitems = self.fmaxitems * self.fpage + 1
+            fstart = (self.fpage - 1) * self.fmaxitems + line_offset
+            self.fmaxitems = self.fmaxitems * self.fpage + 1 + line_offset
             result['paging'] = 1
             if len(result['Blocks'][0]['Items']) < self.fmaxitems:
                 result['lastpage'] = 1
@@ -1241,31 +1260,69 @@ class ConcCGI(UserCGI):
 
     add_vars['savefreq_form'] = ['concsize']
 
-    def savefreq_form(self, fcrit=[]):
-        return {'FCrit': [{'fcrit': cr} for cr in fcrit]}
+    def savefreq_form(self, fcrit=[], flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
+        """
+        Displays a form to set-up the 'save frequencies' operation
+        """
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if not to_line:
+            to_line = len(result['Blocks'][0]['Items'])
+
+        return {
+            'FCrit': [{'fcrit': cr} for cr in fcrit],
+            'from_line': from_line,
+            'to_line': to_line
+        }
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
-                 saveformat='text', maxsavelines=1000):
-        "save a frequecy list"
-        if self.pages:
-            if maxsavelines < self.fmaxitems: self.fmaxitems = maxsavelines
-        else:
-            self.fpage = 1
-            self.fmaxitems = maxsavelines
+                 saveformat='text', from_line=1, to_line=''):
+        """
+        save a frequecy list
+        """
+
+        from_line = int(from_line)
+        to_line = int(to_line)
+
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        err = validate_range((from_line, to_line), (1, len(result['Blocks'][0]['Items'])))
+        if err is not None:
+            raise err
+
+        self.fpage = 1
+        self.fmaxitems = to_line - from_line
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
-        if self.wlattr: self.make_wl_query() # multilevel wordlist
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if self.wlattr:
+            self.make_wl_query()  # multilevel wordlist
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="freq.xml"'
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
-        return result
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="freq.csv"'
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            logging.getLogger(__name__).info('RESULT: %s' % (result,))
+            for item in result['Blocks'][0]['Items']:
+                #logging.getLogger(__name__).info('ITEM: %s' % (item,))
+                csv_writer.writerow([str(w['n']) for w in item['Word']] + [str(item['freq']), str(item['rel'])])
+
+
+            tpl_data = {'csv_rows': csv_buff.rows}
+
+        return tpl_data
 
     add_vars['savefreq'] = ['Desc']
 
@@ -1275,7 +1332,9 @@ class ConcCGI(UserCGI):
                ml3attr='word', ml3pos=1, ml3icase='', ml3fcode='rc',
                ml4attr='word', ml4pos=1, ml4icase='', ml4fcode='rc',
                ml1ctx='0', ml2ctx='0', ml3ctx='0', ml4ctx='0'):
-        "multilevel frequency list"
+        """
+        multilevel frequency list
+        """
         l = locals()
         fcrit = ' '.join([onelevelcrit('', l['ml%dattr' % i],
                                        l['ml%dctx' % i], l['ml%dpos' % i],
@@ -1530,7 +1589,6 @@ class ConcCGI(UserCGI):
         out = {}
         out['processing'] = self.check_histogram_processing().split(':')[1]
         return out
-
 
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
     # gets arbitrary list of words for wordlist
@@ -2033,8 +2091,9 @@ class ConcCGI(UserCGI):
 
             tpl_data = {'from_line': from_line, 'to_line': to_line}
 
-            if from_line < 1 or to_line > conc.size() or from_line >= to_line:
-                raise UserActionException(_('Invalid range entered: [%s, %s]') % (from_line, to_line))
+            err = validate_range((from_line, to_line), (1, conc.size()))
+            if err is not None:
+                raise err
             page_size = to_line - (from_line - 1)
             fromp = 1
             line_offset = (from_line - 1)
