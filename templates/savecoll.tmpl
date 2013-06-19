@@ -53,7 +53,6 @@ $d.arg#slurp
 #elif $saveformat == 'text' ## Text format
   #if $heading
 \# Collocations
-
 \# Corpus: $corpname
     #for $d in $Desc
 \# $d.op:  $d.arg $d.size
@@ -61,14 +60,16 @@ $d.arg#slurp
 
   #end if
   #for $h in $Head
-$h.n	#slurp
+| $h.n	#slurp
   #end for
 
+------------------------------------------------------------
 #for $i in $Items
 $i.str	$i.freq	#slurp
   #for $ss in $i.Stats
 $ss.s	#slurp
   #end for
+
 #end for
 #elif $saveformat == 'csv' ## CSV format
 #for $row in $data

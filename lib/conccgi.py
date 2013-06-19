@@ -388,13 +388,18 @@ class ConcCGI(UserCGI):
             return
 
         if 'Desc' in names:
+            if methodname in ('savecoll', 'savewl', 'savefreq', 'saveconc'):
+                translate = False
+            else:
+                translate = True
             result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                                'tourl': self.urlencode(u2), 'size': s}
                               for o, a, u1, u2, s in
                               conclib.get_conc_desc(self.q,
                                                     corpname=self.corpname,
                                                     cache_dir=self.cache_dir,
-                                                    subchash=getattr(self._corp(), "subchash", None))]
+                                                    subchash=getattr(self._corp(), "subchash", None),
+                                                    translate=translate)]
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
@@ -1390,11 +1395,11 @@ class ConcCGI(UserCGI):
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
         num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
-        result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
-                              cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-                              from_idx=collstart, max_lines=num_fetch_lines)
-        # TODO import debug
-        # TODO result = debug.data
+        #result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
+        #                      cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
+        #                      from_idx=collstart, max_lines=num_fetch_lines)
+        import debug
+        result = debug.data
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1461,8 +1466,8 @@ class ConcCGI(UserCGI):
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
 
             for item in result['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
