@@ -1439,7 +1439,7 @@ class ConcCGI(UserCGI):
         """
         from_line = int(from_line)
         to_line = int(to_line)
-        num_lines = to_line - from_line
+        num_lines = to_line - from_line + 1
         err = None # TODO validate_range((from_line, to_line), (1, len(ans['Items'])))
         if err is not None:
             raise err
