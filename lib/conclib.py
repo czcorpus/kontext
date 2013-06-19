@@ -1179,7 +1179,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         else:
             minsize = fromp * pagesize
     cache_dir = cache_dir + '/' + corp.corpname + '/'
-    pid_dir = cache_dir + "/run/"
+    pid_dir = cache_dir + "run/"
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
