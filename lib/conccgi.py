@@ -1299,19 +1299,19 @@ class ConcCGI(UserCGI):
 
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % self.corpname
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % self.corpname
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
 
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.csv"'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
