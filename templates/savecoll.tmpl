@@ -15,11 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
-
 ## XML format
 #if $saveformat == 'xml'
 <?xml version="1.0" encoding="$corpencoding"?>
-
 #filter WebSafe
 <collocations>
   #if $heading
@@ -52,8 +50,7 @@ $d.arg#slurp
 </collocations>
 
 #end filter
-#else
-## Text format
+#elif $saveformat == 'text' ## Text format
   #if $heading
 \# Collocations
 
@@ -72,8 +69,10 @@ $i.str	$i.freq	#slurp
   #for $ss in $i.Stats
 $ss.s	#slurp
   #end for
-
 #end for
-
+#elif $saveformat == 'csv' ## CSV format
+#for $row in $data
+$row#slurp
+#end for
 #end if
 
