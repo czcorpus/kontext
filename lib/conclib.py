@@ -1361,7 +1361,9 @@ def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate
                                  sortopt.get(sortattrs[1][:4], sortattrs[1]))
             url1p.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}
                            .get(sortattrs[1][:2], '')))
-
+        elif opid == 'f':
+            size = ''
+            args = _('enabled')
         if op:
             if formname[0]:
                 url1 = '%s?%s' % (formname[0], url1p)
