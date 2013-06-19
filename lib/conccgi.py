@@ -1363,7 +1363,9 @@ class ConcCGI(UserCGI):
     citemsperpage = 50
 
     def coll(self):
-        "collocations form"
+        """
+        collocations form
+        """
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
         else:
@@ -1377,19 +1379,22 @@ class ConcCGI(UserCGI):
 
     add_vars['coll'] = ['concsize']
 
-    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd']):
+    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd'], line_offset=0, num_lines=None):
         """
         list collocations
         """
-        collstart = (self.collpage - 1) * self.citemsperpage
+        collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
             self.csortfn = cbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
+        num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
         result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
                               cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-                              from_idx=collstart, max_lines=self.citemsperpage)
+                              from_idx=collstart, max_lines=num_fetch_lines)
+        # TODO import debug
+        # TODO result = debug.data
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1413,21 +1418,57 @@ class ConcCGI(UserCGI):
 
     save_coll_options.template = 'coll.tmpl'
 
-    def savecoll(self, csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                 heading=0, maxsavelines=1000):
-        "save collocations"
-        if not self.pages:
-            self.collpage = 1
-            self.citemsperpage = maxsavelines
+    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0):
+        """
+        """
+        self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
+        if to_line == '':
+            to_line = len(result['Items'])
+        return {
+            'from_line': from_line,
+            'to_line': to_line,
+            'saveformat': saveformat
+        }
+
+    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0):
+        """
+        save collocations
+        """
+        from_line = int(from_line)
+        to_line = int(to_line)
+        num_lines = to_line - from_line
+        err = None # TODO validate_range((from_line, to_line), (1, len(ans['Items'])))
+        if err is not None:
+            raise err
+
+        self.collpage = 1
+        self.citemsperpage = sys.maxint
+        result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.xml"'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % self.corpname
             result['Scores'] = result['Head'][2:]
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.txt"'
-        return result
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            self._headers['Content-Type'] = 'application/text'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+
+            for item in result['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+        return tpl_data
 
     add_vars['savecoll'] = ['Desc', 'concsize']
 
