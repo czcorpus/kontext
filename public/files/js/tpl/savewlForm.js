@@ -60,7 +60,17 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
      */
     lib.init = function (conf) {
         mainPage.init(conf);
-        lib.bindClicks(conf);
+        lib.bindClicks();
+
+        // obtain current state of the form and update
+        (function () {
+            var jqForm = $('form[action="savewl"]'),
+            checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
+
+            if (checkedRadio) {
+                lib.updateExportTypeSwitch(jqForm, checkedRadio);
+            }
+        }());
     };
 
     return lib;
