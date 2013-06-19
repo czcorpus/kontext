@@ -116,11 +116,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #if $result_arf != ''
 \# ARF: $result_arf
 #end if
-
 #for $d in $Desc
-\#      $d.op    $d.arg $d.size
+\# $d.op: $d.arg $d.size
 #end for
 #end if
+
 ## kwic lines
 #for $i, $l in $enumerate($Lines)
 #if $numbering
