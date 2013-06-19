@@ -1395,11 +1395,11 @@ class ConcCGI(UserCGI):
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
         num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
-        #result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
-        #                      cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-        #                      from_idx=collstart, max_lines=num_fetch_lines)
-        import debug
-        result = debug.data
+        result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
+                              cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
+                              from_idx=collstart, max_lines=num_fetch_lines)
+        #import debug
+        #result = debug.data
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
