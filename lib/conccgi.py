@@ -12,6 +12,7 @@
 
 import os
 import re
+import sys
 from sys import stderr
 import time
 import glob
@@ -1314,9 +1315,7 @@ class ConcCGI(UserCGI):
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
-            logging.getLogger(__name__).info('RESULT: %s' % (result,))
             for item in result['Blocks'][0]['Items']:
-                #logging.getLogger(__name__).info('ITEM: %s' % (item,))
                 csv_writer.writerow([str(w['n']) for w in item['Word']] + [str(item['freq']), str(item['rel'])])
 
 
@@ -1591,12 +1590,14 @@ class ConcCGI(UserCGI):
         return out
 
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
-    # gets arbitrary list of words for wordlist
+        """
+        gets arbitrary list of words for wordlist
+        """
         wlfile = getattr(self, attrnames[0], '').encode('utf8')
         wlcache = getattr(self, attrnames[1], '')
-        filename = wlcache;
+        filename = wlcache
         wlwords = []
-        if wlfile: # save a cache file
+        if wlfile:  # save a cache file
             try:
                 from hashlib import md5
             except ImportError:
@@ -1608,7 +1609,7 @@ class ConcCGI(UserCGI):
             cache_file.write(wlfile)
             cache_file.close()
             wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
-        if wlcache: # read from a cache file
+        if wlcache:  # read from a cache file
             filename = os.path.join(self.cache_dir, wlcache)
             cache_file = open(filename)
             wlwords = [w.strip() for w in cache_file]
@@ -1621,8 +1622,9 @@ class ConcCGI(UserCGI):
     wlnums = 'frq'
 
     def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
-                 ref_corpname='', ref_usesubcorp='', wlpage=1):
-        if not wlpat: self.wlpat = '.*'
+                 ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
+        if not wlpat:
+            self.wlpat = '.*'
         if '.' in self.wlattr:
             orig_wlnums = self.wlnums
             if wltype != 'simple':
@@ -1645,10 +1647,13 @@ class ConcCGI(UserCGI):
             wlpage = 1
             self.wlpage = 1
             self.wlmaxitems = 1000
-        wlstart = (wlpage - 1) * self.wlmaxitems
+        wlstart = (wlpage - 1) * self.wlmaxitems + line_offset
+
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
-        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
-                                   % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
+        result = {
+            'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
+                          % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)
+        }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
@@ -1689,7 +1694,8 @@ class ConcCGI(UserCGI):
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
-                result['lastpage'] = 0; result_list = result_list[:-1]
+                result['lastpage'] = 0
+                result_list = result_list[:-1]
             self.wlmaxitems -= 1
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
@@ -1700,17 +1706,17 @@ class ConcCGI(UserCGI):
                 result['wlattr_label'] = self.wlattr
 
             return result
-        except corplib.MissingSubCorpFreqFile as subcmiss:
+        except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
-                out = corplib.build_arf_db(subcmiss.args[0], 'hashws')
+                out = corplib.build_arf_db(e.args[0], 'hashws')
             else:
                 corp = self._corp()
                 try:
                     doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
                 except:
                     raise ConcError('DOCSTRUCTURE not set correctly')
-                out = corplib.build_arf_db(subcmiss.args[0], self.wlattr)
+                out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
@@ -1766,21 +1772,54 @@ class ConcCGI(UserCGI):
 
     struct_wordlist.template = 'freqs.tmpl'
 
-    def savewl(self, maxsavelines=1000, wlpat='', wltype='simple',
+    def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                usesubcorp='', ref_corpname='', ref_usesubcorp='',
                saveformat='text'):
-        'save word list'
+        wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+        if to_line == '':
+            to_line = str(len(wl['Items']))
+
+        return {
+            'from_line': from_line,
+            'to_line': to_line
+        }
+
+    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
+               ref_usesubcorp='', saveformat='text'):
+        """
+        save word list
+        """
+        from_line = int(from_line)
+        to_line = int(to_line)
+        line_offset = (from_line - 1)
+        self.wlmaxitems = sys.maxint  # TODO
+        ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                            ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
+        err = validate_range((from_line, to_line), (1, len(ans['Items'])))
+        if err is not None:
+            raise err
+        ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.xml"'
-        else:
+            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.xml"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.txt"'
-        if not self.pages:
-            self.wlpage = 1
-            self.wlmaxitems = maxsavelines
-        return self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
-                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.txt"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            for item in ans['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])))
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.csv"' % self.corpname
+
+        return tpl_data
 
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
@@ -1837,9 +1876,10 @@ class ConcCGI(UserCGI):
 
         for item in tt:
             for col in item['Line']:
-                if col.has_key('textboxlength'): continue
+                if 'textboxlength' in col:
+                    continue
                 if not col['name'].startswith(basestructname):
-                    col['textboxlength'] = 30;
+                    col['textboxlength'] = 30
                     continue
                 attr = corp.get_attr(col['name'])
                 aname = col['name'].split('.')[-1]
