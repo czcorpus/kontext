@@ -2623,3 +2623,5 @@ msgstr "celý korpus"
 msgid "Please specify positive filter to switch"
 msgstr "Pro změnu jazyka je nutné zadat pozitivní filtr"
 
+msgid "Range [%s, %s] is invalid. It must be non-empty and within [%s, %s]."
+msgstr "Interval [%s, %s] je neplatný. Musí být neprázdný a z rozsahu [%s, %s]."
