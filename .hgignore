@@ -3,6 +3,7 @@ syntax: glob
 *.*~
 .idea
 doc
+log
 *.pyc
 config.xml
 .directory
