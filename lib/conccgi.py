@@ -364,7 +364,7 @@ class ConcCGI(UserCGI):
     def add_undefined(self, result, methodname):
         UserCGI.add_undefined(self, result, methodname)
         result['methodname'] = methodname
-        if self.add_vars.has_key(methodname):
+        if 'methodname' in self.add_vars:
             names = self.add_vars[methodname]
         else:
             return
@@ -383,11 +383,6 @@ class ConcCGI(UserCGI):
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
-        if 'concsize' in names:
-            conc = self.call_function(conclib.get_conc,
-                                      (self._corp(),))
-            if conc:
-                result['concsize'] = conc.size()
 
         if 'orig_query' in names:
             conc_desc = conclib.get_conc_desc(self.q,
