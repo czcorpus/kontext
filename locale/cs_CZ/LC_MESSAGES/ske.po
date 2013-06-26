@@ -2623,3 +2623,6 @@ msgstr "celý korpus"
 msgid "Please specify positive filter to switch"
 msgstr "Pro změnu jazyka je nutné zadat pozitivní filtr"
 
+msgid "random sample of size"
+msgstr "náhodný vzorek velikosti"
+
