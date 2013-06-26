@@ -316,8 +316,8 @@ class ConcCGI(UserCGI):
         else:
             result['corp_web'] = ''
         if self.usesubcorp:
-            result['subcorp_size'] = _('%s positions') % locale.format('%d', thecorp.search_size(), True).decode(
-                'utf-8') # TODO check whether this is proper method
+            sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
+            result['subcorp_size'] = ('%s positions') % locale.format('%d', sc.search_size(), True).decode('utf-8')
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
