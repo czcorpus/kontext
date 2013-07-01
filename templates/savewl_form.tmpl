@@ -40,8 +40,6 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
 });
 #end def
 
-#attr $focus = "'#submit'"
-
 #def main
 #filter WebSafe
 <h3>
@@ -65,10 +63,13 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
 <input type="hidden" name="usesubcorp" value="$usesubcorp" />
 <input type="hidden" name="ref_corpname" value="$ref_corpname" />
 <input type="hidden" name="ref_usesubcorp" value="$ref_usesubcorp" />
-<input type="hidden" name="keywords" value="$keywords" />
 <input type="hidden" name="wlcache" value="$wlcache" />
 <input type="hidden" name="usearf" value="$usearf" />
 <input type="hidden" name="simple_n" value="$simple_n" />
+<input type="hidden" name="wltype" value="$wltype" />
+<input type="hidden" name="wlnums" value="$wlnums" />
+<input type="hidden" name="include_nonwords" value="$include_nonwords" />
+<input type="hidden" name="blcache" value="$blcache" />
 <table class="form">
   <tr>
     <th>
@@ -105,6 +106,10 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
   <tr class="separator">
     <th>$_("Include heading"):</th>
     <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
+  </tr>
+  <tr class="separator">
+    <th>$_("Include column headers"):</th>
+    <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
   </tr>
   <tr>
     <th>$_("Lines to store"):</th>

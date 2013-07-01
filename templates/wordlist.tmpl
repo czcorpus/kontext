@@ -23,26 +23,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Word list")#slurp
 #end def
 
-#attr $focus = "'#next'"
-
 #def headers
 #filter WebSafe
 #set global $new_maxitems = $wlmaxitems / $wlpage
 #set global $url_wlpat = $urlquote($wlpat)
 #set global $url_usesubcorp = $urlquote($usesubcorp)
-#set global $allhref = 'wordlist?%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache)
+#set global $curr_settings = '%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s;wlpage=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache, $wlpage)
+
+ #if $processing
+   <meta http-equiv="refresh" content="3;wordlist?$curr_settings">
+ #end if
 #end filter
 #end def
 
 #def left_submenu_options
 #filter WebSafe
-  <li><a href="wordlist_form?$allhref[9:]">$_("Change options")</a></li>
+  <li><a href="wordlist_form?$curr_settings">$_("Change options")</a></li>
 #end filter
 #end def
 
 #def left_submenu_save
 #filter WebSafe
-  <li><a title="$_("Save Word List/Keywords to a text file or XML")" href="savewl_form?$corpname_url&amp;usesubcorp=$url_usesubcorp&amp;ref_corpname=$ref_corpname&amp;ref_usesubcorp=$ref_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlsort=$wlsort&amp;keywords=$keywords;wlpage=$wlpage;wlcache=$wlcache;usearf=$usearf;simple_n=$simple_n">$_("Save")</a></li>
+  <li><a title="$_("Save Word List/Keywords to a text file or XML")" href="savewl_form?$curr_settings">$_("Save")</a></li>
 #end filter
 #end def
 
@@ -62,18 +64,14 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 
 #def main
 #filter WebSafe
-#if $keywords
-  <h3>$_("Keywords")</h3>
-#else
   <h3>$_("Word list")</h3>
-#end if
-  $_("Corpus"): <b>$corpname</b>
+  $_("Corpus"): <b>$corp_full_name</b>
 #if $usesubcorp
   <br/>$_("Subcorpus"): <b>$usesubcorp</b>
 #end if
-#if $keywords
+#if $Keywords
   <br/>
-  <br/>$_("Reference corpus"):  <b>$ref_corpname</b>
+  <br/>$_("Reference corpus"):  <b>$ref_corp_full_name</b>
   #if $ref_usesubcorp
     <br/>$_("Reference subcorpus"): <b>$ref_usesubcorp</b>
   #end if
@@ -96,11 +94,12 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 #if ($getVar('Items', '') or $getVar('Keywords', '')) and not ($wlpage == 1 and $lastpage)
 <div class="bonito-pagination">
 <form action="wordlist">
-<fieldset class="float anonymous">
   #if $wlpage > 1
     <div class="bonito-pagination-left">
-    <a href="$allhref">$_("<< First")</a> |
-    <a href="$allhref;wlpage=$(int($wlpage) - 1)">$_("< Previous")</a>
+    #set $firstlink_sett = $url_sub($curr_settings, 'wlpage', 1)
+    <a href="wordlist?$firstlink_sett">$_("<< First")</a> |
+    #set $prevlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) - 1)
+    <a href="wordlist?$prevlink_sett">$_("< Previous")</a>
     </div>
   #end if
 
@@ -112,15 +111,14 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
     <input type="hidden" name="wlpat" value='$wlpat' />
     <input type="hidden" name="wlicase" value='$wlicase' />
     <input type="hidden" name="wlmaxitems" value='$new_maxitems' />
-    <input type="hidden" name="keywords" value='$keywords' />
     <input type="hidden" name="wlsort" value='$wlsort' />
     <input type="hidden" name="ref_corpname" value='$ref_corpname' />
     <input type="hidden" name="ref_usesubcorp" value='$ref_usesubcorp' />
     <input type="hidden" name="wlcache" value='$wlcache' />
     <input type="hidden" name="simple_n" value='$simple_n' />
-    <input type="hidden" name="wltype" value='$wltype,' />
+    <input type="hidden" name="wltype" value='$wltype' />
     <input type="hidden" name="wlnums" value='$wlnums' />
-    <input type="hidden" name="include_nonwords" value='$include_nonwords,' />
+    <input type="hidden" name="include_nonwords" value='$include_nonwords' />
     <input type="hidden" name="blcache" value='$blcache' />
 
   $_("Page")
@@ -130,12 +128,12 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 
   #if not $lastpage
   <div class="bonito-pagination-right">
-  <a href="$allhref;wlpage=$(int($wlpage) + 1)" id="$navid">$_("Next >")</a>
+    #set $nextlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) + 1)
+  <a href="wordlist?$nextlink_sett" id="$navid">$_("Next >")</a>
   </div>
   #else
   <a id="$navid"></a>
   #end if
-</fieldset>
 </form>
 </div> 
 #end if
@@ -144,22 +142,31 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 <table class="result numtab">
 
 #if $Items
-  <thead>
-  <tr>
-    <th><a href="wordlist?$corpname_url;usesubcorp=$url_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlcache=$wlcache;blcache=$blcache;wlnums=$wlnums;include_nonwords=$include_nonwords;wltype=$wltype">$_($wlattr)</a></th>
-    <th><a href="wordlist?$corpname_url;usesubcorp=$url_usesubcorp;wlattr=$wlattr;wlminfreq=$wlminfreq;wlpat=$url_wlpat;wlicase=$wlicase;wlmaxitems=$new_maxitems;wlsort=f;wlcache=$wlcache;blcache=$blcache;wlnums=$wlnums;include_nonwords=$include_nonwords;wltype=$wltype">$_("Freq")</a></th>
-  </tr>
-  </thead>
+    #if $wlattr != 'ws_collocations'
+      #set $attrsort_sett = $url_sub($curr_settings, 'wlsort', '')
+      #set $freqsort_sett = $url_sub($curr_settings, 'wlsort', 'f')
+      <thead><tr>
+      <th><a href="wordlist?$attrsort_sett">$wlattr_label</a></th>
+      <th><a href="wordlist?$freqsort_sett">$_("Freq")</a></th>
+      </tr></thead>
+    #else
+      <thead><tr><th>$wlattr</th><th>$_("Freq")</th></tr></thead>
+    #end if
   #for $i in $Items
     <tr class="$i.get('class')" >
-    #set $url_str = $urlquote($i.str.replace('"', '\\"'))
+    #if $wlattr == 'ws_collocations'
+      <td class="left">$i.w1 <sub><span class="note">$i.gramrel</span></sub> $i.w2</td>
+      <td><a href="view?q=w$i.seek;$corpname_url;usesubcorp=$url_usesubcorp">$i.freq</a></td>
+    #else
+      #set $url_str = $urlquote($i.str.replace('\\', '\\\\').replace('"', '\\"'))
       <td class="left">$i.str</td><td>
       #if '.' in $wlattr
         $i.freq
       #else
-        <a href="first?$corpname_url;usesubcorp=$url_usesubcorp;cql=%22$url_str%22;default_attr=$wlattr;qmcase=1;queryselector=cqlrow">$i.freq</a>
+        <a href="first?$corpname_url;usesubcorp=$url_usesubcorp;cql=%5B$wlattr%3D%3D%22$url_str%22%5D;default_attr=$wlattr;qmcase=1;queryselector=cqlrow">$i.freq</a>
       #end if
       </td>
+    #end if
     </tr>
   #end for
 
@@ -169,14 +176,14 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
     <tr>
       <th></th>
       <th></th>
-      <th colspan="3" border="1"><i>$corpname#if $usesubcorp#:$usesubcorp#end if</i></th>
+      <th colspan="3" border="1"><i>$corp_full_name#if $usesubcorp# : $usesubcorp#end if</i></th>
       <th></th>
-      <th colspan="3" border="1"><i>$ref_corpname#if $ref_usesubcorp#:$ref_usesubcorp#end if</i></th>
+      <th colspan="3" border="1"><i>$ref_corp_full_name#if $ref_usesubcorp# : $ref_usesubcorp#end if</i></th>
       <th></th>
       <th></th>
     </tr>
     <tr>
-      <th>$_($wlattr)</th>
+      <th>$wlattr</th>
       <th width="10"></th>
       <th>$_("Freq")</th>
       <th>$_("Freq/mill")</th>
@@ -193,15 +200,26 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
       class="$k.class"
     #end if
     >
+    #if $wlattr == 'ws_collocations'
+      #set $w1, $gramrel, $w2, $seek = $k.str.split('\t')
+      <td class="left">$w1 <sub><span class="note">$gramrel</span></sub> $w2</td>
+      <td></td>
+      <td><a href="view?q=w$seek;$corpname_url;usesubcorp=$url_usesubcorp">$k.freq</a></td>
+    #else
       <td class="left">$k.str</td>
       <td></td>
-    #set $url_str = $urlquote($k.str.replace('"', '\\"'))
+      #set $url_str = $urlquote($k.str.replace('"', '\\"'))
       <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq</a></td>
+    #end if
       <td>$k.rel</td>
       <td></td>
       <td>
       #if $k.freq_ref
-        <a href="first?$corpname_url;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
+        #if $wlattr == 'ws_collocations'
+          <a href="view?q=w$seek;corpname=$ref_corpname;usesubcorp=$ref_usesubcorp">$k.freq_ref</a>
+        #else
+          <a href="first?corpname=$ref_corpname;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
+        #end if
       #else
         0
       #end if
