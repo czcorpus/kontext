@@ -71,7 +71,9 @@ def validate_range(actual_range, max_range):
     """
     if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
             or actual_range[0] > actual_range[1]:
-        if max_range[1] is not None:
+        if max_range[0] > max_range[1]:
+            msg = _('Invalid range - cannot select rows from an empty list.')
+        elif max_range[1] is not None:
             msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
                     % (actual_range + max_range)
         else:
@@ -1183,8 +1185,9 @@ class ConcCGI(UserCGI):
             'concsize': conc.size(),
             'fmaxitems': self.fmaxitems
         }
-        if not result['Blocks'][0]: raise ConcError(_('Empty list'))
-        if len(result['Blocks']) == 1: # paging
+        if not result['Blocks'][0]:
+            raise ConcError(_('Empty list'))
+        if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
             fstart = (self.fpage - 1) * self.fmaxitems + line_offset
             self.fmaxitems = self.fmaxitems * self.fpage + 1 + line_offset
@@ -1287,9 +1290,9 @@ class ConcCGI(UserCGI):
         }
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
-                 saveformat='text', from_line=1, to_line=''):
+                 saveformat='text', from_line=1, to_line='', colheaders=0):
         """
-        save a frequecy list
+        save a frequency list
         """
 
         from_line = int(from_line)
@@ -1326,9 +1329,12 @@ class ConcCGI(UserCGI):
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Blocks'][0]['Head'][:-2]] + ['freq', 'freq [%]'])
+            # then write the data (first block only)
             for item in result['Blocks'][0]['Items']:
                 csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item['rel'])])
-
 
             tpl_data = {'csv_rows': [row.decode('utf-8') for row in csv_buff.rows]}
 
@@ -1442,7 +1448,7 @@ class ConcCGI(UserCGI):
         }
 
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                 heading=0):
+                 heading=0, colheaders=0):
         """
         save collocations
         """
@@ -1473,6 +1479,10 @@ class ConcCGI(UserCGI):
             self._headers['Content-Type'] = 'text/csv'
             self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
 
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Head']])
+            # then write the data
             for item in result['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
 
@@ -1684,10 +1694,8 @@ class ConcCGI(UserCGI):
             elif self.wlnums == 'frq':
                 self.wlnums = 'doc sizes'
             elif self.wlnums == 'docf':
-                self.wlnums = 'frq'
-        if self.wlattr == 'ws_collocations' and self.wlnums != 'frq':
-            raise ConcError('Word sketch keywords are available '
-                            'with raw word counts only')
+                self.wlnums = 'docf'
+
         lastpage = 0
         if self._anonymous and wlpage >= 10:  # limit paged lists
             wlpage = 10
@@ -1828,15 +1836,20 @@ class ConcCGI(UserCGI):
         wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                              ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
         if to_line == '':
-            to_line = str(len(wl['Items']))
+            to_line = str(len(wl['Items'])) if 'Items' in wl else 0
 
-        return {
+        ans = {
             'from_line': from_line,
-            'to_line': to_line
+            'to_line': to_line,
         }
 
+        if to_line == 0:
+            ans['error'] = _('Empty result cannot be saved.')
+
+        return ans
+
     def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
-               ref_usesubcorp='', saveformat='text'):
+               ref_usesubcorp='', saveformat='text', colheaders=0):
         """
         save word list
         """
@@ -1846,28 +1859,33 @@ class ConcCGI(UserCGI):
         self.wlmaxitems = sys.maxint  # TODO
         ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                             ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
-        err = validate_range((from_line, to_line), (1, len(ans['Items'])))
+        err = validate_range((from_line, to_line), (1, len(ans['Items']) if 'Items' in ans else 0))
         if err is not None:
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % self.corpname
             tpl_data = ans
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % self.corpname
             tpl_data = ans
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
+
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow((self.wlattr, 'freq'))
+            # then write the data
             for item in ans['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])))
             tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="word-list-%s.csv"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
 
         return tpl_data
 
@@ -2202,7 +2220,7 @@ class ConcCGI(UserCGI):
                                                  for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
-            mkfilename = lambda suffix: 'concordance-%s.%s' % (self.corpname, suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self.corpname, suffix)
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')

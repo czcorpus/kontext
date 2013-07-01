@@ -30,17 +30,23 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
      * @param {Element} currentElement
      */
     lib.updateExportTypeSwitch = function (jqForm, currentElement) {
-        var jqHeadingInput = $(jqForm).find('input[name="heading"]'),
-            jqHeadingRow = jqHeadingInput.closest('tr');
+        var jqHeadingInput = $(jqForm).find('input[name="colheaders"]'),
+            jqHeadingRow = jqHeadingInput.closest('tr'),
+            jqHeadingInput2 = $(jqForm).find('input[name="heading"]'),
+            jqHeadingRow2 = jqHeadingInput2.closest('tr');
 
-            if ($(currentElement).val() === 'csv') {
-                jqHeadingInput.prop('disabled', true);
-                jqHeadingRow.hide();
+        if ($(currentElement).val() === 'csv') {
+            jqHeadingInput.prop('disabled', false);
+            jqHeadingRow.show();
+            jqHeadingInput2.prop('disabled', true);
+            jqHeadingRow2.hide();
 
-            } else {
-                jqHeadingInput.prop('disabled', false);
-                jqHeadingRow.show();
-            }
+        } else {
+            jqHeadingInput.prop('disabled', true);
+            jqHeadingRow.hide();
+            jqHeadingInput2.prop('disabled', false);
+            jqHeadingRow2.show();
+        }
     };
 
     /**

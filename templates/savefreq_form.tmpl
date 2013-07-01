@@ -31,8 +31,6 @@ require(['jquery', 'tpl/savefreqForm', 'domReady!'], function (\$, savefreqForm,
 });
 #end def
 
-
-
 #attr $focus = "'#submit'"
 
 #def main
@@ -86,11 +84,15 @@ $input_hidden
     <th>$_("Include heading"):</th>
     <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
   </tr>
-    <tr>
-        <th>$_("Lines to store"):</th>
-        <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
-            <input type="text" name="to_line" value="$to_line" size="4" /></td>
-    </tr>
+  <tr class="separator">
+    <th>$_("Include column headers"):</th>
+    <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
+  </tr>
+  <tr>
+    <th>$_("Lines to store"):</th>
+    <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
+      <input type="text" name="to_line" value="$to_line" size="4" /></td>
+   </tr>
 </table>
 
 <div class="buttons">

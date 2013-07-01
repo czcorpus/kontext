@@ -31,7 +31,6 @@ require(['jquery', 'tpl/savecollForm', 'domReady!'], function (\$, savecollForm,
 });
 #end def
 
-#attr $focus = "'#submit'"
 
 #def main
 #filter WebSafe
@@ -79,6 +78,10 @@ $input_hidden
   <tr class="separator">
     <th>$_("Include heading"):</th>
     <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
+  </tr>
+  <tr class="separator">
+    <th>$_("Include column headers"):</th>
+    <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
   </tr>
   <tr>
     <th>$_("Lines to store"):</th>
