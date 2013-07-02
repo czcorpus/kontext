@@ -22,6 +22,7 @@ import conf
 conf.init()
 from taghelper import *
 
+
 class TestTagVariantLoader(unittest.TestCase):
     """
     """
@@ -38,15 +39,12 @@ class TestTagVariantLoader(unittest.TestCase):
         self.assertRaises(TagGeneratorException, tag_variants_file_exists, '')
         self.assertRaises(TagGeneratorException, tag_variants_file_exists, None)
 
-    def test_variants_provider(self):
-        vp = TagVariantLoader('susanne', 6)
-        values = vp.get_initial_values()
-
     def test_tagsets_load(self):
-        data = load_tag_descriptions('config.test.xml', 'cs')
+        data, labels = load_tag_descriptions('config.test.xml', 'cs')
         self.assertEqual(2, len(data))
         self.assertEqual(2, len(data[0]))
-        self.assertEqual('adjective', data[0]['A'])
-        self.assertEqual('preposition', data[0]['R'])
+        self.assertEqual(('A', 'adjective'),  data[0][0])
+        self.assertEqual(('R', 'preposition'),  data[0][1])
         self.assertEqual(1, len(data[1]))
-        self.assertEqual('experimental item', data[1]['X'])
+        self.assertEqual(('X', 'experimental item'), data[1][0])
+        self.assertEqual(['Part of Speech', 'just a stuff'], labels)

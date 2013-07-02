@@ -9,6 +9,8 @@ from MySQLdb import connections
 import conf
 conf.init()
 import settings
+import db
+import ucnk_auth  # TODO
 
 
 class TestSettingsModule(unittest.TestCase):
@@ -16,8 +18,10 @@ class TestSettingsModule(unittest.TestCase):
     """
 
     def setUp(self):
-        settings.load('default', './config.test.xml')
+        settings.load('./config.test.xml')
         settings._conf['database']['adapter'] = 'mysql'
+        db._adapter = 'mysql'
+        settings.auth = ucnk_auth.create_instance(settings)
         self.mysql_mocker = mox.Mox()
         self.dbcon_mocker = mox.Mox()
         self.dbcursor_mocker = mox.Mox()
@@ -100,84 +104,109 @@ class TestSettingsModule(unittest.TestCase):
         """
         """
         conn = self.dbcon_mocker.CreateMock(connections.Connection)
-        self.mox.StubOutWithMock(settings, 'create_db_connection')
-        settings.create_db_connection().AndReturn(conn)
-
+        self.mox.StubOutWithMock(db, 'open')
+        db.open(settings).AndReturn(None)
+        settings.auth.db_conn = conn
         cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
         conn.cursor().AndReturn(cursor)
 
-        query = "SELECT corplist, sketches FROM user WHERE user LIKE %s"
+        query = "SELECT corplist FROM user WHERE user LIKE %s"
         cursor.execute(query, ('default', )).AndReturn(True)
-        cursor.fetchone().AndReturn(('oral2013 susanne syn syn2010',))
+        cursor.fetchone().AndReturn(('oral2013 susanne syn syn2010 @magic',))
 
+        query = "SELECT corpora.name FROM corplist,relation,corpora WHERE corplist.id=relation.corplist AND relation.corpora=corpora.id AND corplist.name=%s"
+        cursor.execute(query, 'magic').AndReturn(True)
+        cursor.fetchall().AndReturn((('foo1', ), ('foo2', ), ('foo3', )))
         cursor.close().AndReturn(None)
-        conn.close().AndReturn(None)
 
         self.mysql_mocker.ReplayAll()
         self.dbcon_mocker.ReplayAll()
         self.dbcursor_mocker.ReplayAll()
         self.mox.ReplayAll()
 
-        corplist = settings.get_corplist()
-        self.assertEqual('oral2013', corplist[0])
-        self.assertEqual('susanne', corplist[1])
-        self.assertEqual('syn', corplist[2])
-        self.assertEqual('syn2010', corplist[3])
+        # let's fake we are logged in
+        db.open(settings)
+        settings.auth.user = 'default'
+        corplist = settings.auth.get_corplist()
+        self.assertEqual(('foo1', 'foo2', 'foo3', 'oral2013', 'susanne', 'syn', 'syn2010'), corplist)
 
         self.mysql_mocker.VerifyAll()
         self.dbcon_mocker.VerifyAll()
         self.dbcursor_mocker.VerifyAll()
         self.mox.VerifyAll()
         self.mox.UnsetStubs()
+        self.mysql_mocker.UnsetStubs()
+        self.dbcon_mocker.UnsetStubs()
+        self.dbcursor_mocker.UnsetStubs()
 
     def test_user_has_access_to(self):
         """
         """
-        self.assertEquals(True, settings.user_has_access_to('syn2010'))
-        self.assertEquals(False, settings.user_has_access_to('syn201024309u02'))
+        conn = self.dbcon_mocker.CreateMock(connections.Connection)
+        self.mox.StubOutWithMock(db, 'open')
+        db.open(settings).AndReturn(None)
+        settings.auth.db_conn = conn
+
+        mocker = mox.Mox()
+        mocker.StubOutWithMock(settings.auth, 'get_corplist')
+        settings.auth.get_corplist().AndReturn(('syn2010', 'foo1', 'foo2'))
+        settings.auth.get_corplist().AndReturn(('syn2010', 'foo1', 'foo2'))
+
+        mocker.ReplayAll()
+        self.dbcon_mocker.ReplayAll()
+
+        db.open(settings)
+        self.assertEquals(True, settings.auth.user_has_access_to('syn2010'))
+        self.assertEquals(False, settings.auth.user_has_access_to('syn201024309u02'))
+
+        self.dbcon_mocker.VerifyAll()
+        mocker.VerifyAll()
+
+        self.dbcon_mocker.UnsetStubs()
+        mocker.UnsetStubs()
 
     def test_get_user_data(self):
         """
         """
         conn = self.dbcon_mocker.CreateMock(connections.Connection)
-        self.mox.StubOutWithMock(settings, 'create_db_connection')
-        settings.create_db_connection().AndReturn(conn)
-
+        self.mox.StubOutWithMock(db, 'open')
+        db.open(settings).AndReturn(None)
+        settings.auth.db_conn = conn
         cursor = self.dbcursor_mocker.CreateMock(cursors.Cursor)
         conn.cursor().AndReturn(cursor)
 
-        query = "SELECT pass,corplist FROM user WHERE user = %s"
+        query = "SELECT user,pass FROM user WHERE user = %s"
         cursor.execute(query, ('atomik',)).AndReturn(True)
-        cursor.fetchone().AndReturn(('my*password', 'syn2010 oral2013 susanne'))
+        cursor.fetchone().AndReturn(('atomik', 'my*password'))
 
         cursor.close().AndReturn(None)
-        conn.close().AndReturn(None)
 
         self.mysql_mocker.ReplayAll()
         self.dbcon_mocker.ReplayAll()
         self.dbcursor_mocker.ReplayAll()
         self.mox.ReplayAll()
 
-        settings._user = 'atomik'
-        user_data = settings.get_user_data()
-        self.assertEqual('syn2010 oral2013 susanne', user_data['corplist'])
-        self.assertEqual('my*password', user_data['pass'])
+        db.open(settings)
+        settings.auth.login('atomik', '')
 
         self.mysql_mocker.VerifyAll()
         self.dbcon_mocker.VerifyAll()
         self.dbcursor_mocker.VerifyAll()
         self.mox.VerifyAll()
+        self.mysql_mocker.UnsetStubs()
+        self.dbcon_mocker.UnsetStubs()
+        self.dbcursor_mocker.UnsetStubs()
         self.mox.UnsetStubs()
 
     def test_fq(self):
         """
         """
-        settings._conf['database']['adapter'] = 'mysql'
-        q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
+        db._adapter = 'mysql'
+        q = db.fq('SELECT * FROM foo WHERE name = %(p)s')
         self.assertEqual('SELECT * FROM foo WHERE name = %s', q)
 
-        settings._conf['database']['adapter'] = 'sqlite'
-        q = settings.fq('SELECT * FROM foo WHERE name = %(p)s')
+        db._adapter = 'sqlite'
+        q = db.fq('SELECT * FROM foo WHERE name = %(p)s')
         self.assertEqual('SELECT * FROM foo WHERE name = ?', q)
 
     def test_administrators_parsing(self):
@@ -191,5 +220,5 @@ class TestSettingsModule(unittest.TestCase):
     def test_administrators_empty(self):
         """
         """
-        settings.load('default', './config.test-2.xml')
+        settings.load('./config.test-2.xml')
         self.assertEqual((), settings.get('global', 'administrators'))

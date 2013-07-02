@@ -84,6 +84,7 @@ def load_tag_descriptions(path, lang):
     root = xml.find('corpora/tagsets')
     ans = [None for i in range(len(root))]
     labels = [None for i in range(len(root))]
+
     for item in root:
         idx = int(item.attrib['position'])
         ans[idx] = []
@@ -108,7 +109,6 @@ def load_tag_descriptions(path, lang):
                     labels[idx] = translations['en']
                 else:
                     labels[idx] = None
-
     return ans, labels
 
 
