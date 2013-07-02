@@ -26,10 +26,15 @@ sys.path.insert(0, '../lib')
 sys.path.insert(0, '..')
 
 import settings
-settings.load(os.getenv('REMOTE_USER'))
+settings.load()
 
 if settings.is_debug_mode():
     cgitb.enable()
+
+auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
+settings.auth = auth_module.create_instance(settings)
+settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by webserver
+
 
 manatee_dir = settings.get('global', 'manatee_path')
 if manatee_dir and manatee_dir not in sys.path:
@@ -52,8 +57,7 @@ class BonitoCGI (ConcCGI, UserCGI):
     cache_dir = settings.get('corpora', 'cache_dir')
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
-	# set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = settings.get_corplist()
+    corplist = settings.auth.get_corplist()
 
     # set default corpus
     corpname = settings.get_default_corpus(corplist)
@@ -108,7 +112,7 @@ if __name__ == '__main__':
     hdlr = handlers.RotatingFileHandler(settings.get('global', 'log_path'), maxBytes=(1 << 23), backupCount=50)
     hdlr.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
     # locale
     locale_dir = '../locale/' # TODO
