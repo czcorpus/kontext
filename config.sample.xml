@@ -4,12 +4,12 @@
         <log_path>/var/log/bonito/application.log</log_path>
         <debug>true</debug>
         <max_attr_list_size>30</max_attr_list_size>
-        <administrators extension-for="ucnk">
+        <administrators extension-by="ucnk">
             <user>johndoe</user>
             <user>janedoe</user>
         </administrators>
     </global>
-    <database extension-for="ucnk">
+    <database extension-by="ucnk">
         <adapter>sqlite</adapter>
         <name>./data/bonito.db</name>
     </database>

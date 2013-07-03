@@ -94,7 +94,7 @@ The structure can be understood from the following example::
       </some_other_section>
     </bonito>
 
-Custom sections and items should have attribute *extension-for* where value identifies you, your project or your
+Custom sections and items should have attribute *extension-by* where value identifies you, your project or your
 installation ::
 
     <bonito>
@@ -104,7 +104,7 @@ installation ::
         <corpora>
         ...
         </corpora>
-        <my_section extension-for="acme">
+        <my_section extension-by="acme">
             <key1>value1</key1>
         </my_section>
     </bonito>
@@ -124,7 +124,7 @@ You can also add a custom item to a core section ::
     <bonito>
         <global>
         ...
-          <my_item extension-for="acme">foo</my_item>
+          <my_item extension-by="acme">foo</my_item>
         </global>
         <corpora>
         ...
