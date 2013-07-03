@@ -845,8 +845,10 @@ img {
     vertical-align:bottom;
 }
 
-input[type="text"] {
+input[type="text"],
+input[type="password"] {
     border:solid 1px #AAA;
+    border-radius: 3px;
     display:inline-block;
     padding:1px;
 }

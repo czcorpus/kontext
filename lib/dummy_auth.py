@@ -73,18 +73,30 @@ class DummyAuthHandler(object):
         """
         return self.corplist
 
-    def user_has_access_to(self, corpname):
-        """
-        Tests whether the current user has access to provided corpus name
-
-        Parameters
-        ----------
-        corpname : str
-        """
-        return corpname in self.get_corplist()
-
     def is_administrator(self):
         """
         Tests whether the current user's name belongs to the 'administrators' group
         """
         return True
+
+    def validate_password(self, password):
+        """
+        Tests whether provided password matches user's current password
+        """
+        return True
+
+    def validate_new_password(self, password):
+        """
+        Tests whether the password candidate matches required password properties
+        (like minimal length, presence of special characters etc.)
+
+        Returns
+        -------
+        True on success else False
+        """
+        return True
+
+    def get_required_password_properties(self):
+        """
+        """
+        return _('Any string can be used.')

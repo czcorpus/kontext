@@ -41,14 +41,20 @@ module with the following properties:
     The *settings* parameter is Bonito's *settings* module or some compatible one. This
     provides access to any required configuration parameter (e.g. database connection if you need one).
 
-Authentication object is expected to have these properties:
-  * implements method *login(username, password)* which returns bool value (True on success else False) and changes
+Authentication object is expected to implement following methods:
+
+  * *login(username, password)* - returns bool value (True on success else False) and changes
     the state of your authentication object to reflect user's properties
-  * implements method *get_corplist()* which returns list/tuple containing identifiers of corpora available to the
+  * *get_corplist()* - returns list/tuple containing identifiers of corpora available to the
     logged user
-  * implements method *is_administrator()* which returns True if the user is admin else False is returned
-  * optionally the method *update_password(new_password)* may be implemented if such functionality is expected from
-    Bonito
+  * *is_administrator()* - returns True if the user is admin else False is returned
+  * if the password update interface is required then the following additional methods must be implemented:
+
+    * *update_password(new_password)*
+    * *validate_password(password)* - tests whether provided password matches user's current password
+    * *validate_new_password(password)* - tests whether provided password candidate matches required password
+      properties (like length)
+    * *get_required_password_properties()* - returns a text describing what are the properties of a valid password
 
 
 Deployment
@@ -69,6 +75,18 @@ The application itself is configured via a XML configuration file located in the
 By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting environment
 variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
 
+The configuration XML file is expected to be partially customizable according to the needs of 3rd party modules.
+Generally it has two-level structure: sections and key->value items (where value can be also a list of items (see
+e.g. */bonito/corpora/default_corpora*). Some parts of the file can be also processed by dedicated functions.
+
+Custom sections and items should have attribute *extension-for* where value identifies you, your project or your
+installation. The value is then used to access custom items as a prefix. While core configuration items are accessible
+via two parameters 'section_name' and 'item_name' in case of custom values it is 'value_of_extension_for:section_name'
+or 'value_of_extension_for:item_name'. E.g. if you define your custom section <database extension-for="foo">
+with value <name> then you must use following call to obtain that value: *settings.get('foo:database', 'name')*.
+Or if you e.g. add some value <encoding extension-for="foo"> to the 'global' section, then you have to use
+*settings.get('global', 'foo:encoding')* call.
+
 Please refer to the **config.sample.xml** to see the structure.
 
 +----------------------------------------------+-------------------------------------------------------------------+
@@ -79,8 +97,6 @@ Please refer to the **config.sample.xml** to see the structure.
 | /bonito/global/debug                         | true/false (true => detailed error info is visible)               |
 +----------------------------------------------+-------------------------------------------------------------------+
 | /bonito/global/log_path                      | Path to the logging file (Apache must have write access)          |
-+----------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/administrators                | Contains elements 'user', each with single admin username         |
 +----------------------------------------------+-------------------------------------------------------------------+
 | /bonito/global/auth_module                   | Name of a Python module to be used for authentication             |
 +----------------------------------------------+-------------------------------------------------------------------+

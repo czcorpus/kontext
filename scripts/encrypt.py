@@ -4,10 +4,10 @@ if __name__ == '__main__':
     import sys
 
     sys.path.insert(0, 'lib')
-    import settings
+    import ucnk_auth
     import crypt
 
     if len(sys.argv) < 2:
         print('No password entered')
     else:
-        print('\nYour encrypted password is: %s\n' % crypt.crypt(sys.argv[1], settings.create_salt()))
+        print('\nYour encrypted password is: %s\n' % crypt.crypt(sys.argv[1], ucnk_auth.create_salt()))

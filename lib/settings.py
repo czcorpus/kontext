@@ -27,7 +27,7 @@ _conf = {}  # contains parsed data, it should not be accessed directly (use set,
 auth = None  # authentication module (this is set from the outside)
 
 # This dict defines special parsing of quoted sections. Sections not mentioned there
-# are considered to be lists of key->value pairs (i.e. no complex types). 
+# are considered to be lists of key->value pairs (i.e. no complex types).
 conf_parsers = {
     'corplist': 'parse_corplist',
     'tagsets': None,
@@ -134,8 +134,11 @@ def parse_config(path):
     """
     xml = etree.parse(open(path))
     root = xml.getroot()
+    custom_prefix = lambda elm: '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
+
     for section in root:
-        _conf[section.tag] = {}
+        section_id = '%s%s' % (custom_prefix(section), section.tag)
+        _conf[section_id] = {}
         for item in section:
             if item.tag is etree.Comment:
                 continue
@@ -146,13 +149,14 @@ def parse_config(path):
                 else:
                     pass  # we ignore items with None processor deliberately
             else:
+                item_id = '%s%s' % (custom_prefix(item), item.tag)
                 if len(item.getchildren()) == 0:
-                    _conf[section.tag][item.tag] = item.text
+                    _conf[section_id][item_id] = item.text
                 else:
                     item_list = []
                     for sub_item in item:
                         item_list.append(sub_item.text)
-                    _conf[section.tag][item.tag] = tuple(item_list)
+                    _conf[section_id][item_id] = tuple(item_list)
 
 
 def load(conf_path='../config.xml'):
