@@ -31,11 +31,6 @@ settings.load()
 if settings.is_debug_mode():
     cgitb.enable()
 
-auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
-settings.auth = auth_module.create_instance(settings)
-settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
-
-
 manatee_dir = settings.get('global', 'manatee_path')
 if manatee_dir and manatee_dir not in sys.path:
     sys.path.insert(0, manatee_dir)
@@ -47,6 +42,10 @@ from conccgi import ConcCGI
 from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
+
+auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
+settings.auth = auth_module.create_instance(settings)
+settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
 
 class BonitoCGI (ConcCGI, UserCGI):
 
