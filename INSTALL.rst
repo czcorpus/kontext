@@ -36,7 +36,8 @@ and always returns the same list of corpora (you probably want to set your own l
 To be able to provide different lists of corpora for different users, you have to implement an authentication
 module with the following properties:
 
-  * resides in a directory specified in *sys.path* (i.e. is importable without additional Python runtime configuration
+  * the module resides in a directory specified in *sys.path* (i.e. is importable without additional
+    Python runtime configuration)
   * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
     The *settings* parameter is Bonito's *settings* module or some compatible one. This
     provides access to any required configuration parameter (e.g. database connection if you need one).
@@ -65,29 +66,76 @@ Copy/unpack your application directory/archive to the location of your choice an
    ./scripts/deploy.sh
 
 The script compiles HTML templates and then asks you for the location of the YUI compressor. If you don't want to minify
-JavaScript and CSS files you can cancel it by pressing Ctrl^C. If you want to use this feature, please download latest
+JavaScript and CSS just answer "no" in the prompt (= default choice). If you want to use this feature, please download latest
 version of the YUI compressor from https://github.com/yui/yuicompressor/downloads.
 
 Configuration
 =============
 
-The application itself is configured via a XML configuration file located in the root directory of the application.
-By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting environment
+The application itself is configured via an XML configuration file located in the root directory of the application.
+By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting an environment
 variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
 
 The configuration XML file is expected to be partially customizable according to the needs of 3rd party modules.
 Generally it has two-level structure: sections and key->value items (where value can be also a list of items (see
 e.g. */bonito/corpora/default_corpora*). Some parts of the file can be also processed by dedicated functions.
+The structure can be understood from the following example::
+
+    <bonito>
+      <global>
+        <key1>value1</key>
+      </global>
+      <some_other_section>
+        <key2>value2</key>
+        <key3>
+          <item>value3a</item>
+          <item>value3b</item>
+        </key3>
+      </some_other_section>
+    </bonito>
 
 Custom sections and items should have attribute *extension-for* where value identifies you, your project or your
-installation. The value is then used to access custom items as a prefix. While core configuration items are accessible
-via two parameters 'section_name' and 'item_name' in case of custom values it is 'value_of_extension_for:section_name'
-or 'value_of_extension_for:item_name'. E.g. if you define your custom section <database extension-for="foo">
-with value <name> then you must use following call to obtain that value: *settings.get('foo:database', 'name')*.
-Or if you e.g. add some value <encoding extension-for="foo"> to the 'global' section, then you have to use
-*settings.get('global', 'foo:encoding')* call.
+installation ::
 
-Please refer to the **config.sample.xml** to see the structure.
+    <bonito>
+        <global>
+        ...
+        </global>
+        <corpora>
+        ...
+        </corpora>
+        <my_section extension-for="acme">
+            <key1>value1</key1>
+        </my_section>
+    </bonito>
+
+
+The value of the attribute is then used as a prefix to access custom items. While core configuration items are accessible
+via two parameters *[section_name]* and *[item_name]* in case of custom values it is *[value_of_extension_for:section_name]*
+or *[value_of_extension_for:item_name]*. If you define your custom section as show in the previous code example
+then you must use following call to obtain for example the value *value1*::
+
+    settings.get('acme:my_section', 'key1')
+
+Please note that items of your custom section are accessed without any prefix.
+
+You can also add a custom item to a core section ::
+
+    <bonito>
+        <global>
+        ...
+          <my_item extension-for="acme">foo</my_item>
+        </global>
+        <corpora>
+        ...
+        </corpora>
+    </bonito>
+
+Such value is then accessible via following call ::
+
+    settings.get('global', 'acme:my_item')
+
+You can refer to the **config.sample.xml** to see more examples.
 
 +----------------------------------------------+-------------------------------------------------------------------+
 | Xpath                                        | Description                                                       |
