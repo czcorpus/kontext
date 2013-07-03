@@ -154,32 +154,6 @@ class TestSettingsModule(unittest.TestCase):
         self.dbcon_mocker.UnsetStubs()
         self.dbcursor_mocker.UnsetStubs()
 
-    def test_user_has_access_to(self):
-        """
-        """
-        conn = self.dbcon_mocker.CreateMock(connections.Connection)
-        self.mox.StubOutWithMock(db, 'open')
-        db.open(settings).AndReturn(None)
-        settings.auth.db_conn = conn
-
-        mocker = mox.Mox()
-        mocker.StubOutWithMock(settings.auth, 'get_corplist')
-        settings.auth.get_corplist().AndReturn(('syn2010', 'foo1', 'foo2'))
-        settings.auth.get_corplist().AndReturn(('syn2010', 'foo1', 'foo2'))
-
-        mocker.ReplayAll()
-        self.dbcon_mocker.ReplayAll()
-
-        db.open(settings)
-        self.assertEquals(True, settings.auth.user_has_access_to('syn2010'))
-        self.assertEquals(False, settings.auth.user_has_access_to('syn201024309u02'))
-
-        self.dbcon_mocker.VerifyAll()
-        mocker.VerifyAll()
-
-        self.dbcon_mocker.UnsetStubs()
-        mocker.UnsetStubs()
-
     def test_get_user_data(self):
         """
         """

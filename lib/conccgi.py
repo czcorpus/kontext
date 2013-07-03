@@ -275,7 +275,7 @@ class ConcCGI(UserCGI):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not settings.auth.user_has_access_to(cn):
+            if not cn in settings.auth.get_corplist():
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
@@ -2710,7 +2710,7 @@ class ConcCGI(UserCGI):
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
-        if settings.auth.user_is_administrator():
+        if settings.auth.is_administrator():
             import system_stats
             data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
             maxmin = {}

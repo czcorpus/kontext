@@ -16,10 +16,12 @@
 
 import CGIPublisher
 import os
+from CGIPublisher import UserActionException
 
 import settings
 
-def load_opt_file (options, filepath):
+
+def load_opt_file(options, filepath):
     if not os.path.isfile (filepath):
         return
     for line in open (filepath).readlines():
@@ -115,18 +117,19 @@ class UserCGI (CGIPublisher.CGIPublisher):
         self._save_options(options, '')
 
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
-        import crypt
-
-        user_data = settings.get_user_data()
-        if not user_data:
-            raise Exception(_('Unknown user'))
-        if crypt.crypt(curr_passwd, user_data['pass']) == user_data['pass']:
+        logged_in = settings.auth.login(self._user, curr_passwd)
+        if not logged_in:
+            raise UserActionException(_('Unknown user'))
+        if settings.auth.validate_password(curr_passwd):
             pass
         else:
-            raise Exception(_('Invalid password'))
+            raise UserActionException(_('Invalid password'))
 
         if new_passwd != new_passwd2:
-            raise Exception(_('New password and its confirmation do not match.'))
+            raise UserActionException(_('New password and its confirmation do not match.'))
+
+        if not settings.auth.validate_new_password(new_passwd):
+            raise UserActionException(settings.auth.get_required_password_properties())
 
         settings.auth.update_user_password(new_passwd)
         print('Location: %s' % settings.get_root_uri())

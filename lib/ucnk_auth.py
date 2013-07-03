@@ -16,6 +16,7 @@ You probably want to implement an authentication solution of your own. Please re
 to the documentation or read the dummy_auth.py module to see the required interface.
 """
 import os
+import crypt
 
 import manatee
 import db
@@ -37,14 +38,16 @@ def create_instance(conf):
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    conn = db.open(conf.get('database'))
-    return UCNKAuth(conn, conf.get('global', 'administrators'))
+    conn = db.open(conf.get('ucnk:database'))
+    return UCNKAuth(conn, conf.get('global', 'ucnk:administrators'))
 
 
 class UCNKAuth(object):
     """
     A custom authentication class for the Institute of the Czech National Corpus
     """
+
+    MIN_PASSWORD_LENGTH = 5
 
     def __init__(self, db_conn, admins):
         """
@@ -156,6 +159,28 @@ class UCNKAuth(object):
         corpname : str
         """
         return corpname in self.get_corplist()
+
+    def validate_password(self, password):
+        """
+        Tests whether provided password matches user's current password
+        """
+        return crypt.crypt(password, getattr(self, 'pass')) == getattr(self, 'pass')
+
+    def validate_new_password(self, password):
+        """
+        Tests whether the password candidate matches required password properties
+        (like minimal length, presence of special characters etc.)
+
+        Returns
+        -------
+        True on success else False
+        """
+        return len(password) >= UCNKAuth.MIN_PASSWORD_LENGTH
+
+    def get_required_password_properties(self):
+        """
+        """
+        return _('Password must be at least %s characters long.' % UCNKAuth.MIN_PASSWORD_LENGTH)
 
     def is_administrator(self):
         """
