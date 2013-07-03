@@ -19,11 +19,20 @@ This module wraps application's configuration (as specified in config.xml) and p
 methods.
 """
 import os
+import sys
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 
-auth = None  # authentication module (this is set by the application)
+auth = None  # authentication module (this is set from the outside)
+
+# This dict defines special parsing of quoted sections. Sections not mentioned there
+# are considered to be lists of key->value pairs (i.e. no complex types). 
+conf_parsers = {
+    'corplist': 'parse_corplist',
+    'tagsets': None,
+
+}
 
 
 def get(section, key=None, default=None):
@@ -75,7 +84,7 @@ def get_int(section, key):
     return int(get(section, key))
 
 
-def parse_corplist(root, data, path='/'):
+def parse_corplist_node(root, data, path='/'):
     """
     """
     if not hasattr(root, 'tag') or not root.tag == 'corplist':
@@ -86,7 +95,7 @@ def parse_corplist(root, data, path='/'):
         if not hasattr(item, 'tag'):
             continue
         elif item.tag == 'corplist':
-            parse_corplist(item, data, path)
+            parse_corplist_node(item, data, path)
         elif item.tag == 'corpus':
             web_url = item.attrib['web'] if 'web' in item.attrib else None
             sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
@@ -100,38 +109,50 @@ def parse_corplist(root, data, path='/'):
             })
 
 
+def parse_corplist(root):
+    global _conf
+
+    data = []
+    parse_corplist_node(root, data, path='/')
+    _conf['corpora_hierarchy'] = data
+
+
 def parse_config(path):
     """
+    Parses application configuration XML file. A two-level structure is expected where
+    first level represents sections and second level key->value pairs. It is also possible
+    to have values of list type (e.g. <my_conf_value><item>v1</item><item>v2</item></my_conf_value>)
+
+    There are also specific sections which can be processed by an assigned function (see variable conf_parsers).
+    This can be used to omit some sections too (you just define empty function or set None value in conf_parsers
+    for such section).
+
+    Parameters
+    ----------
+    path : str
+      a file system path to the configuration file
     """
     xml = etree.parse(open(path))
-    _conf['global'] = {}
-    for item in xml.find('global'):
-        if item.tag == 'administrators':
-            tmp = tuple([x.text for x in item])
-            _conf['global'][item.tag] = tmp if tmp is not None else ()
-        else:
-            _conf['global'][item.tag] = item.text
-    if not 'administrators' in _conf['global']:
-        _conf['global']['administrators'] = ()
-    _conf['database'] = {}
-    for item in xml.find('database'):
-        _conf['database'][item.tag] = item.text
-    _conf['cache'] = {}
-    for item in xml.find('cache'):
-        _conf['cache'][item.tag] = item.text
-    _conf['corpora'] = {}
-    for item in xml.find('corpora'):
-        if item.tag == 'corplist':
-            data = []
-            parse_corplist(item, data)
-            _conf['corpora_hierarchy'] = data
-        elif item.tag == 'default_corpora':
-            data = []
-            for item in item.findall('item'):
-                data.append(item.text)
-            _conf['corpora']['default_corpora'] = data
-        else:
-            _conf['corpora'][item.tag] = item.text
+    root = xml.getroot()
+    for section in root:
+        _conf[section.tag] = {}
+        for item in section:
+            if item.tag is etree.Comment:
+                continue
+            elif item.tag in conf_parsers:
+                node_processor = conf_parsers[item.tag]
+                if node_processor is not None:
+                    getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
+                else:
+                    pass  # we ignore items with None processor deliberately
+            else:
+                if len(item.getchildren()) == 0:
+                    _conf[section.tag][item.tag] = item.text
+                else:
+                    item_list = []
+                    for sub_item in item:
+                        item_list.append(sub_item.text)
+                    _conf[section.tag][item.tag] = tuple(item_list)
 
 
 def load(conf_path='../config.xml'):
@@ -142,10 +163,15 @@ def load(conf_path='../config.xml'):
     ----------
     auth_handler : object
     conf_path : str, optional (default is 'config.xml')
-      path to the configuration XML file
+      path to the configuration XML file. This value can be
+      overridden by an environment variable BONITO_CONF_PATH
     """
+    if 'BONITO_CONF_PATH' in os.environ:
+        conf_path = os.environ['BONITO_CONF_PATH']
     parse_config(conf_path)
-    os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')  # TODO check if already exists
+
+    if get('corpora', 'manatee_registry'):
+        os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
 
 
