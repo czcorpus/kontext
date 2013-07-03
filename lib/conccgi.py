@@ -385,6 +385,7 @@ class ConcCGI(UserCGI):
                                               ('usesubcorp', self.usesubcorp),
         ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['supports_password_change'] = settings.supports_password_change()
         return result
 
     def add_undefined(self, result, methodname):

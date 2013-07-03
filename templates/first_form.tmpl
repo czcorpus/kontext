@@ -70,7 +70,7 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
       #end if
     </ul>
   </li>
-    #if $varExists('user_menu')
+    #if $varExists('user_menu') and $supports_password_change
     <li>
         <hr />
         <strong>$_('User'):</strong>
