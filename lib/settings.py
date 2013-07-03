@@ -282,6 +282,14 @@ def get_root_uri():
     return 'http://%s%s' % (os.getenv('SERVER_NAME'), os.getenv('REQUEST_URI').replace('user_password', 'first_form'))
 
 
+def supports_password_change():
+    req_functions = ('validate_password', 'validate_new_password', 'get_required_password_properties',
+                     'update_user_password')
+    for item in req_functions:
+        if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
+            return False
+    return True
+
 if __name__ == '__main__':
     import sys
 

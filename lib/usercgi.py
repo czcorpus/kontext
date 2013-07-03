@@ -116,7 +116,16 @@ class UserCGI (CGIPublisher.CGIPublisher):
         options = [a for a in self.attrs2save if not a.startswith('_')]
         self._save_options(options, '')
 
+    def user_password_form(self):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
+        return {}
+
+    user_password_form.template = 'user_password_form.tmpl'
+
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
         logged_in = settings.auth.login(self._user, curr_passwd)
         if not logged_in:
             raise UserActionException(_('Unknown user'))

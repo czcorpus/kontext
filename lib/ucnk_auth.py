@@ -150,16 +150,6 @@ class UCNKAuth(object):
             self.corplist = tuple(corpora)
         return self.corplist
 
-    def user_has_access_to(self, corpname):
-        """
-        Tests whether the current user has access to provided corpus name
-
-        Parameters
-        ----------
-        corpname : str
-        """
-        return corpname in self.get_corplist()
-
     def validate_password(self, password):
         """
         Tests whether provided password matches user's current password
