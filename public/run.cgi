@@ -22,8 +22,8 @@ import os
 import re
 import json
 
-sys.path.insert(0, '../lib')
-sys.path.insert(0, '..')
+sys.path.insert(0, '../lib')  # to be able to import application libraries
+sys.path.insert(0, '..')   # to be able to import compiled template modules
 
 import settings
 settings.load()
@@ -33,7 +33,7 @@ if settings.is_debug_mode():
 
 auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
 settings.auth = auth_module.create_instance(settings)
-settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by webserver
+settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
 
 
 manatee_dir = settings.get('global', 'manatee_path')

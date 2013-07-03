@@ -51,7 +51,6 @@ Authentication object is expected to have these properties:
     Bonito
 
 
-
 Deployment
 ==========
 
@@ -66,7 +65,10 @@ version of the YUI compressor from https://github.com/yui/yuicompressor/download
 Configuration
 =============
 
-The application itself is configured via config.xml file located in the root directory of the application.
+The application itself is configured via a XML configuration file located in the root directory of the application.
+By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting environment
+variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
+
 Please refer to the **config.sample.xml** to see the structure.
 
 +----------------------------------------------+-------------------------------------------------------------------+
