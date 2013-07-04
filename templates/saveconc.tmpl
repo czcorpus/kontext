@@ -145,7 +145,11 @@ $ll.str #slurp
     #end if
     #if $align
     #for $ii, $ll in enumerate($l.get('Align', []))
+    #if $align_kwic
     $ll.ref	#slurp
+    #else
+    	$ll.ref	#slurp  # there is a tab character as a prefix
+    #end if
     #if $align_kwic
     $ll.leftspace #slurp
     #end if
