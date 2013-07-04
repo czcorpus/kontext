@@ -1343,25 +1343,20 @@ class ConcCGI(UserCGI):
 
     add_vars['savefreq'] = ['Desc']
 
-    def freqml(self, flimit=0, freqlevel=1,
-               ml1attr='word', ml1pos=1, ml1icase='', ml1fcode='rc',
-               ml2attr='word', ml2pos=1, ml2icase='', ml2fcode='rc',
-               ml3attr='word', ml3pos=1, ml3icase='', ml3fcode='rc',
-               ml4attr='word', ml4pos=1, ml4icase='', ml4fcode='rc',
-               ml1ctx='0', ml2ctx='0', ml3ctx='0', ml4ctx='0'):
+    def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
         """
-        l = locals()
-        fcrit = ' '.join([onelevelcrit('', l['ml%dattr' % i],
-                                       l['ml%dctx' % i], l['ml%dpos' % i],
-                                       l['ml%dfcode' % i], l['ml%dicase' % i], 'e')
+        fcrit = ' '.join([onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
+                                       kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
+                                       kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
         return result
 
     freqml.template = 'freqs.tmpl'
+    freqml.accept_kwargs = True
 
     def freqtt(self, flimit=0, fttattr=[]):
         if not fttattr:
