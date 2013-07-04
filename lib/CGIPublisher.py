@@ -268,7 +268,11 @@ class CGIPublisher(object):
 
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
-        correct_types(na, function_defaults(method), 1)
+        if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
+            del_nondef = 0
+        else:
+            del_nondef = 1
+        correct_types(na, function_defaults(method), del_nondef=del_nondef)
         ans = apply(method, args[1:], na)
         if type(ans) == dict and tpl_data is not None:
             ans.update(tpl_data)
