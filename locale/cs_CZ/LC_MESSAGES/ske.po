@@ -2637,3 +2637,6 @@ msgstr "Neplatný rozsah - nelze vybrat řádky z prázdného seznamu."
 
 msgid "Remove item"
 msgstr "Odstranit položku"
+
+msgid "Maximum level reached."
+msgstr "Bylo dosaženo maximální povolené úrovně."

@@ -27,7 +27,9 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
     lib.messages = {};
 
     lib.recalcLevelParams = function () {
-        $('#multilevel-freq-params tr.level-line').each(function (i, elm) {
+        var addLevelButton;
+
+        $('#multilevel-freq-params tr.level-line').each(function (i) {
             var currLevel = i + 1;
 
             if (currLevel === 1) {
@@ -40,10 +42,20 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
             $(this).find('td:nth-child(5) select').attr('id', 'kwic-alignment-' + currLevel);
             $(this).find('td input[name="freqlevel"]').val(currLevel);
         });
+
+        addLevelButton = $('#add-freq-level-button');
+        if (addLevelButton.attr('disabled') === 'disabled' && lib.getCurrNumLevels() < lib.maxNumLevels) {
+            addLevelButton.attr('disabled', null);
+            addLevelButton.attr('title', null);
+        }
+    };
+
+    lib.getCurrNumLevels = function () {
+        return $('#multilevel-freq-params tr.level-line').length;
     };
 
     lib.addLevel = function () {
-        var numLevels = $('#multilevel-freq-params tr.level-line').length,
+        var numLevels = lib.getCurrNumLevels(),
             newLine = $('#multilevel-freq-first-level').clone(),
             newLevelNum = numLevels + 1;
 
@@ -60,6 +72,11 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
         newLine.find('td:last a.remove-level').on('click', function (event) {
             lib.removeLevel($(event.target).closest('tr'));
         });
+
+        if (lib.getCurrNumLevels() === lib.maxNumLevels) {
+            $('#add-freq-level-button').attr('disabled', 'disabled');
+            $('#add-freq-level-button').attr('title', lib.messages.max_level_reached);
+        }
     };
 
     lib.removeLevel = function (lineElm) {
@@ -70,6 +87,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
     lib.init = function (conf) {
         mainPage.init(conf);
         lib.messages = conf.messages;
+        lib.maxNumLevels = conf.multilevel_freq_dist_max_levels;
         bonito.multiLevelKwicFormUtil.init();
         $('a.kwic-alignment-help').each(function () {
             $(this).bind('click', function (event) {
