@@ -1355,14 +1355,6 @@ var VKI_attach, VKI_close;
     tbody.appendChild(tr);
     this.VKI_keyboard.appendChild(tbody);
 
-    if (this.VKI_isIE6) {
-        this.VKI_iframe = document.createElement('iframe');
-        this.VKI_iframe.style.position = "absolute";
-        this.VKI_iframe.style.border = "0px none";
-        this.VKI_iframe.style.filter = "mask()";
-        this.VKI_iframe.style.zIndex = "999999";
-        this.VKI_iframe.src = this.VKI_imageURI;
-    }
 
 
     /* ****************************************************************
@@ -1507,11 +1499,8 @@ var VKI_attach, VKI_close;
             table.appendChild(tbody);
             container.appendChild(table);
         }
-        if (this.VKI_deadBox)
+        if (this.VKI_deadBox) {
             this.VKI_deadkeysOn.style.display = (hasDeadKey) ? "inline" : "none";
-        if (this.VKI_isIE6) {
-            this.VKI_iframe.style.width = this.VKI_keyboard.offsetWidth + "px";
-            this.VKI_iframe.style.height = this.VKI_keyboard.offsetHeight + "px";
         }
     };
 
@@ -1652,7 +1641,6 @@ var VKI_attach, VKI_close;
                 }
             } while (elem = elem.offsetParent);
 
-            if (this.VKI_isIE6) document.body.appendChild(this.VKI_iframe);
             document.body.appendChild(this.VKI_keyboard);
             this.VKI_keyboard.style.position = this.VKI_target.keyboardPosition;
             if (this.VKI_isOpera) this.VKI_keyboard.reflow();
@@ -1694,17 +1682,10 @@ var VKI_attach, VKI_close;
                         var bottom = scr.offsetHeight - oTop - self.VKI_target.offsetHeight;
                         var right = scr.offsetWidth - oLeft - self.VKI_target.offsetWidth;
                         self.VKI_keyboard.style.display = (top < 0 || left < 0 || bottom < 0 || right < 0) ? "none" : "";
-                        if (self.VKI_isIE6) self.VKI_iframe.style.display = (top < 0 || left < 0 || bottom < 0 || right < 0) ? "none" : "";
                     }
                 }
                 self.VKI_keyboard.style.top = iPos[1] - ((self.VKI_target.keyboardPosition == "fixed" && !self.VKI_isIE && !self.VKI_isMoz) ? sDis[1] : 0) + fudge + "px";
                 self.VKI_keyboard.style.left = Math.max(10, Math.min(wDim[0] - self.VKI_keyboard.offsetWidth - 25, iPos[0])) + "px";
-                if (self.VKI_isIE6) {
-                    self.VKI_iframe.style.width = self.VKI_keyboard.offsetWidth + "px";
-                    self.VKI_iframe.style.height = self.VKI_keyboard.offsetHeight + "px";
-                    self.VKI_iframe.style.top = self.VKI_keyboard.style.top;
-                    self.VKI_iframe.style.left = self.VKI_keyboard.style.left;
-                }
             }
             if (force === true) self.VKI_position();
         }
@@ -1719,7 +1700,6 @@ var VKI_attach, VKI_close;
         if (this.VKI_target) {
             try {
                 this.VKI_keyboard.parentNode.removeChild(this.VKI_keyboard);
-                if (this.VKI_isIE6) this.VKI_iframe.parentNode.removeChild(this.VKI_iframe);
             } catch (e) {}
             if (this.VKI_kt != this.VKI_kts) {
                 kbSelect.firstChild.nodeValue = this.VKI_kt = this.VKI_kts;
