@@ -1130,3 +1130,29 @@ table.colloc-metrics th {
 table.colloc-metrics label {
     display: block;
 }
+
+table#multilevel-freq-params {
+    border-collapse: collapse;
+}
+
+table#multilevel-freq-params td,
+table#multilevel-freq-params th {
+    padding: 4px 8px;
+    border-style: solid;
+    border-color: #6091B2;
+    border-width: 0 1px 0 1px;
+}
+
+table#multilevel-freq-params th {
+    border-width: 1px 1px;
+}
+
+table#multilevel-freq-params tr.last-line td {
+    border-width: 1px 1px;
+}
+
+table#multilevel-freq-params td.level {
+    text-align: center;
+    font-size: 120%;
+    font-weight: bold;
+}
