@@ -44,7 +44,7 @@ define(['jquery', 'win', 'jquery.cookies'], function ($, win, cookies) {
          */
         init : function () {
             var mlkfu = lib.multiLevelKwicFormUtil;
-            $('#kwic-alignment-box').css({ display : 'table-row' });
+            $('#kwic-alignment-box').css({ display : 'block' });
             $('select.kwic-alignment').each(function () {
                 mlkfu.switchAlignment($(this).val(), mlkfu.getColumnId(this));
             });

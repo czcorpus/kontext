@@ -2634,3 +2634,6 @@ msgstr "Prázdný výsledek nelze uložit."
 
 msgid "Invalid range - cannot select rows from an empty list."
 msgstr "Neplatný rozsah - nelze vybrat řádky z prázdného seznamu."
+
+msgid "Remove item"
+msgstr "Odstranit položku"
