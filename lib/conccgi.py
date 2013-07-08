@@ -1139,8 +1139,13 @@ class ConcCGI(UserCGI):
     reduce.template = 'view.tmpl'
 
     def freq(self):
-        "frequency list form"
-        return {'Pos_ctxs': conclib.pos_ctxs(1, 1, 6)}
+        """
+        frequency list form
+        """
+        return {
+            'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
+            'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1)
+        }
 
     add_vars['freq'] = ['concsize']
     fcrit = []

@@ -35,7 +35,8 @@ $_("Freqs form")#slurp
 require(['tpl/freq', 'domReady!'], function (pageSelf, domReady) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
     conf.messages['remove_item'] = "$_('Remove item')";
-
+    conf.messages['max_level_reached'] = "$_('Maximum level reached.')";
+    conf.multilevel_freq_dist_max_levels = $multilevel_freq_dist_max_levels;
     pageSelf.init(conf);
 });
 #end def
