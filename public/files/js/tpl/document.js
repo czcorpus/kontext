@@ -109,14 +109,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      */
     lib.setAlignedCorporaFieldsDisabledState = function (state) {
         $('#mainform input[name="sel_aligned"]').each(function () {
-            var corpn = $(this).data('corpus'),
+            var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
                 queryType;
 
             // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
             if (!$(this).val()) {
-                $('select[name=pcq_pos_neg_' + corpn + ']').attr('disabled', state);
-                $('select[name=queryselector_' + corpn + ']').attr('disabled', state);
-                $('#qnode_' + corpn).find('input').attr('disabled', state);
+                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', state);
+                $('select[name="queryselector_' + corpn + '"]').attr('disabled', state);
+                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', state);
                 $(this).attr('disabled', state);
 
                 $(this).parent().find('input[type="text"]').each(function () {
@@ -124,9 +124,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 });
 
             } else {
-                queryType = $(this).parent().find('#queryselector_' + corpn).val();
+                queryType = $(this).parent().find('[id="queryselector_' + corpn + '"]').val();
                 queryType = queryType.substring(0, queryType.length - 3);
-                $('#qnode_' + corpn).find('input[type="text"]').each(function () {
+                $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
                     if (!$(this).hasClass(queryType + '-input')) {
                         $(this).attr('disabled', state);
                     }

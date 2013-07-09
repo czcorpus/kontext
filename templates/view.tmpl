@@ -238,7 +238,8 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #set $online_sample = False
         #end if
 
-        $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter# $concsize #end filter#</strong>
+        $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
+#end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
         <span id="conc-calc-info" title="$concsize">#slurp
 	    #if $concsize != $fullsize
 		    #set $l=$locale.format("%d",$concsize,grouping=True)
@@ -254,8 +255,9 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 	    #end if
 	    </span>
 
-        (<span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
-        <abbr title="$_('instances per million') ($result_relative_freq_rel_to)">i.p.m.</abbr>; $result_relative_freq_rel_to)
+        <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+        <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+        $result_relative_freq_rel_to
         #if $result_arf
         | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
         <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
