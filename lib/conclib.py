@@ -200,8 +200,8 @@ def kwicpage(
         corpsize = corpus.size()
     out['result_relative_freq'] = round(
         conc.size() / (float(corpsize) / 1e6), 2)
-    out['result_relative_freq_rel_to'] = _('related to the selected subcorpus') if hasattr(corpus, 'subcname') \
-        else _('related to the whole corpus')
+    out['result_relative_freq_rel_to'] = '(%s)' % _('related to the selected subcorpus') if hasattr(corpus, 'subcname') \
+        else '(%s)' % _('related to the whole corpus')
     if hidenone:
         for line in out['Lines']:
             for part in ('Kwic', 'Left', 'Right'):

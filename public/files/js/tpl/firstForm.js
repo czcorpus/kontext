@@ -110,16 +110,16 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
 
             if (corpusId) {
-                jqHiddenStatus = $('#qnode_' + corpusId + ' input[name="sel_aligned"]');
+                jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
 
-                $('#qnode_' + corpusId).show();
+                $('[id="qnode_' + corpusId + '"]').show();
                 addActiveParallelCorpus(corpusId);
                 $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
 
 
                 jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-                $('#qnode_' + corpusId + ' a.close-button').on('click', function () {
-                    $('#qnode_' + corpusId).hide();
+                $('[id="qnode_' + corpusId + '"] a.close-button').on('click', function () {
+                    $('[id="qnode_' + corpusId + '"]').hide();
                     jqHiddenStatus.val('');
                     removeActiveParallelCorpus(corpusId);
                     $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
@@ -260,7 +260,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         });
         $('input[name="sel_aligned"]').each(function() {
             if ($(this).val()) {
-                $('select[name=pcq_pos_neg_' + $(this).data('corpus') + '],#qtable_' + $(this).data('corpus')).show();
+                $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
             }
         });
     };
