@@ -35,54 +35,22 @@ class UserCGI (CGIPublisher.CGIPublisher):
     _ca_user_info = u''
     _options_dir = u''
     _email = u''
-    _default_user = u'defaults'
     attrs2save = []
 
-    def __init__ (self, environ, user=None):
-        CGIPublisher.CGIPublisher.__init__ (self, environ)
+    def __init__(self, environ, user=None):
+        CGIPublisher.CGIPublisher.__init__(self, environ)
         self._user = user
 
-    def _user_defaults (self, user):
+    def _user_defaults(self, user):
         pass
 
-    def _get_ca_user_info(self, corpname=''):
-        import Cookie, urllib, urllib2, simplejson
-        ck = Cookie.SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        self.session_id = getattr(ck.get('sessionid'), 'value', '')
-        self.user_ip = os.getenv ('REMOTE_ADDR', '-')
-        if self._login_address:
-            self._login_address += '/?next=' + urllib.quote_plus(
-                                                os.getenv ('REQUEST_URI', '-'))
-        request = urllib2.Request(self._ca_user_info
-                                  % (self.session_id, self.user_ip, corpname))
-        file = urllib2.urlopen(request)
-        data = file.read()
-        file.close()
-        user_info = simplejson.loads(data)
-        if user_info.has_key('error'): self._has_access = False
-            # set attributes (incl. these starting '_') and correct types
-        corr_func = {type(0): int, type(0.0): float, type([]): lambda x: [x]}
-        for k, v in user_info.items():
-            try: setattr (self, k, corr_func[type(getattr(self, k))](v))
-            except: setattr (self, k, v)
-        if self._user: self._user = str(self._user)
-
     def _setup_user(self, corpname=''):
-        if self._ca_user_info:
-            self._has_access = 0
-            self._get_ca_user_info(corpname)
-        if not self._user:
-            self._user = os.getenv('REMOTE_USER', '-')
-            if self._user == '-':
-                self._user = self._default_user
-        user = self._user
         options = {}
-        load_opt_file(options, os.path.join(self._options_dir,
-                                            self._default_user))
-        if user is not self._default_user:
-            load_opt_file(options, os.path.join(self._options_dir, user))
+        if not self._user:
+            self._user = 'anonymous'
+        load_opt_file(options, os.path.join(self._options_dir, self._user))
         CGIPublisher.correct_types(options, self.clone_self(), selector=1)
-        self._user_defaults(user)
+        self._user_defaults(self._user)
         self.__dict__.update(options)
 
     def _save_options(self, optlist=[], selector=''):
@@ -106,8 +74,6 @@ class UserCGI (CGIPublisher.CGIPublisher):
                 v = v.encode('utf8')
             opt_lines.append(str(k) + '\t' + str(v))
         opt_lines.sort()
-        import logging
-        logging.getLogger(__name__).info('options: %s' % opt_filepath)
         opt_file = open(opt_filepath, 'w')
         opt_file.write('\n'.join(opt_lines))
         opt_file.close()
@@ -142,5 +108,24 @@ class UserCGI (CGIPublisher.CGIPublisher):
 
         settings.auth.update_user_password(new_passwd)
         print('Location: %s' % settings.get_root_uri())
+
+    def login(self):
+        self.disabled_menu_items = ('menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
+        return {}
+
+    def loginx(self, username='', password=''):
+        session_id = settings.auth.login(username, password)
+        self._headers['Location'] = settings.get('global', 'root_url')
+        if session_id:
+            self._cookies[settings.get('global', 'auth_cookie_name')] = session_id
+        return {}
+
+    def logoutx(self):
+        settings.auth.logout(self._cookies[settings.get('global', 'auth_cookie_name')].value)
+        del(self._cookies[settings.get('global', 'auth_cookie_name')])
+        return {}
+
+    logoutx.template = 'login.tmpl'
 
     user_password.template = 'user_password.tmpl'

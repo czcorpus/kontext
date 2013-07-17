@@ -464,9 +464,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
     /**
      *
      */
-    lib.loadSharedBar = function () {
+    lib.loadSharedBar = function (conf) {
         $.ajax({
-            url : 'http://korpus.test/shared-bar',
+            url : conf.common_app_bar_url + cookies.get('ucnksessionid'),
             data : {},
             method : 'get',
             dataType : 'html',
@@ -509,7 +509,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         lib.misc(conf);
         lib.bindClicks(conf);
         lib.initMenu();
-        lib.loadSharedBar();
+
+        if (conf.common_app_bar_url) {
+            lib.loadSharedBar(conf);
+        }
     };
 
     return lib;

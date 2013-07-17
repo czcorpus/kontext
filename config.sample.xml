@@ -8,6 +8,11 @@
             <user>johndoe</user>
             <user>janedoe</user>
         </administrators>
+        <!-- unfinished prototype -->
+        <common_app_bar_url>http://korpus.test/shared-bar?id=</common_app_bar_url>
+        <!-- unfinished prototype -->
+        <root_url>http://kontext.korpus.test/run.cgi/first_form</root_url>
+        <auth_cookie_name>ucnksessionid</auth_cookie_name>
     </global>
     <database extension-by="ucnk">
         <adapter>sqlite</adapter>

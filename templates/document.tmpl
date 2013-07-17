@@ -64,6 +64,7 @@ var conf = {};
 conf['rootPath'] = "$root_path";
 conf['corpname'] = "$corpname";
 conf['numTagPos'] = $num_tag_pos;
+conf['common_app_bar_url'] = "$common_app_bar_url";
 conf['messages'] = {};
 conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
 
@@ -113,7 +114,7 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="common-bar">
-<span class="user">$_("User"): <a href="#">$_user</a></span>
+<span class="user">$_("User"): <a href="#">$_user</a></span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
 </div>
 <div id="topbar">
     <div id="logo-wrapper">KONTEXT</div>
@@ -131,7 +132,7 @@ $_ca_topbar
         <ul id="menu-level-1">
 
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("New query")</a></li>
-            <li id="menu-word-list" #if $active_menu_item == 'menu-word-list'#class="current"#end if#><a class="trigger" title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
+            <li id="menu-word-list" class="$menu_status('menu-word-list')"><a class="trigger" title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
                 <ul class="submenu">
@@ -188,7 +189,6 @@ $_ca_topbar
             <div id="menu-level-2" data-current-menu=""></div>
         </div>
     </div>
-
 
     <form id="corpus-search-form" action="simple_search">
     <table id="toolbar">
