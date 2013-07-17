@@ -223,24 +223,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $('select.qselector').bind('change', function (event) {
             hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
         });
-        $('.menu_switch a').on('click', function () {
-            if (lib.userSettings.get('menupos') === 'top') {
-                $('#sidebar').removeClass('horizontal');
-                $('#in-sidebar').removeClass('horizontal');
-                lib.userSettings.del('menupos');
-
-            } else {
-                $('#sidebar').toggleClass('horizontal');
-                $('#in-sidebar').toggleClass('horizontal');
-                lib.userSettings.set('menupos', 'top');
-            }
-        });
-
-        // change to horizontal menu if setting is set to "top"
-        if (lib.userSettings.get("menupos") === "top") {
-            $('#sidebar').addClass('horizontal');
-            $('#in-sidebar').addClass('horizontal');
-        }
 
         // remove empty and unused parameters from URL before mainform submit
         $('form').submit(function () { // run before submit
@@ -433,6 +415,72 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
+     */
+    lib.initMenu = function () {
+        $('#menu-level-1 li.disabled a').each(function () {
+           $(this).attr('href', '#');
+        });
+
+        $('#menu-level-1 a.trigger').each(function () {
+
+            $(this).on('mouseover', function (event) {
+                var jqMenuLi = $(event.target).closest('li'),
+                    jqSubmenu = jqMenuLi.find('ul'),
+                    prevMenuId = $('#menu-level-2').attr('data-current-menu'),
+                    jqPrevMenuUl = $('#menu-level-2').find('ul');
+
+                jqMenuLi.addClass('active');
+                if (jqMenuLi.attr('id') === prevMenuId || jqMenuLi.hasClass('disabled')) {
+                    return;
+                }
+
+                if (prevMenuId) {
+                    $('#' + prevMenuId).removeClass('active').append(jqPrevMenuUl);
+                    jqPrevMenuUl.css('display', 'none');
+                }
+
+                $('#menu-level-2').attr('data-current-menu', jqMenuLi.attr('id'));
+                if (jqSubmenu.length > 0) {
+                    jqSubmenu.css('display', 'block');
+                    $('#menu-level-2').addClass('active').empty().append(jqSubmenu);
+                    jqSubmenu.css('margin-left', jqMenuLi.position().left + jqMenuLi.width() / 2 - jqSubmenu.width() / 2);
+
+                } else {
+                    $('#menu-level-2').removeClass('active');
+                }
+            });
+
+            $(this).on('mouseout', function (event) {
+                    var jqMenuLi = $(event.target).closest('li'),
+                    jqSubmenu = $('#menu-level-2').find('ul');
+
+                    if (jqSubmenu.length === 0) {
+                        jqMenuLi.removeClass('active');
+                    }
+            });
+        });
+    };
+
+    /**
+     *
+     */
+    lib.loadSharedBar = function () {
+        $.ajax({
+            url : 'http://korpus.test/shared-bar',
+            data : {},
+            method : 'get',
+            dataType : 'html',
+            success : function (data) {
+                $('#common-bar').empty().append(data);
+            },
+            error : function (jqXHR, textStatus, errorThrown) {
+                // TODO
+            }
+        });
+    };
+
+    /**
+     *
      * @param {object} conf
      */
     lib.init = function (conf) {
@@ -460,6 +508,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         lib.misc(conf);
         lib.bindClicks(conf);
+        lib.initMenu();
+        lib.loadSharedBar();
     };
 
     return lib;

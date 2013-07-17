@@ -52,43 +52,10 @@ soundManager.setup({
 
 #def left_submenu_save
 #filter WebSafe
-  <li><a title="$_("Save concordance to a text file or xml")" href="saveconc_form?$q;$globals&amp;fromp=$fromp&amp;pagesize=$pagesize&amp;leftctx=$leftctx.replace('#', '')&amp;rightctx=$rightctx.replace('#', '')">$_("Save")</a></li>
+<li><a title="$_("Save concordance to a text file or xml")" href="saveconc_form?$q;$globals&amp;fromp=$fromp&amp;pagesize=$pagesize&amp;leftctx=$leftctx.replace('#', '')&amp;rightctx=$rightctx.replace('#', '')">$_("Save")</a></li>
 #end filter
 #end def
 
-#def left_submenu_options
-  <li><strong>$_("View")</strong>
-      <ul class="submenu">
-          <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')</a></li>
-          <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
-          <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
-          #if $align
-          <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
-          #end if
-      </ul>
-  </li>
-#end def
-
-#def viewblock
-  <li><strong>$_("Sort")</strong>
-    <ul class="submenu">
-      <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Custom')</a></li>
-      <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc;sicase=i">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a>
-        | <a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc;sicase=i">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
-      <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw;sicase=i">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
-      #set $mlsortref = ''
-      #set $i = 0
-      #for $r in $refs.split(',')
-        #set $i = $i + 1
-        #set $mlsortref = $mlsortref + ('ml%dattr=' % $i) + $r.strip('=') + ';'
-        #set $mlsortref = $mlsortref + ('ml%dpos=0;' % $i)
-      #end for
-      #set $mlsortref = $mlsortref + 'sortlevel=%d' % $i
-      <li><a title="$_("Sort according to the 'References' field")" href="mlsortx?$q;$globals;$mlsortref">$_("References")</a></li>
-      <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
-    </ul>
-  </li>
-#end def
 
 #def bodyonload
 require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
@@ -119,12 +86,6 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     pageSelf.reloadHits(conf);
     #end if
 });
-#end def
-
-#def sampleblock
-  #if len($getVar('Par_conc_corpnames', [])) == 0
-    <li><a title="$_("Make a random sample from the concordance.")" href="reduce_form?$q;$globals">$_("Sample")</a></li>
-  #end if
 #end def
 
 

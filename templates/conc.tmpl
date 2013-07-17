@@ -29,44 +29,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end filter
 #end def
 
-#def left_submenu
-#filter WebSafe
-## view menu
-#block viewblock
-  <li><a title="$_("View current concordance")" href="view?$q;$globals">$_("View concordance")</a></li>
-#end block
-#block sampleblock
-  <li><a title="$_("Make a random sample from the concordance.")" href="reduce_form?$q;$globals">$_("Sample")</a></li>
-#end block
-#block filterblock
-  <li><a title="$_("Make a query on the current concordance.")" href="filter_form?$q;$globals">$_("Filter")</a></li>
-#end block
-#block freqblock
-<li><strong>$_("Frequency")</strong>
-    <ul class="submenu">
-        <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')</a></li>
-        #if 'tag' in [x['n'] for x in $AttrList]
-        <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
-        #end if
-        <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
-        #if '.' in $fcrit_shortref.split('/')[0]
-        <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
-        #end if
-        #if $ttcrit
-        <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
-        #end if
-    </ul>
-</li>
-#end block
-#block collblock
-  <li><a title="$_("Collocation candidates")" href="coll?$q;$globals">$_("Collocations")</a></li>
-#end block
-  <li><a title="$_("Concordance description")" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_("ConcDesc")</a></li>
-#if $varExists('tourl')
-  #set $href = 'view?' + $tourl + ';' + $globals
-  <li><a title="$_("Take me to the original concordance")" href="$href">$_("Original Conc.")</a></li>
-#end if
-#end filter
-#end def
-
 
