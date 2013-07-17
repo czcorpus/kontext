@@ -26,7 +26,7 @@ import corplib
 import conclib
 import version
 from butils import *
-from CGIPublisher import JsonEncodedData, UserActionException, load_auth_cookie
+from CGIPublisher import JsonEncodedData, UserActionException
 import settings
 import taghelper
 
@@ -159,7 +159,6 @@ class ConcCGI(UserCGI):
 
     add_vars = {}
     corpname = u'susanne'
-    corplist = [u'susanne', u'bnc']
     usesubcorp = u''
     subcname = u''
     subcpath = []
@@ -245,11 +244,14 @@ class ConcCGI(UserCGI):
 
     def __init__(self, environ):
         super(UserCGI, self).__init__(environ=environ)
-        self.cm = corplib.CorpusManager(self.corplist, self.subcpath,
-                                        self.gdexpath)
         self._curr_corpus = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
+        self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
+
+    def pre_dispatch(self):
+        self.cm = corplib.CorpusManager(settings.auth.get_corplist(), self.subcpath,
+                                        self.gdexpath)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -2731,9 +2733,9 @@ class ConcCGI(UserCGI):
         # catch exception and amend diagnostics in template
         except Exception as e:
             out['error'] = True
-            try: # concrete error, catch message from lower levels
+            try:  # concrete error, catch message from lower levels
                 out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
-            except: # general error
+            except:  # general error
                 out['code'], out['details'] = 1, repr(e)
                 out['msg'] = 'General system error'
             return out

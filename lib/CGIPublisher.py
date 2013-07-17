@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from lib2to3.fixes.fix_urllib import FixUrllib
 
+import __builtin__
 import os
 import sys
+import re
 import cgi
 from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
 from inspect import isclass
@@ -26,8 +27,11 @@ import imp
 from urllib import urlencode, quote_plus, unquote, quote
 import json
 import logging
+import gettext
+import locale
 
 import settings
+import auth
 
 
 def replace_dot_error_handler(err):
@@ -85,26 +89,6 @@ def q_help(page, lang): # html code for context help
     return "<a onclick=\"window.open('http://www.sketchengine.co.uk/help.cgi?page=" \
            + page + ";lang=" + lang \
            + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
-
-
-def load_user_settings_cookie(cookie_data):
-    """
-    Loads user settings from cookies
-
-    Parameters
-    ----------
-
-    cookie_data : str
-       raw cookie data
-
-    Returns
-    -------
-
-    user_settings : dict
-       a dictionary containing all values stored as a JSON string in user_settings cookie
-    """
-    ck = BonitoCookie(cookie_data)
-    return json.loads(ck['user_settings'].value) if ck.has_key('user_settings') else {}
 
 
 def log_request(user_settings, action_name):
@@ -208,13 +192,14 @@ class CGIPublisher(object):
     reload = 0
     _has_access = 1
     _anonymous = 0
-    _authenticated = 0
     _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
     menupos = ''
+    user = None
 
     def __init__(self, environ=os.environ):
         self.environ = environ
         self.headers_sent = False
+        self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
 
         # correct _locale_dir
         if not os.path.isdir(self._locale_dir):
@@ -231,6 +216,77 @@ class CGIPublisher(object):
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
+
+    def auth(self):
+        ans = settings.auth.auth_session(self.get_auth_id())
+        self._anonymous = 0 if ans else 1
+        return ans
+
+    def get_user_settings(self):
+        """
+        Loads user settings from cookie
+
+        Returns
+        -------
+
+        user_settings : dict
+           a dictionary containing all values stored as a JSON string in user_settings cookie
+        """
+        return json.loads(self._cookies['user_settings'].value) if 'user_settings' in self._cookies else {}
+
+    def get_auth_id(self):
+        return self._cookies['ucnksessionid'].value if 'ucnksessionid' in self._cookies else None
+
+    def get_uilang(self, locale_dir):
+        """
+        loads user language from user settings or from browser's configuration
+        """
+        user_settings = self.get_user_settings()
+        if 'uilang' in user_settings:
+            lgs_string = user_settings['uilang']
+        else:
+            lgs_string = None
+        if not lgs_string:
+            lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
+        if lgs_string == '':
+            return ''  # english
+        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
+        lgs = lgs_string.split(',')
+        lgdirs = os.listdir(locale_dir)
+        for lg in lgs:
+            lg = lg.replace('-', '_').lower()
+            if lg.startswith('en'): # english
+                return ''
+            for lgdir in lgdirs:
+                if lgdir.lower().startswith(lg):
+                    return lgdir
+        return ''
+
+    def init_locale(self):
+
+        # locale
+        locale_dir = '../locale/' # TODO
+        if not os.path.isdir (locale_dir):
+            p = os.path.join (os.path.dirname (__file__), locale_dir)
+            if os.path.isdir (p):
+                locale_dir = p
+            else:
+                # This will set the system default locale directory as a side-effect:
+                gettext.install(domain='ske', unicode=True)
+                # hereby we retrieve the system default locale directory back:
+                locale_dir = gettext.bindtextdomain('ske')
+
+        os.environ['LANG'] = self.get_uilang(locale_dir)
+        settings.set('session', 'lang', os.environ['LANG'] if os.environ['LANG'] else 'en')
+        os.environ['LC_ALL'] = os.environ['LANG']
+        formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
+        locale.setlocale(locale.LC_ALL, formatting_lang)
+        translat = gettext.translation('ske', locale_dir, fallback=True)
+        try:
+            translat._catalog[''] = ''
+        except AttributeError:
+            pass
+        __builtin__.__dict__['_'] = translat.ugettext
 
     def is_template(self, template):
         try:
@@ -295,7 +351,7 @@ class CGIPublisher(object):
                          environ=os.environ, post_fp=None):
         self.environ = environ
 
-        named_args = load_user_settings_cookie(environ.get('HTTP_COOKIE', ''))
+        named_args = self.get_user_settings()
         self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
@@ -344,6 +400,12 @@ class CGIPublisher(object):
             raise Exception('access denied')
         return path
 
+    def pre_dispatch(self):
+        """
+        Allows some operations to be done before the action itself is processed
+        """
+        pass
+
     def run_unprotected(self, path=None, selectorname=None):
         """
         Runs an HTTP-mapped action in a mode which does wrap
@@ -351,9 +413,20 @@ class CGIPublisher(object):
         """
         tmpl = None
         methodname = None
-        try:
-            if path is None:
+
+        self.init_locale()
+
+        if path is None:
                 path = self.import_req_path()
+
+        self._user = self.auth()
+        if self._user is None and path[0] not in ('login', 'loginx'):
+            self._headers['Location'] = 'login'
+            raise auth.AuthException(_('Unauthorized access. Please log in first.'))
+
+        try:
+            self.pre_dispatch()
+
             named_args = self.parse_parameters(selectorname)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
@@ -379,7 +452,7 @@ class CGIPublisher(object):
             path = self.import_req_path()
         try:
             self.run_unprotected(path, selectorname)
-        except RequestProcessingException as err:
+        except Exception as err:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
 
@@ -390,6 +463,8 @@ class CGIPublisher(object):
 
             if settings.is_debug_mode() or type(err) is UserActionException:
                 message = u'%s' % err
+            elif type(err) is auth.AuthException:
+                message = err.message
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
 
@@ -403,8 +478,8 @@ class CGIPublisher(object):
                     'Corplist': [],
                     'corp_description': '',
                     'corp_size': '',
-                    'mode_included': bool(err['tmpl']),
-                    'method_name': err['methodname']
+                    'mode_included': bool(getattr(err, 'tmpl', False)),
+                    'method_name': getattr(err, 'methodname', '')
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
@@ -512,15 +587,14 @@ class CGIPublisher(object):
         Generates proper content-type signature and
         creates a cookie to store user's settings
         """
-        cookies = BonitoCookie()
         user_settings = {}
         for k in self._user_settings:
             if k in self.__dict__:
                 user_settings[k] = self.__dict__[k]
-        cookies['user_settings'] = json.dumps(user_settings)
-        cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
-        if cookies and outf:
-            outf.write(cookies.output() + '\n')
+        self._cookies['user_settings'] = json.dumps(user_settings)
+        self._cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
+        if self._cookies and outf:
+            outf.write(self._cookies.output() + '\n')
             pass
 
         # Headers
@@ -531,7 +605,7 @@ class CGIPublisher(object):
                 outf.write('%s: %s\n' % (k, v))
             outf.write('\n')
         self.headers_sent = True
-        return cookies, self._headers
+        return self._cookies, self._headers
 
     def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
                       return_template=False):
