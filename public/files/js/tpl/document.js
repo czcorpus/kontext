@@ -444,10 +444,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 if (jqSubmenu.length > 0) {
                     jqSubmenu.css('display', 'block');
                     $('#menu-level-2').addClass('active').empty().append(jqSubmenu);
-                    if (jqMenuLi.position().left > 300) {
-                        menuLeftPos = jqMenuLi.position().left + jqMenuLi.width() / 2 - jqSubmenu.width() / 2;
-
-                    } else {
+                    menuLeftPos = jqMenuLi.position().left + jqMenuLi.width() / 2 - jqSubmenu.width() / 2;
+                    if (menuLeftPos < 0) {
                         menuLeftPos = 0;
                     }
                     jqSubmenu.css('margin-left', menuLeftPos);
