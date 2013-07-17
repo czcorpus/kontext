@@ -50,6 +50,17 @@ class DummyAuthHandler(object):
         self.user = username
         return True
 
+    def logout(self, session_id):
+        """
+        """
+        pass
+
+    def auth_session(self, session_id):
+        """
+        Validates user's session ID in terms of his log-in status
+        """
+        return True
+
     def update_user_password(self, password):
         """
         Updates current user's password.

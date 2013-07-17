@@ -21,6 +21,8 @@ import crypt
 import manatee
 import db
 from db import fq
+import uuid
+import auth
 
 
 def create_salt(length=2):
@@ -62,7 +64,7 @@ class UCNKAuth(object):
         self.corplist = None
         self.admins = admins
 
-    def login(self, username, password=None):
+    def login(self, username, password):
         """
         Parameters
         ----------
@@ -72,19 +74,42 @@ class UCNKAuth(object):
 
         Returns
         -------
-        bool : True on success, False on failure.
+        str : session ID on success else None
         """
         cols = ('user', 'pass')
         cursor = self.db_conn.cursor()
-        cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (username,))
+        cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (username, ))
         row = cursor.fetchone()
-        cursor.close()
 
-        if row:
+        session_id = None
+        if row and crypt.crypt(password, row[1]) == row[1]:
+            session_id = str(uuid.uuid1())
             for k, v in dict(zip(cols, row)).items():
                 setattr(self, k, v)
-            return True
-        return False
+            cursor.execute('DELETE FROM session WHERE user = ?', (username, ))
+            cursor.execute('INSERT INTO session (user, id) VALUES (?, ?)', (username, session_id))
+        cursor.close()
+        self.db_conn.commit()
+        return session_id
+
+    def logout(self, session_id):
+        cursor = self.db_conn.cursor()
+        cursor.execute(fq("DELETE FROM session WHERE id = %(p)s"), (session_id, ))
+        cursor.close()
+        self.db_conn.commit()
+
+    def auth_session(self, session_id):
+        """
+        """
+        cursor = self.db_conn.cursor()
+        cursor.execute(fq("SELECT user FROM session WHERE id = %(p)s"), (session_id, ))
+        row = cursor.fetchone()
+        cursor.close()
+        if row is not None:
+            setattr(self, 'user', row[0])
+        else:
+            setattr(self, 'user', None)
+        return self.user
 
     def update_user_password(self, password):
         """
@@ -114,10 +139,14 @@ class UCNKAuth(object):
         corplist : list
             list of corpora names (sorted alphabetically)
         """
+        username = getattr(self, 'user', None)
         if self.corplist is None:
             cursor = self.db_conn.cursor()
-            cursor.execute(fq("SELECT corplist FROM user WHERE user LIKE %(p)s"),  (self.user, ))
+            cursor.execute(fq("SELECT corplist FROM user WHERE user LIKE %(p)s"),  (username, ))
             row = cursor.fetchone()
+            if row is None:
+                row = ['']
+
             c = row[0].split()
             corpora = []
 
