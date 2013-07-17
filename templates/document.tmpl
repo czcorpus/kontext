@@ -131,42 +131,49 @@ $_ca_topbar
     <div id="sidebar">
         <ul id="menu-level-1">
 
-            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("New query")</a></li>
-            <li id="menu-word-list" class="$menu_status('menu-word-list')"><a class="trigger" title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
-
-            <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
+            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("New query")</a>
                 <ul class="submenu">
-                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
-                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')...</a></li>
-                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
-                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
-                    #if $align
-                    <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
-                    #end if
+                    <li><a title="TODO" href="#">$_('Search in the corpus')...</a></li>
+                    <li><a title="TODO" href="#">$_('Search in a subcorpus')...</a></li>
+                    <li><a title="TODO" href="#">$_('Query history')...</a></li>
                 </ul>
             </li>
-            <li id="menu-sort" class="$menu_status('menu-sort')"><a class="trigger">$_('Sort')</a>
+            <li id="menu-word-list" class="$menu_status('menu-word-list')"><a class="trigger" title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="#">$_('Words')</a></li>
+                    <li><a title="TODO" href="#">$_('Lemmata')</a></li>
+                    <li><a title="TODO" href="#">$_('Custom')...</a></li>
+                </ul>
+            </li>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger" href="#">$_("Subcorpora")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="#">$_('Create new')...</a></li>
+                    <li><a title="TODO" href="#">$_('My subcorpora')...</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger" href="#">$_("Save")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="#">XML</a></li>
+                    <li><a title="TODO" href="#">CSV</a></li>
+                    <li><a title="TODO" href="#">TXT</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger" href="#">$_("Concordance")</a>
                 <ul class="submenu">
                     <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Custom')...</a></li>
-                    <li><a title="$_("Sort to left")" href="sortx?$q;$globals;skey=lc;sicase=i">#*<img src="$files_path/img/sortleft.png" border="0" />*#$_("Left")</a></li>
-                    <li><a title="$_("Sort to right")" href="sortx?$q;$globals;skey=rc;sicase=i">#*<img src="$files_path/img/sortright.png" border="0" />*#$_("Right")</a></li>
-                    <li><a title="$_("Sort by node word")" href="sortx?$q;$globals;skey=kw;sicase=i">#*<img src="$files_path/img/sortnode.png" border="0" />*#$_("Node")</a></li>
-                    #set $mlsortref = ''
-                    #set $i = 0
-                    #for $r in $refs.split(',')
-                    #set $i = $i + 1
-                    #set $mlsortref = $mlsortref + ('ml%dattr=' % $i) + $r.strip('=') + ';'
-                    #set $mlsortref = $mlsortref + ('ml%dpos=0;' % $i)
-                    #end for
-                    #set $mlsortref = $mlsortref + 'sortlevel=%d' % $i
-                    <li><a title="$_("Sort according to the 'References' field")" href="mlsortx?$q;$globals;$mlsortref">$_("References")</a></li>
                     <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
+                    <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')</a></li>
+                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')...</a></li>
+                    <li><a title="TODO" href="#">$_('Query overview')...</a></li>
+                    <li><a title="TODO" href="#">$_('UNDO')...</a></li>
                 </ul>
             </li>
-            <li id="menu-sample" class="$menu_status('menu-sample')"><a class="trigger" title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')</a>
-            </li>
+
             <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')" href="filter_form?$q;$globals">$_('Filter')</a>
             </li>
+
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
                     <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')...</a></li>
@@ -182,8 +189,29 @@ $_ca_topbar
                     #end if
                 </ul>
             </li>
+
             <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")" href="coll?$q;$globals">$_('Collocations')</a></li>
-            <li id="menu-conc-desc" class="$menu_status('menu-conc-desc')"><a class="trigger" title="$_("Concordance description")" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_("ConcDesc")</a></li>
+
+            <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
+                <ul class="submenu">
+                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
+                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')...</a></li>
+                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
+                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
+                    #if $align
+                    <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+                    #end if
+                    <li><a href="#">$_("References")</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="#">$_('User manual')...</a></li>
+                    <li><a title="TODO" href="#">$_('Linguistic terms')...</a></li>
+                    <li><a title="TODO" href="#">$_('Available corpora')...</a></li>
+                </ul>
+            </li>
         </ul>
         <div id="menu-level-2-wrapper">
             <div id="menu-level-2" data-current-menu=""></div>
@@ -214,13 +242,10 @@ $_ca_topbar
                     #end if
                     #end if
                 </ul>
-
             </td>
         </tr>
     </table>
     </form>
-
-
 
 
     <div id="content">
