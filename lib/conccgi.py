@@ -26,7 +26,7 @@ import corplib
 import conclib
 import version
 from butils import *
-from CGIPublisher import JsonEncodedData, UserActionException
+from CGIPublisher import JsonEncodedData, UserActionException, load_auth_cookie
 import settings
 import taghelper
 
@@ -232,6 +232,9 @@ class ConcCGI(UserCGI):
     alpha_features = 0
 
     shuffle = 0
+
+    active_menu_item = None
+    disabled_menu_items = []
 
     add_vars['wsketch_form'] = [u'LastSubcorp']
     add_vars['wsketch'] = [u'LastSubcorp']
@@ -488,6 +491,7 @@ class ConcCGI(UserCGI):
         view_params : dict
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
+        self.active_menu_item = 'menu-view'
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
@@ -570,6 +574,9 @@ class ConcCGI(UserCGI):
     add_vars['view'] = ['orig_query']
 
     def first_form(self):
+        self.active_menu_item = 'menu-new-query'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
         out = {}
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
@@ -630,6 +637,7 @@ class ConcCGI(UserCGI):
                 'fullsize': fullsize, 'finished': conc.finished()}
 
     def concdesc(self):
+        self.active_menu_item = 'menu-conc-desc'
         return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                           'tourl': self.urlencode(u2), 'size': s}
                          for o, a, u1, u2, s in
@@ -645,6 +653,7 @@ class ConcCGI(UserCGI):
         """
         from tbl_settings import tbl_labels
 
+        self.active_menu_item = 'menu-view'
         out = {}
         if self.maincorp:
             corp = corplib.manatee.Corpus(self.maincorp)
@@ -739,12 +748,16 @@ class ConcCGI(UserCGI):
         """
         sort concordance form
         """
+        self.active_menu_item = 'menu-sort'
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     add_vars['sort'] = ['concsize']
 
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
-        "simple sort concordance"
+        """
+        simple sort concordance
+        """
+        self.active_menu_item = 'menu-view'
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
         elif skey == 'kw':
@@ -1056,6 +1069,7 @@ class ConcCGI(UserCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
+        self.active_menu_item = 'menu-view'
         self.set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
@@ -1072,6 +1086,7 @@ class ConcCGI(UserCGI):
     add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
 
     def filter_form(self, within=0):
+        self.active_menu_item = 'menu-filter'
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
@@ -1091,6 +1106,7 @@ class ConcCGI(UserCGI):
         """
         Positive/Negative filter
         """
+        self.active_menu_item = 'menu-view'
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
@@ -1123,10 +1139,18 @@ class ConcCGI(UserCGI):
     filter.template = 'view.tmpl'
     add_vars['filter'] = ['orig_query']
 
+    def reduce_form(self):
+        """
+
+        """
+        self.active_menu_item = 'menu-sample'
+        return {}
+
     def reduce(self, rlines='250'):
         """
         random sample
         """
+        self.active_menu_item = 'menu-view'
         self.q.append('r' + rlines)
         return self.view()
 
@@ -1138,6 +1162,7 @@ class ConcCGI(UserCGI):
         """
         frequency list form
         """
+        self.active_menu_item = 'menu-frequency'
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
             'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1)
@@ -1150,7 +1175,7 @@ class ConcCGI(UserCGI):
         """
         display a frequency list
         """
-
+        self.active_menu_item = 'menu-frequency'
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -1380,6 +1405,7 @@ class ConcCGI(UserCGI):
         """
         collocations form
         """
+        self.active_menu_item = 'menu-collocations'
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
         else:
@@ -1397,6 +1423,7 @@ class ConcCGI(UserCGI):
         """
         list collocations
         """
+        self.active_menu_item = 'menu-collocations'
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
@@ -1621,6 +1648,9 @@ class ConcCGI(UserCGI):
         """
         Word List Form
         """
+        self.active_menu_item = 'menu-word-list'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -1680,6 +1710,9 @@ class ConcCGI(UserCGI):
 
     def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
                  ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
+        self.active_menu_item = 'menu-word-list'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
         if not wlpat:
             self.wlpat = '.*'
         if '.' in self.wlattr:
