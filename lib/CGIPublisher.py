@@ -400,6 +400,14 @@ class CGIPublisher(object):
             raise Exception('access denied')
         return path
 
+    def redirect(self, url, code=303):
+        self._headers.clear()
+        self._headers[''] = 'HTTP/1.1 %s See Other' % code
+        self._headers['Location'] = url
+
+    def get_http_method(self):
+        return os.getenv('REQUEST_METHOD', '')
+
     def pre_dispatch(self):
         """
         Allows some operations to be done before the action itself is processed
@@ -458,6 +466,7 @@ class CGIPublisher(object):
 
             return_type = self.get_method_metadata(path[0], 'return_type')
             if not self.headers_sent:
+                self._headers['Status'] = '500 Internal Server Error'
                 self.output_headers(return_type=return_type)
                 self.headers_sent = True
 
@@ -601,8 +610,12 @@ class CGIPublisher(object):
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
         if outf:
-            for k, v in self._headers.items():
-                outf.write('%s: %s\n' % (k, v))
+            if 'Status' in self._headers:
+                h_keys = ('Status', ) + tuple([x for x in self._headers.keys() if x != 'Status'])
+            else:
+                h_keys = self._headers.keys()
+            for k in h_keys:
+                outf.write('%s: %s\n' % (k, self._headers[k]))
             outf.write('\n')
         self.headers_sent = True
         return self._cookies, self._headers
