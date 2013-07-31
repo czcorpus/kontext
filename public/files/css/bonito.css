@@ -1172,3 +1172,33 @@ table#multilevel-freq-params td.level {
     font-size: 120%;
     font-weight: bold;
 }
+
+#query-desc-wrapper {
+    margin-top: 20px;
+}
+
+#query-desc-wrapper textarea {
+    display: block;
+    margin: 0;
+}
+
+#query-desc-wrapper button {
+    display: inline-block;
+}
+
+#query-desc-view {
+    width: 400px;
+    height: 150px;
+    border: 1px solid #333333;
+    overflow-y: scroll;
+}
+
+#query-desc-view:hover {
+    background-color: #FFFFFF;
+}
+
+#query-desc-wrapper textarea {
+    width: 400px;
+    height: 150px;
+    border: 1px solid #AA3333;
+}

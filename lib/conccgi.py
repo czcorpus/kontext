@@ -27,7 +27,8 @@ import conclib
 import version
 from butils import *
 from CGIPublisher import JsonEncodedData, UserActionException
-import settings
+import backend
+from backend import settings
 import taghelper
 
 
@@ -252,7 +253,7 @@ class ConcCGI(UserCGI):
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
 
     def pre_dispatch(self):
-        self.cm = corplib.CorpusManager(settings.auth.get_corplist(), self.subcpath,
+        self.cm = corplib.CorpusManager(backend.auth.get_corplist(), self.subcpath,
                                         self.gdexpath)
 
     def _attach_tag_builder(self, tpl_out):
@@ -296,7 +297,7 @@ class ConcCGI(UserCGI):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not cn in settings.auth.get_corplist():
+            if not cn in backend.auth.get_corplist():
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
@@ -2806,7 +2807,7 @@ class ConcCGI(UserCGI):
 
             # unsupported operation
             else:
-                out['operation'] = 'explain' # show within explain template
+                out['operation'] = 'explain'  # show within explain template
                 raise Exception(4, '', 'Unsupported operation')
             return out
 
@@ -2822,7 +2823,7 @@ class ConcCGI(UserCGI):
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
-        if settings.auth.is_administrator():
+        if backend.auth.is_administrator():
             import system_stats
             data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
             maxmin = {}
@@ -2839,5 +2840,13 @@ class ConcCGI(UserCGI):
         else:
             out = {'error': _('You don\'t have enough privileges to see this page.')}
         return out
-
     stats.template = 'stats.tmpl'
+
+    def ajax_save_query(self, query='', description=''):
+        from docutils.core import publish_string
+
+        html = publish_string(source=description, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
+                             writer_name='html')
+        html = html[html.find('<body>')+6:html.find('</body>')].strip()
+        return {'raw_html': html}
+    ajax_save_query.template = 'raw_html.tmpl'
