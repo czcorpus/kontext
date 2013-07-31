@@ -1,6 +1,6 @@
 #common-bar {
     height: 25px;
-    background-color: #333333;
+    background-color: #2F2F2F;
     color: #dddddd;
     text-align: right;
     padding-right: 20px;
@@ -17,8 +17,12 @@
     text-decoration: none;
 }
 
-.ucnk-shared .app-link:hover {
+.ucnk-shared a.app-link:hover {
     text-decoration: underline;
+}
+
+.ucnk-shared span.active {
+    color: #FFE09B !important;
 }
 
 .ucnk-shared .user {

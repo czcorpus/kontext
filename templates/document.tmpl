@@ -67,6 +67,7 @@ conf['numTagPos'] = $num_tag_pos;
 conf['common_app_bar_url'] = "$common_app_bar_url";
 conf['messages'] = {};
 conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+conf['messages'].error_loading_application_bar = "$_('Error loading application bar.')";
 
 #if $focus
 conf.focus = $focus;
@@ -117,7 +118,7 @@ $_ca_topbar
 <span class="user">$_("User"): <a href="#">$_user</a></span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
 </div>
 <div id="topbar">
-    <div id="logo-wrapper">KONTEXT</div>
+    <div id="logo-wrapper"><a href="first_form">KONTEXT</a></div>
 </div>
 #end filter
 #end if
@@ -128,46 +129,42 @@ $_ca_topbar
 ## left menu
 #filter WebSafe
 <div id="container">
-    <div id="sidebar">
+    <div id="menu-bar">
         <ul id="menu-level-1">
 
-            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("New query")</a>
+            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")">$_("New query")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="#">$_('Search in the corpus')...</a></li>
-                    <li><a title="TODO" href="#">$_('Search in a subcorpus')...</a></li>
-                    <li><a title="TODO" href="#">$_('Query history')...</a></li>
+                    <li><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('Search in the corpus')&#8230;</a></li>
+                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Query history')&#8230;</a></li>
                 </ul>
             </li>
-            <li id="menu-word-list" class="$menu_status('menu-word-list')"><a class="trigger" title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="#">$_('Words')</a></li>
-                    <li><a title="TODO" href="#">$_('Lemmata')</a></li>
-                    <li><a title="TODO" href="#">$_('Custom')...</a></li>
+                    <li><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li><a title="TODO" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
                 </ul>
             </li>
-            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger" href="#">$_("Subcorpora")</a>
+            <li class="separator">&nbsp;</li>
+            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="#">$_('Create new')...</a></li>
-                    <li><a title="TODO" href="#">$_('My subcorpora')...</a></li>
-                </ul>
-            </li>
-
-            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger" href="#">$_("Save")</a>
-                <ul class="submenu">
-                    <li><a title="TODO" href="#">XML</a></li>
-                    <li><a title="TODO" href="#">CSV</a></li>
-                    <li><a title="TODO" href="#">TXT</a></li>
+                    #for $item in $save_menu
+                    <li><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    #end for
+                    #if $save_menu
+                    <li><a href="#">Custom&#8230;</a></li>
+                    #end if
                 </ul>
             </li>
 
-            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger" href="#">$_("Concordance")</a>
+            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
                 <ul class="submenu">
-                    <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Custom')...</a></li>
+                    <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
                     <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
                     <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')</a></li>
-                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')...</a></li>
-                    <li><a title="TODO" href="#">$_('Query overview')...</a></li>
-                    <li><a title="TODO" href="#">$_('UNDO')...</a></li>
+                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')&#8230;</a></li>
+                    <li><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('UNDO')&#8230;</a></li>
                 </ul>
             </li>
 
@@ -176,7 +173,7 @@ $_ca_topbar
 
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
-                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')...</a></li>
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
                     #if 'tag' in [x['n'] for x in $AttrList]
                     <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
                     #end if
@@ -195,7 +192,7 @@ $_ca_topbar
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
                 <ul class="submenu">
                     <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
-                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')...</a></li>
+                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
                     <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
                     <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
                     #if $align
@@ -207,9 +204,9 @@ $_ca_topbar
 
             <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="#">$_('User manual')...</a></li>
-                    <li><a title="TODO" href="#">$_('Linguistic terms')...</a></li>
-                    <li><a title="TODO" href="#">$_('Available corpora')...</a></li>
+                    <li><a title="TODO" href="#">$_('User manual')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Linguistic terms')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Available corpora')&#8230;</a></li>
                 </ul>
             </li>
         </ul>
@@ -319,6 +316,13 @@ $corp_full_name</b><br>
     <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
   #end for
 </select>
+#if $SubcorpList
+<strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+    #for $subc in $SubcorpList
+    <option value="$subc.v">$subc.n</option>
+    #end for
+</select>
+#end if ## SubcorpList
 #end if
 #end def
 

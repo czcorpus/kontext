@@ -32,6 +32,8 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
     conf.messages.too_long_condition = '$_('The selection condition you have specified is too long. Please create a subcorpus instead.')';
     conf.messages.cancel = '$_("Cancel")';
     conf.messages.open_the_subcorpus_form = '$_("Open the subcorpus form")';
+    conf.messages.click_to_expand = '$_('Click to expand')';
+    conf.messages.click_to_hide = '$_('Click to hide')';
     firstForm.init(conf);
     #if $getVar('show_cup_menu', '')
         firstForm.showCupMenu(conf);
@@ -42,34 +44,9 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
 #def left_submenu_help
 #end def
 
+
+
 #def left_submenu_expert
-  <li><strong>$_("Expert options"):</strong>
-    <ul class="submenu">
-      <li><a class="toggle-submenu-item" data-id-to-set="contextel">$_("Context")</a>
-      #if $varExists('helpsite')
-        <a href="${helpsite}ConcordanceQuery#ExpertOptions" rel="help" target="_blank" title='$_("? Help on Context")'>
-          <img src="$files_path/img/help.png" alt='$_("? Help on Expert options")' />
-        </a>
-      #end if
-      </li>
-      <li><a class="toggle-submenu-item" data-id-to-set="texttypeel">$_("Subcorpus")</a>
-      #if $varExists('helpsite')
-        <a href="${helpsite}ConcordanceQuery#ExpertOptions" rel="help" target="_blank" title='$_("? Help on Text Types")'>
-          <img src="$files_path/img/help.png" alt='$_("? Help on Expert options")' />
-        </a>
-      #end if
-      </li>
-      #if $getVar('show_cup_menu', '')
-      <li><a id="switch_err_stand">$_("Std. Query")</a>
-         #if $varExists('helpsite')
-           <a href="${helpsite}ConcordanceErrorQuery" rel="help" target="_blank" title='$_("? Help on Error Query")'>
-             <img src="$files_path/img/help.png" alt='$_("? Help on Error Query")' />
-            </a>
-         #end if
-        </li>
-      #end if
-    </ul>
-  </li>
     #if $varExists('user_menu') and $supports_password_change
     <li>
         <hr />
@@ -82,7 +59,7 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
 #end def
 
 #def main
-
+<h3>$_('Search in the corpus')</h3>
 #filter WebSafe
 <form id="mainform" action="first">
 #if $shuffle
@@ -102,119 +79,113 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
   <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
 #end if
 
-<fieldset class="advanced_options" id="contextel">
-<legend>$_("Context")</legend>
+<fieldset class="inactive">
+    <legend><a class="form-extension-switch" title="$_('click to expand')">$_("Context") <span class="status"></span></a></legend>
+    <div class="contents">
+    #if $has_lemmaattr
+      <h3>$_("Lemma filter")</h3>
+    #else
+      <h3>$_("Word form filter")</h3>
+    #end if
+      <table class="form">
+        <tr>
+          <th align="left">$_("Window"):</th>
+          <td><select name="fc_lemword_window_type">
+             <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+             <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+             <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+           </select>
+           <select name="fc_lemword_wsize">
+             <option>1</option>
+             <option>2</option>
+             <option>3</option>
+             <option>4</option>
+             <option selected="selected">5</option>
+             <option>7</option>
+             <option>10</option>
+             <option>15</option>
+           </select>
+           $_("tokens").
+          </td>
+        </tr>
+        <tr>
+    #if $has_lemmaattr
+          <th align="left">$_("Lemma(s)"):</th>
+    #else
+          <th align="left">$_("Word form(s)"):</th>
+    #end if
+          <td>
+          <input type="text" name="fc_lemword" class="fc_lemword" />
+          <select name="fc_lemword_type">
+             <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+             <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+             <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+           </select>
+           $_("of these items").
+          </td>
+        </tr>
+      </table>
 
-#if $has_lemmaattr
-  <h3>$_("Lemma filter")</h3>
-#else
-  <h3>$_("Word form filter")</h3>
-#end if
-  <table class="form">
-    <tr>
-      <th align="left">$_("Window"):</th>
-      <td><select name="fc_lemword_window_type">
-         <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
-         <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
-         <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
-       </select>
-       <select name="fc_lemword_wsize">
-         <option>1</option>
-         <option>2</option>
-         <option>3</option>
-         <option>4</option>
-         <option selected="selected">5</option>
-         <option>7</option>
-         <option>10</option>
-         <option>15</option>
-       </select>
-       $_("tokens").
-      </td>
-    </tr>
-    <tr>
-#if $has_lemmaattr
-      <th align="left">$_("Lemma(s)"):</th>
-#else
-      <th align="left">$_("Word form(s)"):</th>
-#end if
-      <td>
-      <input type="text" name="fc_lemword" class="fc_lemword" />
-      <select name="fc_lemword_type">
-         <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
-         <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
-         <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
-       </select>
-       $_("of these items").
-      </td>
-    </tr>
-  </table>
-
-#if $Wposlist
-  <h3>$_("PoS filter")</h3>
-  <table class="form">
-    <tr>
-      <th align="left">$_("Window"):</th>
-      <td colspan="2"><select name="fc_pos_window_type">
-         <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
-         <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
-         <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
-       </select>
-       <select name="fc_pos_wsize">
-         <option>1</option>
-         <option>2</option>
-         <option>3</option>
-         <option>4</option>
-         <option selected="selected">5</option>
-         <option>7</option>
-         <option>10</option>
-         <option>15</option>
-       </select>
-       $_("tokens").
-      </td>
-    </tr>
-    <tr>
-      <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
-$_("multiple selection"))</span></th>
-    <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
-    #for $w in $Wposlist
-      <option>$_($w.n)</option>
-    #end for
-      </select>
-    </td>
-    <td valign="top">
-      <select name="fc_pos_type">
-         <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
-         <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
-         <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
-       </select>
-       $_("of these items").
-      </td>
-    </tr>
-  </table>
-#end if
+    #if $Wposlist
+      <h3>$_("PoS filter")</h3>
+      <table class="form">
+        <tr>
+          <th align="left">$_("Window"):</th>
+          <td colspan="2"><select name="fc_pos_window_type">
+             <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+             <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+             <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+           </select>
+           <select name="fc_pos_wsize">
+             <option>1</option>
+             <option>2</option>
+             <option>3</option>
+             <option>4</option>
+             <option selected="selected">5</option>
+             <option>7</option>
+             <option>10</option>
+             <option>15</option>
+           </select>
+           $_("tokens").
+          </td>
+        </tr>
+        <tr>
+          <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
+    $_("multiple selection"))</span></th>
+        <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
+        #for $w in $Wposlist
+          <option>$_($w.n)</option>
+        #end for
+          </select>
+        </td>
+        <td valign="top">
+          <select name="fc_pos_type">
+             <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+             <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+             <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+           </select>
+           $_("of these items").
+          </td>
+        </tr>
+      </table>
+    #end if
+</div>
 </fieldset>
 
-#if $TextTypeSel
-  <fieldset class="advanced_options" id="texttypeel">
-  <legend>$_("Subcorpus")</legend>
 
-  <table><tr>
-  <th>
-  $_("Available subcorpora"):
-  #filter None
-  $subcorp_sel
-  #end filter
-  </th></tr>
-<tr><td>
-
-#filter None
-$tt_sel
-#end filter
-
-</td></tr>
-</table>
+<fieldset class="inactive">
+  <legend><a class="form-extension-switch" title="$_('click to expand')">$_("Specific attribute values") <span class="status"></span></a></legend>
+  <div class="contents">
+      <table>
+          <tr>
+              <td>
+                #filter None
+                $tt_sel
+                #end filter
+          </td></tr>
+      </table>
+  </div>
 </fieldset>
-#end if
 
 #filter None
 #if $Aligned

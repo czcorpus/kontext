@@ -55,13 +55,7 @@ require(['jquery', 'tpl/wordlistForm', 'domReady!'], function (\$, wordlistForm,
 
 #def main
 #filter WebSafe
-<h3>$_("Word list options")
-    #if $varExists('helpsite')
-    <a class="context_help" href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank" name="help_icon" id="help_icon">
-      <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
-    </a>
-    #end if
-</h3>
+<h3>$_("Word list")</h3>
 
 <form action="wordlist" id="wordlist_form" method="post" enctype="multipart/form-data">
 <fieldset class="anonymous">
@@ -75,14 +69,6 @@ $input_hidden
   #filter None
   $corp_sel_node
   #end filter
-<tr class="required">
-  <th align="left">$_("Subcorpus"):</th>
-  <td>
-  #filter None
-  $subcorp_sel
-  #end filter
-  <br/></td>
-</tr>
 <tr class="required">
 <th>$_("Search attribute"):</th>
   <td><select name="wlattr">
