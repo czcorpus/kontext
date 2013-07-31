@@ -159,6 +159,7 @@ $_ca_topbar
 
             <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
                 <ul class="submenu">
+                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
                     <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
                     <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
                     <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
@@ -168,11 +169,11 @@ $_ca_topbar
                 </ul>
             </li>
 
-            <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')" href="filter_form?$q;$globals">$_('Filter')</a>
+            <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
                 <ul class="submenu">
                     <li><a href="#">$_('Positive')&#8230;</a></li>
                     <li><a href="#">$_('Negative')&#8230;</a></li>
-                    <li><a href="#">$_('Custom')&#8230;</a></li>
+                    <li><a href="filter_form?$q;$globals">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
@@ -196,7 +197,6 @@ $_ca_topbar
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
                 <ul class="submenu">
-                    <!-- li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li -->
                     #if $viewmode == 'sen'
                     <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
                     #else

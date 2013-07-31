@@ -2852,5 +2852,5 @@ class ConcCGI(UserCGI):
         html = publish_string(source=description, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
                              writer_name='html')
         html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        return {'raw_html': html}
+        return {'raw_html': html.decode('utf-8')}
     ajax_save_query.template = 'raw_html.tmpl'

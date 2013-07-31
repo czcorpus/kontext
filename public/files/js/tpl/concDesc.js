@@ -26,6 +26,8 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
 
     var lib = {};
 
+    lib.conf = {};
+
     /**
      *
      */
@@ -33,6 +35,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
         $('#query-desc-view').on('click', function () {
             $('#query-desc-view').css('display', 'none');
             $('#query-desc-editor').css('display', 'block');
+            $('#query-desc-editor textarea').focus();
         });
 
         $('#exit-editation').on('click', function () {
@@ -57,7 +60,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
                 $('#query-desc-view').css('display', 'block').html(data.responseText);
             },
             error : function () {
-                lib.showErrorMessage(translatMessages.failed_to_save_the_query);
+                mainPage.showErrorMessage(lib.conf.messages.failed_to_save_the_query);
             }
         });
     };
@@ -68,6 +71,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
      */
     lib.init = function (conf) {
         mainPage.init(conf);
+        lib.conf = conf;
         lib.bindEvents();
     };
 
