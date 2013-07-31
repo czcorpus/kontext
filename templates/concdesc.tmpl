@@ -23,6 +23,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def title
 #end def
 
+#def bodyonload
+require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
+    conf.messages.failed_to_save_the_query = "$_('Failed to save the query')";
+    pageSelf.init(conf);
+});
+#end def
+
 #block main
 #filter WebSafe
 <h3>$_("Concordance description")</h3>
@@ -60,6 +67,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </td>
     </tr>
     #end for
-    </tbody></table>
+    </tbody>
+</table>
 #end filter
+
+<div id="query-desc-wrapper">
+    <div id="query-desc-view" title="$_('Click to edit')"></div>
+    <div id="query-desc-editor" style="display: none">
+        <textarea name="query_desc"></textarea>
+        <button type="button">$_('Save the query with the description')</button>
+        <button id="exit-editation" type="button">$_('Exit editation mode')</button>
+    </div>
+</div>
+
+
 #end block

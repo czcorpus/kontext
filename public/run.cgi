@@ -25,8 +25,10 @@ import json
 sys.path.insert(0, '../lib')  # to be able to import application libraries
 sys.path.insert(0, '..')   # to be able to import compiled template modules
 
+import backend
 import settings
 settings.load()
+backend.settings = settings
 
 if settings.is_debug_mode():
     cgitb.enable()
@@ -44,8 +46,8 @@ from usercgi import UserCGI
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
 auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
-settings.auth = auth_module.create_instance(settings)
-settings.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
+backend.auth = auth_module.create_instance(settings)
+backend.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
 
 class BonitoCGI (ConcCGI, UserCGI):
 
