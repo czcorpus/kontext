@@ -35,6 +35,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
     _ca_user_info = u''
     _options_dir = u''
     _email = u''
+    _default_user = u'defaults'
     attrs2save = []
 
     def __init__(self, environ, user=None):

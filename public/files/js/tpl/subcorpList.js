@@ -17,22 +17,34 @@
  */
 
 /**
- * This module contains functionality related directly to the first_form.tmpl template
+ * This module contains functionality related directly to the subcorp_list.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, documentPage) {
+define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
     'use strict';
 
     var lib = {};
 
-    lib.init = function (conf) {
-        documentPage.init(conf);
-        $('#clear-filter-form-button').on('click', function () {
-            $('#stats-filter input').each(function () {
-                $(this).val('');
-            });
 
-        });
+    /**
+     *
+     */
+    lib.misc = function () {
+        var preSubmit = function (event) {
+            $('#mainform').attr('method', 'GET');
+            mainPage.updForm(event);
+        };
+        treeComponent.createTreeComponent($('form#mainform select[name="corpname"]'), null, preSubmit);
     };
+
+    /**
+     *
+     * @param conf
+     */
+    lib.init = function (conf) {
+        mainPage.init(conf);
+        lib.misc(conf);
+    };
+
 
     return lib;
 });

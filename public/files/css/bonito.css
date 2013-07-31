@@ -305,7 +305,7 @@
     padding:0 0 0 20px;
 }
 
-#sidebar {
+#menu-bar {
     margin: 0;
     height: 50px;
     border-style: solid;
@@ -313,11 +313,11 @@
     border-color: #99CCEE;
 }
 
-#sidebar a:hover,#toolbar-info a.corpus-desc:hover {
+#menu-bar a:hover,#toolbar-info a.corpus-desc:hover {
     text-decoration:none;
 }
 
-#sidebar label {
+#menu-bar label {
     background-color:#fff;
     border:1px solid #000;
     display:block;
@@ -325,7 +325,7 @@
     padding:.3em .5em;
 }
 
-#sidebar ul img {
+#menu-bar ul img {
     vertical-align:middle;
 }
 
@@ -350,11 +350,23 @@
     color: #999999;
 }
 
+#menu-level-1 li.disabled a:hover {
+    background-color: transparent;
+    border: none;
+    color: #999999 !important;
+}
+
 #menu-level-1 > li a,
 #menu-level-2 li a {
     display: inline-block;
     text-decoration: none;
     color: #000000;
+}
+
+#menu-level-1 > li.separator {
+    width: 2px;
+    padding: 0;
+    background-color: #6497B9;
 }
 
 #menu-level-1 > li a:hover,
@@ -441,7 +453,14 @@ ul.submenu {
     background-color: #000000;
 }
 
-#topbar,#sidebar {
+#logo-wrapper a {
+    text-decoration: none;
+    color: #333333;
+    letter-spacing: 0.15em;
+    font-family: serif;
+}
+
+#topbar,#menu-bar {
     background-color:#9ce;
 }
 
@@ -589,7 +608,7 @@ input#cql {
     background-color:#999;
 }
 
-.hidden,#cup_hl_line,#contextel,#wsmoreel,#texttypeel,#thesmoreel,#wsdiffadvel,#patternsadvel {
+.hidden,#cup_hl_line,#wsmoreel,#thesmoreel,#wsdiffadvel,#patternsadvel {
     display:none;
 }
 
@@ -742,13 +761,41 @@ div.narrowmain {
 
 fieldset {
     background-color: #dee;
-    border: none;
     margin: 14px 0 6px;
     padding: 0 0 0 14px;
     border-style: solid;
     border-color: #87ADAD;
     border-width: 1px;
     border-radius: 3px;
+}
+
+#subcorp-selector {
+    padding: 3px 5px;
+}
+
+fieldset.inactive {
+    border-color: #C4D7D7;
+}
+
+a.form-extension-switch,
+#mainform legend {
+    text-decoration: none;
+    color: #000;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 5px 0 0;
+    padding: 3px;
+}
+
+a.form-extension-switch:hover {
+    text-decoration: underline;
+}
+
+.form-extension-switch .status {
+    font-size: 80%;
+}
+
+fieldset.inactive {
 }
 
 fieldset.anonymous {
@@ -758,15 +805,6 @@ fieldset.anonymous {
 fieldset fieldset {
     float:left;
     margin:6px 10px 6px 6px;
-}
-
-#mainform legend {
-    font-size: 11pt;
-    font-weight: bold;
-    padding: 3px 8px 3px 8px;
-    margin: 0;
-    color: #6D8E8E;
-    letter-spacing: 0.08em;
 }
 
 fieldset p {
@@ -861,7 +899,7 @@ table.data tr.even {
     background-color:#dee;
 }
 
-table.data tr.even:hover {
+table.data tr:hover {
     background-color:#dea;
 }
 

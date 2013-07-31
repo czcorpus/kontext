@@ -34,18 +34,18 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) 
             jqAlignKwicInput = $(jqForm).find('input[name="align_kwic"]'),
             jqAlignKwicRow = jqAlignKwicInput.closest('tr');
 
-            if ($(currentElement).val() === 'csv') {
-                jqHeadingInput.prop('disabled', true);
-                jqHeadingRow.hide();
-                jqAlignKwicInput.prop('disabled', true);
-                jqAlignKwicRow.hide();
+        if ($(currentElement).val() === 'csv') {
+            jqHeadingInput.prop('disabled', true);
+            jqHeadingRow.hide();
+            jqAlignKwicInput.prop('disabled', true);
+            jqAlignKwicRow.hide();
 
-            } else {
-                jqHeadingInput.prop('disabled', false);
-                jqHeadingRow.show();
-                jqAlignKwicInput.prop('disabled', false);
-                jqAlignKwicRow.show();
-            }
+        } else {
+            jqHeadingInput.prop('disabled', false);
+            jqHeadingRow.show();
+            jqAlignKwicInput.prop('disabled', false);
+            jqAlignKwicRow.show();
+        }
     };
 
     /**

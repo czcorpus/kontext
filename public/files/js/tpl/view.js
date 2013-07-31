@@ -241,7 +241,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'annotconc
                         win.setTimeout(this.periodic.cancel, 1000);
                         $('#loader').empty();
                         /* TODO: Currently, we are unable to update ARF on the fly which means we
-                         * have to reload the page once all the server calculations are finished.
+                         * have to reload the page after all the server calculations are finished.
                          */
                         win.location.reload();
                     }

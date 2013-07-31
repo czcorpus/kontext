@@ -234,6 +234,8 @@ class ConcCGI(UserCGI):
 
     active_menu_item = None
     disabled_menu_items = []
+    SubcorpList = []
+    save_menu = []
 
     add_vars['wsketch_form'] = [u'LastSubcorp']
     add_vars['wsketch'] = [u'LastSubcorp']
@@ -268,14 +270,28 @@ class ConcCGI(UserCGI):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
+    def _add_save_menu_item(self, label, action, params):
+        self.save_menu.append({'label': label, 'action': action, 'params': params})
+
+    def _enable_subcorpora_list(self, out):
+        """
+        Parameters
+        ----------
+        out : dict
+        """
+        basecorpname = self.corpname.split(':')[0]
+        out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
+                             + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+
     def preprocess_values(self, form):
-        if self._corpus_architect: return
+        if self._corpus_architect:
+            return
         cn = ''
-        if form.has_key('json'):
+        if 'json' in form:
             import json
 
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
-        if form.has_key('corpname') and not cn:
+        if 'corpname' in form and not cn:
             cn = form.getvalue('corpname')
         if cn:
             if isinstance(cn, ListType):
@@ -463,7 +479,7 @@ class ConcCGI(UserCGI):
         wsattr = corp.get_conf('WSATTR')
         fattrs.append(wsattr)
         fcrits = ['%s 0' % a for a in fattrs]
-        self.q.append('r1000') # speeds-up computing frequency
+        self.q.append('r1000')  # speeds-up computing frequency
         result['freqs'] = self.freqs(fcrit=fcrits, ml=1)
         for block in result['freqs']['Blocks']:
             block['Items'] = block['Items'][:10]
@@ -494,6 +510,7 @@ class ConcCGI(UserCGI):
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
         self.active_menu_item = 'menu-view'
+
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
@@ -571,6 +588,14 @@ class ConcCGI(UserCGI):
             out['notification'] = _('Empty result')
 
         out['shuffle_notification'] = True if 'f' in self.q else False
+
+        params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
+         % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
+            self.align_kwic, 1, conc.size())
+        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
+        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+
         return out
 
     add_vars['view'] = ['orig_query']
@@ -578,7 +603,7 @@ class ConcCGI(UserCGI):
     def first_form(self):
         self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
@@ -596,6 +621,7 @@ class ConcCGI(UserCGI):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
+        self._enable_subcorpora_list(out)
         out.update(dict([(k, v) for k, v in self._user_settings.items() if k.startswith('query_type_')]))
         return out
 
@@ -639,7 +665,9 @@ class ConcCGI(UserCGI):
                 'fullsize': fullsize, 'finished': conc.finished()}
 
     def concdesc(self):
-        self.active_menu_item = 'menu-conc-desc'
+        self.active_menu_item = 'menu-new-query'
+        self.disabled_menu_items = ('menu-save',)
+
         return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                           'tourl': self.urlencode(u2), 'size': s}
                          for o, a, u1, u2, s in
@@ -656,6 +684,7 @@ class ConcCGI(UserCGI):
         from tbl_settings import tbl_labels
 
         self.active_menu_item = 'menu-view'
+        self.disabled_menu_items = ('menu-save',)
         out = {}
         if self.maincorp:
             corp = corplib.manatee.Corpus(self.maincorp)
@@ -750,7 +779,8 @@ class ConcCGI(UserCGI):
         """
         sort concordance form
         """
-        self.active_menu_item = 'menu-sort'
+        self.active_menu_item = 'menu-concordance'
+        self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     add_vars['sort'] = ['concsize']
@@ -759,7 +789,9 @@ class ConcCGI(UserCGI):
         """
         simple sort concordance
         """
-        self.active_menu_item = 'menu-view'
+        self.active_menu_item = 'menu-concordance'
+        self.disabled_menu_items = ('menu-save',)
+
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
         elif skey == 'kw':
@@ -1089,6 +1121,8 @@ class ConcCGI(UserCGI):
 
     def filter_form(self, within=0):
         self.active_menu_item = 'menu-filter'
+        self.disabled_menu_items = ('menu-save',)
+
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
@@ -1146,6 +1180,7 @@ class ConcCGI(UserCGI):
 
         """
         self.active_menu_item = 'menu-sample'
+        self.disabled_menu_items = ('menu-save',)
         return {}
 
     def reduce(self, rlines='250'):
@@ -1153,6 +1188,8 @@ class ConcCGI(UserCGI):
         random sample
         """
         self.active_menu_item = 'menu-view'
+        self.disabled_menu_items = ('menu-save',)
+
         self.q.append('r' + rlines)
         return self.view()
 
@@ -1426,6 +1463,7 @@ class ConcCGI(UserCGI):
         list collocations
         """
         self.active_menu_item = 'menu-collocations'
+
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
@@ -1445,6 +1483,13 @@ class ConcCGI(UserCGI):
             item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
             item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
 
+        params = "cattr=%s&cbgrfns=%s&cminfreq=%s&cminbgr=%s&cfromw=%s&ctow=%s&csortfn=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s" \
+                 % (self.cattr, self.cbgrfns, self.cminfreq, self.cminbgr, self.cfromw, self.ctow, self.csortfn,
+                   '%s', self.heading, self.numbering, self.align_kwic, 1, 10000)
+        self._add_save_menu_item('XML', 'savecoll', params % 'xml')
+        self._add_save_menu_item('TXT', 'savecoll', params % 'text')
+        self._add_save_menu_item('CSV', 'savecoll', params % 'csv')
+
         return result
 
     add_vars['collx'] = ['concsize']
@@ -1463,6 +1508,8 @@ class ConcCGI(UserCGI):
                  heading=0):
         """
         """
+        self.active_menu_item = 'menu-collocations'
+
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
         if to_line == '':
@@ -1479,7 +1526,10 @@ class ConcCGI(UserCGI):
         save collocations
         """
         from_line = int(from_line)
-        to_line = int(to_line)
+        if to_line == '':
+            to_line = len(self.collx(csortfn, cbgrfns)['Items'])
+        else:
+            to_line = int(to_line)
         num_lines = to_line - from_line + 1
         err = validate_range((from_line, to_line), (1, None))
         if err is not None:
@@ -1650,9 +1700,9 @@ class ConcCGI(UserCGI):
         """
         Word List Form
         """
-        self.active_menu_item = 'menu-word-list'
+        self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -1669,6 +1719,7 @@ class ConcCGI(UserCGI):
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
+        self._enable_subcorpora_list(out)
         return out
 
     add_vars['wordlist_form'] = ['LastSubcorp']
@@ -2021,6 +2072,9 @@ class ConcCGI(UserCGI):
         method : str
             the same meaning as in subcorp()
         """
+        self.active_menu_item = 'menu-subcorpus'
+        self.disabled_menu_items = ('menu-save',)
+
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
         for s, a in [t.split('.') for t in self._corp().get_conf('STRUCTATTRLIST').split(',')]:
@@ -2029,6 +2083,7 @@ class ConcCGI(UserCGI):
             structs_and_attrs[s].append(a)
 
         out = {}
+        out['SubcorpList'] = ()
         if os.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
             for p in self._url_parameters:
@@ -2143,20 +2198,45 @@ class ConcCGI(UserCGI):
             path = path.encode("utf-8")
         if conclib.manatee.create_subcorpus(path, self._corp(), structname,
                                             subquery):
-            finalname = '%s:%s' % (basecorpname, subcname)
-            sc = self.cm.get_Corpus(finalname)
-            subc_list = self.cm.subcorp_names(self.corpname)
-            for item in subc_list:
-                item['selected'] = True if item['n'].decode('utf-8') == subcname else False
-            return {
-                'subcorp': finalname,
-                'corpsize': formatnum(sc.size()),
-                'subcsize': formatnum(sc.search_size()),
-                'SubcorpList': subc_list,
-                'fetchSubcInfo': 'true'  # this is ok (it is used as a JavaScript value)
-            }
+            self.redirect('subcorp_list?corpname=%s' % self.corpname)
+            return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
+
+    def subcorp_list(self, selected_subc=[], sort='n'):
+        """
+        """
+        import tables
+        import locale
+
+        self.active_menu_item = 'menu-subcorpus'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+
+        if self.get_http_method() == 'POST':
+            base = self.subcpath[-1]
+            for subcorp in selected_subc:
+                try:
+                    os.unlink(os.path.join(base, self.corpname, subcorp).encode('utf-8') + '.subc')
+                except Exception as e:
+                    logging.getLogger(__name__).error(e)
+
+        basecorpname = self.corpname.split(':')[0]
+        data = []
+        for item in self.cm.subcorp_names(basecorpname):
+            sc = self.cm.get_Corpus(self.corpname, item['n'])
+            data.append({'n': item['n'], 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+
+        sort_key, rev = tables.parse_sort_key(sort)
+        cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
+        data = sorted(data, key=lambda x: x[sort_key], reverse=rev, cmp=cmp_functions[sort_key])
+        sort_keys = dict([(x, (x, '')) for x in ('n', 'size', 'created')])
+        if not rev:
+            sort_keys[sort_key] = ('-%s' % sort_key, '&#8593;')
+        else:
+            sort_keys[sort_key] = (sort_key, '&#8595;')
+
+        return {'subcorp_list': data, 'sort_keys': sort_keys, 'rev': rev}
 
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)

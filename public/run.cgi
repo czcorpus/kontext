@@ -63,6 +63,8 @@ class BonitoCGI (ConcCGI, UserCGI):
         ConcCGI.__init__(self, environ=environ)
 
     def _user_defaults (self, user):
+        if user is not self._default_user:
+            self.subcpath.append ('%s/%s' % (settings.get('corpora', 'users_subcpath'), user))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 

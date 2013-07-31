@@ -71,7 +71,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
         // obtain current state of the form and update
         (function () {
             var jqForm = $('form[action="savecoll"]'),
-            checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
+                checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
 
             if (checkedRadio) {
                 lib.updateExportTypeSwitch(jqForm, checkedRadio);
