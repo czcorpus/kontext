@@ -30,6 +30,7 @@ import logging
 import gettext
 import locale
 
+import backend
 import settings
 import auth
 
@@ -218,7 +219,7 @@ class CGIPublisher(object):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
     def auth(self):
-        ans = settings.auth.auth_session(self.get_auth_id())
+        ans = backend.auth.auth_session(self.get_auth_id())
         self._anonymous = 0 if ans else 1
         return ans
 
@@ -402,7 +403,7 @@ class CGIPublisher(object):
 
     def redirect(self, url, code=303):
         self._headers.clear()
-        self._headers[''] = 'HTTP/1.1 %s See Other' % code
+        self._headers[''] = 'Status:HTTP/1.1 %s See Other' % code
         self._headers['Location'] = url
 
     def get_http_method(self):
@@ -421,12 +422,10 @@ class CGIPublisher(object):
         """
         tmpl = None
         methodname = None
-
         self.init_locale()
 
         if path is None:
                 path = self.import_req_path()
-
         self._user = self.auth()
         if self._user is None and path[0] not in ('login', 'loginx'):
             self._headers['Location'] = 'login'
@@ -466,7 +465,7 @@ class CGIPublisher(object):
 
             return_type = self.get_method_metadata(path[0], 'return_type')
             if not self.headers_sent:
-                self._headers['Status'] = '500 Internal Server Error'
+                self._headers[''] = 'Status:HTTP/1.1 500 Internal Server Error'
                 self.output_headers(return_type=return_type)
                 self.headers_sent = True
 
@@ -602,21 +601,22 @@ class CGIPublisher(object):
                 user_settings[k] = self.__dict__[k]
         self._cookies['user_settings'] = json.dumps(user_settings)
         self._cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
-        if self._cookies and outf:
-            outf.write(self._cookies.output() + '\n')
-            pass
 
-        # Headers
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
+
         if outf:
-            if 'Status' in self._headers:
-                h_keys = ('Status', ) + tuple([x for x in self._headers.keys() if x != 'Status'])
-            else:
-                h_keys = self._headers.keys()
-            for k in h_keys:
-                outf.write('%s: %s\n' % (k, self._headers[k]))
+            # Headers
+            for k in sorted(self._headers.keys()):
+                if k != '':
+                    outf.write('%s: %s\n' % (k, self._headers[k]))
+                else:
+                    outf.write('%s\n' % (self._headers[k], ))
+            # Cookies
+            if self._cookies and outf:
+                outf.write(self._cookies.output() + '\n')
             outf.write('\n')
+
         self.headers_sent = True
         return self._cookies, self._headers
 
