@@ -593,9 +593,11 @@ class ConcCGI(UserCGI):
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
          % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
             self.align_kwic, 1, conc.size())
-        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
-        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
+        self._add_save_menu_item('ODS', 'saveconc', params % 'ods')
+        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        self._add_save_menu_item(_('link'), '#', params % 'link')
 
         return out
 
@@ -1487,9 +1489,11 @@ class ConcCGI(UserCGI):
         params = "cattr=%s&cbgrfns=%s&cminfreq=%s&cminbgr=%s&cfromw=%s&ctow=%s&csortfn=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s" \
                  % (self.cattr, self.cbgrfns, self.cminfreq, self.cminbgr, self.cfromw, self.ctow, self.csortfn,
                    '%s', self.heading, self.numbering, self.align_kwic, 1, 10000)
-        self._add_save_menu_item('XML', 'savecoll', params % 'xml')
-        self._add_save_menu_item('TXT', 'savecoll', params % 'text')
-        self._add_save_menu_item('CSV', 'savecoll', params % 'csv')
+        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
+        self._add_save_menu_item('ODS', 'saveconc', params % 'ods')
+        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        self._add_save_menu_item(_('link'), '#', params % 'link')
 
         return result
 

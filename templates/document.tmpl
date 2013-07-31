@@ -135,8 +135,8 @@ $_ca_topbar
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")">$_("New query")</a>
                 <ul class="submenu">
                     <li><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('Search in the corpus')&#8230;</a></li>
-                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                     <li><a title="TODO" href="#">$_('Query history')&#8230;</a></li>
+                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
             <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
@@ -161,19 +161,23 @@ $_ca_topbar
                 <ul class="submenu">
                     <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
                     <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
-                    <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')</a></li>
-                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')&#8230;</a></li>
+                    <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
+                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')</a></li>
                     <li><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
-                    <li><a title="TODO" href="#">$_('UNDO')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Undo')</a></li>
                 </ul>
             </li>
 
             <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')" href="filter_form?$q;$globals">$_('Filter')</a>
+                <ul class="submenu">
+                    <li><a href="#">$_('Positive')&#8230;</a></li>
+                    <li><a href="#">$_('Negative')&#8230;</a></li>
+                    <li><a href="#">$_('Custom')&#8230;</a></li>
+                </ul>
             </li>
 
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
-                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
                     #if 'tag' in [x['n'] for x in $AttrList]
                     <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
                     #end if
@@ -184,6 +188,7 @@ $_ca_topbar
                     #if $ttcrit
                     <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
                     #end if
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
@@ -191,14 +196,21 @@ $_ca_topbar
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
                 <ul class="submenu">
-                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
-                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
-                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_("KWIC")</a></li>
-                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_("Sentence")</a></li>
+                    <!-- li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li -->
+                    #if $viewmode == 'sen'
+                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
+                    #else
+                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
+                    #end if
                     #if $align
                     <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
                     #end if
-                    <li><a href="#">$_("References")</a></li>
+                    <li><a href="#">$_("Attributes")&#8230;</a></li>
+                    <li><a href="#">$_("Structures and references")&#8230;</a></li>
+                    <li><a href="#">$_("Range of the concordance")&#8230;</a></li>
+                    <li><a href="#">$_("Frequency distribution")&#8230;</a></li>
+                    <li><a href="#">$_("Collocations")&#8230;</a></li>
+                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
