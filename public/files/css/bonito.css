@@ -1187,8 +1187,8 @@ table#multilevel-freq-params td.level {
 }
 
 #query-desc-view {
-    width: 400px;
-    height: 150px;
+    width: 500px;
+    height: 350px;
     border: 1px solid #333333;
     overflow-y: scroll;
 }
@@ -1198,7 +1198,7 @@ table#multilevel-freq-params td.level {
 }
 
 #query-desc-wrapper textarea {
-    width: 400px;
-    height: 150px;
+    width: 500px;
+    height: 350px;
     border: 1px solid #AA3333;
 }
