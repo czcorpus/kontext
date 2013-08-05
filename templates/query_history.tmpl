@@ -15,7 +15,28 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
+
 #encoding UTF-8
-#filter None
-$raw_html
-#end filter
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+#end def
+
+#def bodyonload
+    require(['tpl/document'], function (document) {
+        document.init(conf);
+    });
+#end def
+
+#block main
+<h3>$_('query history')</h3>
+
+#for $row in $data
+<div class="query-history-item">
+    <h4>$row.created | <a href="$row.url">$_('open')</a></h4>
+    #filter None#$row.description#end filter#
+</div>
+#end for
+
+#end block

@@ -45,6 +45,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         }
     };
 
+    lib.conf = {};
+
     /**
      * Displays 'standard' error message box
      *
@@ -475,6 +477,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * @param {object} conf
      */
     lib.init = function (conf) {
+        lib.conf = conf;
         lib.userSettings = {
             data : cookies.get('user_settings'),
 

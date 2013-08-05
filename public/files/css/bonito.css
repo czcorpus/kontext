@@ -1202,3 +1202,20 @@ table#multilevel-freq-params td.level {
     height: 350px;
     border: 1px solid #AA3333;
 }
+
+.query-history-item .document {
+    border-style: solid;
+    border-color: #000000;
+    border-width: 1px 0 0 0;
+    background-color: #dedede;
+    margin-bottom: 20px;
+    padding: 10px 5px;
+}
+
+.query-history-item h4 {
+    margin: 0 0 3px 0;
+}
+
+.query-export-url {
+    margin: 20px 0;
+}

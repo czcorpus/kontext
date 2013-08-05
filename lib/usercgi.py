@@ -117,7 +117,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
 
     def loginx(self, username='', password=''):
         session_id = settings.auth.login(username, password)
-        self._headers['Location'] = settings.get('global', 'root_url')
+        self._headers['Location'] = '%s%s' % (settings.get('global', 'root_url'), 'first_form')
         if session_id:
             self._cookies[settings.get('global', 'auth_cookie_name')] = session_id
         return {}
