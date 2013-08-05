@@ -49,6 +49,12 @@ auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
 backend.auth = auth_module.create_instance(settings)
 backend.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
 
+try:
+    query_storage_module = __import__(settings.get('global', 'query_storage_module'), fromlist=[])
+    backend.query_storage = query_storage_module.QueryStorage(settings)
+except ImportError:
+    settings.set('global', 'query_storage_module', None)
+
 class BonitoCGI (ConcCGI, UserCGI):
 
     # UserCGI options
