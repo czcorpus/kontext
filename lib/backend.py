@@ -5,8 +5,16 @@ class Auth(object):
     pass
 
 
+class VoidService():
+
+    def __getattr__(self, *args, **kwargs):
+        def fallback(*args, **kwargs):
+            pass
+
+        return fallback
+
+
+
 auth = Auth()
 
-settings = imp.new_module('settings')
-
-services = imp.new_module('services')
+query_storage = VoidService()

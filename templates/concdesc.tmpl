@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def bodyonload
 require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
+    conf.queryId = "$query_id";
     conf.messages.failed_to_save_the_query = "$_('Failed to save the query')";
     pageSelf.init(conf);
 });
@@ -71,13 +72,21 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
 </table>
 #end filter
 
-<div id="query-desc-wrapper">
-    <div id="query-desc-view" title="$_('Click to edit')"></div>
-    <div id="query-desc-editor" style="display: none">
-        <textarea name="query_desc"></textarea>
-        <button id="exit-editation" type="button">$_('Done')</button>
+#if $supports_query_save
+    #if $query_id
+    <div class="query-export-url">
+    $_('URL of the query'): <input type="text" name="export-url" value="$export_url" size="40" readonly="readonly" />
     </div>
-</div>
-
+    #end if
+    <div id="query-desc-wrapper">
+        <div id="query-desc-view" title="$_('Click to edit')">#filter None#$query_desc#end filter#</div>
+        <div id="query-desc-editor" style="display: none">
+            <textarea name="query_desc">$query_desc_raw</textarea>
+            <label for="public-flag-checkbox">$_('anyone can view the description')</label>
+            <input id="public-flag-checkbox" type="checkbox" name="public" value="1" #if $is_public#checked="checked"#end if# />
+            <button id="exit-editation" type="button">$_('Done')</button>
+        </div>
+    </div>
+#end if
 
 #end block

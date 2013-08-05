@@ -667,9 +667,20 @@ class ConcCGI(UserCGI):
                 'relconcsize': 1000000.0 * fullsize / self._corp().search_size(),
                 'fullsize': fullsize, 'finished': conc.finished()}
 
-    def concdesc(self):
+    def concdesc(self, query_id=''):
         self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-save',)
+
+        supports_query_save = settings.get('global', 'query_storage_module') is not None
+        query_desc = ''
+        query_desc_raw = ''
+        is_public = True
+        if query_id and supports_query_save:
+            ans = backend.query_storage.get_user_query(backend.auth.get_user_info()['username'], query_id)
+            if ans:
+                query_desc_raw = ans['description']
+                query_desc = backend.query_storage.decode_description(query_desc_raw)
+                is_public = ans['public']
 
         return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                           'tourl': self.urlencode(u2), 'size': s}
@@ -677,8 +688,14 @@ class ConcCGI(UserCGI):
                          conclib.get_conc_desc(self.q,
                                                corpname=self.corpname,
                                                cache_dir=self.cache_dir,
-                                               subchash=getattr(self._corp(), "subchash", None))]
-        }
+                                               subchash=getattr(self._corp(), "subchash", None))],
+                'supports_query_save': supports_query_save,
+                'query_desc': query_desc,
+                'query_desc_raw': query_desc_raw,
+                'query_id': query_id,
+                'export_url': '%sto?q=%s' % (settings.get('global', 'root_url'), query_id),
+                'is_public': is_public
+                }
 
     def viewattrs(self):
         """
@@ -2846,11 +2863,20 @@ class ConcCGI(UserCGI):
         return out
     stats.template = 'stats.tmpl'
 
-    def ajax_save_query(self, query='', description=''):
-        from docutils.core import publish_string
+    def ajax_save_query(self, description='', url='', query_id='', public=''):
+        html = backend.query_storage.decode_description(description)
+        query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
+                                               url=url, description=description, query_id=query_id, public=int(public))
+        return {'rawHtml': html.decode('utf-8'), 'queryId': query_id}
+    ajax_save_query.return_type = 'json'
 
-        html = publish_string(source=description, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-                             writer_name='html')
-        html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        return {'raw_html': html.decode('utf-8')}
-    ajax_save_query.template = 'raw_html.tmpl'
+    def query_history(self):
+        rows = backend.query_storage.get_user_queries(backend.auth.get_user_info()['username'])
+        return {'data': rows}
+
+    def to(self, q=''):
+        user_id = backend.auth.get_user_info()['username']
+        row = backend.query_storage.get_user_query(user_id, q)
+        if row:
+            self.redirect('%s&query_id=%s' % (row['url'], row['id']))
+        return {}

@@ -22,7 +22,6 @@ import manatee
 import db
 from db import fq
 import uuid
-import auth
 
 
 def create_salt(length=2):
@@ -86,8 +85,8 @@ class UCNKAuth(object):
             session_id = str(uuid.uuid1())
             for k, v in dict(zip(cols, row)).items():
                 setattr(self, k, v)
-            cursor.execute('DELETE FROM session WHERE user = ?', (username, ))
-            cursor.execute('INSERT INTO session (user, id) VALUES (?, ?)', (username, session_id))
+            cursor.execute(fq('DELETE FROM session WHERE user = %(p)s'), (username, ))
+            cursor.execute(fq('INSERT INTO session (user, id) VALUES (%(p)s, %(p)s)'), (username, session_id))
         cursor.close()
         self.db_conn.commit()
         return session_id
@@ -178,6 +177,18 @@ class UCNKAuth(object):
             corpora.sort()
             self.corplist = tuple(corpora)
         return self.corplist
+
+    def get_user_info(self):
+        if hasattr(self, 'fullname') and self.fullname:
+            fullname = self.fullname.split(' ')
+        else:
+            fullname = ('unkown', 'user')
+        return {
+            'username': self.user,
+            'firstname': fullname[0],
+            'lastname': fullname[1],
+            'email': self.email if hasattr(self, 'email') else None
+        }
 
     def validate_password(self, password):
         """
