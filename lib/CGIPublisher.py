@@ -403,7 +403,6 @@ class CGIPublisher(object):
 
     def redirect(self, url, code=303):
         self._headers.clear()
-        self._headers[''] = 'Status:HTTP/1.1 %s See Other' % code
         self._headers['Location'] = url
 
     def get_http_method(self):
@@ -444,8 +443,9 @@ class CGIPublisher(object):
             log_request(user_settings, '%s' % methodname)
 
             return_type = self.get_method_metadata(methodname, 'return_type')
-            self.output_headers(return_type)
-            self.output_result(methodname, tmpl, result, return_type)
+            cont = self.output_headers(return_type)
+            if cont:
+                self.output_result(methodname, tmpl, result, return_type)
         except Exception as e:
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
@@ -594,6 +594,10 @@ class CGIPublisher(object):
         """
         Generates proper content-type signature and
         creates a cookie to store user's settings
+
+        Returns
+        -------
+        bool : True if content should follow else False
         """
         user_settings = {}
         for k in self._user_settings:
@@ -607,18 +611,20 @@ class CGIPublisher(object):
 
         if outf:
             # Headers
+            if 'Location' in self._headers:
+                outf.write('Location: %s\n' % self._headers['Location'])
+                outf.write('\n')
+                self.headers_sent = True
+                return False
             for k in sorted(self._headers.keys()):
-                if k != '':
-                    outf.write('%s: %s\n' % (k, self._headers[k]))
-                else:
-                    outf.write('%s\n' % (self._headers[k], ))
+                outf.write('%s: %s\n' % (k, self._headers[k]))
             # Cookies
             if self._cookies and outf:
                 outf.write(self._cookies.output() + '\n')
             outf.write('\n')
 
         self.headers_sent = True
-        return self._cookies, self._headers
+        return True
 
     def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
                       return_template=False):
