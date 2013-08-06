@@ -24,8 +24,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end def
 
 #def bodyonload
-    require(['tpl/document'], function (document) {
-        document.init(conf);
+    require(['tpl/queryHistory'], function (pageSelf) {
+        conf.messages.failed_to_delete_the_query = "$_('Failed to delete the query')";
+        conf.messages.deleted_query = "$_('Deleted the query.')";
+        conf.messages.undeleted_query = "$_('Undeleted the query.')";
+        conf.messages.failed_to_undelete_the_query = "$_('Failed to undelete the query.')";
+        conf.messages.undo = "$_('Undo')";
+        pageSelf.init(conf);
     });
 #end def
 
@@ -33,8 +38,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <h3>$_('query history')</h3>
 
 #for $row in $data
-<div class="query-history-item">
-    <h4>$row.created | <a href="$row.url">$_('open')</a></h4>
+<div class="query-history-item" data-query-id="$row.id">
+    <h4>$row.created | <a href="$row.url">$_('open')</a> | <a class="delete" href="#">$_('delete')</a></h4>
     #filter None#$row.description#end filter#
 </div>
 #end for
