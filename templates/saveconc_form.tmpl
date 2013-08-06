@@ -1,0 +1,134 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Save Concordance Form")#slurp
+#end def
+
+#def bodyonload
+require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm, domReady) {
+    ## conf object is defined within document.tmpl
+    conf.files_path = '${files_path}';
+    saveconcForm.init(conf);
+});
+#end def
+
+#def main
+#filter WebSafe
+<h3>$_("Save Concordance")
+    #if $varExists('helpsite')
+    <a href="${helpsite}saveconc" rel="help" title='$_("? Help on Saving Conc.")' target="_blank" name="help_icon" id="help_icon">
+        <img src="$files_path/img/help.png" alt='$_("? Help on Saving Conc.")' />
+    </a>
+    #end if
+</h3>
+<form action="saveconc">
+    #filter None
+    $input_hidden
+    #end filter
+    <input type="hidden" name="pagesize" value="$pagesize" />
+    <input type="hidden" name="leftctx" value="$leftctx" />
+    <input type="hidden" name="rightctx" value="$rightctx" />
+    <table class="form">
+        <tr>
+            <th>$_("Save concordance as"):</th>
+            <td>
+                <label>
+                    <input type="radio" name="saveformat" value="text"
+                    #if $saveformat == 'text'
+                    checked="checked"
+                    #end if
+                    /> $_("Text")
+                </label>
+                <label>
+                    <input type="radio" name="saveformat" value="xml"
+                    #if $saveformat == 'xml'
+                    checked="checked"
+                    #end if
+                    /> $_("XML")
+                </label>
+            </td>
+        </tr>
+        <tr class="separator">
+            <th>$_("Save pages"):</th>
+            <td>
+                <label>
+                    <input type="radio" name="pages" value="0"
+                    #if $pages == 0
+                    checked="checked"
+                    #end if
+                    /> $_("All")
+                </label>
+            </td>
+        </tr><tr>
+        <th></th>
+        <td>
+            <label>
+                <input type="radio" name="pages" value="1"
+                #if $pages == 1
+                checked="checked"
+                #end if
+                /> $_("Only page"):
+                <input type="text" name="fromp" value="$fromp" size="5" />
+            </label>
+        </td>
+    </tr>
+        <tr class="separator">
+            <th>$_("Include heading"):</th>
+            <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
+        </tr><tr>
+        <th>$_("Number lines"):</th>
+        <td><input type="checkbox" name="numbering" value="1"
+            #if $numbering
+            checked="checked"
+            #end if
+            /></td>
+    </tr><tr>
+        <th>$_("Align KWIC"):</th>
+        <td><input type="checkbox" name="align_kwic" value="1" checked="checked" /></td>
+    </tr><tr>
+        <th>$_("Maximum number of lines"):</th>
+        <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
+    </tr>
+    </table>
+
+    <div class="buttons">
+        <input class="submit" type="submit" value="$_("Save Concordance")" />
+    </div>
+</form>
+
+
+#if $can_annotate
+<h3>$_("Store Concordance")</h3>
+#if $stored
+<div> $_("Concordance stored"): <b>$stored</b></div>
+#end if
+<form action="storeconc">
+    #filter None
+    $input_hidden
+    #end filter
+    $_("Concordance name"): <input type="text" name="storeconcname" value="$lemma" size="20" /><br/>
+    <div class="buttons">
+        <input class="submit" type="submit" value="$_("Store Concordance For Annotation")" />
+    </div>
+</form>
+#end if
+#end filter
+#end def

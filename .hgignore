@@ -1,0 +1,12 @@
+syntax: glob
+
+*.*~
+.idea
+doc
+*.pyc
+config.xml
+.directory
+
+syntax: regexp
+
+^cmpltmpl/[^_]{2}
