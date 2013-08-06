@@ -66,7 +66,7 @@ class QueryStorage(object):
         Returns list of queries of a specific user.
         """
         cursor = self.conn.cursor()
-        cursor.execute(fq("SELECT %s FROM saved_queries WHERE user = %%(p)s ORDER BY created DESC, updated DESC"
+        cursor.execute(fq("SELECT %s FROM saved_queries WHERE user = %%(p)s AND deleted IS NULL ORDER BY created DESC, updated DESC"
                           % ','.join(QueryStorage.cols)), (user,))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
         for row in rows:
@@ -77,15 +77,31 @@ class QueryStorage(object):
 
     def get_user_query(self, user, id):
         """
-        Returns concrete query specified by its ID. But also user identifier has to match.
+        Returns concrete query specified by its ID.
+        In case the query is not public also user identifier has to match (else None is returned.
         """
         cursor = self.conn.cursor()
-        cursor.execute(fq("SELECT %s FROM saved_queries WHERE user = %%(p)s AND id = %%(p)s" % ','.join(QueryStorage.cols)),
-                       (user, id))
+        cursor.execute(fq("SELECT %s FROM saved_queries WHERE id = %%(p)s" % ','.join(QueryStorage.cols)),
+                       (id, ))
         row = cursor.fetchone()
         if row:
             row = dict(zip(QueryStorage.cols, row))
+            if not row['public'] and row['user'] != user:
+                row = None
         return row
+
+    def delete_user_query(self, user, id):
+        cursor = self.conn.cursor()
+        deleted = int(time.mktime(datetime.now().timetuple()))
+        cursor.execute(fq("UPDATE saved_queries SET deleted = %(p)s WHERE user = %(p)s AND id = %(p)s"),
+                       (deleted, user, id))
+        self.conn.commit()
+
+    def undelete_user_query(self, user, id):
+        cursor = self.conn.cursor()
+        cursor.execute(fq("UPDATE saved_queries SET deleted = NULL WHERE user = %(p)s AND id = %(p)s"),
+                       (user, id))
+        self.conn.commit()
 
     def make_query_hash(self, user, url):
         """
@@ -114,6 +130,10 @@ class QueryStorage(object):
         """
         from docutils.core import publish_string
 
+        is_unicode = type(s) is unicode
         html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
                                  writer_name='html')
-        return html[html.find('<body>')+6:html.find('</body>')].strip()
+        html = html[html.find('<body>')+6:html.find('</body>')].strip()
+        if is_unicode and type(html) is str:
+            html = html.decode('utf-8')
+        return html

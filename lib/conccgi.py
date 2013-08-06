@@ -670,6 +670,7 @@ class ConcCGI(UserCGI):
     def concdesc(self, query_id=''):
         self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-save',)
+        out = {}
 
         supports_query_save = settings.get('global', 'query_storage_module') is not None
         query_desc = ''
@@ -681,8 +682,11 @@ class ConcCGI(UserCGI):
                 query_desc_raw = ans['description']
                 query_desc = backend.query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
+            else:
+                out['error'] = _('Cannot access user-defined query description.')
+                query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
-        return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+        out.update({'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                           'tourl': self.urlencode(u2), 'size': s}
                          for o, a, u1, u2, s in
                          conclib.get_conc_desc(self.q,
@@ -695,7 +699,8 @@ class ConcCGI(UserCGI):
                 'query_id': query_id,
                 'export_url': '%sto?q=%s' % (settings.get('global', 'root_url'), query_id),
                 'is_public': is_public
-                }
+                })
+        return out
 
     def viewattrs(self):
         """
@@ -2869,6 +2874,29 @@ class ConcCGI(UserCGI):
                                                url=url, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html.decode('utf-8'), 'queryId': query_id}
     ajax_save_query.return_type = 'json'
+
+    def ajax_delete_query(self, query_id=''):
+        user_id = backend.auth.get_user_info()['username']
+        backend.query_storage.delete_user_query(user_id, query_id)
+        return {}
+    ajax_delete_query.return_type = 'json'
+
+    def ajax_undelete_query(self, query_id=''):
+        from datetime import datetime
+
+        user_id = backend.auth.get_user_info()['username']
+        backend.query_storage.undelete_user_query(user_id, query_id)
+        query = backend.query_storage.get_user_query(user_id, query_id)
+        desc = backend.query_storage.decode_description(query['description'])
+
+        html = """<div class="query-history-item" data-query-id="%s">
+                <h4>%s | <a href="%s">%s</a> | <a class="delete" href="#">%s</a></h4>
+                %s""" % (query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
+                          _('delete'), desc)
+        return {
+            'html': html
+        }
+    ajax_undelete_query.return_type = 'json'
 
     def query_history(self):
         rows = backend.query_storage.get_user_queries(backend.auth.get_user_info()['username'])
