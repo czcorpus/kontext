@@ -33,7 +33,7 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
 
 #block main
 #filter WebSafe
-<h3>$_("Concordance description")</h3>
+<h2>$_("Concordance description")</h2>
 
 <p>$_("Corpus"): <b>$corp_full_name</b>
     #if $usesubcorp
@@ -73,11 +73,7 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
 #end filter
 
 #if $supports_query_save
-    #if $query_id
-    <div class="query-export-url">
-    $_('URL of the query'): <input type="text" name="export-url" value="$export_url" size="40" readonly="readonly" />
-    </div>
-    #end if
+    <h3>$_('User\'s note')</h3>
     <div id="query-desc-wrapper">
         <div id="query-desc-view" title="$_('Click to edit')">#filter None#$query_desc#end filter#</div>
         <div id="query-desc-editor" style="display: none">
@@ -87,6 +83,12 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
             <button id="exit-editation" type="button">$_('Done')</button>
         </div>
     </div>
+
+    #if $query_id
+    <div class="query-export-url">
+    $_('URL of the query and description'): <input type="text" name="export-url" value="$export_url" size="40" readonly="readonly" />
+    </div>
+    #end if
 #end if
 
 #end block
