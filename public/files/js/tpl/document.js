@@ -51,8 +51,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * Displays 'standard' error message box
      *
      * @param {string} message a message to be displayed
+     * @param {function} callback a function to be called after the message is displayed; a single parameter is passed
+     * to the function - a DOM element of the error box
      */
-    lib.showErrorMessage = function (message) {
+    lib.showErrorMessage = function (message, callback) {
         var html = '<div id="error"><div class="frame">'
             + '<img class="icon" alt="Error" src="../files/img/error-icon.png">'
             + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
@@ -63,6 +65,30 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $('#error a.close-icon').bind('click', function () {
             $('#error').remove();
         });
+        if (typeof(callback) === 'function') {
+            callback($('#error').get(0));
+        }
+    };
+
+    /**
+     *
+     * @param message
+     * @param callback
+     */
+    lib.showMessage = function (message, callback) {
+        var html = '<div id="notification"><div class="frame">'
+            + '<img class="icon" alt="Notification" src="../files/img/info-icon.png">'
+            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
+            + '</div></div>';
+
+        $('#content #notification').remove();
+        $('#content').prepend(html);
+        $('#notification a.close-icon').bind('click', function () {
+            $('#notification').remove();
+        });
+        if (typeof(callback) === 'function') {
+            callback($('#error').get(0));
+        }
     };
 
     /**
