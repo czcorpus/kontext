@@ -2872,7 +2872,7 @@ class ConcCGI(UserCGI):
         html = backend.query_storage.decode_description(description)
         query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
                                                url=url, description=description, query_id=query_id, public=int(public))
-        return {'rawHtml': html.decode('utf-8'), 'queryId': query_id}
+        return {'rawHtml': html, 'queryId': query_id}
     ajax_save_query.return_type = 'json'
 
     def ajax_delete_query(self, query_id=''):
@@ -2890,7 +2890,7 @@ class ConcCGI(UserCGI):
         desc = backend.query_storage.decode_description(query['description'])
 
         html = """<div class="query-history-item" data-query-id="%s">
-                <h4>%s | <a href="%s">%s</a> | <a class="delete" href="#">%s</a></h4>
+                <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a></h4>
                 %s""" % (query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
                           _('delete'), desc)
         return {

@@ -840,7 +840,7 @@ h2 {
 }
 
 h3 {
-    margin:0 0 10px;
+    margin:10px 0 5px 0;
 }
 
 h3 a:focus,h3 a:focus img {
@@ -1180,6 +1180,7 @@ table#multilevel-freq-params td.level {
 #query-desc-wrapper textarea {
     display: block;
     margin: 0;
+    padding: 10px;
 }
 
 #query-desc-wrapper button {
@@ -1189,12 +1190,17 @@ table#multilevel-freq-params td.level {
 #query-desc-view {
     width: 500px;
     height: 350px;
-    border: 1px solid #333333;
+    border-style: solid;
+    border-color: #9FC4E0;
+    border-width: 1px 0 0 0;
+    background-color: #CCE3F4;
     overflow-y: scroll;
+    padding: 10px;
 }
 
 #query-desc-view:hover {
     background-color: #FFFFFF;
+    border: 1px solid #AA3333;
 }
 
 #query-desc-wrapper textarea {
@@ -1203,11 +1209,15 @@ table#multilevel-freq-params td.level {
     border: 1px solid #AA3333;
 }
 
+.query-history-item {
+    width: 80%;
+}
+
 .query-history-item .document {
     border-style: solid;
-    border-color: #000000;
+    border-color: #9FC4E0;
     border-width: 1px 0 0 0;
-    background-color: #dedede;
+    background-color: #CCE3F4;
     margin-bottom: 20px;
     padding: 10px 5px;
 }
@@ -1218,4 +1228,16 @@ table#multilevel-freq-params td.level {
 
 .query-export-url {
     margin: 20px 0;
+}
+
+.query-history-item h4 {
+    font-weight: normal;
+}
+
+.query-history-item h4 a.delete {
+    color: #E20000;
+}
+
+.query-history-item h4 a.open {
+    font-weight: bold;
 }

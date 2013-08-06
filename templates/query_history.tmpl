@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #for $row in $data
 <div class="query-history-item" data-query-id="$row.id">
-    <h4>$row.created | <a href="$row.url">$_('open')</a> | <a class="delete" href="#">$_('delete')</a></h4>
+    <h4>$row.created | <a class="open" href="$row.url">$_('open')</a> | <a class="delete" href="#">$_('delete')</a></h4>
     #filter None#$row.description#end filter#
 </div>
 #end for
