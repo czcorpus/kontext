@@ -42,9 +42,10 @@ def fq(q):
             formatted query
     """
     return {
-        'mysql': q % { 'p' : '%s' },
-        'sqlite': q % { 'p' : '?' }
+        'mysql': q % {'p': '%s'},
+        'sqlite': q % {'p': '?'}
     }[_conf['database']['adapter']]
+
 
 def create_db_connection():
     """
@@ -65,6 +66,7 @@ def create_db_connection():
         import sqlite3
         return sqlite3.connect(get('database', 'name'))
 
+
 def get(section, key=None, default=None):
     """
     Gets a configuration value.
@@ -82,19 +84,21 @@ def get(section, key=None, default=None):
         return _conf[section][key]
     return default
 
+
 def set(section, key, value):
     if not section in _conf:
         _conf[section] = {}
     _conf[section][key] = value
 
+
 def get_bool(section, key):
     """
     """
     return {
-        'true' : True,
-        '1' : True,
-        'false' : False,
-        '0' : False
+        'true': True,
+        '1': True,
+        'false': False,
+        '0': False
     }[get(section, str(key).lower())]
 
 
@@ -121,11 +125,11 @@ def parse_corplist(root, path='/', data=[]):
             sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
             num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
             data.append({
-                'id' : item.attrib['id'].lower(),
-                'path' : path,
-                'web' : web_url,
-                'sentence_struct' : sentence_struct,
-                'num_tag_pos' : num_tag_pos
+                'id': item.attrib['id'].lower(),
+                'path': path,
+                'web': web_url,
+                'sentence_struct': sentence_struct,
+                'num_tag_pos': num_tag_pos
             })
 
 
@@ -240,6 +244,7 @@ def create_salt(length=2):
     salt_chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
     return ''.join([salt_chars[random.randint(0, len(salt_chars) - 1)] for i in range(length)])
 
+
 def get_user_data():
     """
     """
@@ -251,6 +256,7 @@ def get_user_data():
     cursor.close()
     conn.close()
     return dict(zip(cols, row))
+
 
 def update_user_password(password):
     """
@@ -283,38 +289,16 @@ def get_corplist():
     if _corplist is None:
         conn = create_db_connection()
         cursor = conn.cursor()
-        cursor.execute(fq("SELECT corplist, sketches FROM user WHERE user LIKE %(p)s"),  (_user, ))
-        row = cursor.fetchone()
+        cursor.execute(fq("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
+                          " WHERE un.user = %(p)s"),  (_user, ))
+        rows = cursor.fetchall()
+        if len(rows) > 0:
+            cursor.close()
+            conn.close()
+            corpora = [row[0] for row in rows]
+        else:
+            corpora = []
 
-        c = row[0].split()
-        corpora = []
-
-        for i in c:
-            if i[0].startswith('@'):
-                i = i[1:]
-                cursor.execute(fq("""SELECT corpora.name
-                FROM corplist,relation,corpora
-                WHERE corplist.id=relation.corplist
-                  AND relation.corpora=corpora.id
-                  AND corplist.name=%(p)s"""), i)
-                row = cursor.fetchall()
-
-                for y in row:
-                    corpora.append(y[0])
-            else:
-                corpora.append(i)
-        cursor.close()
-        conn.close()
-        path_info =  os.getenv('PATH_INFO')
-
-        if path_info in ('/wsketch_form', '/wsketch', '/thes_form', '/thes', '/wsdiff_form', '/wsdiff'):
-            r = []
-            for ws in range(len(corpora)):
-                c = manatee.Corpus(corpora[ws]).get_conf('WSBASE')
-                if c == 'none':
-                    r.append(corpora[ws])
-            for x in r:
-                corpora.remove(x)
         corpora.sort()
         _corplist = corpora
     return _corplist
