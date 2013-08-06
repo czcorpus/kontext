@@ -60,7 +60,7 @@ class UCNKAuth(object):
             list of usernames with administrator privileges
         """
         self.db_conn = db_conn
-        self.corplist = None
+        self.corplist = []
         self.admins = admins
 
     def login(self, username, password):
@@ -131,52 +131,30 @@ class UCNKAuth(object):
 
     def get_corplist(self):
         """
-        Fetches list of corpora available to the current user
+        Fetches list of available corpora according to provided user
 
         Returns
         -------
-        corplist : list
-            list of corpora names (sorted alphabetically)
+        list
+          list of corpora names (sorted alphabetically) available to current user (specified in the _user variable)
         """
-        username = getattr(self, 'user', None)
-        if self.corplist is None:
-            cursor = self.db_conn.cursor()
-            cursor.execute(fq("SELECT corplist FROM user WHERE user LIKE %(p)s"),  (username, ))
-            row = cursor.fetchone()
-            if row is None:
-                row = ['']
+        global _corplist
 
-            c = row[0].split()
-            corpora = []
+        if len(self.corplist) == 0:
+            conn = self.db_conn
+            cursor = conn.cursor()
+            cursor.execute(fq("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
+                              " WHERE un.user = %(p)s"),  (self.user, ))
+            rows = cursor.fetchall()
+            if len(rows) > 0:
+                cursor.close()
+                corpora = [row[0] for row in rows]
+            else:
+                corpora = []
 
-            for i in c:
-                if i[0].startswith('@'):
-                    i = i[1:]
-                    cursor.execute(fq("SELECT corpora.name" +
-                                      " FROM corplist,relation,corpora" +
-                                      " WHERE corplist.id=relation.corplist" +
-                                      " AND relation.corpora=corpora.id"
-                                      " AND corplist.name=%(p)s"), i)
-                    row = cursor.fetchall()
-
-                    for y in row:
-                        corpora.append(y[0])
-                else:
-                    corpora.append(i)
-            cursor.close()
-            path_info = os.getenv('PATH_INFO')
-
-            if path_info in ('/wsketch_form', '/wsketch', '/thes_form', '/thes', '/wsdiff_form', '/wsdiff'):
-                r = []
-                for ws in range(len(corpora)):
-                    c = manatee.Corpus(corpora[ws]).get_conf('WSBASE')
-                    if c == 'none':
-                        r.append(corpora[ws])
-                for x in r:
-                    corpora.remove(x)
             corpora.sort()
-            self.corplist = tuple(corpora)
-        return self.corplist
+            _corplist = corpora
+        return _corplist
 
     def get_user_info(self):
         if hasattr(self, 'fullname') and self.fullname:
