@@ -108,7 +108,7 @@ if __name__ == '__main__':
     hdlr = handlers.RotatingFileHandler(settings.get('global', 'log_path'), maxBytes=(1 << 23), backupCount=50)
     hdlr.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
     # locale
     locale_dir = '../locale/' # TODO
