@@ -153,7 +153,7 @@ class RequestProcessingException(Exception):
         self.data = data
 
     def __getitem__(self, key):
-        return self.data[key]
+        return self.data.get(key, None)
 
     def __setitem__(self, key, value):
         self.data[key] = value
@@ -184,6 +184,10 @@ class UserActionException(Exception):
     """
     This exception should cover general errors occurring in CGIPublisher's action methods'
     """
+    pass
+
+
+class AuthException(UserActionException):
     pass
 
 
@@ -290,7 +294,6 @@ class CGIPublisher:
     def parse_parameters(self, selectorname=None,
                          environ=os.environ, post_fp=None):
         self.environ = environ
-
         named_args = load_user_settings_cookie(environ.get('HTTP_COOKIE', ''))
         self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
@@ -342,12 +345,14 @@ class CGIPublisher:
 
     def run_unprotected(self, path=None, selectorname=None):
         """
-        Runs an HTTP-mapped action in a mode which does wrap
-        error processing (i.e. it may throw an exception).
+        Runs an HTTP-mapped action in a mode which may throw an exception.
         """
         tmpl = None
         methodname = None
         try:
+            if len(self.corplist) == 0 or not self.corplist:
+                raise AuthException(_('You do not have an access to any corpus.'))
+
             if path is None:
                 path = self.import_req_path()
             named_args = self.parse_parameters(selectorname)
@@ -364,7 +369,7 @@ class CGIPublisher:
             self.output_result(methodname, tmpl, result, return_type)
         except Exception as e:
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
-            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
+            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname, parent_err=e)
 
     def run(self, path=None, selectorname=None):
         """
@@ -383,8 +388,9 @@ class CGIPublisher:
             if not self.headers_sent:
                 self.output_headers(return_type=return_type)
                 self.headers_sent = True
-
-            if settings.is_debug_mode() or type(err) is UserActionException:
+            import logging
+            logging.getLogger(__name__).info(err.__class__)
+            if settings.is_debug_mode() or isinstance(err['parent_err'], UserActionException):
                 message = u'%s' % err
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
@@ -435,7 +441,7 @@ class CGIPublisher:
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
-                if settings.is_debug_mode() or type(e) is UserActionException:
+                if settings.is_debug_mode() or isinstance(e, UserActionException):
                     json_msg = u'%s' % e
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
