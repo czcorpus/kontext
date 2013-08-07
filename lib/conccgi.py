@@ -697,7 +697,7 @@ class ConcCGI(UserCGI):
                 'query_desc': query_desc,
                 'query_desc_raw': query_desc_raw,
                 'query_id': query_id,
-                'export_url': '%sto?q=%s' % (settings.get('global', 'root_url'), query_id),
+                'export_url': '%sto?q=%s' % (settings.get_root_url(), query_id),
                 'is_public': is_public
                 })
         return out
@@ -1139,6 +1139,14 @@ class ConcCGI(UserCGI):
                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
+        logging.getLogger(__name__).debug(os.environ)
+        q_encoded = self.urlencode([('q', q) for q in self.q])
+        url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
+                                                           self.usesubcorp, q_encoded)
+        description = "%s::\n\n\t%s\n" % (_('Auto-saved query'), ';'.join(self.q))
+        query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
+                                               url=url, tmp=0, description=description, query_id=None, public=0)
+
         return self.view()
 
     first.template = 'view.tmpl'
@@ -2868,10 +2876,10 @@ class ConcCGI(UserCGI):
         return out
     stats.template = 'stats.tmpl'
 
-    def ajax_save_query(self, description='', url='', query_id='', public=''):
+    def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
         html = backend.query_storage.decode_description(description)
         query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
-                                               url=url, description=description, query_id=query_id, public=int(public))
+                                               url=url, tmp=0, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html, 'queryId': query_id}
     ajax_save_query.return_type = 'json'
 

@@ -275,11 +275,21 @@ def create_speech_url(corpus_name, speech_id):
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
 
-def get_root_uri():
+def get_uri_scheme_name():
+    if os.getenv('SCRIPT_URI').startswith('https'):
+        return 'https'
+    elif os.getenv('SCRIPT_URI').startswith('http'):
+        return 'http'
+    else:
+        return ''
+
+
+def get_root_url():
     """
     Returns root URL of the application
     """
-    return 'http://%s%s' % (os.getenv('SERVER_NAME'), os.getenv('REQUEST_URI').replace('user_password', 'first_form'))
+    path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
 
 
 def supports_password_change():
