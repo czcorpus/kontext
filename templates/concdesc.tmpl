@@ -74,6 +74,7 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
 
 #if $supports_query_save
     <h3>$_('User\'s note')</h3>
+    <p id="desc-area-switch-hint">$_('Click on the description area to start editing.')</p>
     <div id="query-desc-wrapper">
         <div id="query-desc-view" title="$_('Click to edit')">#filter None#$query_desc#end filter#</div>
         <div id="query-desc-editor" style="display: none">

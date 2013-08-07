@@ -28,7 +28,7 @@ class QueryStorage(object):
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = db.open(conf.get('global', 'ucnk:database'))
+        self.conn = db.open(conf.get('plugins', 'query_storage')['ucnk:db_path'])
 
     def write(self, user, corpname, url, public, tmp, description=None,  query_id=None):
         """

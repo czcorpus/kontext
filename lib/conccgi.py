@@ -1145,7 +1145,7 @@ class ConcCGI(UserCGI):
                                                                self.usesubcorp, q_encoded)
             description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
             plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
-                                        url=url, tmp=0, description=description, query_id=None, public=0)
+                                        url=url, tmp=1, description=description, query_id=None, public=0)
 
         return self.view()
 
