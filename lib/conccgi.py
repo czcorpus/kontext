@@ -27,8 +27,8 @@ import conclib
 import version
 from butils import *
 from CGIPublisher import JsonEncodedData, UserActionException
-import backend
-from backend import settings
+import plugins
+import settings
 import taghelper
 
 
@@ -253,7 +253,7 @@ class ConcCGI(UserCGI):
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
 
     def pre_dispatch(self):
-        self.cm = corplib.CorpusManager(backend.auth.get_corplist(), self.subcpath,
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(), self.subcpath,
                                         self.gdexpath)
 
     def _attach_tag_builder(self, tpl_out):
@@ -297,7 +297,7 @@ class ConcCGI(UserCGI):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not cn in backend.auth.get_corplist():
+            if not cn in plugins.auth.get_corplist():
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
@@ -677,10 +677,10 @@ class ConcCGI(UserCGI):
         query_desc_raw = ''
         is_public = True
         if query_id and supports_query_save:
-            ans = backend.query_storage.get_user_query(backend.auth.get_user_info()['username'], query_id)
+            ans = plugins.query_storage.get_user_query(plugins.auth.get_user_info()['username'], query_id)
             if ans:
                 query_desc_raw = ans['description']
-                query_desc = backend.query_storage.decode_description(query_desc_raw)
+                query_desc = plugins.query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
             else:
                 out['error'] = _('Cannot access user-defined query description.')
@@ -1139,13 +1139,14 @@ class ConcCGI(UserCGI):
                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
-        logging.getLogger(__name__).debug(os.environ)
-        q_encoded = self.urlencode([('q', q) for q in self.q])
-        url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
-                                                           self.usesubcorp, q_encoded)
-        description = "%s::\n\n\t%s\n" % (_('Auto-saved query'), ';'.join(self.q))
-        query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
-                                               url=url, tmp=0, description=description, query_id=None, public=0)
+
+        if plugins.has_plugin('query_storage'):
+            q_encoded = self.urlencode([('q', q) for q in self.q])
+            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
+                                                               self.usesubcorp, q_encoded)
+            description = "%s::\n\n\t%s\n" % (_('Auto-saved query'), ';'.join(self.q))
+            plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
+                                        url=url, tmp=0, description=description, query_id=None, public=0)
 
         return self.view()
 
@@ -2857,7 +2858,7 @@ class ConcCGI(UserCGI):
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
-        if backend.auth.is_administrator():
+        if plugins.auth.is_administrator():
             import system_stats
             data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
             maxmin = {}
@@ -2877,25 +2878,25 @@ class ConcCGI(UserCGI):
     stats.template = 'stats.tmpl'
 
     def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
-        html = backend.query_storage.decode_description(description)
-        query_id = backend.query_storage.write(user=backend.auth.get_user_info()['username'], corpname=self.corpname,
+        html = plugins.query_storage.decode_description(description)
+        query_id = plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
                                                url=url, tmp=0, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html, 'queryId': query_id}
     ajax_save_query.return_type = 'json'
 
     def ajax_delete_query(self, query_id=''):
-        user_id = backend.auth.get_user_info()['username']
-        backend.query_storage.delete_user_query(user_id, query_id)
+        user_id = plugins.auth.get_user_info()['username']
+        plugins.query_storage.delete_user_query(user_id, query_id)
         return {}
     ajax_delete_query.return_type = 'json'
 
     def ajax_undelete_query(self, query_id=''):
         from datetime import datetime
 
-        user_id = backend.auth.get_user_info()['username']
-        backend.query_storage.undelete_user_query(user_id, query_id)
-        query = backend.query_storage.get_user_query(user_id, query_id)
-        desc = backend.query_storage.decode_description(query['description'])
+        user_id = plugins.auth.get_user_info()['username']
+        plugins.query_storage.undelete_user_query(user_id, query_id)
+        query = plugins.query_storage.get_user_query(user_id, query_id)
+        desc = plugins.query_storage.decode_description(query['description'])
 
         html = """<div class="query-history-item" data-query-id="%s">
                 <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a></h4>
@@ -2907,12 +2908,15 @@ class ConcCGI(UserCGI):
     ajax_undelete_query.return_type = 'json'
 
     def query_history(self):
-        rows = backend.query_storage.get_user_queries(backend.auth.get_user_info()['username'])
+        if plugins.has_plugin('query_storage'):
+            rows = plugins.query_storage.get_user_queries(plugins.auth.get_user_info()['username'])
+        else:
+            rows = []
         return {'data': rows}
 
     def to(self, q=''):
-        user_id = backend.auth.get_user_info()['username']
-        row = backend.query_storage.get_user_query(user_id, q)
+        user_id = plugins.auth.get_user_info()['username']
+        row = plugins.query_storage.get_user_query(user_id, q)
         if row:
             self.redirect('%s&query_id=%s' % (row['url'], row['id']))
         return {}

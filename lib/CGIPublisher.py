@@ -30,7 +30,7 @@ import logging
 import gettext
 import locale
 
-import backend
+import plugins
 import settings
 import auth
 
@@ -219,7 +219,7 @@ class CGIPublisher(object):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
     def auth(self):
-        ans = backend.auth.auth_session(self.get_auth_id())
+        ans = plugins.auth.auth_session(self.get_auth_id())
         self._anonymous = 0 if ans else 1
         return ans
 
