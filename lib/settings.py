@@ -30,6 +30,7 @@ auth = None  # authentication module (this is set from the outside)
 # are considered to be lists of key->value pairs (i.e. no complex types).
 conf_parsers = {
     'corplist': 'parse_corplist',
+    'plugins': 'parse_plugins',
     'tagsets': None,
 
 }
@@ -66,7 +67,7 @@ def set(section, key, value):
 
 def get_bool(section, key):
     """
-    The same as get() but returns a bool type
+    The same as get() but returnparse_pluginss a bool type
     (True for 'true', '1' values, False for 'false', '0' values)
     """
     return {
@@ -82,6 +83,10 @@ def get_int(section, key):
     The same as get() but returns an int type
     """
     return int(get(section, key))
+
+
+def custom_prefix(elm):
+    return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
 
 
 def parse_corplist_node(root, data, path='/'):
@@ -109,6 +114,37 @@ def parse_corplist_node(root, data, path='/'):
             })
 
 
+def parse_general_tree(section):
+    ans = {}
+    for item in section:
+        if item.tag is etree.Comment:
+            continue
+        elif item.tag in conf_parsers:
+            node_processor = conf_parsers[item.tag]
+            if node_processor is not None:
+                getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
+            else:
+                pass  # we ignore items with None processor deliberately
+        else:
+            item_id = '%s%s' % (custom_prefix(item), item.tag)
+            if len(item.getchildren()) == 0:
+                ans[item_id] = item.text
+            else:
+                item_list = []
+                for sub_item in item:
+                    item_list.append(sub_item.text)
+                ans[item_id] = tuple(item_list)
+    return ans
+
+
+def parse_plugins(root):
+    global _conf
+
+    _conf['plugins'] = {}
+    for item in root:
+        _conf['plugins'][item.tag] = parse_general_tree(item)
+
+
 def parse_corplist(root):
     global _conf
 
@@ -132,31 +168,17 @@ def parse_config(path):
     path : str
       a file system path to the configuration file
     """
+    global _conf
+
     xml = etree.parse(open(path))
     root = xml.getroot()
-    custom_prefix = lambda elm: '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
 
     for section in root:
-        section_id = '%s%s' % (custom_prefix(section), section.tag)
-        _conf[section_id] = {}
-        for item in section:
-            if item.tag is etree.Comment:
-                continue
-            elif item.tag in conf_parsers:
-                node_processor = conf_parsers[item.tag]
-                if node_processor is not None:
-                    getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
-                else:
-                    pass  # we ignore items with None processor deliberately
-            else:
-                item_id = '%s%s' % (custom_prefix(item), item.tag)
-                if len(item.getchildren()) == 0:
-                    _conf[section_id][item_id] = item.text
-                else:
-                    item_list = []
-                    for sub_item in item:
-                        item_list.append(sub_item.text)
-                    _conf[section_id][item_id] = tuple(item_list)
+        if section.tag in conf_parsers:
+            getattr(sys.modules[__name__], conf_parsers[section.tag])(section)
+        else:
+            section_id = '%s%s' % (custom_prefix(section), section.tag)
+            _conf[section_id] = parse_general_tree(section)
 
 
 def load(conf_path='../config.xml'):

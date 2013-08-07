@@ -25,10 +25,9 @@ import json
 sys.path.insert(0, '../lib')  # to be able to import application libraries
 sys.path.insert(0, '..')   # to be able to import compiled template modules
 
-import backend
+import plugins
 import settings
 settings.load()
-backend.settings = settings
 
 if settings.is_debug_mode():
     cgitb.enable()
@@ -45,15 +44,28 @@ from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
-auth_module = __import__(settings.get('global', 'auth_module'), fromlist=[])
-backend.auth = auth_module.create_instance(settings)
-backend.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
+# implicit plugins BEGIN ###
+
+auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
+plugins.auth = auth_module.create_instance(settings)
+plugins.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
 
 try:
-    query_storage_module = __import__(settings.get('global', 'query_storage_module'), fromlist=[])
-    backend.query_storage = query_storage_module.QueryStorage(settings)
+    query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])
+    if query_storage_module:
+        plugins.query_storage = query_storage_module.QueryStorage(settings)
 except ImportError:
     settings.set('global', 'query_storage_module', None)
+
+try:
+    appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
+    if appbar_module:
+        plugins.application_bar = appbar_module.AppBar(settings)
+except ImportError:
+    settings.set('global', 'appbar_module', None)
+
+# implicit plugins END ###
+
 
 class BonitoCGI (ConcCGI, UserCGI):
 
