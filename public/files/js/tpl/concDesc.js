@@ -32,13 +32,16 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
         $('#query-desc-view').on('click', function () {
             $('#query-desc-view').css('display', 'none');
             $('#query-desc-editor').css('display', 'block');
+            $('#desc-area-switch-hint').css('display', 'none');
             $('#query-desc-editor textarea').focus();
         });
 
         $('#exit-editation').on('click', function () {
             $('#query-desc-view').css('display', 'block').html($('#query-desc-editor textarea').val());
-            lib.saveQuery();
-            $('#query-desc-editor').css('display', 'none');
+            lib.saveQuery(function () {
+                $('#query-desc-editor').css('display', 'none');
+                $('#desc-area-switch-hint').css('display', 'block');
+            });
         });
 
         $('input[name="export-url"]').on('focus', function (event) {
@@ -49,7 +52,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
     /**
      *
      */
-    lib.saveQuery = function () {
+    lib.saveQuery = function (doneCallback) {
         var description = $('#query-desc-editor textarea').val();
         $('#query-desc-view').css('display', 'block').html('<img src="../files/img/ajax-loader.gif" style="display: block; width: 24px; height: 24px; margin: 50px auto;" />');
 
@@ -69,6 +72,9 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
                 if (!data.error) {
                     mainPage.conf.queryId = data.queryId;
                     $('#query-desc-view').css('display', 'block').html(data.rawHtml);
+                    if (typeof doneCallback === 'function') {
+                        doneCallback();
+                    }
 
                 } else {
                     mainPage.showErrorMessage(mainPage.conf.messages.failed_to_save_the_query);

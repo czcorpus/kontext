@@ -1248,3 +1248,7 @@ table#multilevel-freq-params td.level {
     background-color: #DCDCDC;
     border-color: #A7A7A7;
 }
+
+#desc-area-switch-hint {
+    margin: 0;
+}
