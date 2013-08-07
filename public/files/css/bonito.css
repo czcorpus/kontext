@@ -1215,12 +1215,28 @@ table#multilevel-freq-params td.level {
 }
 
 .query-history-item .document {
+    clear: both;
     border-style: solid;
     border-color: #9FC4E0;
     border-width: 1px 0 0 0;
     background-color: #CCE3F4;
     margin-bottom: 20px;
     padding: 10px 5px;
+}
+
+.query-history-item h4.info {
+    width: 40%;
+    float: left;
+}
+
+.query-history-item h4.info .corpname {
+    font-weight: bold;
+}
+
+.query-history-item h4.actions {
+    width: 40%;
+    float: right;
+    text-align: right;
 }
 
 .query-history-item h4 {
