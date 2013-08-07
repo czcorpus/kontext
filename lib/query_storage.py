@@ -30,7 +30,7 @@ class QueryStorage(object):
         """
         self.conn = db.open(conf.get('global', 'ucnk:database'))
 
-    def write(self, user, corpname, url, description, public,  query_id=None):
+    def write(self, user, corpname, url, public, tmp, description=None,  query_id=None):
         """
         Writes data as a new saved query
 
@@ -130,6 +130,8 @@ class QueryStorage(object):
         """
         from docutils.core import publish_string
 
+        if s in ('', None):
+            return ''
         is_unicode = type(s) is unicode
         html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
                                  writer_name='html')

@@ -54,12 +54,15 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
         $('#query-desc-view').css('display', 'block').html('<img src="../files/img/ajax-loader.gif" style="display: block; width: 24px; height: 24px; margin: 50px auto;" />');
 
         $.ajax({
-            url: 'ajax_save_query?corpname=' + mainPage.conf.corpname + '&query_id=' + mainPage.conf.queryId,
+            url: 'ajax_save_query',
             type: 'POST',
             data: {
                 description : description,
                 url: win.location.href,
-                'public': $('#public-flag-checkbox').is(':checked') ? 1 : 0
+                query_id: mainPage.conf.queryId,
+                corpname: mainPage.conf.corpname,
+                'public': $('#public-flag-checkbox').is(':checked') ? 1 : 0,
+                tmp: 0 // manually saved queries are persistent by default
             },
             dataType: 'json',
             success: function (data) {

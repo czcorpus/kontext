@@ -9,7 +9,7 @@
 
 .application input[type="submit"] {
     background-color: #d7d7d7;
-    border: outset 2px #d7d7d7
+    border: outset 2px #d7d7d7;
 }
 
 .application input[class="button"] {
@@ -29,7 +29,7 @@
     display:block;
     margin:0;
     overflow:auto;
-    padding: 25px 20px;
+    padding: 10px 20px;
 }
 
 #content form {
@@ -835,8 +835,9 @@ h1 {
 
 h2 {
     font-size:140%;
-    margin-bottom:.5em;
-    margin-top:1.5em;
+    margin-bottom: 1em;
+    margin-top: .5em;
+    font-weight: 500;
 }
 
 h3 {
@@ -1232,6 +1233,7 @@ table#multilevel-freq-params td.level {
 
 .query-history-item h4 {
     font-weight: normal;
+    margin-left: 10px;
 }
 
 .query-history-item h4 a.delete {
