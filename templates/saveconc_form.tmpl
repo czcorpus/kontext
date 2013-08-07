@@ -32,13 +32,13 @@ require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm,
 
 #def main
 #filter WebSafe
-<h3>$_("Save Concordance")
+<h2>$_("Save Concordance")
     #if $varExists('helpsite')
     <a href="${helpsite}saveconc" rel="help" title='$_("? Help on Saving Conc.")' target="_blank" name="help_icon" id="help_icon">
         <img src="$files_path/img/help.png" alt='$_("? Help on Saving Conc.")' />
     </a>
     #end if
-</h3>
+</h2>
 <form action="saveconc">
     #filter None
     $input_hidden
