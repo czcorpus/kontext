@@ -672,11 +672,10 @@ class ConcCGI(UserCGI):
         self.disabled_menu_items = ('menu-save',)
         out = {}
 
-        supports_query_save = settings.get('global', 'query_storage_module') is not None
         query_desc = ''
         query_desc_raw = ''
         is_public = True
-        if query_id and supports_query_save:
+        if query_id and plugins.has_plugin('query_storage'):
             ans = plugins.query_storage.get_user_query(plugins.auth.get_user_info()['username'], query_id)
             if ans:
                 query_desc_raw = ans['description']
@@ -693,7 +692,7 @@ class ConcCGI(UserCGI):
                                                corpname=self.corpname,
                                                cache_dir=self.cache_dir,
                                                subchash=getattr(self._corp(), "subchash", None))],
-                'supports_query_save': supports_query_save,
+                'supports_query_save': plugins.has_plugin('query_storage'),
                 'query_desc': query_desc,
                 'query_desc_raw': query_desc_raw,
                 'query_id': query_id,
@@ -2897,11 +2896,13 @@ class ConcCGI(UserCGI):
         plugins.query_storage.undelete_user_query(user_id, query_id)
         query = plugins.query_storage.get_user_query(user_id, query_id)
         desc = plugins.query_storage.decode_description(query['description'])
+        autosaved_class = ' autosaved' if query['tmp'] else ''
+        notification_autosaved = "| %s" % _('autosaved') if query['tmp'] else ''
 
-        html = """<div class="query-history-item" data-query-id="%s">
-                <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a></h4>
-                %s""" % (query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
-                          _('delete'), desc)
+        html = """<div class="query-history-item%s" data-query-id="%s">
+                <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a>%s</h4>
+                %s""" % (autosaved_class, query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
+                          _('delete'), notification_autosaved, desc)
         return {
             'html': html
         }

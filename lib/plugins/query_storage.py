@@ -19,7 +19,7 @@ from db import fq
 
 class QueryStorage(object):
 
-    cols = ('id', 'user', 'corpname', 'url', 'description', 'created', 'updated', 'public')
+    cols = ('id', 'user', 'corpname', 'url', 'description', 'created', 'updated', 'public', 'tmp')
 
     def __init__(self, conf):
         """
@@ -51,13 +51,14 @@ class QueryStorage(object):
             while id_exists(query_id[:i]) and i < 32:
                 i += 1
             query_id = query_id[:i]
-            cursor.execute(fq("INSERT INTO saved_queries (id, user, corpname, url, description, created, public) "
-                              + "VALUES (%(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s)"),
-                          (query_id, user, corpname, url, description, created, public))
+            cursor.execute(fq("INSERT INTO saved_queries (id, user, corpname, url, description, created, public, tmp) "
+                              + "VALUES (%(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s)"),
+                          (query_id, user, corpname, url, description, created, public, tmp))
         else:
             updated = int(time.mktime(datetime.now().timetuple()))
-            cursor.execute(fq("UPDATE saved_queries SET description = %(p)s, updated = %(p)s, public = %(p)s "
-                              + "WHERE user = %(p)s AND id = %(p)s"), (description, updated, public, user, query_id))
+            cursor.execute(fq("UPDATE saved_queries SET description = %(p)s, updated = %(p)s, public = %(p)s, "
+                              + "tmp = %(p)s WHERE user = %(p)s AND id = %(p)s"), (description, updated, public, tmp,
+                                                                                   user, query_id))
         self.conn.commit()
         return query_id
 

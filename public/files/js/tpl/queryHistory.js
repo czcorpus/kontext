@@ -43,7 +43,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
             success: function (data) {
                 if (!data.error) {
                     $('#removed-query-history-item').replaceWith(data.html);
-                    lib.bindEvents($('div[class="query-history-item"][data-query-id="' + queryId + '"]'));
+                    lib.bindEvents($('div.query-history-item[data-query-id="' + queryId + '"]'));
                     mainPage.showMessage(mainPage.conf.messages.undeleted_query);
 
                 } else {
