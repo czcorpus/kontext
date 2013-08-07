@@ -55,14 +55,14 @@ try:
     if query_storage_module:
         plugins.query_storage = query_storage_module.QueryStorage(settings)
 except ImportError:
-    settings.set('global', 'query_storage_module', None)
+    pass
 
 try:
     appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
     if appbar_module:
         plugins.application_bar = appbar_module.AppBar(settings)
 except ImportError:
-    settings.set('global', 'appbar_module', None)
+    pass
 
 # implicit plugins END ###
 
