@@ -42,13 +42,13 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
 
 #def main
 #filter WebSafe
-<h3>
+<h2>
 #if $keywords
   $_("Save Keywords")
 #else
   $_("Save Word List")
 #end if
-</h3>
+</h2>
 <form action="savewl">
 <fieldset class="anonymous">
 #unless $_corpus_architect

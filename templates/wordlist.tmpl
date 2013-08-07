@@ -64,7 +64,7 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 
 #def main
 #filter WebSafe
-  <h3>$_("Word list")</h3>
+  <h2>$_("Word list")</h2>
   $_("Corpus"): <b>$corp_full_name</b>
 #if $usesubcorp
   <br/>$_("Subcorpus"): <b>$usesubcorp</b>
