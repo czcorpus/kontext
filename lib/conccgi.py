@@ -1143,7 +1143,7 @@ class ConcCGI(UserCGI):
             q_encoded = self.urlencode([('q', q) for q in self.q])
             url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
                                                                self.usesubcorp, q_encoded)
-            description = "%s::\n\n\t%s\n" % (_('Auto-saved query'), ';'.join(self.q))
+            description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
             plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
                                         url=url, tmp=0, description=description, query_id=None, public=0)
 
