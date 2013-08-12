@@ -591,11 +591,12 @@ class ConcCGI(UserCGI):
         out['shuffle_notification'] = True if 'f' in self.q else False
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
-         % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
-            self.align_kwic, 1, conc.size())
+            % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
+               self.align_kwic, 1, conc.size())
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
 
         return out
 
@@ -1884,6 +1885,7 @@ class ConcCGI(UserCGI):
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
+            # custom save is solved in templates because of compatibility issues
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
