@@ -595,9 +595,7 @@ class ConcCGI(UserCGI):
             self.align_kwic, 1, conc.size())
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
-        self._add_save_menu_item('ODS', 'saveconc', params % 'ods')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
-        self._add_save_menu_item(_('link'), '#', params % 'link')
 
         return out
 
@@ -1521,9 +1519,7 @@ class ConcCGI(UserCGI):
                    '%s', self.heading, self.numbering, self.align_kwic, 1, 10000)
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
-        self._add_save_menu_item('ODS', 'saveconc', params % 'ods')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
-        self._add_save_menu_item(_('link'), '#', params % 'link')
 
         return result
 
@@ -1800,7 +1796,8 @@ class ConcCGI(UserCGI):
                  ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
         self.active_menu_item = 'menu-word-list'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+                                    'menu-collocations', 'menu-conc-desc', 'menu-concordance')
+
         if not wlpat:
             self.wlpat = '.*'
         if '.' in self.wlattr:
@@ -1827,8 +1824,9 @@ class ConcCGI(UserCGI):
 
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
         result = {
-            'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
-                          % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)
+            'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
+                           + '&include_nonwords=%s&wlsort=f') % (self.wlattr, self.corpname, self.usesubcorp,
+                                                                 self.wlpat, self.wlminfreq, self.include_nonwords)
         }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
@@ -1845,11 +1843,11 @@ class ConcCGI(UserCGI):
                 out = self.call_function(kw_func, args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
                 result.update({'Keywords': [{'str': w, 'score': round(s, 1),
-                                        'freq': round(f, 1),
-                                        'freq_ref': round(fr, 1),
-                                        'rel': round(rel, 1),
-                                        'rel_ref': round(relref, 1)}
-                                       for s, rel, relref, f, fr, w in out],
+                                             'freq': round(f, 1),
+                                             'freq_ref': round(fr, 1),
+                                             'rel': round(rel, 1),
+                                             'rel_ref': round(relref, 1)}
+                                            for s, rel, relref, f, fr, w in out],
                           'ref_corp_full_name': ref_name
                 })
                 result_list = result['Keywords']
@@ -1881,7 +1879,13 @@ class ConcCGI(UserCGI):
             except Exception:
                 result['wlattr_label'] = self.wlattr
 
+            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=1000' \
+                     % (self.wlattr, wlpat)
+            self._add_save_menu_item('CSV', 'savewl', params % 'csv')
+            self._add_save_menu_item('XML', 'savewl', params % 'xml')
+            self._add_save_menu_item('TXT', 'savewl', params % 'text')
             return result
+
         except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
@@ -1977,7 +1981,7 @@ class ConcCGI(UserCGI):
         self.wlmaxitems = sys.maxint  # TODO
         ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                             ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
-        err = validate_range((from_line, to_line), (1, len(ans['Items']) if 'Items' in ans else 0))
+        err = validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
