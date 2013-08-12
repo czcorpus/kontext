@@ -128,26 +128,8 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     /**
      *
      */
-    lib.bindClicks = function (conf) {
-        // existing within conditions with the 'close link'
-        $('#subc-spec-section .within-selection a.close-link').on('click', function (event) {
-            $(event.target).closest('tr.within-selection').remove();
-        });
+    lib.bindClicks = function () {
 
-        // functionality to add new within conditions
-        $('#another-subc-condition-button').on('click', function () {
-            var jqNewConditionItem = $('#subc-spec-section .within-selection:first').clone(); // always clone fixed item
-
-            jqNewConditionItem.find('.struct-selector').prepend('<span>' + conf.messages.and + '</span>');
-            jqNewConditionItem.find('td:last').append('<a class="close-link">'
-                + '<img src="../files/img/close-icon.png" alt="' + conf.messages.close
-                + '" title="' + conf.messages.close + '" /></a>');
-            jqNewConditionItem.find('a.close-link').on('click', function (event) {
-                $(event.target).closest('tr.within-selection').remove();
-            });
-            jqNewConditionItem.find('input[name="within_condition"]').val('');
-            $('#subc-spec-section .within-selection:last').after(jqNewConditionItem);
-        });
     };
 
     /**
