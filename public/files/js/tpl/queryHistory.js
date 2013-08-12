@@ -20,7 +20,7 @@
  * This module contains functionality related directly to the query_history.tmpl template
  *
  */
-define(['jquery', 'tpl/document'], function ($, mainPage) {
+define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, mainPage) {
     'use strict';
 
     var lib = {},
@@ -112,6 +112,15 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
     lib.init = function (conf) {
         mainPage.init(conf);
         lib.bindEvents();
+
+        $('#from-date-filter').datepicker({
+            dateFormat: "yy-mm-dd",
+            defaultDate: -2
+        });
+        $('#to-date-filter').datepicker({
+            dateFormat: "yy-mm-dd",
+            defaultDate: 0
+        });
     };
 
     return lib;
