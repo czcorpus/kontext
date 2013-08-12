@@ -151,9 +151,8 @@ $_ca_topbar
                     #for $item in $save_menu
                     <li><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
                     #end for
-                    #if $save_menu
-                    <li><a href="#">Custom&#8230;</a></li>
-                    #end if
+                    #block custom_save
+                    #end block
                 </ul>
             </li>
 

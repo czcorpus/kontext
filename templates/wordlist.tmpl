@@ -61,6 +61,9 @@ require(['tpl/wordlist', 'domReady!'], function(pageSelf, domReady) {
 });
 #end def
 
+#def custom_save
+    <li><a href="savewl_form?$curr_settings">$_('Custom')...</a></li>
+#end def
 
 #def main
 #filter WebSafe
