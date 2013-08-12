@@ -284,6 +284,15 @@ class ConcCGI(UserCGI):
         out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
                              + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
 
+    def _save_query(self):
+        if plugins.has_plugin('query_storage'):
+            q_encoded = self.urlencode([('q', q) for q in self.q])
+            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
+                                                               self.usesubcorp, q_encoded)
+            description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
+            plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
+                                        url=url, tmp=1, description=description, query_id=None, public=0)
+
     def preprocess_values(self, form):
         if self._corpus_architect:
             return
@@ -1138,14 +1147,7 @@ class ConcCGI(UserCGI):
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
 
-        if plugins.has_plugin('query_storage'):
-            q_encoded = self.urlencode([('q', q) for q in self.q])
-            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
-                                                               self.usesubcorp, q_encoded)
-            description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
-            plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
-                                        url=url, tmp=1, description=description, query_id=None, public=0)
-
+        self._save_query()
         return self.view()
 
     first.template = 'view.tmpl'
@@ -1196,6 +1198,7 @@ class ConcCGI(UserCGI):
             self.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
                                              rank, query))
         try:
+            self._save_query()
             return self.view()
         except:
             if within:
@@ -2914,12 +2917,19 @@ class ConcCGI(UserCGI):
         }
     ajax_undelete_query.return_type = 'json'
 
-    def query_history(self):
+    def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
         if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(plugins.auth.get_user_info()['username'])
+            rows = plugins.query_storage.get_user_queries(plugins.auth.get_user_info()['username'],
+                                                          from_date=from_date, to_date=to_date,
+                                                          offset=offset, limit=limit, types=types)
         else:
             rows = []
-        return {'data': rows}
+        return {
+            'data': rows,
+            'from_date': from_date,
+            'to_date': to_date,
+            'types': types
+        }
 
     def to(self, q=''):
         user_id = plugins.auth.get_user_info()['username']
