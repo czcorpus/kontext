@@ -52,48 +52,29 @@ require(['tpl/subcorpForm', 'domReady!'], function(pageSelf, domReady) {
 $corp_sel_node
 #end filter
 <tbody>
-    <tr class="required">
-    <th style="width: 20%">$_("New subcorpus name"):</th>
-    <td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>
-    </tr>
-    <tr>
-        <th>$_('Specify subcorpus using'):</th>
-        <td>
-            <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
-            <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
-        </td>
-    </tr>
-</tbody>
-<tbody id="subc-spec-section">
-    <tr>
-        <th colspan="2">$_('Condition within'):</th>
-    </tr>
-    #set $custom_within = $zip($within_struct, $within_condition)
-    #set $i = 0
-    #for $item in $custom_within
-    <tr class="within-selection">
-        <th class="struct-selector">
-            #if $i > 0
-            <span>$_('and')</span>
-            #end if
-            <select class="within-struct-selector" name="within_struct">
-                #for key, value in $structs_and_attrs.items()
-                <option value="$key" title="#echo (', ').join($value) #" #if $key == $item[0]#selected="selected"#end if#>$key</option>
-                #end for
-            </select> =
-        </th>
-        <td>
-            <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$item[1]#end filter#" />
-            #if $i > 0
-            <a class="close-link"><img src="../files/img/close-icon.png" alt="$_('close')" title="$_('close')" /></a>
-            #end if
-        </td>
-    </tr>
-    #set $i = $i + 1
-    #end for
-    <tr>
-        <td colspan="2"><button id="another-subc-condition-button" type="button">$_('Add another condition')</button></td>
-    </tr>
+<tr class="required">
+<th style="width: 20%">$_("New subcorpus name"):</th>
+<td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>
+</tr>
+<tr>
+    <th>$_('Specify subcorpus using'):</th>
+    <td>
+        <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
+        <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
+    </td>
+</tr>
+<tr id="subc-spec-row">
+    <th>$_('Condition within')
+        <select id="within-struct-selector" name="within_struct">
+            #for key, value in $structs_and_attrs.items()
+            <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
+            #end for
+        </select>:
+    </th>
+    <td>
+        <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
+    </td>
+</tr>
 </tbody>
 </table>
 <input type="hidden" name="create" value="True" />
