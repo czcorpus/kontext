@@ -237,7 +237,9 @@ class CGIPublisher(object):
             self._session['user'] = None
 
     def _get_session_id(self):
-        return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
+        if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
+            return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
+        return None
 
     def _set_session_id(self, val):
         self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
