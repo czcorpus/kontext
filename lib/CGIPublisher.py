@@ -201,6 +201,7 @@ class CGIPublisher(object):
         self.environ = environ
         self.headers_sent = False
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._session = {}
 
         # correct _locale_dir
         if not os.path.isdir(self._locale_dir):
@@ -218,10 +219,28 @@ class CGIPublisher(object):
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
-    def auth(self):
-        ans = plugins.auth.auth_session(self.get_auth_id())
-        self._anonymous = 0 if ans else 1
-        return ans
+    def _init_session(self):
+        cookie_id = self._get_session_id()
+        if plugins.has_plugin('sessions'):
+            ans = plugins.sessions.load(cookie_id)
+        else:
+            ans = {'id': 0, 'data': {}}
+        self._set_session_id(ans['id'])
+        self._session = ans['data']
+
+        if 'user' in self._session and self._session['user']:
+            self._user = self._session['user']['user']
+            self._anonymous = 0
+        else:
+            self._user = None
+            self._anonymous = 1
+            self._session['user'] = None
+
+    def _get_session_id(self):
+        return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
+
+    def _set_session_id(self, val):
+        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
 
     def get_user_settings(self):
         """
@@ -234,9 +253,6 @@ class CGIPublisher(object):
            a dictionary containing all values stored as a JSON string in user_settings cookie
         """
         return json.loads(self._cookies['user_settings'].value) if 'user_settings' in self._cookies else {}
-
-    def get_auth_id(self):
-        return self._cookies['ucnksessionid'].value if 'ucnksessionid' in self._cookies else None
 
     def get_uilang(self, locale_dir):
         """
@@ -266,7 +282,7 @@ class CGIPublisher(object):
     def init_locale(self):
 
         # locale
-        locale_dir = '../locale/' # TODO
+        locale_dir = '../locale/'  # TODO
         if not os.path.isdir (locale_dir):
             p = os.path.join (os.path.dirname (__file__), locale_dir)
             if os.path.isdir (p):
@@ -422,13 +438,13 @@ class CGIPublisher(object):
         tmpl = None
         methodname = None
         self.init_locale()
+        self._init_session()
 
         if path is None:
                 path = self.import_req_path()
-        self._user = self.auth()
+
         if self._user is None and path[0] not in ('login', 'loginx'):
-            self._headers['Location'] = 'login'
-            raise auth.AuthException(_('Unauthorized access. Please log in first.'))
+            self.redirect('login')
 
         try:
             self.pre_dispatch()
@@ -446,6 +462,10 @@ class CGIPublisher(object):
             cont = self.output_headers(return_type)
             if cont:
                 self.output_result(methodname, tmpl, result, return_type)
+
+            if plugins.has_plugin('sessions'):
+                plugins.sessions.save(self._get_session_id(), self._session)
+
         except Exception as e:
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
@@ -599,6 +619,7 @@ class CGIPublisher(object):
         -------
         bool : True if content should follow else False
         """
+        has_body = True
         user_settings = {}
         for k in self._user_settings:
             if k in self.__dict__:
@@ -613,9 +634,7 @@ class CGIPublisher(object):
             # Headers
             if 'Location' in self._headers:
                 outf.write('Location: %s\n' % self._headers['Location'])
-                outf.write('\n')
-                self.headers_sent = True
-                return False
+                has_body = False
             for k in sorted(self._headers.keys()):
                 outf.write('%s: %s\n' % (k, self._headers[k]))
             # Cookies
@@ -624,7 +643,7 @@ class CGIPublisher(object):
             outf.write('\n')
 
         self.headers_sent = True
-        return True
+        return has_body
 
     def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
                       return_template=False):

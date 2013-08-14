@@ -19,6 +19,7 @@ import os
 from CGIPublisher import UserActionException
 
 import settings
+import plugins
 
 
 def load_opt_file(options, filepath):
@@ -47,11 +48,13 @@ class UserCGI (CGIPublisher.CGIPublisher):
 
     def _setup_user(self, corpname=''):
         options = {}
-        if not self._user:
-            self._user = 'anonymous'
-        load_opt_file(options, os.path.join(self._options_dir, self._user))
+        if self._user:
+            user_file_id = self._user
+        else:
+            user_file_id = 'anonymous'
+        load_opt_file(options, os.path.join(self._options_dir, user_file_id))
         CGIPublisher.correct_types(options, self.clone_self(), selector=1)
-        self._user_defaults(self._user)
+        self._user_defaults(user_file_id)
         self.__dict__.update(options)
 
     def _save_options(self, optlist=[], selector=''):
@@ -108,7 +111,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
             raise UserActionException(settings.auth.get_required_password_properties())
 
         settings.auth.update_user_password(new_passwd)
-        print('Location: %s' % settings.get_root_uri())
+        self.redirect(settings.get_root_uri())
 
     def login(self):
         self.disabled_menu_items = ('menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
@@ -116,16 +119,21 @@ class UserCGI (CGIPublisher.CGIPublisher):
         return {}
 
     def loginx(self, username='', password=''):
-        session_id = settings.auth.login(username, password)
-        self.redirect('%s%s' % (settings.get('global', 'root_url'), 'first_form'))
-        if session_id:
-            self._cookies[settings.get('global', 'auth_cookie_name')] = session_id
+        user = plugins.auth.login(username, password)
+        if user is not None:
+            self._session['user'] = user
+            self.redirect('%s%s' % (settings.get_root_url(), 'first_form'))
+        else:
+            self.redirect('login')
         return {}
 
     def logoutx(self):
-        settings.auth.logout(self._cookies[settings.get('global', 'auth_cookie_name')].value)
-        del(self._cookies[settings.get('global', 'auth_cookie_name')])
-        return {}
+        plugins.auth.logout(self._get_session_id())
+        self._session['user'] = None
+        self._user = None
+        return {
+            'notification': _('You have been logged out')
+        }
 
     logoutx.template = 'login.tmpl'
 

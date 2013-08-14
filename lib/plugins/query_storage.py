@@ -12,9 +12,7 @@
 
 from datetime import datetime
 import time
-
-import db
-from db import fq
+import sqlite3
 
 
 class QueryStorage(object):
@@ -28,8 +26,8 @@ class QueryStorage(object):
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = db.open(conf.get('plugins', 'query_storage')['ucnk:db_path'])
-        self.num_kept_records = conf.get('plugins', 'query_storage')['num_kept_records']
+        self.conn = sqlite3.connect(conf.get('plugins', 'query_storage')['ucnk:db_path'])
+        self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
     def write(self, user, corpname, url, public, tmp, description=None,  query_id=None):
@@ -44,7 +42,7 @@ class QueryStorage(object):
         cursor = self.conn.cursor()
 
         def id_exists(id):
-            cursor.execute(fq("SELECT COUNT (*) FROM saved_queries WHERE id = %(p)s LIMIT 1"), (id,))
+            cursor.execute("SELECT COUNT (*) FROM saved_queries WHERE id = ? LIMIT 1", (id,))
             return cursor.fetchone()[0]
 
         if not query_id:
@@ -54,14 +52,13 @@ class QueryStorage(object):
             while id_exists(query_id[:i]) and i < 32:
                 i += 1
             query_id = query_id[:i]
-            cursor.execute(fq("INSERT INTO saved_queries (id, user, corpname, url, description, created, public, tmp) "
-                              "VALUES (%(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s, %(p)s)"),
+            cursor.execute("INSERT INTO saved_queries (id, user, corpname, url, description, created, public, tmp) "
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                           (query_id, user, corpname, url, description, created, public, tmp))
         else:
             updated = int(time.mktime(datetime.now().timetuple()))
-            cursor.execute(fq("UPDATE saved_queries SET description = %(p)s, updated = %(p)s, public = %(p)s, "
-                              + "tmp = %(p)s WHERE user = %(p)s AND id = %(p)s"), (description, updated, public, tmp,
-                                                                                   user, query_id))
+            cursor.execute("UPDATE saved_queries SET description = ?, updated = ?, public = ?, "
+                           "tmp = ? WHERE user = ? AND id = ?", (description, updated, public, tmp, user, query_id))
 
         self.delete_old_records(cursor, user)
         self.conn.commit()
@@ -77,13 +74,13 @@ class QueryStorage(object):
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
             from_date = time.mktime(datetime(from_date[0], from_date[1], from_date[2], 0, 0, 0).timetuple())
-            opt_sql.append('created >= %(p)s')
+            opt_sql.append('created >= ?')
             sql_params.append(from_date)
 
         if to_date:
             to_date = [int(d) for d in to_date.split('-')]
             to_date = time.mktime(datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
-            opt_sql.append('created <= %(p)s')
+            opt_sql.append('created <= ?')
             sql_params.append(to_date)
 
         if types is None:
@@ -94,7 +91,7 @@ class QueryStorage(object):
             opt_sql.append('(%s)' % tmp)
 
         if limit:
-            limit_sql = "LIMIT %(p)s OFFSET %(p)s"
+            limit_sql = "LIMIT ? OFFSET ?"
             sql_params.append(limit)
             sql_params.append(offset)
         else:
@@ -104,14 +101,14 @@ class QueryStorage(object):
             opt_sql.insert(0, '')
 
         sql = ("SELECT %s FROM saved_queries"
-               " WHERE user = %%(p)s AND deleted IS NULL"
+               " WHERE user = ? AND deleted IS NULL"
                " %s "
                " ORDER BY created DESC, updated DESC "
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
 
         sql_params.insert(0, user)
         cursor = self.conn.cursor()
-        cursor.execute(fq(sql), tuple(sql_params))
+        cursor.execute(sql, tuple(sql_params))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
         for row in rows:
             row['description'] = self.decode_description(row['description'])
@@ -123,14 +120,13 @@ class QueryStorage(object):
         """
 
         """
-        cursor.execute(fq("SELECT COUNT(*) FROM saved_queries WHERE user=%(p)s AND deleted IS NULL AND tmp = 1"),
-                       (user,))
+        cursor.execute("SELECT COUNT(*) FROM saved_queries WHERE user = ? AND deleted IS NULL AND tmp = 1", (user,))
         row = cursor.fetchone()
         if row:
             num_delete = row[0] - self.num_kept_records
             if num_delete > 0:
-                cursor.execute(fq("DELETE FROM saved_queries WHERE user=%(p)s AND deleted IS NULL AND tmp = 1"
-                                  + " ORDER BY created LIMIT %(p)s"), (user, num_delete))
+                cursor.execute("DELETE FROM saved_queries WHERE user=? AND deleted IS NULL AND tmp = 1"
+                               " ORDER BY created LIMIT ?", (user, num_delete))
 
     def get_user_query(self, user, id):
         """
@@ -138,8 +134,7 @@ class QueryStorage(object):
         In case the query is not public also user identifier has to match (else None is returned.
         """
         cursor = self.conn.cursor()
-        cursor.execute(fq("SELECT %s FROM saved_queries WHERE id = %%(p)s" % ','.join(QueryStorage.cols)),
-                       (id, ))
+        cursor.execute("SELECT %s FROM saved_queries WHERE id = ?" % ','.join(QueryStorage.cols), (id, ))
         row = cursor.fetchone()
         if row:
             row = dict(zip(QueryStorage.cols, row))
@@ -150,14 +145,12 @@ class QueryStorage(object):
     def delete_user_query(self, user, id):
         cursor = self.conn.cursor()
         deleted = int(time.mktime(datetime.now().timetuple()))
-        cursor.execute(fq("UPDATE saved_queries SET deleted = %(p)s WHERE user = %(p)s AND id = %(p)s"),
-                       (deleted, user, id))
+        cursor.execute("UPDATE saved_queries SET deleted = ? WHERE user = ? AND id = ?", (deleted, user, id))
         self.conn.commit()
 
     def undelete_user_query(self, user, id):
         cursor = self.conn.cursor()
-        cursor.execute(fq("UPDATE saved_queries SET deleted = NULL WHERE user = %(p)s AND id = %(p)s"),
-                       (user, id))
+        cursor.execute("UPDATE saved_queries SET deleted = NULL WHERE user = ? AND id = ?", (user, id))
         self.conn.commit()
 
     def make_query_hash(self, user, url):
