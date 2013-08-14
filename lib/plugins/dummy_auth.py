@@ -84,14 +84,6 @@ class DummyAuthHandler(object):
         """
         return self.corplist
 
-    def get_user_info(self):
-        return {
-            'username': 'public',
-            'firstname': 'public',
-            'lastname': 'user',
-            'email': None
-        }
-
     def is_administrator(self):
         """
         Tests whether the current user's name belongs to the 'administrators' group

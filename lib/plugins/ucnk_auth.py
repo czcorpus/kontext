@@ -141,7 +141,7 @@ class UCNKAuth(object):
         -------
         str : session ID on success else None
         """
-        cols = ('id', 'user', 'pass', 'fullname')
+        cols = ('id', 'user', 'pass', 'firstName', 'surname')
         cursor = self.db_conn.cursor()
         cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (username, ))
         row = cursor.fetchone()
@@ -149,8 +149,11 @@ class UCNKAuth(object):
             row = dict(zip(cols, row))
         cursor.close()
         if 'id' in row:
-            del(row['pass'])
-            return row
+            return {
+                'id': row['id'],
+                'user': row['user'],
+                'fullname': '%s %s' % (row['firstName'], row['surname'])
+            }
         return None
 
     def logout(self, session_id):
@@ -201,18 +204,6 @@ class UCNKAuth(object):
             corpora.sort()
             _corplist = corpora
         return _corplist
-
-    def get_user_info(self):
-        if hasattr(self, 'fullname') and self.fullname:
-            fullname = self.fullname.split(' ')
-        else:
-            fullname = ('unkown', 'user')
-        return {
-            'username': self.user,
-            'firstname': fullname[0],
-            'lastname': fullname[1],
-            'email': self.email if hasattr(self, 'email') else None
-        }
 
     def validate_password(self, password):
         """

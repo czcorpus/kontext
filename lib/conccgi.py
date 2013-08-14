@@ -290,7 +290,7 @@ class ConcCGI(UserCGI):
             url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
                                                                self.usesubcorp, q_encoded)
             description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
-            plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
+            plugins.query_storage.write(user=self._user, corpname=self.corpname,
                                         url=url, tmp=1, description=description, query_id=None, public=0)
 
     def preprocess_values(self, form):
@@ -367,6 +367,7 @@ class ConcCGI(UserCGI):
 
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
+        result['user_info'] = self._session['user']
         corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info['web']
@@ -684,7 +685,7 @@ class ConcCGI(UserCGI):
         query_desc_raw = ''
         is_public = True
         if query_id and plugins.has_plugin('query_storage'):
-            ans = plugins.query_storage.get_user_query(plugins.auth.get_user_info()['username'], query_id)
+            ans = plugins.query_storage.get_user_query(self._user, query_id)
             if ans:
                 query_desc_raw = ans['description']
                 query_desc = plugins.query_storage.decode_description(query_desc_raw)
@@ -2887,23 +2888,21 @@ class ConcCGI(UserCGI):
 
     def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
         html = plugins.query_storage.decode_description(description)
-        query_id = plugins.query_storage.write(user=plugins.auth.get_user_info()['username'], corpname=self.corpname,
+        query_id = plugins.query_storage.write(user=self._user, corpname=self.corpname,
                                                url=url, tmp=0, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html, 'queryId': query_id}
     ajax_save_query.return_type = 'json'
 
     def ajax_delete_query(self, query_id=''):
-        user_id = plugins.auth.get_user_info()['username']
-        plugins.query_storage.delete_user_query(user_id, query_id)
+        plugins.query_storage.delete_user_query(self._user, query_id)
         return {}
     ajax_delete_query.return_type = 'json'
 
     def ajax_undelete_query(self, query_id=''):
         from datetime import datetime
 
-        user_id = plugins.auth.get_user_info()['username']
-        plugins.query_storage.undelete_user_query(user_id, query_id)
-        query = plugins.query_storage.get_user_query(user_id, query_id)
+        plugins.query_storage.undelete_user_query(self._user, query_id)
+        query = plugins.query_storage.get_user_query(self._user, query_id)
         desc = plugins.query_storage.decode_description(query['description'])
         autosaved_class = ' autosaved' if query['tmp'] else ''
         notification_autosaved = "| %s" % _('autosaved') if query['tmp'] else ''
@@ -2919,8 +2918,7 @@ class ConcCGI(UserCGI):
 
     def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
         if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(plugins.auth.get_user_info()['username'],
-                                                          from_date=from_date, to_date=to_date,
+            rows = plugins.query_storage.get_user_queries(self._user, from_date=from_date, to_date=to_date,
                                                           offset=offset, limit=limit, types=types)
         else:
             rows = []
@@ -2932,8 +2930,7 @@ class ConcCGI(UserCGI):
         }
 
     def to(self, q=''):
-        user_id = plugins.auth.get_user_info()['username']
-        row = plugins.query_storage.get_user_query(user_id, q)
+        row = plugins.query_storage.get_user_query(self._user, q)
         if row:
             self.redirect('%s&query_id=%s' % (row['url'], row['id']))
         return {}

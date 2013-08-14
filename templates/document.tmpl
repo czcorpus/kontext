@@ -123,7 +123,7 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="common-bar">
-<span class="user">$_("User"): #if not $_anonymous#$_user#else#<a href="login">$_('anonymous')</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
+<span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
 </div>
 <div id="topbar">
     <div id="logo-wrapper"><a href="first_form">KONTEXT</a></div>
