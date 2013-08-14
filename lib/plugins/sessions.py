@@ -30,16 +30,18 @@ class Sessions(object):
         """
         return time.mktime(datetime.now().timetuple())
 
-    def start_new(self):
+    def start_new(self, data=None):
         """
         Writes a new session record to the storage
         """
         cursor = self.conn.cursor()
         session_id = str(uuid.uuid1())
+        if data is None:
+            data = {}
         cursor.execute('INSERT INTO session (id, updated, data) VALUES (?, ?, ?)',
-                       (session_id, self.get_actual_timestamp(), json.dumps({})))
+                       (session_id, self.get_actual_timestamp(), json.dumps(data)))
         self.conn.commit()
-        return {'id': session_id, 'data': {}}
+        return {'id': session_id, 'data': data}
 
     def delete(self, session_id):
         """
@@ -50,12 +52,20 @@ class Sessions(object):
         cursor.close()
         self.conn.commit()
 
-    def load(self, session_id):
+    def load(self, session_id, data=None):
         """
         Loads a session record identified by session_id. If no such record exists
         then a new record is created. Method always returns valid session_id. I.e.
         you should take that session_id and write it to cookies if you call this
         method.
+
+        Parameters
+        ----------
+        session_id : str
+            identifier of the session
+
+        data : dict
+            data to be used and written in case the session does not exist
         """
         if random.random() < Sessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
@@ -66,7 +76,7 @@ class Sessions(object):
         if row:
             return {'id': session_id, 'data': json.loads(row[0])}
         else:
-            return self.start_new()
+            return self.start_new(data)
 
     def save(self, session_id, data):
         """
