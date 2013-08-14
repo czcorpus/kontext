@@ -100,7 +100,7 @@ def create_instance(conf, sessions):
     db_name = conf.get('plugins', 'auth').get('ucnk:db_name', None)
     db_host = conf.get('plugins', 'auth').get('ucnk:db_host', None)
     db_username = conf.get('plugins', 'auth').get('ucnk:db_username', None)
-    db_password = conf.get('plugins', 'auth').get('ucnk:db_adapter', None)
+    db_password = conf.get('plugins', 'auth').get('ucnk:db_password', None)
     conn = db_open(db_name=db_name, adapter=db_adapter, host=db_host, username=db_username, password=db_password)
     return UCNKAuth(conn, sessions, conf.get('global', 'ucnk:administrators'))
 
