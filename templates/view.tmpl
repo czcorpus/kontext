@@ -188,45 +188,6 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 
 #def main
 #filter WebSafe
-    <div id="result-info">
-        #if $usesubcorp
-            $_("Subcorpus"): <strong>$usesubcorp</strong>
-        #end if
-        <br/>
-        #if $q[2] == "R"
-            #set $online_sample = True
-        #else
-            #set $online_sample = False
-        #end if
-
-        $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
-#end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
-        <span id="conc-calc-info" title="$concsize">#slurp
-	    #if $concsize != $fullsize
-		    #set $l=$locale.format("%d",$concsize,grouping=True)
-		    #if not $online_sample
-			    $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
-		    #else
-			    $_('using random') $l#slurp
-			    #if not $finished
-				    $_('counting') ...#slurp
-			    #end if
-			    $_('lines only')#slurp
-		    #end if
-	    #end if
-	    </span>
-
-        <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-        <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
-        $result_relative_freq_rel_to
-        #if $result_arf
-        | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-        <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
-        #end if
-        #if $shuffle_notification
-        | <span class="notice-shuffled">$_('Result is shuffled')</span>
-        #end if
-    </div>
 
 ## concordance annotation
 #if $annotconc
@@ -265,110 +226,155 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #end if
 #end if
 
-#block navigation($navid="navigation_form", $nextid="next")
-## navigation
-#if $numofpages
-    <div class="bonito-pagination">
-    <form action="view" id="$navid">
-    #if $prevlink
-        <div class="bonito-pagination-left">
-        <a href="view?$q;$firstlink;$globals">$_("First")</a> |
-        <a href="view?$q;$prevlink;$globals">$_("Previous")</a>
-        </div>
-    #end if
-
-    <div class="bonito-pagination-core">
-      #filter None
-      $input_hidden
-      #end filter
-      $_("Page")
-      <input type="text" name="fromp" value="$fromp" size="4" />
-      #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
-      $_("of") <span class="numofpages" title="$numofpages">$l_numofpages</span>
-      <input type="submit" value="$_("Go")" />
-    </div>
-
-    #if $nextlink
-        <div class="bonito-pagination-right">
-        <a href="view?$q;$nextlink;$globals" id="$nextid">$_("Next")</a> |
-        <a id="lastpage" href="view?$q;$lastlink;$globals">$_("Last")</a>
-        </div>
-    #else
-        <a id="$nextid"></a>
-    #end if
-
-    #if $Sort_idx
-        &nbsp; &nbsp; $_("Concordance is sorted. Jump to"):
-        <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-        #for $idx in $Sort_idx
-            <option value="$idx.page"
-            #if $idx.page == $fromp
-                selected="selected"
+<div id="conc-wrapper">
+    <div id="conc-top-bar">
+        <div id="result-info">
+            #if $usesubcorp
+                $_("Subcorpus"): <strong>$usesubcorp</strong>
             #end if
-            >$idx.label</option>
-        #end for
-        </select>
-    #end if
-    </form>
-    </div>
-#end if
-#end block
 
-## concordance lines
-#set $basecorpname = $corpname.split('/')[-1]
-#set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
-#set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
-<table id="conclines">
-#filter None
-$align_heading($viewmode, $KWICCorps)
-#end filter
-#if $len($Lines) > 0
-    #for $i, $l in $enumerate($Lines)
-      <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-      <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
-          $l.ref
-      </td>
-      #filter None
-        #if $refs_up
-          <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
-            #if $copy_icon# <td></td> #end if#
-            #for $ii,$ll in $enumerate($l.get('Align', []))
-                #set $bcname = $Par_conc_corpnames[$ii+1].n
-                #if $ll.ref
-                    <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
+            #if $q[2] == "R"
+                #set $online_sample = True
+            #else
+                #set $online_sample = False
+            #end if
+
+            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
+    #end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
+            <span id="conc-calc-info" title="$concsize">#slurp
+            #if $concsize != $fullsize
+                #set $l=$locale.format("%d",$concsize,grouping=True)
+                #if not $online_sample
+                    $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
                 #else
-                    <td></td>
+                    $_('using random') $l#slurp
+                    #if not $finished
+                        $_('counting') ...#slurp
+                    #end if
+                    $_('lines only')#slurp
                 #end if
-            #end for
-            </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-            $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-            $oneclick_line($l, $i, $corpname)
-            #for $ii,$ll in $enumerate($l.get('Align', []))
-                #set $bcname = $Par_conc_corpnames[$ii+1].n
-                $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-            #end for
-        #else ## standard display of refs
-            $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-            $oneclick_line($l, $i, $corpname)
-            #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-              #set $bcname = $Par_conc_corpnames[$ii+1].n
-              #if $ll.ref
-                <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
-              #else
-                <td></td>
-              #end if
-              $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-            #end for
-        #end if
-      #end filter
-      </tr>
-    #end for
-    </table>
-#end if
+            #end if
+            </span>
 
-#filter None
-$navigation("navigation_form2", "next2")
-#end filter
+            <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+            <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+            $result_relative_freq_rel_to
+            #if $result_arf
+            | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+            <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+            #end if
+            #if $shuffle_notification
+            | <span class="notice-shuffled">$_('Result is shuffled')</span>
+            #end if
+        </div>
+
+        #block navigation($navid="navigation_form", $nextid="next")
+        ## navigation
+        #if $numofpages
+            <div class="bonito-pagination">
+            <form action="view" id="$navid">
+            #if $prevlink
+                <div class="bonito-pagination-left">
+                <a href="view?$q;$firstlink;$globals"><img src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" /></a>
+                <a href="view?$q;$prevlink;$globals"><img src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" /></a>
+                </div>
+            #end if
+
+            <div class="bonito-pagination-core">
+              #filter None
+              $input_hidden
+              #end filter
+              <input type="text" name="fromp" value="$fromp" size="2" />
+              #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
+              $_("of") <span class="numofpages" title="$numofpages">$l_numofpages</span>
+            </div>
+
+            #if $nextlink
+                <div class="bonito-pagination-right">
+                <a href="view?$q;$nextlink;$globals" id="$nextid"><img src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" /></a>
+                <a id="lastpage" href="view?$q;$lastlink;$globals"><img src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" /></a>
+                </div>
+            #else
+                <a id="$nextid"></a>
+            #end if
+
+            #if $Sort_idx
+                &nbsp; &nbsp; $_("Concordance is sorted. Jump to"):
+                <select onchange="this.form.fromp.value = this.value; this.form.submit();">
+                #for $idx in $Sort_idx
+                    <option value="$idx.page"
+                    #if $idx.page == $fromp
+                        selected="selected"
+                    #end if
+                    >$idx.label</option>
+                #end for
+                </select>
+            #end if
+            </form>
+            </div>
+        #end if
+        #end block
+    </div>
+
+
+    ## concordance lines
+    #set $basecorpname = $corpname.split('/')[-1]
+    #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
+    #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
+    <table id="conclines">
+    #filter None
+    $align_heading($viewmode, $KWICCorps)
+    #end filter
+    #if $len($Lines) > 0
+        #for $i, $l in $enumerate($Lines)
+          <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+          <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
+              $l.ref
+          </td>
+          #filter None
+            #if $refs_up
+              <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
+                #if $copy_icon# <td></td> #end if#
+                #for $ii,$ll in $enumerate($l.get('Align', []))
+                    #set $bcname = $Par_conc_corpnames[$ii+1].n
+                    #if $ll.ref
+                        <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
+                    #else
+                        <td></td>
+                    #end if
+                #end for
+                </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+                $oneclick_line($l, $i, $corpname)
+                #for $ii,$ll in $enumerate($l.get('Align', []))
+                    #set $bcname = $Par_conc_corpnames[$ii+1].n
+                    $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+                #end for
+            #else ## standard display of refs
+                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+                $oneclick_line($l, $i, $corpname)
+                #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
+                  #set $bcname = $Par_conc_corpnames[$ii+1].n
+                  #if $ll.ref
+                    <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
+                  #else
+                    <td></td>
+                  #end if
+                  $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+                #end for
+            #end if
+          #end filter
+          </tr>
+        #end for
+        </table>
+    #end if
+
+    <div id="conc-bottom-bar">
+    #filter None
+    $navigation("navigation_form2", "next2")
+    #end filter
+    </div>
+</div>
 
 <div id="detailframe">
   <a id="hideel">

@@ -126,17 +126,9 @@ $_ca_topbar
 <span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
 </div>
 <div id="topbar">
-    <div id="logo-wrapper"><a href="first_form">KONTEXT</a></div>
-</div>
-#end filter
-#end if
 
-<hr class="hidden" />
+    <a id="logo-wrapper" href="first_form"><img id="logo-image" src="../files/img/kontext-logo.png" alt="Kontext logo" style="width: 157px;height: 52px" /></a>
 
-
-## left menu
-#filter WebSafe
-<div id="container">
     <div id="menu-bar">
         <ul id="menu-level-1">
 
@@ -238,36 +230,49 @@ $_ca_topbar
         </div>
     </div>
 
-    <form id="corpus-search-form" action="simple_search">
-    <table id="toolbar">
+
+    <table id="toolbar-info">
         <tr>
-            <td id="toolbar-info">
-                <ul>
-                    <li>$_("Corpus"): <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')"><strong>$corp_full_name</strong></a></li>
-                    #if $corp_description
-                    <li>$_('Description'):
-                        #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#<strong>$corp_description</strong>#if $corp_web#</a>#end if#
-                    </li>
-                    #end if
-                    #if $corp_size
-                    <li>$_('Size'): <strong class="corpus-size">$corp_size</strong> <sup><a id="positions-help-link" href="#">?</a></sup></li>
-                    #end if
-                    #if $usesubcorp
-                    <li>$_('Subcorpus'): <strong>$usesubcorp</strong> ($subcorp_size)</li>
-                    #end if
-                    #if $concsize
-                    <li>$_('Hits'): <strong id="toolbar-hits">#filter $IntegerFormatter# $concsize #end filter#</strong></li>
-                    #if $concarf
-                    <li>($concarf)</li>
-                    #end if
-                    #end if
-                </ul>
+            <th>$_("Corpus"):</th>
+            <td>
+                <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>
             </td>
         </tr>
+        #if $corp_description
+        <tr>
+            <th>$_('Description'):</th>
+            <td>
+                #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#$corp_description#if $corp_web#</a>#end if#
+            </td>
+        </tr>
+        #end if
+        #if $corp_size
+        <tr>
+            <th>$_('Size'):</th>
+            <td>
+                <span class="corpus-size">$corp_size</span> <sup><a id="positions-help-link" href="#">?</a></sup>
+            </td>
+        </tr>
+        #end if
+        #if $usesubcorp
+        <tr>
+            <th>$_('Subcorpus'):</th>
+            <td>$usesubcorp ($subcorp_size)</td>
+        </tr>
+        #end if
     </table>
-    </form>
 
 
+</div>
+
+
+
+#end filter
+#end if
+
+
+#filter WebSafe
+<div id="container">
     <div id="content">
         #if $error
         <div id="error">
@@ -304,10 +309,10 @@ $_ca_topbar
             $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
         </span>
         <br />
-        <span id="lc_logo">
-            <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.
-                <img alt="Lexical Computing logo" src="$files_path/img/lc_logo_small.png" />
-            </a></span>
+        <span id="copyright-info">
+            &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,
+            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>
+        </span>
 
     </div>
 </div>

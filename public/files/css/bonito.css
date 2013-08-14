@@ -1,3 +1,5 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700);
+
 #advanced {
     margin-top:10px;
 }
@@ -22,6 +24,7 @@
 }
 
 #container {
+    clear: both;
     overflow:auto;
 }
 
@@ -33,11 +36,9 @@
 }
 
 #content form {
-    background-color:#DEE;
     border:solid 1px #D5E6E6;
     display:inline-block;
     margin:0 0 10px;
-    min-width:510px;
     padding:1em;
 }
 
@@ -147,14 +148,24 @@
     width: 70%;
 }
 
-#footer,#lc_logo a {
+#footer {
     color:#999;
 }
 
+#footer #copyright-info {
+    font-size: 7pt;
+}
+
+#footer #copyright-info a {
+    color: #999999;
+    text-decoration: none;
+}
+
+#footer #copyright-info a:hover {
+    text-decoration: underline;
+}
+
 #footer {
-    border-style: solid;
-    border-width: 1px 0 0 0;
-    border-color: #cccccc;
     clear: both;
     padding: 0.3em 1em;
     text-align: right;
@@ -275,7 +286,9 @@
 }
 
 #result-info {
-    margin-bottom:7px;
+    margin: 0;
+    float: left;
+    width: 800px;
 }
 
 #rightpanel {
@@ -306,11 +319,10 @@
 }
 
 #menu-bar {
-    margin: 0;
+    float: left;
+    width: 650px;
+    margin: 0 20px;
     height: 50px;
-    border-style: solid;
-    border-width: 3px 0 3px 0;
-    border-color: #99CCEE;
 }
 
 #menu-bar a:hover,#toolbar-info a.corpus-desc:hover {
@@ -375,7 +387,7 @@
 }
 
 #menu-level-1 > li.active {
-    background-image: linear-gradient(180deg, #C0D9EA, #DDEAF2);
+    background-color: #D2EDC0;
     border-radius: 5px 5px 0 0;
 }
 
@@ -385,14 +397,12 @@
 
 #menu-level-wrapper-2 {
     display: block;
-}
-
-#menu-level-2 {
-    display: inline-block;
+    border: 1px solid red;
 }
 
 #menu-level-2 ul {
-    background-color: #DAE8F1;
+    position: absolute;
+    background-color: #D2EDC0;
     margin: 0;
 }
 
@@ -404,24 +414,22 @@
 ul.submenu {
     margin: 0;
     padding: 0;
+    border-radius: 3px;
 }
 
 #tag-builder-modal {
     height:565px;
 }
 
-#toolbar {
-    background-color:#fff;
-    border-bottom: 1px solid #AAA;
-    border-top:1px solid #AAA;
-    background-image: linear-gradient(180deg, #DEDEDE, #f6f6f6);
-    background-image: -webkit-linear-gradient(270deg, #DEDEDE, #f6f6f6);
-    width:100%;
+#toolbar-info {
+    color: #A4A4A4;
+    float: right;
+    width: 250px;
 }
 
-#toolbar-info {
-    text-align:left;
-    white-space:nowrap;
+#toolbar-info th {
+    text-align: left;
+    font-weight: normal;
 }
 
 #toolbar-info a.corpus-desc {
@@ -429,13 +437,8 @@ ul.submenu {
     text-decoration:underline;
 }
 
-#toolbar-info li {
-    display:inline;
-    padding:0 15px 0 0;
-}
-
-#toolbar-info,#corpus-search {
-    padding:.3em 1em;
+#corpus-search {
+    padding: .3em 1em;
 }
 
 #topbar {
@@ -444,24 +447,14 @@ ul.submenu {
     color: #000000;
 }
 
-#logo-wrapper {
-    font-size: 20pt;
+a#logo-wrapper {
+    float: left;
+    width: 157px;
+    height: 52px;
 }
 
-#logo-wrapper span.inv {
-    color: #9ce;
-    background-color: #000000;
-}
-
-#logo-wrapper a {
-    text-decoration: none;
-    color: #333333;
-    letter-spacing: 0.15em;
-    font-family: serif;
-}
-
-#topbar,#menu-bar {
-    background-color:#9ce;
+#logo-wrapper img {
+    display: block;
 }
 
 #topbar-navigation li {
@@ -469,7 +462,7 @@ ul.submenu {
     padding-left:1em;
 }
 
-#topbar-navigation ul,#toolbar-info ul {
+#topbar-navigation ul, l#toolbar-info {
     margin:0;
     padding:0;
 }
@@ -542,6 +535,11 @@ fieldset h4 {
 
 .bar {
     background-color:#008;
+}
+
+.bonito-pagination {
+    width: 100%;
+    background-color: #D2EDC0;
 }
 
 .bonito-pagination-core,.desc,ul.cql-toolbox li {
@@ -721,9 +719,8 @@ a.toggled {
 }
 
 body {
-    background-color:#f2f2f2;
-    font-family:"Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
-    font-size: 12px;
+    font-family:"Roboto", "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 10pt;
     margin:0;
     padding:0;
 }
@@ -760,7 +757,6 @@ div.narrowmain {
 }
 
 fieldset {
-    background-color: #dee;
     margin: 14px 0 6px;
     padding: 0 0 0 14px;
     border-style: solid;
@@ -822,10 +818,12 @@ form {
 }
 
 form#navigation_form,form#navigation_form2 {
-    background-color:#EEE;
-    border:0;
-    margin:0;
-    padding:.5em;
+    background-color: #D2EDC0;
+    margin: 0;
+    padding: 0;
+    float: right;
+    text-align: right;
+    width: 250px;
 }
 
 h1 {
