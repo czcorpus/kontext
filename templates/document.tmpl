@@ -200,7 +200,11 @@ $_ca_topbar
                 </ul>
             </li>
 
-            <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")" href="coll?$q;$globals">$_('Collocations')</a></li>
+            <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
+                <ul class="submenu">
+                    <li><a href="coll?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
                 <ul class="submenu">
