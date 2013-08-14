@@ -57,7 +57,7 @@ class Sessions(object):
         you should take that session_id and write it to cookies if you call this
         method.
         """
-        if random.random() > Sessions.DEFAULT_CLEANUP_PROBABILITY:
+        if random.random() < Sessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
         cursor = self.conn.cursor()
         cursor.execute("SELECT data FROM session WHERE id = ?", (session_id, ))
