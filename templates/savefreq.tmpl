@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
-
+##
 #if $saveformat == 'xml'
 #filter WebSafe
 ## XML
 <?xml version="1.0" encoding="$corpencoding"?>
-
 <frequency>
 #if $heading
   <heading>
@@ -52,28 +51,29 @@ $d.get('arg')#slurp
   </block>
   #end for
 </frequency>
-
 #end filter
-#else
+##
+#elif $saveformat == 'csv'
+#for $item in $csv_rows
+$item#slurp
+#end for
+#elif $saveformat == 'text'
 ## text
 #if $heading
 \# Frequency list
-
 \# Corpus: $corpname
   #for $d in $Desc
 \# $d.get('op'):  $d.get('arg') $d.get('size')
   #end for
-
 \# Frequency limit: $flimit
-
 #end if
 #for $b in $Blocks
 
   #for $h in $b.Head
-$h.get('n')	#slurp
+| $h.get('n')	#slurp
   #end for
 
--------------------------------------------------------
+------------------------------
   #for $i in $b.Items
     #for $w in $i.Word
 $w.get('n')	#slurp

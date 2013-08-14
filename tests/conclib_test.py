@@ -4,6 +4,9 @@ import settings
 import unittest
 import conclib
 
+import conf
+conf.init()
+
 class TestConclibModule(unittest.TestCase):
     """
     """
@@ -39,16 +42,16 @@ class TestConclibModule(unittest.TestCase):
         """
         line = (
             {
-                'str' : 'lorem ipsum <seg soundfile=123.wav foo=bar>dolor sit</seg><seg> amet...',
-                'class' : 'foo'
+                'str': 'lorem ipsum <seg soundfile=123.wav foo=bar>dolor sit</seg><seg> amet...',
+                'class': 'foo'
             },
             {
-                'str' : 'consectetur <x>adipisicing elit</x>, sed do eiusmod',
-                'class' : 'foo'
+                'str': 'consectetur <x>adipisicing elit</x>, sed do eiusmod',
+                'class': 'foo'
             },
             {
-                'str' : '<seg soundfile=937.341>',
-                'class' : 'foo'
+                'str': '<seg soundfile=937.341>',
+                'class': 'foo'
             }
         )
 
@@ -71,8 +74,8 @@ class TestConclibModule(unittest.TestCase):
         line = [{}]
         line[0]['str'] = "lorem ipsum <seg time=342 date=12.12.2012>dolor sit amet</seg> and stuff like that </seg>"
         line.append({
-            'str' : '<seg>'
-            })
+            'str': '<seg>'
+        })
         ans = conclib.remove_tag_from_line(line, 'seg')
         self.assertEqual('lorem ipsum dolor sit amet and stuff like that ', ans[0]['str'])
         self.assertEqual('', ans[1]['str'])

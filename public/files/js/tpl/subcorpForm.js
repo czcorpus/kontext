@@ -61,16 +61,16 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     lib.createFuncSwitchToInputMethod = function (conf) {
         return function (value) {
             if (value === 'raw') {
-                $('#subc-spec-row').css({ display : 'table-row' });
+                $('#subc-spec-section').css({ display : '' });
                 $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : 'none'});
+                    $(item).css({ display : null});
                 });
                 lib.createFuncShowWithinHint(conf)({ element : function () { return $('within-struct-selector'); } });
 
             } else if (value === 'gui') {
-                $('#subc-spec-row').css({ display : 'none' });
+                $('#subc-spec-section').css({ display : 'none' });
                 $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : 'table'});
+                    $(item).css({ display : null});
                 });
                 if ($('within-select-hint-row')) {
                     $('within-select-hint-row').remove();

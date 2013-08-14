@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from lib2to3.fixes.fix_urllib import FixUrllib
 
+import __builtin__
 import os
 import sys
+import re
 import cgi
 from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
 from inspect import isclass
@@ -26,8 +27,12 @@ import imp
 from urllib import urlencode, quote_plus, unquote, quote
 import json
 import logging
+import gettext
+import locale
 
+import plugins
 import settings
+import auth
 
 
 def replace_dot_error_handler(err):
@@ -87,26 +92,6 @@ def q_help(page, lang): # html code for context help
            + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
 
 
-def load_user_settings_cookie(cookie_data):
-    """
-    Loads user settings from cookies
-
-    Parameters
-    ----------
-
-    cookie_data : str
-       raw cookie data
-
-    Returns
-    -------
-
-    user_settings : dict
-       a dictionary containing all values stored as a JSON string in user_settings cookie
-    """
-    ck = BonitoCookie(cookie_data)
-    return json.loads(ck['user_settings'].value) if ck.has_key('user_settings') else {}
-
-
 def log_request(user_settings, action_name):
     """
     Logs user's request by storing URL parameters, user settings and user name
@@ -153,13 +138,13 @@ class RequestProcessingException(Exception):
         self.data = data
 
     def __getitem__(self, key):
-        return self.data.get(key, None)
+        return self.data[key]
 
     def __setitem__(self, key, value):
         self.data[key] = value
 
 
-class CheetahResponseFile:
+class CheetahResponseFile(object):
     def __init__(self, outfile):
         self.outfile = codecs.getwriter("utf-8")(outfile)
 
@@ -187,11 +172,7 @@ class UserActionException(Exception):
     pass
 
 
-class AuthException(UserActionException):
-    pass
-
-
-class CGIPublisher:
+class CGIPublisher(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
@@ -212,13 +193,15 @@ class CGIPublisher:
     reload = 0
     _has_access = 1
     _anonymous = 0
-    _authenticated = 0
     _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
     menupos = ''
+    user = None
 
     def __init__(self, environ=os.environ):
         self.environ = environ
         self.headers_sent = False
+        self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._session = {}
 
         # correct _locale_dir
         if not os.path.isdir(self._locale_dir):
@@ -235,6 +218,93 @@ class CGIPublisher:
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
+
+    def _init_session(self):
+        cookie_id = self._get_session_id()
+        if plugins.has_plugin('sessions'):
+            ans = plugins.sessions.load(cookie_id, {'user': plugins.auth.anonymous_user()})
+        else:
+            ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
+        self._set_session_id(ans['id'])
+        self._session = ans['data']
+        self._user = self._session['user']['user']
+
+        if self._session['user']['id'] is not None:
+            self._anonymous = 0
+        else:
+            self._user = None
+            self._anonymous = 1
+
+    def _get_session_id(self):
+        if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
+            return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
+        return None
+
+    def _set_session_id(self, val):
+        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
+
+    def get_user_settings(self):
+        """
+        Loads user settings from cookie
+
+        Returns
+        -------
+
+        user_settings : dict
+           a dictionary containing all values stored as a JSON string in user_settings cookie
+        """
+        return json.loads(self._cookies['user_settings'].value) if 'user_settings' in self._cookies else {}
+
+    def get_uilang(self, locale_dir):
+        """
+        loads user language from user settings or from browser's configuration
+        """
+        user_settings = self.get_user_settings()
+        if 'uilang' in user_settings:
+            lgs_string = user_settings['uilang']
+        else:
+            lgs_string = None
+        if not lgs_string:
+            lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
+        if lgs_string == '':
+            return ''  # english
+        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
+        lgs = lgs_string.split(',')
+        lgdirs = os.listdir(locale_dir)
+        for lg in lgs:
+            lg = lg.replace('-', '_').lower()
+            if lg.startswith('en'): # english
+                return ''
+            for lgdir in lgdirs:
+                if lgdir.lower().startswith(lg):
+                    return lgdir
+        return ''
+
+    def init_locale(self):
+
+        # locale
+        locale_dir = '../locale/'  # TODO
+        if not os.path.isdir (locale_dir):
+            p = os.path.join (os.path.dirname (__file__), locale_dir)
+            if os.path.isdir (p):
+                locale_dir = p
+            else:
+                # This will set the system default locale directory as a side-effect:
+                gettext.install(domain='ske', unicode=True)
+                # hereby we retrieve the system default locale directory back:
+                locale_dir = gettext.bindtextdomain('ske')
+
+        os.environ['LANG'] = self.get_uilang(locale_dir)
+        settings.set('session', 'lang', os.environ['LANG'] if os.environ['LANG'] else 'en')
+        os.environ['LC_ALL'] = os.environ['LANG']
+        formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
+        locale.setlocale(locale.LC_ALL, formatting_lang)
+        translat = gettext.translation('ske', locale_dir, fallback=True)
+        try:
+            translat._catalog[''] = ''
+        except AttributeError:
+            pass
+        __builtin__.__dict__['_'] = translat.ugettext
 
     def is_template(self, template):
         try:
@@ -272,7 +342,11 @@ class CGIPublisher:
 
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
-        correct_types(na, function_defaults(method), 1)
+        if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
+            del_nondef = 0
+        else:
+            del_nondef = 1
+        correct_types(na, function_defaults(method), del_nondef=del_nondef)
         ans = apply(method, args[1:], na)
         if type(ans) == dict and tpl_data is not None:
             ans.update(tpl_data)
@@ -294,7 +368,8 @@ class CGIPublisher:
     def parse_parameters(self, selectorname=None,
                          environ=os.environ, post_fp=None):
         self.environ = environ
-        named_args = load_user_settings_cookie(environ.get('HTTP_COOKIE', ''))
+
+        named_args = self.get_user_settings()
         self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
@@ -343,18 +418,38 @@ class CGIPublisher:
             raise Exception('access denied')
         return path
 
+    def redirect(self, url, code=303):
+        self._headers.clear()
+        self._headers['Location'] = url
+
+    def get_http_method(self):
+        return os.getenv('REQUEST_METHOD', '')
+
+    def pre_dispatch(self):
+        """
+        Allows some operations to be done before the action itself is processed
+        """
+        pass
+
     def run_unprotected(self, path=None, selectorname=None):
         """
-        Runs an HTTP-mapped action in a mode which may throw an exception.
+        Runs an HTTP-mapped action in a mode which does wrap
+        error processing (i.e. it may throw an exception).
         """
         tmpl = None
         methodname = None
-        try:
-            if len(self.corplist) == 0 or not self.corplist:
-                raise AuthException(_('You do not have an access to any corpus.'))
+        self.init_locale()
+        self._init_session()
 
-            if path is None:
+        if path is None:
                 path = self.import_req_path()
+
+        if self._user is None and path[0] not in ('login', 'loginx'):
+            self.redirect('login')
+
+        try:
+            self.pre_dispatch()
+
             named_args = self.parse_parameters(selectorname)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
@@ -365,11 +460,16 @@ class CGIPublisher:
             log_request(user_settings, '%s' % methodname)
 
             return_type = self.get_method_metadata(methodname, 'return_type')
-            self.output_headers(return_type)
-            self.output_result(methodname, tmpl, result, return_type)
+            cont = self.output_headers(return_type)
+            if cont:
+                self.output_result(methodname, tmpl, result, return_type)
+
+            if plugins.has_plugin('sessions'):
+                plugins.sessions.save(self._get_session_id(), self._session)
+
         except Exception as e:
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
-            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname, parent_err=e)
+            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
     def run(self, path=None, selectorname=None):
         """
@@ -380,18 +480,20 @@ class CGIPublisher:
             path = self.import_req_path()
         try:
             self.run_unprotected(path, selectorname)
-        except RequestProcessingException as err:
+        except Exception as err:
             from Cheetah.Template import Template
             from cmpltmpl import error_message
 
             return_type = self.get_method_metadata(path[0], 'return_type')
             if not self.headers_sent:
+                self._headers[''] = 'Status:HTTP/1.1 500 Internal Server Error'
                 self.output_headers(return_type=return_type)
                 self.headers_sent = True
-            import logging
-            logging.getLogger(__name__).info(err.__class__)
-            if settings.is_debug_mode() or isinstance(err['parent_err'], UserActionException):
+
+            if settings.is_debug_mode() or type(err) is UserActionException:
                 message = u'%s' % err
+            elif type(err) is auth.AuthException:
+                message = err.message
             else:
                 message = _('Failed to process your request. Please try again later or contact system support.')
 
@@ -405,14 +507,21 @@ class CGIPublisher:
                     'Corplist': [],
                     'corp_description': '',
                     'corp_size': '',
-                    'mode_included': bool(err['tmpl']),
-                    'method_name': err['methodname']
+                    'mode_included': bool(getattr(err, 'tmpl', False)),
+                    'method_name': getattr(err, 'methodname', '')
                 }
                 error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
         This method handles mapping between HTTP actions and CGIPublisher's methods
+
+        Returns
+        -------
+        result : tuple of 3 elements
+          0 = method name
+          1 = template name
+          2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
         if tpl_data is None:
@@ -441,7 +550,7 @@ class CGIPublisher:
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
-                if settings.is_debug_mode() or isinstance(e, UserActionException):
+                if settings.is_debug_mode() or type(e) is UserActionException:
                     json_msg = u'%s' % e
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
@@ -506,27 +615,36 @@ class CGIPublisher:
         """
         Generates proper content-type signature and
         creates a cookie to store user's settings
+
+        Returns
+        -------
+        bool : True if content should follow else False
         """
-        cookies = BonitoCookie()
+        has_body = True
         user_settings = {}
         for k in self._user_settings:
             if k in self.__dict__:
                 user_settings[k] = self.__dict__[k]
-        cookies['user_settings'] = json.dumps(user_settings)
-        cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
-        if cookies and outf:
-            outf.write(cookies.output() + '\n')
-            pass
+        self._cookies['user_settings'] = json.dumps(user_settings)
+        self._cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
 
-        # Headers
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
+
         if outf:
-            for k, v in self._headers.items():
-                outf.write('%s: %s\n' % (k, v))
+            # Headers
+            if 'Location' in self._headers:
+                outf.write('Location: %s\n' % self._headers['Location'])
+                has_body = False
+            for k in sorted(self._headers.keys()):
+                outf.write('%s: %s\n' % (k, self._headers[k]))
+            # Cookies
+            if self._cookies and outf:
+                outf.write(self._cookies.output() + '\n')
             outf.write('\n')
+
         self.headers_sent = True
-        return cookies, self._headers
+        return has_body
 
     def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
                       return_template=False):
@@ -543,11 +661,13 @@ class CGIPublisher:
             self._add_globals(result)
             self.add_undefined(result, methodname)
             result = self.rec_recode(result)
-            for attr in dir(self): # recoding self
+            custom_attributes = [a for a in CGIPublisher.__dict__.keys() if not a.startswith('__')
+                                 and not a.endswith('__')]
+            for attr in custom_attributes:  # recoding self
                 setattr(self, attr, self.rec_recode(getattr(self, attr)))
 
             if template.endswith('.tmpl'):
-                class_name = template[:-5] # appropriate module import
+                class_name = template[:-5]  # appropriate module import
                 file, pathname, description = \
                     imp.find_module(class_name, [self._template_dir])
                 module = imp.load_module(class_name, file, pathname, description)

@@ -12,6 +12,7 @@
 
 import os
 import re
+import sys
 from sys import stderr
 import time
 import glob
@@ -26,6 +27,7 @@ import conclib
 import version
 from butils import *
 from CGIPublisher import JsonEncodedData, UserActionException
+import plugins
 import settings
 import taghelper
 
@@ -55,6 +57,31 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     if '~' in ctx and '.' in attr:
         ctx = ctx.split('~')[0]
     return attrpart + ctx
+
+
+def validate_range(actual_range, max_range):
+    """
+    Parameters
+    ----------
+    actual_range : 2-tuple
+    max_range : 2-tuple (if second value is None, that validation of the value is omitted
+
+    Returns
+    -------
+    None if everything is OK else UserActionException instance
+    """
+    if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
+            or actual_range[0] > actual_range[1]:
+        if max_range[0] > max_range[1]:
+            msg = _('Invalid range - cannot select rows from an empty list.')
+        elif max_range[1] is not None:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
+                    % (actual_range + max_range)
+        else:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s') \
+                    % (actual_range + (max_range[0], ))
+        return UserActionException(msg)
+    return None
 
 
 class ConcError(Exception):
@@ -133,7 +160,6 @@ class ConcCGI(UserCGI):
 
     add_vars = {}
     corpname = u'susanne'
-    corplist = [u'susanne', u'bnc']
     usesubcorp = u''
     subcname = u''
     subcpath = []
@@ -207,6 +233,11 @@ class ConcCGI(UserCGI):
 
     shuffle = 0
 
+    active_menu_item = None
+    disabled_menu_items = []
+    SubcorpList = []
+    save_menu = []
+
     add_vars['wsketch_form'] = [u'LastSubcorp']
     add_vars['wsketch'] = [u'LastSubcorp']
     add_vars['wsdiff'] = [u'LastSubcorp']
@@ -215,12 +246,15 @@ class ConcCGI(UserCGI):
     add_vars['findx_upload'] = [u'LastSubcorp']
 
     def __init__(self, environ):
-        UserCGI.__init__(self, environ=environ)
-        self.cm = corplib.CorpusManager(self.corplist, self.subcpath,
-                                        self.gdexpath)
+        super(UserCGI, self).__init__(environ=environ)
         self._curr_corpus = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
+        self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
+
+    def pre_dispatch(self):
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
+                                        self.gdexpath)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -237,19 +271,42 @@ class ConcCGI(UserCGI):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
+    def _add_save_menu_item(self, label, action, params):
+        self.save_menu.append({'label': label, 'action': action, 'params': params})
+
+    def _enable_subcorpora_list(self, out):
+        """
+        Parameters
+        ----------
+        out : dict
+        """
+        basecorpname = self.corpname.split(':')[0]
+        out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
+                             + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+
+    def _save_query(self):
+        if plugins.has_plugin('query_storage'):
+            q_encoded = self.urlencode([('q', q) for q in self.q])
+            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
+                                                               self.usesubcorp, q_encoded)
+            description = "%s::\n\n\t%s\n" % (_('Parameters'), ';'.join(self.q))
+            plugins.query_storage.write(user=self._user, corpname=self.corpname,
+                                        url=url, tmp=1, description=description, query_id=None, public=0)
+
     def preprocess_values(self, form):
-        if self._corpus_architect: return
+        if self._corpus_architect:
+            return
         cn = ''
-        if form.has_key('json'):
+        if 'json' in form:
             import json
 
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
-        if form.has_key('corpname') and not cn:
+        if 'corpname' in form and not cn:
             cn = form.getvalue('corpname')
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not settings.user_has_access_to(cn):
+            if not cn in plugins.auth.get_corplist(self._user):
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
@@ -310,6 +367,7 @@ class ConcCGI(UserCGI):
 
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
+        result['user_info'] = self._session['user']
         corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info['web']
@@ -359,6 +417,7 @@ class ConcCGI(UserCGI):
                                               ('usesubcorp', self.usesubcorp),
         ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['supports_password_change'] = settings.supports_password_change()
         return result
 
     def add_undefined(self, result, methodname):
@@ -370,13 +429,18 @@ class ConcCGI(UserCGI):
             return
 
         if 'Desc' in names:
+            if methodname in ('savecoll', 'savewl', 'savefreq', 'saveconc'):
+                translate = False
+            else:
+                translate = True
             result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                                'tourl': self.urlencode(u2), 'size': s}
                               for o, a, u1, u2, s in
                               conclib.get_conc_desc(self.q,
                                                     corpname=self.corpname,
                                                     cache_dir=self.cache_dir,
-                                                    subchash=getattr(self._corp(), "subchash", None))]
+                                                    subchash=getattr(self._corp(), "subchash", None),
+                                                    translate=translate)]
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
@@ -426,7 +490,7 @@ class ConcCGI(UserCGI):
         wsattr = corp.get_conf('WSATTR')
         fattrs.append(wsattr)
         fcrits = ['%s 0' % a for a in fattrs]
-        self.q.append('r1000') # speeds-up computing frequency
+        self.q.append('r1000')  # speeds-up computing frequency
         result['freqs'] = self.freqs(fcrit=fcrits, ml=1)
         for block in result['freqs']['Blocks']:
             block['Items'] = block['Items'][:10]
@@ -456,6 +520,8 @@ class ConcCGI(UserCGI):
         view_params : dict
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
+        self.active_menu_item = 'menu-view'
+
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
@@ -533,11 +599,23 @@ class ConcCGI(UserCGI):
             out['notification'] = _('Empty result')
 
         out['shuffle_notification'] = True if 'f' in self.q else False
+
+        params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
+            % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
+               self.align_kwic, 1, conc.size())
+        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
+        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
+
         return out
 
     add_vars['view'] = ['orig_query']
 
     def first_form(self):
+        self.active_menu_item = 'menu-new-query'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
@@ -555,12 +633,14 @@ class ConcCGI(UserCGI):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
+        self._enable_subcorpora_list(out)
         out.update(dict([(k, v) for k, v in self._user_settings.items() if k.startswith('query_type_')]))
         return out
 
     add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
     def get_cached_conc_sizes(self):
+        self._headers['Content-Type'] = 'text/plain'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
 
         return {
@@ -596,15 +676,39 @@ class ConcCGI(UserCGI):
                 'relconcsize': 1000000.0 * fullsize / self._corp().search_size(),
                 'fullsize': fullsize, 'finished': conc.finished()}
 
-    def concdesc(self):
-        return {'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
+    def concdesc(self, query_id=''):
+        self.active_menu_item = 'menu-new-query'
+        self.disabled_menu_items = ('menu-save',)
+        out = {}
+
+        query_desc = ''
+        query_desc_raw = ''
+        is_public = True
+        if query_id and plugins.has_plugin('query_storage'):
+            ans = plugins.query_storage.get_user_query(self._user, query_id)
+            if ans:
+                query_desc_raw = ans['description']
+                query_desc = plugins.query_storage.decode_description(query_desc_raw)
+                is_public = ans['public']
+            else:
+                out['error'] = _('Cannot access user-defined query description.')
+                query_id = None  # we have to invalidate the query_id (to render HTML properly)
+
+        out.update({'Desc': [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                           'tourl': self.urlencode(u2), 'size': s}
                          for o, a, u1, u2, s in
                          conclib.get_conc_desc(self.q,
                                                corpname=self.corpname,
                                                cache_dir=self.cache_dir,
-                                               subchash=getattr(self._corp(), "subchash", None))]
-        }
+                                               subchash=getattr(self._corp(), "subchash", None))],
+                'supports_query_save': plugins.has_plugin('query_storage'),
+                'query_desc': query_desc,
+                'query_desc_raw': query_desc_raw,
+                'query_id': query_id,
+                'export_url': '%sto?q=%s' % (settings.get_root_url(), query_id),
+                'is_public': is_public
+                })
+        return out
 
     def viewattrs(self):
         """
@@ -612,6 +716,8 @@ class ConcCGI(UserCGI):
         """
         from tbl_settings import tbl_labels
 
+        self.active_menu_item = 'menu-view'
+        self.disabled_menu_items = ('menu-save',)
         out = {}
         if self.maincorp:
             corp = corplib.manatee.Corpus(self.maincorp)
@@ -706,12 +812,19 @@ class ConcCGI(UserCGI):
         """
         sort concordance form
         """
+        self.active_menu_item = 'menu-concordance'
+        self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     add_vars['sort'] = ['concsize']
 
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
-        "simple sort concordance"
+        """
+        simple sort concordance
+        """
+        self.active_menu_item = 'menu-concordance'
+        self.disabled_menu_items = ('menu-save',)
+
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
         elif skey == 'kw':
@@ -1023,6 +1136,7 @@ class ConcCGI(UserCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
+        self.active_menu_item = 'menu-view'
         self.set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
@@ -1033,12 +1147,17 @@ class ConcCGI(UserCGI):
                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
+
+        self._save_query()
         return self.view()
 
     first.template = 'view.tmpl'
     add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
 
     def filter_form(self, within=0):
+        self.active_menu_item = 'menu-filter'
+        self.disabled_menu_items = ('menu-save',)
+
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
@@ -1058,6 +1177,7 @@ class ConcCGI(UserCGI):
         """
         Positive/Negative filter
         """
+        self.active_menu_item = 'menu-view'
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
@@ -1079,6 +1199,7 @@ class ConcCGI(UserCGI):
             self.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
                                              rank, query))
         try:
+            self._save_query()
             return self.view()
         except:
             if within:
@@ -1090,10 +1211,21 @@ class ConcCGI(UserCGI):
     filter.template = 'view.tmpl'
     add_vars['filter'] = ['orig_query']
 
+    def reduce_form(self):
+        """
+
+        """
+        self.active_menu_item = 'menu-sample'
+        self.disabled_menu_items = ('menu-save',)
+        return {}
+
     def reduce(self, rlines='250'):
         """
         random sample
         """
+        self.active_menu_item = 'menu-view'
+        self.disabled_menu_items = ('menu-save',)
+
         self.q.append('r' + rlines)
         return self.view()
 
@@ -1102,22 +1234,30 @@ class ConcCGI(UserCGI):
     reduce.template = 'view.tmpl'
 
     def freq(self):
-        "frequency list form"
-        return {'Pos_ctxs': conclib.pos_ctxs(1, 1, 6)}
+        """
+        frequency list form
+        """
+        self.active_menu_item = 'menu-frequency'
+        return {
+            'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
+            'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1)
+        }
 
     add_vars['freq'] = ['concsize']
     fcrit = []
 
-    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0):
+    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
         """
-
+        self.active_menu_item = 'menu-frequency'
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
-                if i % 2 == 0: attrs.append(item)
-                if i % 2 == 1: ranges.append(item)
+                if i % 2 == 0:
+                    attrs.append(item)
+                if i % 2 == 1:
+                    ranges.append(item)
             return attrs, ranges
 
         def is_non_structural_attr(criteria):
@@ -1147,11 +1287,12 @@ class ConcCGI(UserCGI):
             'concsize': conc.size(),
             'fmaxitems': self.fmaxitems
         }
-        if not result['Blocks'][0]: raise ConcError(_('Empty list'))
-        if len(result['Blocks']) == 1: # paging
+        if not result['Blocks'][0]:
+            raise ConcError(_('Empty list'))
+        if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
-            fstart = (self.fpage - 1) * self.fmaxitems
-            self.fmaxitems = self.fmaxitems * self.fpage + 1
+            fstart = (self.fpage - 1) * self.fmaxitems + line_offset
+            self.fmaxitems = self.fmaxitems * self.fpage + 1 + line_offset
             result['paging'] = 1
             if len(result['Blocks'][0]['Items']) < self.fmaxitems:
                 result['lastpage'] = 1
@@ -1236,51 +1377,87 @@ class ConcCGI(UserCGI):
 
     add_vars['savefreq_form'] = ['concsize']
 
-    def savefreq_form(self, fcrit=[]):
-        return {'FCrit': [{'fcrit': cr} for cr in fcrit]}
+    def savefreq_form(self, fcrit=[], flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
+        """
+        Displays a form to set-up the 'save frequencies' operation
+        """
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if not to_line:
+            to_line = len(result['Blocks'][0]['Items'])
+
+        return {
+            'FCrit': [{'fcrit': cr} for cr in fcrit],
+            'from_line': from_line,
+            'to_line': to_line
+        }
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
-                 saveformat='text', maxsavelines=1000):
-        "save a frequecy list"
-        if self.pages:
-            if maxsavelines < self.fmaxitems: self.fmaxitems = maxsavelines
-        else:
-            self.fpage = 1
-            self.fmaxitems = maxsavelines
+                 saveformat='text', from_line=1, to_line='', colheaders=0):
+        """
+        save a frequency list
+        """
+
+        from_line = int(from_line)
+        to_line = int(to_line)
+
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        err = validate_range((from_line, to_line), (1, None))
+        if err is not None:
+            raise err
+
+        self.fpage = 1
+        self.fmaxitems = to_line - from_line
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
-        if self.wlattr: self.make_wl_query() # multilevel wordlist
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if self.wlattr:
+            self.make_wl_query()  # multilevel wordlist
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % self.corpname
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
-        return result
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % self.corpname
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Blocks'][0]['Head'][:-2]] + ['freq', 'freq [%]'])
+            # then write the data (first block only)
+            for item in result['Blocks'][0]['Items']:
+                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item['rel'])])
+
+            tpl_data = {'csv_rows': [row.decode('utf-8') for row in csv_buff.rows]}
+
+        return tpl_data
 
     add_vars['savefreq'] = ['Desc']
 
-    def freqml(self, flimit=0, freqlevel=1,
-               ml1attr='word', ml1pos=1, ml1icase='', ml1fcode='rc',
-               ml2attr='word', ml2pos=1, ml2icase='', ml2fcode='rc',
-               ml3attr='word', ml3pos=1, ml3icase='', ml3fcode='rc',
-               ml4attr='word', ml4pos=1, ml4icase='', ml4fcode='rc',
-               ml1ctx='0', ml2ctx='0', ml3ctx='0', ml4ctx='0'):
-        "multilevel frequency list"
-        l = locals()
-        fcrit = ' '.join([onelevelcrit('', l['ml%dattr' % i],
-                                       l['ml%dctx' % i], l['ml%dpos' % i],
-                                       l['ml%dfcode' % i], l['ml%dicase' % i], 'e')
+    def freqml(self, flimit=0, freqlevel=1, **kwargs):
+        """
+        multilevel frequency list
+        """
+        fcrit = ' '.join([onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
+                                       kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
+                                       kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
         return result
 
     freqml.template = 'freqs.tmpl'
+    freqml.accept_kwargs = True
 
     def freqtt(self, flimit=0, fttattr=[]):
         if not fttattr:
@@ -1300,7 +1477,10 @@ class ConcCGI(UserCGI):
     citemsperpage = 50
 
     def coll(self):
-        "collocations form"
+        """
+        collocations form
+        """
+        self.active_menu_item = 'menu-collocations'
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
         else:
@@ -1314,19 +1494,22 @@ class ConcCGI(UserCGI):
 
     add_vars['coll'] = ['concsize']
 
-    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd']):
+    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd'], line_offset=0, num_lines=None):
         """
         list collocations
         """
-        collstart = (self.collpage - 1) * self.citemsperpage
+        self.active_menu_item = 'menu-collocations'
+
+        collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
             self.csortfn = cbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
+        num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
         result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
                               cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-                              from_idx=collstart, max_lines=self.citemsperpage)
+                              from_idx=collstart, max_lines=num_fetch_lines)
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1335,6 +1518,13 @@ class ConcCGI(UserCGI):
         for item in result['Items']:
             item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
             item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
+
+        params = "cattr=%s&cbgrfns=%s&cminfreq=%s&cminbgr=%s&cfromw=%s&ctow=%s&csortfn=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s" \
+                 % (self.cattr, self.cbgrfns, self.cminfreq, self.cminbgr, self.cfromw, self.ctow, self.csortfn,
+                   '%s', self.heading, self.numbering, self.align_kwic, 1, 10000)
+        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
+        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
 
         return result
 
@@ -1350,21 +1540,66 @@ class ConcCGI(UserCGI):
 
     save_coll_options.template = 'coll.tmpl'
 
-    def savecoll(self, csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                 heading=0, maxsavelines=1000):
-        "save collocations"
-        if not self.pages:
-            self.collpage = 1
-            self.citemsperpage = maxsavelines
+    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0):
+        """
+        """
+        self.active_menu_item = 'menu-collocations'
+
+        self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
+        if to_line == '':
+            to_line = len(result['Items'])
+        return {
+            'from_line': from_line,
+            'to_line': to_line,
+            'saveformat': saveformat
+        }
+
+    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0, colheaders=0):
+        """
+        save collocations
+        """
+        from_line = int(from_line)
+        if to_line == '':
+            to_line = len(self.collx(csortfn, cbgrfns)['Items'])
+        else:
+            to_line = int(to_line)
+        num_lines = to_line - from_line + 1
+        err = validate_range((from_line, to_line), (1, None))
+        if err is not None:
+            raise err
+
+        self.collpage = 1
+        self.citemsperpage = sys.maxint
+        result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.xml"'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % self.corpname
             result['Scores'] = result['Head'][2:]
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.txt"'
-        return result
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
+
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Head']])
+            # then write the data
+            for item in result['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+        return tpl_data
 
     add_vars['savecoll'] = ['Desc', 'concsize']
 
@@ -1501,6 +1736,9 @@ class ConcCGI(UserCGI):
         """
         Word List Form
         """
+        self.active_menu_item = 'menu-new-query'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -1517,6 +1755,7 @@ class ConcCGI(UserCGI):
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
+        self._enable_subcorpora_list(out)
         return out
 
     add_vars['wordlist_form'] = ['LastSubcorp']
@@ -1526,14 +1765,15 @@ class ConcCGI(UserCGI):
         out['processing'] = self.check_histogram_processing().split(':')[1]
         return out
 
-
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
-    # gets arbitrary list of words for wordlist
+        """
+        gets arbitrary list of words for wordlist
+        """
         wlfile = getattr(self, attrnames[0], '').encode('utf8')
         wlcache = getattr(self, attrnames[1], '')
-        filename = wlcache;
+        filename = wlcache
         wlwords = []
-        if wlfile: # save a cache file
+        if wlfile:  # save a cache file
             try:
                 from hashlib import md5
             except ImportError:
@@ -1545,7 +1785,7 @@ class ConcCGI(UserCGI):
             cache_file.write(wlfile)
             cache_file.close()
             wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
-        if wlcache: # read from a cache file
+        if wlcache:  # read from a cache file
             filename = os.path.join(self.cache_dir, wlcache)
             cache_file = open(filename)
             wlwords = [w.strip() for w in cache_file]
@@ -1558,8 +1798,13 @@ class ConcCGI(UserCGI):
     wlnums = 'frq'
 
     def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
-                 ref_corpname='', ref_usesubcorp='', wlpage=1):
-        if not wlpat: self.wlpat = '.*'
+                 ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
+        self.active_menu_item = 'menu-word-list'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc', 'menu-concordance')
+
+        if not wlpat:
+            self.wlpat = '.*'
         if '.' in self.wlattr:
             orig_wlnums = self.wlnums
             if wltype != 'simple':
@@ -1569,10 +1814,8 @@ class ConcCGI(UserCGI):
             elif self.wlnums == 'frq':
                 self.wlnums = 'doc sizes'
             elif self.wlnums == 'docf':
-                self.wlnums = 'frq'
-        if self.wlattr == 'ws_collocations' and self.wlnums != 'frq':
-            raise ConcError('Word sketch keywords are available '
-                            'with raw word counts only')
+                self.wlnums = 'docf'
+
         lastpage = 0
         if self._anonymous and wlpage >= 10:  # limit paged lists
             wlpage = 10
@@ -1582,10 +1825,14 @@ class ConcCGI(UserCGI):
             wlpage = 1
             self.wlpage = 1
             self.wlmaxitems = 1000
-        wlstart = (wlpage - 1) * self.wlmaxitems
+        wlstart = (wlpage - 1) * self.wlmaxitems + line_offset
+
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
-        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
-                                   % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
+        result = {
+            'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
+                           + '&include_nonwords=%s&wlsort=f') % (self.wlattr, self.corpname, self.usesubcorp,
+                                                                 self.wlpat, self.wlminfreq, self.include_nonwords)
+        }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
@@ -1601,11 +1848,11 @@ class ConcCGI(UserCGI):
                 out = self.call_function(kw_func, args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
                 result.update({'Keywords': [{'str': w, 'score': round(s, 1),
-                                        'freq': round(f, 1),
-                                        'freq_ref': round(fr, 1),
-                                        'rel': round(rel, 1),
-                                        'rel_ref': round(relref, 1)}
-                                       for s, rel, relref, f, fr, w in out],
+                                             'freq': round(f, 1),
+                                             'freq_ref': round(fr, 1),
+                                             'rel': round(rel, 1),
+                                             'rel_ref': round(relref, 1)}
+                                            for s, rel, relref, f, fr, w in out],
                           'ref_corp_full_name': ref_name
                 })
                 result_list = result['Keywords']
@@ -1626,7 +1873,8 @@ class ConcCGI(UserCGI):
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
-                result['lastpage'] = 0; result_list = result_list[:-1]
+                result['lastpage'] = 0
+                result_list = result_list[:-1]
             self.wlmaxitems -= 1
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
@@ -1636,18 +1884,25 @@ class ConcCGI(UserCGI):
             except Exception:
                 result['wlattr_label'] = self.wlattr
 
+            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=1000' \
+                     % (self.wlattr, wlpat)
+            self._add_save_menu_item('CSV', 'savewl', params % 'csv')
+            self._add_save_menu_item('XML', 'savewl', params % 'xml')
+            self._add_save_menu_item('TXT', 'savewl', params % 'text')
+            # custom save is solved in templates because of compatibility issues
             return result
-        except corplib.MissingSubCorpFreqFile as subcmiss:
+
+        except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
-                out = corplib.build_arf_db(subcmiss.args[0], 'hashws')
+                out = corplib.build_arf_db(e.args[0], 'hashws')
             else:
                 corp = self._corp()
                 try:
                     doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
                 except:
                     raise ConcError('DOCSTRUCTURE not set correctly')
-                out = corplib.build_arf_db(subcmiss.args[0], self.wlattr)
+                out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
@@ -1703,21 +1958,64 @@ class ConcCGI(UserCGI):
 
     struct_wordlist.template = 'freqs.tmpl'
 
-    def savewl(self, maxsavelines=1000, wlpat='', wltype='simple',
+    def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                usesubcorp='', ref_corpname='', ref_usesubcorp='',
                saveformat='text'):
-        'save word list'
+        wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+        if to_line == '':
+            to_line = str(len(wl['Items'])) if 'Items' in wl else 0
+
+        ans = {
+            'from_line': from_line,
+            'to_line': to_line,
+        }
+
+        if to_line == 0:
+            ans['error'] = _('Empty result cannot be saved.')
+
+        return ans
+
+    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
+               ref_usesubcorp='', saveformat='text', colheaders=0):
+        """
+        save word list
+        """
+        from_line = int(from_line)
+        to_line = int(to_line)
+        line_offset = (from_line - 1)
+        self.wlmaxitems = sys.maxint  # TODO
+        ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                            ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
+        err = validate_range((from_line, to_line), (1, None))
+        if err is not None:
+            raise err
+        ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.xml"'
-        else:
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.txt"'
-        if not self.pages:
-            self.wlpage = 1
-            self.wlmaxitems = maxsavelines
-        return self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
-                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow((self.wlattr, 'freq'))
+            # then write the data
+            for item in ans['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])))
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
+
+        return tpl_data
 
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
@@ -1774,9 +2072,10 @@ class ConcCGI(UserCGI):
 
         for item in tt:
             for col in item['Line']:
-                if col.has_key('textboxlength'): continue
+                if 'textboxlength' in col:
+                    continue
                 if not col['name'].startswith(basestructname):
-                    col['textboxlength'] = 30;
+                    col['textboxlength'] = 30
                     continue
                 attr = corp.get_attr(col['name'])
                 aname = col['name'].split('.')[-1]
@@ -1818,6 +2117,9 @@ class ConcCGI(UserCGI):
         method : str
             the same meaning as in subcorp()
         """
+        self.active_menu_item = 'menu-subcorpus'
+        self.disabled_menu_items = ('menu-save',)
+
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
         for s, a in [t.split('.') for t in self._corp().get_conf('STRUCTATTRLIST').split(',')]:
@@ -1826,6 +2128,7 @@ class ConcCGI(UserCGI):
             structs_and_attrs[s].append(a)
 
         out = {}
+        out['SubcorpList'] = ()
         if os.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
             for p in self._url_parameters:
@@ -1940,20 +2243,45 @@ class ConcCGI(UserCGI):
             path = path.encode("utf-8")
         if conclib.manatee.create_subcorpus(path, self._corp(), structname,
                                             subquery):
-            finalname = '%s:%s' % (basecorpname, subcname)
-            sc = self.cm.get_Corpus(finalname)
-            subc_list = self.cm.subcorp_names(self.corpname)
-            for item in subc_list:
-                item['selected'] = True if item['n'].decode('utf-8') == subcname else False
-            return {
-                'subcorp': finalname,
-                'corpsize': formatnum(sc.size()),
-                'subcsize': formatnum(sc.search_size()),
-                'SubcorpList': subc_list,
-                'fetchSubcInfo': 'true'  # this is ok (it is used as a JavaScript value)
-            }
+            self.redirect('subcorp_list?corpname=%s' % self.corpname)
+            return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
+
+    def subcorp_list(self, selected_subc=[], sort='n'):
+        """
+        """
+        import tables
+        import locale
+
+        self.active_menu_item = 'menu-subcorpus'
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+
+        if self.get_http_method() == 'POST':
+            base = self.subcpath[-1]
+            for subcorp in selected_subc:
+                try:
+                    os.unlink(os.path.join(base, self.corpname, subcorp).encode('utf-8') + '.subc')
+                except Exception as e:
+                    logging.getLogger(__name__).error(e)
+
+        basecorpname = self.corpname.split(':')[0]
+        data = []
+        for item in self.cm.subcorp_names(basecorpname):
+            sc = self.cm.get_Corpus(self.corpname, item['n'])
+            data.append({'n': item['n'], 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+
+        sort_key, rev = tables.parse_sort_key(sort)
+        cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
+        data = sorted(data, key=lambda x: x[sort_key], reverse=rev, cmp=cmp_functions[sort_key])
+        sort_keys = dict([(x, (x, '')) for x in ('n', 'size', 'created')])
+        if not rev:
+            sort_keys[sort_key] = ('-%s' % sort_key, '&#8593;')
+        else:
+            sort_keys[sort_key] = (sort_key, '&#8595;')
+
+        return {'subcorp_list': data, 'sort_keys': sort_keys, 'rev': rev}
 
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
@@ -1983,40 +2311,120 @@ class ConcCGI(UserCGI):
         return 'Done'
 
     delsubc.template = 'subcorp_form'
-
     maxsavelines = 1000
 
-    def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
-                 align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+    def saveconc_form(self, from_line=1, to_line=''):
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-        conc.switch_aligned(os.path.basename(self.corpname))
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.xml"'
-        else:
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.txt"'
-        ps = self.pagesize
-        if pages:
-            if maxsavelines < self.pagesize:
-                ps = maxsavelines
-        else:
+        if not to_line:
+            to_line = conc.size()
+
+        return {'from_line': from_line, 'to_line':to_line}
+
+    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+
+        def merge_conc_line_parts(items):
+            """
+            converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
+                {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+            """
+            ans = ''
+            for item in items:
+                if 'class' in item and item['class'] != 'attr':
+                    ans += ' %s' % item['str'].strip()
+                else:
+                    ans += '%s' % item['str'].strip()
+            return ans.strip()
+
+        def process_lang(root, left_key, kwic_key, right_key):
+            if type(root) is dict:
+                root = (root,)
+
+            row = []
+            for item in root:
+                if 'ref' in item:
+                    row.append(item['ref'])
+                row.append(merge_conc_line_parts(item[left_key]))
+                row.append(merge_conc_line_parts(item[kwic_key]))
+                row.append(merge_conc_line_parts(item[right_key]))
+            return row
+
+        try:
+            conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+            conc.switch_aligned(os.path.basename(self.corpname))
+            from_line = int(from_line)
+            to_line = int(to_line)
+
+            tpl_data = {'from_line': from_line, 'to_line': to_line}
+
+            err = validate_range((from_line, to_line), (1, conc.size()))
+            if err is not None:
+                raise err
+            page_size = to_line - (from_line - 1)
             fromp = 1
-            ps = maxsavelines
-        labelmap = {}
-        if self.annotconc:
-            try:
-                anot = self._get_annotconc()
-                conc.set_linegroup_from_conc(anot)
-                labelmap = anot.labelmap
-            except conclib.manatee.FileAccessError:
-                pass
-        contains_speech = settings.has_configured_speech(self._corp())
-        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                  pagesize=ps, labelmap=labelmap, align=[],
-                                  alignlist=[self.cm.get_Corpus(c)
-                                             for c in self.align.split(',') if c],
-                                  leftctx=leftctx, rightctx=rightctx)
+            line_offset = (from_line - 1)
+            labelmap = {}
+            if self.annotconc:
+                try:
+                    anot = self._get_annotconc()
+                    conc.set_linegroup_from_conc(anot)
+                    labelmap = anot.labelmap
+                except conclib.manatee.FileAccessError:
+                    pass
+            contains_speech = settings.has_configured_speech(self._corp())
+            data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+                                      pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
+                                      alignlist=[self.cm.get_Corpus(c)
+                                                 for c in self.align.split(',') if c],
+                                      leftctx=leftctx, rightctx=rightctx)
+
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self.corpname, suffix)
+            if saveformat == 'xml':
+                self._headers['Content-Type'] = 'application/xml'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
+                tpl_data.update(data)
+            elif saveformat == 'text':
+                self._headers['Content-Type'] = 'text/plain'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
+                tpl_data.update(data)
+            elif saveformat == 'csv':
+                from butils import UnicodeCSVWriter, Writeable
+
+                self._headers['Content-Type'] = 'text/csv'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
+                csv_buff = Writeable()
+                csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+                if len(data['Lines']) > 0:
+                    if 'Left' in data['Lines'][0] and len(data['Lines'][0]['Left']) > 0:
+                        left_key = 'Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Right'
+                    elif 'Sen_Left' in data['Lines'][0] and len(data['Lines'][0]['Sen_Left']) > 0:
+                        left_key = 'Sen_Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Sen_Right'
+                    else:
+                        raise ConcError(_('Invalid data'))
+
+                    for i in range(len(data['Lines'])):
+                        line = data['Lines'][i]
+                        if numbering:
+                            row = [str(i + from_line)]
+                        else:
+                            row = []
+                        row += process_lang(line, left_key, kwic_key, right_key)
+                        if 'Align' in line:
+                            row += process_lang(line['Align'], left_key, kwic_key, right_key)
+                        csv_writer.writerow(row)
+                tpl_data.update({'data': [row.decode('utf-8') for row in csv_buff.rows]})
+            else:
+                raise UserActionException(_('Unknown export data type'))
+            return tpl_data
+        except Exception as e:
+            self._headers['Content-Type'] = 'text/html'
+            if 'Content-Disposition' in self._headers:
+                del(self._headers['Content-Disposition'])
+            raise e
+
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
@@ -2042,7 +2450,7 @@ class ConcCGI(UserCGI):
         os.umask(um)
         #print >>stderr, 'save conc: "%s"' % cpath
         self._user_settings.append('annotconc')
-        return {'stored': storeconcname}
+        return {'stored': storeconcname, 'conc_size': conc.size()}
 
     storeconc.template = 'saveconc_form.tmpl'
     add_vars['storeconc'] = ['Desc']
@@ -2443,23 +2851,23 @@ class ConcCGI(UserCGI):
 
             # unsupported operation
             else:
-                out['operation'] = 'explain' # show within explain template
+                out['operation'] = 'explain'  # show within explain template
                 raise Exception(4, '', 'Unsupported operation')
             return out
 
         # catch exception and amend diagnostics in template
         except Exception as e:
             out['error'] = True
-            try: # concrete error, catch message from lower levels
+            try:  # concrete error, catch message from lower levels
                 out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
-            except: # general error
+            except:  # general error
                 out['code'], out['details'] = 1, repr(e)
                 out['msg'] = 'General system error'
             return out
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
-        if settings.user_is_administrator():
+        if plugins.auth.is_administrator():
             import system_stats
             data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
             maxmin = {}
@@ -2476,5 +2884,53 @@ class ConcCGI(UserCGI):
         else:
             out = {'error': _('You don\'t have enough privileges to see this page.')}
         return out
-
     stats.template = 'stats.tmpl'
+
+    def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
+        html = plugins.query_storage.decode_description(description)
+        query_id = plugins.query_storage.write(user=self._user, corpname=self.corpname,
+                                               url=url, tmp=0, description=description, query_id=query_id, public=int(public))
+        return {'rawHtml': html, 'queryId': query_id}
+    ajax_save_query.return_type = 'json'
+
+    def ajax_delete_query(self, query_id=''):
+        plugins.query_storage.delete_user_query(self._user, query_id)
+        return {}
+    ajax_delete_query.return_type = 'json'
+
+    def ajax_undelete_query(self, query_id=''):
+        from datetime import datetime
+
+        plugins.query_storage.undelete_user_query(self._user, query_id)
+        query = plugins.query_storage.get_user_query(self._user, query_id)
+        desc = plugins.query_storage.decode_description(query['description'])
+        autosaved_class = ' autosaved' if query['tmp'] else ''
+        notification_autosaved = "| %s" % _('autosaved') if query['tmp'] else ''
+
+        html = """<div class="query-history-item%s" data-query-id="%s">
+                <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a>%s</h4>
+                %s""" % (autosaved_class, query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
+                          _('delete'), notification_autosaved, desc)
+        return {
+            'html': html
+        }
+    ajax_undelete_query.return_type = 'json'
+
+    def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
+        if plugins.has_plugin('query_storage'):
+            rows = plugins.query_storage.get_user_queries(self._user, from_date=from_date, to_date=to_date,
+                                                          offset=offset, limit=limit, types=types)
+        else:
+            rows = []
+        return {
+            'data': rows,
+            'from_date': from_date,
+            'to_date': to_date,
+            'types': types
+        }
+
+    def to(self, q=''):
+        row = plugins.query_storage.get_user_query(self._user, q)
+        if row:
+            self.redirect('%s&query_id=%s' % (row['url'], row['id']))
+        return {}

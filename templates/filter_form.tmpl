@@ -47,7 +47,7 @@ require(['jquery', 'tpl/filterForm', 'domReady!'], function (\$, filterForm, dom
 
 #def main
 #filter WebSafe
-<h3>$_("Concordance Filter")</h3>
+<h2>$_("Concordance Filter")</h2>
 <form id="mainform" action="filter">
 <input type="hidden" name="within" value="$within" />
 <fieldset class="anonymous">
@@ -102,7 +102,7 @@ $query_node
 #if $TextTypeSel
   #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
   #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
-  <div class="advanced_options$hidden" id="texttypeel">
+  <div class="advanced_options$hidden">
   <h3>$_("Text Types")</h3>
 
     <div class="indent">

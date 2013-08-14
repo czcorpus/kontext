@@ -21,21 +21,10 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
+define(['tpl/document'], function (mainPage) {
     'use strict';
 
     var lib = {};
-
-    /**
-     *
-     */
-    lib.bindClicks = function () {
-
-        $('#text-type-el-link').on('click', function (event) {
-            bonito.toggleViewStore('texttypeel', null, mainPage.userSettings);
-            $(event.target).toggleClass('toggled');
-        });
-    };
 
     /**
      *
@@ -43,7 +32,6 @@ define(['jquery', 'tpl/document', 'bonito'], function ($, mainPage, bonito) {
      */
     lib.init = function (conf) {
         mainPage.init(conf);
-        lib.bindClicks();
     };
 
     return lib;

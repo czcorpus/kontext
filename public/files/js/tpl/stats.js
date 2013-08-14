@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'tpl/document'], function (win, $, documentPage) {
+define(['jquery', 'tpl/document'], function ($, documentPage) {
     'use strict';
 
     var lib = {};

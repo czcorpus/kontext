@@ -23,9 +23,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def title
 #end def
 
+#def bodyonload
+require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
+    conf.queryId = "$query_id";
+    conf.messages.failed_to_save_the_query = "$_('Failed to save the query')";
+    pageSelf.init(conf);
+});
+#end def
+
 #block main
 #filter WebSafe
-<h3>$_("Concordance description")</h3>
+<h2>$_("Concordance description")</h2>
 
 <p>$_("Corpus"): <b>$corp_full_name</b>
     #if $usesubcorp
@@ -60,6 +68,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </td>
     </tr>
     #end for
-    </tbody></table>
+    </tbody>
+</table>
 #end filter
+
+#if $supports_query_save
+    <h3>$_('User\'s note')</h3>
+    <p id="desc-area-switch-hint">$_('Click on the description area to start editing.')</p>
+    <div id="query-desc-wrapper">
+        <div id="query-desc-view" title="$_('Click to edit')">#filter None#$query_desc#end filter#</div>
+        <div id="query-desc-editor" style="display: none">
+            <textarea name="query_desc">$query_desc_raw</textarea>
+            <label for="public-flag-checkbox">$_('anyone can view the description')</label>
+            <input id="public-flag-checkbox" type="checkbox" name="public" value="1" #if $is_public#checked="checked"#end if# />
+            <button id="exit-editation" type="button">$_('Done')</button>
+        </div>
+    </div>
+
+    #if $query_id
+    <div class="query-export-url">
+    $_('URL of the query and description'): <input type="text" name="export-url" value="$export_url" size="40" readonly="readonly" />
+    </div>
+    #end if
+#end if
+
 #end block

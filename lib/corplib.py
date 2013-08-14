@@ -22,11 +22,13 @@ import sys
 import glob
 from types import UnicodeType
 from hashlib import md5
+from datetime import datetime
 
 import manatee
 
 
-class CorpusManager:
+class CorpusManager(object):
+
     def __init__(self, corplist=['susanne'], subcpath=[], gdexpath=[]):
         self.corplist = corplist
         self.subcpath = subcpath
@@ -45,7 +47,7 @@ class CorpusManager:
             corpname, subcname = corpname.split(':', 1)
         corp = manatee.Corpus(corpname)
         manatee.setEncoding(corp.get_conf('ENCODING'))
-        corp.corpname = str(corpname) # never unicode (paths)
+        corp.corpname = str(corpname)  # never unicode (paths)
         corp.cm = self
         dsubcpath = self.default_subcpath(corp)
         if subcname:
@@ -62,12 +64,13 @@ class CorpusManager:
                     subc.spath = spath
                     try:
                         open(spath[:-4] + 'used', 'w')
-                    except:
+                    except Exception:
                         pass
-                    subc.corpname = str(corpname) # never unicode (paths)
+                    subc.corpname = str(corpname)  # never unicode (paths)
                     subc.subcname = subcname
                     subc.cm = self
                     subc.subchash = md5(open(spath).read()).digest()
+                    subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
                     return subc
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)
         else:
@@ -146,16 +149,17 @@ class CorpusManager:
         return cl
 
     def subcorpora(self, corpname):
-        # we must encode for glob.glob otherwise it fails for non-ascii files
+        # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
         enc_corpname = corpname.encode("utf-8")
+
         subc = []
         for sp in self.subcpath:
-            subc += glob.glob(os.path.join(sp, enc_corpname, '*.subc'))
+            subc += [x.decode('utf-8') for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8'))]
         subc += glob.glob(os.path.join(self.default_subcpath(corpname).encode("utf-8"), '*.subc'))
         return sorted(subc)
 
     def subcorp_names(self, corpname):
-        return [{'n': os.path.splitext(os.path.basename(s))[0]}
+        return [{'n': os.path.splitext(os.path.basename(s))[0], 'v': os.path.splitext(os.path.basename(s))[0]}
                 for s in self.subcorpora(corpname)]
 
     def last_subcorp_names(self, corpname, maxitems=25):

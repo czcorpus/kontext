@@ -31,8 +31,10 @@ $text
 #end filter
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ucnk.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
 <script type="text/javascript" src="$files_path/js/virtual-keyboard.js" charset="UTF-8"></script>
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
@@ -47,12 +49,19 @@ requirejs.config({
     paths: {
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
-        'simplemodal' : './jquery.simplemodal.min'
+        'simplemodal' : './jquery.simplemodal.min',
+        'jqueryui' :  './jquery-ui.custom.min'
     },
     shim : {
+        'jquery': {
+            exports: 'jQuery'
+        },
         'jquery.cookies' : {
             deps : ['jquery'],
             exports : 'jaaulde.utils.cookies'
+        },
+        'jqueryui' : {
+            deps: ['jquery']
         }
     }
 });
@@ -63,8 +72,10 @@ var conf = {};
 conf['rootPath'] = "$root_path";
 conf['corpname'] = "$corpname";
 conf['numTagPos'] = $num_tag_pos;
+conf['common_app_bar_url'] = "$common_app_bar_url";
 conf['messages'] = {};
 conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+conf['messages'].error_loading_application_bar = "$_('Error loading application bar.')";
 
 #if $focus
 conf.focus = $focus;
@@ -97,37 +108,141 @@ _gaq.push(['_trackPageview']);
 </script>
 #end if
 </head>
-
 <body>
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else
 
-#filter WebSafe
-<form id="help-search-form" action="" onsubmit="hideElem.cmdHelp('https://trac.sketchengine.co.uk/');">
-    <table id="topbar">
-        <tr>
-            <td rowspan="2">
-                <a href="$_home_url">
-                    <img id="logo" alt="$_("Sketch Engine")" src="$files_path/img/${css_prefix}logo.png" />
-                </a>
-            </td>
-            <td id="topbar-navigation">
-                $_("Search")
-                <input type="text" id="searchhelp" />
-                $_("in")
-                <a id="top-level-help-link" href='https://trac.sketchengine.co.uk/'>$_("Help")</a>
-            </td>
-        </tr>
-    </table>
-</form>
+#def menu_status($id)
+    #if $id == $active_menu_item
+        current
+    #elif $id in $disabled_menu_items
+        disabled
+    #end if
+#end def
 
-<form id="corpus-search-form" action="simple_search">
+#filter WebSafe
+<div id="common-bar">
+<span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
+</div>
+<div id="topbar">
+    <div id="logo-wrapper"><a href="first_form">KONTEXT</a></div>
+</div>
+#end filter
+#end if
+
+<hr class="hidden" />
+
+
+## left menu
+#filter WebSafe
+<div id="container">
+    <div id="menu-bar">
+        <ul id="menu-level-1">
+
+            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")">$_("New query")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('Search in the corpus')&#8230;</a></li>
+                    <li><a title="TODO" href="query_history?$corpname_url">$_('Query history')&#8230;</a></li>
+                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
+                </ul>
+            </li>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li><a title="TODO" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                </ul>
+            </li>
+            <li class="separator">&nbsp;</li>
+            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
+                <ul class="submenu">
+                    #for $item in $save_menu
+                    <li><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    #end for
+                    #block custom_save
+                    #end block
+                </ul>
+            </li>
+
+            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
+                <ul class="submenu">
+                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
+                    <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
+                    <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
+                    <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
+                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')</a></li>
+                    <li><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Undo')</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
+                <ul class="submenu">
+                    <li><a href="filter_form?$q;$globals&pnfilter=p">$_('Positive')&#8230;</a></li>
+                    <li><a href="filter_form?$q;$globals&pnfilter=n">$_('Negative')&#8230;</a></li>
+                    <li><a href="filter_form?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
+                <ul class="submenu">
+                    #if 'tag' in [x['n'] for x in $AttrList]
+                    <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
+                    #end if
+                    <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
+                    #if '.' in $fcrit_shortref.split('/')[0]
+                    <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
+                    #end if
+                    #if $ttcrit
+                    <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+                    #end if
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
+                <ul class="submenu">
+                    <li><a href="coll?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
+                <ul class="submenu">
+                    #if $viewmode == 'sen'
+                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
+                    #else
+                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
+                    #end if
+                    #if $align
+                    <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+                    #end if
+                    <li><a href="#">$_("Attributes")&#8230;</a></li>
+                    <li><a href="#">$_("Structures and references")&#8230;</a></li>
+                    <li><a href="#">$_("Range of the concordance")&#8230;</a></li>
+                    <li><a href="#">$_("Frequency distribution")&#8230;</a></li>
+                    <li><a href="#">$_("Collocations")&#8230;</a></li>
+                    <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
+                <ul class="submenu">
+                    <li><a title="TODO" href="#">$_('User manual')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Linguistic terms')&#8230;</a></li>
+                    <li><a title="TODO" href="#">$_('Available corpora')&#8230;</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div id="menu-level-2-wrapper">
+            <div id="menu-level-2" data-current-menu=""></div>
+        </div>
+    </div>
+
+    <form id="corpus-search-form" action="simple_search">
     <table id="toolbar">
         <tr>
             <td id="toolbar-info">
                 <ul>
-                    <li>$_("User"): <strong>$_user</strong></li>
                     <li>$_("Corpus"): <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')"><strong>$corp_full_name</strong></a></li>
                     #if $corp_description
                     <li>$_('Description'):
@@ -147,72 +262,11 @@ $_ca_topbar
                     #end if
                     #end if
                 </ul>
-
             </td>
         </tr>
     </table>
-</form>
-#end filter
-#end if
+    </form>
 
-<hr class="hidden" />
-
-
-## left menu
-#filter WebSafe
-<div id="container">
-    <div id="sidebar">
-        <div id="in-sidebar">
-            <ul>
-                <li><a title="$_("New query entry form")" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_("New query")</a></li>
-                <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")</a></li>
-                #if $has_wsketch
-                <li><a title="$_("Word Sketch query entry form")" href="wsketch_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch")</a></li>
-                <li><a title="$_("Thesaurus query entry form")" href="thes_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Thesaurus")</a></li>
-                <li><a title="$_("Word sketch difference")" href="wsdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Diff")</a></li>
-                #if $can_wseval
-                <li><a title="$_("Word Sketch Evaluation")" href="wseval_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Sketch-Eval")</a></li>
-                #end if
-                #if $can_annotate
-                <li><a title="$_("Corpus Pattern Analysis")" href="cpa_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Corpus Pattern Analysis")</a></li>
-                #end if
-                #if $alpha_features
-                <li><a title="$_("Word Sketch Patterns")" href="patterns_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("Word Sketch Patterns")</a></li>
-                <li><a title="$_("Word Sketch Text-type difference")" href="wsttdiff_form?$corpname_url;lemma=$lemma;lpos=$lpos">$_("WS Text-type diff.")</a></li>
-                #end if
-                #if $getVar('lg_switch_content', '')
-                <script>
-                    var url = window.location.toString();
-                    if (url.indexOf('?') == -1) { url += '?'; }
-                    document.write('<li><a href="' + url +
-                            ';uilang=$lg_switch_content[0]">$lg_switch_content[1]</a></li>')
-                </script>
-                #end if
-                #end if
-                #if $varExists('helpsite')
-                <li class="context_help"><a href="${helpsite}../MainLinkHelp" rel="help"><img src="../files/img/help.png" alt="$_("Help on main menu")" title="$_("Help on main menu")" /></a></li>
-                #end if
-            </ul>
-            <hr/>
-            <div id="submenu">
-                <ul>
-                    #filter WebSafe
-                    #block left_submenu_help
-                    #end block
-                    #block left_submenu_save
-                    #end block
-                    #block left_submenu_options
-                    #end block
-                    #block left_submenu
-                    #end block
-                    #block left_submenu_expert
-                    #end block
-                    #end filter
-                    <li class="menu_switch"><a data-path="$files_path">$_("Switch menu position")</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
 
     <div id="content">
         #if $error
@@ -261,9 +315,6 @@ $_ca_topbar
 ## end of left menu
 
 
-
-
-
 </body>
 </html>
 
@@ -288,6 +339,13 @@ $corp_full_name</b><br>
     <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
   #end for
 </select>
+#if $SubcorpList
+<strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+    #for $subc in $SubcorpList
+    <option value="$subc.v">$subc.n</option>
+    #end for
+</select>
+#end if ## SubcorpList
 #end if
 #end def
 

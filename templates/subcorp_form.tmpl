@@ -31,6 +31,8 @@ $_("Create Subcorpus")#slurp
 require(['tpl/subcorpForm', 'domReady!'], function(pageSelf, domReady) {
     conf.inputMethod = "$method";
     conf.messages['available_messages'] = "$_('available attributes')";
+    conf.messages['and'] = "$_('and')";
+    conf.messages['close'] = "$_('close')";
     pageSelf.init(conf);
 });
 
@@ -42,6 +44,7 @@ require(['tpl/subcorpForm', 'domReady!'], function(pageSelf, domReady) {
 <br /><br />$_("Sorry, creating user subcorpora is not available in the open version")
 #else
 
+<h2>$_('New subcorpus')</h2>
 <form action="subcorp" method="POST">
 <fieldset class="anonymous">
 <table class="form">

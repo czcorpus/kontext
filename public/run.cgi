@@ -22,11 +22,12 @@ import os
 import re
 import json
 
-sys.path.insert(0, '../lib')
-sys.path.insert(0, '..')
+sys.path.insert(0, '../lib')  # to be able to import application libraries
+sys.path.insert(0, '..')   # to be able to import compiled template modules
 
+import plugins
 import settings
-settings.load(os.getenv('REMOTE_USER'))
+settings.load()
 
 if settings.is_debug_mode():
     cgitb.enable()
@@ -43,6 +44,31 @@ from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
+# implicit plugins BEGIN ###
+
+session_module = plugins.load_plugin(settings.get('plugins', 'sessions')['module'])
+plugins.sessions = session_module.create_instance(settings)
+
+auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
+plugins.auth = auth_module.create_instance(settings, plugins.sessions)
+
+try:
+    query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])
+    if query_storage_module:
+        plugins.query_storage = query_storage_module.QueryStorage(settings)
+except ImportError:
+    pass
+
+try:
+    appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
+    if appbar_module:
+        plugins.application_bar = appbar_module.AppBar(settings)
+except ImportError:
+    pass
+
+# implicit plugins END ###
+
+
 class BonitoCGI (ConcCGI, UserCGI):
 
     # UserCGI options
@@ -52,18 +78,11 @@ class BonitoCGI (ConcCGI, UserCGI):
     cache_dir = settings.get('corpora', 'cache_dir')
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
-	# set available corpora, e.g.: corplist = ['susanne', 'bnc', 'biwec']
-    corplist = settings.get_corplist()
-
-    # set default corpus
-    corpname = settings.get_default_corpus(corplist)
-
-
     helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     def __init__(self, user=None, environ=os.environ):
-        UserCGI.__init__ (self, environ=environ, user=user)
-        ConcCGI.__init__ (self, environ=environ)
+        UserCGI.__init__(self, environ=environ, user=user)
+        ConcCGI.__init__(self, environ=environ)
 
     def _user_defaults (self, user):
         if user is not self._default_user:
@@ -71,37 +90,10 @@ class BonitoCGI (ConcCGI, UserCGI):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
 
-def get_uilang(locale_dir):
-    """
-    loads user language from user settings or from browser's configuration
-    """
-    user_settings = CGIPublisher.load_user_settings_cookie(os.environ.get('HTTP_COOKIE',''))
-    if 'uilang' in user_settings:
-        lgs_string = user_settings['uilang']
-    else:
-        lgs_string = None
-    if not lgs_string:
-        lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
-    if lgs_string == '':
-        return '' # english
-    lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-    lgs = lgs_string.split(',')
-    lgdirs = os.listdir(locale_dir)
-    for lg in lgs:
-        lg = lg.replace('-', '_').lower()
-        if lg.startswith('en'): # english
-            return ''
-        for lgdir in lgdirs:
-            if lgdir.lower().startswith(lg):
-                return lgdir
-    return ''
 
 if __name__ == '__main__':
     import logging
     from logging import handlers
-    import __builtin__
-    import gettext
-    import locale
 
     # logging setup
     logger = logging.getLogger('') # root logger
@@ -109,29 +101,6 @@ if __name__ == '__main__':
     hdlr.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
-
-    # locale
-    locale_dir = '../locale/' # TODO
-    if not os.path.isdir (locale_dir):
-        p = os.path.join (os.path.dirname (__file__), locale_dir)
-        if os.path.isdir (p):
-            locale_dir = p
-        else:
-            # This will set the system default locale directory as a side-effect:
-            gettext.install(domain='ske', unicode=True)
-            # hereby we retrieve the system default locale directory back:
-            locale_dir = gettext.bindtextdomain('ske')
-
-    os.environ['LANG'] = get_uilang(locale_dir)
-    settings.set('session', 'lang', os.environ['LANG'] if os.environ['LANG'] else 'en')
-    os.environ['LC_ALL'] = os.environ['LANG']
-    formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
-    locale.setlocale(locale.LC_ALL, formatting_lang)
-    translat = gettext.translation('ske', locale_dir, fallback=True)
-    try: translat._catalog[''] = ''
-    except AttributeError: pass
-
-    __builtin__.__dict__['_'] = translat.ugettext
 
     if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
         import cProfile, pstats, tempfile

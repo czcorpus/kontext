@@ -4,16 +4,19 @@
         <log_path>/var/log/bonito/application.log</log_path>
         <debug>true</debug>
         <max_attr_list_size>30</max_attr_list_size>
-        <administrators>
+        <administrators extension-by="ucnk">
             <user>johndoe</user>
             <user>janedoe</user>
         </administrators>
+        <!-- unfinished prototype -->
+        <common_app_bar_url>http://korpus.test/shared-bar?id=</common_app_bar_url>
+        <!-- unfinished prototype -->
+        <root_url>http://kontext.korpus.test/run.cgi/first_form</root_url>
+        <auth_cookie_name>ucnksessionid</auth_cookie_name>
     </global>
-    <database>
-        <name>bonito</name>
-        <host>localhost</host>
-        <password>bonito</password>
-        <username>bonito</username>
+    <database extension-by="ucnk">
+        <adapter>sqlite</adapter>
+        <name>./data/bonito.db</name>
     </database>
     <cache>
         <clear_interval>3600</clear_interval>
@@ -39,6 +42,7 @@
         <kwicline_max_context>500</kwicline_max_context>
         <use_db_whitelist>1</use_db_whitelist>
         <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
+        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
 
         <corplist title="">
             <corplist title="Our corpora">

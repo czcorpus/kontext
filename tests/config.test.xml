@@ -66,6 +66,9 @@
         </corplist>
         <tagsets>
             <tagset position="0">
+                <label>
+                    <desc lang="en">Part of Speech</desc>
+                </label>
                 <value id="A">
                     <desc lang="en">adjective</desc>
                 </value>
@@ -74,6 +77,9 @@
                 </value>
             </tagset>
             <tagset position="1">
+                <label>
+                    <desc lang="en">just a stuff</desc>
+                </label>
                 <value id="X">
                     <desc lang="en">experimental item</desc>
                 </value>
