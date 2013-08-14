@@ -50,17 +50,19 @@ td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
 .kw {
 	text-align: center; 
 	white-space:nowrap;
-        width: 1px;
-        border-right: 0px !important;
+    width: 1px;
+    border-right: 0px !important;
 }
 .coll {
-	color: red;  
+	color: #CC0066;
 	font-weight: bold; 
         /*text-decoration: underline;*/ 
 	cursor: pointer;
 }
 .strc {
 	color: green;
+    font-style: normal;
+    font-size: 110%;
 }
 .attr {
 	font-size: small;
