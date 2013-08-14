@@ -14,13 +14,17 @@
 
 #conclines {
     background-color: white;
-    border: 1px solid #DDDDDD;
     font-size: 10pt;
     font-family: 'Roboto Condensed';
 }
 
-table#conclines { border-spacing: 0px; }
+table#conclines {
+    border-spacing: 0px;
+    width: 100%;
+}
+
 table#conclines tr td { padding: 2px; }
+
 td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
 
 /* concordance formating */
