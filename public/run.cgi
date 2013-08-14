@@ -46,9 +46,11 @@ MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
 # implicit plugins BEGIN ###
 
+session_module = plugins.load_plugin(settings.get('plugins', 'sessions')['module'])
+plugins.sessions = session_module.create_instance(settings)
+
 auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
-plugins.auth = auth_module.create_instance(settings)
-plugins.auth.login(os.getenv('REMOTE_USER'), '')  # password is currently checked by web server
+plugins.auth = auth_module.create_instance(settings, plugins.sessions)
 
 try:
     query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])

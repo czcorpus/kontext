@@ -253,7 +253,7 @@ class ConcCGI(UserCGI):
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
 
     def pre_dispatch(self):
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(), self.subcpath,
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
                                         self.gdexpath)
 
     def _attach_tag_builder(self, tpl_out):
@@ -306,7 +306,7 @@ class ConcCGI(UserCGI):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not cn in plugins.auth.get_corplist():
+            if not cn in plugins.auth.get_corplist(self._user):
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
