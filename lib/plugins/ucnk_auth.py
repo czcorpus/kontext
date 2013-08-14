@@ -129,6 +129,13 @@ class UCNKAuth(object):
         self.admins = admins
         self.user = 'anonymous'
 
+    def anonymous_user(self):
+        return {
+            'id': None,
+            'user': None,
+            'fullname': _('anonymous')
+        }
+
     def login(self, username, password):
         """
         Parameters
@@ -154,7 +161,7 @@ class UCNKAuth(object):
                 'user': row['user'],
                 'fullname': '%s %s' % (row['firstName'], row['surname'])
             }
-        return None
+        return self.anonymous_user()
 
     def logout(self, session_id):
         self.sessions.delete(session_id)

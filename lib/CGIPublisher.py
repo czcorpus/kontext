@@ -222,19 +222,18 @@ class CGIPublisher(object):
     def _init_session(self):
         cookie_id = self._get_session_id()
         if plugins.has_plugin('sessions'):
-            ans = plugins.sessions.load(cookie_id)
+            ans = plugins.sessions.load(cookie_id, {'user': plugins.auth.anonymous_user()})
         else:
-            ans = {'id': 0, 'data': {}}
+            ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
         self._set_session_id(ans['id'])
         self._session = ans['data']
+        self._user = self._session['user']['user']
 
-        if 'user' in self._session and self._session['user'] is not None:
-            self._user = self._session['user']['user']
+        if self._session['user']['id'] is not None:
             self._anonymous = 0
         else:
             self._user = None
             self._anonymous = 1
-            self._session['user'] = {'id': None, 'fullname': 'anonymous', 'user': 'anonymous'}
 
     def _get_session_id(self):
         if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
