@@ -2,37 +2,12 @@
 Installation guide
 ==================
 
-Apache
-======
+Web server configuration
+========================
+
+Please note that currently only supported web server is Apache 2.x. Support for some other web servers is being considered.
 
 Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
-
-  Alias /bonito /path/to/your/app
-
-  <Directory /path/to/your/app>
-    Options +ExecCGI
-    AddHandler cgi-script .cgi
-    AllowOverride FileInfo
-    RewriteEngine On
-    RewriteRule ^$ run.cgi/first_form [L,R=301]
-    AuthType Basic
-    AuthName "Add your login message here."
-    AuthGroupFile /dev/null
-    AuthMySQL On
-    AuthMySQL_Authoritative On
-    AuthBasicAuthoritative Off
-    AuthMySQL_Host localhost
-    AuthMySQL_User bonito
-    AuthMySQL_Password bonito
-    AuthMySQL_DB bonito
-    AuthMySQL_Password_Table user
-    AuthMySQL_Username_Field user
-    AuthMySQL_Password_Field pass
-    AuthMySQL_Encryption_Types Crypt_DES
-    require valid-user
-  </Directory>
-
-If you want to skip using mysql-based user authentication you can use following simplified version::
 
   Alias /bonito /path/to/your/app
 
@@ -45,61 +20,43 @@ If you want to skip using mysql-based user authentication you can use following 
     SetEnv REMOTE_USER default
   </Directory>
 
-Please note that the value of the REMOTE_USER variable ('default' in the example) is up to your choice but you have
-to create user of that name in your database (see the following section).
 
-Using one of described configurations, your web application should be available at URL http://your_server_hostname/bonito.
+The value of the REMOTE_USER parameter ('default' here) is typically set by Apache's authentication mechanism
+but in our sample we skip this.
 
-Database
-========
+Using described configuration, your web application should be available at URL http://your_server_hostname/bonito.
 
+Authentication
+==============
 
-Open your mysql console::
+The application expects you to provide your custom implementation of authentication module. If you want to test the
+application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
+and always returns the same list of corpora (you probably want to set your own list).
 
-     mysql -u root -p
+To be able to provide different lists of corpora for different users, you have to implement an authentication
+module with the following properties:
 
-Create new database for your application::
+  * the module resides in a directory specified in *sys.path* (i.e. is importable without additional
+    Python runtime configuration)
+  * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
+    The *settings* parameter is Bonito's *settings* module or some compatible one. This
+    provides access to any required configuration parameter (e.g. database connection if you need one).
 
-     CREATE DATABASE your_db_name DEFAULT CHARSET UTF8;
+Authentication object is expected to implement following methods:
 
-Grant required privileges to the database user you want to use along with this application::
+  * *login(username, password)* - returns bool value (True on success else False) and changes
+    the state of your authentication object to reflect user's properties
+  * *get_corplist()* - returns list/tuple containing identifiers of corpora available to the
+    logged user
+  * *is_administrator()* - returns True if the user is admin else False is returned
+  * if the password update interface is required then the following additional methods must be implemented:
 
-     GRANT SELECT, UPDATE ON your_db_name.* to 'some_username'@'database_hostname' IDENTIFIED BY 'some_password';
+    * *update_password(new_password)*
+    * *validate_password(password)* - tests whether provided password matches user's current password
+    * *validate_new_password(password)* - tests whether provided password candidate matches required password
+      properties (like length)
+    * *get_required_password_properties()* - returns a text describing what are the properties of a valid password
 
-Typically, your database will run on the same hostname as the application itself::
-
-    GRANT SELECT, UPDATE ON your_db_name.* to 'some_username'@'localhost' IDENTIFIED BY 'some_password';
-
-Update the privileges information::
-
-    FLUSH PRIVILEGES;
-
-Leave mysql console and run the script to create required tables (we assume your current directory is bonito's
-root directory)::
-
-    mysql -u root -p < scripts/create-tables.sql
-
-
-Corpora and users
-=================
-
-Bonito 2 does not provide web-based administration of the users which means you have to use mysql console or some
-GUI client application (e.g. the PHPMyAdmin). Open mysql console again::
-
-    mysql -u root -p
-
-Define some corpus/corpora you want to publish::
-
-    INSERT INTO corpora (name) VALUES ('some_corpora_name');
-    INSERT INTO corpora (name) VALUES ('some_other_corpora_name');
-
-Define a user::
-
-    INSERT INTO user (user, pass, corplist, subcorp, fullname, email, regist, valid)
-    VALUES ('some_username', ENCRYPT('some_password'), 'some_corpora_name some_other_corpora_name', 'yes',
-    'fullname of the user', 'email of the user', NOW(), 1);
-
-Please note that corpora names in **corplist** are separated by the whitespace.
 
 Deployment
 ==========
@@ -109,68 +66,134 @@ Copy/unpack your application directory/archive to the location of your choice an
    ./scripts/deploy.sh
 
 The script compiles HTML templates and then asks you for the location of the YUI compressor. If you don't want to minify
-JavaScript and CSS files you can cancel it by pressing Ctrl^C. If you want to use this feature, please download latest
+JavaScript and CSS just answer "no" in the prompt (= default choice). If you want to use this feature, please download latest
 version of the YUI compressor from https://github.com/yui/yuicompressor/downloads.
 
 Configuration
 =============
 
-The application itself is configured via config.xml file located in the root directory of the application.
-Please refer to the **config.sample.xml** to see the structure.
+The application itself is configured via an XML configuration file located in the root directory of the application.
+By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting an environment
+variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
 
-+----------------------------------------------+-----------------------------------------------------------+
-| Xpath                                        | Description                                               |
-+==============================================+===========================================================+
-| /bonito/global/manatee_path                  | Location of your Python interface to the manatee          |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/global/debug                         | true/false (true => detailed error info is visible)       |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/global/log_path                      | Path to the logging file (Apache must have write access)  |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/adapter                     | {mysql, sqlite}                                           +
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/name                        | Name (or path) of the database used with Bonito2          |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/host                        | Hostname of the database server                           |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/password                    | Password to the database                                  |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/username                    | Username of the user with SELECT and UPDATE privileges    |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/cache/clear_interval                 | number of seconds to keep cached files                    |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/manatee_registry             | Path where corpora registry files are stored              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/options_dir                  | Path where 'options' files are stored                     |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/cache_dir                    | Path where application stores general cached data         |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/subcpath                     | Path where general subcorpora data is stored              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/users_subcpath               | Path where user's subcorpora are stored                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/tags_src_dir                 | TODO (incoming feature)                                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/tags_cache_dir               | TODO (incoming feature)                                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/conc_dir                     | Path where general concordance data is stored             |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/helpsite                     | URL of the help site (refer to the config.sample.xml)     |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/default_corpora              | Contains list of default corpora (see below)              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/default_corpora/item         | Represents individual default corpus (multiple allowed)   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/speech_segment_struct_attr   | Name of the structural attribute delimiting speeches      |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/speech_data_url              | URL where speech files are stored                         |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/kwicline_max_context         | Maximum size (in words) of the KWIC context               |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/use_db_whitelist             | 0/1 (0 => any user has access to any corpus)              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/empty_attr_value_placeholder | An alternative string to show if some structattr is empty |
-+----------------------------------------------+-----------------------------------------------------------+
+The configuration XML file is expected to be partially customizable according to the needs of 3rd party modules.
+Generally it has two-level structure: sections and key->value items (where value can be also a list of items (see
+e.g. */bonito/corpora/default_corpora*). Some parts of the file can be also processed by dedicated functions.
+The structure can be understood from the following example::
+
+    <bonito>
+      <global>
+        <key1>value1</key>
+      </global>
+      <some_other_section>
+        <key2>value2</key>
+        <key3>
+          <item>value3a</item>
+          <item>value3b</item>
+        </key3>
+      </some_other_section>
+    </bonito>
+
+Custom sections and items should have attribute *extension-by* where value identifies you, your project or your
+installation ::
+
+    <bonito>
+        <global>
+        ...
+        </global>
+        <corpora>
+        ...
+        </corpora>
+        <my_section extension-by="acme">
+            <key1>value1</key1>
+        </my_section>
+    </bonito>
+
+
+The value of the attribute is then used as a prefix to access custom items. While core configuration items are accessible
+via two parameters *[section_name]* and *[item_name]* in case of custom values it is *[value_of_extension_for:section_name]*
+or *[value_of_extension_for:item_name]*. If you define your custom section as show in the previous code example
+then you must use following call to obtain for example the value *value1*::
+
+    settings.get('acme:my_section', 'key1')
+
+Please note that items of your custom section are accessed without any prefix.
+
+You can also add a custom item to a core section ::
+
+    <bonito>
+        <global>
+        ...
+          <my_item extension-by="acme">foo</my_item>
+        </global>
+        <corpora>
+        ...
+        </corpora>
+    </bonito>
+
+Such value is then accessible via following call ::
+
+    settings.get('global', 'acme:my_item')
+
+You can refer to the **config.sample.xml** to see more examples.
+
++------------------------------------------------+-------------------------------------------------------------------+
+| Xpath                                          | Description                                                       |
++================================================+===================================================================+
+| /bonito/global/manatee_path                    | Location of your Python interface to the manatee                  |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/global/debug                           | true/false (true => detailed error info is visible)               |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/global/log_path                        | Path to the logging file (Apache must have write access)          |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/global/auth_module                     | Name of a Python module to be used for authentication             |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/adapter                       | {mysql, sqlite}                                                   |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/name                          | Name (or path) of the database used with Bonito2                  |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/host                          | Hostname of the database server                                   |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/password                      | Password to the database                                          |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/username                      | Username of the user with SELECT and UPDATE privileges            |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/cache/clear_interval                   | number of seconds to keep cached files                            |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/manatee_registry               | Path where corpora registry files are stored                      |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/options_dir                    | Path where 'options' files are stored                             |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/cache_dir                      | Path where application stores general cached data                 |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/subcpath                       | Path where general subcorpora data is stored                      |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/users_subcpath                 | Path where user's subcorpora are stored                           |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/tags_src_dir                   | A directory where all unique tag combinations for corpora are     |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/tags_cache_dir                 | A directory where tag-builder widget stores some of its data      |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/conc_dir                       | Path where general concordance data is stored                     |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/helpsite                       | URL of the help site (refer to the config.sample.xml)             |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/default_corpora                | Contains list of default corpora (see below)                      |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/default_corpora/item           | Represents individual default corpus (multiple allowed)           |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/speech_segment_struct_attr     | Name of the structural attribute delimiting speeches              |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/speech_data_url                | URL where speech files are stored                                 |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/kwicline_max_context           | Maximum size (in words) of the KWIC context                       |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/use_db_whitelist               | 0/1 (0 => any user has access to any corpus)                      |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/empty_attr_value_placeholder   | An alternative string to show if some structattr is empty         |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/multilevel_freq_dist_max_levels| Multi-level freq. distrib. - max. number of levels for a query    |
++------------------------------------------------+-------------------------------------------------------------------+
 
 Corpora hierarchy
 -----------------

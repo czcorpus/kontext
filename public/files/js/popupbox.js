@@ -74,8 +74,8 @@ define(['win', 'jquery'], function (context, $) {
             open : function (event, boxId, whereElement, contents, options) {
                 var pageWidth = $(document).width(),
                     horizPadding = 8,
+                    borderWidth,
                     boxWidth = '620px',
-                    borderWidth = 1,
                     boxHeight = '70px',
                     boxIntWidth,
                     boxTop = 0,
@@ -103,19 +103,13 @@ define(['win', 'jquery'], function (context, $) {
                 } else {
                     $(popupBox.newElem).empty().append(contents);
                 }
+                $(popupBox.newElem).addClass('hint-box');
                 $(popupBox.newElem).css({
                     padding : '5px ' + horizPadding + 'px',
-                    position : 'absolute',
-                    border : borderWidth + 'px solid #DDD',
-                    color : '#333',
-                    'background-color' : '#FFF',
                     width : boxWidth,
                     height: boxHeight,
-                    'box-shadow': '2px 2px 1px #444',
-                    'font-size' : fontSize,
-                    'white-space' : 'normal'
+                    'font-size' : fontSize
                 });
-
                 if (options.hasOwnProperty('top')) {
                     if (options.top === 'attached-top') {
                         boxTop = $(event.target).position().top + 'px';
@@ -134,6 +128,7 @@ define(['win', 'jquery'], function (context, $) {
                     $(popupBox.newElem).css('left', $(event.target).position().left + 'px');
 
                 } else {
+                    borderWidth = $(popupBox.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
                     $(popupBox.newElem).css({
                         left : '100%',
                         'margin-left' : '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'

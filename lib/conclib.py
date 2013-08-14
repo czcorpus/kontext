@@ -95,7 +95,7 @@ def add_block_items(items, attr='class', val='even', block_size=3):
 
 
 def kwicpage(
-    corpus, conc, has_speech=False, fromp=1, leftctx='-5', rightctx='5', attrs='word',
+    corpus, conc, has_speech=False, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
     ctxattrs='word', refs='#', structs='p', pagesize=20,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
         tbl_template='none', hidenone=0):
@@ -111,7 +111,9 @@ def kwicpage(
     has_speech : bool
       sets whether the corpus concordance is derived from contains speech files
     fromp : int
-      page number
+      page number (starts from 1)
+    line_offset : int
+      first line of the listing (starts from 0)
     leftctx : str, optional (default is '-5')
       how many characters/positions/whatever_struct_attrs display on the left side
     rightctx : str, optional (default is '5')
@@ -153,10 +155,10 @@ def kwicpage(
     out = {'Lines':
            kwiclines(
                corpus, conc, has_speech, (
-                   fromp - 1) * pagesize, fromp * pagesize,
+                   fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
            leftctx, rightctx, attrs, ctxattrs, refs, structs,
            labelmap, righttoleft, alignlist)}
-    add_aligns(corpus, out, conc, (fromp - 1) * pagesize, fromp * pagesize,
+    add_aligns(corpus, out, conc, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                leftctx, rightctx, attrs, ctxattrs, refs, structs,
                labelmap, righttoleft, alignlist)
     if copy_icon:
@@ -165,7 +167,7 @@ def kwicpage(
         sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
         sen_lines = kwiclines(
-            corpus, conc, has_speech, (fromp - 1) * pagesize, fromp * pagesize,
+            corpus, conc, has_speech, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
             '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
@@ -1177,7 +1179,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         else:
             minsize = fromp * pagesize
     cache_dir = cache_dir + '/' + corp.corpname + '/'
-    pid_dir = cache_dir + "/run/"
+    pid_dir = cache_dir + "run/"
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
@@ -1304,20 +1306,24 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
     return conc
 
 
-def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None):
-    desctext = {'q': _('Query'),
-                'a': _('Query'),
-                'r': _('Random sample'),
-                's': _('Sort'),
-                'f': _('Shuffle'),
-                'n': _('Negative filter'),
-                'N': _('Negative filter (excluding KWIC)'),
-                'p': _('Positive filter'),
-                'P': _('Positive filter (excluding KWIC)'),
-                'w': _('Word sketch item'),
-                't': _('Word sketch texttype item'),
-                'e': _('GDEX'),
-                'x': _('Switch KWIC'),
+def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate=True):
+    if translate:
+        _t = lambda s: _(s)
+    else:
+        _t = lambda s: s
+    desctext = {'q': _t('Query'),
+                'a': _t('Query'),
+                'r': _t('Random sample'),
+                's': _t('Sort'),
+                'f': _t('Shuffle'),
+                'n': _t('Negative filter'),
+                'N': _t('Negative filter (excluding KWIC)'),
+                'p': _t('Positive filter'),
+                'P': _t('Positive filter (excluding KWIC)'),
+                'w': _t('Word sketch item'),
+                't': _t('Word sketch texttype item'),
+                'e': _t('GDEX'),
+                'x': _t('Switch KWIC'),
                 }
     forms = {'q': ('first_form', 'cql'),
              'a': ('first_form', 'cql'),
@@ -1355,7 +1361,9 @@ def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None):
                                  sortopt.get(sortattrs[1][:4], sortattrs[1]))
             url1p.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}
                            .get(sortattrs[1][:2], '')))
-
+        elif opid == 'f':
+            size = ''
+            args = _('enabled')
         if op:
             if formname[0]:
                 url1 = '%s?%s' % (formname[0], url1p)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Czech National Corpus
+# Copyright (c) 2012 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,6 +20,7 @@ Custom Cheetah filters for the Bonito 2 interface
 import locale
 from Cheetah.Filters import Filter
 
+
 class IntegerFormatter(Filter):
     """
     Formats integer numbers according to the locales currently set
@@ -39,6 +40,7 @@ class FloatFormatter(Filter):
         if val:
             return locale.format('%01.2f', val, True).decode('UTF-8')
         return str(val)
+
 
 class HtmlEscape(Filter):
     """

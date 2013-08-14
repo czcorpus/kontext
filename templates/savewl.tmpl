@@ -15,9 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
+#encoding UTF-8
 #if $saveformat == 'xml'
 #filter WebSafe
-## XML format
+## XML formatsavewl
 <?xml version='1.0' encoding='utf-8'?>
 #if $keywords
 <keywords>
@@ -72,7 +73,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end if
 
 #end filter
-#else
+#elif $saveformat == 'text'
 ## Text format
 #if $heading
   #if $keywords
@@ -80,24 +81,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   #else
 \# Word List
   #end if
-
-\# Corpus:    $corpname
-
+\# Corpus: $corpname
   #if $usesubcorp
 \# Subcorpus: $usesubcorp
   #end if
   #if $keywords
-\# Reference corpus:    $ref_corpname
-
-    #if $ref_usesubcorp
+\# Reference corpus: $ref_corpname
+#if $ref_usesubcorp
 \# Reference subcorpus: $ref_usesubcorp
-    #end if
-  #end if
-
+#end if
+#end if
 #end if
 
 #if $Items
-$wlattr	Freq
+| $wlattr |	Freq
 ------------------------------
   #for $i in $Items
 $i.str	$i.freq
@@ -112,6 +109,9 @@ $k.str	$k.freq	$k.arf	$k.arf_mill	$k.get('freq_ref', '0')	$k.arf_ref	$k.arf_mill
     #end for
   #end if
 #end if
-
+#elif $saveformat == 'csv'   ## CSV format
+#for $item in $data
+$item#slurp
+#end for
 #end if
 

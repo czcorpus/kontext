@@ -1,4 +1,5 @@
 import re
+import csv, codecs, cStringIO
 
 try:
     import fcntl
@@ -46,3 +47,38 @@ try:
     from setproctitle import setproctitle
 except ImportError:
     setproctitle = lambda x: None
+
+
+class UnicodeCSVWriter:
+    """
+    Code taken from http://docs.python.org/2/library/csv.html
+    """
+
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        self.queue = cStringIO.StringIO()
+        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.stream = f
+        self.encoder = codecs.getincrementalencoder(encoding)()
+
+    def writerow(self, row):
+        self.writer.writerow([s.encode("utf-8") for s in row])
+        data = self.queue.getvalue()
+        data = data.decode("utf-8")
+        # ... and reencode it into the target encoding
+        data = self.encoder.encode(data)
+        # write to the target stream
+        self.stream.write(data)
+        # empty queue
+        self.queue.truncate(0)
+
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)
+
+
+class Writeable(object):
+    def __init__(self):
+        self.rows = []
+
+    def write(self, s):
+        self.rows.append(s)

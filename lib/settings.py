@@ -19,57 +19,27 @@ This module wraps application's configuration (as specified in config.xml) and p
 methods.
 """
 import os
+import sys
 from lxml import etree
 
-_conf = {}
-_user = None
-_corplist = None
+_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 
+auth = None  # authentication module (this is set from the outside)
 
-def fq(q):
-    """
-    Transforms a query containing db independent '%(p)s' placeholders
-    according to the selected adapter type.
+# This dict defines special parsing of quoted sections. Sections not mentioned there
+# are considered to be lists of key->value pairs (i.e. no complex types).
+conf_parsers = {
+    'corplist': 'parse_corplist',
+    'plugins': 'parse_plugins',
+    'tagsets': None,
 
-    Parameters
-    ----------
-    q : str
-        input query
-
-    Returns
-    -------
-    query : string
-            formatted query
-    """
-    return {
-        'mysql': q % {'p': '%s'},
-        'sqlite': q % {'p': '?'}
-    }[_conf['database']['adapter']]
-
-
-def create_db_connection():
-    """
-    Opens database connection according to the application setup.
-    MySQL and SQLite database adapters are supported.
-
-    Returns
-    -------
-    connection : object
-                 connection object as provided by selected module
-    """
-    db_adapter = _conf['database']['adapter'].lower()
-    if db_adapter == 'mysql':
-        import MySQLdb
-        return MySQLdb.connect(host=get('database', 'host'), user=get('database', 'username'),
-            passwd=get('database', 'password'), db=get('database', 'name'))
-    elif db_adapter == 'sqlite':
-        import sqlite3
-        return sqlite3.connect(get('database', 'name'))
+}
 
 
 def get(section, key=None, default=None):
     """
-    Gets a configuration value.
+    Gets a configuration value. This function never throws an exception in
+    case it cannot find the required value.
 
     Parameters
     ----------
@@ -86,6 +56,10 @@ def get(section, key=None, default=None):
 
 
 def set(section, key, value):
+    """
+    Sets configuration value. Please note that this action is neither
+    persistent nor shared between users/requests.
+    """
     if not section in _conf:
         _conf[section] = {}
     _conf[section][key] = value
@@ -93,6 +67,8 @@ def set(section, key, value):
 
 def get_bool(section, key):
     """
+    The same as get() but returnparse_pluginss a bool type
+    (True for 'true', '1' values, False for 'false', '0' values)
     """
     return {
         'true': True,
@@ -104,11 +80,16 @@ def get_bool(section, key):
 
 def get_int(section, key):
     """
+    The same as get() but returns an int type
     """
     return int(get(section, key))
 
 
-def parse_corplist(root, path='/', data=[]):
+def custom_prefix(elm):
+    return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
+
+
+def parse_corplist_node(root, data, path='/'):
     """
     """
     if not hasattr(root, 'tag') or not root.tag == 'corplist':
@@ -119,7 +100,7 @@ def parse_corplist(root, path='/', data=[]):
         if not hasattr(item, 'tag'):
             continue
         elif item.tag == 'corplist':
-            parse_corplist(item, path, data)
+            parse_corplist_node(item, data, path)
         elif item.tag == 'corpus':
             web_url = item.attrib['web'] if 'web' in item.attrib else None
             sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
@@ -133,61 +114,96 @@ def parse_corplist(root, path='/', data=[]):
             })
 
 
+def parse_general_tree(section):
+    ans = {}
+    for item in section:
+        if item.tag is etree.Comment:
+            continue
+        elif item.tag in conf_parsers:
+            node_processor = conf_parsers[item.tag]
+            if node_processor is not None:
+                getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
+            else:
+                pass  # we ignore items with None processor deliberately
+        else:
+            item_id = '%s%s' % (custom_prefix(item), item.tag)
+            if len(item.getchildren()) == 0:
+                ans[item_id] = item.text
+            else:
+                item_list = []
+                for sub_item in item:
+                    item_list.append(sub_item.text)
+                ans[item_id] = tuple(item_list)
+    return ans
+
+
+def parse_plugins(root):
+    global _conf
+
+    _conf['plugins'] = {}
+    for item in root:
+        _conf['plugins'][item.tag] = parse_general_tree(item)
+
+
+def parse_corplist(root):
+    global _conf
+
+    data = []
+    parse_corplist_node(root, data, path='/')
+    _conf['corpora_hierarchy'] = data
+
+
 def parse_config(path):
     """
+    Parses application configuration XML file. A two-level structure is expected where
+    first level represents sections and second level key->value pairs. It is also possible
+    to have values of list type (e.g. <my_conf_value><item>v1</item><item>v2</item></my_conf_value>)
+
+    There are also specific sections which can be processed by an assigned function (see variable conf_parsers).
+    This can be used to omit some sections too (you just define empty function or set None value in conf_parsers
+    for such section).
+
+    Parameters
+    ----------
+    path : str
+      a file system path to the configuration file
     """
+    global _conf
+
     xml = etree.parse(open(path))
-    _conf['global'] = {}
-    for item in xml.find('global'):
-        if item.tag == 'administrators':
-            tmp = tuple([x.text for x in item])
-            _conf['global'][item.tag] = tmp if tmp is not None else ()
+    root = xml.getroot()
+
+    for section in root:
+        if section.tag in conf_parsers:
+            getattr(sys.modules[__name__], conf_parsers[section.tag])(section)
         else:
-            _conf['global'][item.tag] = item.text
-    if not 'administrators' in _conf['global']:
-        _conf['global']['administrators'] = ()
-    _conf['database'] = {}
-    for item in xml.find('database'):
-        _conf['database'][item.tag] = item.text
-    _conf['cache'] = {}
-    for item in xml.find('cache'):
-        _conf['cache'][item.tag] = item.text
-    _conf['corpora'] = {}
-    for item in xml.find('corpora'):
-        if item.tag == 'corplist':
-            data = []
-            parse_corplist(item, data=data)
-            _conf['corpora_hierarchy'] = data
-        elif item.tag == 'default_corpora':
-            data = []
-            for item in item.findall('item'):
-                data.append(item.text)
-            _conf['corpora']['default_corpora'] = data
-        else:
-            _conf['corpora'][item.tag] = item.text
+            section_id = '%s%s' % (custom_prefix(section), section.tag)
+            _conf[section_id] = parse_general_tree(section)
 
 
-def load(user, conf_path='../config.xml'):
+def load(conf_path='../config.xml'):
     """
     Loads application's configuration from provided file
 
     Parameters
     ----------
-    user : str
+    auth_handler : object
     conf_path : str, optional (default is 'config.xml')
-      path to the configuration XML file
+      path to the configuration XML file. This value can be
+      overridden by an environment variable BONITO_CONF_PATH
     """
-    global _user
-
-    _user = user
+    if 'BONITO_CONF_PATH' in os.environ:
+        conf_path = os.environ['BONITO_CONF_PATH']
     parse_config(conf_path)
-    os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
+
+    if get('corpora', 'manatee_registry'):
+        os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
 
 
 def get_corpus_info(corp_name):
     """
-    Returns information related to provided corpus name and contained within
+    Returns an information related to provided corpus name and contained within
     the configuration XML file (i.e. not the data from the registry file). It is
     able to handle names containing the '/' character.
 
@@ -237,92 +253,11 @@ def get_default_corpus(corplist):
         return get('corpora', 'default_corpora')[0]
 
 
-def create_salt(length=2):
-    """
-    """
-    import random
-    salt_chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
-    return ''.join([salt_chars[random.randint(0, len(salt_chars) - 1)] for i in range(length)])
-
-
-def get_user_data():
-    """
-    """
-    cols = ('pass', 'corplist')
-    conn = create_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (_user,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return dict(zip(cols, row))
-
-
-def update_user_password(password):
-    """
-    Updates current (see the _user variable) user's password.
-    There is no need to hash/encrypt the password - function does it automatically.
-    """
-    import crypt
-
-    hashed_pass = crypt.crypt(password, create_salt())
-    conn = create_db_connection()
-    cursor = conn.cursor()
-    ans = cursor.execute(fq("UPDATE user SET pass = %(p)s WHERE user = %(p)s"), (hashed_pass, _user,))
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return ans
-
-
-def get_corplist():
-    """
-    Fetches list of available corpora according to provided user
-
-    Returns
-    -------
-    list
-      list of corpora names (sorted alphabetically) available to current user (specified in the _user variable)
-    """
-    global _corplist
-
-    if _corplist is None:
-        conn = create_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(fq("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
-                          " WHERE un.user = %(p)s"),  (_user, ))
-        rows = cursor.fetchall()
-        if len(rows) > 0:
-            cursor.close()
-            conn.close()
-            corpora = [row[0] for row in rows]
-        else:
-            corpora = []
-
-        corpora.sort()
-        _corplist = corpora
-    return _corplist
-
-
-def user_has_access_to(corpname):
-    """
-    Tests whether the current user has access to provided corpus name
-    """
-    return corpname in get_corplist() or not get_bool('corpora', 'use_db_whitelist')
-
-
-def user_is_administrator():
-    """
-    Tests whether the current user's name belongs to the 'administrators' group
-    """
-    return _user in get('global', 'administrators')
-
-
 def is_debug_mode():
     """
-    Returns true if the application is in 'debugging mode'
+    Returns True if the application is in 'debugging mode'
     (which leads to more detailed error messages etc.).
-    Else returns false.
+    Otherwise it returns False.
     """
     value = get('global', 'debug')
     return value is not None and value.lower() in ('true', '1')
@@ -342,26 +277,50 @@ def has_configured_speech(corpus):
     """
     return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
 
+
 def get_speech_structure():
     """
     Returns name of the structure configured as a 'speech' delimiter
     """
     return get('corpora', 'speech_segment_struct_attr').split('.')[0]
 
+
 def create_speech_url(corpus_name, speech_id):
     """
     Builds a URL string to the provided speech_id and corpus_name
     """
     speech_url = get('corpora', 'speech_data_url')
-    if speech_url[-1] <> '/':
+    if speech_url[-1] != '/':
         speech_url += '/'
     if '@SERVER_NAME' in speech_url:
-        speech_url = speech_url.replace('@SERVER_NAME', '%s')
-        speech_url = speech_url % os.getenv('SERVER_NAME')
+        speech_url = speech_url.replace('@SERVER_NAME', '%s') % os.getenv('SERVER_NAME')
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
-def get_root_uri():
-    return 'http://%s%s' % (os.getenv('SERVER_NAME'), os.getenv('REQUEST_URI').replace('user_password', 'first_form'))
+
+def get_uri_scheme_name():
+    if os.getenv('SCRIPT_URI').startswith('https'):
+        return 'https'
+    elif os.getenv('SCRIPT_URI').startswith('http'):
+        return 'http'
+    else:
+        return ''
+
+
+def get_root_url():
+    """
+    Returns root URL of the application
+    """
+    path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
+
+
+def supports_password_change():
+    req_functions = ('validate_password', 'validate_new_password', 'get_required_password_properties',
+                     'update_user_password')
+    for item in req_functions:
+        if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
+            return False
+    return True
 
 if __name__ == '__main__':
     import sys

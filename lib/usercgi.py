@@ -16,10 +16,13 @@
 
 import CGIPublisher
 import os
+from CGIPublisher import UserActionException
 
 import settings
+import plugins
 
-def load_opt_file (options, filepath):
+
+def load_opt_file(options, filepath):
     if not os.path.isfile (filepath):
         return
     for line in open (filepath).readlines():
@@ -36,51 +39,22 @@ class UserCGI (CGIPublisher.CGIPublisher):
     _default_user = u'defaults'
     attrs2save = []
 
-    def __init__ (self, environ, user=None):
-        CGIPublisher.CGIPublisher.__init__ (self, environ)
+    def __init__(self, environ, user=None):
+        CGIPublisher.CGIPublisher.__init__(self, environ)
         self._user = user
 
-    def _user_defaults (self, user):
+    def _user_defaults(self, user):
         pass
 
-    def _get_ca_user_info(self, corpname=''):
-        import Cookie, urllib, urllib2, simplejson
-        ck = Cookie.SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        self.session_id = getattr(ck.get('sessionid'), 'value', '')
-        self.user_ip = os.getenv ('REMOTE_ADDR', '-')
-        if self._login_address:
-            self._login_address += '/?next=' + urllib.quote_plus(
-                                                os.getenv ('REQUEST_URI', '-'))
-        request = urllib2.Request(self._ca_user_info
-                                  % (self.session_id, self.user_ip, corpname))
-        file = urllib2.urlopen(request)
-        data = file.read()
-        file.close()
-        user_info = simplejson.loads(data)
-        if user_info.has_key('error'): self._has_access = False
-            # set attributes (incl. these starting '_') and correct types
-        corr_func = {type(0): int, type(0.0): float, type([]): lambda x: [x]}
-        for k, v in user_info.items():
-            try: setattr (self, k, corr_func[type(getattr(self, k))](v))
-            except: setattr (self, k, v)
-        if self._user: self._user = str(self._user)
-
     def _setup_user(self, corpname=''):
-        if self._ca_user_info:
-            self._has_access = 0
-            self._get_ca_user_info(corpname)
-        if not self._user:
-            self._user = os.getenv('REMOTE_USER', '-')
-            if self._user == '-':
-                self._user = self._default_user
-        user = self._user
         options = {}
-        load_opt_file(options, os.path.join(self._options_dir,
-                                            self._default_user))
-        if user is not self._default_user:
-            load_opt_file(options, os.path.join(self._options_dir, user))
+        if self._user:
+            user_file_id = self._user
+        else:
+            user_file_id = 'anonymous'
+        load_opt_file(options, os.path.join(self._options_dir, user_file_id))
         CGIPublisher.correct_types(options, self.clone_self(), selector=1)
-        self._user_defaults(user)
+        self._user_defaults(user_file_id)
         self.__dict__.update(options)
 
     def _save_options(self, optlist=[], selector=''):
@@ -104,8 +78,6 @@ class UserCGI (CGIPublisher.CGIPublisher):
                 v = v.encode('utf8')
             opt_lines.append(str(k) + '\t' + str(v))
         opt_lines.sort()
-        import logging
-        logging.getLogger(__name__).info('options: %s' % opt_filepath)
         opt_file = open(opt_filepath, 'w')
         opt_file.write('\n'.join(opt_lines))
         opt_file.close()
@@ -114,21 +86,55 @@ class UserCGI (CGIPublisher.CGIPublisher):
         options = [a for a in self.attrs2save if not a.startswith('_')]
         self._save_options(options, '')
 
-    def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
-        import crypt
+    def user_password_form(self):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
+        return {}
 
-        user_data = settings.get_user_data()
-        if not user_data:
-            raise Exception(_('Unknown user'))
-        if crypt.crypt(curr_passwd, user_data['pass']) == user_data['pass']:
+    user_password_form.template = 'user_password_form.tmpl'
+
+    def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
+        logged_in = settings.auth.login(self._user, curr_passwd)
+        if not logged_in:
+            raise UserActionException(_('Unknown user'))
+        if settings.auth.validate_password(curr_passwd):
             pass
         else:
-            raise Exception(_('Invalid password'))
+            raise UserActionException(_('Invalid password'))
 
         if new_passwd != new_passwd2:
-            raise Exception(_('New password and its confirmation do not match.'))
+            raise UserActionException(_('New password and its confirmation do not match.'))
 
-        settings.update_user_password(new_passwd)
-        print('Location: %s' % settings.get_root_uri())
+        if not settings.auth.validate_new_password(new_passwd):
+            raise UserActionException(settings.auth.get_required_password_properties())
+
+        settings.auth.update_user_password(new_passwd)
+        self.redirect(settings.get_root_uri())
+
+    def login(self):
+        self.disabled_menu_items = ('menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
+        return {}
+
+    def loginx(self, username='', password=''):
+        user = plugins.auth.login(username, password)
+        if user is not None:
+            self._session['user'] = user
+            self.redirect('%s%s' % (settings.get_root_url(), 'first_form'))
+        else:
+            self.redirect('login')
+        return {}
+
+    def logoutx(self):
+        plugins.auth.logout(self._get_session_id())
+        self._session['user'] = plugins.auth.anonymous_user()  # just to keep rendering ok
+        self._user = None
+        return {
+            'notification': _('You have been logged out')
+        }
+
+    logoutx.template = 'login.tmpl'
 
     user_password.template = 'user_password.tmpl'

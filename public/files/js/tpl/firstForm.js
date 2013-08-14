@@ -21,12 +21,9 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $,
-                                                                                                          treeComponent,
-                                                                                                          bonito,
-                                                                                                          mainPage,
-                                                                                                          hideElem,
-                                                                                                          _sm) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $, treeComponent,
+                                                                                                mainPage, hideElem,
+                                                                                                _sm) {
     'use strict';
 
     var lib = {},
@@ -159,16 +156,41 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         });
     };
 
+    lib.updateFieldsets = function () {
+        var jqFieldset =  $('a.form-extension-switch').closest('fieldset');
+
+        if (jqFieldset.hasClass('inactive')) {
+            jqFieldset.find('div.contents').css('display', 'none');
+            jqFieldset.find('.status').empty().html('&#8595;');
+
+        } else {
+            jqFieldset.find('div.contents').css('display', 'block');
+            jqFieldset.find('.status').empty().html('&#8593;');
+        }
+    };
+
     /**
      * @param {object} conf
      */
     lib.bindClicks = function (conf) {
-        $('ul.submenu a.toggle-submenu-item').each(function () {
-            $(this).on('click', function (event) {
-                bonito.toggleViewStore($(this).data('id-to-set'), null, mainPage.userSettings);
-                $(event.target).toggleClass('toggled');
-            });
+        $('a.form-extension-switch').on('click', function (event) {
+            var jqTriggerLink = $(event.target),
+                jqFieldset = jqTriggerLink.closest('fieldset');
+
+            jqFieldset.toggleClass('inactive');
+            if (jqFieldset.hasClass('inactive')) {
+                jqFieldset.find('div.contents').css('display', 'none');
+                jqFieldset.find('.status').empty().html('&#8595;');
+                jqTriggerLink.attr('title', conf.messages.click_to_expand);
+
+            } else {
+                jqFieldset.find('div.contents').css('display', 'block');
+                jqFieldset.find('.status').empty().html('&#8593;');
+                jqTriggerLink.attr('title', conf.messages.click_to_hide);
+            }
         });
+
+        // context-switch TODO
 
         $('#switch_err_stand').on('click', function () {
             if ($(this).text() === conf.labelStdQuery) {
@@ -258,7 +280,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         $('#add-searched-lang-widget button[type="button"]').each(function () {
             $(this).on('click', createAddLanguageClickHandler());
         });
-        $('input[name="sel_aligned"]').each(function() {
+        $('input[name="sel_aligned"]').each(function () {
             if ($(this).val()) {
                 $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
             }
@@ -288,6 +310,7 @@ define(['win', 'jquery', 'treecomponent', 'bonito', 'tpl/document', 'hideelem', 
         lib.misc(conf);
         lib.bindClicks(conf);
         lib.bindParallelCorporaCheckBoxes();
+        lib.updateFieldsets();
     };
 
     return lib;
