@@ -1,7 +1,22 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700);
+
+#conc-wrapper {
+    border: 3px solid #D2EDC0;
+    border-radius: 9px;
+}
+
+#conc-top-bar,
+#conc-bottom-bar {
+    overflow: hidden;
+    background-color: #D2EDC0;
+    padding: 5px 15px;
+}
+
 #conclines {
-    font-size: 100%;
     background-color: white;
     border: 1px solid #DDDDDD;
+    font-size: 10pt;
+    font-family: 'Roboto Condensed';
 }
 
 table#conclines { border-spacing: 0px; }
@@ -13,7 +28,7 @@ td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
 .ref {
 	white-space:nowrap;
 	cursor: pointer;
-	color: blue;
+	color: #009EE0;
 	font-weight: bold;
 }
 .lc {
@@ -160,7 +175,7 @@ tr.highlight td {
 }
 
 tr.even {
-   background-color: #ddd;
+   background-color: #ECF3EA;
 }
 
 /* spoken corpus */

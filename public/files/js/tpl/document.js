@@ -441,7 +441,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     jqSubmenu = jqMenuLi.find('ul'),
                     prevMenuId = $('#menu-level-2').attr('data-current-menu'),
                     jqPrevMenuUl = $('#menu-level-2').find('ul'),
-                    menuLeftPos = 0;
+                    menuLeftPos = 0,
+                    jqMenuBar = $('#menu-bar');
 
                 if (jqMenuLi.attr('id') === prevMenuId || jqMenuLi.hasClass('disabled')) {
                     return;
@@ -457,11 +458,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 if (jqSubmenu.length > 0) {
                     jqSubmenu.css('display', 'block');
                     $('#menu-level-2').addClass('active').empty().append(jqSubmenu);
-                    menuLeftPos = jqMenuLi.position().left + jqMenuLi.width() / 2 - jqSubmenu.width() / 2;
-                    if (menuLeftPos < 0) {
-                        menuLeftPos = 0;
+                    menuLeftPos = jqMenuLi.offset().left + jqMenuLi.width() / 2 - jqSubmenu.width() / 2;
+                    if (menuLeftPos < jqMenuBar.offset().left) {
+                        menuLeftPos = jqMenuBar.offset().left;
+
+                    } else if (menuLeftPos + jqSubmenu.width() > jqMenuBar.offset().left + jqMenuBar.width()) {
+                        menuLeftPos = jqMenuBar.offset().left + jqMenuBar.width() - jqSubmenu.width();
                     }
-                    jqSubmenu.css('margin-left', menuLeftPos);
+                    jqSubmenu.css('left', menuLeftPos);
 
                 } else {
                     $('#menu-level-2').removeClass('active');
