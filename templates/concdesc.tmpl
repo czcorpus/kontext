@@ -47,7 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <td>$d.op
         </td><td>
         #if $d.churl
-        #set $href = $d.churl + ';' + $globals
+        #set $href = 'view?' + $d.tourl + ';' + $globals
         <a href="$href">
             #end if
             $d.arg
