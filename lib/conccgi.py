@@ -603,15 +603,6 @@ class ConcCGI(UserCGI):
                                  copy_icon=self.copy_icon,
                                  tbl_template=self.tbl_template)
 
-        self._session['conc'] = {
-            'sampled_size': out.get('sampled_size', None),
-            'fullsize': out.get('fullsize', None),
-            'concsize': out.get('concsize', None),
-            'result_relative_freq': out.get('result_relative_freq', None),
-            'result_relative_freq_rel_to': out.get('result_relative_freq_rel_to', None),
-            'result_arf': out.get('result_arf', None),
-        }
-
         out['Sort_idx'] = self.call_function(conclib.get_sort_idx, (conc,),
                                              enc=self.self_encoding())
         out.update(self.get_conc_sizes(conc))
@@ -637,6 +628,14 @@ class ConcCGI(UserCGI):
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
 
+        self._session['conc'] = {
+            'sampled_size': out.get('sampled_size', None),
+            'fullsize': out.get('fullsize', None),
+            'concsize': out.get('concsize', None),
+            'result_relative_freq': out.get('result_relative_freq', None),
+            'result_relative_freq_rel_to': out.get('result_relative_freq_rel_to', None),
+            'result_arf': out.get('result_arf', None),
+        }
         return out
 
     add_vars['view'] = ['orig_query']
