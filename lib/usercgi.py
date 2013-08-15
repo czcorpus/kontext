@@ -129,7 +129,9 @@ class UserCGI (CGIPublisher.CGIPublisher):
 
     def logoutx(self):
         plugins.auth.logout(self._get_session_id())
-        self._session['user'] = plugins.auth.anonymous_user()  # just to keep rendering ok
+        self._session = {
+            'user': plugins.auth.anonymous_user()  # just to keep rendering ok
+        }
         self._user = None
         return {
             'notification': _('You have been logged out')
