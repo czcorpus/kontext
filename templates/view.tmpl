@@ -321,53 +321,55 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #set $basecorpname = $corpname.split('/')[-1]
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
     #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
-    <table id="conclines">
-    #filter None
-    $align_heading($viewmode, $KWICCorps)
-    #end filter
-    #if $len($Lines) > 0
-        #for $i, $l in $enumerate($Lines)
-          <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-          <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
-              $l.ref
-          </td>
-          #filter None
-            #if $refs_up
-              <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
-                #if $copy_icon# <td></td> #end if#
-                #for $ii,$ll in $enumerate($l.get('Align', []))
-                    #set $bcname = $Par_conc_corpnames[$ii+1].n
-                    #if $ll.ref
-                        <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
-                    #else
+    <div id="conclines-wrapper">
+        <table id="conclines">
+        #filter None
+        $align_heading($viewmode, $KWICCorps)
+        #end filter
+        #if $len($Lines) > 0
+            #for $i, $l in $enumerate($Lines)
+              <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+              <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
+                  $l.ref
+              </td>
+              #filter None
+                #if $refs_up
+                  <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
+                    #if $copy_icon# <td></td> #end if#
+                    #for $ii,$ll in $enumerate($l.get('Align', []))
+                        #set $bcname = $Par_conc_corpnames[$ii+1].n
+                        #if $ll.ref
+                            <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
+                        #else
+                            <td></td>
+                        #end if
+                    #end for
+                    </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+                    $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+                    $oneclick_line($l, $i, $corpname)
+                    #for $ii,$ll in $enumerate($l.get('Align', []))
+                        #set $bcname = $Par_conc_corpnames[$ii+1].n
+                        $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+                    #end for
+                #else ## standard display of refs
+                    $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+                    $oneclick_line($l, $i, $corpname)
+                    #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
+                      #set $bcname = $Par_conc_corpnames[$ii+1].n
+                      #if $ll.ref
+                        <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
+                      #else
                         <td></td>
-                    #end if
-                #end for
-                </tr><tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-                $oneclick_line($l, $i, $corpname)
-                #for $ii,$ll in $enumerate($l.get('Align', []))
-                    #set $bcname = $Par_conc_corpnames[$ii+1].n
-                    $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                #end for
-            #else ## standard display of refs
-                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-                $oneclick_line($l, $i, $corpname)
-                #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-                  #set $bcname = $Par_conc_corpnames[$ii+1].n
-                  #if $ll.ref
-                    <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
-                  #else
-                    <td></td>
-                  #end if
-                  $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                #end for
-            #end if
-          #end filter
-          </tr>
-        #end for
+                      #end if
+                      $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+                    #end for
+                #end if
+              #end filter
+              </tr>
+            #end for
         </table>
-    #end if
+        #end if
+    </div>
 
     <div id="conc-bottom-bar">
     #filter None

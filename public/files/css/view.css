@@ -12,6 +12,10 @@
     padding: 5px 15px;
 }
 
+#conclines-wrapper {
+    overflow: auto;
+}
+
 #conclines {
     background-color: white;
     font-size: 10pt;
