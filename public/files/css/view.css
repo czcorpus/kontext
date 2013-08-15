@@ -27,6 +27,16 @@ table#conclines {
     width: 100%;
 }
 
+#hidden-conc {
+    text-align: center;
+    background-image: url(../img/hidden-conc.jpg);
+    background-repeat: no-repeat;
+}
+
+#hidden-conc a {
+    display: block;
+}
+
 table#conclines tr td { padding: 2px; }
 
 td.maincorp { background-color: rgba(0, 100, 255, 0.1); }

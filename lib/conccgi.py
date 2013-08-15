@@ -274,6 +274,10 @@ class ConcCGI(UserCGI):
     def _add_save_menu_item(self, label, action, params):
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
+    def _reset_session_conc(self):
+        if 'conc' in self._session:
+            del(self._session['conc'])
+
     def _enable_subcorpora_list(self, out):
         """
         Parameters
@@ -415,9 +419,24 @@ class ConcCGI(UserCGI):
                                               ('lemma', self.lemma),
                                               ('lpos', self.lpos),
                                               ('usesubcorp', self.usesubcorp),
-        ])
+                                             ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
         result['supports_password_change'] = settings.supports_password_change()
+
+        # is there a concordance information in session?
+        if 'conc' in self._session:
+            result['show_conc_bar'] = True
+            result['sampled_size'] = self._session['conc'].get('sampled_size', None)
+            result['fullsize'] = self._session['conc'].get('fullsize', None)
+            result['concsize'] = self._session['conc'].get('concsize', None)
+            result['result_relative_freq'] = self._session['conc'].get('result_relative_freq', None)
+            result['result_relative_freq_rel_to'] = self._session['conc'].get('result_relative_freq_rel_to', None)
+            result['result_arf'] = self._session['conc'].get('result_arf', None)
+            result['shuffle_notification'] = self._session['conc'].get('shuffle_notification', None)
+        else:
+            result['show_conc_bar'] = False
+
+
         return result
 
     def add_undefined(self, result, methodname):
@@ -583,6 +602,16 @@ class ConcCGI(UserCGI):
                                             for c in self.align.split(',') if c],
                                  copy_icon=self.copy_icon,
                                  tbl_template=self.tbl_template)
+
+        self._session['conc'] = {
+            'sampled_size': out.get('sampled_size', None),
+            'fullsize': out.get('fullsize', None),
+            'concsize': out.get('concsize', None),
+            'result_relative_freq': out.get('result_relative_freq', None),
+            'result_relative_freq_rel_to': out.get('result_relative_freq_rel_to', None),
+            'result_arf': out.get('result_arf', None),
+        }
+
         out['Sort_idx'] = self.call_function(conclib.get_sort_idx, (conc,),
                                              enc=self.self_encoding())
         out.update(self.get_conc_sizes(conc))
@@ -617,6 +646,7 @@ class ConcCGI(UserCGI):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
+        self._reset_session_conc()
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
@@ -1739,6 +1769,7 @@ class ConcCGI(UserCGI):
         self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+        self._reset_session_conc()
         nogenhist = 0
         corp = self._corp()
         attrlist = corp.get_conf('ATTRLIST').split(',')
@@ -2917,6 +2948,7 @@ class ConcCGI(UserCGI):
     ajax_undelete_query.return_type = 'json'
 
     def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
+        self._reset_session_conc()
         if plugins.has_plugin('query_storage'):
             rows = plugins.query_storage.get_user_queries(self._user, from_date=from_date, to_date=to_date,
                                                           offset=offset, limit=limit, types=types)
