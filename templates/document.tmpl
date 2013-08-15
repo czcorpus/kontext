@@ -1,5 +1,6 @@
 #*
 Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -31,6 +32,7 @@ $text
 #end filter
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ucnk.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}multiselect.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
@@ -261,12 +263,7 @@ $_ca_topbar
         </tr>
         #end if
     </table>
-
-
 </div>
-
-
-
 #end filter
 #end if
 
@@ -297,7 +294,42 @@ $_ca_topbar
         </div>
         #end if
         #filter None
-        $main
+        #block concordance
+        #if $show_conc_bar
+        <div id="conc-wrapper">
+            <div id="conc-top-bar">
+                <div id="result-info">
+                    #if $usesubcorp
+                        $_("Subcorpus"): <strong>$usesubcorp</strong>
+                    #end if
+
+                    $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
+                        #end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
+
+                    <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+                    <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+                    $result_relative_freq_rel_to
+                    #if $result_arf
+                    | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+                    <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+                    #end if
+                    #if $shuffle_notification
+                    | <span class="notice-shuffled">$_('Result is shuffled')</span>
+                    #end if
+                </div>
+            </div>
+            <div id="conclines-wrapper">
+                <div id="hidden-conc">
+                    <a href="view?$q;$globals" title="$_('click to show current concordance')"><img src="../files/img/expand-conc.png" alt="$_('show current concordance')" /></a>
+                </div>
+            </div>
+        </div>
+        #end if
+        #end block
+
+        #block main
+        #end block
+
         #end filter
     </div>
     <div id="footer">
