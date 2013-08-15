@@ -125,8 +125,9 @@ class QueryStorage(object):
         if row:
             num_delete = row[0] - self.num_kept_records
             if num_delete > 0:
-                cursor.execute("DELETE FROM saved_queries WHERE user=? AND deleted IS NULL AND tmp = 1"
-                               " ORDER BY created LIMIT ?", (user, num_delete))
+                cursor.execute("DELETE FROM saved_queries WHERE id IN (SELECT id FROM saved_queries "
+                               " WHERE user=? AND deleted IS NULL AND tmp = 1"
+                               " ORDER BY created LIMIT ?)", (user, num_delete))
 
     def get_user_query(self, user, id):
         """
