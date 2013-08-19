@@ -2149,6 +2149,7 @@ class ConcCGI(UserCGI):
         """
         self.active_menu_item = 'menu-subcorpus'
         self.disabled_menu_items = ('menu-save',)
+        self._reset_session_conc()
 
         tt_sel = self.texttypes_with_norms()
         structs_and_attrs = {}
