@@ -136,22 +136,24 @@ $_ca_topbar
 
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("New query entry form")">$_("New query")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('Search in the corpus')&#8230;</a></li>
-                    <li><a title="TODO" href="query_history?$corpname_url">$_('Query history')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('Search in the corpus')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="query_history?$corpname_url">$_('Query history')&#8230;</a></li>
                     <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
             <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
                     <li><a title="TODO" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
                 </ul>
             </li>
             <li class="separator">&nbsp;</li>
             <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
                 <ul class="submenu">
+                    #set $i = 0
                     #for $item in $save_menu
-                    <li><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    #set $i = $i + 1
                     #end for
                     #block custom_save
                     #end block
@@ -160,20 +162,20 @@ $_ca_topbar
 
             <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
                 <ul class="submenu">
-                    <li><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
-                    <li><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
-                    <li><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
-                    <li><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
-                    <li><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')</a></li>
-                    <li><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
+                    <li class="separ"><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
+                    <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
+                    <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="#">KWIC &#8596; $_('Cooccurrence')</a></li>
+                    <li class="separ"><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
                     <li><a title="TODO" href="#">$_('Undo')</a></li>
                 </ul>
             </li>
 
             <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
                 <ul class="submenu">
-                    <li><a href="filter_form?$q;$globals&pnfilter=p">$_('Positive')&#8230;</a></li>
-                    <li><a href="filter_form?$q;$globals&pnfilter=n">$_('Negative')&#8230;</a></li>
+                    <li class="separ"><a href="filter_form?$q;$globals&pnfilter=p">$_('Positive')&#8230;</a></li>
+                    <li class="separ"><a href="filter_form?$q;$globals&pnfilter=n">$_('Negative')&#8230;</a></li>
                     <li><a href="filter_form?$q;$globals">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
@@ -181,14 +183,14 @@ $_ca_topbar
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
                     #if 'tag' in [x['n'] for x in $AttrList]
-                    <li><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
                     #end if
-                    <li><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
                     #if '.' in $fcrit_shortref.split('/')[0]
-                    <li><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
                     #end if
                     #if $ttcrit
-                    <li><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
                     #end if
                     <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
                 </ul>
@@ -203,26 +205,26 @@ $_ca_topbar
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
                 <ul class="submenu">
                     #if $viewmode == 'sen'
-                    <li><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
+                    <li class="separ"><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
                     #else
-                    <li><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
+                    <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
                     #end if
                     #if $align
-                    <li><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+                    <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
                     #end if
-                    <li><a href="#">$_("Attributes")&#8230;</a></li>
-                    <li><a href="#">$_("Structures and references")&#8230;</a></li>
-                    <li><a href="#">$_("Range of the concordance")&#8230;</a></li>
-                    <li><a href="#">$_("Frequency distribution")&#8230;</a></li>
-                    <li><a href="#">$_("Collocations")&#8230;</a></li>
+                    <li class="separ"><a href="#">$_("Attributes")&#8230;</a></li>
+                    <li class="separ"><a href="#">$_("Structures and references")&#8230;</a></li>
+                    <li class="separ"><a href="#">$_("Range of the concordance")&#8230;</a></li>
+                    <li class="separ"><a href="#">$_("Frequency distribution")&#8230;</a></li>
+                    <li class="separ"><a href="#">$_("Collocations")&#8230;</a></li>
                     <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
             <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                 <ul class="submenu">
-                    <li><a title="TODO" href="#">$_('User manual')&#8230;</a></li>
-                    <li><a title="TODO" href="#">$_('Linguistic terms')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="#">$_('User manual')&#8230;</a></li>
+                    <li class="separ"><a title="TODO" href="#">$_('Linguistic terms')&#8230;</a></li>
                     <li><a title="TODO" href="#">$_('Available corpora')&#8230;</a></li>
                 </ul>
             </li>
@@ -232,37 +234,44 @@ $_ca_topbar
         </div>
     </div>
 
+    <div id="active-corpus">
+        $_('corpus'):
+        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:</strong><span title="$_('subcorpus')">$usesubcorp</span>#end if#
+    </div>
 
-    <table id="toolbar-info">
-        <tr>
-            <th>$_("Corpus"):</th>
-            <td>
-                <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>
-            </td>
-        </tr>
-        #if $corp_description
-        <tr>
-            <th>$_('Description'):</th>
-            <td>
-                #if $corp_web#<a class="corpus-desc" href="$corp_web" target="_blank" title="$_('click for detailed description')">#end if#$corp_description#if $corp_web#</a>#end if#
-            </td>
-        </tr>
-        #end if
-        #if $corp_size
-        <tr>
-            <th>$_('Size'):</th>
-            <td>
-                <span class="corpus-size">$corp_size</span> <sup><a id="positions-help-link" href="#">?</a></sup>
-            </td>
-        </tr>
-        #end if
-        #if $usesubcorp
-        <tr>
-            <th>$_('Subcorpus'):</th>
-            <td>$usesubcorp ($subcorp_size)</td>
-        </tr>
-        #end if
-    </table>
+    <div id="corpus-details-box">
+        <h4 class="corpus-name"></h4>
+        <p>
+            <strong>$_('size'):</strong> <span class="size"></span> $_('positions')
+        </p>
+        <p class="corpus-description"></p>
+        <table class="structs-and-attrs" border="0" style="border-collapse: collapse">
+            <tr>
+                <td>
+                    <table class="attrib-list">
+                        <tr>
+                            <th class="attrib-heading" colspan="2">$_('Attributes')</th>
+                        </tr>
+                        <tr class="item">
+                            <th></th>
+                            <td class="numeric"></td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="padding-left: 4em">
+                    <table class="struct-list">
+                        <tr>
+                            <th class="attrib-heading" colspan="2">$_('Structures')</th>
+                        </tr>
+                        <tr class="item">
+                            <th></th>
+                            <td class="numeric"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
 #end filter
 #end if
@@ -300,21 +309,22 @@ $_ca_topbar
             <div id="conc-top-bar">
                 <div id="result-info">
                     #if $usesubcorp
-                        $_("Subcorpus"): <strong>$usesubcorp</strong>
+                        $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
                     #end if
 
                     $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
-                        #end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
+                        #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+                        <span class="separ">|</span> #end if
 
                     <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
                     <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
                     $result_relative_freq_rel_to
                     #if $result_arf
-                    | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+                    <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
                     <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
                     #end if
                     #if $shuffle_notification
-                    | <span class="notice-shuffled">$_('Result is shuffled')</span>
+                    <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
                     #end if
                 </div>
             </div>

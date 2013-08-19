@@ -228,7 +228,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     <div id="conc-top-bar">
         <div id="result-info">
             #if $usesubcorp
-                $_("Subcorpus"): <strong>$usesubcorp</strong>
+                $_("Subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
             #end if
 
             #if $q[2] == "R"
@@ -237,8 +237,9 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
                 #set $online_sample = False
             #end if
 
-            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
-    #end filter#</strong>#if $sampled_size# | $_("random sample of size") <strong>$sampled_size</strong> | #end if
+            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#end filter#</strong>
+            #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+            | <span class="separ">#end if</span>
             <span id="conc-calc-info" title="$concsize">#slurp
             #if $concsize != $fullsize
                 #set $l=$locale.format("%d",$concsize,grouping=True)
@@ -254,15 +255,15 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #end if
             </span>
 
-            <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+            <span class="separ">|</span> <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
             <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
             $result_relative_freq_rel_to
             #if $result_arf
-            | <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+            <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
             <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
             #end if
             #if $shuffle_notification
-            | <span class="notice-shuffled">$_('Result is shuffled')</span>
+            <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
             #end if
         </div>
 
@@ -284,7 +285,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
               #end filter
               <input type="text" name="fromp" value="$fromp" size="2" />
               #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
-              $_("of") <span class="numofpages" title="$numofpages">$l_numofpages</span>
+              / <span class="numofpages" title="$numofpages">$l_numofpages</span>
             </div>
 
             #if $nextlink

@@ -65,7 +65,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $('#error a.close-icon').bind('click', function () {
             $('#error').remove();
         });
-        if (typeof(callback) === 'function') {
+        if (typeof callback === 'function') {
             callback($('#error').get(0));
         }
     };
@@ -86,7 +86,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         $('#notification a.close-icon').bind('click', function () {
             $('#notification').remove();
         });
-        if (typeof(callback) === 'function') {
+        if (typeof callback === 'function') {
             callback($('#error').get(0));
         }
     };
@@ -266,33 +266,86 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
      * @param {object} conf
      */
     lib.bindClicks = function (conf) {
-        var msg2;
+        var resetCorpusInfoBox,
+            createCorpusInfoBox;
 
-        msg2 = function (updatedElement) {
+
+        resetCorpusInfoBox = function () {
+            $('#corpus-details-box .attrib-list tr.dynamic').remove();
+        };
+
+        createCorpusInfoBox = function () {
             $.ajax({
                 url : 'ajax_get_corp_details?corpname=' + conf.corpname,
+                dataType : 'json',
+                method : 'get',
                 success : function (data) {
-                    $(updatedElement).empty().append(data);
+                    var jqInfoBox = $('#corpus-details-box'),
+                        jqAttribList = $('#corpus-details-box .attrib-list'),
+                        jqStructList = $('#corpus-details-box .struct-list'),
+                        newRow;
+
+                    resetCorpusInfoBox();
+
+                    jqInfoBox.find('.corpus-name').text(data.corpname);
+                    jqInfoBox.find('.corpus-description').text(data.description);
+                    jqInfoBox.find('.size').text(data.size);
+
+                    $.each(data.attrlist, function (i, item) {
+                        if (!item.error) {
+                            newRow = jqAttribList.find('.item').clone();
+                            newRow.removeClass('item');
+                            newRow.addClass('dynamic');
+                            newRow.find('th').text(item.name);
+                            newRow.find('td').text(item.size);
+
+                        } else {
+                            newRow = jqAttribList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+                        }
+                        jqAttribList.append(newRow);
+                    });
+
+                    $.each(data.structlist, function (i, item) {
+                        if (!item.error) {
+                            newRow = jqStructList.find('.item').clone();
+                            newRow.removeClass('item');
+                            newRow.addClass('dynamic');
+                            newRow.find('th').text(item.name);
+                            newRow.find('td').text(item.size);
+
+                        } else {
+                            newRow = jqStructList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+                        }
+                        jqStructList.append(newRow);
+                    });
+
                 },
                 error : function () {
-                    $(updatedElement).empty().append(conf.messages.failed_to_load_corpus_info);
+                    resetCorpusInfoBox();
+                    lib.showErrorMessage(conf.messages.failed_to_load_corpus_info);
                 }
             });
         };
 
         $('#positions-help-link').bind('click', function (event) {
-            popupbox.createPopupBox(event, 'positions-help', $('#toolbar-info'), conf.messages.msg1);
+            popupbox.createPopupBox(event, 'positions-help', $('#active-corpus'), conf.messages.msg1);
             event.stopPropagation();
         });
 
-        // Activates pop-up box with basic corpus information
         $('#corpus-desc-link').bind('click', function (event) {
-            popupbox.createPopupBox(event, 'corpus-details-box', $('#corpus-desc-link'), msg2, {
-                'height' : 'auto',
-                'width' : 'auto'
+            $('#corpus-details-box').modal({
+                minHeight: 400,
+                onShow : function () {
+                    createCorpusInfoBox('#corpus-detail-box');
+                },
+
+                onClose : function () {
+                    $.modal.close();
+                    //jqInputElement.focus();
+                }
             });
-            event.stopPropagation();
         });
+
 
         // 'Select all' buttons for structural attribute lists
         $('input[class="select-all"]').bind('click', function (event) {

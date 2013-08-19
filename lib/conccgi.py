@@ -43,6 +43,7 @@ try:
     locale.setlocale(locale.LC_NUMERIC, 'en_GB')
 
     def formatnum(f):
+
         return locale.format('%.f', f, True)
 except locale.Error:
     def formatnum(f):
@@ -2720,26 +2721,29 @@ class ConcCGI(UserCGI):
         """
         """
         corp_conf_info = settings.get_corpus_info(self._corp().corpname)
+
+        format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
+
         ans = {
-            'corpname': self._corp().get_conf('NAME'),
-            'corpus': self._corp().get_info(),
-            'size': self._corp().size(),
+            'corpname': self.corpname,
+            'description': self._corp().get_info(),
+            'size': format_int(self._corp().size()),
             'attrlist': [],
             'structlist': [],
-            'corp_web': corp_conf_info['web'] if corp_conf_info is not None else ''
+            'web_url': corp_conf_info['web'] if corp_conf_info is not None else ''
         }
         try:
-            ans['attrlist'] = [(item, self._corp().get_attr(item).id_range()) for item in
+            ans['attrlist'] = [{'name': item, 'size': format_int(self._corp().get_attr(item).id_range())} for item in
                                self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
-            ans['attrlist'] = [(_('Failed to load'), '')]
-        ans['structlist'] = [(item, self._corp().get_struct(item).size()) for item in
+            ans['attrlist'] = [{'error': _('Failed to load')}]
+        ans['structlist'] = [{'name': item, 'size': format_int(self._corp().get_struct(item).size())} for item in
                              self._corp().get_conf('STRUCTLIST').split(',')]
 
         return ans
 
-    ajax_get_corp_details.template = 'corpus_details.tmpl'
+    ajax_get_corp_details.return_type = 'json'
 
     def ajax_get_structs_details(self):
         """
@@ -2773,7 +2777,6 @@ class ConcCGI(UserCGI):
         return JsonEncodedData(ans)
 
     ajax_get_tag_variants.return_type = 'json'
-
 
     def fcs(self, operation='explain', version='', recordPacking='xml',
             extraRequestData='', query='', startRecord='', responsePosition='',
