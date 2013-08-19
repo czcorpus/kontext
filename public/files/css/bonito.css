@@ -55,11 +55,18 @@
     text-align:center;
 }
 
-#corpus-details-box table.attrib-list {
+#corpus-details-box table.attrib-list tr.item *,
+#corpus-details-box table.struct-list tr.item * {
+    background-color: transparent;
+}
+
+#corpus-details-box table.attrib-list,
+#corpus-details-box table.struct-list {
     border-collapse:collapse;
 }
 
-#corpus-details-box table.attrib-list th {
+#corpus-details-box table.attrib-list th,
+#corpus-details-box table.struct-list th{
     background-color:#EFEFEF;
     border-color:#FFF;
     border-style:solid;
@@ -68,22 +75,23 @@
     text-align:center;
 }
 
-#corpus-details-box table.attrib-list th.attrib-heading {
+#corpus-details-box table.attrib-list th.attrib-heading,
+#corpus-details-box table.struct-list th.attrib-heading {
     background-color:transparent;
     border-color:#000;
     border-style:solid;
     border-width:0 0 1px;
     color:#444;
-    font-size:110%;
+    font-size: 9pt;
     text-align:center;
 }
 
-#corpus-details-box table.wrapper {
-    margin:0 auto;
+#corpus-details-box table.structs-and-attrs {
+    margin: 0;
 }
 
-#corpus-details-box table.wrapper td {
-    vertical-align:top;
+#corpus-details-box table.structs-and-attrs td {
+    vertical-align: top;
 }
 
 #corpus-details-box td.numeric {
@@ -320,24 +328,16 @@
 }
 
 #menu-bar {
-    font-size: 10.5pt;
+    font-size: 10pt;
     float: left;
-    min-width: 770px;
+    min-width: 670px;
     width: auto;
     margin: 0 20px;
     height: 50px;
 }
 
-#menu-bar a:hover,#toolbar-info a.corpus-desc:hover {
+#menu-bar a:hover,#active-corpus a.corpus-desc:hover {
     text-decoration:none;
-}
-
-#menu-bar label {
-    background-color:#fff;
-    border:1px solid #000;
-    display:block;
-    font-weight:700;
-    padding:.3em .5em;
 }
 
 #menu-bar ul img {
@@ -385,7 +385,7 @@
 #menu-level-1 > li.separator {
     width: 2px;
     padding: 0;
-    background-color: #6497B9;
+    background-color: #00A8E8;
 }
 
 #menu-level-1 > li a:hover,
@@ -404,7 +404,6 @@
 
 #menu-level-wrapper-2 {
     display: block;
-    border: 1px solid red;
 }
 
 #menu-level-2 ul {
@@ -415,7 +414,7 @@
 
 #menu-level-2 ul li {
     display: inline-block;
-    padding: 5px 8px;
+    padding: 1px 5px;
 }
 
 ul.submenu {
@@ -424,24 +423,47 @@ ul.submenu {
     border-radius: 3px;
 }
 
+ul.submenu li {
+    margin: 6px 0 6px 0;
+}
+
+ul.submenu li.separ {
+    border-style: solid;
+    border-color: #00AAEB;
+    border-width: 0 1px 0 0;
+}
+
 #tag-builder-modal {
     height:565px;
 }
 
-#toolbar-info {
+#active-corpus {
+    font-size: 12pt;
     color: #A4A4A4;
     float: right;
-    width: 230px;
+    width: 210px;
+    padding: 0;
+    margin: 0;
+    text-align: right;
 }
 
-#toolbar-info th {
-    text-align: left;
-    font-weight: normal;
-}
-
-#toolbar-info a.corpus-desc {
+#active-corpus a.corpus-desc {
     color:inherit;
     text-decoration:underline;
+}
+
+#corpus-details-box {
+    overflow: hidden;
+    display: none;
+}
+
+#corpus-details-box h4.corpus-name {
+    font-size: 14pt;
+    margin: 0;
+}
+
+#corpus-details-box .corpus-description {
+    margin: 1em 0;
 }
 
 #corpus-search {
@@ -449,19 +471,18 @@ ul.submenu {
 }
 
 #topbar {
-    width:100%;
-    padding: 15px 0 5px 10px;
+    padding: 15px 20px 5px 20px;
     color: #000000;
+    overflow: hidden;
 }
 
 a#logo-wrapper {
     float: left;
-    width: 157px;
     height: 52px;
 }
 
 #logo-wrapper img {
-    display: block;
+    display: inline-block;
 }
 
 #topbar-navigation li {
@@ -469,7 +490,7 @@ a#logo-wrapper {
     padding-left:1em;
 }
 
-#topbar-navigation ul, l#toolbar-info {
+#topbar-navigation ul {
     margin:0;
     padding:0;
 }
@@ -557,6 +578,10 @@ fieldset h4 {
 
 .bonito-pagination-core,.desc,ul.cql-toolbox li {
     display:inline;
+}
+
+.bonito-pagination-core input[name="fromp"] {
+    width: 40px;
 }
 
 .bonito-pagination-left {
@@ -736,6 +761,7 @@ body {
     font-size: 10pt;
     margin:0;
     padding:0;
+    height: 100%;
 }
 
 button, input[type='button'], input[type='submit'] {
@@ -1233,7 +1259,7 @@ table#multilevel-freq-params td.level {
     border-style: solid;
     border-color: #9FC4E0;
     border-width: 1px 0 0 0;
-    background-color: #CCE3F4;
+    background-color: #D2EDC0;
     margin-bottom: 20px;
     padding: 10px 5px;
 }
@@ -1275,7 +1301,7 @@ table#multilevel-freq-params td.level {
 }
 
 .query-history-item.autosaved .document {
-    background-color: #DCDCDC;
+    background-color: #DAE1D9;
     border-color: #A7A7A7;
 }
 
