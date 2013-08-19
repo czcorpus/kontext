@@ -36,7 +36,8 @@
 }
 
 #content form {
-    border:solid 1px #D5E6E6;
+    border:solid 3px #D2EDC0;
+    border-radius: 9px;
     display:inline-block;
     margin:0 0 10px;
     padding:1em;
@@ -288,7 +289,7 @@
 #result-info {
     margin: 0;
     float: left;
-    width: 800px;
+    width: 70%;
 }
 
 #rightpanel {
@@ -548,6 +549,12 @@ fieldset h4 {
     background-color: #D2EDC0;
 }
 
+#conc-wrapper .bonito-pagination {
+    float: right;
+    text-align: right;
+    width: 25%;
+}
+
 .bonito-pagination-core,.desc,ul.cql-toolbox li {
     display:inline;
 }
@@ -766,7 +773,7 @@ fieldset {
     margin: 14px 0 6px;
     padding: 0 0 0 14px;
     border-style: solid;
-    border-color: #87ADAD;
+    border-color: #DBE2D9;
     border-width: 1px;
     border-radius: 3px;
 }
@@ -776,7 +783,7 @@ fieldset {
 }
 
 fieldset.inactive {
-    border-color: #C4D7D7;
+    border-color: #DEDEDE;
 }
 
 a.form-extension-switch,
@@ -827,9 +834,6 @@ form#navigation_form,form#navigation_form2 {
     background-color: #D2EDC0;
     margin: 0;
     padding: 0;
-    float: right;
-    text-align: right;
-    width: 250px;
 }
 
 h1 {
@@ -839,8 +843,8 @@ h1 {
 
 h2 {
     font-size:140%;
-    margin-bottom: 1em;
-    margin-top: .5em;
+    margin-bottom: 0.5em;
+    margin-top: .1em;
     font-weight: 500;
 }
 
@@ -882,8 +886,9 @@ pre {
 }
 
 table.data {
-    border:1px solid #000;
-    border-collapse:collapse;
+    border: 1px solid #DAE1D9;
+    border-radius: 5px;
+
 }
 
 table.data td,table.data th {
@@ -891,9 +896,14 @@ table.data td,table.data th {
 }
 
 table.data th {
-    background-color:#9ce;
-    font-weight:700;
-    text-align:left;
+    background-color: #FFFFFF;
+    color: #CC0066;
+    font-weight: 700;
+    text-align: left;
+}
+
+table.data th a {
+    color: #CC0066;
 }
 
 table.data th.super {
@@ -905,7 +915,7 @@ table.data tr.even {
 }
 
 table.data tr:hover {
-    background-color:#dea;
+    background-color:#ffb;
 }
 
 table.data tr.odd {
@@ -917,8 +927,8 @@ table.data tr.odd:hover {
 }
 
 table.envelope {
-    background-color:#eee;
-    border:solid 1px #D5E6E6;
+    background-color: #ffffff;
+    border:solid 1px #D2EDC0;
     border-collapse:collapse;
     float:left;
     margin-right:5px;
@@ -952,17 +962,17 @@ table.envelope td,table.envelope th {
 }
 
 table.envelope td.separ {
-    border-color:#ddd;
-    border-style:solid;
-    border-width:0 1px 0 0;
+    border-color: #D2EDC0;
+    border-style: solid;
+    border-width: 0 1px 0 0;
 }
 
 table.envelope th {
-    color:#fff;
+    color: #CC0066;
 }
 
 table.envelope thead {
-    background-color:#777;
+    background-color: #ffffff;
 }
 
 table.envelope thead.fixed tr {
@@ -970,7 +980,7 @@ table.envelope thead.fixed tr {
 }
 
 table.envelope tr.even {
-    background-color:#e7e7e7;
+    background-color: #ECF3EA;
 }
 
 table.envelope tr.last-line td {
@@ -1062,12 +1072,12 @@ ul.cql-toolbox {
 }
 
 ul.cql-toolbox li a {
-    background-color:#fff9ed;
+    background-color: #fefefe;
     border-style: solid;
     border-color: #a6754d;
     border-width: 1px 1px 0 1px;
     border-radius:3px 3px 0 0;
-    color:#a6754d;
+    color: #CC0066;
     font-size:75%;
     padding:2px 5px;
     text-decoration:none;
