@@ -141,9 +141,6 @@ $ll.str #slurp
         $kw.str #slurp
         #end for
         >#slurp
-    #if $annotconc
-    [$l.linegroup]
-    #end if
     #for $rr in $l.Right
     #unless $rr.class == 'strc'
     $rr.str #slurp
@@ -172,9 +169,6 @@ $ll.str #slurp
             $kw.str #slurp
             #end for
             >#slurp
-        #if $annotconc
-        [$ll.linegroup]
-        #end if
         #for $rr in $ll.Right
         #unless $rr.class == 'strc'
         $rr.str #slurp

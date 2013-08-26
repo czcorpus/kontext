@@ -217,10 +217,6 @@ class ConcCGI(UserCGI):
     can_annotate = 0
     enable_sadd = 0
     annotconc = u''
-    annotconc_init_labels = (u'x', u'u')
-    annotconc_num_label_suffixes = (u'.e',)
-    #annotconc_info_umask = 022
-    annotconc_info_umask = 0111  #XXX renumbering from CPA editor
 
     empty_attr_value_placeholder = ''
     tag_builder_support = []
@@ -234,11 +230,6 @@ class ConcCGI(UserCGI):
     SubcorpList = []
     save_menu = []
 
-    add_vars['wsketch_form'] = [u'LastSubcorp']
-    add_vars['wsketch'] = [u'LastSubcorp']
-    add_vars['wsdiff'] = [u'LastSubcorp']
-    add_vars['save_ws_options'] = [u'LastSubcorp']
-    add_vars['save_wsdiff_options'] = [u'LastSubcorp']
     add_vars['findx_upload'] = [u'LastSubcorp']
 
     def __init__(self, environ):
@@ -357,11 +348,7 @@ class ConcCGI(UserCGI):
                           if getattr(self.__class__, n, None) is not val]
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
-        result['has_wsketch'] = (getattr(self, 'wsketch', '')
-                                 and thecorp.get_conf('WSDEF')
-                                 and thecorp.get_conf('WSBASE') != 'none')
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
-        result['can_wseval'] = getattr(self, '_can_wseval', '')
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
         result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
@@ -396,7 +383,6 @@ class ConcCGI(UserCGI):
         poslist = self.cm.corpconf_pairs(thecorp, 'WSPOSLIST')
         if not poslist:
             poslist = self.cm.corpconf_pairs(thecorp, 'LPOSLIST')
-        result['WSposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
         result['default_attr'] = thecorp.get_conf('DEFAULTATTR')

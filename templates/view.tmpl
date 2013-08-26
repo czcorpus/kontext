@@ -29,9 +29,6 @@ $_("Concordance")#slurp
 #def headers
 <script src="$files_path/js/tblex.js" type="text/javascript"></script>
 <script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
-#if $can_annotate and $annotconc
-<script src="$files_path/js/annotconc.js" type="text/javascript"></script>
-#end if
 <script type="text/javascript">
 soundManager.setup({
     url: '../files/misc/soundmanager2/',
@@ -186,43 +183,6 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
 
 #def concordance
 #filter WebSafe
-
-## concordance annotation
-#if $annotconc
-    <i>$_("Annotating"):</i> <b>$annotconc</b>&nbsp;&nbsp;
-    <a href="lngroupinfo?$q;$globals">$_("Info")</a>
-    <a href="view?$q;q=g$annotconc;$globals">$_("Sort")</a>
-    <a href="view?$q;$globals;annotconc=--NONE--">$_("Finish")</a>
-    #if $can_annotate
-        &nbsp;&nbsp;
-        <i>$_("New pattern"):</i> <input id="newlabel" type="text" size="10" />
-        <input class="add-new-annotation-label" type="submit" value="Add" />
-        <span id="number_globally">$_("Number globally"):
-           <span class="groupbox" data-pos="select">X</span>
-        </span>
-        <span id="number_selected" style="display:none">$_("Number selected")
-          (<span id="num_of_selected_lines">0</span>):
-           <span class="groupbox" data-pos="select">X</span>
-           <a class="clear-selection" href="#">$_("Clear selection")</a>
-        </span>
-        <span id="annot_undo" style="display:none">
-          <span id="annot_undo_count">0</span> lines assigned. Undo.</span>
-
-        <div id="groupmenu">
-        <table>
-           #for $g in $GroupNumbers
-              <tr>
-              #for $i in $g.Items
-                 <td class="assign-group" data-grpid="${i['n']}" data-grplabel="${i['lab']}">$i.lab</td>
-              #end for
-              </tr>
-           #end for
-              <tr><td class="add-new-annotation-label" colspan="3">$_("Add next")</td></tr>
-              <tr><td class="assign-group" colspan="3" data-grpid="0" data-grplabel="_">$_("None")</td></tr>
-        </table>
-        </div>
-    #end if
-#end if
 
 <div id="conc-wrapper">
     <div id="conc-top-bar">
