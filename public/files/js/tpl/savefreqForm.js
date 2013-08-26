@@ -17,42 +17,43 @@
  */
 
 /**
- * This module contains functionality related directly to the saveconc_form.tmpl template
+ * This module contains functionality related directly to the savefreq_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) {
+define(['jquery', 'tpl/document'], function ($, mainPage) {
     'use strict';
 
     var lib = {};
+
 
     /**
      * @param {jquery} jqForm jquery object representing parent form of the radio buttons
      * @param {Element} currentElement
      */
     lib.updateExportTypeSwitch = function (jqForm, currentElement) {
-        var jqHeadingInput = $(jqForm).find('input[name="heading"]'),
+        var jqHeadingInput = $(jqForm).find('input[name="colheaders"]'),
             jqHeadingRow = jqHeadingInput.closest('tr'),
-            jqAlignKwicInput = $(jqForm).find('input[name="align_kwic"]'),
-            jqAlignKwicRow = jqAlignKwicInput.closest('tr');
+            jqHeadingInput2 = $(jqForm).find('input[name="heading"]'),
+            jqHeadingRow2 = jqHeadingInput2.closest('tr');
 
-            if ($(currentElement).val() === 'csv') {
-                jqHeadingInput.prop('disabled', true);
-                jqHeadingRow.hide();
-                jqAlignKwicInput.prop('disabled', true);
-                jqAlignKwicRow.hide();
+        if ($(currentElement).val() === 'csv') {
+            jqHeadingInput.prop('disabled', false);
+            jqHeadingRow.show();
+            jqHeadingInput2.prop('disabled', true);
+            jqHeadingRow2.hide();
 
-            } else {
-                jqHeadingInput.prop('disabled', false);
-                jqHeadingRow.show();
-                jqAlignKwicInput.prop('disabled', false);
-                jqAlignKwicRow.show();
-            }
+        } else {
+            jqHeadingInput.prop('disabled', true);
+            jqHeadingRow.hide();
+            jqHeadingInput2.prop('disabled', false);
+            jqHeadingRow2.show();
+        }
     };
 
     /**
      *
      */
     lib.bindClicks = function () {
-        var jqForm = $('form[action="saveconc"]');
+        var jqForm = $('form[action="savefreq"]');
 
         jqForm.find('input[name="saveformat"]').on('click', function (event) {
             lib.updateExportTypeSwitch(jqForm, event.target);
@@ -65,28 +66,18 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) 
      */
     lib.init = function (conf) {
         mainPage.init(conf);
-        hideElem.loadHideElementStore(conf.files_path, mainPage.userSettings);
+        lib.bindClicks();
 
-        $('input[type="submit"]').focus();
-        if (mainPage.userSettings.get('concdesc_view') === 'show') {
-            $('#concdescplusminus').attr('src', conf.files_path + '/img/minus.png');
-        }
-
+        // obtain current state of the form and update
         (function () {
-            var jqForm = $('form[action="saveconc"]'),
-                checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
+            var jqForm = $('form[action="savefreq"]'),
+            checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
 
             if (checkedRadio) {
                 lib.updateExportTypeSwitch(jqForm, checkedRadio);
             }
         }());
-
-
-        lib.bindClicks();
     };
-
-
-
 
     return lib;
 });

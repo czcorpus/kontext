@@ -12,6 +12,7 @@
 
 import os
 import re
+import sys
 from sys import stderr
 import time
 import glob
@@ -55,6 +56,31 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     if '~' in ctx and '.' in attr:
         ctx = ctx.split('~')[0]
     return attrpart + ctx
+
+
+def validate_range(actual_range, max_range):
+    """
+    Parameters
+    ----------
+    actual_range : 2-tuple
+    max_range : 2-tuple (if second value is None, that validation of the value is omitted
+
+    Returns
+    -------
+    None if everything is OK else UserActionException instance
+    """
+    if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
+            or actual_range[0] > actual_range[1]:
+        if max_range[0] > max_range[1]:
+            msg = _('Invalid range - cannot select rows from an empty list.')
+        elif max_range[1] is not None:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
+                    % (actual_range + max_range)
+        else:
+            msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s') \
+                    % (actual_range + (max_range[0], ))
+        return UserActionException(msg)
+    return None
 
 
 class ConcError(Exception):
@@ -370,20 +396,29 @@ class ConcCGI(UserCGI):
             return
 
         if 'Desc' in names:
+            if methodname in ('savecoll', 'savewl', 'savefreq', 'saveconc'):
+                translate = False
+            else:
+                translate = True
             result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                                'tourl': self.urlencode(u2), 'size': s}
                               for o, a, u1, u2, s in
                               conclib.get_conc_desc(self.q,
                                                     corpname=self.corpname,
                                                     cache_dir=self.cache_dir,
-                                                    subchash=getattr(self._corp(), "subchash", None))]
+                                                    subchash=getattr(self._corp(), "subchash", None),
+                                                    translate=translate)]
 
         if 'TextTypeSel' in names:
             result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
-
+        if 'concsize' in names:
+            conc = self.call_function(conclib.get_conc,
+                                      (self._corp(),))
+            if conc:
+                result['concsize'] = conc.size()
 
         if 'orig_query' in names:
             conc_desc = conclib.get_conc_desc(self.q,
@@ -1108,7 +1143,7 @@ class ConcCGI(UserCGI):
     add_vars['freq'] = ['concsize']
     fcrit = []
 
-    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0):
+    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
         """
@@ -1116,8 +1151,10 @@ class ConcCGI(UserCGI):
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
-                if i % 2 == 0: attrs.append(item)
-                if i % 2 == 1: ranges.append(item)
+                if i % 2 == 0:
+                    attrs.append(item)
+                if i % 2 == 1:
+                    ranges.append(item)
             return attrs, ranges
 
         def is_non_structural_attr(criteria):
@@ -1147,11 +1184,12 @@ class ConcCGI(UserCGI):
             'concsize': conc.size(),
             'fmaxitems': self.fmaxitems
         }
-        if not result['Blocks'][0]: raise ConcError(_('Empty list'))
-        if len(result['Blocks']) == 1: # paging
+        if not result['Blocks'][0]:
+            raise ConcError(_('Empty list'))
+        if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
-            fstart = (self.fpage - 1) * self.fmaxitems
-            self.fmaxitems = self.fmaxitems * self.fpage + 1
+            fstart = (self.fpage - 1) * self.fmaxitems + line_offset
+            self.fmaxitems = self.fmaxitems * self.fpage + 1 + line_offset
             result['paging'] = 1
             if len(result['Blocks'][0]['Items']) < self.fmaxitems:
                 result['lastpage'] = 1
@@ -1236,31 +1274,70 @@ class ConcCGI(UserCGI):
 
     add_vars['savefreq_form'] = ['concsize']
 
-    def savefreq_form(self, fcrit=[]):
-        return {'FCrit': [{'fcrit': cr} for cr in fcrit]}
+    def savefreq_form(self, fcrit=[], flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
+        """
+        Displays a form to set-up the 'save frequencies' operation
+        """
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if not to_line:
+            to_line = len(result['Blocks'][0]['Items'])
+
+        return {
+            'FCrit': [{'fcrit': cr} for cr in fcrit],
+            'from_line': from_line,
+            'to_line': to_line
+        }
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
-                 saveformat='text', maxsavelines=1000):
-        "save a frequecy list"
-        if self.pages:
-            if maxsavelines < self.fmaxitems: self.fmaxitems = maxsavelines
-        else:
-            self.fpage = 1
-            self.fmaxitems = maxsavelines
+                 saveformat='text', from_line=1, to_line='', colheaders=0):
+        """
+        save a frequency list
+        """
+
+        from_line = int(from_line)
+        to_line = int(to_line)
+
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        err = validate_range((from_line, to_line), (1, None))
+        if err is not None:
+            raise err
+
+        self.fpage = 1
+        self.fmaxitems = to_line - from_line
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
-        if self.wlattr: self.make_wl_query() # multilevel wordlist
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        if self.wlattr:
+            self.make_wl_query()  # multilevel wordlist
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.xml"'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % self.corpname
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="freq.txt"'
-        return result
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % self.corpname
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Blocks'][0]['Head'][:-2]] + ['freq', 'freq [%]'])
+            # then write the data (first block only)
+            for item in result['Blocks'][0]['Items']:
+                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item['rel'])])
+
+            tpl_data = {'csv_rows': [row.decode('utf-8') for row in csv_buff.rows]}
+
+        return tpl_data
 
     add_vars['savefreq'] = ['Desc']
 
@@ -1270,7 +1347,9 @@ class ConcCGI(UserCGI):
                ml3attr='word', ml3pos=1, ml3icase='', ml3fcode='rc',
                ml4attr='word', ml4pos=1, ml4icase='', ml4fcode='rc',
                ml1ctx='0', ml2ctx='0', ml3ctx='0', ml4ctx='0'):
-        "multilevel frequency list"
+        """
+        multilevel frequency list
+        """
         l = locals()
         fcrit = ' '.join([onelevelcrit('', l['ml%dattr' % i],
                                        l['ml%dctx' % i], l['ml%dpos' % i],
@@ -1300,7 +1379,9 @@ class ConcCGI(UserCGI):
     citemsperpage = 50
 
     def coll(self):
-        "collocations form"
+        """
+        collocations form
+        """
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
         else:
@@ -1314,19 +1395,20 @@ class ConcCGI(UserCGI):
 
     add_vars['coll'] = ['concsize']
 
-    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd']):
+    def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd'], line_offset=0, num_lines=None):
         """
         list collocations
         """
-        collstart = (self.collpage - 1) * self.citemsperpage
+        collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
             self.csortfn = cbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
+        num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
         result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
                               cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-                              from_idx=collstart, max_lines=self.citemsperpage)
+                              from_idx=collstart, max_lines=num_fetch_lines)
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1350,21 +1432,61 @@ class ConcCGI(UserCGI):
 
     save_coll_options.template = 'coll.tmpl'
 
-    def savecoll(self, csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                 heading=0, maxsavelines=1000):
-        "save collocations"
-        if not self.pages:
-            self.collpage = 1
-            self.citemsperpage = maxsavelines
+    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0):
+        """
+        """
+        self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
+        if to_line == '':
+            to_line = len(result['Items'])
+        return {
+            'from_line': from_line,
+            'to_line': to_line,
+            'saveformat': saveformat
+        }
+
+    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+                 heading=0, colheaders=0):
+        """
+        save collocations
+        """
+        from_line = int(from_line)
+        to_line = int(to_line)
+        num_lines = to_line - from_line + 1
+        err = validate_range((from_line, to_line), (1, None))
+        if err is not None:
+            raise err
+
+        self.collpage = 1
+        self.citemsperpage = sys.maxint
+        result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.xml"'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % self.corpname
             result['Scores'] = result['Head'][2:]
-        else:
+            tpl_data = result
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="coll.txt"'
-        return result
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            tpl_data = result
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
+
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow([item['n'] for item in result['Head']])
+            # then write the data
+            for item in result['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+        return tpl_data
 
     add_vars['savecoll'] = ['Desc', 'concsize']
 
@@ -1526,14 +1648,15 @@ class ConcCGI(UserCGI):
         out['processing'] = self.check_histogram_processing().split(':')[1]
         return out
 
-
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
-    # gets arbitrary list of words for wordlist
+        """
+        gets arbitrary list of words for wordlist
+        """
         wlfile = getattr(self, attrnames[0], '').encode('utf8')
         wlcache = getattr(self, attrnames[1], '')
-        filename = wlcache;
+        filename = wlcache
         wlwords = []
-        if wlfile: # save a cache file
+        if wlfile:  # save a cache file
             try:
                 from hashlib import md5
             except ImportError:
@@ -1545,7 +1668,7 @@ class ConcCGI(UserCGI):
             cache_file.write(wlfile)
             cache_file.close()
             wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
-        if wlcache: # read from a cache file
+        if wlcache:  # read from a cache file
             filename = os.path.join(self.cache_dir, wlcache)
             cache_file = open(filename)
             wlwords = [w.strip() for w in cache_file]
@@ -1558,8 +1681,9 @@ class ConcCGI(UserCGI):
     wlnums = 'frq'
 
     def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
-                 ref_corpname='', ref_usesubcorp='', wlpage=1):
-        if not wlpat: self.wlpat = '.*'
+                 ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
+        if not wlpat:
+            self.wlpat = '.*'
         if '.' in self.wlattr:
             orig_wlnums = self.wlnums
             if wltype != 'simple':
@@ -1569,10 +1693,8 @@ class ConcCGI(UserCGI):
             elif self.wlnums == 'frq':
                 self.wlnums = 'doc sizes'
             elif self.wlnums == 'docf':
-                self.wlnums = 'frq'
-        if self.wlattr == 'ws_collocations' and self.wlnums != 'frq':
-            raise ConcError('Word sketch keywords are available '
-                            'with raw word counts only')
+                self.wlnums = 'docf'
+
         lastpage = 0
         if self._anonymous and wlpage >= 10:  # limit paged lists
             wlpage = 10
@@ -1582,10 +1704,13 @@ class ConcCGI(UserCGI):
             wlpage = 1
             self.wlpage = 1
             self.wlmaxitems = 1000
-        wlstart = (wlpage - 1) * self.wlmaxitems
+        wlstart = (wlpage - 1) * self.wlmaxitems + line_offset
+
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
-        result = {'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
-                                   % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)}
+        result = {
+            'reload_url': 'wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s&include_nonwords=%s&wlsort=f' \
+                          % (self.wlattr, self.corpname, self.usesubcorp, self.wlpat, self.wlminfreq, self.include_nonwords)
+        }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
             self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
@@ -1626,7 +1751,8 @@ class ConcCGI(UserCGI):
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
             else:
-                result['lastpage'] = 0; result_list = result_list[:-1]
+                result['lastpage'] = 0
+                result_list = result_list[:-1]
             self.wlmaxitems -= 1
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
@@ -1637,17 +1763,17 @@ class ConcCGI(UserCGI):
                 result['wlattr_label'] = self.wlattr
 
             return result
-        except corplib.MissingSubCorpFreqFile as subcmiss:
+        except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
             if self.wlattr == 'ws_collocations':
-                out = corplib.build_arf_db(subcmiss.args[0], 'hashws')
+                out = corplib.build_arf_db(e.args[0], 'hashws')
             else:
                 corp = self._corp()
                 try:
                     doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
                 except:
                     raise ConcError('DOCSTRUCTURE not set correctly')
-                out = corplib.build_arf_db(subcmiss.args[0], self.wlattr)
+                out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
@@ -1703,21 +1829,64 @@ class ConcCGI(UserCGI):
 
     struct_wordlist.template = 'freqs.tmpl'
 
-    def savewl(self, maxsavelines=1000, wlpat='', wltype='simple',
+    def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                usesubcorp='', ref_corpname='', ref_usesubcorp='',
                saveformat='text'):
-        'save word list'
+        wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+        if to_line == '':
+            to_line = str(len(wl['Items'])) if 'Items' in wl else 0
+
+        ans = {
+            'from_line': from_line,
+            'to_line': to_line,
+        }
+
+        if to_line == 0:
+            ans['error'] = _('Empty result cannot be saved.')
+
+        return ans
+
+    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
+               ref_usesubcorp='', saveformat='text', colheaders=0):
+        """
+        save word list
+        """
+        from_line = int(from_line)
+        to_line = int(to_line)
+        line_offset = (from_line - 1)
+        self.wlmaxitems = sys.maxint  # TODO
+        ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
+                            ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
+        err = validate_range((from_line, to_line), (1, len(ans['Items']) if 'Items' in ans else 0))
+        if err is not None:
+            raise err
+        ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
+
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.xml"'
-        else:
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="wl.txt"'
-        if not self.pages:
-            self.wlpage = 1
-            self.wlmaxitems = maxsavelines
-        return self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
-                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % self.corpname
+            tpl_data = ans
+        elif saveformat == 'csv':
+            from butils import UnicodeCSVWriter, Writeable
+
+            csv_buff = Writeable()
+            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            # write the header first, if required
+            if colheaders:
+                csv_writer.writerow((self.wlattr, 'freq'))
+            # then write the data
+            for item in ans['Items']:
+                csv_writer.writerow((item['str'], str(item['freq'])))
+            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+            self._headers['Content-Type'] = 'text/csv'
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
+
+        return tpl_data
 
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
@@ -1774,9 +1943,10 @@ class ConcCGI(UserCGI):
 
         for item in tt:
             for col in item['Line']:
-                if col.has_key('textboxlength'): continue
+                if 'textboxlength' in col:
+                    continue
                 if not col['name'].startswith(basestructname):
-                    col['textboxlength'] = 30;
+                    col['textboxlength'] = 30
                     continue
                 attr = corp.get_attr(col['name'])
                 aname = col['name'].split('.')[-1]
@@ -1983,40 +2153,120 @@ class ConcCGI(UserCGI):
         return 'Done'
 
     delsubc.template = 'subcorp_form'
-
     maxsavelines = 1000
 
-    def saveconc(self, maxsavelines=1000, saveformat='text', pages=0, fromp=1,
-                 align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+    def saveconc_form(self, from_line=1, to_line=''):
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-        conc.switch_aligned(os.path.basename(self.corpname))
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.xml"'
-        else:
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="conc.txt"'
-        ps = self.pagesize
-        if pages:
-            if maxsavelines < self.pagesize:
-                ps = maxsavelines
-        else:
+        if not to_line:
+            to_line = conc.size()
+
+        return {'from_line': from_line, 'to_line':to_line}
+
+    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+
+        def merge_conc_line_parts(items):
+            """
+            converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
+                {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+            """
+            ans = ''
+            for item in items:
+                if 'class' in item and item['class'] != 'attr':
+                    ans += ' %s' % item['str'].strip()
+                else:
+                    ans += '%s' % item['str'].strip()
+            return ans.strip()
+
+        def process_lang(root, left_key, kwic_key, right_key):
+            if type(root) is dict:
+                root = (root,)
+
+            row = []
+            for item in root:
+                if 'ref' in item:
+                    row.append(item['ref'])
+                row.append(merge_conc_line_parts(item[left_key]))
+                row.append(merge_conc_line_parts(item[kwic_key]))
+                row.append(merge_conc_line_parts(item[right_key]))
+            return row
+
+        try:
+            conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+            conc.switch_aligned(os.path.basename(self.corpname))
+            from_line = int(from_line)
+            to_line = int(to_line)
+
+            tpl_data = {'from_line': from_line, 'to_line': to_line}
+
+            err = validate_range((from_line, to_line), (1, conc.size()))
+            if err is not None:
+                raise err
+            page_size = to_line - (from_line - 1)
             fromp = 1
-            ps = maxsavelines
-        labelmap = {}
-        if self.annotconc:
-            try:
-                anot = self._get_annotconc()
-                conc.set_linegroup_from_conc(anot)
-                labelmap = anot.labelmap
-            except conclib.manatee.FileAccessError:
-                pass
-        contains_speech = settings.has_configured_speech(self._corp())
-        return self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
-                                  pagesize=ps, labelmap=labelmap, align=[],
-                                  alignlist=[self.cm.get_Corpus(c)
-                                             for c in self.align.split(',') if c],
-                                  leftctx=leftctx, rightctx=rightctx)
+            line_offset = (from_line - 1)
+            labelmap = {}
+            if self.annotconc:
+                try:
+                    anot = self._get_annotconc()
+                    conc.set_linegroup_from_conc(anot)
+                    labelmap = anot.labelmap
+                except conclib.manatee.FileAccessError:
+                    pass
+            contains_speech = settings.has_configured_speech(self._corp())
+            data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+                                      pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
+                                      alignlist=[self.cm.get_Corpus(c)
+                                                 for c in self.align.split(',') if c],
+                                      leftctx=leftctx, rightctx=rightctx)
+
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self.corpname, suffix)
+            if saveformat == 'xml':
+                self._headers['Content-Type'] = 'application/xml'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
+                tpl_data.update(data)
+            elif saveformat == 'text':
+                self._headers['Content-Type'] = 'text/plain'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
+                tpl_data.update(data)
+            elif saveformat == 'csv':
+                from butils import UnicodeCSVWriter, Writeable
+
+                self._headers['Content-Type'] = 'text/csv'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
+                csv_buff = Writeable()
+                csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+                if len(data['Lines']) > 0:
+                    if 'Left' in data['Lines'][0] and len(data['Lines'][0]['Left']) > 0:
+                        left_key = 'Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Right'
+                    elif 'Sen_Left' in data['Lines'][0] and len(data['Lines'][0]['Sen_Left']) > 0:
+                        left_key = 'Sen_Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Sen_Right'
+                    else:
+                        raise ConcError(_('Invalid data'))
+
+                    for i in range(len(data['Lines'])):
+                        line = data['Lines'][i]
+                        if numbering:
+                            row = [str(i + from_line)]
+                        else:
+                            row = []
+                        row += process_lang(line, left_key, kwic_key, right_key)
+                        if 'Align' in line:
+                            row += process_lang(line['Align'], left_key, kwic_key, right_key)
+                        csv_writer.writerow(row)
+                tpl_data.update({'data': [row.decode('utf-8') for row in csv_buff.rows]})
+            else:
+                raise UserActionException(_('Unknown export data type'))
+            return tpl_data
+        except Exception as e:
+            self._headers['Content-Type'] = 'text/html'
+            if 'Content-Disposition' in self._headers:
+                del(self._headers['Content-Disposition'])
+            raise e
+
 
     add_vars['saveconc'] = ['Desc', 'concsize']
 
@@ -2042,7 +2292,7 @@ class ConcCGI(UserCGI):
         os.umask(um)
         #print >>stderr, 'save conc: "%s"' % cpath
         self._user_settings.append('annotconc')
-        return {'stored': storeconcname}
+        return {'stored': storeconcname, 'conc_size': conc.size()}
 
     storeconc.template = 'saveconc_form.tmpl'
     add_vars['storeconc'] = ['Desc']

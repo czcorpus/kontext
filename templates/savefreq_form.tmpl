@@ -23,6 +23,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Save Frequency List")#slurp
 #end def
 
+#def bodyonload
+require(['jquery', 'tpl/savefreqForm', 'domReady!'], function (\$, savefreqForm, domReady) {
+    ## conf object is defined within document.tmpl
+    conf.files_path = '${files_path}';
+    savefreqForm.init(conf);
+});
+#end def
+
 #attr $focus = "'#submit'"
 
 #def main
@@ -63,44 +71,28 @@ $input_hidden
         #end if
         /> $_("XML")
       </label>
+      <label>
+          <input type="radio" name="saveformat" value="csv"
+          #if $saveformat == 'csv'
+          checked="checked"
+          #end if
+          /> CSV
+      </label>
     </td>
   </tr>
-  #if $paging
-    <tr class="separator">
-      <th>$_("Save pages"):</th>
-      <td>
-      <label>
-        <input type="radio" name="pages" value="0"
-        #if $pages == 0
-          checked="checked"
-        #end if
-        /> $_("All")
-      </label>
-      </td>
-    </tr><tr>
-      <th></th>
-      <td>
-      <label>
-        <input type="radio" name="pages" value="1"
-        #if $pages == 1
-          checked="checked"
-        #end if
-        /> $_("Only page"):
-   <input type="text" name="fpage" value="$fpage" size="5" />
-      </label>
-      </td>
-    </tr>
-  #end if
   <tr class="separator">
     <th>$_("Include heading"):</th>
     <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
   </tr>
-  #if $paging
-    <tr>
-      <th>$_("Maximum number of lines"):</th>
-      <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
-    </tr>
-  #end if
+  <tr class="separator">
+    <th>$_("Include column headers"):</th>
+    <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
+  </tr>
+  <tr>
+    <th>$_("Lines to store"):</th>
+    <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
+      <input type="text" name="to_line" value="$to_line" size="4" /></td>
+   </tr>
 </table>
 
 <div class="buttons">

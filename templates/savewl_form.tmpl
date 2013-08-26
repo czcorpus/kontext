@@ -32,7 +32,13 @@ $_("Save Word List")#slurp
 #end if
 </title>
 
-#attr $focus = "'#submit'"
+#def bodyonload
+require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, domReady) {
+    ## conf object is defined within document.tmpl
+    conf.files_path = '${files_path}';
+    savewlForm.init(conf);
+});
+#end def
 
 #def main
 #filter WebSafe
@@ -57,10 +63,13 @@ $_("Save Word List")#slurp
 <input type="hidden" name="usesubcorp" value="$usesubcorp" />
 <input type="hidden" name="ref_corpname" value="$ref_corpname" />
 <input type="hidden" name="ref_usesubcorp" value="$ref_usesubcorp" />
-<input type="hidden" name="keywords" value="$keywords" />
 <input type="hidden" name="wlcache" value="$wlcache" />
 <input type="hidden" name="usearf" value="$usearf" />
 <input type="hidden" name="simple_n" value="$simple_n" />
+<input type="hidden" name="wltype" value="$wltype" />
+<input type="hidden" name="wlnums" value="$wlnums" />
+<input type="hidden" name="include_nonwords" value="$include_nonwords" />
+<input type="hidden" name="blcache" value="$blcache" />
 <table class="form">
   <tr>
     <th>
@@ -85,39 +94,27 @@ $_("Save Word List")#slurp
 	#end if
 	/> $_("XML")
       </label>
+      <label>
+          <input type="radio" name="saveformat" value="csv"
+          #if $saveformat == 'csv'
+          checked="checked"
+          #end if
+          /> CSV
+      </label>
     </td>
   </tr>
-  <tr class="separator">
-      <th>$_("Save pages"):</th>
-      <td>
-      <label>
-        <input type="radio" name="pages" value="0"
-        #if $pages == 0
-          checked="checked"
-        #end if
-        /> $_("All")
-      </label>
-      </td>
-    </tr><tr>
-      <td></td>
-      <td>
-      <label>
-        <input type="radio" name="pages" value="1"
-        #if $pages == 1
-          checked="checked"
-        #end if
-        /> $_("Only page"):
-   <input type="text" name="wlpage" value="$wlpage" size="5" />
-      </label>
-      </td>
-    </tr>
   <tr class="separator">
     <th>$_("Include heading"):</th>
     <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
   </tr>
+  <tr class="separator">
+    <th>$_("Include column headers"):</th>
+    <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
+  </tr>
   <tr>
-    <th>$_("Maximum number of lines"):</th>
-    <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
+    <th>$_("Lines to store"):</th>
+    <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
+            <input type="text" name="to_line" value="$to_line" size="4" /></td>
   </tr>
 </table>
 

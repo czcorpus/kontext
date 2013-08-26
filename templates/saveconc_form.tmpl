@@ -64,48 +64,32 @@ require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm,
                     #end if
                     /> $_("XML")
                 </label>
+                <label>
+                    <input type="radio" name="saveformat" value="csv"
+                     #if $saveformat == 'csv'
+                    checked="checked"
+                    #end if
+                    /> CSV
+                </label>
             </td>
         </tr>
         <tr class="separator">
-            <th>$_("Save pages"):</th>
-            <td>
-                <label>
-                    <input type="radio" name="pages" value="0"
-                    #if $pages == 0
-                    checked="checked"
-                    #end if
-                    /> $_("All")
-                </label>
-            </td>
+            <th><label for="document-heading-checkbox">$_("Include heading"):</label></th>
+            <td><input id="document-heading-checkbox" type="checkbox" name="heading" value="1" checked="checked" /></td>
         </tr><tr>
-        <th></th>
-        <td>
-            <label>
-                <input type="radio" name="pages" value="1"
-                #if $pages == 1
-                checked="checked"
-                #end if
-                /> $_("Only page"):
-                <input type="text" name="fromp" value="$fromp" size="5" />
-            </label>
-        </td>
-    </tr>
-        <tr class="separator">
-            <th>$_("Include heading"):</th>
-            <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
-        </tr><tr>
-        <th>$_("Number lines"):</th>
-        <td><input type="checkbox" name="numbering" value="1"
+        <th><label for="line-numbering-checkbox">$_("Include line numbers"):</label></th>
+        <td><input id="line-numbering-checkbox" type="checkbox" name="numbering" value="1"
             #if $numbering
             checked="checked"
             #end if
             /></td>
     </tr><tr>
-        <th>$_("Align KWIC"):</th>
-        <td><input type="checkbox" name="align_kwic" value="1" checked="checked" /></td>
+        <th><label for="align-kwic-checkbox">$_("Align KWIC"):</label></th>
+        <td><input id="align-kwic-checkbox" type="checkbox" name="align_kwic" value="1" checked="checked" /></td>
     </tr><tr>
-        <th>$_("Maximum number of lines"):</th>
-        <td><input type="text" name="maxsavelines" value="$maxsavelines" size="7" /></td>
+        <th>$_("Lines to store"):</th>
+        <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
+            <input type="text" name="to_line" value="$to_line" size="4" /></td>
     </tr>
     </table>
 
