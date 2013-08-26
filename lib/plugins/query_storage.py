@@ -12,7 +12,6 @@
 
 from datetime import datetime
 import time
-import sqlite3
 
 
 class QueryStorage(object):

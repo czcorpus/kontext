@@ -81,6 +81,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
         opt_file = open(opt_filepath, 'w')
         opt_file.write('\n'.join(opt_lines))
         opt_file.close()
+        plugins.settings_storage.save(self._user, options)
 
     def save_global_attrs(self):
         options = [a for a in self.attrs2save if not a.startswith('_')]
