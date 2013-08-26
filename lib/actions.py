@@ -15,9 +15,6 @@ import logging
 import math
 import os
 import sys
-from sys import stderr
-import time
-import glob
 import re
 import locale
 import csv
@@ -28,7 +25,6 @@ from CGIPublisher import JsonEncodedData, UserActionException
 import settings
 import conclib
 import corplib
-from butils import *
 import plugins
 
 if not '_' in globals():
@@ -37,47 +33,8 @@ if not '_' in globals():
 
 class Actions(ConcCGI):
 
-    def simple_search(self):
-        """
-        simple search result -- all in one
-        """
-        # concordance lines
-        corp = self._corp()
-        conclines = 11  # setable?
-        self.viewmode = 'sen'
-        self.structs = 'g'
-        self.pagesize = conclines
-        self.gdex_enabled = 1
-        self.gdexcnt = conclines
-        self.exceptmethod = "first_form"
-        result = self.first()
-        # frequencies
-        fattrs = []
-        subcorpattrs = corp.get_conf('SUBCORPATTRS') \
-            or corp.get_conf('FULLREF')
-        if subcorpattrs != '#':
-            fattrs.extend(subcorpattrs.replace('|', ',').split(','))
-        wsattr = corp.get_conf('WSATTR')
-        fattrs.append(wsattr)
-        fcrits = ['%s 0' % a for a in fattrs]
-        self.q.append('r1000')  # speeds-up computing frequency
-        result['freqs'] = self.freqs(fcrit=fcrits, ml=1)
-        for block in result['freqs']['Blocks']:
-            block['Items'] = block['Items'][:10]
-            #sketches
-        self.numoflines = 10
-        result['Sketches'] = []
-        if fattrs and fattrs[-1] in ('lemma', 'lempos'):
-            try:
-                self.gr = ' '  # all relations
-                lemma = result['freqs']['Blocks'][-1]['Items'][0]['Word'][0]['n']  # most frequent lemma(lempos)
-                if wsattr == 'lempos':
-                    self.lemma = lemma[:-2]
-                    self.lpos = lemma[-2:]
-                result['Sketches'] = self.wseval()['Items']  # "flat" sketches
-            except:
-                result['Sketches'] = []
-        return result
+    def _get_annot_conc(self):
+        return conclib.get_stored_conc(self._corp(), self.annotconc, self._conc_dir)
 
     def view(self, view_params={}):
         """
@@ -133,18 +90,6 @@ class Actions(ConcCGI):
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
         labelmap = {}
-        if self.annotconc:
-            if self._selectstored(self.annotconc):
-                anot = self._get_annotconc()
-                conc.set_linegroup_from_conc(anot)
-                labelmap = anot.labelmap
-            elif self.can_annotate:
-                self.storeconc(self.annotconc)
-                labelmap = conclib.get_conc_labelmap(self._storeconc_path()
-                                                     + '.info')
-            else:
-                self._user_settings.append('annotconc')
-                self.annotconc = ''
         contains_speech = settings.has_configured_speech(self._corp())
         out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech),
                                  labelmap=labelmap,
@@ -1952,13 +1897,6 @@ class Actions(ConcCGI):
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
-            if self.annotconc:
-                try:
-                    anot = self._get_annotconc()
-                    conc.set_linegroup_from_conc(anot)
-                    labelmap = anot.labelmap
-                except conclib.manatee.FileAccessError:
-                    pass
             contains_speech = settings.has_configured_speech(self._corp())
             data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
                                       pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
@@ -2043,236 +1981,6 @@ class Actions(ConcCGI):
 
     storeconc.template = 'saveconc_form.tmpl'
     ConcCGI.add_vars['storeconc'] = ['Desc']
-
-    def storeconc_fromlemma(self, lemma='', lpos='-v'):
-        import re
-
-        num = re.search('-\d+$', lemma)
-        if num:
-            annotname = lemma
-            lemma = lemma[:num.start()]
-        else:
-            annotname = lemma
-        if 'lempos' in self._corp().get_conf('ATTRLIST').split(','):
-            self.q = ['q[lempos="%s%s"]' % (lemma, lpos)]
-            annotname += lpos
-        else:
-            self.q = ['q[lemma="%s"]' % lemma]
-        if not self._selectstored(annotname):
-            self.storeconc(annotname)
-        self.annotconc = annotname
-        try:
-            return self.view()
-        except ConcError:
-            self.exceptmethod = 'first_form'
-            raise
-
-    storeconc_fromlemma.template = 'view.tmpl'
-
-
-    def _selectstored(self, annotconc):
-        if os.path.exists(self._storeconc_path(annotconc) + '.conc'):
-            self._user_settings.append('annotconc')
-            return True
-        return False
-
-    def selectstored(self, annotconc='', storedconcnumber=200):
-        out = {}
-        if self._selectstored(annotconc):
-            out['selected'] = annotconc
-            if annotconc.startswith('cpa'):
-                out['lemma'] = annotconc[6:]
-            else:
-                out['lemma'] = annotconc
-        self.annotconc, annotconc_saved = '', self.annotconc
-        stored = [(os.stat(c).st_mtime, c)
-                  for c in glob.glob(self._storeconc_path() + '*.conc')]
-        stored.sort(reverse=True)
-        #stderr.write('selectstored (%s)[%s]:%s\n' %(self._user, self._conc_dir, stored))
-        del stored[storedconcnumber:]
-        self.annotconc = annotconc_saved
-        out['LastStoredConcs'] = [{'n': os.path.basename(c)[:-5]} for t, c in stored]
-        return out
-
-    def _get_annotconc(self):
-        return conclib.get_stored_conc(self._corp(), self.annotconc,
-                                       self._conc_dir)
-
-    def _save_lngroup_log(self, log):
-        logf = open(self._storeconc_path() + '.log', 'a')
-        flck_ex_lock(logf)
-        actionid = hex(hash(tuple(log)))[2:]
-        logf.write('Time: %s\n' % time.strftime('%Y-%m-%d %H:%M:%S'))
-        logf.write('User: %s\n' % self._user)
-        logf.write('Start: #%s#\n' % actionid)
-        for toknum, orggrp in log:
-            logf.write('%d\t%d\n' % (toknum, orggrp))
-        logf.write('End: #%s#\n' % actionid)
-        flck_unlock(logf)
-        #print >>stderr, 'locking log file finished',
-        logf.close()
-        return actionid
-
-    def undolngroupaction(self, action=''):
-        conc = self._get_annotconc()
-        logf = open(self._storeconc_path() + '.log')
-        process_tokens = False
-        log = []
-        for line in logf:
-            if line.startswith('Start: #%s#' % action):
-                process_tokens = True
-            elif line.startswith('End: #%s#' % action):
-                break
-            elif process_tokens:
-                toknum, lngrp = map(int, line.split())
-                log.append((toknum, conc.set_linegroup_at_pos(toknum, lngrp)))
-        actionid = self._save_lngroup_log(log)
-        conc.save(self._storeconc_path() + '.conc', 1)
-        self.format = 'json'
-        return {'actionid': actionid, 'count': len(log)}
-
-    def setlngroup(self, toknum='', group=0):
-        if not self.annotconc:
-            return 'No concordance selected'
-        conc = self._get_annotconc()
-        log = []
-        for tn in toknum.strip().split():
-            tni = int(tn)
-            log.append((tni, conc.set_linegroup_at_pos(tni, group)))
-        actionid = self._save_lngroup_log(log)
-        conc.save(self._storeconc_path() + '.conc', 1)
-        lab = conc.labelmap.get(group, group)
-        self.format = 'json'
-        return {'actionid': actionid, 'label': lab, 'count': len(log)}
-
-    def setlngroupglobally(self, group=0):
-        if not self.annotconc:
-            return 'No concordance selected'
-        anot = self._get_annotconc()
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
-        conc.set_linegroup_from_conc(anot)
-        # create undo log
-        kl = conclib.manatee.KWICLines(conc, '', '', '', '', '', '')
-        log = []
-        for i in range(conc.size()):
-            kl.nextcontext(i)
-            log.append((kl.get_pos(), kl.get_linegroup()))
-        actionid = self._save_lngroup_log(log)
-        conc.set_linegroup_globally(group)
-        anot.set_linegroup_from_conc(conc)
-        anot.save(self._storeconc_path() + '.conc', 1)
-        lab = anot.labelmap.get(group, group)
-        self.format = 'json'
-        return {'actionid': actionid, 'label': lab, 'count': len(log)}
-
-    def addlngrouplabel(self, annotconc='', newlabel=''):
-        ipath = self._storeconc_path() + '.info'
-        labelmap = conclib.get_conc_labelmap(ipath)
-        if not newlabel:
-            firstparts = [int(x[0][1])
-                          for x in [conclib.lngrp_sortcrit(l)
-                                    for l in labelmap.values() if l]
-                          if x[0][0] == 'n']
-            if not firstparts:
-                newlabel = '1'
-            else:
-                newlabel = str(max(firstparts) + 1)
-
-        def _addlngrouplabel_into_map(newlabel, labelmap):
-            ids = labelmap.items()
-            freeids = map(str, range(1, len(ids) + 2))
-            #stderr.write('addlngrouplabel: ids: %s, freeids:%s' % (ids, freeids))
-            for n, l in ids:
-                try:
-                    freeids.remove(n)
-                except ValueError:
-                    pass
-                if l == newlabel:
-                    break
-            else:
-                import xml.etree.ElementTree as ET
-
-                try:
-                    itree = ET.parse(ipath)
-                except IOError, err:
-                    itree = ET.ElementTree(ET.fromstring('<concinfo>\n<labels>\n</labels>\n</concinfo>\n'))
-                li = ('<li><n>%s</n><lab>%s</lab></li>\n'
-                      % (freeids[0], newlabel))
-                itree.find('labels').append(ET.fromstring(li))
-                itree.write(ipath)
-                labelmap[freeids[0]] = newlabel
-
-        _addlngrouplabel_into_map(newlabel, labelmap)
-        try:
-            int(newlabel)
-            for suff in self.annotconc_num_label_suffixes:
-                _addlngrouplabel_into_map(newlabel + suff, labelmap)
-        except ValueError:
-            pass
-
-        self._headers['Content-Type'] = 'text/xml'
-        return {'GroupNumbers': conclib.format_labelmap(labelmap)}
-
-    def lngroupinfo(self, annotconc=''):
-        # XXX opravit poradne! (_conc_dir)
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
-        anot = self._get_annotconc()
-        conc.set_linegroup_from_conc(anot)
-        labelmap = anot.labelmap
-        labelmap['0'] = 'Not assigned'
-        ids = conclib.manatee.IntVector()
-        freqs = conclib.manatee.IntVector()
-        conc.get_linegroup_stat(ids, freqs)
-        lg = [(labelmap.get(str(i), '#%s' % i), i, f) for i, f in zip(ids, freqs)]
-        lg = [(conclib.lngrp_sortcrit(n), n, i, f) for n, i, f in lg]
-        lg.sort()
-        lgs = [{'name': n, 'freq': f, 'id': i} for s, n, i, f in lg]
-        if self.enable_sadd and self.lemma:
-            import wsclust
-
-            ws = self.call_function(wsclust.WSCluster, ())
-            lgids = labelmap.keys()
-            for lg in lgs:
-                c1 = conclib.manatee.Concordance(conc)
-                c1.delete_linegroups(str(lg['id']), True)
-                lg['Sketch'] = ws.get_small_word_sketch(self.lemma,
-                                                        self.lpos, c1)
-        return {'LineGroups': lgs}
-
-    minbootscore = 0.5
-    minbootdiff = 0.8
-
-    def bootstrap(self, annotconc='', minbootscore=0.5, minbootdiff=0.8):
-        import wsclust
-
-        annot = self._get_annotconc()
-        ws = self.call_function(wsclust.WSCluster, ())
-        ws.build_pos2coll_map()
-        log = ws.bootstrap_conc(annot, minbootscore, minbootdiff)
-        print >> stderr, 'bootstrap', len(log)
-        actionid = self._save_lngroup_log(log)
-        annot.save(self._storeconc_path() + '.conc', 1)
-        del annot
-        self.q = ['s' + annotconc]
-        out = self.lngroupinfo(annotconc)
-        out['auto_annotated'] = len(log)
-        return out
-
-    bootstrap.template = 'lngroupinfo.tmpl'
-
-    def rename_annot(self, annotconc='', newname=''):
-        if not newname:
-            return self.lngroupinfo(annotconc)
-
-        for p in glob.glob(self._storeconc_path(annotconc) + '.*'):
-            d, f = os.path.split(p)
-            if f.startswith(annotconc):
-                os.rename(p, os.path.join(d, newname + f[len(annotconc):]))
-        self.annotconc = newname
-        self._user_settings.append('annotconc')
-        return self.lngroupinfo(newname)
-
-    rename_annot.template = 'lngroupinfo.tmpl'
 
     def ajax_get_corp_details(self):
         """

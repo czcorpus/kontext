@@ -97,22 +97,5 @@ require(['jquery', 'tpl/saveconcForm', 'domReady!'], function (\$, saveconcForm,
         <input class="submit" type="submit" value="$_("Save Concordance")" />
     </div>
 </form>
-
-
-#if $can_annotate
-<h3>$_("Store Concordance")</h3>
-#if $stored
-<div> $_("Concordance stored"): <b>$stored</b></div>
-#end if
-<form action="storeconc">
-    #filter None
-    $input_hidden
-    #end filter
-    $_("Concordance name"): <input type="text" name="storeconcname" value="$lemma" size="20" /><br/>
-    <div class="buttons">
-        <input class="submit" type="submit" value="$_("Store Concordance For Annotation")" />
-    </div>
-</form>
-#end if
 #end filter
 #end def
