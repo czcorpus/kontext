@@ -52,13 +52,13 @@ class QueryStorage(object):
             while id_exists(query_id[:i]) and i < 32:
                 i += 1
             query_id = query_id[:i]
-            cursor.execute("INSERT INTO noske_saved_queries (id, user, corpname, url, description, created, public, tmp) "
-                           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            cursor.execute(u"INSERT INTO noske_saved_queries (id, user, corpname, url, description, created, public, tmp) "
+                           u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                           (query_id, user, corpname, url, description, created, public, tmp))
         else:
             updated = int(time.mktime(datetime.now().timetuple()))
-            cursor.execute("UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
-                           "tmp = %s WHERE user = %s AND id = %s", (description, updated, public, tmp, user, query_id))
+            cursor.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
+                           u"tmp = %s WHERE user = %s AND id = %s", (description, updated, public, tmp, user, query_id))
 
         self.delete_old_records(cursor, user)
         self.conn.commit()
@@ -187,6 +187,7 @@ class QueryStorage(object):
         html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
                                  writer_name='html')
         html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        if is_unicode and type(html) is str:
+        if not is_unicode and type(html) is str:
             html = html.decode('utf-8')
+
         return html
