@@ -52,6 +52,9 @@ plugins.db = db_module.create_instance(settings.get('plugins', 'db'))
 session_module = plugins.load_plugin(settings.get('plugins', 'sessions')['module'])
 plugins.sessions = session_module.create_instance(settings, plugins.db)
 
+settings_storage_module = plugins.load_plugin(settings.get('plugins', 'settings_storage')['module'])
+plugins.settings_storage = settings_storage_module.create_instance(settings, plugins.db)
+
 auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
 plugins.auth = auth_module.create_instance(settings, plugins.sessions, plugins.db)
 
