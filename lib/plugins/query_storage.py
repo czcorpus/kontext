@@ -19,14 +19,14 @@ class QueryStorage(object):
 
     cols = ('id', 'user', 'corpname', 'url', 'description', 'created', 'updated', 'public', 'tmp')
 
-    def __init__(self, conf):
+    def __init__(self, conf, db):
         """
         Parameters
         ----------
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = sqlite3.connect(conf.get('plugins', 'query_storage')['ucnk:db_path'])
+        self.conn = db.get()
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
@@ -42,7 +42,7 @@ class QueryStorage(object):
         cursor = self.conn.cursor()
 
         def id_exists(id):
-            cursor.execute("SELECT COUNT (*) FROM saved_queries WHERE id = ? LIMIT 1", (id,))
+            cursor.execute("SELECT COUNT(*) FROM noske_saved_queries WHERE id = %s LIMIT 1", (id,))
             return cursor.fetchone()[0]
 
         if not query_id:
@@ -52,13 +52,13 @@ class QueryStorage(object):
             while id_exists(query_id[:i]) and i < 32:
                 i += 1
             query_id = query_id[:i]
-            cursor.execute("INSERT INTO saved_queries (id, user, corpname, url, description, created, public, tmp) "
-                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            cursor.execute("INSERT INTO noske_saved_queries (id, user, corpname, url, description, created, public, tmp) "
+                           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                           (query_id, user, corpname, url, description, created, public, tmp))
         else:
             updated = int(time.mktime(datetime.now().timetuple()))
-            cursor.execute("UPDATE saved_queries SET description = ?, updated = ?, public = ?, "
-                           "tmp = ? WHERE user = ? AND id = ?", (description, updated, public, tmp, user, query_id))
+            cursor.execute("UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
+                           "tmp = %s WHERE user = %s AND id = %s", (description, updated, public, tmp, user, query_id))
 
         self.delete_old_records(cursor, user)
         self.conn.commit()
@@ -74,13 +74,13 @@ class QueryStorage(object):
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
             from_date = time.mktime(datetime(from_date[0], from_date[1], from_date[2], 0, 0, 0).timetuple())
-            opt_sql.append('created >= ?')
+            opt_sql.append('created >= %s')
             sql_params.append(from_date)
 
         if to_date:
             to_date = [int(d) for d in to_date.split('-')]
             to_date = time.mktime(datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
-            opt_sql.append('created <= ?')
+            opt_sql.append('created <= %s')
             sql_params.append(to_date)
 
         if types is None:
@@ -91,7 +91,7 @@ class QueryStorage(object):
             opt_sql.append('(%s)' % tmp)
 
         if limit:
-            limit_sql = "LIMIT ? OFFSET ?"
+            limit_sql = "LIMIT %s OFFSET %s"
             sql_params.append(limit)
             sql_params.append(offset)
         else:
@@ -100,8 +100,8 @@ class QueryStorage(object):
         if len(opt_sql) > 0:
             opt_sql.insert(0, '')
 
-        sql = ("SELECT %s FROM saved_queries"
-               " WHERE user = ? AND deleted IS NULL"
+        sql = ("SELECT %s FROM noske_saved_queries"
+               " WHERE user = %%s AND deleted IS NULL"
                " %s "
                " ORDER BY created DESC, updated DESC "
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
@@ -120,14 +120,14 @@ class QueryStorage(object):
         """
 
         """
-        cursor.execute("SELECT COUNT(*) FROM saved_queries WHERE user = ? AND deleted IS NULL AND tmp = 1", (user,))
+        cursor.execute("SELECT COUNT(*) FROM noske_saved_queries WHERE user = %s AND deleted IS NULL AND tmp = 1", (user,))
         row = cursor.fetchone()
         if row:
             num_delete = row[0] - self.num_kept_records
             if num_delete > 0:
-                cursor.execute("DELETE FROM saved_queries WHERE id IN (SELECT id FROM saved_queries "
-                               " WHERE user=? AND deleted IS NULL AND tmp = 1"
-                               " ORDER BY created LIMIT ?)", (user, num_delete))
+                cursor.execute("DELETE FROM noske_saved_queries WHERE id IN (SELECT id FROM noske_saved_queries "
+                               " WHERE user=%s AND deleted IS NULL AND tmp = 1"
+                               " ORDER BY created LIMIT %s)", (user, num_delete))
 
     def get_user_query(self, user, id):
         """
@@ -135,7 +135,7 @@ class QueryStorage(object):
         In case the query is not public also user identifier has to match (else None is returned.
         """
         cursor = self.conn.cursor()
-        cursor.execute("SELECT %s FROM saved_queries WHERE id = ?" % ','.join(QueryStorage.cols), (id, ))
+        cursor.execute("SELECT %s FROM noske_saved_queries WHERE id = %%s" % ','.join(QueryStorage.cols), (id, ))
         row = cursor.fetchone()
         if row:
             row = dict(zip(QueryStorage.cols, row))
@@ -146,12 +146,12 @@ class QueryStorage(object):
     def delete_user_query(self, user, id):
         cursor = self.conn.cursor()
         deleted = int(time.mktime(datetime.now().timetuple()))
-        cursor.execute("UPDATE saved_queries SET deleted = ? WHERE user = ? AND id = ?", (deleted, user, id))
+        cursor.execute("UPDATE noske_saved_queries SET deleted = %s WHERE user = %s AND id = %s", (deleted, user, id))
         self.conn.commit()
 
     def undelete_user_query(self, user, id):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE saved_queries SET deleted = NULL WHERE user = ? AND id = ?", (user, id))
+        cursor.execute("UPDATE noske_saved_queries SET deleted = NULL WHERE user = %s AND id = %s", (user, id))
         self.conn.commit()
 
     def make_query_hash(self, user, url):

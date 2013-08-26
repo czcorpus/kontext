@@ -17,68 +17,7 @@ to the documentation or read the dummy_auth.py module to see the required interf
 """
 import crypt
 
-_conn = None
-
-fq = None
-
-
-def create_fq(adapter):
-    """
-    This function allows using a unified parameter placeholder "%(p)s" in your SQL queries.
-    When called, db-dependent variant is returned (i.e. with "?", "%s",... replacements)
-    """
-
-    global fq
-
-    def fq2(q):
-        return {
-            'mysql': q % {'p': '%s'},
-            'sqlite': q % {'p': '?'}
-        }[adapter]
-    return fq2
-
-
-def db_open(adapter, db_name, host=None, username=None, password=None):
-    """
-    If called for the first time then opens new database connection according to provided database connection
-    data. The connection is kept open until explicitly closed. If the function is called again then already opened
-    connection is returned.
-
-    MySQL and SQLite database adapters are supported.
-
-    Parameters
-    ----------
-    adapter : str
-        {mysql, sqlite}
-
-    db_name : str
-        name or path to the database
-
-    host : str
-        hostname
-
-    username : str
-        database username
-
-    password : str
-        database user's password
-
-    Returns
-    -------
-    connection : object
-                 connection object as provided by selected module
-    """
-    global _conn, fq
-
-    if _conn is None:
-        fq = create_fq(adapter)
-        if adapter == 'mysql':
-            import MySQLdb
-            _conn = MySQLdb.connect(host=host, user=username, passwd=password, db=db_name)
-        elif adapter == 'sqlite':
-            import sqlite3
-            _conn = sqlite3.connect(db_name)
-    return _conn
+import ucnk_db
 
 
 def create_salt(length=2):
@@ -91,18 +30,12 @@ def create_salt(length=2):
     return ''.join([salt_chars[random.randint(0, len(salt_chars) - 1)] for i in range(length)])
 
 
-def create_instance(conf, sessions):
+def create_instance(conf, sessions, db):
     """
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    db_adapter = conf.get('plugins', 'auth').get('ucnk:db_adapter', None)
-    db_name = conf.get('plugins', 'auth').get('ucnk:db_name', None)
-    db_host = conf.get('plugins', 'auth').get('ucnk:db_host', None)
-    db_username = conf.get('plugins', 'auth').get('ucnk:db_username', None)
-    db_password = conf.get('plugins', 'auth').get('ucnk:db_password', None)
-    conn = db_open(db_name=db_name, adapter=db_adapter, host=db_host, username=db_username, password=db_password)
-    return UCNKAuth(conn, sessions, conf.get('global', 'ucnk:administrators'))
+    return UCNKAuth(db.get(), sessions, conf.get('global', 'ucnk:administrators'))
 
 
 class UCNKAuth(object):
@@ -150,7 +83,7 @@ class UCNKAuth(object):
         """
         cols = ('id', 'user', 'pass', 'firstName', 'surname')
         cursor = self.db_conn.cursor()
-        cursor.execute(fq("SELECT %s FROM user WHERE user = %%(p)s" % ','.join(cols)), (username, ))
+        cursor.execute("SELECT %s FROM user WHERE user = %%s" % ','.join(cols), (username, ))
         row = cursor.fetchone()
         if row and crypt.crypt(password, row[2]) == row[2]:
             row = dict(zip(cols, row))
@@ -180,7 +113,7 @@ class UCNKAuth(object):
 
         hashed_pass = crypt.crypt(password, create_salt())
         cursor = self.db_conn.cursor()
-        ans = cursor.execute(fq("UPDATE user SET pass = %(p)s WHERE user = %(p)s"), (hashed_pass, self.user,))
+        ans = cursor.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, self.user,))
         cursor.close()
         self.db_conn.commit()
         return ans
@@ -199,8 +132,8 @@ class UCNKAuth(object):
         if len(self.corplist) == 0:
             conn = self.db_conn
             cursor = conn.cursor()
-            cursor.execute(fq("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
-                              " WHERE un.user = %(p)s"),  (user, ))
+            cursor.execute("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
+                           " WHERE un.user = %s",  (user, ))
             rows = cursor.fetchall()
             if len(rows) > 0:
                 cursor.close()

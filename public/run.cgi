@@ -46,16 +46,19 @@ MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
 # implicit plugins BEGIN ###
 
+db_module = plugins.load_plugin(settings.get('plugins', 'db')['module'])
+plugins.db = db_module.create_instance(settings.get('plugins', 'db'))
+
 session_module = plugins.load_plugin(settings.get('plugins', 'sessions')['module'])
-plugins.sessions = session_module.create_instance(settings)
+plugins.sessions = session_module.create_instance(settings, plugins.db)
 
 auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
-plugins.auth = auth_module.create_instance(settings, plugins.sessions)
+plugins.auth = auth_module.create_instance(settings, plugins.sessions, plugins.db)
 
 try:
     query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])
     if query_storage_module:
-        plugins.query_storage = query_storage_module.QueryStorage(settings)
+        plugins.query_storage = query_storage_module.QueryStorage(settings, plugins.db)
 except ImportError:
     pass
 

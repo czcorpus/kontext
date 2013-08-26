@@ -15,11 +15,11 @@ class Sessions(object):
 
     DEFAULT_CLEANUP_PROBABILITY = 0.5
 
-    def __init__(self, settings):
+    def __init__(self, settings, db):
         """
         Initialization according to the 'settings' object/module
         """
-        self.conn = sqlite3.connect(settings.get('plugins', 'sessions').get('ucnk:db_path', None))
+        self.conn = db.get()
         self.ttl = settings.get('plugins', 'sessions').get('ttl', Sessions.DEFAULT_TTL)
         self.cleanup_probability = settings.get('plugins', 'sessions').get('cleanup_probability',
                                                                            Sessions.DEFAULT_CLEANUP_PROBABILITY)
@@ -38,7 +38,7 @@ class Sessions(object):
         session_id = str(uuid.uuid1())
         if data is None:
             data = {}
-        cursor.execute('INSERT INTO session (id, updated, data) VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO noske_session (id, updated, data) VALUES (%s, %s, %s)',
                        (session_id, self.get_actual_timestamp(), json.dumps(data)))
         self.conn.commit()
         return {'id': session_id, 'data': data}
@@ -48,7 +48,7 @@ class Sessions(object):
         Deletes a session record from the storage
         """
         cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM session WHERE id = ?", (session_id, ))
+        cursor.execute("DELETE FROM noske_session WHERE id = %s", (session_id, ))
         cursor.close()
         self.conn.commit()
 
@@ -70,7 +70,7 @@ class Sessions(object):
         if random.random() < Sessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
         cursor = self.conn.cursor()
-        cursor.execute("SELECT data FROM session WHERE id = ?", (session_id, ))
+        cursor.execute("SELECT data FROM noske_session WHERE id = %s", (session_id, ))
         row = cursor.fetchone()
         cursor.close()
         if row:
@@ -84,7 +84,7 @@ class Sessions(object):
         If no such record exists then nothing is done and no error is thrown.
         """
         cursor = self.conn.cursor()
-        cursor.execute('UPDATE session SET data = ?, updated = ? WHERE id = ?',
+        cursor.execute('UPDATE noske_session SET data = %s, updated = %s WHERE id = %s',
                        (json.dumps(data), self.get_actual_timestamp(), session_id))
         cursor.close()
         self.conn.commit()
@@ -97,13 +97,13 @@ class Sessions(object):
         """
         cursor = self.conn.cursor()
         limit_time = self.get_actual_timestamp() - Sessions.DEFAULT_TTL
-        cursor.execute('DELETE FROM session WHERE updated < ?', (limit_time, ))
+        cursor.execute('DELETE FROM noske_session WHERE updated < %s', (limit_time, ))
         cursor.close()
         self.conn.commit()
 
 
-def create_instance(config):
+def create_instance(config, db):
     """
     This is an expected plugin module method to create instance of the service
     """
-    return Sessions(config)
+    return Sessions(config, db)
