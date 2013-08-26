@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700);
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&subset=latin,latin-ext);
 
 #conc-wrapper {
     border: 3px solid #D2EDC0;
