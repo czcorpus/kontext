@@ -19,4 +19,5 @@ def create_instance(conf):
     """
     conn = MySQLdb.connect(host=conf['ucnk:host'], user=conf['ucnk:username'], passwd=conf['ucnk:password'],
                            db=conf['ucnk:name'])
+    conn.set_character_set('utf8')
     return DbConnection(conn)
