@@ -39,7 +39,7 @@ if manatee_dir and manatee_dir not in sys.path:
 import manatee
 
 import CGIPublisher
-from conccgi import ConcCGI
+from actions import Actions
 from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
@@ -72,12 +72,12 @@ except ImportError:
 # implicit plugins END ###
 
 
-class BonitoCGI (ConcCGI, UserCGI):
+class BonitoCGI (Actions, UserCGI):
 
     # UserCGI options
     _options_dir = settings.get('corpora', 'options_dir')
 
-    # ConcCGI options
+    # Actions options
     cache_dir = settings.get('corpora', 'cache_dir')
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
@@ -85,7 +85,7 @@ class BonitoCGI (ConcCGI, UserCGI):
 
     def __init__(self, user=None, environ=os.environ):
         UserCGI.__init__(self, environ=environ, user=user)
-        ConcCGI.__init__(self, environ=environ)
+        Actions.__init__(self, environ=environ)
 
     def _user_defaults (self, user):
         if user is not self._default_user:
