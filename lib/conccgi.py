@@ -285,8 +285,6 @@ class ConcCGI(UserCGI):
                                         url=url, tmp=1, description=description, query_id=None, public=0)
 
     def preprocess_values(self, form):
-        if self._corpus_architect:
-            return
         cn = ''
         if 'json' in form:
             import json
@@ -340,12 +338,11 @@ class ConcCGI(UserCGI):
         result['q'] = self.urlencode([('q', q) for q in self.q])
         result['Q'] = [{'q': q} for q in self.q]
         result['corpname_url'] = 'corpname=' + self.corpname
-        if self._corpus_architect: # no corpname for corpus architect
-            self._global_vars = self._global_vars[1:]
-            result['corpname_url'] = ''
+
         global_var_val = [(n, val) for n in self._global_vars
                           for val in [getattr(self, n)]
                           if getattr(self.__class__, n, None) is not val]
+
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
