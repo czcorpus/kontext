@@ -22,14 +22,11 @@ import settings
 import plugins
 
 
-def load_opt_file(options, filepath):
-    if not os.path.isfile (filepath):
-        return
-    for line in open (filepath).readlines():
-        if line[0] == '#':
-            continue
-        a,v = line.split ('\t', 1)
-        options [a.strip()] = v.strip('\n').decode('utf8')
+def load_opt_file(options, user_id):
+    """
+    TODO
+    """
+    plugins.settings_storage.load(user_id, options)
 
 
 class UserCGI (CGIPublisher.CGIPublisher):
@@ -52,7 +49,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
             user_file_id = self._user
         else:
             user_file_id = 'anonymous'
-        load_opt_file(options, os.path.join(self._options_dir, user_file_id))
+        load_opt_file(options, self._session_get('user', 'id'))
         CGIPublisher.correct_types(options, self.clone_self(), selector=1)
         self._user_defaults(user_file_id)
         self.__dict__.update(options)
@@ -67,21 +64,10 @@ class UserCGI (CGIPublisher.CGIPublisher):
         else:
             tosave = [(opt, self.__dict__[opt]) for opt in optlist
                       if opt in self.__dict__]
-        opt_filepath = os.path.join(self._options_dir, self._user)
         options = {}
-        load_opt_file(options, opt_filepath)
+        load_opt_file(options, self._session_get('user', 'id'))
         options.update(tosave)
-
-        opt_lines = []
-        for k, v in options.items():
-            if isinstance(v, unicode):
-                v = v.encode('utf8')
-            opt_lines.append(str(k) + '\t' + str(v))
-        opt_lines.sort()
-        opt_file = open(opt_filepath, 'w')
-        opt_file.write('\n'.join(opt_lines))
-        opt_file.close()
-        plugins.settings_storage.save(self._user, options)
+        plugins.settings_storage.save(self._session_get('user', 'id'), options)
 
     def save_global_attrs(self):
         options = [a for a in self.attrs2save if not a.startswith('_')]
