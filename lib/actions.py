@@ -1270,10 +1270,6 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         self._reset_session_conc()
-        nogenhist = 0
-        corp = self._corp()
-        attrlist = corp.get_conf('ATTRLIST').split(',')
-        # set reference corpus and reference subcorp list (for keywords)
         out = {}
         if not ref_corpname:
             ref_corpname = self.corpname
@@ -1292,9 +1288,9 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['wordlist_form'] = ['LastSubcorp']
 
     def findx_upload_form(self):
-        out = {}
-        out['processing'] = self.check_histogram_processing().split(':')[1]
-        return out
+        return {
+            'processing': self.check_histogram_processing().split(':')[1]
+        }
 
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
         """
@@ -1311,7 +1307,8 @@ class Actions(ConcCGI):
                 from md5 import new as md5
             filename = os.path.join(self.cache_dir,
                                     md5(wlfile).hexdigest() + '.wordlist')
-            if not os.path.isdir(self.cache_dir): os.makedirs(self.cache_dir)
+            if not os.path.isdir(self.cache_dir):
+                os.makedirs(self.cache_dir)
             cache_file = open(filename, 'w')
             cache_file.write(wlfile)
             cache_file.close()
@@ -1322,7 +1319,6 @@ class Actions(ConcCGI):
             wlwords = [w.strip() for w in cache_file]
             cache_file.close()
         return wlwords, os.path.basename(filename)
-
 
     include_nonwords = 0
     wltype = 'simple'
