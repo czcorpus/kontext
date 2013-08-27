@@ -51,9 +51,7 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
 </h2>
 <form action="savewl">
 <fieldset class="anonymous">
-#unless $_corpus_architect
-  <input type="hidden" name="corpname" value="$corpname" />
-#end unless
+<input type="hidden" name="corpname" value="$corpname" />
 <input type="hidden" name="wlattr" value="$wlattr" />
 <input type="hidden" name="wlminfreq" value="$wlminfreq" />
 <input type="hidden" name="wlpat" value="$wlpat" />

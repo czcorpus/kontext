@@ -145,7 +145,7 @@ $input_hidden
     <select name="tbl_template">
     #for $t in $_avail_tbl_templates.split(',')
         #set $parsed_name = $t.rsplit('_', 2)
-        #if $_corpus_architect or $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
+        #if $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
         <option value="$t" #if $t == $tbl_template#selected="selected"#end if#>$tbl_labels.get($t, $t)</option>
         #end if
     #end for

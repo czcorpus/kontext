@@ -374,9 +374,7 @@ $_ca_topbar
 
 #if $corplist_size == 1
 $corp_full_name</b><br>
-  #unless $_corpus_architect
-    <input type="hidden" name="corpname" value="$corpname" />
-  #end unless
+<input type="hidden" name="corpname" value="$corpname" />
 #else
 <input type="hidden" name="reload" />
 
@@ -399,22 +397,20 @@ $corp_full_name</b><br>
 #def corp_sel_node
 #filter None
 <tbody>
-#if not $_corpus_architect
-<tr class="required">
-#if $corplist_size > 1
-<th>$_("Corpus"):</th>
-<td colspan="2">
-#filter None
-$corp_sel
-#end filter
-#else
-<td colspan="2">
-<input type="hidden" name="corpname" value="$corpname" />
-#end if
-</td>
-</tr>
+    <tr class="required">
+    #if $corplist_size > 1
+        <th>$_("Corpus"):</th>
+        <td colspan="2">
+        #filter None
+        $corp_sel
+        #end filter
+    #else
+        <td colspan="2">
+        <input type="hidden" name="corpname" value="$corpname" />
+    #end if
+    </td>
+    </tr>
 </tbody>
-#end if
 #end filter
 #end def
 

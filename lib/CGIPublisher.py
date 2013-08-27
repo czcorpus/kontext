@@ -183,7 +183,6 @@ class CGIPublisher(object):
     _template_dir = u'../cmpltmpl/'
     _locale_dir = u'../locale/'
     _tmp_dir = u'/tmp'
-    _corpus_architect = 0
     _url_parameters = []
     exceptmethod = None
     debug = None
@@ -408,11 +407,6 @@ class CGIPublisher(object):
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 named_args[str(k)] = self.recode_input(form.getvalue(k))
-        if self._corpus_architect:
-            try:
-                del named_args['corpname']
-            except KeyError:
-                pass
         na = named_args.copy()
         correct_types(na, self.clone_self())
         if selectorname:
@@ -590,8 +584,10 @@ class CGIPublisher(object):
             em, self.exceptmethod = self.exceptmethod, None
             return self.process_method(em, pos_args, named_args, tpl_data)
 
-    def recode_input(self, x, decode=1):  # converts query into corpencoding
-        if self._corpus_architect and decode: return x
+    def recode_input(self, x, decode=1):
+        """
+        converts a query into the encoding of current corpus
+        """
         if type(x) is ListType:
             return [self.recode_input(v, decode) for v in x]
         if decode:
