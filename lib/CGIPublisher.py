@@ -235,6 +235,20 @@ class CGIPublisher(object):
             self._user = None
             self._anonymous = 1
 
+    def _session_get(self, *nested_keys):
+        """
+        Retrieves a value from session dictionary. If no such value is found
+        then None is returned. More than one key is understood as a 'path' of
+        a nested dictionaries.
+        """
+        curr = self._session
+        for k in nested_keys:
+            if k in curr:
+                curr = curr[k]
+            else:
+                return None
+        return curr
+
     def _get_session_id(self):
         if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
             return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
@@ -242,6 +256,16 @@ class CGIPublisher(object):
 
     def _set_session_id(self, val):
         self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
+
+    def _from_session(self, *keys):
+        curr = self._session
+        for k in keys:
+            if k in curr:
+                curr = curr[k]
+            else:
+                return None
+        return curr
+
 
     def get_user_settings(self):
         """
