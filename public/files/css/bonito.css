@@ -797,7 +797,7 @@ div.narrowmain {
 
 fieldset {
     margin: 14px 0 6px;
-    padding: 0 0 0 14px;
+    padding: 10px;
     border-style: solid;
     border-color: #DBE2D9;
     border-width: 1px;
@@ -838,7 +838,6 @@ fieldset.anonymous {
 }
 
 fieldset fieldset {
-    float:left;
     margin:6px 10px 6px 6px;
 }
 
@@ -852,8 +851,7 @@ fieldset.float {
 }
 
 form {
-    display:table;
-    width:auto;
+    min-width: 50%;
 }
 
 form#navigation_form,form#navigation_form2 {
@@ -869,8 +867,7 @@ h1 {
 
 h2 {
     font-size:140%;
-    margin-bottom: 0.5em;
-    margin-top: .1em;
+    margin: 0.5em auto 0.5em 0.5em;
     font-weight: 500;
 }
 
@@ -1307,4 +1304,17 @@ table#multilevel-freq-params td.level {
 
 #desc-area-switch-hint {
     margin: 0;
+}
+
+div.lft-block {
+    float: left;
+}
+
+div.rgt-block {
+    float: right;
+}
+
+.struct em {
+    text-decoration: none;
+    color: #999999;
 }
