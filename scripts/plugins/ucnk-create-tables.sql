@@ -29,5 +29,6 @@ CREATE TABLE noske_user_settings (
     user_id INTEGER NOT NULL,
     data TEXT,
     updated INTEGER NOT NULL,
+    UNIQUE KEY(user_id),
     FOREIGN KEY(user_id) REFERENCES user(id)
 ) ENGINE=InnoDB;
