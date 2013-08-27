@@ -13,6 +13,7 @@
 import re
 import locale
 from types import ListType
+import os
 
 from usercgi import UserCGI
 import corplib
@@ -22,6 +23,7 @@ from CGIPublisher import UserActionException
 import plugins
 import settings
 import taghelper
+import logging
 
 if not '_' in globals():
     _ = lambda s: s
@@ -229,6 +231,7 @@ class ConcCGI(UserCGI):
     disabled_menu_items = []
     SubcorpList = []
     save_menu = []
+    last_corpus = None
 
     add_vars['findx_upload'] = [u'LastSubcorp']
 
@@ -239,9 +242,43 @@ class ConcCGI(UserCGI):
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
 
+    def _log_request(self, user_settings, action_name):
+        """
+        Logs user's request by storing URL parameters, user settings and user name
+
+        Parameters
+        ----------
+        user_settings: dict
+            settings stored in user's cookie
+        action_name: str
+            name of the action
+        """
+        import json
+        import datetime
+
+        ans = {
+            'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+            'action': action_name,
+            'user': os.getenv('REMOTE_USER'),
+            'params': dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]]),
+            'settings': user_settings
+        }
+        logging.getLogger('QUERY').info(json.dumps(ans))
+
+    def _get_persistent_attrs(self):
+        """
+        Returns list of object's attributes which (along with their values) will be preserved using cookies.
+        """
+        return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
+                'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl', 'last_corpus')
+
     def _pre_dispatch(self):
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
                                         self.gdexpath)
+
+    def _post_dispatch(self, methodname, tmpl, result):
+        self.last_corpus = self.corpname
+        self._log_request(self._get_persistent_items(), '%s' % methodname)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -316,13 +353,8 @@ class ConcCGI(UserCGI):
         return self._curr_corpus
 
     def _set_defaults(self):
-        if not self.__dict__.has_key('refs'):
+        if not 'refs' in self.__dict__:
             self.refs = self._corp().get_conf('SHORTREF')
-
-    def _correct_parameters(self):
-        if self.annotconc == '--NONE--':
-            self._user_settings.append('annotconc')
-            self.annotconc = ''
 
     def _add_globals(self, result):
         """
@@ -420,8 +452,7 @@ class ConcCGI(UserCGI):
             result['show_conc_bar'] = False
         return result
 
-    def add_undefined(self, result, methodname):
-        UserCGI.add_undefined(self, result, methodname)
+    def _add_undefined(self, result, methodname):
         result['methodname'] = methodname
         if methodname in self.add_vars:
             names = self.add_vars[methodname]
@@ -447,7 +478,6 @@ class ConcCGI(UserCGI):
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
-
 
         if 'orig_query' in names:
             conc_desc = conclib.get_conc_desc(self.q,

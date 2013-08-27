@@ -11,7 +11,7 @@ class Sessions(object):
     SQLite-based session persistence implementation
     """
 
-    DEFAULT_TTL = 1800
+    DEFAULT_TTL = 14400
 
     DEFAULT_CLEANUP_PROBABILITY = 0.5
 

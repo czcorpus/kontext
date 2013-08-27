@@ -92,30 +92,6 @@ def q_help(page, lang): # html code for context help
            + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
 
 
-def log_request(user_settings, action_name):
-    """
-    Logs user's request by storing URL parameters, user settings and user name
-
-    Parameters
-    ----------
-    user_settings: dict
-        settings stored in user's cookie
-    action_name: str
-        name of the action
-    """
-    import json
-    import datetime
-
-    ans = {
-        'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
-        'action': action_name,
-        'user': os.getenv('REMOTE_USER'),
-        'params': dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]]),
-        'settings': user_settings
-    }
-    logging.getLogger('QUERY').info(json.dumps(ans))
-
-
 class BonitoCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -179,7 +155,6 @@ class CGIPublisher(object):
     """
     _headers = {'Content-Type': 'text/html; charset=utf-8'}
     _keep_blank_values = 0
-    _user_settings = {}
     _template_dir = u'../cmpltmpl/'
     _locale_dir = u'../locale/'
     _tmp_dir = u'/tmp'
@@ -265,7 +240,6 @@ class CGIPublisher(object):
                 return None
         return curr
 
-
     def get_user_settings(self):
         """
         Loads user settings from cookie
@@ -348,10 +322,7 @@ class CGIPublisher(object):
     def _set_defaults(self):
         pass
 
-    def _correct_parameters(self):
-        pass
-
-    def add_undefined(self, result, methodname):
+    def _add_undefined(self, result, methodname):
         pass
 
     def _add_globals(self, result):
@@ -393,7 +364,6 @@ class CGIPublisher(object):
         self.environ = environ
 
         named_args = self.get_user_settings()
-        self._user_settings.update(named_args)
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=post_fp)
         self.preprocess_values(form)  # values needed before recoding
@@ -413,7 +383,6 @@ class CGIPublisher(object):
             choose_selector(self.__dict__, getattr(self, selectorname))
         self._set_defaults()
         self.__dict__.update(na)
-        self._correct_parameters()
         return named_args
 
     def get_method_metadata(self, method_name, data_name):
@@ -443,11 +412,27 @@ class CGIPublisher(object):
     def get_http_method(self):
         return os.getenv('REQUEST_METHOD', '')
 
+    def _get_persistent_attrs(self):
+        return []
+
+    def _get_persistent_items(self):
+        ans = {}
+        for k in self._get_persistent_attrs():
+            if hasattr(self, k):
+                ans[k] = getattr(self, k)
+        return ans
+
     def _pre_dispatch(self):
         """
-        Allows some operations to be done before the action itself is processed
+        Allows special operations to be done before the action itself is processed
         """
         pass
+
+    def _post_dispatch(self, methodname, tmpl, result):
+        """
+        Allows special operations to be done after the action itself has been processed but before
+        any output or HTTP headers.
+        """
 
     def run_unprotected(self, path=None, selectorname=None):
         """
@@ -471,11 +456,7 @@ class CGIPublisher(object):
             named_args = self.parse_parameters(selectorname)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
-            if hasattr(self, '_user_settings'):
-                user_settings = getattr(self, '_user_settings')
-            else:
-                user_settings = {}
-            log_request(user_settings, '%s' % methodname)
+            self._post_dispatch(methodname, tmpl, result)
 
             return_type = self.get_method_metadata(methodname, 'return_type')
             cont = self.output_headers(return_type)
@@ -641,11 +622,8 @@ class CGIPublisher(object):
         bool : True if content should follow else False
         """
         has_body = True
-        user_settings = {}
-        for k in self._user_settings:
-            if k in self.__dict__:
-                user_settings[k] = self.__dict__[k]
-        self._cookies['user_settings'] = json.dumps(user_settings)
+
+        self._cookies['user_settings'] = json.dumps(self._get_persistent_items())
         self._cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
 
         if return_type == 'json':
@@ -679,7 +657,7 @@ class CGIPublisher(object):
         # Template
         elif type(result) is DictType:
             self._add_globals(result)
-            self.add_undefined(result, methodname)
+            self._add_undefined(result, methodname)
             result = self.rec_recode(result)
             custom_attributes = [a for a in CGIPublisher.__dict__.keys() if not a.startswith('__')
                                  and not a.endswith('__')]

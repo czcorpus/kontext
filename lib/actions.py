@@ -158,7 +158,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._enable_subcorpora_list(out)
-        out.update(dict([(k, v) for k, v in self._user_settings.items() if k.startswith('query_type_')]))
+        out.update(dict([(k, k) for k, v in self._get_persistent_items().items() if k.startswith('query_type_')]))
         return out
 
     ConcCGI.add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
@@ -294,9 +294,6 @@ class Actions(ConcCGI):
         self.gdexconf = gdexconf
         self.shuffle = shuffle
 
-        self._user_settings.update(dict([(x, '') for x in ['attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon',
-                                                           'multiple_copy', 'gdex_enabled', 'gdexcnt', 'gdexconf',
-                                                           'refs_up', 'shuffle']]))
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -304,7 +301,6 @@ class Actions(ConcCGI):
                     _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
-            self._user_settings.update([(x, '') for x in ['kwicleftctx', 'kwicrightctx', 'ctxunit']])
 
     def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[],
                    newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
@@ -500,7 +496,6 @@ class Actions(ConcCGI):
     def _compile_query(self, qtype=None, cname=''):
         if not self.is_err_corpus():
             return self._compile_basic_query(qtype, cname=cname)
-        self._user_settings.append('cup_hl')
         err_code = getattr(self, 'cup_err_code', '')
         err = getattr(self, 'cup_err', '')
         corr = getattr(self, 'cup_corr', '')
@@ -1971,8 +1966,6 @@ class Actions(ConcCGI):
         labels = '<concinfo>\n<labels>\n%s\n</labels>\n</concinfo>\n' % labels
         open(cpath + '.info', 'w').write(labels)
         os.umask(um)
-        #print >>stderr, 'save conc: "%s"' % cpath
-        self._user_settings.append('annotconc')
         return {'stored': storeconcname, 'conc_size': conc.size()}
 
     storeconc.template = 'saveconc_form.tmpl'
