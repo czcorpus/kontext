@@ -28,12 +28,32 @@ class QueryStorage(object):
 
     def save(self, user_id, data):
         cursor = self.conn.cursor()
-        cursor.execute("REPLACE INTO noske_user_settings SET data = %s WHERE user_id = %s", (json.dumps(data), user_id))
+        cursor.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s", (json.dumps(data), user_id))
         self.conn.commit()
 
-    def load(self, user_id):
-        # TODO
-        pass
+    def load(self, user_id, current_settings=None):
+        """
+        Loads user individual settings.
+
+        Parameters
+        ----------
+        current_settings : dict
+          if provided then instead of returning new dictionary method updates this one
+          and returns it
+
+        Returns
+        -------
+        current_settings : dict
+          new or updated settings dictionary provided as a parameter
+        """
+        if current_settings is None:
+            current_settings = {}
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,))
+        row = cursor.fetchone()
+        if row:
+            current_settings.update(json.loads(row[0]))
+        return current_settings
 
 
 def create_instance(conf, db):
