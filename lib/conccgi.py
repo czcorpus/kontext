@@ -239,7 +239,7 @@ class ConcCGI(UserCGI):
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
 
-    def pre_dispatch(self):
+    def _pre_dispatch(self):
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
                                         self.gdexpath)
 

@@ -449,7 +449,7 @@ class CGIPublisher(object):
     def get_http_method(self):
         return os.getenv('REQUEST_METHOD', '')
 
-    def pre_dispatch(self):
+    def _pre_dispatch(self):
         """
         Allows some operations to be done before the action itself is processed
         """
@@ -472,7 +472,7 @@ class CGIPublisher(object):
             self.redirect('login')
 
         try:
-            self.pre_dispatch()
+            self._pre_dispatch()
 
             named_args = self.parse_parameters(selectorname)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
