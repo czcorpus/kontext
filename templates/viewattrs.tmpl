@@ -43,128 +43,122 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
 <h2>$_("View options")</h2>
 
 <form id="mainform" action='viewattrsx'>
-<fieldset class="anonymous">
+
 #filter None
 $input_hidden
 #end filter
 <input type='hidden' name='fromp' value='$fromp' />
   
-  <table><tr>
-    <th>$_("Attributes")</th>
-    #if $Availstructs
-      <th>$_("Structures")</th>
-    #end if
-    <th>$_("References")</th>
-  </tr>
-  <tr>
-    <td valign="top">
-      #set $navid = 'id="firstattr"'
-      #for $a in $AttrList
+<fieldset>
+    <legend>$_("Attributes")</legend>
+
+    <div class="lft-block">
+        #set $navid = 'id="firstattr"'
+        #for $a in $AttrList
         #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
         <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
         #set $navid = ''
-      #end for
-      <hr/>
-      $_("Display attributes")<br/>
-      <label><input type='radio' name='allpos' value='all'
-      #if $attr_allpos == 'all'
-        checked="checked"
-      #end if
-      /> $_("For each token")</label><br/>
-      <label><input type='radio' name='allpos' value='kw'
-      #if $attr_allpos == 'kw'
-        checked="checked"
-      #end if
-      /> $_("KWIC tokens only")</label>
-    </td>
-    #if $Availstructs
-    <td valign="top">
-        <select name='setstructs' size="13" multiple="multiple">
-      #for $a in $Availstructs
-        #set $selected = ($a.sel) and 'selected="selected"' or ''
-        <option value='$a.n' $selected>&lt;${$a.label or $a.n}&gt;</option>
-      #end for
-        </select>
-    </td>
-    #end if
-    <td valign="top"><select name='setrefs' size="13" multiple="multiple">
+        #end for
+    </div>
+
+    <div class="rgt-block">
+        <label><input type='radio' name='allpos' value='all'
+        #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
+        <label><input type='radio' name='allpos' value='kw'
+        #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
+    </div>
+</fieldset>
+
+#if $Availstructs
+<fieldset>
+    <legend>$_("Structures")</legend>
+
+    #set $i = 0
+    #for $a in $Availstructs
+        #set $checked = ($a.sel) and 'checked="checked"' or ''
+        <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' checked />
+        <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
+        #set $i = $i + 1
+    #end for
+</fieldset>
+#end if
+
+<fieldset>
+    <legend>$_("References")</legend>
+
+    #set $i = 0
     #for $a in $Availrefs
-        #set $selected = ($a.sel) and 'selected="selected"' or ''
-        <option value='$a.n' $selected>$a.label</option>
+        #set $checked = ($a.sel) and 'checked="checked"' or ''
+        <input id="ref-item-$i" type="checkbox" name="setrefs" value='$a.n' $checked>
+        <label for="ref-item-$i">$a.label</label><br />
+        #set $i = $i + 1
     #end for
     </select>
-    </td>
-  </tr></table>
-<hr/>
-#try
-  #set $nic = $gdexcnt
-#except
-  #set $gdexcnt = ''
-#end try
-  $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
-  $_("KWIC Context size") ($_("positions")): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
-  <input type="hidden" name="ctxunit" value="@pos" />
-  <br /><br />
-  <input type="hidden" name="gdex_enabled" value="0" />
-  <input type="checkbox" name="gdex_enabled" value="1"
-#if $gdex_enabled
-  checked="checked"
-#end if
-  /> $_("Sort good dictionary examples").
-  <table>
-      <tr><td>$_("Number of lines to be sorted"):</td>
-          <td><input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
-          </td></tr>
-      #if $getVar('Availgdexconfs', {})
-      <tr><td>$_("GDEX configuration for current corpus"):</td>
-          <td>         
-#filter None
-$gdexconf_select('gdexconf', $gdexconf)
-#end filter
-          </td>
-      </tr>
-      #end if
-  </table>
-  <input type="hidden" name="shuffle" value="-1" />
-  <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
-  <label for="always-shuffle">$_("Always shuffle concordance results").</label> <br />
+</fieldset>
 
-<hr/>
-  <input type="hidden" name="copy_icon" value="0" />
-  <input type="checkbox" name="copy_icon" value="1"
-#if $copy_icon
-  checked="checked"
-#end if
-  /> $_("Icon for one-click sentence copying") <br />
-  <input type="hidden" name="multiple_copy" value="0" />
-  <input type="checkbox" name="multiple_copy" value="1"
-#if $multiple_copy
-  checked="checked"
-#end if
-  /> $_("Allow multiple lines selection")
-  <br /><br />
-  $_("XML template for one-click copying"):
-  <select name="tbl_template">
-     #for $t in $_avail_tbl_templates.split(',')
-       #set $parsed_name = $t.rsplit('_', 2)
-       #if $_corpus_architect or $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
-         <option value="$t"
-         #if $t == $tbl_template
-           selected="selected"
-         #end if
-         >$tbl_labels.get($t, $t)</option>
-       #end if
-     #end for
-  </select>
-<br />
+
+<fieldset>
+    <legend>$_('Result range and paging')</legend>
+    #try
+      #set $nic = $gdexcnt
+    #except
+      #set $gdexcnt = ''
+    #end try
+      $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
+      $_("KWIC Context size") ($_("positions")): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
+      <input type="hidden" name="ctxunit" value="@pos" />
+      <br /><br />
+      <input type="hidden" name="gdex_enabled" value="0" />
+      <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
+      <label for="gdex-enabled-checkbox">$_("Sort good dictionary examples")</label>
+      <table>
+          <tr><td>$_("Number of lines to be sorted"):</td>
+              <td><input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
+              </td></tr>
+          #if $getVar('Availgdexconfs', {})
+          <tr><td>$_("GDEX configuration for current corpus"):</td>
+              <td>
+    #filter None
+    $gdexconf_select('gdexconf', $gdexconf)
+    #end filter
+              </td>
+          </tr>
+          #end if
+      </table>
+</fieldset>
+
+<fieldset>
+
+    <legend>$_('Other options')</legend>
+
+    <input type="hidden" name="shuffle" value="-1" />
+    <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
+    <label for="always-shuffle">$_("Always shuffle concordance results")</label> <br />
+
+    <input type="hidden" name="copy_icon" value="0" />
+    <input id="icon-one-click-copy-checkbox" type="checkbox" name="copy_icon" value="1" #if $copy_icon#checked="checked"#end if# />
+    <label for="icon-one-click-copy-checkbox">$_("Icon for one-click sentence copying") <br />
+    <input type="hidden" name="multiple_copy" value="0" />
+    <input id="multiple-copy-checkbox" type="checkbox" name="multiple_copy" value="1"#if $multiple_copy#checked="checked"#end if#  />
+    <label for="multiple-copy-checkbox">$_("Allow multiple lines selection")</label>
+    $_("XML template for one-click copying"):
+    <select name="tbl_template">
+    #for $t in $_avail_tbl_templates.split(',')
+        #set $parsed_name = $t.rsplit('_', 2)
+        #if $_corpus_architect or $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
+        <option value="$t" #if $t == $tbl_template#selected="selected"#end if#>$tbl_labels.get($t, $t)</option>
+        #end if
+    #end for
+    </select>
+
+</fieldset>
 
 <div class="buttons">
-  <input type="submit" value='$_("Apply View Options")' />
-  #unless $_anonymous
-  <input id="save-options-button" class="button" type="button" value='$_("Save Options")' />
-  #end unless
+    <input type="submit" value='$_("Apply View Options")' />
+    #unless $_anonymous
+    <input id="save-options-button" class="button" type="button" value='$_("Save Options")' />
+    #end unless
 </div>
-</fieldset>
 </form>
 
 #end filter
