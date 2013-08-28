@@ -199,11 +199,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
-     * @param {object} conf
      */
-    lib.misc = function (conf) {
+    lib.misc = function () {
         hideElem.targetedLinks();
-        if (conf.focus) {
+        if (lib.conf.focus) {
             hideElem.focusEx(hideElem.focus);
         }
 
@@ -212,14 +211,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 cqlInputId = $(this).closest('td').find("input.cql-input").attr('id');
 
             if (cqlInputId === 'cql') {
-                corpName = conf.corpname;
+                corpName = lib.conf.corpname;
 
             } else {
                 corpName = cqlInputId.substring(4);
             }
             tagbuilder.bindTextInputHelper(
                 corpName,
-                conf.numTagPos,
+                lib.conf.numTagPos,
                 {
                     inputElement : $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
                     widgetElement : 'tag-widget',
@@ -236,11 +235,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     margin : 0
                 },
                 function (message) {
-                    lib.showErrorMessage(message || conf.messages.failed_to_contact_server);
+                    lib.showErrorMessage(message || lib.conf.messages.failed_to_contact_server);
                 }
             );
 
-            lib.bindWithinHelper($(this).find('li.within a'), conf.corpname, conf.messages);
+            lib.bindWithinHelper($(this).find('li.within a'), lib.conf.corpname, lib.conf.messages);
         });
 
         hideElem.loadHideElementStoreSimple();
@@ -249,7 +248,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         lib.autoUpdateSelectAll($('table.envelope'));
 
         $('select.qselector').bind('change', function (event) {
-            hideElem.cmdSwitchQuery(event.target, conf.queryTypesHints, lib.userSettings);
+            hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
         });
 
         // remove empty and unused parameters from URL before mainform submit
@@ -263,9 +262,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
     /**
      *
-     * @param {object} conf
      */
-    lib.bindClicks = function (conf) {
+    lib.bindClicks = function () {
         var resetCorpusInfoBox,
             createCorpusInfoBox;
 
@@ -276,7 +274,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
 
         createCorpusInfoBox = function () {
             $.ajax({
-                url : 'ajax_get_corp_details?corpname=' + conf.corpname,
+                url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
                 dataType : 'json',
                 method : 'get',
                 success : function (data) {
@@ -328,13 +326,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                 },
                 error : function () {
                     resetCorpusInfoBox();
-                    lib.showErrorMessage(conf.messages.failed_to_load_corpus_info);
+                    lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
                 }
             });
         };
 
         $('#positions-help-link').bind('click', function (event) {
-            popupbox.createPopupBox(event, 'positions-help', $('#active-corpus'), conf.messages.msg1);
+            popupbox.createPopupBox(event, 'positions-help', $('#active-corpus'), lib.conf.messages.msg1);
             event.stopPropagation();
         });
 
@@ -565,9 +563,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
     /**
      *
      */
-    lib.loadSharedBar = function (conf) {
+    lib.loadSharedBar = function () {
         $.ajax({
-            url : conf.common_app_bar_url + cookies.get('ucnksessionid'),
+            url : lib.conf.common_app_bar_url + cookies.get('ucnksessionid'),
             data : {},
             method : 'get',
             dataType : 'html',
@@ -576,7 +574,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             },
             error : function () {
                 // err params: jqXHR, textStatus, errorThrown
-                $('#common-bar').empty().append(conf.messages.error_loading_application_bar);
+                $('#common-bar').empty().append(lib.conf.messages.error_loading_application_bar);
             }
         });
     };
@@ -591,7 +589,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             data : cookies.get('user_settings'),
 
             cookieParams : {
-                path: conf.rootPath
+                path: lib.conf.rootPath
             },
 
             get : function (key) {
@@ -609,12 +607,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
             }
         };
 
-        lib.misc(conf);
-        lib.bindClicks(conf);
+        lib.misc();
+        lib.bindClicks();
         lib.initMenu();
 
-        if (conf.common_app_bar_url) {
-            lib.loadSharedBar(conf);
+        if (lib.conf.common_app_bar_url) {
+            lib.loadSharedBar();
         }
     };
 

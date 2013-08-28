@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, documentPage, treeComponent) {
+define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, layoutModel, treeComponent) {
     'use strict';
 
     var lib = {},
@@ -119,10 +119,9 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, doc
 
     /**
      *
-     * @param conf
      */
-    lib.misc = function (conf) {
-        selectOutputType(conf.wltype);
+    lib.misc = function () {
+        selectOutputType(layoutModel.conf.wltype);
     };
 
     /**
@@ -148,8 +147,8 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, doc
      * @param conf
      */
     lib.init = function (conf) {
-        documentPage.init(conf);
-        lib.bindClicks(conf);
+        layoutModel.init(conf);
+        lib.bindClicks();
         treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'), null, updForm);
     };
 

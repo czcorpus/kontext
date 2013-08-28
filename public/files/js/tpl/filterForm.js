@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['tpl/document'], function (mainPage) {
+define(['tpl/document'], function (layoutModel) {
     'use strict';
 
     var lib = {};
@@ -31,7 +31,7 @@ define(['tpl/document'], function (mainPage) {
      * @param conf page configuration data
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
+        layoutModel.init(conf);
     };
 
     return lib;

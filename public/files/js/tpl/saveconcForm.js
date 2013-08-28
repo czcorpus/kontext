@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the saveconc_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) {
+define(['jquery', 'tpl/document', 'hideelem'], function ($, layoutModel, hideElem) {
     'use strict';
 
     var lib = {};
@@ -64,12 +64,12 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, mainPage, hideElem) 
      * @param conf
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
-        hideElem.loadHideElementStore(conf.files_path, mainPage.userSettings);
+        layoutModel.init(conf);
+        hideElem.loadHideElementStore(layoutModel.conf.files_path, layoutModel.userSettings);
 
         $('input[type="submit"]').focus();
-        if (mainPage.userSettings.get('concdesc_view') === 'show') {
-            $('#concdescplusminus').attr('src', conf.files_path + '/img/minus.png');
+        if (layoutModel.userSettings.get('concdesc_view') === 'show') {
+            $('#concdescplusminus').attr('src', layoutModel.conf.files_path + '/img/minus.png');
         }
 
         (function () {

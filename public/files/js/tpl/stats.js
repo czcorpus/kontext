@@ -19,13 +19,17 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, documentPage) {
+define(['jquery', 'tpl/document'], function ($, layoutModel) {
     'use strict';
 
     var lib = {};
 
+    /**
+     *
+     * @param conf
+     */
     lib.init = function (conf) {
-        documentPage.init(conf);
+        layoutModel.init(conf);
         $('#clear-filter-form-button').on('click', function () {
             $('#stats-filter input').each(function () {
                 $(this).val('');

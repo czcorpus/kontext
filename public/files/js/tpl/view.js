@@ -21,16 +21,16 @@
  * This module contains functionality related directly to the first_form.tmpl template
  */
 define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemodal'], function (win, $,
-            jqueryPeriodic, documentPage, detail, _sm) {
+            jqueryPeriodic, layoutModel, detail, _sm) {
     'use strict';
 
     var lib = {};
 
-    lib.misc = function (conf) {
+    lib.misc = function () {
         var callback;
 
-        $('#groupmenu').attr('corpname', conf.corpname);
-        $('#groupmenu').attr('queryparams', conf.q);
+        $('#groupmenu').attr('corpname', layoutModel.conf.corpname);
+        $('#groupmenu').attr('queryparams', layoutModel.conf.q);
         $('#groupmenu').mouseleave(lib.close_menu);
 
         callback = function () {
@@ -75,7 +75,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
 
             $('#content #copy-conc-modal').remove();
             $('#content').append('<div id="copy-conc-modal">'
-                + '<strong>' + conf.messages.ctrlc_to_copy + '</strong><br />'
+                + '<strong>' + layoutModel.conf.messages.ctrlc_to_copy + '</strong><br />'
                 + '<textarea id="text-to-copy" rows="8" cols="70"></textarea>'
                 + '</div>');
 
@@ -104,7 +104,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
         });
 
         $('#hideel').bind('click', detail.closeDetail);
-        $('#detailframe').data('corpname', conf.corpname);
+        $('#detailframe').data('corpname', layoutModel.conf.corpname);
 
         $('a.speech-link').each(function () {
             $(this).bind('click', function (event) {
@@ -140,18 +140,20 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
     /**
      *
      */
-    lib.reloadHits = function (conf) {
+    lib.reloadHits = function () {
         var freq = 500;
 
-        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="' + conf.messages.calculating + '" title="' + conf.messages.calculating + '" style="width: 24px; height: 24px" />');
-        $('#arf').empty().html(conf.messages.calculating);
+        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
+            + layoutModel.conf.messages.calculating + '" title="' + layoutModel.conf.messages.calculating
+            + '" style="width: 24px; height: 24px" />');
+        $('#arf').empty().html(layoutModel.conf.messages.calculating);
 
         /*
          * Checks periodically for the current state of a concordance calculation
          */
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
-                url: 'get_cached_conc_sizes?' + conf.q + ';' + conf.globals,
+                url: 'get_cached_conc_sizes?' + layoutModel.conf.q + ';' + layoutModel.conf.globals,
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
@@ -159,7 +161,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
                         num2Str;
 
                     num2Str = function (n) {
-                        return documentPage.formatNum(n, data.thousandsSeparator, data.radixSeparator);
+                        return layoutModel.formatNum(n, data.thousandsSeparator, data.radixSeparator);
                     };
 
                     if (data.end) {
@@ -167,7 +169,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
                     }
 
                     $('#result-info span.ipm').html(num2Str(data.relconcsize.toFixed(2)));
-                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / conf.numLines)));
+                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / layoutModel.conf.numLines)));
 
                     if (data.fullsize > 0) {
                         $('#fullsize').html(num2Str(data.fullsize));
@@ -178,12 +180,13 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
                         $('#toolbar-hits').html(num2Str(data.concsize));
                     }
 
-                    if (data.fullsize > 0 && conf.q2 !== "R") {
+                    if (data.fullsize > 0 && layoutModel.conf.q2 !== "R") {
                         l = lib.addCommas(data.concsize);
-                        $('#conc-calc-info').html(conf.messages.using_first + ' ' + l +
-                            conf.messages.lines_only + ' <a href="view?' +
-                            'q=R' + conf.q2toEnd + ';' + conf.globals + '">' + conf.messages.use_random + ' ' +
-                            l + ' ' + conf.messages.instead + '.</a>');
+                        $('#conc-calc-info').html(layoutModel.conf.messages.using_first + ' ' + l +
+                            layoutModel.conf.messages.lines_only + ' <a href="view?' +
+                            'q=R' + layoutModel.conf.q2toEnd + ';' + layoutModel.conf.globals + '">'
+                            + layoutModel.conf.messages.use_random + ' ' +
+                            l + ' ' + layoutModel.conf.messages.instead + '.</a>');
                     }
 
                     if (data.finished) {
@@ -205,8 +208,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'simplemod
      * @param conf
      */
     lib.init = function (conf) {
-        documentPage.init(conf);
-        lib.misc(conf);
+        layoutModel.init(conf);
+        lib.misc();
     };
 
 

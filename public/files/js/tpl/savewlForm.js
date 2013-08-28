@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the savewl_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, mainPage) {
+define(['jquery', 'tpl/document'], function ($, layoutModel) {
     'use strict';
 
     var lib = {};
@@ -65,7 +65,7 @@ define(['jquery', 'tpl/document'], function ($, mainPage) {
      * @param conf
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
+        layoutModel.init(conf);
         lib.bindClicks();
 
         // obtain current state of the form and update

@@ -20,7 +20,7 @@
  * This module contains functionality related directly to the query_history.tmpl template
  *
  */
-define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, mainPage) {
+define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
     'use strict';
 
     var lib = {},
@@ -44,14 +44,14 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, mainPage) {
                 if (!data.error) {
                     $('#removed-query-history-item').replaceWith(data.html);
                     lib.bindEvents($('div.query-history-item[data-query-id="' + queryId + '"]'));
-                    mainPage.showMessage(mainPage.conf.messages.undeleted_query);
+                    layoutModel.showMessage(layoutModel.conf.messages.undeleted_query);
 
                 } else {
-                    mainPage.showErrorMessage(mainPage.conf.messages.failed_to_undelete_the_query);
+                    layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_undelete_the_query);
                 }
             },
             error: function () {
-                mainPage.showErrorMessage(mainPage.conf.messages.failed_to_undelete_the_query);
+                layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_undelete_the_query);
             }
         };
     };
@@ -76,8 +76,8 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, mainPage) {
 
 
             queryId = $(event.target).closest('.query-history-item').data('query-id');
-            infoMessage = mainPage.conf.messages.deleted_query
-                            + ' <a id="undo-delete-query-desc" href="' + undoUrl + '">' + mainPage.conf.messages.undo + '</a>';
+            infoMessage = layoutModel.conf.messages.deleted_query
+                            + ' <a id="undo-delete-query-desc" href="' + undoUrl + '">' + layoutModel.conf.messages.undo + '</a>';
 
             bindUndeleteAction = function () {
                 $('#undo-delete-query-desc').on('click', function () {
@@ -93,24 +93,28 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, mainPage) {
                 },
                 success : function (data) {
                     if (!data.error) {
-                        mainPage.showMessage(infoMessage, bindUndeleteAction);
+                        layoutModel.showMessage(infoMessage, bindUndeleteAction);
                         $('#removed-query-history-item').remove();
                         $(event.target).closest('.query-history-item').replaceWith('<div id="removed-query-history-item"></div>');
 
                     } else {
-                        mainPage.showErrorMessage(mainPage.conf.messages.failed_to_delete_the_query);
+                        layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_delete_the_query);
                     }
 
                 },
                 error: function () {
-                    mainPage.showErrorMessage(mainPage.conf.messages.failed_to_delete_the_query);
+                    layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_delete_the_query);
                 }
             });
         });
     };
 
+    /**
+     *
+     * @param conf
+     */
     lib.init = function (conf) {
-        mainPage.init(conf);
+        layoutModel.init(conf);
         lib.bindEvents();
 
         $('#from-date-filter').datepicker({

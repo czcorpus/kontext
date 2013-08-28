@@ -20,7 +20,7 @@
  * This module contains functionality related directly to the concdesc.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
+define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     'use strict';
 
     var lib = {};
@@ -62,27 +62,27 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
             data: {
                 description : description,
                 url: win.location.href,
-                query_id: mainPage.conf.queryId,
-                corpname: mainPage.conf.corpname,
+                query_id: layoutModel.conf.queryId,
+                corpname: layoutModel.conf.corpname,
                 'public': $('#public-flag-checkbox').is(':checked') ? 1 : 0,
                 tmp: 0 // manually saved queries are persistent by default
             },
             dataType: 'json',
             success: function (data) {
                 if (!data.error) {
-                    mainPage.conf.queryId = data.queryId;
+                    layoutModel.conf.queryId = data.queryId;
                     $('#query-desc-view').css('display', 'block').html(data.rawHtml);
                     if (typeof doneCallback === 'function') {
                         doneCallback();
                     }
 
                 } else {
-                    mainPage.showErrorMessage(mainPage.conf.messages.failed_to_save_the_query);
+                    layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_save_the_query);
                     $('#query-desc-view').empty();
                 }
             },
             error : function () {
-                mainPage.showErrorMessage(mainPage.conf.messages.failed_to_save_the_query);
+                layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_save_the_query);
                 $('#query-desc-view').empty();
             }
         });
@@ -93,7 +93,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, mainPage, win) {
      * @param conf
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
+        layoutModel.init(conf);
         lib.bindEvents();
     };
 
