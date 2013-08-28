@@ -223,7 +223,6 @@ class ConcCGI(UserCGI):
     tbl_template = u'none'
     errcodes_link = u''
     hidenone = 1
-    helpsite = u'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
 
     can_annotate = 0
     enable_sadd = 0

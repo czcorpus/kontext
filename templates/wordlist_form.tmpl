@@ -25,16 +25,6 @@ $_("Word List Form")#slurp
 
 #attr $focus="'#wlpat'"
 
-#def left_submenu_help
-#filter WebSafe
-    #if $varExists('helpsite')
-    <a class="context_help" href="${helpsite}WordList" rel="help" title='$_("? Help on Word Lists")' target="_blank">
-      <img src="$files_path/img/help.png" alt='$_("? Help on Word Lists")' />
-    </a>
-    #end if
-#end filter
-#end def
-
 #def left_submenu
 #filter WebSafe
     <li><a title="$_("Compute a list of all words")" href="wordlist?$globals;wlattr=word;wlsort=f">$_("All words")</a></li>

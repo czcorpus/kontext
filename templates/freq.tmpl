@@ -25,12 +25,6 @@ $_("Freqs form")#slurp
 
 #attr $focus = "'#submit'"
 
-#def helpblock
-  #if $varExists('helpsite')
-  <li class="context_help"><a href="${helpsite}freqconc" rel="help">$_("? Help on Frequency form")</a></li>
-  #end if
-#end def
-
 #def bodyonload
 require(['tpl/freq', 'domReady!'], function (pageSelf, domReady) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";

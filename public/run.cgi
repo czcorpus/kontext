@@ -84,8 +84,6 @@ class BonitoCGI (Actions, UserCGI):
     cache_dir = settings.get('corpora', 'cache_dir')
     gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
 
-    helpsite = 'https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/'
-
     def __init__(self, user=None, environ=os.environ):
         UserCGI.__init__(self, environ=environ, user=user)
         Actions.__init__(self, environ=environ)

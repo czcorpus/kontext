@@ -25,12 +25,6 @@ $_("Sort form")#slurp
 
 #attr $focus = "'#select'"
 
-#def helpblock
-  #if $varExists('helpsite')
-  <li class="context_help"><a href="${helpsite}sortconc" rel="help">$_("? Help on Sort form")</a></li>
-  #end if
-#end def
-
 #def bodyonload
 require(['tpl/sort', 'domReady!'], function (pageSelf, domReady) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
