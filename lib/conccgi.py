@@ -197,9 +197,9 @@ class ConcCGI(UserCGI):
     allpos = u'kw'
     structs = u'p,g,err,corr'
     q = []
-    pagesize = 20
+    pagesize = 40
     gdexconf = u''
-    gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
+    gdexpath = []  # [('confname', '/path/to/gdex.conf'), ...]
     gdexcnt = 100
     gdex_enabled = 0
     alt_gdexconf = None
@@ -307,7 +307,7 @@ class ConcCGI(UserCGI):
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
-                                        self.gdexpath)                        
+                                        self.gdexpath)
         self._set_defaults()
         self.__dict__.update(na)
 
@@ -541,8 +541,8 @@ class ConcCGI(UserCGI):
         if methodname.startswith('first'):
             result['show_cup_menu'] = self.is_err_corpus()
 
-    kwicleftctx = '-5'
-    kwicrightctx = '5'
+    kwicleftctx = '-10'
+    kwicrightctx = '10'
     senleftctx_tpl = '-1:%s'
     senrightctx_tpl = '1:%s'
     viewmode = 'kwic'
