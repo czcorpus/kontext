@@ -290,6 +290,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                     jqInfoBox.find('.corpus-name').text(data.corpname);
                     jqInfoBox.find('.corpus-description').text(data.description);
                     jqInfoBox.find('.size').text(data.size);
+                    if (data.web_url) {
+                        jqInfoBox.find('span.web_url').html('<a href="' + data.web_url + '">' + data.web_url + '</a>');
+
+                    } else {
+                        jqInfoBox.find('.web_url').remove();
+                    }
 
                     $.each(data.attrlist, function (i, item) {
                         if (!item.error) {
@@ -310,7 +316,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
                             newRow = jqStructList.find('.item').clone();
                             newRow.removeClass('item');
                             newRow.addClass('dynamic');
-                            newRow.find('th').text(item.name);
+                            newRow.find('th').text('<' + item.name + '>');
                             newRow.find('td').text(item.size);
 
                         } else {

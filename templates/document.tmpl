@@ -242,11 +242,11 @@ $_ca_topbar
 
     <div id="corpus-details-box">
         <h4 class="corpus-name"></h4>
-        <p>
-            <strong>$_('size'):</strong> <span class="size"></span> $_('positions')
+        <p class="metadata">
+            <strong>$_('size'):</strong> <span class="size"></span> $_('positions')<br />
+            <strong class="web_url">$_('website'):</strong> <span class="web_url"></span>
         </p>
-        <p class="corpus-description"></p>
-        <table class="structs-and-attrs" border="0" style="border-collapse: collapse">
+        <table class="structs-and-attrs" border="0">
             <tr>
                 <td>
                     <table class="attrib-list">
@@ -272,6 +272,7 @@ $_ca_topbar
                 </td>
             </tr>
         </table>
+        <p class="corpus-description"></p>
     </div>
 </div>
 #end filter
