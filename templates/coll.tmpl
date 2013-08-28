@@ -25,24 +25,12 @@ $_("Collocation form")#slurp
 
 #attr $focus = "'submit'"
 
-#def helpblock
-  #if $varExists('helpsite')
-  <li class="context_help"><a href="${helpsite}collocconc" rel="help">$_("? Help on Collocations")</a></li>
-  #end if
-#end def
-
 #def collblock
 #end def
 
 #def main
 #filter WebSafe
-<h2>$_("Collocation candidates")
-    #if $varExists('helpsite')
-    <a href="${helpsite}collocconc" rel="help" title='$_("? Help on Collocations")' target="_blank" name="help_icon" id="help_icon">
-      <img src="$files_path/img/help.png" alt='$_("? Help on Collocations")' />
-    </a>
-    #end if
-</h2>
+<h2>$_("Collocation candidates")</h2>
 
 <form id="mainform" action="collx">
 <fieldset class="anonymous">
