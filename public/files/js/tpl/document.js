@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
-        'simplemodal'], function (win, $, hideElem, tagbuilder, popupbox, cookies, bonito, _sm) {
+define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
+        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, cookies, bonito, _sm) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -614,6 +614,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies',
         if (lib.conf.common_app_bar_url) {
             lib.loadSharedBar();
         }
+
+        $('button').button();
+        $('input[type="submit"]').button();
+        $('input[type="button"]').button();
     };
 
     return lib;

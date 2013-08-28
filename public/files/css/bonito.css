@@ -1342,3 +1342,16 @@ div.rgt-block {
     text-decoration: none;
     color: #999999;
 }
+
+#content form.login {
+    background-color: #D2EDC0;
+    display: block;
+    margin: 50px auto;
+    min-width: inherit;
+    width: 250px;
+}
+
+#content form.login button {
+    display: block;
+    margin: 0 auto;
+}
