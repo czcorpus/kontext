@@ -213,9 +213,9 @@ $_ca_topbar
                     #if $align
                     <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
                     #end if
-                    <li class="separ"><a href="#">$_("Attributes")&#8230;</a></li>
-                    <li class="separ"><a href="#">$_("Structures and references")&#8230;</a></li>
-                    <li class="separ"><a href="#">$_("Range of the concordance")&#8230;</a></li>
+                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$fromp#attributes">$_("Attributes")&#8230;</a></li>
+                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$fromp#structures">$_("Structures and references")&#8230;</a></li>
+                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$fromp#range-and-paging">$_("Range of the concordance")&#8230;</a></li>
                     <li class="separ"><a href="#">$_("Frequency distribution")&#8230;</a></li>
                     <li class="separ"><a href="#">$_("Collocations")&#8230;</a></li>
                     <li><a title="$_("Concordance view settings")" href="viewattrs?$q;$globals;fromp=$fromp">$_('Custom')&#8230;</a></li>
