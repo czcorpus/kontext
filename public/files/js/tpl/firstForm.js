@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $, treeComponent,
-                                                                                                mainPage, hideElem,
+                                                                                                layoutModel, hideElem,
                                                                                                 _sm) {
     'use strict';
 
@@ -42,7 +42,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
      * @return returns what callback returns
      */
     callOnParallelCorporaList = function (callback) {
-        var itemList = mainPage.userSettings.get(activeParallelCorporaSettingKey) || [];
+        var itemList = layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
 
         if (typeof itemList !== 'object') {
             itemList = itemList.split(',');
@@ -67,7 +67,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             if (corpusName && $.inArray(corpusName, itemList) === -1) {
                 itemList.push(corpusName);
             }
-            mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
             if ($('div.parallel-corp-lang:visible').length > 0) {
                 $('#default-view-mode').remove();
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
@@ -83,7 +83,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             if ($.inArray(corpusName, itemList) >= 0) {
                 itemList.splice($.inArray(corpusName, itemList), 1);
             }
-            mainPage.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
             if ($('div.parallel-corp-lang:visible').length === 0) {
                 $('#default-view-mode').remove();
             }
@@ -131,11 +131,11 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     };
 
     /**
-     * @param conf
+     *
      */
-    lib.misc = function (conf) {
+    lib.misc = function () {
         // let's override the focus
-        conf.focus = function () {
+        layoutModel.conf.focus = function () {
             var target = null;
             $('#mainform tr input[type="text"]').each(function () {
                 if ($(this).css('display') !== 'none') {
@@ -146,9 +146,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             return target;
         };
 
-        treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, mainPage.updForm);
+        treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), null, layoutModel.updForm);
         // initial query selector setting (just like when user changes it manually)
-        hideElem.cmdSwitchQuery($('#queryselector').get(0), conf.queryTypesHints, mainPage.userSettings);
+        hideElem.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -170,9 +170,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     };
 
     /**
-     * @param {object} conf
+     *
      */
-    lib.bindClicks = function (conf) {
+    lib.bindClicks = function () {
         $('a.form-extension-switch').on('click', function (event) {
             var jqTriggerLink = $(event.target),
                 jqFieldset = jqTriggerLink.closest('fieldset');
@@ -181,29 +181,29 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             if (jqFieldset.hasClass('inactive')) {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('.status').empty().html('&#8595;');
-                jqTriggerLink.attr('title', conf.messages.click_to_expand);
+                jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
 
             } else {
                 jqFieldset.find('div.contents').show();
                 jqFieldset.find('.status').empty().html('&#8593;');
-                jqTriggerLink.attr('title', conf.messages.click_to_hide);
+                jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
             }
         });
 
         // context-switch TODO
 
         $('#switch_err_stand').on('click', function () {
-            if ($(this).text() === conf.labelStdQuery) {
+            if ($(this).text() === layoutModel.conf.labelStdQuery) {
                 $('#qnode').show();
                 $('#cup_err_menu').hide();
-                $(this).text(conf.labelErrorQuery);
-                mainPage.userSettings.set("errstdq", "std");
+                $(this).text(layoutModel.conf.labelErrorQuery);
+                layoutModel.userSettings.set("errstdq", "std");
 
             } else {
                 $('#qnode').hide();
                 $('#cup_err_menu').show();
-                $(this).text(conf.labelStdQuery);
-                mainPage.userSettings.set("errstdq", "err");
+                $(this).text(layoutModel.conf.labelStdQuery);
+                layoutModel.userSettings.set("errstdq", "err");
             }
         });
 
@@ -241,9 +241,10 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
 
             if (cleanData.length > lib.maxEncodedParamsLength) {
                 $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
-                    + conf.messages.too_long_condition + '</p>'
-                    + '<button id="alt-form-open-subcorp-form" type="submit">' + conf.messages.open_the_subcorpus_form + '</button>'
-                    + '<button id="alt-form-cancel" type="button">' + conf.messages.cancel + '</button></div>');
+                    + layoutModel.conf.messages.too_long_condition + '</p>'
+                    + '<button id="alt-form-open-subcorp-form" type="submit">'
+                    + layoutModel.conf.messages.open_the_subcorpus_form + '</button>'
+                    + '<button id="alt-form-cancel" type="button">' + layoutModel.conf.messages.cancel + '</button></div>');
 
                 $('#alt-form-open-subcorp-form').on('click', function () {
                     $('#alt-form').remove();
@@ -289,12 +290,11 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
 
     /**
      *
-     * @param {object} conf
      */
-    lib.showCupMenu = function (conf) {
-        if (mainPage.userSettings.get('errstdq') === 'std') {
+    lib.showCupMenu = function () {
+        if (layoutModel.userSettings.get('errstdq') === 'std') {
             $('#cup_err_menu').hide();
-            $('#switch_err_stand').text(conf.messages.labelErrorQuery);
+            $('#switch_err_stand').text(layoutModel.conf.messages.labelErrorQuery);
 
         } else {
             $('#qnode').hide();
@@ -306,9 +306,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
      * @param {object} conf
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
-        lib.misc(conf);
-        lib.bindClicks(conf);
+        layoutModel.init(conf);
+        lib.misc();
+        lib.bindClicks();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
     };

@@ -18,7 +18,7 @@
  */
 
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, popupbox, $, bonito) {
+define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, popupbox, $, bonito) {
 
     'use strict';
 
@@ -26,6 +26,9 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
 
     lib.messages = {};
 
+    /**
+     *
+     */
     lib.recalcLevelParams = function () {
         var addLevelButton;
 
@@ -50,10 +53,17 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
         }
     };
 
+    /**
+     *
+     * @returns {Number}
+     */
     lib.getCurrNumLevels = function () {
         return $('#multilevel-freq-params tr.level-line').length;
     };
 
+    /**
+     *
+     */
     lib.addLevel = function () {
         var numLevels = lib.getCurrNumLevels(),
             newLine = $('#multilevel-freq-first-level').clone(),
@@ -79,41 +89,55 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
         }
     };
 
+    /**
+     *
+     * @param lineElm
+     */
     lib.removeLevel = function (lineElm) {
         lineElm.remove();
         lib.recalcLevelParams();
     };
 
+    /**
+     *
+     */
+    lib.bindEvents = function () {
+        $('#add-freq-level-button').on('click', function () {
+            lib.addLevel();
+        });
+    };
+
+    /**
+     *
+     * @param conf
+     */
     lib.init = function (conf) {
         var i;
 
-        mainPage.init(conf);
-        lib.messages = conf.messages;
-        lib.maxNumLevels = conf.multilevel_freq_dist_max_levels;
+        layoutModel.init(conf);
+        lib.messages = layoutModel.conf.messages;
+        lib.maxNumLevels = layoutModel.conf.multilevel_freq_dist_max_levels;
         bonito.multiLevelKwicFormUtil.init();
-        if (conf.lastNumLevels) {
-            for (i = 1; i < conf.lastNumLevels; i += 1) {
+        if (layoutModel.conf.lastNumLevels) {
+            for (i = 1; i < layoutModel.conf.lastNumLevels; i += 1) {
                 lib.addLevel();
             }
         }
         $('a.kwic-alignment-help').each(function () {
             $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#active-corpus'), conf.messages.msg, {
-                    'top' : 'attached-bottom',
-                    'width' : 'auto',
-                    'height' : 'auto'
-                });
+                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#active-corpus'),
+                    layoutModel.conf.messages.msg,
+                    {
+                        'top' : 'attached-bottom',
+                        'width' : 'auto',
+                        'height' : 'auto'
+                    });
                 event.stopPropagation();
             });
         });
         lib.bindEvents();
     };
 
-    lib.bindEvents = function () {
-        $('#add-freq-level-button').on('click', function () {
-            lib.addLevel();
-        });
-    };
 
     return lib;
 });

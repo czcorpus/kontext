@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the subcorp_list.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
+define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
     'use strict';
 
     var lib = {};
@@ -31,7 +31,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
     lib.misc = function () {
         var preSubmit = function (event) {
             $('#mainform').attr('method', 'GET');
-            mainPage.updForm(event);
+            layoutModel.updForm(event);
         };
         treeComponent.createTreeComponent($('form#mainform select[name="corpname"]'), null, preSubmit);
     };
@@ -41,8 +41,8 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
      * @param conf
      */
     lib.init = function (conf) {
-        mainPage.init(conf);
-        lib.misc(conf);
+        layoutModel.init(conf);
+        lib.misc();
     };
 
 

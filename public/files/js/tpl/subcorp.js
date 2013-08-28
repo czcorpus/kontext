@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeComponent) {
+define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
     'use strict';
 
     var lib = {};
@@ -44,14 +44,16 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, mainPage, treeC
 
     /**
      *
+     * @param conf
      */
     lib.init = function (conf) {
+        layoutModel.init(conf);
         $('#subcname').focus();
-        if (conf.fetchSubcInfo) {
+        if (layoutModel.conf.fetchSubcInfo) {
             lib.showSubcorpInfo();
         }
         $('#subcname').on('change', lib.showSubcorpInfo);
-        treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'), null, mainPage.updForm);
+        treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'), null, layoutModel.updForm);
     };
 
     return lib;
