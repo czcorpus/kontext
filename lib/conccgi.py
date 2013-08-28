@@ -265,12 +265,14 @@ class ConcCGI(UserCGI):
         import json
         import datetime
 
+        params = dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]])
+
         ans = {
             'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
             'action': action_name,
             'user': os.getenv('REMOTE_USER'),
-            'params': dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]]),
-            'settings': user_settings
+            'params': dict([(k, v) for k, v in params.items() if v]),
+            'settings': dict([(k, v) for k, v in user_settings.items() if v])
         }
         logging.getLogger('QUERY').info(json.dumps(ans))
 
