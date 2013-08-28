@@ -60,7 +60,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
             + '</div></div>';
 
-        $('#content #error').remove();
+        $('#content #error').hide('slide', {}, 500);
         $('#content').prepend(html);
         $('#error a.close-icon').bind('click', function () {
             $('#error').remove();
@@ -77,15 +77,26 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
      */
     lib.showMessage = function (message, callback) {
         var html = '<div id="notification"><div class="frame">'
-            + '<img class="icon" alt="Notification" src="../files/img/info-icon.png">'
-            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
-            + '</div></div>';
+                + '<img class="icon" alt="Notification" src="../files/img/info-icon.png">'
+                + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
+                + '</div></div>',
+            timeout;
+
 
         $('#content #notification').remove();
         $('#content').prepend(html);
+
         $('#notification a.close-icon').bind('click', function () {
-            $('#notification').remove();
+            $('#notification').hide('slide', {}, 500);
         });
+
+        if (lib.conf.messageAutoHideInterval) {
+            timeout = win.setTimeout(function () {
+                $('#notification').hide('slide', {}, 500);
+                win.clearTimeout(timeout);
+            }, lib.conf.messageAutoHideInterval);
+        }
+
         if (typeof callback === 'function') {
             callback($('#error').get(0));
         }
@@ -374,13 +385,20 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
         // Removes the 'error box'
         $('#error a.close-icon').bind('click', function () {
-            $('#error').remove();
+            $('#error').hide('slide', {}, 500);
         });
 
         // Removes the 'notification box'
         $('#notification a.close-icon').bind('click', function () {
-            $('#notification').remove();
+            $('#notification').hide('slide', {}, 500);
         });
+
+        if ($('#notification').length > 0 && lib.conf.messageAutoHideInterval) {
+            var timeout = win.setTimeout(function () {
+                $('#notification').hide('slide', {}, 500);
+                win.clearTimeout(timeout);
+            }, lib.conf.messageAutoHideInterval);
+        }
 
         $('img.plus-minus').each(function () {
             $(this).bind('click', function () {
