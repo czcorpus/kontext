@@ -101,8 +101,9 @@ class UserCGI (CGIPublisher.CGIPublisher):
         self.redirect(settings.get_root_uri())
 
     def login(self):
-        self.disabled_menu_items = ('menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
+        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
         return {}
 
     def loginx(self, username='', password=''):
@@ -115,6 +116,9 @@ class UserCGI (CGIPublisher.CGIPublisher):
         return {}
 
     def logoutx(self):
+        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
         plugins.auth.logout(self._get_session_id())
         self._session = {
             'user': plugins.auth.anonymous_user()  # just to keep rendering ok
