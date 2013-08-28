@@ -1839,9 +1839,11 @@ class Actions(ConcCGI):
 
     def saveconc_form(self, from_line=1, to_line=''):
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+        self.leftctx = self.kwicleftctx
+        self.rightctx = self.kwicrightctx
         if not to_line:
             to_line = conc.size()
-
+        logging.getLogger(__name__).debug('leftctx: %s' % self.leftctx)
         # TODO Save menu should be active here
 
         return {'from_line': from_line, 'to_line': to_line}
@@ -1912,12 +1914,13 @@ class Actions(ConcCGI):
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
                 csv_buff = Writeable()
                 csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+
                 if len(data['Lines']) > 0:
-                    if 'Left' in data['Lines'][0] and len(data['Lines'][0]['Left']) > 0:
+                    if 'Left' in data['Lines'][0]:
                         left_key = 'Left'
                         kwic_key = 'Kwic'
                         right_key = 'Right'
-                    elif 'Sen_Left' in data['Lines'][0] and len(data['Lines'][0]['Sen_Left']) > 0:
+                    elif 'Sen_Left' in data['Lines'][0]:
                         left_key = 'Sen_Left'
                         kwic_key = 'Kwic'
                         right_key = 'Sen_Right'
