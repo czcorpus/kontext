@@ -96,7 +96,7 @@ def add_block_items(items, attr='class', val='even', block_size=3):
 
 def kwicpage(
     corpus, conc, has_speech=False, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
-    ctxattrs='word', refs='#', structs='p', pagesize=20,
+    ctxattrs='word', refs='#', structs='p', pagesize=40,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
         tbl_template='none', hidenone=0):
     """
@@ -126,7 +126,7 @@ def kwicpage(
       TODO
     structs : str, optional (default is 'p')
       TODO
-    pagesize : int, optional (default is 20)
+    pagesize : int, optional (default is 40)
       number of lines per page
     labelmap : dict, optional (default is {})
       TODO
