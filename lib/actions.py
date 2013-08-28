@@ -33,9 +33,6 @@ if not '_' in globals():
 
 class Actions(ConcCGI):
 
-    def _get_annot_conc(self):
-        return conclib.get_stored_conc(self._corp(), self.annotconc, self._conc_dir)
-
     def view(self, view_params={}):
         """
         kwic view
@@ -762,7 +759,8 @@ class Actions(ConcCGI):
         self.active_menu_item = 'menu-frequency'
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
-            'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1)
+            'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1),
+            'last_num_levels': self._session_get('last_freq_level')
         }
 
     ConcCGI.add_vars['freq'] = ['concsize']
@@ -977,6 +975,7 @@ class Actions(ConcCGI):
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
+        self._session['last_freq_level'] = freqlevel
         return result
 
     freqml.template = 'freqs.tmpl'
@@ -1843,7 +1842,9 @@ class Actions(ConcCGI):
         if not to_line:
             to_line = conc.size()
 
-        return {'from_line': from_line, 'to_line':to_line}
+        # TODO Save menu should be active here
+
+        return {'from_line': from_line, 'to_line': to_line}
 
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
 

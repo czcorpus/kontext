@@ -85,10 +85,17 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (mainPage, pop
     };
 
     lib.init = function (conf) {
+        var i;
+
         mainPage.init(conf);
         lib.messages = conf.messages;
         lib.maxNumLevels = conf.multilevel_freq_dist_max_levels;
         bonito.multiLevelKwicFormUtil.init();
+        if (conf.lastNumLevels) {
+            for (i = 1; i < conf.lastNumLevels; i += 1) {
+                lib.addLevel();
+            }
+        }
         $('a.kwic-alignment-help').each(function () {
             $(this).bind('click', function (event) {
                 popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#active-corpus'), conf.messages.msg, {
