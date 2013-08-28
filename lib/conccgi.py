@@ -14,12 +14,14 @@ import re
 import locale
 from types import ListType
 import os
+import cgi
+import json
 
 from usercgi import UserCGI
 import corplib
 import conclib
 import version
-from CGIPublisher import UserActionException
+from CGIPublisher import UserActionException, correct_types
 import plugins
 import settings
 import taghelper
@@ -82,16 +84,23 @@ def validate_range(actual_range, max_range):
     return None
 
 
+def choose_selector(args, selector):
+    selector += ':'
+    s = len(selector)
+    for n, v in [(n[s:], v) for n, v in args.items() if n.startswith(selector)]:
+        args[n] = v
+
+
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
 
 
 class ConcCGI(UserCGI):
-    _global_vars = ['corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
-                    'structs', 'refs', 'lemma', 'lpos', 'pagesize',
-                    'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
-                    'gdexcnt', 'gdexconf', 'iquery', 'maincorp']
+    _conc_state_vars = ('corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
+                        'structs', 'refs', 'lemma', 'lpos', 'pagesize',
+                        'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
+                        'gdexcnt', 'gdexconf', 'iquery', 'maincorp')
     error = u''
     fc_lemword_window_type = u'both'
     fc_lemword_type = u'all'
@@ -157,7 +166,7 @@ class ConcCGI(UserCGI):
     # end
 
     add_vars = {}
-    corpname = u'susanne'
+    corpname = None
     usesubcorp = u''
     subcname = u''
     subcpath = []
@@ -272,11 +281,40 @@ class ConcCGI(UserCGI):
         return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl', 'last_corpus')
 
-    def _pre_dispatch(self):
+    def _pre_dispatch(self, selectorname, named_args):
+        """
+        Runs before main action is processed
+        """
+        self.environ = os.environ
+        named_args.update(self._get_user_settings())
+
+        form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
+                                environ=self.environ, fp=None)
+        self._fetch_corpname(form, named_args)
+        self._setup_user(self.corpname)
+
+        if 'json' in form:
+            json_data = json.loads(form.getvalue('json'))
+            named_args.update(json_data)
+        for k in form.keys():
+            self._url_parameters.append(k)
+            # must remove empty values, this should be achieved by
+            # keep_blank_values=0, but it does not work for POST requests
+            if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
+                named_args[str(k)] = self.recode_input(form.getvalue(k))
+        na = named_args.copy()
+        correct_types(na, self.clone_self())
+        if selectorname:
+            choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
-                                        self.gdexpath)
+                                        self.gdexpath)                        
+        self._set_defaults()
+        self.__dict__.update(na)
 
     def _post_dispatch(self, methodname, tmpl, result):
+        """
+        Runs after main action is processed but before any rendering (incl. HTTP headers)
+        """
         self.last_corpus = self.corpname
         self._log_request(self._get_persistent_items(), '%s' % methodname)
 
@@ -299,6 +337,9 @@ class ConcCGI(UserCGI):
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
     def _reset_session_conc(self):
+        """
+        Resets information about current concordance user works with
+        """
         if 'conc' in self._session:
             del(self._session['conc'])
 
@@ -310,7 +351,7 @@ class ConcCGI(UserCGI):
         """
         basecorpname = self.corpname.split(':')[0]
         out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
-                             + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+            + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
 
     def _save_query(self):
         if plugins.has_plugin('query_storage'):
@@ -321,7 +362,7 @@ class ConcCGI(UserCGI):
             plugins.query_storage.write(user=self._user, corpname=self.corpname,
                                         url=url, tmp=1, description=description, query_id=None, public=0)
 
-    def preprocess_values(self, form):
+    def _fetch_corpname(self, form, named_args):
         cn = ''
         if 'json' in form:
             import json
@@ -336,6 +377,12 @@ class ConcCGI(UserCGI):
                 raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
+        if not self.corpname:
+            if named_args.get('last_corpus', None):
+                self.corpname = named_args['last_corpus']
+            else:
+                self.corpname = 'susanne'
+
     def self_encoding(self):
         enc = self._corp().get_conf('ENCODING')
         if enc:
@@ -344,6 +391,11 @@ class ConcCGI(UserCGI):
             return 'iso-8859-1'
 
     def _corp(self):
+        """
+        Returns current corpus (as a manatee object).
+        This should be preferred over accessing _curr_corpus attribute
+        because they may produce different results!
+        """
         if (not self._curr_corpus or
                 (self.usesubcorp and not hasattr(self._curr_corpus, 'subcname'))):
             self._curr_corpus = self.cm.get_Corpus(self.corpname,
@@ -371,7 +423,7 @@ class ConcCGI(UserCGI):
         result['Q'] = [{'q': q} for q in self.q]
         result['corpname_url'] = 'corpname=' + self.corpname
 
-        global_var_val = [(n, val) for n in self._global_vars
+        global_var_val = [(n, val) for n in self._conc_state_vars
                           for val in [getattr(self, n)]
                           if getattr(self.__class__, n, None) is not val]
 
