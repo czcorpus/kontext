@@ -1,3 +1,5 @@
+/* multiselect */
+
 ul.multiselect {
     list-style-type : none;
     margin : 0;
@@ -94,4 +96,18 @@ ul.multiselect li td.checkbox-cell {
     margin: 0 0 8px 0;
     text-align: center;
     color: #000000;
+}
+
+/* corpus tree */
+
+.tree-component {
+    background-color: #FEFDFD;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -khtml-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.tree-component a.tree-expand {
+    color: #E2007A;
 }

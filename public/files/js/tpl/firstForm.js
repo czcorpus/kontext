@@ -179,12 +179,12 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
 
             jqFieldset.toggleClass('inactive');
             if (jqFieldset.hasClass('inactive')) {
-                jqFieldset.find('div.contents').css('display', 'none');
+                jqFieldset.find('div.contents').hide();
                 jqFieldset.find('.status').empty().html('&#8595;');
                 jqTriggerLink.attr('title', conf.messages.click_to_expand);
 
             } else {
-                jqFieldset.find('div.contents').css('display', 'block');
+                jqFieldset.find('div.contents').show();
                 jqFieldset.find('.status').empty().html('&#8593;');
                 jqTriggerLink.attr('title', conf.messages.click_to_hide);
             }

@@ -361,15 +361,9 @@ define(['jquery', 'win'], function ($, win) {
                         position: 'absolute',
                         'z-index' : 1000000,
                         left : leftPos + 'px',
-                        border : '1px solid #D2EDC0',
-                        'background-color': '#FFFFFF',
                         margin : '0',
                         width : menuWidth + 'px',
                         padding: '4px 5px 8px 5px',
-                        'moz-border-radius' : '3px',
-                        'webkit-border-radius': '3px',
-                        'khtml-border-radius': '3px',
-                        'border-radius': '3px',
                         'text-align': 'left'
                     });
                 }

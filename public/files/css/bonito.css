@@ -586,7 +586,7 @@ fieldset h4 {
 }
 
 .bar {
-    background-color:#008;
+    background-color: #009EE0;
 }
 
 .bonito-pagination {
@@ -1101,7 +1101,7 @@ table.numtab td {
 }
 
 table.result tr.even {
-    background-color: #ddd;
+    background-color: #ECF3EA;
 }
 
 td.num {
