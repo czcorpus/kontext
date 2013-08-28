@@ -79,14 +79,7 @@ def correct_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
-def choose_selector(args, selector):
-    selector += ':'
-    s = len(selector)
-    for n, v in [(n[s:], v) for n, v in args.items() if n.startswith(selector)]:
-        args[n] = v
-
-
-def q_help(page, lang): # html code for context help
+def q_help(page, lang):  # html code for context help
     return "<a onclick=\"window.open('http://www.sketchengine.co.uk/help.cgi?page=" \
            + page + ";lang=" + lang \
            + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
@@ -167,7 +160,6 @@ class CGIPublisher(object):
     reload = 0
     _has_access = 1
     _anonymous = 0
-    _login_address = u'' # e.g. 'http://beta.sketchengine.co.uk/login'
     menupos = ''
     user = None
 
@@ -240,7 +232,7 @@ class CGIPublisher(object):
                 return None
         return curr
 
-    def get_user_settings(self):
+    def _get_user_settings(self):
         """
         Loads user settings from cookie
 
@@ -256,7 +248,7 @@ class CGIPublisher(object):
         """
         loads user language from user settings or from browser's configuration
         """
-        user_settings = self.get_user_settings()
+        user_settings = self._get_user_settings()
         if 'uilang' in user_settings:
             lgs_string = user_settings['uilang']
         else:
@@ -270,7 +262,7 @@ class CGIPublisher(object):
         lgdirs = os.listdir(locale_dir)
         for lg in lgs:
             lg = lg.replace('-', '_').lower()
-            if lg.startswith('en'): # english
+            if lg.startswith('en'):  # english
                 return ''
             for lgdir in lgdirs:
                 if lgdir.lower().startswith(lg):
@@ -278,12 +270,11 @@ class CGIPublisher(object):
         return ''
 
     def init_locale(self):
-
         # locale
         locale_dir = '../locale/'  # TODO
-        if not os.path.isdir (locale_dir):
-            p = os.path.join (os.path.dirname (__file__), locale_dir)
-            if os.path.isdir (p):
+        if not os.path.isdir(locale_dir):
+            p = os.path.join(os.path.dirname(__file__), locale_dir)
+            if os.path.isdir(p):
                 locale_dir = p
             else:
                 # This will set the system default locale directory as a side-effect:
@@ -309,9 +300,6 @@ class CGIPublisher(object):
             return True
         except ImportError:
             return False
-
-    def preprocess_values(self, form):
-        pass
 
     def _setup_user(self, user=None, corpname=''):
         pass
@@ -359,32 +347,6 @@ class CGIPublisher(object):
                 na[a] = getattr(self, a)
         return na
 
-    def parse_parameters(self, selectorname=None,
-                         environ=os.environ, post_fp=None):
-        self.environ = environ
-
-        named_args = self.get_user_settings()
-        form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
-                                environ=self.environ, fp=post_fp)
-        self.preprocess_values(form)  # values needed before recoding
-        self._setup_user(self.corpname)
-        if 'json' in form:
-            json_data = json.loads(form.getvalue('json'))
-            named_args.update(json_data)
-        for k in form.keys():
-            self._url_parameters.append(k)
-            # must remove empty values, this should be achieved by
-            # keep_blank_values=0, but it does not work for POST requests
-            if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
-                named_args[str(k)] = self.recode_input(form.getvalue(k))
-        na = named_args.copy()
-        correct_types(na, self.clone_self())
-        if selectorname:
-            choose_selector(self.__dict__, getattr(self, selectorname))
-        self._set_defaults()
-        self.__dict__.update(na)
-        return named_args
-
     def get_method_metadata(self, method_name, data_name):
         if hasattr(self, method_name) and hasattr(getattr(self, method_name), data_name):
             return getattr(getattr(self, method_name), data_name)
@@ -422,7 +384,7 @@ class CGIPublisher(object):
                 ans[k] = getattr(self, k)
         return ans
 
-    def _pre_dispatch(self):
+    def _pre_dispatch(self, selectorname, args):
         """
         Allows special operations to be done before the action itself is processed
         """
@@ -451,9 +413,8 @@ class CGIPublisher(object):
             self.redirect('login')
 
         try:
-            self._pre_dispatch()
-
-            named_args = self.parse_parameters(selectorname)
+            named_args = {}
+            self._pre_dispatch(selectorname, named_args)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
             self._post_dispatch(methodname, tmpl, result)
