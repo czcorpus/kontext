@@ -244,8 +244,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
               $input_hidden
               #end filter
               <input type="text" name="fromp" value="$fromp" size="2" />
-              #set $l_numofpages=$locale.format("%d",$numofpages,grouping=True)
-              / <span class="numofpages" title="$numofpages">$l_numofpages</span>
+              / <span class="numofpages" title="$numofpages">#filter $IntegerFormatter#$numofpages#end filter#</span>
             </div>
 
             #if $nextlink
