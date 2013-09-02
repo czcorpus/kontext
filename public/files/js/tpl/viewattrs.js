@@ -26,20 +26,10 @@ define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, layoutMo
 
     /**
      *
-     */
-    lib.bindClicks = function () {
-        $('#save-options-button').on('click', function () {
-            hideElem.redirectToSave(win.document.getElementById('mainform'), 'save_viewattrs');
-        });
-    };
-
-    /**
-     *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        lib.bindClicks();
     };
 
     return lib;

@@ -67,7 +67,10 @@ class UserCGI (CGIPublisher.CGIPublisher):
         options = {}
         load_opt_file(options, self._session_get('user', 'id'))
         options.update(tosave)
-        plugins.settings_storage.save(self._session_get('user', 'id'), options)
+        if not self._anonymous:
+            plugins.settings_storage.save(self._session_get('user', 'id'), options)
+        else:
+            pass  # TODO save to the session
 
     def save_global_attrs(self):
         options = [a for a in self.attrs2save if not a.startswith('_')]
