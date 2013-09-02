@@ -32,19 +32,9 @@ require(['tpl/subcorpList', 'domReady!'], function(pageSelf, domReady) {
 
 
 #def main
-<h2>$_('My subcorpora of') &quot;$corpname&quot;</h2>
+<h2>$_('My subcorpora')</h2>
 
 <form id="mainform" action="subcorp_list" method="POST">
-<table class="form">
-    <tr class="required">
-        <td>
-        ## corpus selection field
-        #filter None
-        $corp_sel_node
-        #end filter
-        </td>
-    </tr>
-</table>
 
 <table class="data" border="0">
     <tr>
@@ -66,7 +56,9 @@ require(['tpl/subcorpList', 'domReady!'], function(pageSelf, domReady) {
     #set $counter = $counter + 1
     #end for
 </table>
-<button type="submit" name="action" value="delete">$_('Delete selected')</button>
+<p>
+    <button type="submit" name="action" value="delete">$_('Delete selected')</button>
+</p>
 </form>
 
 #end def
