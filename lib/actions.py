@@ -1798,12 +1798,15 @@ class Actions(ConcCGI):
         data = []
         corplist = plugins.auth.get_corplist(self._user)
         for corp in corplist:
-            self.cm.get_Corpus(corp)
-            basecorpname = corp.split(':')[0]
-            for item in self.cm.subcorp_names(basecorpname):
-                sc = self.cm.get_Corpus(corp, item['n'])
-                logging.getLogger(__name__).debug('sc: %s' % sc)
-                data.append({'n': '%s/%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+            try:
+                self.cm.get_Corpus(corp)
+                basecorpname = corp.split(':')[0]
+                for item in self.cm.subcorp_names(basecorpname):
+                    sc = self.cm.get_Corpus(corp, item['n'])
+                    logging.getLogger(__name__).debug('sc: %s' % sc)
+                    data.append({'n': '%s/%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+            except Exception as e:
+                logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
 
         sort_key, rev = tables.parse_sort_key(sort)
         cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
