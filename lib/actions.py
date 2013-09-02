@@ -156,6 +156,7 @@ class Actions(ConcCGI):
         out['user_menu'] = True
         self._enable_subcorpora_list(out)
         out.update(dict([(k, k) for k, v in self._get_persistent_items().items() if k.startswith('query_type_')]))
+        self._session['last_corpus'] = self.corpname
         return out
 
     ConcCGI.add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
@@ -1412,6 +1413,7 @@ class Actions(ConcCGI):
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
             # custom save is solved in templates because of compatibility issues
+            self._session['last_corpus'] = self.corpname
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
