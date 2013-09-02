@@ -26,6 +26,7 @@ import settings
 import conclib
 import corplib
 import plugins
+import manatee
 
 if not '_' in globals():
     _ = lambda s: s
@@ -1782,19 +1783,27 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 
+        current_corp = self.corpname
+
         if self.get_http_method() == 'POST':
             base = self.subcpath[-1]
-            for subcorp in selected_subc:
+            for subcorp_id in selected_subc:
                 try:
-                    os.unlink(os.path.join(base, self.corpname, subcorp).encode('utf-8') + '.subc')
+                    corp, subcorp = subcorp_id.split('/', 1)
+                    sc_obj = self.cm.get_Corpus(corp, subcorp)
+                    os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
                 except Exception as e:
                     logging.getLogger(__name__).error(e)
 
-        basecorpname = self.corpname.split(':')[0]
         data = []
-        for item in self.cm.subcorp_names(basecorpname):
-            sc = self.cm.get_Corpus(self.corpname, item['n'])
-            data.append({'n': item['n'], 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+        corplist = plugins.auth.get_corplist(self._user)
+        for corp in corplist:
+            self.cm.get_Corpus(corp)
+            basecorpname = corp.split(':')[0]
+            for item in self.cm.subcorp_names(basecorpname):
+                sc = self.cm.get_Corpus(corp, item['n'])
+                logging.getLogger(__name__).debug('sc: %s' % sc)
+                data.append({'n': '%s/%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
 
         sort_key, rev = tables.parse_sort_key(sort)
         cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
@@ -1805,6 +1814,7 @@ class Actions(ConcCGI):
         else:
             sort_keys[sort_key] = (sort_key, '&#8595;')
 
+        self.cm.get_Corpus(current_corp)  # this is necessary to reset manatee module back to its original state
         return {'subcorp_list': data, 'sort_keys': sort_keys, 'rev': rev}
 
     def ajax_subcorp_info(self, subcname=''):
