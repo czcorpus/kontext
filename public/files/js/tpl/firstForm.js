@@ -157,16 +157,27 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     };
 
     lib.updateFieldsets = function () {
-        var jqFieldset =  $('a.form-extension-switch').closest('fieldset');
+        var jqLink = $('a.form-extension-switch'),
+            jqFieldset,
+            elmStatus;
 
-        if (jqFieldset.hasClass('inactive')) {
-            jqFieldset.find('div.contents').css('display', 'none');
-            jqFieldset.find('.status').empty().html('&#8595;');
+        jqLink.each(function () {
+            jqFieldset = $(this).closest('fieldset');
+            elmStatus = layoutModel.userSettings.get($(this).data('box-id'));
 
-        } else {
-            jqFieldset.find('div.contents').css('display', 'block');
-            jqFieldset.find('.status').empty().html('&#8593;');
-        }
+            if (elmStatus === true) {
+                jqFieldset.removeClass('inactive');
+                jqFieldset.find('div.contents').show();
+                jqFieldset.find('.status').empty().html('&#8593;');
+                jqLink.attr('title', layoutModel.conf.messages.click_to_hide);
+
+            } else {
+                jqFieldset.find('div.contents').hide();
+                jqFieldset.find('.status').empty().html('&#8595;');
+                jqLink.attr('title', layoutModel.conf.messages.click_to_expand);
+
+            }
+        });
     };
 
     /**
@@ -182,11 +193,13 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('.status').empty().html('&#8595;');
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
+                layoutModel.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
                 jqFieldset.find('div.contents').show();
                 jqFieldset.find('.status').empty().html('&#8593;');
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
+                layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
         });
 

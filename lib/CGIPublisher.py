@@ -18,7 +18,6 @@ import __builtin__
 import os
 import sys
 import re
-import cgi
 from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
 from inspect import isclass
 import Cookie
@@ -232,25 +231,12 @@ class CGIPublisher(object):
                 return None
         return curr
 
-    def _get_user_settings(self):
-        """
-        Loads user settings from cookie
-
-        Returns
-        -------
-
-        user_settings : dict
-           a dictionary containing all values stored as a JSON string in user_settings cookie
-        """
-        return json.loads(self._cookies['user_settings'].value) if 'user_settings' in self._cookies else {}
-
     def get_uilang(self, locale_dir):
         """
         loads user language from user settings or from browser's configuration
         """
-        user_settings = self._get_user_settings()
-        if 'uilang' in user_settings:
-            lgs_string = user_settings['uilang']
+        if 'uilang' in self._session:
+            lgs_string = self._session['uilang']
         else:
             lgs_string = None
         if not lgs_string:
@@ -395,6 +381,7 @@ class CGIPublisher(object):
         Allows special operations to be done after the action itself has been processed but before
         any output or HTTP headers.
         """
+        pass
 
     def run_unprotected(self, path=None, selectorname=None):
         """
@@ -428,6 +415,7 @@ class CGIPublisher(object):
                 plugins.sessions.save(self._get_session_id(), self._session)
 
         except Exception as e:
+            import logging
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
@@ -584,8 +572,11 @@ class CGIPublisher(object):
         """
         has_body = True
 
-        self._cookies['user_settings'] = json.dumps(self._get_persistent_items())
-        self._cookies['user_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
+        # The 'ui_settings' cookie is used only by JavaScript client-side code
+        # which always expects the cookie to exists.
+        if not 'ui_settings' in self._cookies:
+            self._cookies['ui_settings'] = json.dumps({})
+            self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
 
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'

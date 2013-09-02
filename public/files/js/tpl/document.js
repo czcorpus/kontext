@@ -604,7 +604,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
     lib.init = function (conf) {
         lib.conf = conf;
         lib.userSettings = {
-            data : cookies.get('user_settings'),
+            data : cookies.get('ui_settings'),
 
             cookieParams : {
                 path: lib.conf.rootPath
@@ -616,12 +616,12 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
             set : function (key, value) {
                 lib.userSettings.data[key] = value;
-                $.cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookies.set('ui_settings', lib.userSettings.data, lib.userSettings.cookieParams);
             },
 
             del : function (key) {
                 delete (lib.userSettings.data[key]);
-                $.cookies.set('user_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookies.set('ui_settings', lib.userSettings.data, lib.userSettings.cookieParams);
             }
         };
 

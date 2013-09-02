@@ -300,31 +300,13 @@ class Actions(ConcCGI):
         else:
             self.ctxattrs = 'word'
 
-    def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[],
-                   newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        #self._set_new_viewattrs(setattrs, allpos, setstructs,
-        #                       setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+    def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[], shuffle=0):
         self._set_new_viewattrs(setattrs=setattrs, allpos=allpos, setstructs=setstructs, setrefs=setrefs)
+        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize'], self.corpname)
+        # TODO refs_up ???
         return self.view(view_params={'shuffle': shuffle})
 
     viewattrsx.template = 'view.tmpl'
-
-    def save_viewattrs(self, setattrs=[], allpos='', setstructs=[],
-                       setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        self._set_new_viewattrs(setattrs, allpos, setstructs,
-                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
-
-        out = self.viewattrs()
-        if self.shuffle == -1:
-            self.shuffle = 0
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'pagesize',
-                            'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf',
-                            'refs', 'kwicleftctx', 'kwicrightctx', 'multiple_copy',
-                            'tbl_template', 'ctxunit', 'refs_up', 'shuffle'],
-                           self.corpname)
-
-        out['notification'] = _('Selected options successfully saved')
-        return out
 
     def viewopts(self):
         from tbl_settings import tbl_labels
@@ -336,16 +318,14 @@ class Actions(ConcCGI):
         return out
 
     def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        #self._set_new_viewattrs(setattrs, allpos, setstructs,
-        #                       setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+        # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
                                shuffle=shuffle, ctxunit=ctxunit)
+        self._save_options(['pagesize', 'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
+                            'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
         return self.view(view_params={'shuffle': shuffle})
 
     viewoptsx.template = 'view.tmpl'
-
-
-    save_viewattrs.template = 'viewattrs.tmpl'
 
     def sort(self):
         """
