@@ -26,7 +26,6 @@ import settings
 import conclib
 import corplib
 import plugins
-import manatee
 
 if not '_' in globals():
     _ = lambda s: s
@@ -276,22 +275,13 @@ class Actions(ConcCGI):
 
     ConcCGI.add_vars['viewattrs'] = ['concsize']
 
-    def set_new_viewattrs(self, setattrs=[], allpos='', setstructs=[],
-                          setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        if ctxunit == '@pos':
-            ctxunit = ''
-        self.attrs = ','.join(setattrs)
-        self.structs = ','.join(setstructs)
-        self.refs = ','.join(setrefs)
-        self.attr_allpos = allpos
-        if allpos == 'all':
-            self.ctxattrs = self.attrs
-        else:
-            self.ctxattrs = 'word'
+    def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', shuffle=0, ctxunit=''):
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
         self.shuffle = shuffle
 
+        if ctxunit == '@pos':
+            ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
                 self.exceptmethod = 'viewattrs'
@@ -300,17 +290,28 @@ class Actions(ConcCGI):
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
 
+    def _set_new_viewattrs(self, setattrs=[], allpos='', setstructs=[], setrefs=[]):
+        self.attrs = ','.join(setattrs)
+        self.structs = ','.join(setstructs)
+        self.refs = ','.join(setrefs)
+        self.attr_allpos = allpos
+        if allpos == 'all':
+            self.ctxattrs = self.attrs
+        else:
+            self.ctxattrs = 'word'
+
     def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[],
                    newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        self.set_new_viewattrs(setattrs, allpos, setstructs,
-                               setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+        #self._set_new_viewattrs(setattrs, allpos, setstructs,
+        #                       setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+        self._set_new_viewattrs(setattrs=setattrs, allpos=allpos, setstructs=setstructs, setrefs=setrefs)
         return self.view(view_params={'shuffle': shuffle})
 
     viewattrsx.template = 'view.tmpl'
 
     def save_viewattrs(self, setattrs=[], allpos='', setstructs=[],
                        setrefs=[], newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
-        self.set_new_viewattrs(setattrs, allpos, setstructs,
+        self._set_new_viewattrs(setattrs, allpos, setstructs,
                                setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
 
         out = self.viewattrs()
@@ -324,6 +325,25 @@ class Actions(ConcCGI):
 
         out['notification'] = _('Selected options successfully saved')
         return out
+
+    def viewopts(self):
+        from tbl_settings import tbl_labels
+
+        out = {
+            'newctxsize': self.kwicleftctx[1:],
+            'tbl_labels': tbl_labels
+        }
+        return out
+
+    def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
+        #self._set_new_viewattrs(setattrs, allpos, setstructs,
+        #                       setrefs, newctxsize, gdexcnt, gdexconf, ctxunit, refs_up, shuffle)
+        self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
+                               shuffle=shuffle, ctxunit=ctxunit)
+        return self.view(view_params={'shuffle': shuffle})
+
+    viewoptsx.template = 'view.tmpl'
+
 
     save_viewattrs.template = 'viewattrs.tmpl'
 
