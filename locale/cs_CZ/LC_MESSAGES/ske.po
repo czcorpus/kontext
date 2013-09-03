@@ -2578,8 +2578,8 @@ msgstr "Zarovnání"
 msgid "Result is shuffled"
 msgstr "Výsledek je promíchán"
 
-msgid "Always shuffle concordance results"
-msgstr "Vždy promíchat konkordanční řádky"
+msgid "Shuffle concordance results by default"
+msgstr "Ve výchozím stavu promíchat konkordanční řádky"
 
 msgid "Remove the language"
 msgstr "Odstranit tento jazyk"
