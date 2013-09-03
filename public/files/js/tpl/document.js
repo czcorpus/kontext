@@ -410,7 +410,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
         // Footer's language switch
         $('#switch-language-box a').each(function () {
             $(this).bind('click', function () {
-                lib.userSettings.set('uilang', $(this).data('lang'));
+                lib.userSettings.set('set_uilang', $(this).data('lang'));
                 win.location.reload();
             });
         });

@@ -237,6 +237,9 @@ class CGIPublisher(object):
         """
         if 'uilang' in self._session:
             lgs_string = self._session['uilang']
+        elif 'ui_settings' in self._cookies:
+            ui_settings = json.loads(self._cookies['ui_settings'].value)
+            lgs_string = ui_settings.get('set_uilang', None)
         else:
             lgs_string = None
         if not lgs_string:
