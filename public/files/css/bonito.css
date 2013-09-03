@@ -1382,3 +1382,15 @@ table.results-range-and-paging th {
 #corp-size-information {
     font-size: 8pt;
 }
+
+#corpus-citation-link {
+    font-size: 8pt;
+}
+
+#corpus-citation-link a {
+    color: #A4A4A4;
+}
+
+#corpus-citation-box {
+    display: none;
+}
