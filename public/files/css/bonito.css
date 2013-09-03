@@ -1369,3 +1369,12 @@ div.rgt-block {
 #coll-top-bar {
 
 }
+
+table.results-range-and-paging {
+    border-collapse: collapse;
+}
+
+table.results-range-and-paging th {
+    font-weight: normal;
+    text-align: left;
+}
