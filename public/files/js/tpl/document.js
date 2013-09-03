@@ -347,7 +347,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             event.stopPropagation();
         });
 
-        $('#corpus-desc-link').bind('click', function (event) {
+        $('#corpus-desc-link').bind('click', function () {
             $('#corpus-details-box').modal({
                 minHeight: 400,
                 onShow : function () {
@@ -356,11 +356,18 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
                 onClose : function () {
                     $.modal.close();
-                    //jqInputElement.focus();
                 }
             });
         });
 
+        $('#corpus-citation-link a').on('click', function () {
+            $('#corpus-citation-box').modal({
+                minHeight: 400,
+                onClose : function () {
+                    $.modal.close();
+                }
+            });
+        });
 
         // 'Select all' buttons for structural attribute lists
         $('input[class="select-all"]').bind('click', function (event) {
@@ -392,13 +399,6 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
         $('#notification a.close-icon').bind('click', function () {
             $('#notification').hide('slide', {}, 500);
         });
-
-        if ($('#notification').length > 0 && lib.conf.messageAutoHideInterval) {
-            var timeout = win.setTimeout(function () {
-                $('#notification').hide('slide', {}, 500);
-                win.clearTimeout(timeout);
-            }, lib.conf.messageAutoHideInterval);
-        }
 
         $('img.plus-minus').each(function () {
             $(this).bind('click', function () {
@@ -559,9 +559,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
         $('#menu-level-2').on('mouseleave', function (event) {
             var jqMenuLi = $(event.target).closest('li'),
-                jqSubmenu = $('#menu-level-2').find('ul'),
-                prevMenuId = $('#menu-level-2').attr('data-current-menu'),
-                jqPrevMenuUl = $('#menu-level-2').find('ul');
+                jqSubmenu = $('#menu-level-2').find('ul');
 
             if (jqSubmenu.length === 0 || $('#menu-level-2').attr('data-current-menu') !== jqMenuLi.attr('id')) {
                 jqMenuLi.removeClass('active');
@@ -586,6 +584,17 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                 $('#common-bar').empty().append(lib.conf.messages.error_loading_application_bar);
             }
         });
+    };
+
+    lib.updateNotifications = function () {
+        var timeout;
+
+        if ($('#notification').length > 0 && lib.conf.messageAutoHideInterval) {
+            timeout = win.setTimeout(function () {
+                $('#notification').hide('slide', {}, 500);
+                win.clearTimeout(timeout);
+            }, lib.conf.messageAutoHideInterval);
+        }
     };
 
     /**
@@ -619,6 +628,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
         lib.misc();
         lib.bindClicks();
         lib.initMenu();
+        lib.updateNotifications();
 
         if (lib.conf.common_app_bar_url) {
             lib.loadSharedBar();
