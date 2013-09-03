@@ -437,7 +437,7 @@ class ConcCGI(UserCGI):
                                     or self.corpname)
 
         result['corp_description'] = thecorp.get_info()
-        result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
+        result['corp_size'] = locale.format('%d', thecorp.size(), True).decode('utf-8')
         result['user_info'] = self._session['user']
         corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
@@ -446,7 +446,9 @@ class ConcCGI(UserCGI):
             result['corp_web'] = ''
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
-            result['subcorp_size'] = ('%s positions') % locale.format('%d', sc.search_size(), True).decode('utf-8')
+            result['subcorp_size'] = locale.format('%d', sc.search_size(), True).decode('utf-8')
+        else:
+            result['subcorp_size'] = None
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         sref = thecorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'

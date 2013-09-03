@@ -441,7 +441,7 @@ ul.submenu li.separ {
     font-size: 12pt;
     color: #A4A4A4;
     float: right;
-    width: 210px;
+    width: 240px;
     padding: 0;
     margin: 0;
     text-align: right;
@@ -1377,4 +1377,8 @@ table.results-range-and-paging {
 table.results-range-and-paging th {
     font-weight: normal;
     text-align: left;
+}
+
+#corp-size-information {
+    font-size: 8pt;
 }
