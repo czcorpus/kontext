@@ -35,11 +35,11 @@
     padding: 10px 20px;
 }
 
-#content form {
+#content > form {
     border:solid 3px #D2EDC0;
     border-radius: 9px;
     display:inline-block;
-    margin:0 0 10px;
+    margin: 5px;
     padding:1em;
 }
 
@@ -818,7 +818,7 @@ div.narrowmain {
 }
 
 fieldset {
-    margin: 14px 0 6px;
+    margin: 0px;
     padding: 10px;
     border-style: solid;
     border-color: #DBE2D9;
@@ -870,10 +870,6 @@ fieldset p {
 fieldset.float {
     background-color:transparent;
     border-width:0;
-}
-
-form {
-    min-width: 50%;
 }
 
 form#navigation_form,form#navigation_form2 {
@@ -1352,4 +1348,24 @@ div.rgt-block {
 #content form.login button {
     display: block;
     margin: 0 auto;
+}
+
+#coll-wrapper {
+    margin-top: 20px;
+    border: 3px solid #D2EDC0;
+    border-radius: 9px 9px 9px 9px;
+}
+
+#coll-wrapper h2 {
+    background-color: #D2EDC0;
+    margin: 0;
+    padding-left: 15px;
+}
+
+#coll-wrapper .bonito-pagination {
+    text-align: right;
+}
+
+#coll-top-bar {
+
 }
