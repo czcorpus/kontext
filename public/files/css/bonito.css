@@ -1350,20 +1350,35 @@ div.rgt-block {
     margin: 0 auto;
 }
 
-#coll-wrapper {
+#coll-wrapper,
+#freqs-wrapper {
     margin-top: 20px;
     border: 3px solid #D2EDC0;
     border-radius: 9px 9px 9px 9px;
 }
 
-#coll-wrapper h2 {
+#coll-wrapper h2,
+#freqs-wrapper h2 {
     background-color: #D2EDC0;
     margin: 0;
     padding-left: 15px;
 }
 
-#coll-wrapper .bonito-pagination {
+#coll-wrapper .bonito-pagination,
+#freqs-wrapper .bonito-pagination {
+    width: 250px;
+    float: right;
     text-align: right;
+}
+
+#freqs-wrapper form[action='freqs'] {
+    display: inline-block;
+}
+
+#coll-wrapper .navig-bar,
+#freqs-wrapper .navig-bar {
+    background-color: #D2EDC0;
+    overflow: hidden;
 }
 
 #coll-top-bar {
