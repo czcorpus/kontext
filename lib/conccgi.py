@@ -302,6 +302,7 @@ class ConcCGI(UserCGI):
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 named_args[str(k)] = self.recode_input(form.getvalue(k))
         na = named_args.copy()
+
         correct_types(na, self.clone_self())
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
@@ -487,7 +488,7 @@ class ConcCGI(UserCGI):
                                               ('lemma', self.lemma),
                                               ('lpos', self.lpos),
                                               ('usesubcorp', self.usesubcorp),
-                                             ])
+                                              ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
         result['supports_password_change'] = settings.supports_password_change()
 
@@ -500,7 +501,7 @@ class ConcCGI(UserCGI):
             result['result_relative_freq'] = self._session['conc'].get('result_relative_freq', None)
             result['result_relative_freq_rel_to'] = self._session['conc'].get('result_relative_freq_rel_to', None)
             result['result_arf'] = self._session['conc'].get('result_arf', None)
-            result['shuffle_notification'] = self._session['conc'].get('shuffle_notification', None)
+            result['result_shuffled'] = self._session['conc'].get('result_shuffled', None)
         else:
             result['show_conc_bar'] = False
         return result
