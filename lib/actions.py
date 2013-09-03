@@ -1440,7 +1440,8 @@ class Actions(ConcCGI):
 
     def make_wl_query(self):
         qparts = []
-        if self.wlpat: qparts.append('%s="%s"' % (self.wlattr, self.wlpat))
+        if self.wlpat:
+            qparts.append('%s="%s"' % (self.wlattr, self.wlpat))
         if not self.include_nonwords:
             qparts.append('%s!="%s"' % (self.wlattr,
                                         self._corp().get_conf('NONWORDRE')))
@@ -1791,7 +1792,7 @@ class Actions(ConcCGI):
             base = self.subcpath[-1]
             for subcorp_id in selected_subc:
                 try:
-                    corp, subcorp = subcorp_id.split('/', 1)
+                    corp, subcorp = subcorp_id.split(':', 1)
                     sc_obj = self.cm.get_Corpus(corp, subcorp)
                     os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
                 except Exception as e:
@@ -1806,7 +1807,7 @@ class Actions(ConcCGI):
                 for item in self.cm.subcorp_names(basecorpname):
                     sc = self.cm.get_Corpus(corp, item['n'])
                     logging.getLogger(__name__).debug('sc: %s' % sc)
-                    data.append({'n': '%s/%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
+                    data.append({'n': '%s:%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
 
