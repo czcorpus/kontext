@@ -561,20 +561,11 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             var jqMenuLi = $(event.target).closest('li'),
                 jqSubmenu = $('#menu-level-2').find('ul'),
                 prevMenuId = $('#menu-level-2').attr('data-current-menu'),
-                jqPrevMenuUl = $('#menu-level-2').find('ul'),
-                timeout;
+                jqPrevMenuUl = $('#menu-level-2').find('ul');
 
             if (jqSubmenu.length === 0 || $('#menu-level-2').attr('data-current-menu') !== jqMenuLi.attr('id')) {
                 jqMenuLi.removeClass('active');
             }
-            timeout = win.setTimeout(function () {
-                if (prevMenuId) {
-                    $('#' + prevMenuId).removeClass('active').append(jqPrevMenuUl);
-                    jqPrevMenuUl.css('display', 'none');
-                    $('#menu-level-2').attr('data-current-menu', null);
-                }
-                win.clearTimeout(timeout);
-            }, lib.conf.menuAutoHideInterval);
         });
     };
 
