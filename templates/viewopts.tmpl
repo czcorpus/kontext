@@ -36,7 +36,7 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
 #def main
 #filter WebSafe
 <h2>$_("General concordance view options")</h2>
-<p>$_('Following settings apply for all corpora.')</p>
+<p>$_('Following settings apply for all the corpora.')</p>
 <form id="mainform" action='viewoptsx'>
 
 #filter None
@@ -44,8 +44,6 @@ $input_hidden
 #end filter
 <input type='hidden' name='fromp' value='$fromp' />
 
-
-<a name="range-and-paging"></a>
 <fieldset>
     <legend>$_('Result range and paging')</legend>
     #try
@@ -53,28 +51,41 @@ $input_hidden
     #except
       #set $gdexcnt = ''
     #end try
-      $_("Page size (number of lines)"): <input type="text" name="pagesize" value='$pagesize' size="4" /><br />
-      $_("KWIC Context size") ($_("positions")): <input type="text" name="newctxsize" value='$newctxsize' size="4" />
-      <input type="hidden" name="ctxunit" value="@pos" />
-
-      <br /><br />
-      <input type="hidden" name="gdex_enabled" value="0" />
-      <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
-      <label for="gdex-enabled-checkbox">$_("Sort good dictionary examples")</label>
-      <table>
-          <tr><td>$_("Number of lines to be sorted"):</td>
-              <td><input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
-              </td></tr>
-          #if $getVar('Availgdexconfs', {})
-          <tr><td>$_("GDEX configuration for current corpus"):</td>
-              <td>
-    #filter None
-    $gdexconf_select('gdexconf', $gdexconf)
-    #end filter
-              </td>
-          </tr>
-          #end if
-      </table>
+    <table  class="results-range-and-paging">
+        <tr>
+            <th>$_("Page size (number of lines)"):</th>
+            <td><input type="text" name="pagesize" value='$pagesize' size="4" /></td>
+        </tr>
+        <tr>
+            <th>$_("KWIC Context size") ($_("positions")):</th>
+            <td><input type="text" name="newctxsize" value='$newctxsize' size="4" />
+                <input type="hidden" name="ctxunit" value="@pos" />
+            </td>
+        </tr>
+        <tr>
+            <th><label for="gdex-enabled-checkbox">$_("Sort good dictionary examples"):</label></th>
+            <td>
+                <input type="hidden" name="gdex_enabled" value="0" />
+                <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
+            </td>
+        </tr>
+        <tr>
+            <th>$_("Number of lines to be sorted"):</th>
+            <td>
+                <input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
+            </td>
+        </tr>
+        #if $getVar('Availgdexconfs', {})
+        <tr>
+            <th>$_("GDEX configuration for current corpus"):</th>
+            <td>
+                #filter None
+                $gdexconf_select('gdexconf', $gdexconf)
+                #end filter
+            </td>
+        </tr>
+        #end if
+    </table>
 </fieldset>
 
 <a name="other-options"></a>
@@ -84,22 +95,7 @@ $input_hidden
     <input type="hidden" name="shuffle" value="-1" />
     <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
     <label for="always-shuffle">$_("Always shuffle concordance results")</label> <br />
-
     <input type="hidden" name="copy_icon" value="0" />
-    <input id="icon-one-click-copy-checkbox" type="checkbox" name="copy_icon" value="1" #if $copy_icon#checked="checked"#end if# />
-    <label for="icon-one-click-copy-checkbox">$_("Icon for one-click sentence copying") <br />
-    <input type="hidden" name="multiple_copy" value="0" />
-    <input id="multiple-copy-checkbox" type="checkbox" name="multiple_copy" value="1"#if $multiple_copy#checked="checked"#end if#  />
-    <label for="multiple-copy-checkbox">$_("Allow multiple lines selection")</label>
-    $_("XML template for one-click copying"):
-    <select name="tbl_template">
-    #for $t in $_avail_tbl_templates.split(',')
-        #set $parsed_name = $t.rsplit('_', 2)
-        #if $len($parsed_name) < 2 or $corpname.split('/')[-1].lower().startswith($parsed_name[0].lower())
-        <option value="$t" #if $t == $tbl_template#selected="selected"#end if#>$tbl_labels.get($t, $t)</option>
-        #end if
-    #end for
-    </select>
 </fieldset>
 
 <div class="buttons">

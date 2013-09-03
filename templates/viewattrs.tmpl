@@ -35,7 +35,7 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
 #def main
 #filter WebSafe
 <h2>$_("Concordance view options - attributes, structures and references")</h2>
-
+<p>#filter None#$($_('Following settings apply only for the <em>%s</em> corpus.') % $corpname)#end filter#</p>
 <form id="mainform" action='viewattrsx'>
 
 #filter None
