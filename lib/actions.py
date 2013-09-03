@@ -44,16 +44,12 @@ class Actions(ConcCGI):
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
         self.active_menu_item = 'menu-view'
-
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
 
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
-        elif self.shuffle == -1 and 'f' in self.q:  # (shuffle == -1) means "set the value to 0"
-            del(self.q[self.q.index('f')])
-            self.shuffle = 0
 
         self.righttoleft = False
         if self.viewmode == 'kwic':
@@ -97,6 +93,7 @@ class Actions(ConcCGI):
 
         out['Sort_idx'] = self.call_function(conclib.get_sort_idx, (conc,),
                                              enc=self.self_encoding())
+        out['result_shuffled'] = True if 'f' in self.q else False
         out.update(self.get_conc_sizes(conc))
         if self.viewmode == 'sen':
             conclib.add_block_items(out['Lines'], block_size=1)
@@ -109,8 +106,6 @@ class Actions(ConcCGI):
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
             out['notification'] = _('Empty result')
-
-        out['shuffle_notification'] = True if 'f' in self.q else False
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
             % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
@@ -127,6 +122,7 @@ class Actions(ConcCGI):
             'result_relative_freq': out.get('result_relative_freq', None),
             'result_relative_freq_rel_to': out.get('result_relative_freq_rel_to', None),
             'result_arf': out.get('result_arf', None),
+            'result_shuffled': out.get('result_shuffled', False)
         }
         return out
 
@@ -324,7 +320,7 @@ class Actions(ConcCGI):
                                shuffle=shuffle, ctxunit=ctxunit)
         self._save_options(['pagesize', 'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
                             'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
-        return self.view(view_params={'shuffle': shuffle})
+        return self.view()
 
     viewoptsx.template = 'view.tmpl'
 
@@ -1806,7 +1802,6 @@ class Actions(ConcCGI):
                 basecorpname = corp.split(':')[0]
                 for item in self.cm.subcorp_names(basecorpname):
                     sc = self.cm.get_Corpus(corp, item['n'])
-                    logging.getLogger(__name__).debug('sc: %s' % sc)
                     data.append({'n': '%s:%s' % (corp, item['n']), 'v': item['n'], 'size': sc.search_size(), 'created': sc.created})
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
@@ -1859,7 +1854,6 @@ class Actions(ConcCGI):
         self.rightctx = self.kwicrightctx
         if not to_line:
             to_line = conc.size()
-        logging.getLogger(__name__).debug('leftctx: %s' % self.leftctx)
         # TODO Save menu should be active here
 
         return {'from_line': from_line, 'to_line': to_line}
