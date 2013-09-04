@@ -33,6 +33,71 @@ if not '_' in globals():
 
 class Actions(ConcCGI):
 
+    def user_password_form(self):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
+        return {}
+
+    user_password_form.template = 'user_password_form.tmpl'
+
+    def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
+        if not settings.supports_password_change():
+            return {'error': _('This function is disabled.')}
+        logged_in = settings.auth.login(self._user, curr_passwd)
+        if not logged_in:
+            raise UserActionException(_('Unknown user'))
+        if settings.auth.validate_password(curr_passwd):
+            pass
+        else:
+            raise UserActionException(_('Invalid password'))
+
+        if new_passwd != new_passwd2:
+            raise UserActionException(_('New password and its confirmation do not match.'))
+
+        if not settings.auth.validate_new_password(new_passwd):
+            raise UserActionException(settings.auth.get_required_password_properties())
+
+        settings.auth.update_user_password(new_passwd)
+        self._redirect(settings.get_root_uri())
+
+    def login(self):
+        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
+        return {}
+
+    def loginx(self, username='', password=''):
+        ans = {}
+        user = plugins.auth.login(username, password)
+        if user.get('id', None) is not None:
+            self._session['user'] = user
+            self._redirect('%s%s' % (settings.get_root_url(), 'first_form'))
+        else:
+            self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
+            ans['error'] = _('Incorrect username or password')
+        return ans
+    loginx.template = 'login.tmpl'
+
+    def logoutx(self):
+        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-conc-desc')
+        plugins.auth.logout(self._get_session_id())
+        self._session = {
+            'user': plugins.auth.anonymous_user()  # just to keep rendering ok
+        }
+        self._user = None
+        return {
+            'notification': _('You have been logged out')
+        }
+
+    logoutx.template = 'login.tmpl'
+
+    user_password.template = 'user_password.tmpl'
+
+
     def view(self, view_params={}):
         """
         kwic view
