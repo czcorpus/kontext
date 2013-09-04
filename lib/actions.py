@@ -26,12 +26,15 @@ import settings
 import conclib
 import corplib
 import plugins
+import butils
 
 if not '_' in globals():
     _ = lambda s: s
 
 
 class Actions(ConcCGI):
+
+    contains_within = False
 
     def user_password_form(self):
         if not settings.supports_password_change():
@@ -59,6 +62,8 @@ class Actions(ConcCGI):
 
         settings.auth.update_user_password(new_passwd)
         self._redirect(settings.get_root_uri())
+
+    user_password.template = 'user_password.tmpl'
 
     def login(self):
         self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
@@ -95,9 +100,6 @@ class Actions(ConcCGI):
 
     logoutx.template = 'login.tmpl'
 
-    user_password.template = 'user_password.tmpl'
-
-
     def view(self, view_params={}):
         """
         kwic view
@@ -115,6 +117,8 @@ class Actions(ConcCGI):
 
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
+
+        self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.q))
 
         self.righttoleft = False
         if self.viewmode == 'kwic':
