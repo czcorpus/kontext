@@ -296,13 +296,13 @@ class CGIPublisher(object):
     def self_encoding(self):
         return 'iso-8859-1'
 
-    def _set_defaults(self):
-        pass
-
     def _add_undefined(self, result, methodname):
         pass
 
     def _add_globals(self, result):
+        """
+        This is called after an action is processed but before any output starts
+        """
         ppath = self.environ.get('REQUEST_URI', '/')
         try:
             ppath = ppath[:ppath.index('?')]
@@ -373,7 +373,7 @@ class CGIPublisher(object):
                 ans[k] = getattr(self, k)
         return ans
 
-    def _pre_dispatch(self, selectorname, args):
+    def _pre_dispatch(self, path, selectorname, args):
         """
         Allows special operations to be done before the action itself is processed
         """
@@ -399,14 +399,11 @@ class CGIPublisher(object):
         if path is None:
                 path = self.import_req_path()
 
-        if self._user is None and path[0] not in ('login', 'loginx'):
-            self.redirect('login')
-
         try:
             named_args = {}
-            self._pre_dispatch(selectorname, named_args)
-            methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
+            self._pre_dispatch(path, selectorname, named_args)
+            methodname, tmpl, result = self.process_method(path[0], path, named_args)
             self._post_dispatch(methodname, tmpl, result)
 
             return_type = self.get_method_metadata(methodname, 'return_type')

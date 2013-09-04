@@ -225,7 +225,7 @@ def get_corpus_info(corp_name):
     for item in _conf['corpora_hierarchy']:
         if item['id'].lower() == corp_name.lower():
             return item
-    return None
+    return {}
 
 
 def get_default_corpus(corplist):

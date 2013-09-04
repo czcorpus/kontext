@@ -29,7 +29,7 @@ import manatee
 
 class CorpusManager(object):
 
-    def __init__(self, corplist=['susanne'], subcpath=[], gdexpath=[]):
+    def __init__(self, corplist=[], subcpath=[], gdexpath=[]):
         self.corplist = corplist
         self.subcpath = subcpath
         self.gdexdict = dict(gdexpath)
