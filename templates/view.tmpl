@@ -225,6 +225,8 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #if $result_shuffled
             <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
             #end if
+
+            <span class="separ">|</span> contains within: <strong>$contains_within</strong>
         </div>
 
         #block navigation($navid="navigation_form", $nextid="next")

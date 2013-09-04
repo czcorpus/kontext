@@ -1,5 +1,7 @@
 import re
-import csv, codecs, cStringIO
+import csv
+import codecs
+import cStringIO
 
 try:
     import fcntl
@@ -82,3 +84,73 @@ class Writeable(object):
 
     def write(self, s):
         self.rows.append(s)
+
+
+class CQLDetectWithin(object):
+    """
+    """
+    def split_by_parentheses(self, s):
+        if s is None:
+            return [None]
+        return [v1 for v2 in [re.split(r'(\])', x) for x in re.split(r'(\[)', s)] for v1 in v2]
+
+    def parse_lex_elems(self, s):
+        i = 0
+        ans = []
+        curr_piece = ''
+        state = 0   # 1 = opened ", 2 = opened '
+        while i < len(s):
+            if s[i] == '\\':
+                curr_piece += s[i+1]
+                i += 2
+                continue
+            if s[i] == '"':
+                if state == 0:
+                    ans.extend(re.split(r'\s+', curr_piece))
+                    curr_piece = ''
+                    state = 1
+                elif state == 1:
+                    ans.append(None)  # use None instead of quoted text
+                    curr_piece = ''
+                    state = 0
+                else:
+                    raise Exception('syntax error')
+            elif s[i] == '\'':
+                if state == 0:
+                    ans.extend(re.split(r'\s+', curr_piece))
+                    curr_piece = ''
+                    state = 2
+                elif state == 2:
+                    ans.append(None)  # use None instead of quoted text
+                    curr_piece = ''
+                    state = 0
+                else:
+                    raise Exception('syntax error')
+            else:
+                curr_piece += s[i]
+            i += 1
+        if len(curr_piece) > 0:
+            ans.extend(re.split(r'\s+', curr_piece))
+        return ans
+
+    def contains_within(self, s):
+        struct = self.parse(s)
+        last_p = None
+        for item in struct:
+            if item is None:
+                continue
+            if item in (']', '['):
+                last_p = item
+            elif 'within' in item:
+                if last_p in (']', None):
+                    return True
+        return False
+
+    def parse(self, s):
+        result = []
+        ans = self.parse_lex_elems(s)
+        for item in ans:
+            x = self.split_by_parentheses(item)
+            result.extend(x)
+        result = [x for x in result if x != '']
+        return result
