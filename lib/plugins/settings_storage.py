@@ -15,7 +15,7 @@ import time
 import json
 
 
-class QueryStorage(object):
+class SettingsStorage(object):
 
     def __init__(self, conf, db):
         """
@@ -57,4 +57,4 @@ class QueryStorage(object):
 
 
 def create_instance(conf, db):
-    return QueryStorage(conf, db)
+    return SettingsStorage(conf, db)
