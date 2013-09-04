@@ -25,6 +25,9 @@ import locale
 import time
 from lxml import etree
 
+if not '_' in globals():
+    _ = lambda s: s
+
 
 class TagGeneratorException(Exception):
     """
@@ -87,8 +90,8 @@ def load_tag_descriptions(path, lang):
     lang = lang.split('_')[0]
     xml = etree.parse(open(path))
     root = xml.find('corpora/tagsets')
-    ans = [None for i in range(len(root))]
-    labels = [None for i in range(len(root))]
+    ans = [None] * len(root)
+    labels = [None] * len(root)
 
     for item in root:
         idx = int(item.attrib['position'])
@@ -128,7 +131,7 @@ class TagVariantLoader(object):
         ('?', r'\?'),
         ('}', r'\}'),
         ('!', r'\!')
-        )
+    )
 
     def __init__(self, corp_name, num_tag_pos):
         """
@@ -150,7 +153,8 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translations, label_table = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))
+        translations, label_table = load_tag_descriptions(settings.get('session', 'conf_path'),
+                                                          settings.get('session', 'lang'))
         item_sequences = tuple([tuple([item[0] for item in position]) for position in translations])
 
         if os.path.exists(path) \
@@ -172,7 +176,7 @@ class TagVariantLoader(object):
             for line in self.tags_file:
                 line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
                 for i in range(self.num_tag_pos):
-                    value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , line[i]))
+                    value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
                     elif i < len(translations):
@@ -181,7 +185,8 @@ class TagVariantLoader(object):
                             ans[i].add((value, '%s - %s' % (line[i], translation_table[line[i]])))
                     else:
                         ans[i].add((value, line[i]))
-                        logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in translation table' % (line[i], i))
+                        logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in '
+                                                         'translation table' % (line[i], i))
             ans_sorted = []
             for i in range(len(ans)):
                 cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
@@ -191,7 +196,7 @@ class TagVariantLoader(object):
             for i in range(len(ans_sorted)):
                 if len(ans_sorted[i]) == 1:
                     ans_sorted[i] = ()
-            data = json.dumps({ 'tags' : ans_sorted, 'labels' : label_table})
+            data = json.dumps({'tags': ans_sorted, 'labels': label_table})
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
