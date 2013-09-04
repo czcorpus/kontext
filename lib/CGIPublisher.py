@@ -356,7 +356,7 @@ class CGIPublisher(object):
             raise Exception('access denied')
         return path
 
-    def redirect(self, url, code=303):
+    def _redirect(self, url, code=303):
         self._headers.clear()
         self._headers['Location'] = url
 
@@ -377,7 +377,7 @@ class CGIPublisher(object):
         """
         Allows special operations to be done before the action itself is processed
         """
-        pass
+        return path, selectorname, args
 
     def _post_dispatch(self, methodname, tmpl, result):
         """
@@ -402,7 +402,7 @@ class CGIPublisher(object):
         try:
             named_args = {}
 
-            self._pre_dispatch(path, selectorname, named_args)
+            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
             self._post_dispatch(methodname, tmpl, result)
 

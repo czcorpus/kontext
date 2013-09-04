@@ -248,7 +248,7 @@ def get_default_corpus(corplist):
         for item in default_corp_list:
             if item in corplist:
                 return item
-        return None
+        return ''   # '' is 'empty corpus' (None cannot be used here)
     else:
         return get('corpora', 'default_corpora')[0]
 

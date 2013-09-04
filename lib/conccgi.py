@@ -101,6 +101,9 @@ class ConcCGI(UserCGI):
                         'structs', 'refs', 'lemma', 'lpos', 'pagesize',
                         'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
                         'gdexcnt', 'gdexconf', 'iquery', 'maincorp')
+
+    NO_OPERATION = 'nop'
+
     error = u''
     fc_lemword_window_type = u'both'
     fc_lemword_type = u'all'
@@ -166,7 +169,7 @@ class ConcCGI(UserCGI):
     # end
 
     add_vars = {}
-    corpname = None
+    corpname = ''  # must be an empty string and not None
     usesubcorp = u''
     subcname = u''
     subcpath = []
@@ -297,7 +300,9 @@ class ConcCGI(UserCGI):
             allowed_corpora = plugins.auth.get_corplist(self._user)
             self._fetch_corpname(form, allowed_corpora)
             if not self.corpname in allowed_corpora:
-                raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % self.corpname)
+                self.corpname = ''
+                path = [ConcCGI.NO_OPERATION]
+                self._redirect('login')
         else:
             self.corpname = ''
 
@@ -322,6 +327,8 @@ class ConcCGI(UserCGI):
         if not 'refs' in self.__dict__:
             self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
+
+        return path, selectorname, named_args
 
     def _post_dispatch(self, methodname, tmpl, result):
         """
@@ -378,7 +385,6 @@ class ConcCGI(UserCGI):
         cn = ''
         if 'json' in form:
             import json
-
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
         if 'corpname' in form and not cn:
             cn = form.getvalue('corpname')
@@ -551,6 +557,12 @@ class ConcCGI(UserCGI):
                 result['tourl'] = self.urlencode(conc_desc[0][3])
         if methodname.startswith('first'):
             result['show_cup_menu'] = self.is_err_corpus()
+
+    def nop(self):
+        """
+        Represents an empty operation
+        """
+        return {}
 
     kwicleftctx = '-10'
     kwicrightctx = '10'
