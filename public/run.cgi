@@ -40,7 +40,6 @@ import manatee
 
 import CGIPublisher
 from actions import Actions
-from usercgi import UserCGI
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
@@ -75,26 +74,6 @@ except ImportError:
 # implicit plugins END ###
 
 
-class BonitoCGI (Actions, UserCGI):
-
-    # UserCGI options
-    _options_dir = settings.get('corpora', 'options_dir')
-
-    # Actions options
-    cache_dir = settings.get('corpora', 'cache_dir')
-    gdexpath = [] # [('confname', '/path/to/gdex.conf'), ...]
-
-    def __init__(self, user=None, environ=os.environ):
-        UserCGI.__init__(self, environ=environ, user=user)
-        Actions.__init__(self, environ=environ)
-
-    def _user_defaults (self, user):
-        if user is not self._default_user:
-            self.subcpath.append ('%s/%s' % (settings.get('corpora', 'users_subcpath'), user))
-        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user)
-        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user)
-
-
 if __name__ == '__main__':
     import logging
     from logging import handlers
@@ -106,17 +85,7 @@ if __name__ == '__main__':
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
-    if ";prof=" in os.environ['REQUEST_URI'] or "&prof=" in os.environ['REQUEST_URI']:
-        import cProfile, pstats, tempfile
-        proffile = tempfile.NamedTemporaryFile()
-        cProfile.run('''BonitoCGI().run_unprotected (selectorname="corpname",
-                        outf=open(os.devnull, "w"))''', proffile.name)
-        profstats = pstats.Stats(proffile.name)
-        print "<pre>"
-        profstats.sort_stats('time','calls').print_stats(50)
-        profstats.sort_stats('cumulative').print_stats(50)
-        print "</pre>"
-    elif not settings.is_debug_mode():
-        BonitoCGI(environ=os.environ).run(selectorname='corpname')
+    if not settings.is_debug_mode():
+        Actions(environ=os.environ).run(selectorname='corpname')
     else:
-        BonitoCGI(environ=os.environ).run_unprotected(selectorname='corpname')
+        Actions(environ=os.environ).run_unprotected(selectorname='corpname')

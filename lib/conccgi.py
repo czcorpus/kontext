@@ -17,11 +17,10 @@ import os
 import cgi
 import json
 
-from usercgi import UserCGI
 import corplib
 import conclib
 import version
-from CGIPublisher import UserActionException, correct_types
+from CGIPublisher import CGIPublisher, UserActionException, correct_types
 import plugins
 import settings
 import taghelper
@@ -96,7 +95,7 @@ class ConcError(Exception):
         super(ConcError, self).__init__(msg)
 
 
-class ConcCGI(UserCGI):
+class ConcCGI(CGIPublisher):
     _conc_state_vars = ('corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
                         'structs', 'refs', 'lemma', 'lpos', 'pagesize',
                         'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
@@ -246,11 +245,12 @@ class ConcCGI(UserCGI):
     add_vars['findx_upload'] = [u'LastSubcorp']
 
     def __init__(self, environ):
-        super(UserCGI, self).__init__(environ=environ)
+        super(ConcCGI, self).__init__(environ=environ)
         self._curr_corpus = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
+        self.cache_dir = settings.get('corpora', 'cache_dir')
 
     def _log_request(self, user_settings, action_name):
         """
@@ -291,7 +291,7 @@ class ConcCGI(UserCGI):
         """
         Runs before main action is processed
         """
-        super(UserCGI, self)._pre_dispatch(path, selectorname, named_args)
+        super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
         self.environ = os.environ
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
@@ -306,7 +306,7 @@ class ConcCGI(UserCGI):
         else:
             self.corpname = ''
 
-        self._setup_user(self.corpname)
+        self._setup_user()
 
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
@@ -334,7 +334,7 @@ class ConcCGI(UserCGI):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
-        super(UserCGI, self)._post_dispatch(methodname, tmpl, result)
+        super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_persistent_items(), '%s' % methodname)
 
     def _attach_tag_builder(self, tpl_out):
@@ -428,7 +428,7 @@ class ConcCGI(UserCGI):
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        UserCGI._add_globals(self, result)
+        CGIPublisher._add_globals(self, result)
 
         if self.maincorp:
             thecorp = conclib.manatee.Corpus(self.maincorp)
