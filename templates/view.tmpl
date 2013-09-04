@@ -280,11 +280,11 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
     #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
     <div id="conclines-wrapper">
-        <table id="conclines">
         #filter None
         $align_heading($viewmode, $KWICCorps)
         #end filter
         #if $len($Lines) > 0
+            <table id="conclines">
             #for $i, $l in $enumerate($Lines)
               <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
               <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
