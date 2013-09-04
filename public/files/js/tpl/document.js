@@ -281,9 +281,14 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
         resetCorpusInfoBox = function () {
             $('#corpus-details-box .attrib-list tr.dynamic').remove();
+            if ($('#corpus-details-box .loader-animation').length === 0) {
+                $('#corpus-details-box').append('<img class="loader-animation" src="../files/img/ajax-loader.gif" />');
+            }
         };
 
-        createCorpusInfoBox = function () {
+        createCorpusInfoBox = function (okCallback, failCallback) {
+            resetCorpusInfoBox();
+
             $.ajax({
                 url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
                 dataType : 'json',
@@ -294,7 +299,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                         jqStructList = $('#corpus-details-box .struct-list'),
                         newRow;
 
-                    resetCorpusInfoBox();
+                    $('#corpus-details-box .loader-animation').remove();
 
                     jqInfoBox.find('.corpus-name').text(data.corpname);
                     jqInfoBox.find('.corpus-description').text(data.description);
@@ -334,9 +339,16 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                         jqStructList.append(newRow);
                     });
 
+                    if (typeof okCallback === 'function') {
+                        okCallback();
+                    }
+
                 },
                 error : function () {
                     resetCorpusInfoBox();
+                    if (typeof failCallback === 'function') {
+                        failCallback();
+                    }
                     lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
                 }
             });
@@ -351,7 +363,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             $('#corpus-details-box').modal({
                 minHeight: 400,
                 onShow : function () {
-                    createCorpusInfoBox('#corpus-detail-box');
+                    createCorpusInfoBox(null, function () { $.modal.close(); });
                 },
 
                 onClose : function () {

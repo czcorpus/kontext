@@ -101,6 +101,11 @@
     text-align:right;
 }
 
+#corpus-details-box .loader-animation {
+    display: block;
+    margin: 0 auto;
+}
+
 #corpus-search {
     text-align:right;
     white-space:nowrap;
