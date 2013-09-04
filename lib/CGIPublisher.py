@@ -290,8 +290,40 @@ class CGIPublisher(object):
         except ImportError:
             return False
 
-    def _setup_user(self, user=None, corpname=''):
-        pass
+    def _setup_user_paths(self, user_file_id):
+        if not self._anonymous:
+            self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
+        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
+        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
+
+    def _setup_user(self):
+        options = {}
+        if self._user:
+            user_file_id = self._user
+        else:
+            user_file_id = 'anonymous'
+        plugins.settings_storage.load(self._session_get('user', 'id'), options)
+        correct_types(options, self.clone_self(), selector=1)
+        self._setup_user_paths(user_file_id)
+        self.__dict__.update(options)
+
+    def _save_options(self, optlist=[], selector=''):
+        """
+        Saves user's options to a storage
+        """
+        if selector:
+            tosave = [(selector + ':' + opt, self.__dict__[opt])
+                      for opt in optlist if opt in self.__dict__]
+        else:
+            tosave = [(opt, self.__dict__[opt]) for opt in optlist
+                      if opt in self.__dict__]
+        options = {}
+        plugins.settings_storage.load(self._session_get('user', 'id'), options)
+        options.update(tosave)
+        if not self._anonymous:
+            plugins.settings_storage.save(self._session_get('user', 'id'), options)
+        else:
+            pass  # TODO save to the session
 
     def self_encoding(self):
         return 'iso-8859-1'
