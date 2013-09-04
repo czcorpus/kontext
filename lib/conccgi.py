@@ -281,15 +281,26 @@ class ConcCGI(UserCGI):
         return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
 
-    def _pre_dispatch(self, selectorname, named_args):
+    def _is_corpus_free_action(self, action):
+        return action in ('login', 'loginx', 'logoutx')
+
+    def _pre_dispatch(self, path, selectorname, named_args):
         """
         Runs before main action is processed
         """
+        super(UserCGI, self)._pre_dispatch(path, selectorname, named_args)
         self.environ = os.environ
-
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
-        self._fetch_corpname(form)
+
+        if not self._is_corpus_free_action(path[0]):
+            allowed_corpora = plugins.auth.get_corplist(self._user)
+            self._fetch_corpname(form, allowed_corpora)
+            if not self.corpname in allowed_corpora:
+                raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % self.corpname)
+        else:
+            self.corpname = ''
+
         self._setup_user(self.corpname)
 
         if 'json' in form:
@@ -308,7 +319,8 @@ class ConcCGI(UserCGI):
             choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
                                         self.gdexpath)
-        self._set_defaults()
+        if not 'refs' in self.__dict__:
+            self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
 
     def _post_dispatch(self, methodname, tmpl, result):
@@ -362,7 +374,7 @@ class ConcCGI(UserCGI):
             plugins.query_storage.write(user=self._user, corpname=self.corpname,
                                         url=url, tmp=1, description=description, query_id=None, public=0)
 
-    def _fetch_corpname(self, form):
+    def _fetch_corpname(self, form, corplist):
         cn = ''
         if 'json' in form:
             import json
@@ -373,15 +385,13 @@ class ConcCGI(UserCGI):
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            if not cn in plugins.auth.get_corplist(self._user):
-                raise UserActionException(_('Access to the corpus "%s" or its requested variant denied') % cn)
             self.corpname = cn
 
         if not self.corpname:
             if self._session_get('last_corpus'):
                 self.corpname = self._session['last_corpus']
             else:
-                self.corpname = 'susanne'
+                self.corpname = settings.get_default_corpus(corplist)
 
     def self_encoding(self):
         enc = self._corp().get_conf('ENCODING')
@@ -396,22 +406,21 @@ class ConcCGI(UserCGI):
         This should be preferred over accessing _curr_corpus attribute
         because they may produce different results!
         """
-        if (not self._curr_corpus or
-                (self.usesubcorp and not hasattr(self._curr_corpus, 'subcname'))):
-            self._curr_corpus = self.cm.get_Corpus(self.corpname,
-                                                   self.usesubcorp)
-            # TODO opravit poradne!
+        if self.corpname:
+            if not self._curr_corpus or (self.usesubcorp and not hasattr(self._curr_corpus, 'subcname')):
+                self._curr_corpus = self.cm.get_Corpus(self.corpname, self.usesubcorp)
+                # TODO opravit poradne!
             self._curr_corpus._conc_dir = self._conc_dir
-        return self._curr_corpus
-
-    def _set_defaults(self):
-        if not 'refs' in self.__dict__:
-            self.refs = self._corp().get_conf('SHORTREF')
+            return self._curr_corpus
+        else:
+            from empty_corpus import EmptyCorpus
+            return EmptyCorpus()
 
     def _add_globals(self, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
+        It is called after an action is processed but before any output starts
         """
         UserCGI._add_globals(self, result)
 
@@ -442,7 +451,7 @@ class ConcCGI(UserCGI):
         result['user_info'] = self._session['user']
         corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
-            result['corp_web'] = corp_conf_info['web']
+            result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
         if self.usesubcorp:
@@ -489,7 +498,7 @@ class ConcCGI(UserCGI):
                                               ('lpos', self.lpos),
                                               ('usesubcorp', self.usesubcorp),
                                               ])
-        result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['num_tag_pos'] = settings.get_corpus_info(self.corpname).get('num_tag_pos', 0)
         result['supports_password_change'] = settings.supports_password_change()
 
         # is there a concordance information in session?

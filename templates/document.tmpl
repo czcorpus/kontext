@@ -233,18 +233,20 @@ $_ca_topbar
     </div>
 
     <div id="active-corpus">
-        $_('corpus')
-        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
-        <div id="corp-size-information">
-        #if $usesubcorp
-            <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
-        #else
-            <strong>$corp_size</strong> $_('positions')
+        #if $corp_full_name
+            $_('corpus')
+            <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+            <div id="corp-size-information">
+            #if $usesubcorp
+                <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
+            #else
+                <strong>$corp_size</strong> $_('positions')
+            #end if
+            </div>
+            <div id="corpus-citation-link">
+                <a href="#">$_('how to cite the corpus')</a>
+            </div>
         #end if
-        </div>
-        <div id="corpus-citation-link">
-            <a href="#">$_('how to cite the corpus')</a>
-        </div>
 
     </div>
 
