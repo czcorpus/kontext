@@ -101,7 +101,7 @@ class UserCGI (CGIPublisher.CGIPublisher):
             raise UserActionException(settings.auth.get_required_password_properties())
 
         settings.auth.update_user_password(new_passwd)
-        self.redirect(settings.get_root_uri())
+        self._redirect(settings.get_root_uri())
 
     def login(self):
         self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
@@ -113,9 +113,9 @@ class UserCGI (CGIPublisher.CGIPublisher):
         user = plugins.auth.login(username, password)
         if user is not None:
             self._session['user'] = user
-            self.redirect('%s%s' % (settings.get_root_url(), 'first_form'))
+            self._redirect('%s%s' % (settings.get_root_url(), 'first_form'))
         else:
-            self.redirect('login')
+            self._redirect('login')
         return {}
 
     def logoutx(self):

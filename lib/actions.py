@@ -1767,7 +1767,7 @@ class Actions(ConcCGI):
             path = path.encode("utf-8")
         if conclib.manatee.create_subcorpus(path, self._corp(), structname,
                                             subquery):
-            self.redirect('subcorp_list?corpname=%s' % self.corpname)
+            self._redirect('subcorp_list?corpname=%s' % self.corpname)
             return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
@@ -2235,5 +2235,5 @@ class Actions(ConcCGI):
     def to(self, q=''):
         row = plugins.query_storage.get_user_query(self._user, q)
         if row:
-            self.redirect('%s&query_id=%s' % (row['url'], row['id']))
+            self._redirect('%s&query_id=%s' % (row['url'], row['id']))
         return {}

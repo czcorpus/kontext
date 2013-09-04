@@ -25,11 +25,13 @@ import locale
 import time
 from lxml import etree
 
+
 class TagGeneratorException(Exception):
     """
     General error for taghelper module
     """
     pass
+
 
 def create_tag_variants_file_path(corpus_name):
     """
@@ -48,6 +50,7 @@ def create_tag_variants_file_path(corpus_name):
         raise TagGeneratorException('Empty corpus name')
     return '%s/%s' % (settings.get('corpora', 'tags_src_dir'), corpus_name)
 
+
 def tag_variants_file_exists(corpus_name):
     """
     Tests whether the path to the provided corpus_name exists
@@ -60,7 +63,9 @@ def tag_variants_file_exists(corpus_name):
     -------
     answer : bool
     """
-    return os.path.exists(create_tag_variants_file_path(corpus_name))
+    if corpus_name:
+        return os.path.exists(create_tag_variants_file_path(corpus_name))
+    return False
 
 
 def load_tag_descriptions(path, lang):
