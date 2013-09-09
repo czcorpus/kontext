@@ -72,6 +72,7 @@ $ss.s	#slurp
 
 #end for
 #elif $saveformat == 'csv' ## CSV format
+$bom_prefix
 #for $row in $data
 $row#slurp
 #end for

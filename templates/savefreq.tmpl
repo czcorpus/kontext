@@ -54,6 +54,7 @@ $d.get('arg')#slurp
 #end filter
 ##
 #elif $saveformat == 'csv'
+$bom_prefix
 #for $item in $csv_rows
 $item#slurp
 #end for
