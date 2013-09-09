@@ -110,6 +110,7 @@ $k.str	$k.freq	$k.arf	$k.arf_mill	$k.get('freq_ref', '0')	$k.arf_ref	$k.arf_mill
   #end if
 #end if
 #elif $saveformat == 'csv'   ## CSV format
+$bom_prefix
 #for $item in $data
 $item#slurp
 #end for
