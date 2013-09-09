@@ -1322,6 +1322,7 @@ class ConcCGI(UserCGI):
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
+            from codecs import BOM_UTF8
 
             self._headers['Content-Type'] = 'text/csv'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
@@ -1333,9 +1334,12 @@ class ConcCGI(UserCGI):
                 csv_writer.writerow([item['n'] for item in result['Blocks'][0]['Head'][:-2]] + ['freq', 'freq [%]'])
             # then write the data (first block only)
             for item in result['Blocks'][0]['Items']:
-                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item['rel'])])
+                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
 
-            tpl_data = {'csv_rows': [row.decode('utf-8') for row in csv_buff.rows]}
+            tpl_data = {
+                'csv_rows': [row.decode('utf-8') for row in csv_buff.rows],
+                'bom_prefix': BOM_UTF8.decode('utf-8')
+            }
 
         return tpl_data
 
@@ -1472,6 +1476,7 @@ class ConcCGI(UserCGI):
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
+            from codecs import BOM_UTF8
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
@@ -1485,7 +1490,10 @@ class ConcCGI(UserCGI):
             for item in result['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
 
-            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+            tpl_data = {
+                'data': [row.decode('utf-8') for row in csv_buff.rows],
+                'bom_prefix': BOM_UTF8.decode('utf-8')
+            }
         return tpl_data
 
     add_vars['savecoll'] = ['Desc', 'concsize']
@@ -1873,6 +1881,7 @@ class ConcCGI(UserCGI):
             tpl_data = ans
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
+            from codecs import BOM_UTF8
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
@@ -1882,7 +1891,10 @@ class ConcCGI(UserCGI):
             # then write the data
             for item in ans['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])))
-            tpl_data = {'data': [row.decode('utf-8') for row in csv_buff.rows]}
+            tpl_data = {
+                'data': [row.decode('utf-8') for row in csv_buff.rows],
+                'bom_prefix': BOM_UTF8.decode('utf-8')
+            }
             self._headers['Content-Type'] = 'text/csv'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
 
@@ -2230,6 +2242,7 @@ class ConcCGI(UserCGI):
                 tpl_data.update(data)
             elif saveformat == 'csv':
                 from butils import UnicodeCSVWriter, Writeable
+                from codecs import BOM_UTF8
 
                 self._headers['Content-Type'] = 'text/csv'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
@@ -2257,7 +2270,10 @@ class ConcCGI(UserCGI):
                         if 'Align' in line:
                             row += process_lang(line['Align'], left_key, kwic_key, right_key)
                         csv_writer.writerow(row)
-                tpl_data.update({'data': [row.decode('utf-8') for row in csv_buff.rows]})
+                tpl_data.update({
+                    'data': [row.decode('utf-8') for row in csv_buff.rows],
+                    'bom_prefix': BOM_UTF8.decode('utf-8')
+                })
             else:
                 raise UserActionException(_('Unknown export data type'))
             return tpl_data
