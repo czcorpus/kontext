@@ -2308,6 +2308,7 @@ class Actions(ConcCGI):
                                                           to_date=to_date, offset=offset, limit=limit, types=types)
         else:
             rows = []
+
         return {
             'data': rows,
             'from_date': from_date,

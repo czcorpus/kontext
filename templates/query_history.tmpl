@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #encoding UTF-8
 #from cmpltmpl.document import document
+#from templating.filters import *
+
 #extends document
 
 #def title
@@ -42,6 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <th>$_('date')</th>
         <th>$_('corpus')</th>
         <th>$_('CQL')</th>
+        <th>$_('additional actions')</th>
         <th></th>
     </tr>
 #set $i = 0
@@ -50,7 +53,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <td>$row.created</td>
     <td>$row.corpname</td>
     <td>
-        #filter None#$row.cql#end filter#
+        #if $len($row.params_description) > 0
+        $row.params_description[0][1]
+        #end if
+    </td>
+    <td>
+        #set $j = 0
+        #for $item in $row.params_description[1:]
+            <span class="query-action" title="#filter $HtmlEscape#$item[1]#end filter#">$item[0]</span>
+            #if $j < $len($row.params_description[1:]) - 1
+            +
+            #end if
+        #set $j += 1
+        #end for
     </td>
     <td>
         <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('open')</a>

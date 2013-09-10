@@ -20,7 +20,7 @@ class QueryStorageException(Exception):
 
 class QueryStorage(object):
 
-    cols = ('id', 'user_id', 'corpname', 'url', 'cql', 'description', 'created', 'updated', 'public', 'tmp')
+    cols = ('id', 'user_id', 'corpname', 'url', 'params', 'description', 'created', 'updated', 'public', 'tmp')
 
     def __init__(self, conf, db):
         """
@@ -41,7 +41,7 @@ class QueryStorage(object):
             return ans[0]
         return None
 
-    def write(self, user_id, corpname, url, public, tmp, cql=None, description=None,  query_id=None):
+    def write(self, user_id, corpname, url, public, tmp, params=None, description=None,  query_id=None):
         """
         Writes data as a new saved query
 
@@ -55,9 +55,9 @@ class QueryStorage(object):
             if not query_id:
                 created = int(time.mktime(datetime.now().timetuple()))
                 cursor.execute(u"INSERT INTO noske_saved_queries "
-                               u"(user_id, corpname, url, cql, description, created, public, tmp) "
+                               u"(user_id, corpname, url, params, description, created, public, tmp) "
                                u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                              (user_id, corpname, url, cql, description, created, public, tmp))
+                              (user_id, corpname, url, params, description, created, public, tmp))
                 cursor.execute('SELECT LAST_INSERT_ID()')
                 ans = cursor.fetchone()
                 if ans:
@@ -66,7 +66,7 @@ class QueryStorage(object):
                     raise QueryStorageException('Failed to create record')
             else:
                 updated = int(time.mktime(datetime.now().timetuple()))
-                # 'cql' attribute is omitted deliberately
+                # 'params' attribute is omitted deliberately
                 cursor.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
                                u"tmp = %s WHERE user_id = %s AND id = %s", (description, updated, public, tmp, user_id, query_id))
 
@@ -81,6 +81,9 @@ class QueryStorage(object):
         """
         Returns list of queries of a specific user.
         """
+        import json
+        import conclib
+
         sql_params = []
         opt_sql = []
 
@@ -124,6 +127,8 @@ class QueryStorage(object):
         cursor.execute(sql, tuple(sql_params))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
         for row in rows:
+            row['params'] = json.loads(row['params'])
+            row['params_description'] = conclib.get_conc_desc(q=row['params'])
             row['description'] = self.decode_description(row['description'])
             row['created'] = datetime.fromtimestamp(row['created'])
             row['url'] = '%s&query_id=%s' % (row['url'], row['id'])
