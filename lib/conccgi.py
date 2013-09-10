@@ -385,7 +385,7 @@ class ConcCGI(CGIPublisher):
             else:
                 add_q = ()
             description = ''  # "%s::\n\n\t%s\n" % (_('Notes'), ','.join(add_q))
-            plugins.query_storage.write(user=self._user, corpname=self.corpname,
+            plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
                                         url=url, cql=base_q, tmp=1, description=description, query_id=None, public=0)
 
     def _fetch_corpname(self, form, corplist):
