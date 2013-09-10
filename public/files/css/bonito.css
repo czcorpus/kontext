@@ -360,6 +360,11 @@
     display: inline-block;
     padding: 3px 6px;
     font-weight: bold;
+    z-index: 10000;
+    position: relative;
+    border-width: 1px 1px 0 1px;
+    border-style: solid;
+    border-color: #FFFFFF;
 }
 
 #menu-level-1 li.current a {
@@ -401,6 +406,9 @@
 #menu-level-1 > li.active {
     background-color: #D2EDC0;
     border-radius: 5px 5px 0 0;
+    border-width: 1px 1px 0 1px;
+    border-style: solid;
+    border-color: #C7E7B2;
 }
 
 #menu-level-1 li ul {
@@ -414,7 +422,9 @@
 #menu-level-2 ul {
     position: absolute;
     background-color: #D2EDC0;
-    margin: 0;
+    border: 1px solid #C7E7B2;
+    margin: -1px 0 0 0;
+    z-index: 0;
 }
 
 #menu-level-2 ul li {
