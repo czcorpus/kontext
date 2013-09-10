@@ -287,6 +287,10 @@ class ConcCGI(CGIPublisher):
     def _is_corpus_free_action(self, action):
         return action in ('login', 'loginx', 'logoutx')
 
+    def _init_default_settings(self, options):
+        if 'shuffle' not in options:
+            options['shuffle'] = 1
+
     def _pre_dispatch(self, path, selectorname, named_args):
         """
         Runs before main action is processed
@@ -306,7 +310,7 @@ class ConcCGI(CGIPublisher):
         else:
             self.corpname = ''
 
-        self._setup_user()
+        self._setup_action_params(self._init_default_settings)
 
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))

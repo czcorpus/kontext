@@ -296,7 +296,18 @@ class CGIPublisher(object):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
-    def _setup_user(self):
+    def _setup_action_params(self, actions=None):
+        """
+        Sets-up parameters related to processing of current action.
+        This typically includes concordance-related values (to be able to keep the state),
+        user's options etc.
+
+        Parameters
+        ----------
+        actions : callable
+            a function taking a single parameter (a dictionary) which can can be used
+            to alter some of the parameters
+        """
         options = {}
         if self._user:
             user_file_id = self._user
@@ -304,6 +315,8 @@ class CGIPublisher(object):
             user_file_id = 'anonymous'
         plugins.settings_storage.load(self._session_get('user', 'id'), options)
         correct_types(options, self.clone_self(), selector=1)
+        if callable(actions):
+            actions(options)
         self._setup_user_paths(user_file_id)
         self.__dict__.update(options)
 
