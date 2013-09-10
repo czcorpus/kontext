@@ -932,20 +932,21 @@ pre {
 }
 
 table.data {
+    border-collapse: collapse;
     border: 1px solid #D2EDC0;
     border-radius: 5px;
 
 }
 
-table.data td,table.data th {
-    padding:3px 5px;
+table.data td,
+table.data th {
+    padding: 3px 5px;
 }
 
 table.data th {
     background-color: #FFFFFF;
     color: #CC0066;
     font-weight: 700;
-    text-align: left;
 }
 
 table.data th a {
@@ -954,22 +955,6 @@ table.data th a {
 
 table.data th.super {
     text-align:center;
-}
-
-table.data tr.even {
-    background-color:#dee;
-}
-
-table.data tr:hover {
-    background-color:#ffb;
-}
-
-table.data tr.odd {
-    background-color:#fff;
-}
-
-table.data tr.odd:hover {
-    background-color:#ffb;
 }
 
 table.envelope {

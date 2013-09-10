@@ -45,7 +45,7 @@ require(['tpl/subcorpList', 'domReady!'], function(pageSelf, domReady) {
     </tr>
     #set $counter = 1
     #for $item in $subcorp_list
-    <tr #if $counter % 2 == 0#class="odd"#end if#>
+    <tr #if $counter % 2 == 1#class="even"#end if#>
         <td>$item.n</td>
         <td class="num">#filter $IntegerFormatter# $item.size #end filter#</td>
         <td>$item.created</td>
