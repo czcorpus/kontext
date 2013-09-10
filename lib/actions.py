@@ -273,13 +273,13 @@ class Actions(ConcCGI):
         query_desc_raw = ''
         is_public = True
         if query_id and plugins.has_plugin('query_storage'):
-            ans = plugins.query_storage.get_user_query(self._user, query_id)
+            ans = plugins.query_storage.get_user_query(self._session_get('user', 'id'), query_id)
             if ans:
                 query_desc_raw = ans['description']
                 query_desc = plugins.query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
             else:
-                out['error'] = _('Cannot access user-defined query description.')
+                out['error'] = _('Cannot access recorded query.')
                 query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
         conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname, cache_dir=self.cache_dir,
@@ -2273,21 +2273,21 @@ class Actions(ConcCGI):
 
     def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
         html = plugins.query_storage.decode_description(description)
-        query_id = plugins.query_storage.write(user=self._user, corpname=self.corpname,
-                                               url=url, tmp=0, description=description, query_id=query_id, public=int(public))
+        query_id = plugins.query_storage.write(user=self._session_get('user', 'id'), corpname=self.corpname, url=url,
+                                               tmp=0, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html, 'queryId': query_id}
     ajax_save_query.return_type = 'json'
 
     def ajax_delete_query(self, query_id=''):
-        plugins.query_storage.delete_user_query(self._user, query_id)
+        plugins.query_storage.delete_user_query(self._session_get('user', 'id'), query_id)
         return {}
     ajax_delete_query.return_type = 'json'
 
     def ajax_undelete_query(self, query_id=''):
         from datetime import datetime
 
-        plugins.query_storage.undelete_user_query(self._user, query_id)
-        query = plugins.query_storage.get_user_query(self._user, query_id)
+        plugins.query_storage.undelete_user_query(self._session_get('user', 'id'), query_id)
+        query = plugins.query_storage.get_user_query(self._session_get('user', 'id'), query_id)
         desc = plugins.query_storage.decode_description(query['description'])
         autosaved_class = ' autosaved' if query['tmp'] else ''
         notification_autosaved = "| %s" % _('autosaved') if query['tmp'] else ''
@@ -2304,8 +2304,8 @@ class Actions(ConcCGI):
     def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
         self._reset_session_conc()
         if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(self._user, from_date=from_date, to_date=to_date,
-                                                          offset=offset, limit=limit, types=types)
+            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
+                                                          to_date=to_date, offset=offset, limit=limit, types=types)
         else:
             rows = []
         return {
@@ -2316,7 +2316,7 @@ class Actions(ConcCGI):
         }
 
     def to(self, q=''):
-        row = plugins.query_storage.get_user_query(self._user, q)
+        row = plugins.query_storage.get_user_query(self._session_get('user', 'id'), q)
         if row:
             self._redirect('%s&query_id=%s' % (row['url'], row['id']))
         return {}
