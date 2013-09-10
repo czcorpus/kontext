@@ -2302,6 +2302,9 @@ class Actions(ConcCGI):
     ajax_undelete_query.return_type = 'json'
 
     def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-view')
         self._reset_session_conc()
         if plugins.has_plugin('query_storage'):
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
