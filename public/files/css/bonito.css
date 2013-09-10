@@ -932,7 +932,7 @@ pre {
 }
 
 table.data {
-    border: 1px solid #DAE1D9;
+    border: 1px solid #D2EDC0;
     border-radius: 5px;
 
 }
@@ -1237,6 +1237,13 @@ table#multilevel-freq-params td.level {
 table.query-history {
     border: 1px solid #D2EDC0;
     border-collapse: collapse;
+}
+
+.query-history span.query-action {
+    border: 1px solid #494949;
+    color: #494949;
+    border-radius: 3px;
+    padding: 1px 2px;
 }
 
 table.query-history th,

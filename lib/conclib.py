@@ -608,7 +608,7 @@ class PyConc (manatee.Concordance):
                            0, self.corpname)
             manatee.Concordance.__init__(self, corp, ws.poss())
         else:
-            raise RuntimeError(_('Unknown action'))
+            raise RuntimeError(_('Unknown action: %s') % action)
 
     def command_g(self, options):
         # sort according to linegroups

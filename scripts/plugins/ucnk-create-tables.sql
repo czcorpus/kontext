@@ -15,7 +15,7 @@ CREATE TABLE noske_saved_queries (
   user_id int NOT NULL,
   corpname varchar(255) NOT NULL,
   url text NOT NULL,
-  cql text,
+  params text,
   description text,
   public int(11) NOT NULL DEFAULT '0',
   created int(11) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE noske_saved_queries (
   tmp int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (id),
   UNIQUE KEY export_id (export_id),
-  FOREIGN KEY (user_id) REFERENCES user (id)
+  KEY (user_id)
 ) ENGINE=InnoDB;
 
 

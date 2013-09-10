@@ -378,15 +378,9 @@ class ConcCGI(CGIPublisher):
             url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
                                                                self.usesubcorp, q_encoded)
 
-            if len(self.q) > 0:
-                base_q = self.q[0].split(',', 1)[1]
-            if len(self.q) > 1:
-                add_q = tuple(self.q[1:])
-            else:
-                add_q = ()
             description = ''  # "%s::\n\n\t%s\n" % (_('Notes'), ','.join(add_q))
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                        url=url, cql=base_q, tmp=1, description=description, query_id=None, public=0)
+                                        url=url, params=json.dumps(self.q), tmp=1, description=description, query_id=None, public=0)
 
     def _fetch_corpname(self, form, corplist):
         cn = ''
