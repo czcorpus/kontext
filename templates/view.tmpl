@@ -198,8 +198,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #end if
 
             $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#end filter#</strong>
-            #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
-            | <span class="separ">#end if</span>
+            #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>#end if#
             <span id="conc-calc-info" title="$concsize">#slurp
             #if $concsize != $fullsize
                 #set $l=$locale.format("%d",$concsize,grouping=True)
