@@ -193,6 +193,7 @@ class Actions(ConcCGI):
             'result_arf': out.get('result_arf', None),
             'result_shuffled': out.get('result_shuffled', False)
         }
+        self._save_query()
         return out
 
     ConcCGI.add_vars['view'] = ['orig_query']
@@ -733,8 +734,6 @@ class Actions(ConcCGI):
                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
-
-        self._save_query()
         return self.view()
 
     first.template = 'view.tmpl'
@@ -785,7 +784,6 @@ class Actions(ConcCGI):
             self.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
                                              rank, query))
         try:
-            self._save_query()
             return self.view()
         except:
             if within:

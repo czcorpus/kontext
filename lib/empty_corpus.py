@@ -13,6 +13,9 @@
 
 class EmptyCorpus(object):
     """
+    EmptyCorpus serves as kind of a fake corpus to keep Bonito operational
+    in some special cases (= cases where we do not need any corpus to be
+    instantiated).
     """
 
     def __init__(self):

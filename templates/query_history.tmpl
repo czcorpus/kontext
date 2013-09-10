@@ -35,27 +35,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end def
 
 #block main
-<h2>$_('Query history')</h2>
+<h2>$_('Recent queries')</h2>
 
-<h3>$_('Filter')</h3>
-<form action="">
-    $_('from date'): <input id="from-date-filter" type="text" name="from_date" value="$from_date" size="8" /> ,
-    $_('to date'): <input id="to-date-filter" type="text" name="to_date" value="$to_date" size="8" /><br />
-    <label for="filter-autosaved">$_('autosaved')</label>
-    <input id="filter-autosaved" type="checkbox" name="types" value="auto-saved" #if 'auto-saved' in $types#checked="checked"#end if# />
-    <label for="filter-manually-saved">$_('saved manually')</label>
-    <input id="filter-manually-saved" type="checkbox" name="types" value="manually-saved" #if 'manually-saved' in $types#checked="checked"#end if# />
-    <br />
-    <button type="submit">$_('Apply')</button>
-</form>
-
+<table border="0" class="query-history">
+    <tr>
+        <th>$_('date')</th>
+        <th>$_('corpus')</th>
+        <th>$_('CQL')</th>
+        <th></th>
+    </tr>
+#set $i = 0
 #for $row in $data
-<div class="query-history-item#if $row.tmp# autosaved#end if#" data-query-id="$row.id">
-    <h4 class="info">$row.created | <span class="corpname">$row.corpname</span>
-    #if $row.tmp#| $_('autosaved')#end if#</h4>
-    <h4 class="actions"> <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('open')</a> | <a class="delete" href="#">$_('delete')</a></h4>
-    #filter None#$row.description#end filter#
-</div>
+<tr class="query-history-item#if $row.tmp# autosaved#end if# #if $i % 2 == 1#even#end if#" data-query-id="$row.id">
+    <td>$row.created</td>
+    <td>$row.corpname</td>
+    <td>
+        #filter None#$row.cql#end filter#
+    </td>
+    <td>
+        <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('open')</a>
+    </td>
+</tr>
+    #set $i += 1
 #end for
+</table>
 
 #end block
