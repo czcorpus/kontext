@@ -10,18 +10,22 @@ primary key(id)) ENGINE=InnoDB;
 
 
 CREATE TABLE noske_saved_queries (
-    id VARCHAR(255) NOT NULL,
-    user VARCHAR(255) NOT NULL,
-    corpname VARCHAR(255) NOT NULL,
-    url TEXT NOT NULL,
-    description TEXT,
-    public INTEGER NOT NULL DEFAULT 0,
-    created INTEGER NOT NULL,
-    updated INTEGER,
-    deleted INTEGER, 
-    tmp INTEGER NOT NULL default 1,
-    PRIMARY KEY(id),
-    FOREIGN KEY(user) REFERENCES user(user)
+  id int(11) NOT NULL AUTO_INCREMENT,
+  export_id varchar(255) DEFAULT NULL,
+  user varchar(255) NOT NULL,
+  corpname varchar(255) NOT NULL,
+  url text NOT NULL,
+  cql text,
+  description text,
+  public int(11) NOT NULL DEFAULT '0',
+  created int(11) NOT NULL,
+  updated int(11) DEFAULT NULL,
+  deleted int(11) DEFAULT NULL,
+  tmp int(11) NOT NULL DEFAULT '1',
+  PRIMARY KEY (id),
+  UNIQUE KEY export_id (export_id),
+  KEY user (user),
+  CONSTRAINT noske_saved_queries_ibfk_1 FOREIGN KEY (user) REFERENCES user (user)
 ) ENGINE=InnoDB;
 
 
