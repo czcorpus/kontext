@@ -115,9 +115,6 @@ class Actions(ConcCGI):
             if k in self.__dict__:
                 self.__dict__[k] = v
 
-        if self.shuffle == 1 and 'f' not in self.q:
-            self.q.append('f')
-
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.q))
 
         self.righttoleft = False
@@ -342,10 +339,9 @@ class Actions(ConcCGI):
 
     ConcCGI.add_vars['viewattrs'] = ['concsize']
 
-    def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', shuffle=0, ctxunit=''):
+    def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', ctxunit=''):
         self.gdexcnt = gdexcnt
         self.gdexconf = gdexconf
-        self.shuffle = shuffle
 
         if ctxunit == '@pos':
             ctxunit = ''
@@ -371,13 +367,13 @@ class Actions(ConcCGI):
         self._set_new_viewattrs(setattrs=setattrs, allpos=allpos, setstructs=setstructs, setrefs=setrefs)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize'], self.corpname)
         # TODO refs_up ???
-        return self.view(view_params={'shuffle': shuffle})
+        return self.view()
 
     viewattrsx.template = 'view.tmpl'
 
     def viewopts(self):
         from tbl_settings import tbl_labels
-
+        logging.getLogger(__name__).debug('shuffle: %s' % self.shuffle)
         out = {
             'newctxsize': self.kwicleftctx[1:],
             'tbl_labels': tbl_labels
@@ -387,7 +383,7 @@ class Actions(ConcCGI):
     def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
-                               shuffle=shuffle, ctxunit=ctxunit)
+                               ctxunit=ctxunit)
         self._save_options(['pagesize', 'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
                             'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
         return self.view()
@@ -734,6 +730,8 @@ class Actions(ConcCGI):
                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
+        if self.shuffle == 1 and 'f' not in self.q:
+            self.q.append('f')
         return self.view()
 
     first.template = 'view.tmpl'
