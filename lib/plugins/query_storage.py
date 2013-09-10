@@ -14,9 +14,13 @@ from datetime import datetime
 import time
 
 
+class QueryStorageException(Exception):
+    pass
+
+
 class QueryStorage(object):
 
-    cols = ('id', 'user', 'corpname', 'url', 'description', 'created', 'updated', 'public', 'tmp')
+    cols = ('id', 'user', 'corpname', 'url', 'cql', 'description', 'created', 'updated', 'public', 'tmp')
 
     def __init__(self, conf, db):
         """
@@ -29,7 +33,15 @@ class QueryStorage(object):
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
-    def write(self, user, corpname, url, public, tmp, description=None,  query_id=None):
+    def _users_last_record_url(self, user):
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT url FROM noske_saved_queries WHERE user = %s ORDER BY created DESC LIMIT 1', (user,))
+        ans = cursor.fetchone()
+        if ans:
+            return ans[0]
+        return None
+
+    def write(self, user, corpname, url, public, tmp, cql=None, description=None,  query_id=None):
         """
         Writes data as a new saved query
 
@@ -37,31 +49,33 @@ class QueryStorage(object):
         -------
         str : id of the query (either new or existing)
         """
+        last_url = self._users_last_record_url(user)
+        if url != last_url:
+            cursor = self.conn.cursor()
+            if not query_id:
+                created = int(time.mktime(datetime.now().timetuple()))
+                cursor.execute(u"INSERT INTO noske_saved_queries "
+                               u"(user, corpname, url, cql, description, created, public, tmp) "
+                               u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                              (user, corpname, url, cql, description, created, public, tmp))
+                cursor.execute('SELECT LAST_INSERT_ID()')
+                ans = cursor.fetchone()
+                if ans:
+                    query_id = ans[0]
+                else:
+                    raise QueryStorageException('Failed to create record')
+            else:
+                updated = int(time.mktime(datetime.now().timetuple()))
+                # 'cql' attribute is omitted deliberately
+                cursor.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
+                               u"tmp = %s WHERE user = %s AND id = %s", (description, updated, public, tmp, user, query_id))
 
-        cursor = self.conn.cursor()
-
-        def id_exists(id):
-            cursor.execute("SELECT COUNT(*) FROM noske_saved_queries WHERE id = %s LIMIT 1", (id,))
-            return cursor.fetchone()[0]
-
-        if not query_id:
-            created = int(time.mktime(datetime.now().timetuple()))
-            query_id = self.make_query_hash(user, url)
-            i = 5
-            while id_exists(query_id[:i]) and i < 32:
-                i += 1
-            query_id = query_id[:i]
-            cursor.execute(u"INSERT INTO noske_saved_queries (id, user, corpname, url, description, created, public, tmp) "
-                           u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                          (query_id, user, corpname, url, description, created, public, tmp))
+            self.delete_old_records(cursor, user)
+            self.conn.commit()
+            return query_id
         else:
-            updated = int(time.mktime(datetime.now().timetuple()))
-            cursor.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
-                           u"tmp = %s WHERE user = %s AND id = %s", (description, updated, public, tmp, user, query_id))
-
-        self.delete_old_records(cursor, user)
-        self.conn.commit()
-        return query_id
+            # if latest action equals to user's previous action then nothing is done
+            return None
 
     def get_user_queries(self, user, from_date=None, to_date=None, offset=0, limit=None, types=None):
         """

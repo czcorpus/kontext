@@ -1234,99 +1234,22 @@ table#multilevel-freq-params td.level {
     font-weight: bold;
 }
 
-#query-desc-wrapper {
-    margin-top: 20px;
+table.query-history {
+    border: 1px solid #D2EDC0;
+    border-collapse: collapse;
 }
 
-#query-desc-wrapper textarea {
-    display: block;
-    margin: 0;
-    padding: 10px;
+table.query-history th,
+table.query-history td {
+    padding: 4px 10px;
 }
 
-#query-desc-wrapper button {
-    display: inline-block;
-}
-
-#query-desc-view {
-    width: 500px;
-    height: 350px;
-    border-style: solid;
-    border-color: #9FC4E0;
-    border-width: 1px 0 0 0;
-    background-color: #CCE3F4;
-    overflow-y: scroll;
-    padding: 10px;
-}
-
-#query-desc-view:hover {
-    background-color: #FFFFFF;
-    border: 1px solid #AA3333;
-}
-
-#query-desc-wrapper textarea {
-    width: 500px;
-    height: 350px;
-    border: 1px solid #AA3333;
-}
-
-.query-history-item {
-    width: 80%;
-}
-
-.query-history-item .document {
-    clear: both;
-    border-style: solid;
-    border-color: #9FC4E0;
-    border-width: 1px 0 0 0;
-    background-color: #D2EDC0;
-    margin-bottom: 20px;
-    padding: 10px 5px;
-}
-
-.query-history-item h4.info {
-    width: 40%;
-    float: left;
-}
-
-.query-history-item h4.info .corpname {
-    font-weight: bold;
-}
-
-.query-history-item h4.actions {
-    width: 40%;
-    float: right;
-    text-align: right;
-}
-
-.query-history-item h4 {
-    margin: 0 0 3px 0;
+table.query-history th {
+    color: #CC0066;
 }
 
 .query-export-url {
     margin: 20px 0;
-}
-
-.query-history-item h4 {
-    font-weight: normal;
-    margin-left: 10px;
-}
-
-.query-history-item h4 a.delete {
-    color: #E20000;
-}
-
-.query-history-item h4 a.open {
-    font-weight: bold;
-}
-
-.query-history-item.autosaved .document {
-    background-color: #DAE1D9;
-    border-color: #A7A7A7;
-}
-
-#desc-area-switch-hint {
-    margin: 0;
 }
 
 div.lft-block {

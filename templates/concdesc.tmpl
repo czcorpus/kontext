@@ -72,24 +72,4 @@ require(['tpl/concDesc', 'domReady!'], function(pageSelf, domReady) {
 </table>
 #end filter
 
-#if $supports_query_save
-    <h3>$_('User\'s note')</h3>
-    <p id="desc-area-switch-hint">$_('Click on the description area to start editing.')</p>
-    <div id="query-desc-wrapper">
-        <div id="query-desc-view" title="$_('Click to edit')">#filter None#$query_desc#end filter#</div>
-        <div id="query-desc-editor" style="display: none">
-            <textarea name="query_desc">$query_desc_raw</textarea>
-            <label for="public-flag-checkbox">$_('anyone can view the description')</label>
-            <input id="public-flag-checkbox" type="checkbox" name="public" value="1" #if $is_public#checked="checked"#end if# />
-            <button id="exit-editation" type="button">$_('Done')</button>
-        </div>
-    </div>
-
-    #if $query_id
-    <div class="query-export-url">
-    $_('URL of the query and description'): <input type="text" name="export-url" value="$export_url" size="40" readonly="readonly" />
-    </div>
-    #end if
-#end if
-
 #end block
