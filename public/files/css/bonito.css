@@ -266,6 +266,7 @@
     border-radius: 5px;
     margin: 5px 20px;
     font-weight: normal;
+    border: 1px solid #C7E7B2;
 }
 
 #mainform .parallel-corp-lang .close-button {
@@ -456,7 +457,6 @@ ul.submenu li.separ {
     font-size: 12pt;
     color: #A4A4A4;
     float: right;
-    width: 240px;
     padding: 0;
     margin: 0;
     text-align: right;
@@ -478,6 +478,17 @@ ul.submenu li.separ {
     border: 1px solid #ECF3EA;
     border-radius: 5px;
     margin-top: 20px;
+}
+
+#corpus-details-box .note {
+    margin: 5px 0 0 0;
+    padding: 0;
+    font-size: 80%;
+}
+
+#corpus-details-box .top {
+    overflow: auto;
+    padding: 5px;
 }
 
 #corpus-details-box h4.corpus-name {

@@ -243,18 +243,20 @@ $_ca_topbar
             #end if
             </div>
             <div id="corpus-citation-link">
-                <a href="#">$_('how to cite the corpus')</a>
+                <a href="#">$_('How to cite the corpus')</a>
             </div>
         #end if
 
     </div>
 
     <div id="corpus-details-box">
-        <h4 class="corpus-name"></h4>
-        <p class="metadata">
-            <strong>$_('size'):</strong> <span class="size"></span> $_('positions')<br />
-            <strong class="web_url">$_('website'):</strong> <span class="web_url"></span>
-        </p>
+        <div class="top">
+            <h4 class="corpus-name"></h4>
+            <p class="metadata">
+                <strong>$_('size'):</strong> <span class="size"></span> $_('positions')<br />
+                <strong class="web_url">$_('website'):</strong> <span class="web_url"></span>
+            </p>
+        </div>
         <table class="structs-and-attrs" border="0">
             <tr>
                 <td>
@@ -281,6 +283,7 @@ $_ca_topbar
                 </td>
             </tr>
         </table>
+        <p class="note">$_('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')</p>
         <p class="corpus-description"></p>
     </div>
 

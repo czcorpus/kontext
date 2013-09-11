@@ -1657,9 +1657,8 @@ msgstr "Hledat"
 msgid "in"
 msgstr "v"
 
-#: cmpltmpl/topmenu.py:139
 msgid "Help"
-msgstr "Nápovědě"
+msgstr "Nápověda"
 
 #: cmpltmpl/viewattrs.py:89
 #: cmpltmpl/viewattrs.py:205
@@ -2640,3 +2639,48 @@ msgstr "Odstranit položku"
 
 msgid "Maximum level reached."
 msgstr "Bylo dosaženo maximální povolené úrovně."
+
+msgid "Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus."
+msgstr "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu."
+
+msgid "size"
+msgstr "velikost"
+
+msgid "Search in the corpus"
+msgstr "Hledat v korpusu"
+
+msgid "How to cite the corpus"
+msgstr "Jak citovat korpus"
+
+msgid "Recent queries"
+msgstr "Předchozí dotazy"
+
+msgid "My subcorpora"
+msgstr "Mé subkorpusy"
+
+msgid "Create new"
+msgstr "Vytvořit nový"
+
+msgid "User manual"
+msgstr "Uživatelská příručka"
+
+msgid "Linguistic terms"
+msgstr "Lingvistické pojmy"
+
+msgid "Available corpora"
+msgstr "Dostupné korpusy"
+
+msgid "Select all"
+msgstr "Vybrat vše"
+
+msgid "click to show current concordance"
+msgstr "klikněte pro zobrazení aktuální konkordance"
+
+msgid "Attributes, structures and references"
+msgstr "Atributy, struktury a reference"
+
+msgid "General concordance view options"
+msgstr "Obecné volby zobrazení konkordance"
+
+msgid "related to the %s"
+msgstr "vztaženo k %s"
