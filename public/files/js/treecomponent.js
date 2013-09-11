@@ -31,20 +31,22 @@ define(['jquery', 'win'], function ($, win) {
      * UL+LI tree.
      *
      * @constructor
+     * @param {HTMLElement} button
+     * @param {function} customCallback function with signature func(event, selectedItemValue);
      */
-    function NestedTree() {
+    function NestedTree(button, customCallback) {
         this.hiddenInput = null;
+        this.button = button;
+        this.customCallback = customCallback;
     }
 
     /**
      * @param {Array} pathItems
      * @param {string} itemTitle
      * @param {string} itemDesc
-     * @param {HTMLElement} rootElm
-     * @param {HTMLElement} button
-     * @param {function} customCallback
+     * @param {HTMLElement} rootElm where to start the search
      */
-    NestedTree.prototype.findUlPath = function (pathItems, itemTitle, itemDesc, rootElm, button, customCallback) {
+    NestedTree.prototype.findUlPath = function (pathItems, itemTitle, itemDesc, rootElm) {
         var currPathItem = pathItems.shift(),
             foundElm = null,
             newLi,
@@ -68,7 +70,7 @@ define(['jquery', 'win'], function ($, win) {
                 newUl = win.document.createElement('ul');
                 $(newLi).append(currPathItem);
                 $(newLi).append(newUl);
-                this.findUlPath(pathItems, itemTitle, itemDesc, newUl, button, customCallback);
+                this.findUlPath(pathItems, itemTitle, itemDesc, newUl);
 
             } else {
                 jqNewLink = $(win.document.createElement('a'));
@@ -80,10 +82,10 @@ define(['jquery', 'win'], function ($, win) {
                 jqNewLink.append(itemTitle);
                 jqNewLink.bind('click', function (event) {
                     $(self.hiddenInput).val(currPathItem);
-                    $(button).empty().append(itemTitle);
-                    button.click();
-                    if (customCallback !== undefined) {
-                        customCallback(event);
+                    $(self.button).empty().append(itemTitle);
+                    self.button.click();
+                    if (typeof self.customCallback === 'function') {
+                        self.customCallback(event, currPathItem);
                     }
                     event.stopPropagation();
                 });
@@ -91,18 +93,16 @@ define(['jquery', 'win'], function ($, win) {
             }
 
         } else {
-            this.findUlPath(pathItems, itemTitle, itemDesc, $(foundElm).children().get(0), button, customCallback);
+            this.findUlPath(pathItems, itemTitle, itemDesc, $(foundElm).children().get(0));
         }
     };
 
     /**
      *
-     * @param selectBoxId
-     * @param button
-     * @param customCallback
-     * @returns {HTMLElement}
+     * @param {HTMLElement|jQuery|string} selectBox
+     * @returns {HTMLElement} root UL element
      */
-    NestedTree.prototype.buildFromSelectElm = function (selectBoxId, button, customCallback) {
+    NestedTree.prototype.buildFromSelectElm = function (selectBox) {
         var splitPath,
             rootUl = win.document.createElement('ul'),
             self = this;
@@ -110,11 +110,11 @@ define(['jquery', 'win'], function ($, win) {
         this.hiddenInput = win.document.createElement('input');
         $(this.hiddenInput).attr({
             'type': 'hidden',
-            'name': $(selectBoxId).attr('name'),
-            'value': $(selectBoxId).val()
+            'name': $(selectBox).attr('name'),
+            'value': $(selectBox).val()
         });
 
-        $(selectBoxId).children().each(function () {
+        $(selectBox).children().each(function () {
             var path = $(this).data('path');
             if (path.indexOf('/') === 0) {
                 path = path.substring(1);
@@ -124,7 +124,7 @@ define(['jquery', 'win'], function ($, win) {
             }
             splitPath = path.split('/');
             splitPath.push($(this).attr('value'));
-            self.findUlPath(splitPath, $(this).text(), $(this).attr('title'), rootUl, button, customCallback);
+            self.findUlPath(splitPath, $(this).text(), $(this).attr('title'), rootUl);
         });
         $(rootUl).attr('class', 'tree-component');
         return rootUl;
@@ -139,7 +139,7 @@ define(['jquery', 'win'], function ($, win) {
         this.rootUl = null;
         this.jqWrapper = null;
         this.menuWidth = 200;
-        this.nestedTree = new NestedTree();
+        this.nestedTree = null;
     }
 
     /**
@@ -390,7 +390,9 @@ define(['jquery', 'win'], function ($, win) {
 
         button = this.createActivationButton(title || this.getTitleOfSelectedItem(selectElm));
         this.jqWrapper.append(button);
-        this.rootUl = this.nestedTree.buildFromSelectElm(selectElm, button, customCallback);
+
+        this.nestedTree = new NestedTree(button, customCallback);
+        this.rootUl = this.nestedTree.buildFromSelectElm(selectElm);
         $(this.rootUl).attr('id', jqSelectBoxItem.attr('id'));
         this.jqWrapper.append(this.rootUl);
 
@@ -413,8 +415,8 @@ define(['jquery', 'win'], function ($, win) {
      *
      * @param {jQuery} selResult HTML SELECT element to be transformed into an expandable tree
      * @param {string} title if provided then the initial text label will be equal to this value
-     * @param {function} customCallback custom code to be executed when an item is selected (an event
-     * object related to the "item click" action is passed to this function)
+     * @param {function} customCallback custom code to be executed when an item is selected.
+     * The function is expected to have ignature func(event, selectedItemValue);
      */
     lib.createTreeComponent = function (selResult, title, customCallback) {
         selResult.each(function () {
