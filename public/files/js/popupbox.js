@@ -16,10 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['win', 'jquery'], function (context, $) {
+define(['win', 'jquery'], function (win, $) {
     'use strict';
 
-    context.bonitoBoxes = context.bonitoBoxes || {};
+    win.bonitoBoxes = win.bonitoBoxes || {};
+
+    var lib = {};
 
     /**
      * Creates simple absolute positioned DIV as a child of whereElement.
@@ -32,11 +34,11 @@ define(['win', 'jquery'], function (context, $) {
      * values "attached-top" and "attached-bottom")
      * @return {*}
      */
-    var createPopupBox = function (event, boxId, whereElement, contents, options) {
+    lib.createPopupBox = function (event, boxId, whereElement, contents, options) {
         var popupBox;
 
-        if (context.bonitoBoxes[boxId]) {
-            context.bonitoBoxes[boxId].close();
+        if (win.bonitoBoxes[boxId]) {
+            win.bonitoBoxes[boxId].close();
             return;
         }
 
@@ -68,7 +70,7 @@ define(['win', 'jquery'], function (context, $) {
                     }
                     $(document).unbind('click', popupBox.close);
                 }
-                delete context.bonitoBoxes[boxId];
+                delete win.bonitoBoxes[boxId];
             },
 
             open : function (event, boxId, whereElement, contents, options) {
@@ -139,12 +141,10 @@ define(['win', 'jquery'], function (context, $) {
                 popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
             }
         };
-        context.bonitoBoxes[boxId] = popupBox;
+        win.bonitoBoxes[boxId] = popupBox;
         popupBox.open(event, boxId, whereElement, contents, options);
         return popupBox;
     };
 
-    return {
-        createPopupBox : createPopupBox
-    };
+    return lib;
 });
