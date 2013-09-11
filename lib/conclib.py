@@ -20,7 +20,6 @@ import os
 import re
 from sys import stderr
 import time
-import logging
 import math
 
 import manatee
@@ -55,6 +54,11 @@ else:
 
     def flck_unlock(file):
         fcntl.lockf(file, fcntl.LOCK_UN, 1, 0, 0)
+
+try:
+    _
+except NameError:
+    _ = lambda s: s
 
 
 def tokens2strclass(tokens):
