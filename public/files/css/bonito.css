@@ -360,7 +360,7 @@
     display: inline-block;
     padding: 3px 6px;
     font-weight: bold;
-    z-index: 10000;
+    z-index: 100;
     position: relative;
     border-width: 1px 1px 0 1px;
     border-style: solid;
