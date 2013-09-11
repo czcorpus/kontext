@@ -36,14 +36,9 @@ manatee_dir = settings.get('global', 'manatee_path')
 if manatee_dir and manatee_dir not in sys.path:
     sys.path.insert(0, manatee_dir)
 
-import manatee
-
-import CGIPublisher
-from actions import Actions
-
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
-# implicit plugins BEGIN ###
+###### implicit plugins BEGIN ######
 
 db_module = plugins.load_plugin(settings.get('plugins', 'db')['module'])
 plugins.db = db_module.create_instance(settings.get('plugins', 'db'))
@@ -71,12 +66,14 @@ try:
 except ImportError:
     pass
 
-# implicit plugins END ###
-
+###### implicit plugins END ######
 
 if __name__ == '__main__':
     import logging
     from logging import handlers
+    import __builtin__
+    __builtin__.__dict__['_'] = lambda s: s
+    from actions import Actions
 
     # logging setup
     logger = logging.getLogger('') # root logger

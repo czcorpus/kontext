@@ -25,7 +25,9 @@ import locale
 import time
 from lxml import etree
 
-if not '_' in globals():
+try:
+    _
+except NameError:
     _ = lambda s: s
 
 

@@ -26,7 +26,9 @@ import settings
 import taghelper
 import logging
 
-if not '_' in globals():
+try:
+    _
+except NameError:
     _ = lambda s: s
 
 
