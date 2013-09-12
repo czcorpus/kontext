@@ -298,19 +298,20 @@ def create_speech_url(corpus_name, speech_id):
 
 
 def get_uri_scheme_name():
-    if os.getenv('SCRIPT_URI').startswith('https'):
+    if 'HTTPS' in os.environ:
         return 'https'
-    elif os.getenv('SCRIPT_URI').startswith('http'):
-        return 'http'
     else:
-        return ''
+        return 'http'
 
 
 def get_root_url():
     """
     Returns root URL of the application
     """
-    path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    if 'SCRIPT_URL' in os.environ:
+        path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    else:
+        path = os.getenv('REQUEST_URI')[:os.getenv('REQUEST_URI').rindex('/')]
     return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
 
 
