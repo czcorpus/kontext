@@ -169,7 +169,13 @@ $_ca_topbar
                     <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
                     <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
                     <li class="separ"><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
-                    <li><a title="TODO" href="#">$_('Undo')</a></li>
+                    <li>
+                    #if len($undo_q) > 0
+                    <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
+                    #else
+                    <span class="disabled" title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</span>
+                    #end if
+                    </li>
                 </ul>
             </li>
 
