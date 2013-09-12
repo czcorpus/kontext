@@ -87,6 +87,8 @@ class UCNKAuth(object):
         row = cursor.fetchone()
         if row and crypt.crypt(password, row[2]) == row[2]:
             row = dict(zip(cols, row))
+        else:
+            row = {}
         cursor.close()
         if 'id' in row:
             return {
