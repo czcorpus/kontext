@@ -2687,3 +2687,27 @@ msgstr "vztaženo k %s"
 
 msgid "Revert last operation on current concordance"
 msgstr "Vrátit poslední operaci na aktuální konkordanci"
+
+msgid "Current concordance"
+msgstr "Aktuální konkordance"
+
+msgid "Concordance based on current parameters"
+msgstr "Konkordance odpovídající provedeným operacím"
+
+msgid "Details about current query and related operations"
+msgstr "Podrobnosti o aktuálním dotazu a souvisejících operacích"
+
+msgid "Sorting"
+msgstr "Třídění"
+
+msgid "Positive"
+msgstr "Pozitivní"
+
+msgid "Negative"
+msgstr "Negativní"
+
+msgid "Enter new query"
+msgstr "Zadat nový dotaz"
+
+msgid "List of recent queries"
+msgstr "Seznam předchozích dotazů"
