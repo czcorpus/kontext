@@ -138,8 +138,8 @@ $_ca_topbar
 
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="TODO" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('New query')&#8230;</a></li>
-                    <li class="separ"><a title="TODO" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Enter new query')" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('New query')&#8230;</a></li>
+                    <li class="separ"><a title="$_('List of recent queries')" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
                     <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
@@ -168,7 +168,7 @@ $_ca_topbar
                     <li class="separ"><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
                     <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
                     <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
-                    <li class="separ"><a title="TODO" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Details about current query and related operations')" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
                     <li>
                     #if len($undo_q) > 0
                     <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
