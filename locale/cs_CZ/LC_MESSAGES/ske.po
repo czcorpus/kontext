@@ -2684,3 +2684,6 @@ msgstr "Obecné volby zobrazení konkordance"
 
 msgid "related to the %s"
 msgstr "vztaženo k %s"
+
+msgid "Revert last operation on current concordance"
+msgstr "Vrátit poslední operaci na aktuální konkordanci"

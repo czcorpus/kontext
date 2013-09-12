@@ -517,6 +517,7 @@ class ConcCGI(CGIPublisher):
                                               ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname).get('num_tag_pos', 0)
         result['supports_password_change'] = settings.supports_password_change()
+        result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
 
         # is there a concordance information in session?
         if 'conc' in self._session:
