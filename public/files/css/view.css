@@ -288,4 +288,10 @@ a.speech-link:hover {
 
 table#conclines .concordance-col-heading {
     min-width: 280px;
+    text-align: center;
+}
+
+#conclines .select-primary-lang {
+    font-size: 110%;
+    font-family: "Roboto";
 }

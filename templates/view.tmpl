@@ -93,9 +93,9 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #if not $refs_up# <td></td> #end if#
     <td class="concordance-col-heading" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
     #if $c.n in $KWICCorps
-    <a href="view?$q;$globals;q=x-$c.n;maincorp=$c.n"><b>$c.label</b></a>
+    <a class="select-primary-lang" href="view?$q;$globals;q=x-$c.n;maincorp=$c.n" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #else
-    <a href="filter_form?$q;$globals;maincorp=$c.n;within=1"><b>$c.label</b></a>
+    <a class="select-primary-lang" href="filter_form?$q;$globals;maincorp=$c.n;within=1" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #end if
     </td>
     #if $copy_icon and $i == 0 # <td></td> #end if#
@@ -282,11 +282,13 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
     #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
     <div id="conclines-wrapper">
-        #filter None
-        $align_heading($viewmode, $KWICCorps)
-        #end filter
         #if $len($Lines) > 0
         <table id="conclines">
+            #filter None
+            $align_heading($viewmode, $KWICCorps)
+            #end filter
+
+
             #for $i, $l in $enumerate($Lines)
             <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
                 <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
