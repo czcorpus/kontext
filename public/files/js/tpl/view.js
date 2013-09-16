@@ -210,11 +210,20 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         var elm = $('#conclines-wrapper'),
             api;
 
-        elm.jScrollPane({
-        });
+        elm.jScrollPane();
         api = elm.data('jsp');
-        $(window).on('resize', function () {
+        $(win).on('resize', function () {
             api.reinitialise();
+        });
+        $(win.document).on('keyup', function (event) {
+            if ($(':focus').length === 0) {
+                if (event.keyCode === 188) {
+                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.1, 0));
+
+                } else if (event.keyCode === 190) {
+                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.1, 1));
+                }
+            }
         });
     };
 
