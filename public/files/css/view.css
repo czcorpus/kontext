@@ -3,6 +3,7 @@
 #conc-wrapper {
     border: 3px solid #D2EDC0;
     border-radius: 9px;
+    overflow: hidden;
 }
 
 #conc-top-bar,
@@ -287,55 +288,4 @@ a.speech-link:hover {
 
 table#conclines .concordance-col-heading {
     min-width: 280px;
-}
-
-#conclines-wrapper .scroll-pane {
-    overflow: auto;
-    width: 99%;
-    float:left;
-}
-
-#conclines-wrapper .scroll-content {
-    float: left;
-}
-
-#conclines-wrapper .scroll-content-item {
-    width: 100px;
-    height: 100px;
-    float: left;
-    margin: 10px;
-    font-size: 3em;
-    line-height: 96px;
-    text-align: center;
-}
-
-#conclines-wrapper .scroll-bar-wrap {
-    clear: left;
-    padding: 0 4px 0 2px;
-    margin: 0 -1px -1px -1px;
-}
-
-#conclines-wrapper .scroll-bar-wrap .ui-slider {
-    background: none;
-    border:0;
-    height: 2em;
-    margin: 0 auto;
-}
-
-#conclines-wrapper .scroll-bar-wrap .ui-handle-helper-parent {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    margin: 0 auto;
-}
-
-#conclines-wrapper .scroll-bar-wrap .ui-slider-handle {
-    top:.2em;
-    height: 1.5em;
-}
-
-#conclines-wrapper .scroll-bar-wrap .ui-slider-handle .ui-icon {
-    margin: -8px auto 0;
-    position: relative;
-    top: 50%;
 }

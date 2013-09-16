@@ -27,6 +27,7 @@ $_("Concordance")#slurp
 #attr $focus = "'#next'"
 
 #def headers
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jscrollpane.css" />
 <script src="$files_path/js/tblex.js" type="text/javascript"></script>
 <script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
 <script type="text/javascript">
@@ -280,12 +281,12 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #set $basecorpname = $corpname.split('/')[-1]
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
     #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
-    <div id="conclines-wrapper" class="scroll-pane ui-widget ui-widget-header ui-corner-all">
+    <div id="conclines-wrapper">
         #filter None
         $align_heading($viewmode, $KWICCorps)
         #end filter
         #if $len($Lines) > 0
-        <table id="conclines" class="scroll-content">
+        <table id="conclines">
             #for $i, $l in $enumerate($Lines)
             <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
                 <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
@@ -329,11 +330,6 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #end for
         </table>
         #end if
-
-        <div class="scroll-bar-wrap ui-widget-content ui-corner-bottom">
-            <div class="scroll-bar"></div>
-        </div>
-
     </div>
 
     <div id="conc-bottom-bar">
