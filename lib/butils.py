@@ -133,16 +133,25 @@ class CQLDetectWithin(object):
             ans.extend(re.split(r'\s+', curr_piece))
         return ans
 
+    def empty_tag_next(self, struct, start_pos):
+        return start_pos < len(struct) - 1 and re.match(r'\s*/>', struct[start_pos])
+
     def contains_within(self, s):
         struct = self.parse(s)
         last_p = None
-        for item in struct:
+
+        for i in range(len(struct)):
+            item = struct[i]
             if item is None:
                 continue
             if item in (']', '['):
                 last_p = item
             elif 'within' in item:
-                if last_p in (']', None):
+                if i + 1 < len(struct) - 1 and re.match(r'\w+:',  struct[i + 1]):
+                    return False
+                elif i + 1 < len(struct) - 1 and re.match(r'<.+', struct[i + 1]):
+                    return not self.empty_tag_next(struct, i + 2)
+                elif last_p in (']', None):
                     return True
         return False
 
