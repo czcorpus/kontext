@@ -33,7 +33,7 @@ define(['jquery', 'win'], function ($, win) {
 
         /**
          *
-         * @type {*}
+         * @type {object}
          */
         this.opt = opt;
 
@@ -114,8 +114,8 @@ define(['jquery', 'win'], function ($, win) {
      * Shows/hides multi-select block. If no status is provided then visibility is changed
      * (visible->hidden, hidden->visible).
      *
-     * @param blockId {String}
-     * @param status {optional String}
+     * @param {string} blockId
+     * @param {string} [status]
      */
     MultiSelect.prototype.flipBlockVisibility = function (blockId, status) {
         var switchLink = this.blockSwitchLinks[blockId],
@@ -154,8 +154,8 @@ define(['jquery', 'win'], function ($, win) {
      *
      * @param blockId {String}
      * @param blockLabel {String}
-     * @param defaultValue {optional String} value used if no checkbox is selected
-     * @param eventCallbacks {optional Object} map 'event' -> callback
+     * @param {string} [defaultValue] value used if no checkbox is selected
+     * @param {object} [eventCallbacks] object mapping events to callbacks
      * @return {object}
      */
     MultiSelect.prototype.addBlock = function (blockId, blockLabel, defaultValue, eventCallbacks) {
@@ -294,7 +294,7 @@ define(['jquery', 'win'], function ($, win) {
      * @param blockId
      * @param value
      * @param label
-     * @param clickCallback {optional function}
+     * @param {function} [clickCallback]
      * @return {object}
      */
     MultiSelect.prototype.addItem = function (blockId, value, label, clickCallback) {
@@ -354,7 +354,6 @@ define(['jquery', 'win'], function ($, win) {
      * @param blockId
      * @param parentElement
      * @param value
-     * @return {Object}
      */
     MultiSelect.prototype.addDefaultValue = function (blockId, parentElement, value) {
         var inputElm;
@@ -426,7 +425,7 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
-     *
+     * @param {string} blockId block to be disabled
      */
     MultiSelect.prototype.disableBlock = function (blockId) {
         $(this.blocks[blockId]).find('input[type="checkbox"]').attr('disabled', 'disabled');
@@ -458,7 +457,7 @@ define(['jquery', 'win'], function ($, win) {
      * Returns number of checkboxes (total or within a block
      * if blockId is defined) checked.
      *
-     * @param blockId {optional String}
+     * @param {string} [blockId]
      * @return {number}
      */
     MultiSelect.prototype.getNumSelected = function (blockId) {
@@ -470,11 +469,11 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
-     * @param wrapperElem
-     * @param opt configuration options
+     * @param {HTMLElement} wrapperElem
+     * @param opt {object} configuration options
      *   useNamedCheckboxes
-     * @param json
-     * @return {Object}
+     * @param {object} [json]
+     * @return {object}
      */
     lib.createMultiselectComponent = function (wrapperElem, opt, json) {
         if (json !== undefined) {
