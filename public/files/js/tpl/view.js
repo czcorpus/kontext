@@ -215,13 +215,16 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         $(win).on('resize', function () {
             api.reinitialise();
         });
-        $(win.document).on('keyup', function (event) {
-            if ($(':focus').length === 0) {
-                if (event.keyCode === 188) {
-                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.1, 0));
+        $(win).on('keydown', function (event) {
+            if ($('#conclines-wrapper:focus').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
+                event.preventDefault();
+            }
+            if ($('input:focus').length === 0) {
+                if (event.keyCode === 37) {
+                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.2, 0));
 
-                } else if (event.keyCode === 190) {
-                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.1, 1));
+                } else if (event.keyCode === 39) {
+                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.2, 1));
                 }
             }
         });
