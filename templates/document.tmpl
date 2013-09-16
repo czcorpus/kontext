@@ -52,7 +52,8 @@ requirejs.config({
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
         'simplemodal' : './jquery.simplemodal.min',
-        'jqueryui' :  './jquery-ui.custom.min'
+        'jqueryui' :  './jquery-ui.custom.min',
+        'jscrollpane' : './jscrollpane.min'
     },
     shim : {
         'jquery': {
@@ -63,6 +64,9 @@ requirejs.config({
             exports : 'jaaulde.utils.cookies'
         },
         'jqueryui' : {
+            deps: ['jquery']
+        },
+        'jscrollpane' : {
             deps: ['jquery']
         }
     }
