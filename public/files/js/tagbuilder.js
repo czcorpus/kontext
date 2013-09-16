@@ -18,15 +18,14 @@
 
 /**
  * This library provides a clickable 'tag generator' widget.
- * The library depends on multiselect.js - TODO use require.js
  */
-define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multiselect, simpleModalNone, bonito) {
+define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, multiselect, simpleModalNone, bonito, win) {
     'use strict';
 
-    var createTagLoader,
+    var lib = {},
         objectIsEmpty,
-        attachTagLoader,
-        bindTextInputHelper;
+        resetButtonClickFunc,
+        backButtonClickFunc;
 
     /**
      *
@@ -44,480 +43,484 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
     };
 
     /**
-     * Creates new AJAX tag hint loader for selected corpus
      *
-     * @param corpusName corpus identifier
-     * @param numTagPos
-     * @param hiddenElm ID or element itself
-     * @param tagDisplay
-     * @param multiSelectComponent {Object}
-     * @param {function} errorCallback
-     * @return {Object}
      */
-    createTagLoader = function (corpusName, numTagPos, hiddenElm, tagDisplay, multiSelectComponent, errorCallback) {
+    resetButtonClickFunc = function (tagLoader) {
+        return function () {
+            tagLoader.resetWidget();
+        };
+    };
 
-        var tagLoader,
-            i;
+    /**
+     *
+     */
+    backButtonClickFunc = function (tagLoader) {
+        return function () {
+            var prevSelection,
+                prevActiveBlock,
+                updateActiveBlock;
 
-        /**
-         * Tag data loading service object
-         *
-         */
-        tagLoader = {
+            updateActiveBlock = function (blockId, prevSelects) {
+                if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
+                    $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]').each(function () {
+                        if (prevSelects.hasOwnProperty(blockId)) {
+                            $(this).attr('checked', ($.inArray($(this).attr('value'), prevSelects[blockId]) === -1));
 
-            /**
-             * Holds a corpus name for which this object is configured.
-             */
-            corpusName : corpusName,
-
-            /**
-             *
-             */
-            numTagPos : numTagPos,
-
-            /**
-             *
-             */
-            hiddenElm : hiddenElm,
-
-            /**
-             *
-             */
-            multiSelectComponent : multiSelectComponent,
-
-            /**
-             * Latest tag pattern (e.g. PKM-4--2--------) used by this loader
-             */
-            lastPattern : '',
-
-            /**
-             * Initial values for all tag positions used by this tag loader (always the same for a specific corpus)
-             */
-            initialValues : null,
-
-            /**
-             *
-             */
-            selectedValues : [],
-
-            /**
-             * List of patterns user gradually created
-             */
-            history : [],
-
-            /**
-             *
-             */
-            activeBlockHistory : [],
-
-            /**
-             *
-             */
-            tagDisplay : null,
-
-            /**
-             *
-             */
-            errorCallback : function () {},
-
-            /**
-             * Encodes form status into a list of regular expressions (one for each position)
-             */
-            encodeFormStatusItems : function () {
-                var data,
-                    ans = [],
-                    prop,
-                    positionCode,
-                    i;
-
-                data = data || tagLoader.multiSelectComponent.exportStatus();
-                for (prop in data) {
-                    if (data.hasOwnProperty(prop)) {
-                        positionCode = [];
-                        if (data.hasOwnProperty(prop)) {
-                            for (i = 0; i < data[prop].length; i += 1) {
-                                if (data[prop][i] !== null) {
-                                    positionCode.push(data[prop][i]);
-                                }
-                            }
                         }
-                        if (positionCode.length > 1) {
-                            ans.push('[' + positionCode.join('') + ']');
-
-                        } else if (positionCode.length === 1) {
-                            ans.push(positionCode[0]);
-
-                        } else {
-                            ans.push('-');
-                        }
-                    }
-                }
-                return ans;
-            },
-
-            /**
-             *
-             * @return {*}
-             */
-            getLatestActiveBlock : function () {
-                if (tagLoader.activeBlockHistory.length > 0) {
-                    return tagLoader.activeBlockHistory[tagLoader.activeBlockHistory.length - 1];
-                }
-                return null;
-            },
-
-            /**
-             * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
-             *
-             * @param anyCharSymbol
-             */
-            formStatusToPlainText : function (anyCharSymbol) {
-                var ans,
-                    items;
-
-                items = tagLoader.encodeFormStatusItems();
-                anyCharSymbol = anyCharSymbol || '-';
-                ans = items.join('');
-
-                if (anyCharSymbol !== '-') {
-                    ans = ans.replace(/-/g, anyCharSymbol);
-                }
-                if (anyCharSymbol === '.') {
-                    ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
-                }
-                if (ans.length === 0) {
-                    ans = '.*';
-                }
-                return ans;
-            },
-
-            /**
-             *
-             * @return {String}
-             */
-            formStatusToHTML : function () {
-                var ans = '',
-                    items,
-                    i,
-                    lastNonDotPos;
-
-                items = tagLoader.encodeFormStatusItems();
-                lastNonDotPos = items.length - 1;
-                while (lastNonDotPos >= 0 && items[lastNonDotPos] === '-') {
-                    lastNonDotPos -= 1;
-                }
-
-                for (i = 0; i <= lastNonDotPos; i += 1) {
-                    if (items[i] === '-') {
-                        ans +=  '<span class="backlink" data-block-idx="' + i + '">' + items[i].replace('-', '.') + '</span>';
-
-                    } else {
-                        ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
-                    }
-                }
-                if (lastNonDotPos === items.length - 2) {
-                    ans += '.';
-
-                } else if (lastNonDotPos < items.length - 2) {
-                    ans += '.*';
-                }
-                return ans;
-            },
-
-            /**
-             *
-             */
-            updateBacklinks : function () {
-                $(tagLoader.tagDisplay).find('a.backlink').each(function () {
-                    $(this).bind('click', function () {
-                        var liElms = $(tagLoader.multiSelectComponent.ulElement).find('li:nth-child('
-                                + (parseInt($(this).data('block-idx'), 10) + 1) + ')');
-                        if (liElms.length === 1) {
-                            tagLoader.multiSelectComponent.flipBlockVisibility($(liElms[0]).data('block-id'));
-                        }
+                        $(this).attr('disabled', false);
                     });
-                });
-            },
-
-            /**
-             * Updates all SELECT element-based form items with provided data
-             *
-             * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
-             * tag position value) of arrays (0 - value, 1 - label))
-             * @param selects {optional Object}
-             * @param callback {optional Function} called with parameters blockId and prevSelects (see the function inside)
-             */
-            updateMultiSelectValues : function (data, selects, callback) {
-                var i,
-                    j,
-                    blockId,
-                    getResponseLength,
-                    blockLength,
-                    blockLabel,
-                    prevSelects = selects || tagLoader.multiSelectComponent.exportStatus(),
-                    blockSwitchEventHandlers,
-                    lockPreviousItems,
-                    itemClickCallback,
-                    errorBox;
-
-                getResponseLength = function (resp) {
-                    var prop,
-                        ans = 0;
-
-                    if (resp.hasOwnProperty('length')) {
-                        return resp.length;
+                    if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
+                        $(tagLoader.multiSelectComponent.blockSwitchLinks[blockId]).css('font-weight', 'normal');
                     }
-                    for (prop in resp) {
-                        if (resp.hasOwnProperty(prop)) {
-                            ans += 1;
-                        }
-                    }
-                    return ans;
-                };
-
-                blockSwitchEventHandlers = {
-                    mouseover : function (event) {
-                        var blockId = $(event.target.parentNode).data('block-id'),
-                            items;
-
-                        items = $(tagLoader.tagDisplay).find('*');
-                        if (items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
-                            $(items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink called');
-                        }
-                    },
-                    mouseout : function (event) {
-                        var blockId = $(event.target.parentNode).data('block-id'),
-                            items;
-
-                        items = $(tagLoader.tagDisplay).find('*');
-                        if (items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
-                            $(items.get(tagLoader.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink');
-                        }
-                    }
-                };
-
-                lockPreviousItems = function (data) {
-                    tagLoader.updateMultiSelectValues(data, null, function (blockId) {
-                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) > 0
-                                && tagLoader.multiSelectComponent.activeBlockId !== blockId) {
-                            $(tagLoader.multiSelectComponent.blockSwitchLinks[blockId]).css('opacity', 0.4);
-                            $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]')
-                                    .attr('disabled', 'disabled');
-                        }
-                    });
-                };
-
-                itemClickCallback = function () {
-                    var pattern = tagLoader.formStatusToPlainText();
-                    tagLoader.loadPatternVariants(pattern, lockPreviousItems);
                     $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
                     $(tagLoader.tagDisplay).empty().append(tagLoader.formStatusToHTML());
                     tagLoader.updateBacklinks();
+                }
+            };
 
-                };
-                if (prevSelects && !objectIsEmpty(prevSelects)) {
-                    tagLoader.history.push(prevSelects);
+            tagLoader.history.pop(); // remove current status which has been already pushed
+            tagLoader.activeBlockHistory.pop();
+            prevSelection = tagLoader.history.pop(); // and use the previous one
+            prevActiveBlock = tagLoader.activeBlockHistory.pop();
 
-                    if (tagLoader.getLatestActiveBlock() === tagLoader.multiSelectComponent.activeBlockId
-                                && tagLoader.multiSelectComponent.activeBlockId) {
-                        if (tagLoader.multiSelectComponent.getNumSelected(tagLoader.multiSelectComponent.activeBlockId) === 0) {
-                            tagLoader.activeBlockHistory.pop();
-                            tagLoader.history.pop();
+            if (!objectIsEmpty(prevSelection)) {
+                tagLoader.loadPatternVariants(tagLoader.formStatusToPlainText('-'), function (data) {
+                    tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
+                    tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
+                });
+
+            } else { // empty => load initial values
+                prevSelection = {};
+                prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
+                tagLoader.loadInitialVariants(function (data) {
+                    tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
+                    tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
+                    tagLoader.multiSelectComponent.collapseAll();
+                });
+            }
+        };
+    };
+
+    /**
+     *
+     * @param {string} corpusName
+     * @param {number} numTagPos
+     * @param {MultiSelect} multiSelectComponent
+     * @param {HTMLElement} hiddenElm
+     * @constructor
+     */
+    function TagLoader(corpusName, numTagPos, multiSelectComponent, hiddenElm, tagDisplay) {
+
+        /**
+         * Holds a corpus name for which this object is configured.
+         */
+        this.corpusName = corpusName;
+
+        /**
+         *
+         */
+        this.numTagPos = numTagPos;
+
+        /**
+         *
+         */
+        this.hiddenElm = hiddenElm;
+
+        /**
+         *
+         */
+        this.multiSelectComponent = multiSelectComponent;
+
+        /**
+         *
+         */
+        this.tagDisplay = tagDisplay || null;
+
+        /**
+         * Latest tag pattern (e.g. PKM-4--2--------) used by this loader
+         */
+        this.lastPattern = '';
+
+        /**
+         * Initial values for all tag positions used by this tag loader (always the same for a specific corpus)
+         */
+        this.initialValues = null;
+
+        /**
+         *
+         */
+        this.selectedValues = [];
+
+        /**
+         * List of patterns user gradually created
+         */
+        this.history = [];
+
+        /**
+         *
+         */
+        this.activeBlockHistory = [];
+
+    }
+
+    /**
+     * Encodes form status into a list of regular expressions (one for each position)
+     */
+    TagLoader.prototype.encodeFormStatusItems = function () {
+        var data,
+            ans = [],
+            prop,
+            positionCode,
+            i;
+
+        data = data || this.multiSelectComponent.exportStatus();
+        for (prop in data) {
+            if (data.hasOwnProperty(prop)) {
+                positionCode = [];
+                if (data.hasOwnProperty(prop)) {
+                    for (i = 0; i < data[prop].length; i += 1) {
+                        if (data[prop][i] !== null) {
+                            positionCode.push(data[prop][i]);
                         }
-
-                    } else {
-                        tagLoader.activeBlockHistory.push(tagLoader.multiSelectComponent.activeBlockId);
                     }
                 }
+                if (positionCode.length > 1) {
+                    ans.push('[' + positionCode.join('') + ']');
 
-                for (i = 0; i < getResponseLength(data.tags); i += 1) {
-                    blockId = 'position_' + i;
-                    if ($.inArray(blockId, tagLoader.activeBlockHistory) === -1) {
-
-                        if (!tagLoader.multiSelectComponent.containsBlock(blockId)) {
-                            if (data.labels[i] !== undefined && data.labels[i] !== null) {
-                                blockLabel = (i + 1) + ' - ' + data.labels[i];
-                            } else {
-                                blockLabel = (i + 1);
-                            }
-                            tagLoader.multiSelectComponent.addBlock(blockId, blockLabel, null, blockSwitchEventHandlers);
-
-                        } else {
-                            tagLoader.multiSelectComponent.clearBlock(blockId);
-                        }
-                        if (data.tags[i].length > 0) {
-                            blockLength = data.tags[i].length;
-                            for (j = 0; j < data.tags[i].length; j += 1) {
-                                if (data.tags[i][j][0] !== '-') {
-                                    tagLoader.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
-                                    if (prevSelects.hasOwnProperty(blockId) && $.inArray(data.tags[i][j][0], prevSelects[blockId]) > -1) {
-                                        tagLoader.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
-
-                                    } else {
-                                        tagLoader.multiSelectComponent.uncheckItem(blockId, data.tags[i][j][0]);
-                                    }
-
-                                } else {
-                                    blockLength -= 1;
-                                    tagLoader.multiSelectComponent.setDefaultValue(blockId, data.tags[i][j][0]);
-                                }
-                            }
-                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');
-
-                        } else {
-                            tagLoader.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
-                        }
-                    }
-
-                    if (typeof callback === 'function') {
-                        callback(blockId, prevSelects);
-                    }
-                }
-            },
-
-            /**
-             * @param callback function to be called when variants are loaded, JSON data is passed as a parameter
-             */
-            loadInitialVariants : function (callback) {
-                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName,
-                    params = {};
-
-                if (tagLoader.initialValues === null) {
-                    $.ajax({
-                        url : url,
-                        data : params,
-                        method : 'get',
-                        dataType : 'json',
-                        // requestHeaders: {Accept: 'application/json'},
-                        success : function (data) {
-                            if (data.hasOwnProperty('error')) {
-                                $.modal.close();
-                                tagLoader.errorCallback(data.error);
-
-                            } else {
-                                tagLoader.initialValues = data;
-                                callback(tagLoader.initialValues);
-                            }
-                        },
-                        error : function (data) {
-                            $.modal.close();
-                            tagLoader.errorCallback();
-                        }
-                    });
+                } else if (positionCode.length === 1) {
+                    ans.push(positionCode[0]);
 
                 } else {
-                    callback(tagLoader.initialValues);
+                    ans.push('-');
+                }
+            }
+        }
+        return ans;
+    };
+
+    /**
+     *
+     * @return {*}
+     */
+    TagLoader.prototype.getLatestActiveBlock = function () {
+        if (this.activeBlockHistory.length > 0) {
+            return this.activeBlockHistory[this.activeBlockHistory.length - 1];
+        }
+        return null;
+    };
+
+    /**
+     * Encodes multi-select element-based form into a tag string (like 'NNT1h22' etc.)
+     *
+     * @param anyCharSymbol
+     */
+    TagLoader.prototype.formStatusToPlainText = function (anyCharSymbol) {
+        var ans,
+            items;
+
+        items = this.encodeFormStatusItems();
+        anyCharSymbol = anyCharSymbol || '-';
+        ans = items.join('');
+
+        if (anyCharSymbol !== '-') {
+            ans = ans.replace(/-/g, anyCharSymbol);
+        }
+        if (anyCharSymbol === '.') {
+            ans = ans.replace(/([^.]?)(\.)+$/, '$1.*');
+        }
+        if (ans.length === 0) {
+            ans = '.*';
+        }
+        return ans;
+    };
+
+    /**
+     *
+     * @return {String}
+     */
+    TagLoader.prototype.formStatusToHTML = function () {
+        var ans = '',
+            items,
+            i,
+            lastNonDotPos;
+
+        items = this.encodeFormStatusItems();
+        lastNonDotPos = items.length - 1;
+        while (lastNonDotPos >= 0 && items[lastNonDotPos] === '-') {
+            lastNonDotPos -= 1;
+        }
+
+        for (i = 0; i <= lastNonDotPos; i += 1) {
+            if (items[i] === '-') {
+                ans += '<span class="backlink" data-block-idx="' + i + '">' + items[i].replace('-', '.') + '</span>';
+
+            } else {
+                ans += '<a class="backlink" data-block-idx="' + i + '">' + items[i] + '</a>';
+            }
+        }
+        if (lastNonDotPos === items.length - 2) {
+            ans += '.';
+
+        } else if (lastNonDotPos < items.length - 2) {
+            ans += '.*';
+        }
+        return ans;
+    };
+
+    /**
+     *
+     */
+    TagLoader.prototype.updateBacklinks = function () {
+        var self = this;
+
+        $(this.tagDisplay).find('a.backlink').each(function () {
+            $(this).bind('click', function () {
+                var liElms = $(self.multiSelectComponent.ulElement).find('li:nth-child('
+                    + (parseInt($(this).data('block-idx'), 10) + 1) + ')');
+                if (liElms.length === 1) {
+                    self.multiSelectComponent.flipBlockVisibility($(liElms[0]).data('block-id'));
+                }
+            });
+        });
+    };
+
+    /**
+     * Updates all SELECT element-based form items with provided data
+     *
+     * @param data data to be used to update form (array (each SELECT one item) of arrays (each OPTION one possible
+     * tag position value) of arrays (0 - value, 1 - label))
+     * @param {Object} [selects]
+     * @param {function} [callback] called with parameters blockId and prevSelects (see the function inside)
+     */
+    TagLoader.prototype.updateMultiSelectValues = function (data, selects, callback) {
+        var getResponseLength,
+            prevSelects = selects || this.multiSelectComponent.exportStatus(),
+            blockSwitchEventHandlers,
+            lockPreviousItems,
+            itemClickCallback,
+            self = this;
+
+        getResponseLength = function (resp) {
+            var prop,
+                ans = 0;
+
+            if (resp.hasOwnProperty('length')) {
+                return resp.length;
+            }
+            for (prop in resp) {
+                if (resp.hasOwnProperty(prop)) {
+                    ans += 1;
+                }
+            }
+            return ans;
+        };
+
+        blockSwitchEventHandlers = {
+            mouseover: function (event) {
+                var blockId = $(event.target.parentNode).data('block-id'),
+                    items;
+
+                items = $(self.tagDisplay).find('*');
+                if (items.get(self.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
+                    $(items.get(self.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink called');
                 }
             },
+            mouseout: function (event) {
+                var blockId = $(event.target.parentNode).data('block-id'),
+                    items;
 
-            /**
-             *
-             * @param pattern
-             * @param callback
-             */
-            loadPatternVariants : function (pattern, callback) {
-                var url = 'ajax_get_tag_variants?corpname=' + tagLoader.corpusName + '&pattern=' + pattern,
-                    params = {};
-
-                $.ajax({
-                    url : url,
-                    data : params,
-                    method : 'get',
-                    // requestHeaders: {Accept: 'application/json'},
-                    complete : function (data) {
-                        callback($.parseJSON(data.responseText));
-                    }
-                });
-            },
-
-            /**
-             *
-             */
-            resetWidget : function () {
-                var prop;
-                tagLoader.history = [];
-                tagLoader.activeBlockHistory = [];
-                tagLoader.multiSelectComponent.uncheckAll();
-                tagLoader.multiSelectComponent.collapseAll();
-                tagLoader.loadInitialVariants(function (data) {
-                    tagLoader.updateMultiSelectValues(data);
-                });
-                for (prop in tagLoader.multiSelectComponent.blockSwitchLinks) {
-                    if (tagLoader.multiSelectComponent.blockSwitchLinks.hasOwnProperty(prop)) {
-                        $(tagLoader.multiSelectComponent.blockSwitchLinks[prop]).css('opacity', 1);
-                    }
-                }
-                $(tagLoader.tagDisplay).empty().append('.*');
-                $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
-            },
-
-            /**
-             *
-             */
-            resetButtonClick : function () {
-                tagLoader.resetWidget();
-            },
-
-            /**
-             *
-             */
-            backButtonClick : function () {
-                var prevSelection,
-                    prevActiveBlock,
-                    updateActiveBlock;
-
-                updateActiveBlock = function (blockId, prevSelects) {
-                    if (tagLoader.multiSelectComponent.activeBlockId === blockId) {
-                        $(tagLoader.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]').each(function () {
-                            if (prevSelects.hasOwnProperty(blockId)) {
-                                $(this).attr('checked', ($.inArray($(this).attr('value'), prevSelects[blockId]) === -1));
-
-                            }
-                            $(this).attr('disabled', false);
-                        });
-                        if (tagLoader.multiSelectComponent.getNumSelected(blockId) === 0) {
-                            $(tagLoader.multiSelectComponent.blockSwitchLinks[blockId]).css('font-weight', 'normal');
-                        }
-                        $(tagLoader.hiddenElm).attr('value', tagLoader.formStatusToPlainText('.'));
-                        $(tagLoader.tagDisplay).empty().append(tagLoader.formStatusToHTML());
-                        tagLoader.updateBacklinks();
-                    }
-                };
-
-                tagLoader.history.pop(); // remove current status which has been already pushed
-                tagLoader.activeBlockHistory.pop();
-                prevSelection = tagLoader.history.pop(); // and use the previous one
-                prevActiveBlock = tagLoader.activeBlockHistory.pop();
-
-                if (!objectIsEmpty(prevSelection)) {
-                    tagLoader.loadPatternVariants(tagLoader.formStatusToPlainText('-'), function (data) {
-                        tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
-                        tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
-                    });
-
-                } else { // empty => load initial values
-                    prevSelection = {};
-                    prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
-                    tagLoader.loadInitialVariants(function (data) {
-                        tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
-                        tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
-                        tagLoader.multiSelectComponent.collapseAll();
-                    });
+                items = $(self.tagDisplay).find('*');
+                if (items.get(self.multiSelectComponent.getBlockOrder(blockId)) !== undefined) {
+                    $(items.get(self.multiSelectComponent.getBlockOrder(blockId))).attr('class', 'backlink');
                 }
             }
         };
 
-        tagLoader.corpusName = corpusName;
-        tagLoader.hiddenElm = hiddenElm;
-        tagLoader.tagDisplay = tagDisplay;
-        $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
-        $(tagLoader.tagDisplay).empty().append('.*');
+        lockPreviousItems = function (data) {
+            self.updateMultiSelectValues(data, null, function (blockId) {
+                if (self.multiSelectComponent.getNumSelected(blockId) > 0
+                        && self.multiSelectComponent.activeBlockId !== blockId) {
+                    $(self.multiSelectComponent.blockSwitchLinks[blockId]).css('opacity', 0.4);
+                    $(self.multiSelectComponent.blocks[blockId]).find('input[type="checkbox"]')
+                        .attr('disabled', 'disabled');
+                }
+            });
+        };
 
-        for (i = 0; i < numTagPos; i += 1) {
-            tagLoader.selectedValues[i] = '-';
+        itemClickCallback = function () {
+            var pattern = self.formStatusToPlainText();
+            self.loadPatternVariants(pattern, lockPreviousItems);
+            $(self.hiddenElm).attr('value', self.formStatusToPlainText('.'));
+            $(self.tagDisplay).empty().append(self.formStatusToHTML());
+            self.updateBacklinks();
+
+        };
+
+        if (prevSelects && !objectIsEmpty(prevSelects)) {
+            this.history.push(prevSelects);
+
+            if (this.getLatestActiveBlock() === this.multiSelectComponent.activeBlockId
+                    && this.multiSelectComponent.activeBlockId) {
+                if (this.multiSelectComponent.getNumSelected(this.multiSelectComponent.activeBlockId) === 0) {
+                    this.activeBlockHistory.pop();
+                    this.history.pop();
+                }
+
+            } else {
+                this.activeBlockHistory.push(this.multiSelectComponent.activeBlockId);
+            }
         }
-        return tagLoader;
+
+        (function (self) {
+            var i,
+                j,
+                blockId,
+                blockLabel,
+                blockLength;
+
+            for (i = 0; i < getResponseLength(data.tags); i += 1) {
+                blockId = 'position_' + i;
+                if ($.inArray(blockId, self.activeBlockHistory) === -1) {
+
+                    if (!self.multiSelectComponent.containsBlock(blockId)) {
+                        if (data.labels[i] !== undefined && data.labels[i] !== null) {
+                            blockLabel = (i + 1) + ' - ' + data.labels[i];
+                        } else {
+                            blockLabel = (i + 1);
+                        }
+                        self.multiSelectComponent.addBlock(blockId, blockLabel, null, blockSwitchEventHandlers);
+
+                    } else {
+                        self.multiSelectComponent.clearBlock(blockId);
+                    }
+                    if (data.tags[i].length > 0) {
+                        blockLength = data.tags[i].length;
+                        for (j = 0; j < data.tags[i].length; j += 1) {
+                            if (data.tags[i][j][0] !== '-') {
+                                self.multiSelectComponent.addItem(blockId, data.tags[i][j][0], data.tags[i][j][1], itemClickCallback);
+                                if (prevSelects.hasOwnProperty(blockId) && $.inArray(data.tags[i][j][0], prevSelects[blockId]) > -1) {
+                                    self.multiSelectComponent.checkItem(blockId, data.tags[i][j][0]);
+
+                                } else {
+                                    self.multiSelectComponent.uncheckItem(blockId, data.tags[i][j][0]);
+                                }
+
+                            } else {
+                                blockLength -= 1;
+                                self.multiSelectComponent.setDefaultValue(blockId, data.tags[i][j][0]);
+                            }
+                        }
+                        self.multiSelectComponent.updateBlockStatusText(blockId, '[ ' + blockLength + ' ]');
+
+                    } else {
+                        self.multiSelectComponent.updateBlockStatusText(blockId, '[ 0 ]');
+                    }
+                }
+
+                if (typeof callback === 'function') {
+                    callback(blockId, prevSelects);
+                }
+            }
+        }(this));
     };
+
+    /**
+     * @param {function} callback function to be called when variants are loaded, JSON data is passed as a parameter
+     * @param {function} [errorCallback]
+     */
+    TagLoader.prototype.loadInitialVariants = function (callback, errorCallback) {
+        var url = 'ajax_get_tag_variants?corpname=' + this.corpusName,
+            params = {},
+            self = this;
+
+        errorCallback = errorCallback || function (err) {};
+
+        if (this.initialValues === null) {
+            $.ajax({
+                url: url,
+                data: params,
+                method: 'get',
+                dataType: 'json',
+                // requestHeaders: {Accept: 'application/json'},
+                success: function (data) {
+                    if (data.hasOwnProperty('error')) {
+                        $.modal.close();
+                        errorCallback(data.error);
+
+                    } else {
+                        self.initialValues = data;
+                        callback(self.initialValues);
+                    }
+                },
+                error: function (data) {
+                    $.modal.close();
+                    errorCallback();
+                }
+            });
+
+        } else {
+            callback(this.initialValues);
+        }
+    };
+
+    /**
+     *
+     * @param pattern
+     * @param callback
+     */
+    TagLoader.prototype.loadPatternVariants = function (pattern, callback) {
+        var url = 'ajax_get_tag_variants?corpname=' + this.corpusName + '&pattern=' + pattern,
+            params = {};
+
+        $.ajax({
+            url: url,
+            data: params,
+            method: 'get',
+            // requestHeaders: {Accept: 'application/json'},
+            complete: function (data) {
+                callback($.parseJSON(data.responseText));
+            }
+        });
+    };
+
+    /**
+     *
+     */
+    TagLoader.prototype.resetWidget = function () {
+        var prop,
+            self = this;
+
+        this.history = [];
+        this.activeBlockHistory = [];
+        this.multiSelectComponent.uncheckAll();
+        this.multiSelectComponent.collapseAll();
+        this.loadInitialVariants(function (data) {
+            self.updateMultiSelectValues(data);
+        });
+        for (prop in this.multiSelectComponent.blockSwitchLinks) {
+            if (this.multiSelectComponent.blockSwitchLinks.hasOwnProperty(prop)) {
+                $(this.multiSelectComponent.blockSwitchLinks[prop]).css('opacity', 1);
+            }
+        }
+        $(this.tagDisplay).empty().append('.*');
+        $(this.hiddenElm).attr('value', this.formStatusToPlainText('.'));
+    };
+
+    /**
+     *
+     * @param callback
+     */
+    TagLoader.prototype.initSelectedValues = function (callback) {
+        var i;
+
+        for (i = 0; i < this.numTagPos; i += 1) {
+            callback(this.selectedValues, i);
+        }
+    };
+
+    // attach TagLoader to the library
+    lib.TagLoader = TagLoader;
+
 
     /**
      * A helper method that does whole 'create a tag loader for me' job.
@@ -531,9 +534,9 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
      *     tagDisplay     : ID or element itself for the "tag display" box
      *     hiddenElm      : ID or element itself
      *     errorCallback  : function to be called in case of an error
-     * @return {tagLoader}
+     * @return {TagLoader}
      */
-    attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
+    lib.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
         var tagLoader,
             hiddenElm,
             tagDisplay,
@@ -557,7 +560,14 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
         hiddenElm = $(opt.hiddenElm).get(0);
         tagDisplay = $(opt.tagDisplay).get(0);
 
-        tagLoader = createTagLoader(corpusName, numOfPos, hiddenElm, tagDisplay, multiSelectComponent);
+        tagLoader = new TagLoader(corpusName, numOfPos, multiSelectComponent, hiddenElm, tagDisplay);
+        tagLoader.initSelectedValues(function (selectedValues, i) {
+            selectedValues[i] = '-';
+        });
+
+        $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
+        $(tagLoader.tagDisplay).empty().append('.*');
+
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.updateMultiSelectValues(data);
         });
@@ -565,13 +575,13 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
             opt.resetButton = $(opt.resetButton);
         }
         if (opt.resetButton) {
-            $(opt.resetButton).bind('click', tagLoader.resetButtonClick);
+            $(opt.resetButton).bind('click', resetButtonClickFunc(tagLoader));
         }
         if (typeof (opt.backButton) === 'string') {
             opt.backButton = $(opt.backButton);
         }
         if (opt.backButton) {
-            $(opt.backButton).bind('click', tagLoader.backButtonClick);
+            $(opt.backButton).bind('click', backButtonClickFunc(tagLoader));
         }
 
         if (typeof opt.errorCallback === 'function') {
@@ -597,7 +607,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
      * @param numTagPos {Number}
      * @param {function} errorCallback
      */
-    bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts, errorCallback) {
+    lib.bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts, errorCallback) {
         var prop;
 
         for (prop in opt) {
@@ -625,7 +635,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                     $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
                 }
                 $.modal.close();
-                $(document).off('keypress', buttonEnterAction);
+                $(win.document).off('keypress', buttonEnterAction);
                 $(opt.inputElement).focus();
             };
 
@@ -639,17 +649,17 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
                 onShow : function () {
                     var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
 
-                    attachTagLoader(corpusName, numTagPos, msComponent, {
+                    lib.attachTagLoader(corpusName, numTagPos, msComponent, {
                         tagDisplay : $(opt.tagDisplayElement),
                         resetButton : $(opt.resetButtonElement),
                         errorCallback : errorCallback
                     });
 
                     $(opt.insertTagButtonElement).one('click', insertTagClickAction);
-                    $(document).on('keypress', buttonEnterAction);
+                    $(win.document).on('keypress', buttonEnterAction);
                 },
                 onClose : function () {
-                    $(document).off('keypress', buttonEnterAction);
+                    $(win.document).off('keypress', buttonEnterAction);
                     $.modal.close();
                     $(opt.inputElement).focus();
                 }
@@ -657,9 +667,5 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito'], function ($, multisel
         });
     };
 
-    return {
-        attachTagLoader : attachTagLoader,
-        bindTextInputHelper : bindTextInputHelper
-    };
-
+    return lib;
 });
