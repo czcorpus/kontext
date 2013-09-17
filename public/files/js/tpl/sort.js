@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, popupbox, $, bonito) {
+define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, popupBox, $, bonito) {
     'use strict';
 
     var lib = {};
@@ -30,16 +30,10 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, 
         layoutModel.init(conf);
         bonito.multiLevelKwicFormUtil.init();
         $('a.kwic-alignment-help').each(function () {
-            $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#toolbar-info'),
-                    layoutModel.conf.messages.msg,
-                    {
-                        'top' : 'attached-bottom',
-                        'width' : 'auto',
-                        'height' : 'auto'
-                    }
-                );
-                event.stopPropagation();
+            popupBox.bind($(this), layoutModel.conf.messages.msg, {
+                'top': 'attached-bottom',
+                'width': 'auto',
+                'height': 'auto'
             });
         });
     };
