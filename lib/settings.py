@@ -21,6 +21,7 @@ methods.
 import os
 import sys
 from lxml import etree
+from docutils.core import publish_string
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 
@@ -34,6 +35,16 @@ conf_parsers = {
     'tagsets': None,
 
 }
+
+
+def _translate_markup(s):
+    if not s:
+        return None
+    html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
+                                 writer_name='html')
+    html = html[html.find('<body>')+6:html.find('</body>')].strip()
+    html = html.decode('utf-8')
+    return html
 
 
 def get(section, key=None, default=None):
@@ -105,13 +116,22 @@ def parse_corplist_node(root, data, path='/'):
             web_url = item.attrib['web'] if 'web' in item.attrib else None
             sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
             num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
-            data.append({
+
+            ans = {
                 'id': item.attrib['id'].lower(),
                 'path': path,
                 'web': web_url,
                 'sentence_struct': sentence_struct,
-                'num_tag_pos': num_tag_pos
-            })
+                'num_tag_pos': num_tag_pos,
+                'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None}
+            }
+
+            ref_elm = item.find('reference')
+            if ref_elm:
+                ans['citation_info']['default_ref'] = _translate_markup(getattr(ref_elm.find('default'), 'text', None))
+                ans['citation_info']['article_ref'] = _translate_markup(getattr(ref_elm.find('article'), 'text', None))
+                ans['citation_info']['other_bibliography'] = _translate_markup(getattr(ref_elm.find('other_bibliography'), 'text', None))
+            data.append(ans)
 
 
 def parse_general_tree(section):
