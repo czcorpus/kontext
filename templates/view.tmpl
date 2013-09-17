@@ -226,7 +226,10 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
             #end if
 
-            <span class="separ">|</span> contains within: <strong>$contains_within</strong>
+            #if $contains_within
+            <span class="separ">|</span>
+            <a class="calc-warning" href="#"><img src="../files/img/warning-icon.png" /></a>
+            #end if
         </div>
 
         #block navigation($navid="navigation_form", $nextid="next")

@@ -19,131 +19,159 @@
 define(['win', 'jquery'], function (win, $) {
     'use strict';
 
-    win.bonitoBoxes = win.bonitoBoxes || {};
-
     var lib = {};
 
     /**
-     * Creates simple absolute positioned DIV as a child of whereElement.
-     *
-     * @param event event which triggered this request
-     * @param {string} boxId attribute ID for new box
-     * @param {jQuery|string} whereElement element to be used as a parent
-     * @param contents text/HTML content of the box
-     * @param options object with options "width", "height", "top" (just like in CSS but also with additional
-     * values "attached-top" and "attached-bottom")
-     * @return {*}
+     * @constructor
+     * @param {HTMLElement} triggerElm element which acts as an on/off switch for this box
      */
-    lib.createPopupBox = function (event, boxId, whereElement, contents, options) {
-        var popupBox;
+    function TooltipBox(triggerElm) {
 
-        if (win.bonitoBoxes[boxId]) {
-            win.bonitoBoxes[boxId].close();
-            return;
+        this.triggerElm = triggerElm;
+
+        this.timer = null;
+
+        this.newElem = null;
+
+        this.timeout = 25000;
+    }
+
+    TooltipBox.prototype.close = function () {
+        if (this.newElem) {
+            $(this.newElem).remove();
+            this.newElem = null;
+
+            if (this.timer) {
+                clearInterval(this.timer);
+            }
+        }
+    };
+
+    /**
+     *
+     * @param whereElement
+     * @param {string|function} contents if a function is provided,
+     * following signature is expected: function(htmlElement) where htmlElement is the tooltip box itself
+     * @param {object} [options] accepted options are: width, height, fontSize, timeout
+     *
+     */
+    TooltipBox.prototype.open = function (whereElement, contents, options) {
+        var pageWidth = $(document).width(),
+            horizPadding = 12,
+            borderWidth,
+            boxWidth = '620px',
+            boxHeight = '70px',
+            boxIntWidth,
+            boxTop = 0,
+            jqWhereElement = $(whereElement),
+            fontSize,
+            closeClickHandler,
+            self = this;
+
+        options = options || {};
+
+        if (options.hasOwnProperty('height')) {
+            boxHeight = options.height;
         }
 
-        popupBox = {
+        if (options.hasOwnProperty('width')) {
+            boxWidth = options.width;
+        }
 
-            timer : null,
+        this.timeout = options.timeout || this.timeout;
 
-            newElem : null,
+        fontSize = options.hasOwnProperty('fontSize') ? options.fontSize : 'inherit';
 
-            timeout : 25000,
+        this.newElem = win.document.createElement('div');
+        jqWhereElement.append(this.newElem);
 
-            extractIntFromSize : function (size) {
-                var ans = /([0-9]+)[a-z]*/.exec(size);
-                if (ans !== null) {
-                    return parseInt(ans[1], 10);
-                }
-                return null;
-            },
+        if (typeof contents === 'function') {
+            contents(this.newElem);
 
-            close : function (event) {
-                if (event) {
-                    $(event.target).unbind('click', popupBox.close);
-                }
-                if (popupBox.newElem) {
-                    $(popupBox.newElem).remove();
-                    popupBox.newElem = null;
-                    if (popupBox.timer) {
-                        clearInterval(popupBox.timer);
-                    }
-                    $(document).unbind('click', popupBox.close);
-                }
-                delete win.bonitoBoxes[boxId];
-            },
+        } else {
+            $(this.newElem).empty().append(contents);
+        }
+        $(this.newElem).prepend('<img class="info-icon" src="../files/img/info-icon.png" alt="info" />');
+        $(this.newElem).addClass('tooltip-box');
+        $(this.newElem).css({
+            'padding-left': horizPadding + 'px',
+            'padding-right': horizPadding + 'px',
+            width: boxWidth,
+            height: boxHeight,
+            'font-size': fontSize
+        });
+        if (options.top === 'attached-bottom') {
+            boxTop = ($(this.triggerElm).position().top - $(this.newElem).outerHeight(true) - 2) + 'px';
 
-            open : function (event, boxId, whereElement, contents, options) {
-                var pageWidth = $(document).width(),
-                    horizPadding = 8,
-                    borderWidth,
-                    boxWidth = '620px',
-                    boxHeight = '70px',
-                    boxIntWidth,
-                    boxTop = 0,
-                    jqWhereElement = $(whereElement),
-                    fontSize;
+        } else { // includes 'attached-top' option
+            boxTop = ($(this.triggerElm).position().top + $(this.triggerElm).height()) + 'px';
+        }
 
-                options = options || {};
+        $(this.newElem).css('top', boxTop);
 
-                if (options.hasOwnProperty('height')) {
-                    boxHeight = options.height;
-                }
+        boxIntWidth = $(this.newElem).outerWidth(true);
+        if (pageWidth - boxIntWidth > $(this.triggerElm).position().left) {
+            $(this.newElem).css('left', $(this.triggerElm).position().left + 'px');
 
-                if (options.hasOwnProperty('width')) {
-                    boxWidth = options.width;
-                }
+        } else {
+            borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
+            $(this.newElem).css({
+                left: '100%',
+                'margin-left': '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+            });
+        }
 
-                fontSize = options.hasOwnProperty('fontSize') ? options.fontSize : 'inherit';
-
-                popupBox.newElem = document.createElement('div');
-                jqWhereElement.append(popupBox.newElem);
-                $(popupBox.newElem).attr('id', boxId);
-                if (typeof contents === 'function') {
-                    contents(popupBox.newElem);
-
-                } else {
-                    $(popupBox.newElem).empty().append(contents);
-                }
-                $(popupBox.newElem).addClass('hint-box');
-                $(popupBox.newElem).css({
-                    padding : '5px ' + horizPadding + 'px',
-                    width : boxWidth,
-                    height: boxHeight,
-                    'font-size' : fontSize
-                });
-                if (options.hasOwnProperty('top')) {
-                    if (options.top === 'attached-top') {
-                        boxTop = $(event.target).position().top + 'px';
-
-                    } else if (options.top === 'attached-bottom') {
-                        boxTop = ($(event.target).position().top - $(popupBox.newElem).outerHeight(true) - 2) + 'px';
-
-                    } else {
-                        boxTop = options.top;
-                    }
-                }
-                $(popupBox.newElem).css('top', boxTop);
-
-                boxIntWidth = $(popupBox.newElem).outerWidth(true);
-                if (pageWidth - boxIntWidth > $(event.target).position().left) {
-                    $(popupBox.newElem).css('left', $(event.target).position().left + 'px');
-
-                } else {
-                    borderWidth = $(popupBox.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
-                    $(popupBox.newElem).css({
-                        left : '100%',
-                        'margin-left' : '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
-                    });
-                }
-
-                $(document).bind('click', popupBox.close);
-                popupBox.timer = setInterval(popupBox.close, popupBox.timeout);
+        closeClickHandler = function (event) {
+            if (event) {
+                $(event.target).off('click', closeClickHandler);
             }
+            $(document).unbind('click', closeClickHandler);
+            TooltipBox.prototype.close.call(self);
         };
-        win.bonitoBoxes[boxId] = popupBox;
-        popupBox.open(event, boxId, whereElement, contents, options);
-        return popupBox;
+
+        this.timer = setInterval(closeClickHandler, this.timeout);
+    };
+
+    // export TooltipBox constructor
+    lib.TooltipBox = TooltipBox;
+
+    /**
+     *
+     * @param {jQuery|HTMLElement|string} elm
+     * @param {function|string} contents
+     * @param {object} [options]
+     */
+    lib.bind = function (elm, contents, options) {
+        var box,
+            whereElm;
+
+        options = options || {};
+        whereElm = $('body');
+
+        $(elm).on('click', function (event) {
+            var windowClickHandler;
+
+            if ($(elm).data('popupBox')) {
+                box = $(elm).data('popupBox');
+                box.close();
+                $(elm).data('popupBox', null);
+
+            } else {
+                box = new TooltipBox(event.target);
+                $(elm).data('popupBox', box);
+                box.open(whereElm, contents, options);
+
+                windowClickHandler = function (event) {
+                    if (event.target !== box.newElem) {
+                        $(win).off('click', windowClickHandler);
+                        box.close();
+                        $(elm).data('popupBox', null);
+                    }
+                };
+                $(win).on('click', windowClickHandler);
+            }
+            event.stopPropagation();
+        });
     };
 
     return lib;

@@ -21,7 +21,7 @@
 /**
  *
  */
-define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, cookies) {
+define(['jquery', 'win', 'jquery.cookies', 'popupbox'], function ($, win, cookies, popupBox) {
     'use strict';
 
     var hideElem;
@@ -189,13 +189,7 @@ define(['jquery', 'win', 'bonito', 'jquery.cookies'], function ($, win, bonito, 
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
                 $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
-                $('#query-type-hint').bind('click', function (event) {
-                    require(['popupbox'], function (ppbox) {
-                        ppbox.createPopupBox(event, 'query-type-hint-box', $('#query-type-hint'), hints['iqueryrow'],
-                            { 'top' : 'attached-bottom', 'fontSize' : '10pt' });
-                    });
-                    event.stopPropagation();
-                });
+                popupBox.bind($('#query-type-hint'), hints['iqueryrow'], {'top' : 'attached-bottom', 'fontSize' : '10pt' });
 
             } else {
                 $('#query-type-hint').remove();

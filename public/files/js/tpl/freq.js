@@ -123,16 +123,12 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, 
                 lib.addLevel();
             }
         }
+
         $('a.kwic-alignment-help').each(function () {
-            $(this).bind('click', function (event) {
-                popupbox.createPopupBox(event, 'kwic-alignment-help-box', $('#active-corpus'),
-                    layoutModel.conf.messages.msg,
-                    {
-                        'top' : 'attached-bottom',
-                        'width' : 'auto',
-                        'height' : 'auto'
-                    });
-                event.stopPropagation();
+            popupbox.bind($(this), layoutModel.conf.messages.msg, {
+                'top': 'attached-bottom',
+                'width': 'auto',
+                'height': 'auto'
             });
         });
         lib.bindEvents();

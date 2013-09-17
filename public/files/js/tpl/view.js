@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane', 'simplemodal'], function (win, $,
-            jqueryPeriodic, layoutModel, detail, jscrollpane, _sm) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane', 'simplemodal', 'popupbox'],
+    function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, _sm, popupBox) {
     'use strict';
 
     var lib = {};
@@ -113,6 +113,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 return false;
             });
         });
+
+        popupBox.bind($('.calc-warning'), 'foo and bar', {});
     };
 
     /**

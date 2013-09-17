@@ -354,10 +354,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             });
         };
 
-        $('#positions-help-link').bind('click', function (event) {
-            popupbox.createPopupBox(event, 'positions-help', $('#active-corpus'), lib.conf.messages.msg1);
-            event.stopPropagation();
-        });
+        popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
         $('#corpus-desc-link').bind('click', function () {
             $('#corpus-details-box').modal({
