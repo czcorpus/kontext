@@ -834,6 +834,7 @@ class Actions(ConcCGI):
         display a frequency list
         """
         self.active_menu_item = 'menu-frequency'
+
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -868,7 +869,9 @@ class Actions(ConcCGI):
                                        self.ftt_include_empty, rel_mode) for cr in fcrit],
             'paging': 0,
             'concsize': conc.size(),
-            'fmaxitems': self.fmaxitems
+            'fmaxitems': self.fmaxitems,
+            'quick_from_line': 1,
+            'quick_to_line': 1000
         }
         if not result['Blocks'][0]:
             raise ConcError(_('Empty list'))
