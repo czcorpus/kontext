@@ -1157,14 +1157,6 @@ input#cql {
     margin: 10px;
 }
 
-span.notice-shuffled {
-    color: #555555;
-    padding-left: 5px;
-    padding-right: 5px;
-    border-radius: 3px;
-    border: 1px solid #CCCCCC;
-}
-
 table.form th,
 table.form td {
     padding: 5px 15px;
