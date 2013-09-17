@@ -252,7 +252,7 @@ $_ca_topbar
                 <strong>$corp_size</strong> $_('positions')<a id="positions-help-link">?</a>
             #end if
             </div>
-            #if $citation_info.default_ref
+            #if 'default_ref' in $citation_info and $citation_info.default_ref
             <div id="corpus-citation-link">
                 <a href="#">$_('How to cite the corpus')</a>
             </div>
@@ -299,7 +299,7 @@ $_ca_topbar
         <p class="corpus-description"></p>
     </div>
 
-    #if $citation_info.default_ref
+    #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
         <strong>$($_('Corpus %s as a language resource') % $corpname):</strong>
