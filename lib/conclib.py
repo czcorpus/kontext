@@ -205,7 +205,7 @@ def kwicpage(
     out['result_relative_freq'] = round(
         conc.size() / (float(corpsize) / 1e6), 2)
 
-    out['result_relative_freq_rel_to'] = _('related to the %s') % corpus.get_conf('NAME')
+    out['result_relative_freq_rel_to'] = _('related to the whole %s') % corpus.get_conf('NAME')
     if hasattr(corpus, 'subcname'):
         out['result_relative_freq_rel_to'] += ':%s' % getattr(corpus, 'subcname', '')
     out['result_relative_freq_rel_to'] = '(%s)' % out['result_relative_freq_rel_to']
