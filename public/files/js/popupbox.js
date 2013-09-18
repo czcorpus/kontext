@@ -191,6 +191,7 @@ define(['win', 'jquery'], function (win, $) {
                 };
                 $(win).on('click', windowClickHandler);
             }
+            event.preventDefault();
             event.stopPropagation();
         });
     };
