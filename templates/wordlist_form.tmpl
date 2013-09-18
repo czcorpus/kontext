@@ -38,6 +38,7 @@ $_("Word List Form")#slurp
 require(['jquery', 'tpl/wordlistForm', 'domReady!'], function (\$, wordlistForm, domReady) {
     ## conf object is defined within document.tmpl
     conf.wltype = "$wltype";
+    conf.messages.whiteLists = "$_('Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if \'lemma\' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.')";
     wordlistForm.init(conf);
 });
 #end def
@@ -89,10 +90,9 @@ $input_hidden
 </tr><tr>
   <td></td><td>$_("Blacklist"):</td>
   <td><input type="file" name="wlblacklist" size="30" id="wlblacklist" />
-    <a id="show-help-format-link" href="">$_("format")</a>
-    <td><div  id="help_format" class="css_format_help">
-    $_("Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.")
-    </div></td>
+    <a id="show-help-format-link" href="">
+        <img src="../files/img/info-icon.png" alt="info" />$_("required file format")</a>
+    <td></td>
   </td>
 </tr><tr><td colspan="3">
 #set $checked = $int($include_nonwords) and 'checked' or ''

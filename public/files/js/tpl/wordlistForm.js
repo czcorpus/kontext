@@ -21,12 +21,12 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, layoutModel, treeComponent) {
+define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function (win, $, layoutModel, treeComponent,
+    popupbox) {
     'use strict';
 
     var lib = {},
         selectOutputType,
-        showHelpFormat,
         updForm;
 
 
@@ -106,20 +106,6 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, lay
     /**
      *
      */
-    showHelpFormat = function () {
-        var help_div = win.document.getElementById('help_format');
-
-        if (help_div.style.visibility === 'visible') {
-            help_div.style.visibility = 'hidden';
-
-        } else {
-            help_div.style.visibility = 'visible';
-        }
-    };
-
-    /**
-     *
-     */
     lib.misc = function () {
         selectOutputType(layoutModel.conf.wltype);
     };
@@ -128,9 +114,7 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent'], function (win, $, lay
      *
      */
     lib.bindClicks = function () {
-        $('#show-help-format-link').on('click', function () {
-            showHelpFormat();
-        });
+        popupbox.bind($('#show-help-format-link'), layoutModel.conf.messages.whiteLists, {});
         $('#select-output-type-simple').on('click', function () {
             selectOutputType('simple');
         });

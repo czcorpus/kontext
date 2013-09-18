@@ -1373,3 +1373,7 @@ table.results-range-and-paging th {
 .calc-warning img {
     padding: 0;
 }
+
+#show-help-format-link img {
+    padding-right: 5px;
+}
