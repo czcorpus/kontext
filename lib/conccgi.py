@@ -571,6 +571,25 @@ class ConcCGI(CGIPublisher):
         if methodname.startswith('first'):
             result['show_cup_menu'] = self.is_err_corpus()
 
+    def _store_query_selector_types(self):
+        """
+        Stores the state of all queryselector_* values so they can
+        be used to restore respective forms
+        """
+        if 'forms' not in self._session:
+            self._session['forms'] = {}
+        for item in vars(self):
+            if item.startswith('queryselector'):
+                self._session['forms'][item] = getattr(self, item)
+
+    def _restore_query_selector_types(self):
+        """
+        """
+        ans = {}
+        if 'forms' in self._session:
+            ans.update(self._session['forms'])
+        return ans
+
     def nop(self):
         """
         Represents an empty operation
