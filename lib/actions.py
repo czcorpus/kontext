@@ -201,6 +201,7 @@ class Actions(ConcCGI):
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
         self._reset_session_conc()
+        out.update(self._restore_query_selector_types())
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
@@ -218,7 +219,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._enable_subcorpora_list(out)
-        out.update(dict([(k, k) for k, v in self._get_persistent_items().items() if k.startswith('query_type_')]))
+        logging.getLogger(__name__).debug(out)
         self._session['last_corpus'] = self.corpname
         return out
 
@@ -732,6 +733,7 @@ class Actions(ConcCGI):
             self.align = ','.join(self.sel_aligned)
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
+        self._store_query_selector_types()
         return self.view()
 
     first.template = 'view.tmpl'
