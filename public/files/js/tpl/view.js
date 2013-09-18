@@ -114,7 +114,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             });
         });
 
-        popupBox.bind($('.calc-warning'), layoutModel.conf.messages.calc_warning, {});
+        popupBox.bind($('.calc-warning'), layoutModel.conf.messages.calc_warning, {type: 'warning'});
     };
 
     /**
