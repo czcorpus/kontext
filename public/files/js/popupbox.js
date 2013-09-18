@@ -36,6 +36,9 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = 25000;
     }
 
+    /**
+     *
+     */
     TooltipBox.prototype.close = function () {
         if (this.newElem) {
             $(this.newElem).remove();
@@ -45,6 +48,19 @@ define(['win', 'jquery'], function (win, $) {
                 clearInterval(this.timer);
             }
         }
+    };
+
+    TooltipBox.prototype.mapTypeToIcon = function (type) {
+        var ans = {
+            info : "../files/img/info-icon.png",
+            warning : "../files/img/warning-icon.png",
+            error : "../files/img/error-icon.png"
+        }[type];
+
+        if (!ans) {
+            throw Error('unknown tooltip type: ' + type);
+        }
+        return ans;
     };
 
     /**
@@ -66,9 +82,14 @@ define(['win', 'jquery'], function (win, $) {
             jqWhereElement = $(whereElement),
             fontSize,
             closeClickHandler,
-            self = this;
+            self = this,
+            msgType = 'info';
 
         options = options || {};
+
+        if (options.hasOwnProperty('type')) {
+            msgType = options.type;
+        }
 
         if (options.hasOwnProperty('height')) {
             boxHeight = options.height;
@@ -91,7 +112,7 @@ define(['win', 'jquery'], function (win, $) {
         } else {
             $(this.newElem).empty().append(contents);
         }
-        $(this.newElem).prepend('<img class="info-icon" src="../files/img/info-icon.png" alt="info" />');
+        $(this.newElem).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         $(this.newElem).addClass('tooltip-box');
         $(this.newElem).css({
             'padding-left': horizPadding + 'px',
