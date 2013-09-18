@@ -1097,6 +1097,23 @@ def is_conc_alive(pidfile):
     return True
 
 
+def contains_shuffle_seq(q_ops):
+    """
+    Tests whether the provided query sequence contains a subsequence
+    of 'shuffle' operation (e.g. on ['foo', 'bar', 'f', 'f', 'something'] returns True)
+    """
+    prev_shuffle = False
+    for item in q_ops:
+        if item == 'f':
+            if prev_shuffle:
+                return True
+            else:
+                prev_shuffle = True
+        else:
+            prev_shuffle = False
+    return False
+
+
 def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     q = tuple(q)
     try:
@@ -1113,7 +1130,12 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
         pass
 
     saved = load_map(cache_dir)
-    for i in range(len(q), 0, -1):
+    if contains_shuffle_seq(q):
+        srch_from = 1
+    else:
+        srch_from = len(q)
+
+    for i in range(srch_from, 0, -1):
         cache_val = saved.get((subchash, q[:i]))
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
