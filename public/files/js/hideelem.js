@@ -131,20 +131,6 @@ define(['jquery', 'win', 'jquery.cookies', 'popupbox'], function ($, win, cookie
         },
 
         /**
-         * @param {object} userSettings
-         * @return {String}
-         */
-        cmdGetFocusedId : function (userSettings) {
-            var oldid = userSetings.get("query_type"),
-                id = oldid.substring(0, oldid.length - 3);
-
-            if (win.document.getElementById(id)) {
-                return oldid.substring(0, oldid.length - 3);
-            }
-            return 'iquery';
-        },
-
-        /**
          * @param querySelector
          * @param hints
          * @param {object} userSettings
@@ -193,13 +179,6 @@ define(['jquery', 'win', 'jquery.cookies', 'popupbox'], function ($, win, cookie
 
             } else {
                 $('#query-type-hint').remove();
-            }
-
-            if (jqQs.data('parallel-corp')) {
-                userSettings.set('query_type' + jqQs.data('parallel-corp'), $(querySelector).val());
-
-            } else {
-                userSettings.set('query_type', newid);
             }
             jqFocusElem.focus();
         },
