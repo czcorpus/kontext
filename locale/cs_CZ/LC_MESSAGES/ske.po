@@ -2626,3 +2626,5 @@ msgstr "Pro změnu jazyka je nutné zadat pozitivní filtr"
 msgid "random sample of size"
 msgstr "náhodný vzorek o velikosti"
 
+msgid "Line range cannot be specified as the data contain multiple blocks. All the respective lines will be stored."
+msgstr "Rozsah řádek nelze nastavit, neboť data obsahují více bloků. Budou uložena všechna data."

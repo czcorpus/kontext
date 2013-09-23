@@ -1105,3 +1105,9 @@ table.form th {
 #stats-filter dl dd {
     margin: 0 0 10px 0;
 }
+
+p.notification {
+    margin: 0;
+    font-size: 90%;
+    color: #444444;
+}

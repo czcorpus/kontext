@@ -1279,6 +1279,7 @@ class ConcCGI(UserCGI):
         Displays a form to set-up the 'save frequencies' operation
         """
         result = self.freqs(fcrit, flimit, freq_sort, ml)
+        is_multiblock = len(result['Blocks']) > 1
         if not to_line:
             if 'Total' in result['Blocks'][0]:
                 to_line = result['Blocks'][0]['Total']
@@ -1287,8 +1288,9 @@ class ConcCGI(UserCGI):
 
         return {
             'FCrit': [{'fcrit': cr} for cr in fcrit],
-            'from_line': from_line,
-            'to_line': to_line
+            'from_line': from_line if not is_multiblock else '1',
+            'to_line': to_line if not is_multiblock else 'auto',
+            'is_multiblock': is_multiblock
         }
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
@@ -1332,12 +1334,15 @@ class ConcCGI(UserCGI):
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
-            # write the header first, if required
-            if colheaders:
-                csv_writer.writerow([item['n'] for item in result['Blocks'][0]['Head'][:-2]] + ['freq', 'freq [%]'])
-            # then write the data (first block only)
-            for item in result['Blocks'][0]['Items']:
-                csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
+
+            for block in result['Blocks']:
+                # write the header first, if required
+                if colheaders:
+                    csv_writer.writerow([item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
+                # then write the data (first block only)
+                for item in block['Items']:
+                    csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
+                csv_writer.writerow('')
 
             tpl_data = {
                 'csv_rows': [row.decode('utf-8') for row in csv_buff.rows],
