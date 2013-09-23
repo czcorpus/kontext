@@ -28,7 +28,9 @@ import corplib
 import plugins
 import butils
 
-if not '_' in globals():
+try:
+    _
+except NameError:
     _ = lambda s: s
 
 
