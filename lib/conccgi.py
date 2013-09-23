@@ -1280,7 +1280,10 @@ class ConcCGI(UserCGI):
         """
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         if not to_line:
-            to_line = len(result['Blocks'][0]['Items'])
+            if 'Total' in result['Blocks'][0]:
+                to_line = result['Blocks'][0]['Total']
+            else:
+                to_line = len(result['Blocks'][0]['Items'])
 
         return {
             'FCrit': [{'fcrit': cr} for cr in fcrit],
