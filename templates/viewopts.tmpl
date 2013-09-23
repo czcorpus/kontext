@@ -63,7 +63,7 @@ $input_hidden
             </td>
         </tr>
         <tr>
-            <th><label for="gdex-enabled-checkbox">$_("Sort good dictionary examples"):</label></th>
+            <th><label for="gdex-enabled-checkbox">$_("Sort concordance according to good dictionary examples"):</label></th>
             <td>
                 <input type="hidden" name="gdex_enabled" value="0" />
                 <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
@@ -94,7 +94,7 @@ $input_hidden
 
     <input type="hidden" name="shuffle" value="0" />
     <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
-    <label for="always-shuffle">$_("Always start with shuffled concordance lines.")</label>
+    <label for="always-shuffle">$_("Shuffle concordance lines by default")</label>
     <br />
     ($_('no effect to current concordance')) <br />
     <input type="hidden" name="copy_icon" value="0" />

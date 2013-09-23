@@ -891,8 +891,11 @@ msgid "Select one or more PoS tags"
 msgstr "Vyberte jednu nebo více značek"
 
 #: cmpltmpl/first_form.py:658
-msgid "Specific attribute values"
-msgstr "Specifikovat atributy hledání."
+msgid "Specify query according to the meta-information"
+msgstr "Specifikovat dotaz podle metainformací"
+
+msgid "Specify context"
+msgstr "Specifikovat kontext"
 
 #: cmpltmpl/first_form.py:687
 msgid "Aligned corpora"
@@ -1123,8 +1126,8 @@ msgid "KWIC Context size"
 msgstr "Velikost KWIC kontextu (počet pozic)"
 
 #: cmpltmpl/viewopts.py:230
-msgid "Sort good dictionary examples"
-msgstr "Setřídit vhodné slovníkové příklady"
+msgid "Sort concordance according to good dictionary examples"
+msgstr "Setřídit konkordanci podle vhodných slovníkových příkladů"
 
 #: cmpltmpl/viewopts.py:245
 msgid "Number of lines to be sorted"
@@ -1140,8 +1143,8 @@ msgid "Other options"
 msgstr "Další možnosti"
 
 #: cmpltmpl/viewopts.py:297
-msgid "Always start with shuffled concordance lines."
-msgstr "Vždy začínat s promíchanými konkordančními řádky."
+msgid "Shuffle concordance lines by default"
+msgstr "Automaticky promíchat konkordanční řádky"
 
 #: cmpltmpl/viewopts.py:304
 msgid "no effect to current concordance"
