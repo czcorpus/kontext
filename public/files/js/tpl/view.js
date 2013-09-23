@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane', 'simplemodal', 'popupbox'],
-    function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, _sm, popupBox) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane', 'simplemodal',
+        'popupbox'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, _sm, popupBox) {
     'use strict';
 
     var lib = {};
@@ -35,8 +35,9 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
 
         callback = function () {
             $('a.expand-link').each(function () {
-                $(this).bind('click', function () {
+                $(this).bind('click', function (event) {
                     detail.showDetail($(this).data('url'), $(this).data('params'), $(this).data('loadtext'), true, callback);
+                    event.preventDefault();
                 });
             });
         };
@@ -44,6 +45,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
             var jqRealTarget = null;
 
+            $('#conclines tr.active').removeClass('active');
+            $(event.target).closest('tr').addClass('active');
             if ($(event.target).data('url')) {
                 jqRealTarget = $(event.target);
 
@@ -61,6 +64,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         });
 
         $('td.ref').bind('click', function (event) {
+            $('#conclines tr.active').removeClass('active');
+            $(event.target).closest('tr').addClass('active');
             detail.showDetail(
                 $(event.target).data('url'),
                 $(event.target).data('params'),

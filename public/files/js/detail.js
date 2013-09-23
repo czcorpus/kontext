@@ -65,6 +65,7 @@ define(['jquery'], function ($) {
         closeDetail : function (event) {
             $(document).off('keyup', self.escKeyEventHandler);
             $('#detailframe').fadeOut(100);
+            $('#conclines tr.active').removeClass('active');
             event.stopPropagation();
         },
 
