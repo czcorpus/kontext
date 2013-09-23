@@ -295,3 +295,7 @@ table#conclines .concordance-col-heading {
     font-size: 110%;
     font-family: "Roboto";
 }
+
+#conclines tr.active {
+    background-color: #FFFFCC;
+}
