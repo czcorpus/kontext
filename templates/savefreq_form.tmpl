@@ -90,8 +90,18 @@ $input_hidden
   </tr>
   <tr>
     <th>$_("Lines to store"):</th>
-    <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
-      <input type="text" name="to_line" value="$to_line" size="4" /></td>
+    <td>
+        #if not $is_multiblock
+        $_('from'):  <input type="text" name="from_line" value="$from_line" size="4" />
+        $_('to'): <input type="text" name="to_line" value="$to_line" size="4" />
+        #else
+        $_('from'):  <input type="text" value="$from_line" size="4" disabled="disabled" />
+        <input type="hidden" name="from_line" value="1" />
+        $_('to'): <input type="text" value="$to_line" size="4" disabled="disabled" />
+        <input type="hidden" name="to_line" value="100000" />
+        <p class="notification">($_('Line range cannot be specified as the data contain multiple blocks. All the respective lines will be stored.'))</p>
+        #end if
+    </td>
    </tr>
 </table>
 
