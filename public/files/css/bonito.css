@@ -548,6 +548,11 @@ a#logo-wrapper {
     height:120px;
 }
 
+#within-builder-modal .inputs {
+    margin-top: 15px;
+    text-align: center;
+}
+
 fieldset h3 {
     text-align: center;
     font-size: 11pt;
