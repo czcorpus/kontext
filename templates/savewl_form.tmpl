@@ -110,8 +110,8 @@ require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, dom
     <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
   </tr>
   <tr>
-    <th>$_("Lines to store"):</th>
-    <td>$_('from') <input type="text" name="from_line" value="$from_line" size="4" /> $_('to')
+    <th>$_("Maximum number of lines"):</th>
+    <td><input type="hidden" name="from_line" value="$from_line" size="4" />
             <input type="text" name="to_line" value="$to_line" size="4" /></td>
   </tr>
 </table>
