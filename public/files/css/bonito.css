@@ -752,10 +752,6 @@ input#cql {
     text-align:right;
 }
 
-.tree-component {
-    box-shadow:2px 2px 3px #aaa;
-}
-
 .warning {
     color:red;
 }
@@ -1186,15 +1182,6 @@ table.form th {
 
 #stats-filter dl dd {
     margin: 0 0 10px 0;
-}
-
-.hint-box {
-    position: absolute;
-    color: #333;
-    background-color: #FFF;
-    box-shadow: 2px 2px 1px #aaa;
-    white-space: normal;
-    border : 1px solid #DDD;
 }
 
 table.colloc-metrics {
