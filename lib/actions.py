@@ -1568,10 +1568,11 @@ class Actions(ConcCGI):
     def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                usesubcorp='', ref_corpname='', ref_usesubcorp='',
                saveformat='text'):
+        self.disabled_menu_items = ('menu-save', )
         wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                              ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
         if to_line == '':
-            to_line = str(len(wl['Items'])) if 'Items' in wl else 0
+            to_line = 1000
 
         ans = {
             'from_line': from_line,
