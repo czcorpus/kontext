@@ -25,18 +25,24 @@ $_("Collocations")#slurp
 
 #attr $focus = "'next'"
 
+
 #def collblock
 #end def
 
-#def left_submenu_save
-<li><a title='$_("Save Collocation candidates to a text file or XML")' href='savecoll_form?$q;$globals&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage'>$_("Save")</a></li>
+#def custom_save
+#set global $new_maxitems = $cmaxitems / $collpage
+#filter WebSafe
+<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savecoll?$q;$globals&amp;saveformat=csv&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage"">CSV</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savecoll?$q;$globals&amp;saveformat=xml&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage"">XML</a></li>
+<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savecoll?$q;$globals&amp;saveformat=text&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage">TXT</a></li>
+<li><a title="$_("Save Frequency list with custom parameters")" href="savecoll_form?$q;$globals&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage">$_("Custom")&#8230;</a></li>
+#end filter
 #end def
 
 
 #def main
 #filter WebSafe
 #set global $allhref = 'collx?%s;%s;cattr=%s;cbgrfns=%s;cminfreq=%s;cminbgr=%s;cfromw=%s;ctow=%s;csortfn=%s' % ($q, $globals, $cattr, $cbgrfns, $cminfreq, $cminbgr, $cfromw, $ctow, $csortfn)
-
 
 <div id="coll-wrapper">
     <h2>$_("Collocation candidates")</h2>

@@ -1085,6 +1085,7 @@ class Actions(ConcCGI):
         collocations form
         """
         self.active_menu_item = 'menu-collocations'
+        self.disabled_menu_items = ('menu-save', )
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
         else:
@@ -1122,14 +1123,8 @@ class Actions(ConcCGI):
         for item in result['Items']:
             item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
             item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
-
-        params = "cattr=%s&cbgrfns=%s&cminfreq=%s&cminbgr=%s&cfromw=%s&ctow=%s&csortfn=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s" \
-                 % (self.cattr, self.cbgrfns, self.cminfreq, self.cminbgr, self.cfromw, self.ctow, self.csortfn,
-                   '%s', self.heading, self.numbering, self.align_kwic, 1, 10000)
-        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
-        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
-        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
-
+        result['cmaxitems'] = 10000
+        result['to_line'] = 10000  # TODO
         return result
 
     ConcCGI.add_vars['collx'] = ['concsize']
@@ -1149,6 +1144,7 @@ class Actions(ConcCGI):
         """
         """
         self.active_menu_item = 'menu-collocations'
+        self.disabled_menu_items = ('menu-save', )
 
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
