@@ -376,7 +376,8 @@ class Actions(ConcCGI):
 
     def viewopts(self):
         from tbl_settings import tbl_labels
-        logging.getLogger(__name__).debug('shuffle: %s' % self.shuffle)
+
+        self.disabled_menu_items = ('menu-save', )
         out = {
             'newctxsize': self.kwicleftctx[1:],
             'tbl_labels': tbl_labels

@@ -437,6 +437,7 @@ ul.submenu {
     margin: 0;
     padding: 0;
     border-radius: 3px;
+    min-width: 90px;
 }
 
 ul.submenu li {
