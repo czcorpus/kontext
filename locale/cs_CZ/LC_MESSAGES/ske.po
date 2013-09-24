@@ -1120,7 +1120,7 @@ msgid "Page size (number of lines)"
 msgstr "Velikost stránky (počet řádků)"
 
 #: cmpltmpl/viewopts.py:211
-msgid "KWIC Context size"
+msgid "KWIC Context size (positions)"
 msgstr "Velikost KWIC kontextu (počet pozic)"
 
 #: cmpltmpl/viewopts.py:230
