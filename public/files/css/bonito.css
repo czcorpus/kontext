@@ -101,7 +101,7 @@
     text-align:right;
 }
 
-#corpus-details-box .loader-animation {
+.loader-animation {
     display: block;
     margin: 0 auto;
 }

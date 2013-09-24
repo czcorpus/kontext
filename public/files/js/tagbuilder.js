@@ -93,6 +93,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
                 prevSelection = {};
                 prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
                 tagLoader.loadInitialVariants(function (data) {
+                    tagLoader.stopLoadingNotification();
                     tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                     tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
                     tagLoader.multiSelectComponent.collapseAll();
@@ -160,6 +161,11 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
          *
          */
         this.activeBlockHistory = [];
+
+        /**
+         *
+         */
+        this.loadingNotification = null;
 
     }
 
@@ -282,6 +288,26 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
                 }
             });
         });
+    };
+
+    /**
+     *
+     * @param parentElement
+     */
+    TagLoader.prototype.startLoadingNotification = function (parentElement) {
+        this.loadingNotification = win.document.createElement('IMG');
+
+        $(parentElement).append(this.loadingNotification);
+        $(this.loadingNotification).attr('src', '../files/img/ajax-loader.gif').addClass('loader-animation');
+    };
+
+    /**
+     *
+     */
+    TagLoader.prototype.stopLoadingNotification = function () {
+        if (this.loadingNotification) {
+            $(this.loadingNotification).remove();
+        }
     };
 
     /**
@@ -433,7 +459,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
             params = {},
             self = this;
 
-        errorCallback = errorCallback || function (err) {};
+        errorCallback = errorCallback || function () {};
 
         if (this.initialValues === null) {
             $.ajax({
@@ -452,7 +478,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
                         callback(self.initialValues);
                     }
                 },
-                error: function (data) {
+                error: function () {
                     $.modal.close();
                     errorCallback();
                 }
@@ -496,6 +522,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
         this.multiSelectComponent.collapseAll();
         this.loadInitialVariants(function (data) {
             self.updateMultiSelectValues(data);
+            self.stopLoadingNotification();
         });
         for (prop in this.multiSelectComponent.blockSwitchLinks) {
             if (this.multiSelectComponent.blockSwitchLinks.hasOwnProperty(prop)) {
@@ -534,6 +561,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
      *     tagDisplay     : ID or element itself for the "tag display" box
      *     hiddenElm      : ID or element itself
      *     errorCallback  : function to be called in case of an error
+     *     widgetElement : HTMLElement where the widget is rendered
      * @return {TagLoader}
      */
     lib.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
@@ -568,7 +596,11 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
         $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
         $(tagLoader.tagDisplay).empty().append('.*');
 
+        if ($(opt.widgetElement).length > 0) {
+            tagLoader.startLoadingNotification(opt.widgetElement);
+        }
         tagLoader.loadInitialVariants(function (data) {
+            tagLoader.stopLoadingNotification();
             tagLoader.updateMultiSelectValues(data);
         });
         if (typeof (opt.resetButton) === 'string') {
@@ -652,7 +684,8 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
                     lib.attachTagLoader(corpusName, numTagPos, msComponent, {
                         tagDisplay : $(opt.tagDisplayElement),
                         resetButton : $(opt.resetButtonElement),
-                        errorCallback : errorCallback
+                        errorCallback : errorCallback,
+                        widgetElement : opt.widgetElement
                     });
 
                     $(opt.insertTagButtonElement).one('click', insertTagClickAction);
