@@ -70,12 +70,15 @@ ul.multiselect li td.checkbox-cell {
 }
 
 .tag-display-box {
+    width: 380px;
+    float: left;
+    margin-bottom: 5px;
+    padding: 2px;
+    margin-right: 5px;
     font-size: 15pt;
     font-family: "Courier New", Courier, monospace;
     background-color: #ffffff;
     border: 1px solid #979f9f;
-    padding: 2px;
-    margin-right: 5px;
 }
 
 .tag-display-box a.backlink:hover,
