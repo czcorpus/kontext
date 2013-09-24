@@ -138,13 +138,17 @@ class QueryStorage(object):
         """
 
         """
-        cursor.execute("SELECT COUNT(*) FROM noske_saved_queries WHERE user_id = %s AND deleted IS NULL AND tmp = 1", (user_id,))
-        row = cursor.fetchone()
-        if row:
-            num_delete = row[0] - self.num_kept_records
-            if num_delete > 0:
+        # Current solution is not very effective but makes MySQL to complain less
+        # in case of active replication and multiple engines used.
+        # Typically this will delete just one old record which should be ok.
+        cursor.execute("SELECT id FROM noske_saved_queries WHERE user_id = %s "
+                       "AND deleted IS NULL AND tmp = 1 ORDER BY created DESC LIMIT %s, 100",
+                       (user_id, self.num_kept_records))
+        rows = cursor.fetchall()
+        if rows:
+            for row in rows:
                 cursor.execute("DELETE FROM noske_saved_queries WHERE user_id = %s AND deleted IS NULL AND tmp = 1 "
-                               " ORDER BY created LIMIT %s", (user_id, num_delete))
+                               " AND id = %s", (user_id, row[0]))
 
     def get_user_query(self, user_id, id):
         """
