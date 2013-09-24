@@ -463,6 +463,8 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
             $('#within-builder-modal').modal({
                 onShow : function () {
+                    $('#within-builder-modal .selection-container')
+                        .append('<img src="../files/img/ajax-loader.gif" alt="loading" />');
                     $.ajax({
                         url : 'ajax_get_structs_details?corpname=' + corpusName,
                         data : {},
@@ -487,7 +489,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                                     }
                                 }
                                 html += '</select>';
-                                $('#within-builder-modal .selection-container').append(html);
+                                $('#within-builder-modal .selection-container').empty().append(html);
                                 $('#within-insert-button').one('click', clickAction);
                                 $(win.document).on('keypress', buttonEnterAction);
                             }
