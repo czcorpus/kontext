@@ -391,7 +391,7 @@ class ConcCGI(CGIPublisher):
                 corpname = self.corpname
             else:
                 corpname = '%s:%s' % (self.corpname, self.usesubcorp)
-            plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=corpname,
+            plugins.query_storage.write(useapplication_barr_id=self._session_get('user', 'id'), corpname=corpname,
                                         url=url, params=json.dumps(self.q), tmp=1, description=description, query_id=None, public=0)
 
     def _fetch_corpname(self, form, corplist):
@@ -528,6 +528,11 @@ class ConcCGI(CGIPublisher):
         else:
             result['login_url'] = 'login'
             result['logout_url'] = 'login'
+
+        if plugins.has_plugin('application_bar'):
+            result['app_bar'] = plugins.application_bar.get_contents(plugins.auth.get_ticket(self._cookies))
+        else:
+            result['app_bar'] = None
 
         # is there a concordance information in session?
         if 'conc' in self._session:

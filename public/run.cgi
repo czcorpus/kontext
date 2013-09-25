@@ -62,7 +62,7 @@ except ImportError:
 try:
     appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
     if appbar_module:
-        plugins.application_bar = appbar_module.AppBar(settings)
+        plugins.application_bar = appbar_module.create_instance(settings)
 except ImportError:
     pass
 

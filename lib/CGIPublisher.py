@@ -193,12 +193,7 @@ class CGIPublisher(object):
         self._set_session_id(ans['id'])
         self._session = ans['data']
 
-        central_auth_cookie_name = settings.get('plugins', 'auth')['ucnk:central_auth_cookie_name']
-        if central_auth_cookie_name in self._cookies:
-            central_auth_id = self._cookies[central_auth_cookie_name].value
-        else:
-            central_auth_id = None
-        user = plugins.auth.validate_auth_ticket(central_auth_id)
+        user = plugins.auth.validate_auth_ticket(self._cookies)
         self._session['user'] = {
             'id': user['id'],
             'user': user['user'],
