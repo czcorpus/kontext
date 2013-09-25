@@ -46,37 +46,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </script>
 </head>
 <body>
-
-<div>
-    <table id="topbar">
-        <tr>
-            <td rowspan="2">
-                <a href="../run.cgi/first_form">$_('Continue')</a>
-            </td>
-            <td id="topbar-navigation">
-            </td>
-        </tr>
-    </table>
-</div>
-
-#end unless
-
-
-
-#filter WebSafe
-<div id="error" class="system-error">
-    <div class="frame">
-        <img class="icon" alt="Error" src="../files/img/error-icon.png">
-        <p>$message</p>
-        <a href="$_home_url" class="close-icon" title="$_('home page')">
-            <img src="../files/img/close-icon.png" />
-        </a>
+<div id="error-page">
+    <div>
+        <div id="topbar">
+            <a id="logo-wrapper" href="first_form"><img id="logo-image" src="../files/img/kontext-logo.png" alt="Kontext logo"
+                                                        style="width: 157px;height: 52px" /></a>
+        </div>
     </div>
+
+    #end unless
+
+
+
+    #filter WebSafe
+    <div id="error" class="system-error">
+        <div class="frame">
+            <img class="icon" alt="Error" src="../files/img/error-icon.png">
+            <p>$message</p>
+            <a href="$_home_url" class="close-icon" title="$_('home page')">
+                <img src="../files/img/close-icon.png" />
+            </a>
+        </div>
+    </div>
+
+    <p class="menu"><a href="first_form">$_('Continue')</a></p>
+
+    #end filter
+
+    #unless $mode_included
 </div>
-
-#end filter
-
-#unless $mode_included
 </body>
 </html>
 #end unless

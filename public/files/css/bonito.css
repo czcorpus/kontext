@@ -1370,3 +1370,18 @@ table.results-range-and-paging th {
 #show-help-format-link img {
     padding-right: 5px;
 }
+
+#error-page #topbar {
+    text-align: center;
+    margin-bottom: 80px;
+}
+
+#error-page p.menu {
+    margin-top: 50px;
+    text-align: center;
+    font-size: 17pt;
+}
+
+#error-page #logo-wrapper {
+    float: none;
+}
