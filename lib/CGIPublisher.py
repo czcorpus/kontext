@@ -192,12 +192,23 @@ class CGIPublisher(object):
             ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
         self._set_session_id(ans['id'])
         self._session = ans['data']
+
+        central_auth_cookie_name = settings.get('plugins', 'auth')['ucnk:central_auth_cookie_name']
+        if central_auth_cookie_name in self._cookies:
+            central_auth_id = self._cookies[central_auth_cookie_name].value
+        else:
+            central_auth_id = None
+        user = plugins.auth.validate_auth_ticket(central_auth_id)
+        self._session['user'] = {
+            'id': user['id'],
+            'user': user['user'],
+            'fullname': user['fullname']
+        }
         self._user = self._session['user']['user']
 
-        if self._session['user']['id'] is not None:
+        if self._session['user']['id'] > 0:
             self._anonymous = 0
         else:
-            self._user = None
             self._anonymous = 1
 
     def _session_get(self, *nested_keys):

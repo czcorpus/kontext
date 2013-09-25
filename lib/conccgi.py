@@ -287,7 +287,7 @@ class ConcCGI(CGIPublisher):
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
 
     def _is_corpus_free_action(self, action):
-        return action in ('login', 'loginx', 'logoutx')
+        return action in ('login', 'loginx', 'logoutx', 'first_form')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -302,13 +302,15 @@ class ConcCGI(CGIPublisher):
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
 
+        allowed_corpora = plugins.auth.get_corplist(self._user)
         if not self._is_corpus_free_action(path[0]):
-            allowed_corpora = plugins.auth.get_corplist(self._user)
             self._fetch_corpname(form, allowed_corpora)
             if not self.corpname in allowed_corpora:
                 self.corpname = ''
                 path = [ConcCGI.NO_OPERATION]
-                self._redirect('login')
+                self._redirect('%sfirst_form' % settings.get_root_url())
+        elif len(allowed_corpora) > 0:
+            self.corpname = allowed_corpora[0]
         else:
             self.corpname = ''
 
@@ -519,6 +521,13 @@ class ConcCGI(CGIPublisher):
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
         result['citation_info'] = corp_conf_info.get('citation_info', '')
+
+        if plugins.has_plugin('auth'):
+            result['login_url'] = plugins.auth.get_login_url()
+            result['logout_url'] = plugins.auth.get_logout_url()
+        else:
+            result['login_url'] = 'login'
+            result['logout_url'] = 'login'
 
         # is there a concordance information in session?
         if 'conc' in self._session:
