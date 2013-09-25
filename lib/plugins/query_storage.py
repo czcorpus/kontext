@@ -127,6 +127,8 @@ class QueryStorage(object):
         cursor.execute(sql, tuple(sql_params))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
         for row in rows:
+            row['corpname'] = row['corpname'].decode('utf-8')
+            row['url'] = row['url'].decode('utf-8')
             row['params'] = json.loads(row['params'])
             row['params_description'] = conclib.get_conc_desc(q=row['params'])
             row['description'] = self.decode_description(row['description'])
