@@ -1106,6 +1106,9 @@ class Actions(ConcCGI):
         """
         self.active_menu_item = 'menu-collocations'
 
+        self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
+                    'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
+
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
         self.cbgrfns = ''.join(cbgrfns)
         if csortfn is '' and cbgrfns:
@@ -1129,16 +1132,6 @@ class Actions(ConcCGI):
         return result
 
     ConcCGI.add_vars['collx'] = ['concsize']
-
-    def save_coll_options(self, cbgrfns=['t', 'm']):
-        out = self.coll()
-        self.cbgrfns = ''.join(cbgrfns)
-        self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
-                            'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
-        out['notification'] = _('Selected options successfully saved')
-        return out
-
-    save_coll_options.template = 'coll.tmpl'
 
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                  heading=0):
