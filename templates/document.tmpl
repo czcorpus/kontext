@@ -1,0 +1,808 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+#encoding UTF-8
+#import urllib
+#import re
+#from templating.filters import *
+#attr $focus = ""
+#if $format == 'text'
+$text
+#else:
+<!DOCTYPE html>
+<html>
+#filter WebSafe
+<head>
+<title>$title</title>
+#end filter
+<meta charset="utf-8" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}ucnk.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}widgets.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
+<script type="text/javascript" src="$files_path/js/virtual-keyboard.js" charset="UTF-8"></script>
+<script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+#block headers
+#end block
+#if $getVar('ca_headers', '')
+$ca_headers
+#else
+<script type="text/javascript">
+requirejs.config({
+    baseUrl : '../files/js',
+    paths: {
+        'domReady' : './domReady.min',
+        'jquery': './jquery.min',
+        'simplemodal' : './jquery.simplemodal.min',
+        'jqueryui' :  './jquery-ui.custom.min',
+        'jscrollpane' : './jscrollpane.min'
+    },
+    shim : {
+        'jquery': {
+            exports: 'jQuery'
+        },
+        'jquery.cookies' : {
+            deps : ['jquery'],
+            exports : 'jaaulde.utils.cookies'
+        },
+        'jqueryui' : {
+            deps: ['jquery']
+        },
+        'jscrollpane' : {
+            deps: ['jquery']
+        }
+    }
+});
+
+define('win', [], function () { return window; });
+
+var conf = {};
+conf['menuAutoHideInterval'] = 1500;
+conf['messageAutoHideInterval'] = 5000;
+conf['rootPath'] = "$root_path";
+conf['corpname'] = "$corpname";
+conf['numTagPos'] = $num_tag_pos;
+conf['common_app_bar_url'] = "$common_app_bar_url";
+conf['messages'] = {};
+conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+conf['messages'].error_loading_application_bar = "$_('Error loading application bar.')";
+
+#if $focus
+conf.focus = $focus;
+#end if
+
+conf.queryTypesHints = {
+    iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
+};
+conf.messages['msg1'] = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
+conf.messages['failed_to_load_corpus_info'] = "$_('Failed to load corpus information.')";
+
+#block bodyonload
+require(['domReady!', 'tpl/document'], function (domReady, pageself) {
+    pageself.init(conf);
+});
+#end block
+
+#if $getVar('ga_identifier', '')
+// google analytics stuff
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', '$ga_identifier']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+#end if
+</script>
+#end if
+</head>
+<body>
+#if $varExists('_ca_topbar')
+$_ca_topbar
+#else
+
+#def menu_status($id)
+    #if $id == $active_menu_item
+        current
+    #elif $id in $disabled_menu_items
+        disabled
+    #end if
+#end def
+
+#filter WebSafe
+<div id="common-bar">
+<span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
+</div>
+<div id="topbar">
+
+    <a id="logo-wrapper" href="first_form"><img id="logo-image" src="../files/img/kontext-logo.png" alt="Kontext logo" style="width: 157px;height: 52px" /></a>
+
+    <div id="menu-bar">
+        <ul id="menu-level-1">
+
+            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
+                <ul class="submenu">
+                    <li class="separ"><a title="$_('Enter new query')" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('New query')&#8230;</a></li>
+                    <li class="separ"><a title="$_('List of recent queries')" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
+                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
+                </ul>
+            </li>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
+                <ul class="submenu">
+                    <li class="separ"><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li><a title="TODO" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                </ul>
+            </li>
+            <li class="separator">&nbsp;</li>
+            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
+                <ul class="submenu">
+                    #set $i = 0
+                    #for $item in $save_menu
+                    <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    #set $i = $i + 1
+                    #end for
+                    #block custom_save
+                    #end block
+                </ul>
+            </li>
+
+            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
+                <ul class="submenu">
+                    <li class="separ"><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
+                    <li class="separ"><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
+                    <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
+                    <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Details about current query and related operations')" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li>
+                    #if len($undo_q) > 0
+                    <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
+                    #else
+                    <span class="disabled" title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</span>
+                    #end if
+                    </li>
+                </ul>
+            </li>
+
+            <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
+                <ul class="submenu">
+                    <li class="separ"><a href="filter_form?$q;$globals&pnfilter=p">$_('Positive')&#8230;</a></li>
+                    <li><a href="filter_form?$q;$globals&pnfilter=n">$_('Negative')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
+                <ul class="submenu">
+                    #if 'tag' in [x['n'] for x in $AttrList]
+                    <li class="separ"><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
+                    #end if
+                    <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
+                    #if '.' in $fcrit_shortref.split('/')[0]
+                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
+                    #end if
+                    #if $ttcrit
+                    <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+                    #end if
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
+                <ul class="submenu">
+                    <li><a href="coll?$q;$globals">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View options')</a>
+                <ul class="submenu">
+                    #if $viewmode == 'sen'
+                    <li class="separ"><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
+                    #else
+                    <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
+                    #end if
+                    #if $align
+                    <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+                    #end if
+                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$fromp">$_("Attributes, structures and references")&#8230;</a></li>
+                    <li><a href="viewopts?$q;$globals;fromp=$fromp">$_("General concordance view options")&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
+                <ul class="submenu">
+                    <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/manual:uvod" target="_blank">$_('User manual')&#8230;</a></li>
+                    <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms')&#8230;</a></li>
+                    <li><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/cnk:uvod" target="_blank">$_('Available corpora')&#8230;</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div id="menu-level-2-wrapper">
+            <div id="menu-level-2" data-current-menu=""></div>
+        </div>
+    </div>
+
+    <div id="active-corpus">
+        #if $corp_full_name
+            $_('corpus')
+            <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+            <div id="corp-size-information">
+            #if $usesubcorp
+                <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
+            #else
+                <strong>$corp_size</strong> $_('positions')<a id="positions-help-link">?</a>
+            #end if
+            </div>
+            #if 'default_ref' in $citation_info and $citation_info.default_ref
+            <div id="corpus-citation-link">
+                <a href="#">$_('How to cite the corpus')</a>
+            </div>
+            #end if
+        #end if
+
+    </div>
+
+    <div id="corpus-details-box">
+        <div class="top">
+            <h4 class="corpus-name"></h4>
+            <p class="metadata">
+                <strong>$_('size'):</strong> <span class="size"></span> $_('positions')<br />
+                <strong class="web_url">$_('website'):</strong> <span class="web_url"></span>
+            </p>
+        </div>
+        <table class="structs-and-attrs" border="0">
+            <tr>
+                <td>
+                    <table class="attrib-list">
+                        <tr>
+                            <th class="attrib-heading" colspan="2">$_('Attributes')</th>
+                        </tr>
+                        <tr class="item">
+                            <th></th>
+                            <td class="numeric"></td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="padding-left: 4em">
+                    <table class="struct-list">
+                        <tr>
+                            <th class="attrib-heading" colspan="2">$_('Structures')</th>
+                        </tr>
+                        <tr class="item">
+                            <th></th>
+                            <td class="numeric"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <p class="note">$_('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')</p>
+        <p class="corpus-description"></p>
+    </div>
+
+    #if 'default_ref' in $citation_info and $citation_info.default_ref
+    <div id="corpus-citation-box">
+        <h3>$_('How to cite the corpus')</h3>
+        <strong>$($_('Corpus %s as a language resource') % $corpname):</strong>
+        #filter None# $citation_info.default_ref #end filter#
+
+        #if $citation_info.article_ref
+        <strong>$_('It is possible to cite the following article too'):</strong>
+        #filter None# $citation_info.article_ref #end filter#
+        #end if
+
+        #if $citation_info.other_bibliography
+        <strong>$_('other bibliography'):</strong>
+        #filter None# $citation_info.other_bibliography #end filter#
+        #end if
+    </div>
+    #end if
+</div>
+#end filter
+#end if
+
+
+#filter WebSafe
+<div id="container">
+    <div id="content">
+        #if $error
+        <div id="error">
+            <div class="frame">
+                <img class="icon" alt="Error" src="../files/img/error-icon.png">
+                <span>$error</span>
+                <a class="close-icon">
+                    <img src="../files/img/close-icon.png" />
+                </a>
+            </div>
+        </div>
+        #end if
+        #if $varExists('notification') and $notification
+        <div id="notification">
+            <div class="frame">
+                <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
+                <span>$notification</span>
+                <a class="close-icon">
+                    <img src="../files/img/close-icon.png" />
+                </a>
+            </div>
+        </div>
+        #end if
+        #filter None
+        #block concordance
+        #if $show_conc_bar
+        <div id="conc-wrapper">
+            <div id="conc-top-bar">
+                <div id="result-info">
+                    #if $usesubcorp
+                        $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
+                    #end if
+
+                    $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
+                        #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+                        <span class="separ">|</span> #end if
+
+                    <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+                    <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+                    $result_relative_freq_rel_to
+                    #if $result_arf
+                    <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+                    <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+                    #end if
+                    #if $result_shuffled
+                    <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
+                    #end if
+                </div>
+            </div>
+            <div id="conclines-wrapper">
+                <div id="hidden-conc">
+                    <a href="view?$q;$globals" title="$_('click to show current concordance')"><img src="../files/img/expand-conc.png" alt="$_('show current concordance')" /></a>
+                </div>
+            </div>
+        </div>
+        #end if
+        #end block
+
+        #block main
+        #end block
+
+        #end filter
+    </div>
+    <div id="footer">
+        <div id="switch-language-box">$_("user interface languages"):
+            <a data-lang="en">English</a> |
+            <a data-lang="cs">česky</a>
+        </div>
+        <div>
+            <span id="copyright-info">
+                &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,
+                &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>
+            </span>,
+            <span id="app-version">
+                $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
+            </span>
+        </div>
+    </div>
+</div>
+#end filter
+## end of left menu
+
+
+</body>
+</html>
+
+#end if
+
+## ******** Common methods definitions ******** ##
+
+#def corp_sel($onchange=True)
+## Select corpus name
+
+#if $corplist_size == 1
+$corp_full_name</b><br>
+<input type="hidden" name="corpname" value="$corpname" />
+#else
+<input type="hidden" name="reload" />
+
+<select name="corpname">
+  #for $c in $Corplist
+    #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
+    <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
+  #end for
+</select>
+#if $SubcorpList
+<strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+    #for $subc in $SubcorpList
+    <option value="$subc.v">$subc.n</option>
+    #end for
+</select>
+#end if ## SubcorpList
+#end if
+#end def
+
+#def corp_sel_node
+#filter None
+<tbody>
+    <tr class="required">
+    #if $corplist_size > 1
+        <th>$_("Corpus"):</th>
+        <td colspan="2">
+        #filter None
+        $corp_sel
+        #end filter
+    #else
+        <td colspan="2">
+        <input type="hidden" name="corpname" value="$corpname" />
+    #end if
+    </td>
+    </tr>
+</tbody>
+#end filter
+#end def
+
+
+#def subcorp_sel($nameid='usesubcorp')
+## Select subcorpus
+
+#if $LastSubcorp
+  <select name="$nameid" id="$nameid">
+    <option value="">$_("whole corpus")</option>
+    #for $l in $LastSubcorp
+      <option
+      #if $l.n == $getVar($nameid, '')
+        selected
+      #end if
+      >$l.n</option>
+    #end for
+    </select>
+    <i>
+    <a href="subcorp?$corpname_url">$_("info")</a>
+    </i>
+#end if
+<i>
+#if not $_anonymous
+  <a href="subcorp_form?$corpname_url">$_("create new")</a>
+#end if
+</i>
+#end def
+
+
+#def input_hidden
+## Global form parameters
+
+#for $qq in $Q
+  <input type="hidden" name="q" value="${qq['q'], also='"'}" />
+#end for
+#for $g in $Globals
+  <input type="hidden" name="$g.name" value="$g.value" />
+#end for
+#end def
+
+
+#def tt_sel
+## Text Types
+  #set $showhiddenlist = $getVar("showhidden", '').split(".")
+  <div class="text-type-params">
+  <div class="text-type-top-bar">
+      #for $nn in $TextTypeSel['Normslist']
+        #if $nn.n == $subcnorm
+          <b>
+        #end if
+        <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
+        #if $nn.n == $subcnorm
+          </b>
+        #end if
+      #end for
+  </div>
+  #for $t in $TextTypeSel['Blocks']
+    #for $l in $t['Line']
+
+    <table class="envelope" border="0">
+      <thead class="fixed">
+        <tr>
+        <th>$_($l['label'])</th>
+      #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+        <th></th>
+      #end if
+        </tr>
+      </thead>
+      <tbody class="scrollable">
+      #if $l.attr_doc
+        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
+      #end if
+      #if $l.has_key('Values')
+        #if $l.has_key('hierarchical')
+          <tr><td>
+              <ul>
+          #set $hsep = $l['hierarchical']
+          #for $v in $l['Values']
+            #if $v['startdiv']
+              #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
+              <ul id="div_$v['key']" $hidden>
+            #end if
+            <li>
+            #if $v['display_plus']
+            #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
+            <img class="plus-minus" src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")"
+                data-elementid="div_$v['key']$hsep$v['label']" data-storeval="1" data-path="${files_path}" />
+            #else
+            <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
+            #end if
+            #if $v['v']
+              <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
+                <label for="sca_$l['name']">$_($v['label'])</label>
+              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength')
+                ($v.get('xcnt', ''))
+              #end if
+            #end if
+            #if not $v['display_plus']
+            </li>
+            #end if
+            #for $i in $range($v['enddiv'])
+              </ul></li>
+            #end for
+          #end for
+          </ul></td></tr>
+        #else
+          #set $i = 0
+          #for $v in $l['Values']
+            #if 'v' in $v
+              <tr  #if $i % 2 == 0 #class="even"#end if#>
+                <td class="separ">
+                    #set $checked = ''
+                    #if $varExists('checked_sca')
+                        #set $item_value = $v['v']
+                        #if $item_value in $checked_sca
+                            #set $checked = 'checked="checked"'
+                        #end if
+                    #end if
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" $checked />
+                    <label for="sca.$i.$l['name']">#if $v['v']# $_($v['v']) #else# $empty_attr_value_placeholder #end if#</label>
+                </td>
+              #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
+                <td class="num">$v.get('xcnt', '')</td>
+              #else
+                <td></td>
+              #end if
+              </tr>
+            #end if
+            #set $i = $i + 1
+          #end for
+        #end if
+      </tbody>
+      <tbody>
+     <tr class="last-line"><td>
+     <input class="select-all" type="button" data-status="1" data-alt-label="$_('Deselect all')" value="$_('Select all')" />
+     </td></tr>
+      #else
+        <tr>
+            <td>
+            <input id="scaid_$l['name']" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+            </td>
+        </tr>
+      #end if
+      #if $l.attr_doc
+        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
+      #end if
+    </tbody>
+    </table>
+    #end for
+    <div style="clear: both; height: 20px;">  </div>
+  #end for
+  </div>
+#end def
+
+#def query_node($suff='',$filter=False)
+## basic query node form
+<tbody>
+
+#if $suff
+<tr class="required">
+    <th></th>
+    <td>
+        <select name="pcq_pos_neg$suff">
+            <option value="pos">$_('Contains')</option>
+            <option value="neg">$_('Does NOT contain')</option>
+        </select>
+    </td>
+</tr>
+#end if
+
+
+#set $querytype = $getVar("queryselector" + $suff, '')
+
+<tr class="required" id="querytypeel$suff">
+  <th>$_("Query Type"):</th>
+  <td><select class="qselector" id="queryselector$suff" name="queryselector$suff" data-parallel-corp="$suff">
+#set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
+     <option value="iqueryrow" $selected>$_("Basic")</option>
+  #if $getVar('has_lemmaattr' + $suff, '')
+     #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
+     <option value="lemmarow" $selected>$_("Lemma")</option>
+  #end if
+     #set $selected = ($querytype == 'phraserow') and 'selected="selected"' or ''
+     <option value="phraserow" $selected>$_("Phrase")</option>
+     #set $selected = ($querytype == 'wordrow') and 'selected="selected"' or ''
+     <option value="wordrow" $selected>$_("Word Form")</option>
+     #set $selected = ($querytype == 'charrow') and 'selected="selected"' or ''
+     <option value="charrow" $selected>$_("Character")</option>
+     #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
+     <option value="cqlrow" $selected>$_("CQL")</option>
+  </select>
+  </td>
+</tr>
+
+#set $hidden = ($querytype == 'iqueryrow' or $querytype == '' or
+                ($querytype == 'lemmarow' and not $has_lemmaattr)) and 'visible' or 'hidden'
+  <tr class="required $hidden" id="iqueryrow$suff">
+      <th>$_("Query"):</th>
+      <td><input type="text" id="iquery$suff" class="iquery-input keyboardInput" name="iquery$suff" size="40" value="$getVar('iquery' + $suff, '')" /></td>
+  </tr>
+#if $has_lemmaattr
+  #set $hidden = ($querytype == 'lemmarow') and 'visible' or 'hidden'
+  <tr class="required $hidden" id="lemmarow$suff">
+      <th>$_("Lemma"):</th><td>
+  #if $q
+    <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="lemma-input keyboardInput" />
+  #else
+    <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" size="60" id="lemma$suff" class="lemma-input keyboardInput" />
+  #end if
+  #if $Lposlist
+    <span class="no-wrap">
+    $_("PoS"):<select name="lpos$suff">
+      <option value="">$_("unspecified")</option>
+      #for $lp in $Lposlist
+        <option value="$lp.v"
+	#if $lp.v == $getVar('lpos' + $suff, '')
+	  selected="selected"
+	#end if
+	>$lp.n</option>
+      #end for
+      </select>
+    </span>
+  #end if
+</td></tr>
+#end if
+#set $hidden = ($querytype == 'phraserow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="phraserow$suff">
+  <th>$_("Phrase"):</th><td>
+  <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" size="60" id="phrase$suff" class="phrase-input keyboardInput" />
+</td></tr>
+#set $hidden = ($querytype == 'wordrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="wordrow$suff">
+  <th>$_("Word Form"):</th><td>
+  <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" size="60" id="word$suff" class="word-input keyboardInput" />
+  #if $Wposlist
+    <span class="no-wrap">
+    $_("PoS"):<select name="wpos$suff">
+    <option value="">$_("unspecified")</option>
+    #for $wp in $Wposlist
+      <option value="$wp.v"
+      #if $wp.v == $getVar('wpos' + $suff, '')
+        selected="selected"
+      #end if
+      >$wp.n</option>
+    #end for
+    </select>
+    </span>
+  #end if
+  <span class="no-wrap">
+  <label>$_("Match case"):</label>
+  <input type="checkbox" name="qmcase$suff" value="1"
+  #if $getVar('qmcase' + $suff, '')
+    checked
+  #end if
+  />
+  </span>
+</td></tr>
+#set $hidden = ($querytype == 'charrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="charrow$suff">
+  <th>$_("Character"):</th><td>
+  <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" size="6" id="char$suff" class="char-input keyboardInput" />
+</td></tr>
+#set $hidden = ($querytype == 'cqlrow') and 'visible' or 'hidden'
+<tr class="required $hidden" id="cqlrow$suff">
+  <th title="$_("Corpus Query Language")">$_("CQL"):</th>
+  <td>
+    #unless $suff
+    <div id="tag-builder-modal" class="modal-container" style="display: none">
+        <h3>$_('Create a tag')</h3>
+        <div id="tag-display"></div>
+        <button id="insert-tag-button" type="button" style="float: left">$_('Insert')</button>
+        <button id="reset-tag-button" type="button" style="float: left">$_('Reset')</button>
+        <div id="tag-widget" style="height: 500px; overflow: auto;"></div>
+    </div>
+    <div id="within-builder-modal" class="modal-container" style="display: none">
+        <h3>$_('Create a within condition')</h3>
+        <div class="inputs">
+            <span class="selection-container"></span> = <input id="within-value" type="text" />
+            <button id="within-insert-button" type="button">$_('Insert')</button>
+        </div>
+    </div>
+    #end unless
+
+    <ul class="cql-toolbox">
+        #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
+        <li class="insert-tag"><a data-bound-input="cql$suff">$_('insert tag')</a></li>
+        #end if
+        <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
+    </ul>
+  <input id="cql$suff" class="cql-input keyboardInput" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' size="70" />
+#if not $suff
+  <span class="no-wrap">
+  $_("Default attribute"):<select name="default_attr$suff">
+  #for $a in $AttrList
+    <option value="$a.n"
+    #if $a.n == $getVar('default_attr' + $suff, '')
+      selected="selected"
+    #end if
+    >$a.n</option>
+  #end for
+  </select>
+  #if $tagsetdoc
+    <a target="_blank" href="$tagsetdoc">$_("Tagset summary")</a>
+  #end if
+  </span>
+#end if
+</td></tr>
+</tbody>
+#if $suff
+<tbody><tr><td colspan="2">
+    <input type="checkbox" name="include_empty$suff" id="include_empty$suff"
+    #if $getVar('include_empty'+$suff, '')
+    checked#slurp
+    #end if
+    />
+    <label for="include_empty$suff">$_('include empty lines')</label>
+</td></tr></tbody>
+#end if
+#end def ## query_node
+
+#def urlquote($word)
+## quoting strings in URLs
+  #if $type('') == $type($word)
+    #return urllib.quote_plus($word)
+  #else
+    #return urllib.quote_plus($word.encode('utf8'))
+  #end if
+#end def
+
+#def url_sub($url, $option_name, $new_value)
+## substituting options in URL to change one particular setting
+    #if not re.search('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, $url)
+        #return $url + ';%s=%s' % ($option_name, $new_value)
+    #end if
+    #return re.sub('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, ';%s=%s;' % ($option_name, $new_value), $url)
+#end def
+
+#def gdexconf_select($select_name, $gdexconf, $tblex=False)
+    #set $onchange = ($tblex) and 'onchange="this.form.submit();"' or ''
+    <select name="$select_name" id="$select_name" $onchange>
+        #if $tblex
+        <option value=" None " >$_("None")</option>
+        #end if
+        #set $selected = ($gdexconf==" default configuration ") and 'selected="selected"' or ''
+        <option value=" default configuration " $selected>$_("default")</option>
+        #for name in $getVar('Availgdexconfs', {})
+            #set $selected = ($name==$gdexconf) and 'selected="selected"' or ''
+            <option $selected value="$name">$name</option>
+        #end for
+    </select>
+#end def

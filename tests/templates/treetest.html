@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <style type="text/css">
+            h1 {
+                font-size: 14pt;
+            }
+            h2 {
+                font-size: 12pt;
+            }
+            body {
+                font-size: 10pt;
+                font-family: sans-serif;
+            }
+            pre {
+                width: 70%;
+                background-color: #EEDEC5;
+                border: 1px solid #CEC1AE;
+                padding: 10px;
+            }
+            button#transform {
+                padding: 3px 8px;
+                color: #FFF;
+                background-color: #26A926;
+                border-style: groove;
+                border-radius: 5px;
+            }
+
+
+            #select-box-orig {
+                box-shadow: 2px 2px 3px #aaa;
+            }
+        </style>
+        <script type="text/javascript" src="../../public/files/js/requirejs.min.js"></script>
+        <script type="text/javascript">
+            requirejs.config({
+                baseUrl : '../../public/files/js',
+                paths: {
+                    'domReady' : './domReady.min',
+                    'jquery': './jquery.min',
+                    'simplemodal' : './jquery.simplemodal.min',
+                    'jqueryui' :  './jquery-ui.custom.min'
+                }
+            });
+            define('win', [], function () { return window; });
+        </script>
+    </head>
+    <body>
+        <h1>Tree component test</h1>
+        <p>Tree component transforms select-boxes containing additional information about path into a tree with
+        expandable subtrees.</p>
+        <pre>
+&lt;select name="corpus-name" id="select-box-orig" style=""&gt;
+  &lt;option data-path="/folderA" title="This is item 1" value="item-1"&gt;item 1&lt;/option&gt;
+  &lt;option data-path="/folderA/subfolderA.1" value="item-4"&gt;item 2&lt;/option&gt;
+  ...
+&lt;/select&gt;
+        </pre>
+        <form action="" method="get">
+            selected item: <input id="selected-value" type="text" readonly />
+            <select name="corpus-name" id="select-box-orig" style="">
+                <option data-path="/folderA" title="This is item 1" value="item-1">item 1</option>
+                <option data-path="/folderA" title="This is item 2 with little bit longer description. Lorem ipsum dolor sit amet" value="item-2">item 2</option>
+                <option data-path="/folderB" title="This is item 3" value="item-3">item 3</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="item-4">item 4</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="item-5">item 5</option>
+                <option data-path="/folderC/folderC.1/folderC.1.I" value="omezeni/item-6">item 6</option>
+                <option data-path="/folderD/folderD.1/folderD.1.I" value="omezeni/item-7">item 7</option>
+                <option data-path="/folderD/folderD.1/folderD.1.I" value="omezeni/item-8">item 8</option>
+            </select>
+            <select name="corpus-name" class="select-box">
+                <option data-path="/folderU" value="item-1">item 1</option>
+                <option data-path="/folderU" value="item-2">item 2</option>
+                <option data-path="/folderV" value="item-3">item 3</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I/" value="item-4">item 4</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I" value="item-5">item 5</option>
+                <option data-path="/folderW/folderW.1/folderW.1.I" value="item-6">item 6</option>
+                <option data-path="/folderX/folderX.1/folderX.1.I" value="item-7">item 7</option>
+                <option data-path="/folderX/folderX.1/folderX.1.I" value="item-8">item 8</option>
+            </select>
+        </form>
+
+        <p><button id="transform">transform</button></p>
+    </body>
+    <script>
+        require(['jquery', 'treecomponent'], function ($, tc) {
+            var customCallback = function (event, item) {
+                $('#selected-value').val(item);
+            };
+            $('#transform').on('click', function () {
+                tc.createTreeComponent($('select[name="corpus-name"]'), null, customCallback);
+            });
+        });
+    </script>
+</html>
