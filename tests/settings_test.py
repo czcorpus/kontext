@@ -176,7 +176,7 @@ class TestSettingsModule(unittest.TestCase):
         self.mox.ReplayAll()
 
         db.open(settings)
-        settings.auth.login('atomik', '')
+        settings.auth.validate_user('atomik', '')
 
         self.mysql_mocker.VerifyAll()
         self.dbcon_mocker.VerifyAll()

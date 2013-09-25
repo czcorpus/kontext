@@ -11,23 +11,8 @@
 # GNU General Public License for more details.
 
 """
-A custom authentication module for the Institute of the Czech National Corpus.
-You probably want to implement an authentication solution of your own. Please refer
-to the documentation or read the dummy_auth.py module to see the required interface.
+
 """
-import crypt
-
-import ucnk_db
-
-
-def create_salt(length=2):
-    """
-    Creates random salt of required length (default is 2) and composed
-    of a-z,A-Z letters.
-    """
-    import random
-    salt_chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
-    return ''.join([salt_chars[random.randint(0, len(salt_chars) - 1)] for i in range(length)])
 
 
 def create_instance(conf, sessions, db):
@@ -35,17 +20,18 @@ def create_instance(conf, sessions, db):
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    return UCNKAuth(db.get(), sessions, conf.get('global', 'ucnk:administrators'))
+    login_url = conf.get('plugins', 'auth')['login_url'] % ('%sfirst_form' % conf.get_root_url())
+    logout_url = conf.get('plugins', 'auth')['logout_url'] % ('%sfirst_form' % conf.get_root_url())
+    return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
+                       login_url=login_url, logout_url=logout_url)
 
 
-class UCNKAuth(object):
+class CentralAuth(object):
     """
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    MIN_PASSWORD_LENGTH = 5
-
-    def __init__(self, db_conn, sessions, admins):
+    def __init__(self, db_conn, sessions, admins, login_url, logout_url):
         """
         Parameters
         ----------
@@ -60,16 +46,18 @@ class UCNKAuth(object):
         self.sessions = sessions
         self.corplist = []
         self.admins = admins
+        self.login_url = login_url
+        self.logout_url = logout_url
         self.user = 'anonymous'
 
     def anonymous_user(self):
         return {
-            'id': None,
-            'user': None,
+            'id': 0,
+            'user': 'anonymous',
             'fullname': _('anonymous')
         }
 
-    def validate_user(self, username, password):
+    def validate_auth_ticket(self, id):
         """
         Parameters
         ----------
@@ -81,44 +69,24 @@ class UCNKAuth(object):
         -------
         str : session ID on success else None
         """
-        cols = ('id', 'user', 'pass', 'firstName', 'surname')
+        cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
         cursor = self.db_conn.cursor()
-        cursor.execute("SELECT %s FROM user WHERE user = %%s" % ','.join(cols), (username, ))
+        cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
+                       % ','.join(cols), (id, ))
         row = cursor.fetchone()
-        if row and crypt.crypt(password, row[2]) == row[2]:
+        if row:
             row = dict(zip(cols, row))
         else:
             row = {}
         cursor.close()
-        if 'id' in row:
+        if 'u.id' in row:
             return {
-                'id': row['id'],
-                'user': row['user'],
-                'fullname': '%s %s' % (row['firstName'], row['surname'])
+                'id': row['u.id'],
+                'user': row['u.user'],
+                'fullname': '%s %s' % (row['u.firstName'], row['u.surname'])
             }
-        return self.anonymous_user()
-
-    def logout(self, session_id):
-        self.sessions.delete(session_id)
-
-    def update_user_password(self, password):
-        """
-        Updates current user's password.
-        There is no need to hash/encrypt the password - function does it automatically.
-
-        Parameters
-        ----------
-        password : str
-            new password
-        """
-        import crypt
-
-        hashed_pass = crypt.crypt(password, create_salt())
-        cursor = self.db_conn.cursor()
-        ans = cursor.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, self.user,))
-        cursor.close()
-        self.db_conn.commit()
-        return ans
+        else:
+            return self.anonymous_user()
 
     def get_corplist(self, user):
         """
@@ -147,30 +115,14 @@ class UCNKAuth(object):
             _corplist = corpora
         return _corplist
 
-    def validate_password(self, password):
-        """
-        Tests whether provided password matches user's current password
-        """
-        return crypt.crypt(password, getattr(self, 'pass')) == getattr(self, 'pass')
-
-    def validate_new_password(self, password):
-        """
-        Tests whether the password candidate matches required password properties
-        (like minimal length, presence of special characters etc.)
-
-        Returns
-        -------
-        True on success else False
-        """
-        return len(password) >= UCNKAuth.MIN_PASSWORD_LENGTH
-
-    def get_required_password_properties(self):
-        """
-        """
-        return _('Password must be at least %s characters long.' % UCNKAuth.MIN_PASSWORD_LENGTH)
-
     def is_administrator(self):
         """
         Tests whether the current user's name belongs to the 'administrators' group
         """
         return self.user in self.admins
+
+    def get_login_url(self):
+        return self.login_url
+
+    def get_logout_url(self):
+        return self.logout_url

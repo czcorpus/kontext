@@ -131,7 +131,15 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="common-bar">
-<span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
+<span class="user">$_("User"):
+    #if not $_anonymous
+        $user_info.fullname
+        (<a href="$logout_url">$_('logout')</a>)
+    #else
+        $user_info.fullname
+        <a href="$login_url">($_('login'))</a>
+    #end if
+</span>
 </div>
 <div id="topbar">
 
@@ -441,7 +449,7 @@ $corp_full_name</b><br>
 #filter None
 <tbody>
     <tr class="required">
-    #if $corplist_size > 1
+    #if $corplist_size
         <th>$_("Corpus"):</th>
         <td colspan="2">
         #filter None
