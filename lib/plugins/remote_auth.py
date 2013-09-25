@@ -11,7 +11,13 @@
 # GNU General Public License for more details.
 
 """
-
+This is a custom authentication plugin for the Institute of
+the Czech National Corpus. It works in a slightly different
+way when compared to ucnk_auth.py as it expects some external
+(yet still available via a database connection) service to provide
+login/logout functions and set a cookie with authentication
+ticket. User status is then checked by calling the 'revalidate()'
+method.
 """
 
 
@@ -42,6 +48,12 @@ class CentralAuth(object):
             a session handler
         admins : tuple|list
             list of usernames with administrator privileges
+        login_url : str
+            the application redirects a user to this URL when login is necessary
+        logout_url : str
+            the application redirects a user to this URL when logout is requested
+        cookie_name : str
+            name of the cookie used to store authentication ticket
         """
         self.db_conn = db_conn
         self.sessions = sessions
@@ -66,17 +78,18 @@ class CentralAuth(object):
             ticket_id = None
         return ticket_id
 
-    def validate_auth_ticket(self, cookies):
+    def revalidate(self, cookies, session):
         """
+        Re-validates user authentication using cookie and session data (in general).
+        Resulting user data is written to session. No value is returned.
+
         Parameters
         ----------
-        username : str
+        cookies : dict
+            cookies
 
-        password : str
-
-        Returns
-        -------
-        str : session ID on success else None
+        session : dict
+            session data
         """
         ticket_id = self.get_ticket(cookies)
         cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
@@ -90,13 +103,15 @@ class CentralAuth(object):
             row = {}
         cursor.close()
         if 'u.id' in row:
-            return {
-                'id': row['u.id'],
-                'user': row['u.user'],
-                'fullname': u'%s %s' % (row['u.firstName'].decode('utf-8'), row['u.surname'].decode('utf-8'))
-            }
+            session['user']['id'] = row['u.id']
+            session['user']['user'] = row['u.user']
+            session['user']['fullname'] = u'%s %s' % (row['u.firstName'].decode('utf-8'), row['u.surname'].decode('utf-8'))
+
         else:
-            return self.anonymous_user()
+            user = self.anonymous_user()
+            session['user']['id'] = user['id']
+            session['user']['user'] = user['user']
+            session['user']['fullname'] = user['fullname']
 
     def get_corplist(self, user):
         """

@@ -21,7 +21,7 @@ def create_instance(conf):
     This function must be always implemented. Bonito uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
-    return DummyAuthHandler()
+    return DummyAuthHandler(conf.get_root_url())
 
 
 class DummyAuthHandler(object):
@@ -29,7 +29,8 @@ class DummyAuthHandler(object):
     Sample authentication handler
     """
 
-    def __init__(self):
+    def __init__(self, root_url):
+        self.root_url = root_url
         self.corplist = ('syn2010', 'intercorp_cs', 'intercorp_en')
 
     def login(self, username, password):
@@ -111,3 +112,9 @@ class DummyAuthHandler(object):
         """
         """
         return _('Any string can be used.')
+
+    def get_login_url(self):
+        return '%slogin' % self.root_url
+
+    def get_logout_url(self):
+        return '%slogoutx' % self.root_url
