@@ -531,8 +531,11 @@ class ConcCGI(CGIPublisher):
 
         if plugins.has_plugin('application_bar'):
             result['app_bar'] = plugins.application_bar.get_contents(plugins.auth.get_ticket(self._cookies))
+            result['app_bar_css'] = plugins.application_bar.css_url
+
         else:
             result['app_bar'] = None
+            result['app_bar_css'] = None
 
         # is there a concordance information in session?
         if 'conc' in self._session:
