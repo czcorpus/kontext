@@ -22,8 +22,9 @@ def create_instance(conf, sessions, db):
     """
     login_url = conf.get('plugins', 'auth')['login_url'] % ('%sfirst_form' % conf.get_root_url())
     logout_url = conf.get('plugins', 'auth')['logout_url'] % ('%sfirst_form' % conf.get_root_url())
+    cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
     return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
-                       login_url=login_url, logout_url=logout_url)
+                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
 
 
 class CentralAuth(object):
@@ -31,7 +32,7 @@ class CentralAuth(object):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db_conn, sessions, admins, login_url, logout_url):
+    def __init__(self, db_conn, sessions, admins, login_url, logout_url, cookie_name):
         """
         Parameters
         ----------
@@ -48,6 +49,7 @@ class CentralAuth(object):
         self.admins = admins
         self.login_url = login_url
         self.logout_url = logout_url
+        self.cookie_name = cookie_name
         self.user = 'anonymous'
 
     def anonymous_user(self):
@@ -57,7 +59,14 @@ class CentralAuth(object):
             'fullname': _('anonymous')
         }
 
-    def validate_auth_ticket(self, id):
+    def get_ticket(self, cookies):
+        if self.cookie_name in cookies:
+            ticket_id = cookies[self.cookie_name].value
+        else:
+            ticket_id = None
+        return ticket_id
+
+    def validate_auth_ticket(self, cookies):
         """
         Parameters
         ----------
@@ -69,10 +78,11 @@ class CentralAuth(object):
         -------
         str : session ID on success else None
         """
+        ticket_id = self.get_ticket(cookies)
         cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
         cursor = self.db_conn.cursor()
         cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
-                       % ','.join(cols), (id, ))
+                       % ','.join(cols), (ticket_id, ))
         row = cursor.fetchone()
         if row:
             row = dict(zip(cols, row))
@@ -83,7 +93,7 @@ class CentralAuth(object):
             return {
                 'id': row['u.id'],
                 'user': row['u.user'],
-                'fullname': '%s %s' % (row['u.firstName'], row['u.surname'])
+                'fullname': u'%s %s' % (row['u.firstName'].decode('utf-8'), row['u.surname'].decode('utf-8'))
             }
         else:
             return self.anonymous_user()

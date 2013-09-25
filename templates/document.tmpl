@@ -131,6 +131,11 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="common-bar">
+#if $app_bar
+#filter None
+    $app_bar
+#end filter
+#else
 <span class="user">$_("User"):
     #if not $_anonymous
         $user_info.fullname
@@ -140,6 +145,7 @@ $_ca_topbar
         <a href="$login_url">($_('login'))</a>
     #end if
 </span>
+#end if
 </div>
 <div id="topbar">
 
