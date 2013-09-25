@@ -35,7 +35,7 @@ def create_instance(conf, sessions, db):
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    return UCNKAuth(db.get(), sessions, conf.get('global', 'ucnk:administrators'))
+    return UCNKAuth(db.get(), sessions, conf.get('global', 'ucnk:administrators'), conf.get_root_url())
 
 
 class UCNKAuth(object):
@@ -45,7 +45,7 @@ class UCNKAuth(object):
 
     MIN_PASSWORD_LENGTH = 5
 
-    def __init__(self, db_conn, sessions, admins):
+    def __init__(self, db_conn, sessions, admins, root_url):
         """
         Parameters
         ----------
@@ -60,6 +60,7 @@ class UCNKAuth(object):
         self.sessions = sessions
         self.corplist = []
         self.admins = admins
+        self.root_url = root_url
         self.user = 'anonymous'
 
     def anonymous_user(self):
@@ -174,3 +175,9 @@ class UCNKAuth(object):
         Tests whether the current user's name belongs to the 'administrators' group
         """
         return self.user in self.admins
+
+    def get_login_url(self):
+        return '%slogin' % self.root_url
+
+    def get_logout_url(self):
+        return '%slogoutx' % self.root_url

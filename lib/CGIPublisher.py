@@ -193,12 +193,8 @@ class CGIPublisher(object):
         self._set_session_id(ans['id'])
         self._session = ans['data']
 
-        user = plugins.auth.validate_auth_ticket(self._cookies)
-        self._session['user'] = {
-            'id': user['id'],
-            'user': user['user'],
-            'fullname': user['fullname']
-        }
+        if hasattr(plugins.auth, 'revalidate'):
+            plugins.auth.revalidate(self._cookies, self._session)
         self._user = self._session['user']['user']
 
         if self._session['user']['id'] > 0:
