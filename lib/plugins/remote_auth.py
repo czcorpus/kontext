@@ -20,14 +20,16 @@ ticket. User status is then checked by calling the 'revalidate()'
 method.
 """
 
+import urllib
+
 
 def create_instance(conf, sessions, db):
     """
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    login_url = conf.get('plugins', 'auth')['login_url'] % ('%sfirst_form' % conf.get_root_url())
-    logout_url = conf.get('plugins', 'auth')['logout_url'] % ('%sfirst_form' % conf.get_root_url())
+    login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote('%sfirst_form' % conf.get_root_url()))
+    logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote('%sfirst_form' % conf.get_root_url()))
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
     return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
                        login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
