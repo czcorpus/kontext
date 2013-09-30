@@ -6,13 +6,16 @@ def create_instance(settings, ticket_id_provider):
     path = settings.get('plugins', 'appbar').get('path', '')
     port = int(settings.get('plugins', 'appbar').get('port', 80))
     css_url = settings.get('plugins', 'appbar').get('css_url', None)
-    return AppBar(ticket_id_provider=ticket_id_provider, server=server, path=path, port=port, css_url=css_url)
+    root_url = settings.get_root_url()
+    return AppBar(root_url=root_url, ticket_id_provider=ticket_id_provider, server=server, path=path, port=port,
+                  css_url=css_url)
 
 
 class AppBar(object):
 
-    def __init__(self, ticket_id_provider, server, path, port, css_url):
+    def __init__(self, ticket_id_provider, root_url, server, path, port, css_url):
         self.ticket_id_provider = ticket_id_provider
+        self.root_url = root_url
         self.server = server
         self.path = path
         self.port = port if port else 80
@@ -22,7 +25,7 @@ class AppBar(object):
     def get_contents(self, cookies):
         if hasattr(self.ticket_id_provider, 'get_ticket'):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
-            self.connection.request('GET', self.path % ticket_id)
+            self.connection.request('GET', self.path % (ticket_id, '%s%s' % (self.root_url, 'first_form')))
             response = self.connection.getresponse()
 
             if response and response.status == 200:
