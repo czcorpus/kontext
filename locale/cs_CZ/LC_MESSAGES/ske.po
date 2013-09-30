@@ -2634,3 +2634,12 @@ msgstr "Vložit nadpisy sloupců"
 
 msgid "Lines to store"
 msgstr "Uložit řádky"
+
+msgid "Invalid range - cannot select rows from an empty list."
+msgstr "Chybný rozsah - žádné záznamy nejsou k dispozici."
+
+msgid "Range [%s, %s] is invalid. It must be non-empty and within [%s, %s]."
+msgstr "Rozsah [%s, %s] je chybný. Musí být neprázdný a z intervalu [%s, %s]."
+
+msgid "Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s"
+msgstr "Rozsah [%s, %s] je chybný. Musí být neprázdný a levá hodnota musí větší nebo rovna %s"
