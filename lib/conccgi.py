@@ -1301,8 +1301,7 @@ class ConcCGI(UserCGI):
 
         from_line = int(from_line)
         to_line = int(to_line)
-
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        logging.getLogger(__name__).info('TO_LINE: %s' % to_line)
         err = validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
@@ -1312,8 +1311,11 @@ class ConcCGI(UserCGI):
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
+
         if self.wlattr:
             self.make_wl_query()  # multilevel wordlist
+
+        result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
 
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
@@ -1874,7 +1876,7 @@ class ConcCGI(UserCGI):
         self.wlmaxitems = sys.maxint  # TODO
         ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                             ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
-        err = validate_range((from_line, to_line), (1, len(ans['Items']) if 'Items' in ans else 0))
+        err = validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
