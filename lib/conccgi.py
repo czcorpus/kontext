@@ -1851,7 +1851,7 @@ class ConcCGI(UserCGI):
         wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
                              ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
         if to_line == '':
-            to_line = str(len(wl['Items'])) if 'Items' in wl else 0
+            to_line = 1000
 
         ans = {
             'from_line': from_line,
