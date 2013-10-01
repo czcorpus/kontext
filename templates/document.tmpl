@@ -37,6 +37,9 @@ $text
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}widgets.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
+#if $app_bar_css
+<link rel="stylesheet" type="text/css" href="$app_bar_css" />
+#end if
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
 <script type="text/javascript" src="$files_path/js/virtual-keyboard.js" charset="UTF-8"></script>
 <script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
@@ -131,7 +134,21 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="common-bar">
-<span class="user">$_("User"): #if not $_anonymous#$user_info.fullname#else#<a href="login">$user_info.fullname</a>#end if#</span> #if not $_anonymous#(<a href="logoutx">$_('logout')</a>)#end if#
+#if $app_bar
+#filter None
+    $app_bar
+#end filter
+#else
+<span class="user">$_("User"):
+    #if not $_anonymous
+        $user_info.fullname
+        (<a href="$logout_url">$_('logout')</a>)
+    #else
+        $user_info.fullname
+        <a href="$login_url">($_('login'))</a>
+    #end if
+</span>
+#end if
 </div>
 <div id="topbar">
 
@@ -441,7 +458,7 @@ $corp_full_name</b><br>
 #filter None
 <tbody>
     <tr class="required">
-    #if $corplist_size > 1
+    #if $corplist_size
         <th>$_("Corpus"):</th>
         <td colspan="2">
         #filter None

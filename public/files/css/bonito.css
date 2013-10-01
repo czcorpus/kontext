@@ -795,7 +795,7 @@ a.disabled,.disabled {
 }
 
 a:hover {
-    color:#a20!important;
+    color:#a20;
     text-decoration:underline;
 }
 
@@ -936,7 +936,6 @@ hr {
 
 img {
     border:none;
-    vertical-align:bottom;
 }
 
 input[type="text"],

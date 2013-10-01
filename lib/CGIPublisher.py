@@ -192,12 +192,14 @@ class CGIPublisher(object):
             ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
         self._set_session_id(ans['id'])
         self._session = ans['data']
+
+        if hasattr(plugins.auth, 'revalidate'):
+            plugins.auth.revalidate(self._cookies, self._session)
         self._user = self._session['user']['user']
 
-        if self._session['user']['id'] is not None:
+        if self._session['user']['id'] > 0:
             self._anonymous = 0
         else:
-            self._user = None
             self._anonymous = 1
 
     def _session_get(self, *nested_keys):
