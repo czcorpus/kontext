@@ -583,7 +583,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
      */
     lib.loadSharedBar = function () {
         $.ajax({
-            url : lib.conf.common_app_bar_url + cookies.get('ucnksessionid'),
+            url : lib.conf.common_app_bar_url + cookies.get(lib.conf.session_cookie_name),
             data : {},
             method : 'get',
             dataType : 'html',

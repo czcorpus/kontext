@@ -521,6 +521,7 @@ class ConcCGI(CGIPublisher):
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
         result['citation_info'] = corp_conf_info.get('citation_info', '')
+        result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url()
