@@ -48,7 +48,7 @@ class Actions(ConcCGI):
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         if not settings.supports_password_change():
             return {'error': _('This function is disabled.')}
-        logged_in = settings.auth.login(self._user, curr_passwd)
+        logged_in = settings.auth.validate_user(self._user, curr_passwd)
         if not logged_in:
             raise UserActionException(_('Unknown user'))
         if settings.auth.validate_password(curr_passwd):
@@ -75,7 +75,7 @@ class Actions(ConcCGI):
 
     def loginx(self, username='', password=''):
         ans = {}
-        user = plugins.auth.login(username, password)
+        user = plugins.auth.validate_user(username, password)
         if user.get('id', None) is not None:
             self._session['user'] = user
             self._redirect('%s%s' % (settings.get_root_url(), 'first_form'))
