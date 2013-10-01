@@ -1384,3 +1384,7 @@ table.results-range-and-paging th {
 #error-page #logo-wrapper {
     float: none;
 }
+
+#common-bar {
+    height: 40px;
+}
