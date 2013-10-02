@@ -143,7 +143,8 @@ class UCNKAuth(object):
                 corpora = [row[0] for row in rows]
             else:
                 corpora = []
-
+            if not 'susanne' in corpora:
+                corpora.append('susanne')
             corpora.sort()
             _corplist = corpora
         return _corplist
