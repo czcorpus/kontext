@@ -105,6 +105,8 @@ class ConcCGI(CGIPublisher):
 
     NO_OPERATION = 'nop'
 
+    ANON_FORBIDDEN_MENU_ITEMS = ('menu-save',)
+
     error = u''
     fc_lemword_window_type = u'both'
     fc_lemword_type = u'all'
@@ -293,6 +295,14 @@ class ConcCGI(CGIPublisher):
         if 'shuffle' not in options:
             options['shuffle'] = 1
 
+    def _get_action_prop(self, action_name, prop_name):
+        prop = None
+        if hasattr(self, action_name):
+            a = getattr(self, action_name)
+            if a and hasattr(a, prop_name):
+                prop = getattr(a, prop_name)
+        return prop
+
     def _pre_dispatch(self, path, selectorname, named_args):
         """
         Runs before main action is processed
@@ -336,12 +346,23 @@ class ConcCGI(CGIPublisher):
             self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
 
+        if len(path) > 0:
+            access_level = self._get_action_prop(path[0], 'access_level')
+            if access_level and self._user_is_anonymous():
+                import auth
+                raise auth.AuthException(_('Access forbidden'))
+
         return path, selectorname, named_args
 
     def _post_dispatch(self, methodname, tmpl, result):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
+        if self._user_is_anonymous():
+            disabled_set = set(self.disabled_menu_items)
+            for x in ConcCGI.ANON_FORBIDDEN_MENU_ITEMS:
+                disabled_set.add(x)
+            self.disabled_menu_items = tuple(disabled_set)
         super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_persistent_items(), '%s' % methodname)
 
