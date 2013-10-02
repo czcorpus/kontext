@@ -987,6 +987,7 @@ class Actions(ConcCGI):
             'to_line': to_line if not is_multiblock else 'auto',
             'is_multiblock': is_multiblock
         }
+    savefreq_form.access_level = 1
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0):
@@ -1043,8 +1044,8 @@ class Actions(ConcCGI):
                 'csv_rows': [row.decode('utf-8') for row in csv_buff.rows],
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
-
         return tpl_data
+    savefreq.access_level = 1
 
     ConcCGI.add_vars['savefreq'] = ['Desc']
 
@@ -1149,6 +1150,7 @@ class Actions(ConcCGI):
             'to_line': to_line,
             'saveformat': saveformat
         }
+    savecoll_form.access_level = 1
 
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                  heading=0, colheaders=0):
@@ -1198,7 +1200,7 @@ class Actions(ConcCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
         return tpl_data
-
+    savecoll.access_level = 1
     ConcCGI.add_vars['savecoll'] = ['Desc', 'concsize']
 
     def structctx(self, pos=0, struct='doc'):
@@ -1572,11 +1574,10 @@ class Actions(ConcCGI):
             'from_line': from_line,
             'to_line': to_line,
         }
-
         if to_line == 0:
             ans['error'] = _('Empty result cannot be saved.')
-
         return ans
+    savewl_form.access_level = 1
 
     def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
                ref_usesubcorp='', saveformat='text', colheaders=0):
@@ -1622,6 +1623,7 @@ class Actions(ConcCGI):
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
 
         return tpl_data
+    savewl.access_level = 1
 
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
@@ -1938,8 +1940,9 @@ class Actions(ConcCGI):
         if not to_line:
             to_line = conc.size()
         # TODO Save menu should be active here
-
         return {'from_line': from_line, 'to_line': to_line}
+
+    saveconc_form.access_level = 1
 
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
 
@@ -2044,7 +2047,7 @@ class Actions(ConcCGI):
                 del(self._headers['Content-Disposition'])
             raise e
 
-
+    saveconc.access_level = 1
     ConcCGI.add_vars['saveconc'] = ['Desc', 'concsize']
 
     def _storeconc_path(self, annotconc=None):
