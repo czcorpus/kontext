@@ -316,9 +316,9 @@ class ConcCGI(CGIPublisher):
         if not self._is_corpus_free_action(path[0]):
             self._fetch_corpname(form, allowed_corpora)
             if not self.corpname in allowed_corpora:
-                self.corpname = 'susanne'
+                self.corpname = allowed_corpora[-1] if len(allowed_corpora) > 0 else 'susanne'
                 path = [ConcCGI.NO_OPERATION]
-                self._redirect('%sfirst_form' % settings.get_root_url())
+                self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
         elif len(allowed_corpora) > 0:
             self.corpname = allowed_corpora[0]
         else:
