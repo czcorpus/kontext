@@ -1387,4 +1387,5 @@ table.results-range-and-paging th {
 
 #common-bar {
     height: 40px;
+    overflow: hidden;
 }
