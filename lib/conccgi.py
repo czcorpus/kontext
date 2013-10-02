@@ -289,7 +289,7 @@ class ConcCGI(CGIPublisher):
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
 
     def _is_corpus_free_action(self, action):
-        return action in ('login', 'loginx', 'logoutx', 'first_form')
+        return action in ('login', 'loginx', 'logoutx')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
