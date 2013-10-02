@@ -425,7 +425,7 @@
     background-color: #D2EDC0;
     border: 1px solid #C7E7B2;
     margin: -1px 0 0 0;
-    z-index: 0;
+    z-index: 10;
 }
 
 #menu-level-2 ul li {
