@@ -687,6 +687,9 @@ class CGIPublisher(object):
         else:
             outf.write(str(result))
 
+    def _user_is_anonymous(self):
+        return self._session_get('user', 'id') > 0
+
     def get_traceback(self):
         """
         Returns python-generated traceback information
