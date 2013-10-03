@@ -557,6 +557,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             if (menuId) {
                 $('#' + menuId).removeClass('active').append(jqPrevMenuUl);
                 jqPrevMenuUl.css('display', 'none');
+                this.setActiveSubmenuId(null);
             }
         },
 
@@ -640,6 +641,10 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                 if (jqSubmenu.length === 0 || self.getActiveSubmenuId() !== jqMenuLi.attr('id')) {
                     jqMenuLi.removeClass('active');
                 }
+            });
+
+            $(win).on('resize', function () {
+                self.closeSubmenu();
             });
         }
     };
