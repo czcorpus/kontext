@@ -1395,4 +1395,10 @@ table.results-range-and-paging th {
 #common-bar {
     height: 40px;
     overflow: hidden;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+#common-bar a {
+    color: #FFFFFF;
 }
