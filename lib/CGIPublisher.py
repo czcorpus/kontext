@@ -407,6 +407,10 @@ class CGIPublisher(object):
         self._headers.clear()
         self._headers['Location'] = url
 
+    def _set_not_found(self):
+        self._headers.clear()
+        self._headers[''] = 'Status: 404'
+
     def get_http_method(self):
         return os.getenv('REQUEST_METHOD', '')
 
@@ -629,12 +633,15 @@ class CGIPublisher(object):
             self._headers['Content-Type'] = 'text/x-json'
 
         if outf:
+            if '' in self._headers:
+                outf.write(self._headers[''])
             # Headers
             if 'Location' in self._headers:
                 outf.write('Location: %s\n' % self._headers['Location'])
                 has_body = False
             for k in sorted(self._headers.keys()):
-                outf.write('%s: %s\n' % (k, self._headers[k]))
+                if self._headers[k]:
+                    outf.write('%s: %s\n' % (k, self._headers[k]))
             # Cookies
             if self._cookies and outf:
                 outf.write(self._cookies.output() + '\n')
@@ -665,12 +672,9 @@ class CGIPublisher(object):
 
             if template.endswith('.tmpl'):
                 class_name = template[:-5]  # appropriate module import
-                file, pathname, description = \
-                    imp.find_module(class_name, [self._template_dir])
+                file, pathname, description = imp.find_module(class_name, [self._template_dir])
                 module = imp.load_module(class_name, file, pathname, description)
-
                 TemplateClass = getattr(module, class_name)
-
                 result = TemplateClass(searchList=[result, self])
             else:
                 result = Template(template, searchList=[result, self])
