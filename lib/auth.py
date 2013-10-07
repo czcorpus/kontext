@@ -11,6 +11,29 @@
 # GNU General Public License for more details.
 
 
+class AbstractAuth(object):
+    """
+    Represents general authentication module.
+    Custom implementations should inherit this.
+    """
+
+    def anonymous_user(self):
+        return {
+            'id': 0,
+            'user': 'anonymous',
+            'fullname': _('anonymous')
+        }
+
+    def get_login_url(self):
+        return '%slogin' % self.root_url
+
+    def get_logout_url(self):
+        return '%slogoutx' % self.root_url
+
+    def is_administrator(self):
+        return False
+
+
 class AuthException(Exception):
     """
     """

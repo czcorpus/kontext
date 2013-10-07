@@ -65,7 +65,7 @@ class UCNKAuth(object):
 
     def anonymous_user(self):
         return {
-            'id': None,
+            'id': 0,
             'user': None,
             'fullname': _('anonymous')
         }
