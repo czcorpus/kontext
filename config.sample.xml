@@ -8,6 +8,9 @@
             <user>johndoe</user>
             <user>janedoe</user>
         </administrators>
+        <fonts>
+            <item>http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&amp;subset=latin-ext</item>
+        </fonts>
     </global>
 
     <plugins>
