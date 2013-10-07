@@ -222,6 +222,7 @@ a.speech-link:hover {
 
 #audio-wrapper {
     position: absolute;
+    z-index: 1000;
 }
 
 .audio-controls {

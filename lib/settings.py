@@ -305,18 +305,6 @@ def get_speech_structure():
     return get('corpora', 'speech_segment_struct_attr').split('.')[0]
 
 
-def create_speech_url(corpus_name, speech_id):
-    """
-    Builds a URL string to the provided speech_id and corpus_name
-    """
-    speech_url = get('corpora', 'speech_data_url')
-    if speech_url[-1] != '/':
-        speech_url += '/'
-    if '@SERVER_NAME' in speech_url:
-        speech_url = speech_url.replace('@SERVER_NAME', '%s') % os.getenv('SERVER_NAME')
-    return "%s%s/%s" % (speech_url, corpus_name, speech_id)
-
-
 def get_uri_scheme_name():
     if 'HTTPS' in os.environ:
         return 'https'
