@@ -29,9 +29,11 @@ $text
 #filter WebSafe
 <head>
 <title>$title</title>
-#end filter
 <meta charset="utf-8" />
-<link href='http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&amp;subset=latin-ext' rel='stylesheet' type='text/css'>
+#for $css_font in $css_fonts
+<link href='$css_font' rel='stylesheet' type='text/css'>
+#end for
+#end filter
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}widgets.css" />
