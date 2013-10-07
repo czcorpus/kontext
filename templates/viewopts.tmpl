@@ -1,0 +1,109 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("View options")#slurp
+#end def
+
+#attr $focus = "'#firstattr'"
+
+#def bodyonload
+require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domReady) {
+    ## conf object is defined within document.tmpl
+    viewAttrs.init(conf);
+});
+#end def
+
+#def main
+#filter WebSafe
+<h2>$_("General concordance view options")</h2>
+<p>$_('Following settings apply for all the corpora.')</p>
+<form id="mainform" action='viewoptsx'>
+
+#filter None
+$input_hidden
+#end filter
+<input type='hidden' name='fromp' value='$fromp' />
+
+<fieldset>
+    <legend>$_('Result range and paging')</legend>
+    #try
+      #set $nic = $gdexcnt
+    #except
+      #set $gdexcnt = ''
+    #end try
+    <table  class="results-range-and-paging">
+        <tr>
+            <th>$_("Page size (number of lines)"):</th>
+            <td><input type="text" name="pagesize" value='$pagesize' size="4" /></td>
+        </tr>
+        <tr>
+            <th>$_("KWIC Context size (positions)"):</th>
+            <td><input type="text" name="newctxsize" value='$newctxsize' size="4" />
+                <input type="hidden" name="ctxunit" value="@pos" />
+            </td>
+        </tr>
+        <tr>
+            <th><label for="gdex-enabled-checkbox">$_("Sort concordance according to good dictionary examples"):</label></th>
+            <td>
+                <input type="hidden" name="gdex_enabled" value="0" />
+                <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
+            </td>
+        </tr>
+        <tr>
+            <th>$_("Number of lines to be sorted"):</th>
+            <td>
+                <input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
+            </td>
+        </tr>
+        #if $getVar('Availgdexconfs', {})
+        <tr>
+            <th>$_("GDEX configuration for current corpus"):</th>
+            <td>
+                #filter None
+                $gdexconf_select('gdexconf', $gdexconf)
+                #end filter
+            </td>
+        </tr>
+        #end if
+    </table>
+</fieldset>
+
+<a name="other-options"></a>
+<fieldset>
+    <legend>$_('Other options')</legend>
+
+    <input type="hidden" name="shuffle" value="0" />
+    <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
+    <label for="always-shuffle">$_("Shuffle concordance lines by default")</label>
+    <br />
+    ($_('no effect to current concordance')) <br />
+    <input type="hidden" name="copy_icon" value="0" />
+</fieldset>
+
+<div class="buttons">
+    <input type="submit" value='$_("Apply View Options")' />
+</div>
+</form>
+
+#end filter
+#end def
