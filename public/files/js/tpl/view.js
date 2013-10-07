@@ -115,6 +115,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             $(this).bind('click', function (event) {
                 detail.openSpeech(this);
                 event.stopPropagation();
+                event.preventDefault();
                 return false;
             });
         });

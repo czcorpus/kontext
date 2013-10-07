@@ -341,12 +341,16 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
       the KWIC word itself separates left and right side).
     """
     import re
+    import urllib
 
     newline = []
     speech_struct = settings.get_speech_structure()
     fragment_separator = '<%s' % speech_struct
     last_fragment = None
     last_speech_id = prev_speech_id
+
+    create_speech_url = lambda x: '%saudio?%s' % (settings.get_root_url(), urllib.urlencode({'corpname': corpus_name, 'chunk': speech_id}))
+
     for item in line:
         fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (
             speech_struct, speech_struct), item['str']) if x != '']
@@ -361,11 +365,9 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
                 'class': item['class']
             }
             if frag_ext.startswith(fragment_separator):
-                newline_item['open_link'] = {'speech_url':
-                                             settings.create_speech_url(corpus_name, speech_id)}
+                newline_item['open_link'] = {'speech_url': create_speech_url(speech_id)}
             elif frag_ext.endswith('</%s>' % speech_struct):
-                newline_item['close_link'] = {'speech_url':
-                                              settings.create_speech_url(corpus_name, speech_id)}
+                newline_item['close_link'] = {'speech_url': create_speech_url(speech_id)}
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the
