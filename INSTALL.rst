@@ -5,46 +5,76 @@ Installation guide
 Web server configuration
 ========================
 
-Please note that currently only supported web server is Apache 2.x. Support for some other web servers is being considered.
+Please note that currently only Apache 2.x web server is supported. Support for other web servers is being considered.
 
 Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
 
-  Alias /bonito /path/to/your/app
+  Alias /bonito /path/to/your/app/public
 
-  <Directory /path/to/your/app>
+  <Directory /path/to/your/app/public>
     Options +ExecCGI
     AddHandler cgi-script .cgi
     AllowOverride FileInfo
     RewriteEngine On
     RewriteRule ^$ run.cgi/first_form [L,R=301]
-    SetEnv REMOTE_USER default
   </Directory>
 
-
-The value of the REMOTE_USER parameter ('default' here) is typically set by Apache's authentication mechanism
-but in our sample we skip this.
+Please note that Apache's document root should be set to the *public* subdirectory
+of the application to prevent access to configuration, source code and other sensitive data.
 
 Using described configuration, your web application should be available at URL http://your_server_hostname/bonito.
 
-Authentication
-==============
+Plugin approach
+===============
 
-The application expects you to provide your custom implementation of authentication module. If you want to test the
+To be able to fit in different environments, some of application's functionality is not implemented concretely. It means
+you have to implement a solution compatible with your existing systems by yourself (e.g. you have already some database
+schema specifying user accounts). You can start by exploring plugins we use in our institute - they are included
+in the *plugins* directory.
+
+Typically, a plugin module is required to implement *create_instance(settings, \*args, \**kwargs) * method which returns
+an instance of required service.
+
+
+Database
+--------
+
+Because many implicit plugins require a storage of some kind, application defines plugin *db* which is intended to
+provide an application-wide access to a database. The most convenient approach is thus based on a single database
+server (e.g. MariaDB, MySQL or PostreSQL) serving to the whole application. But there is nothing wrong with
+per-plugin storage solution too.
+
+Sessions
+--------
+
+The application uses web sessions to store persistent user data. Please refer to *plugins/sessions.py* for an
+example of possible implementation.
+
+User settings storage
+---------------------
+
+When user changes some of application's settings (e.g. the context size for concordance lines) these data are
+stored via *settings_storage* plugin. Please refer to *plugins/settings_storage.py* for an example.
+
+
+Authentication
+--------------
+
+The application expects you to provide a custom implementation of authentication module. If you want to test the
 application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
 and always returns the same list of corpora (you probably want to set your own list).
 
 To be able to provide different lists of corpora for different users, you have to implement an authentication
 module with the following properties:
 
-  * the module resides in a directory specified in *sys.path* (i.e. is importable without additional
-    Python runtime configuration)
+  * the module resides in the *plugins* package (= *./lib/plugins* directory)
   * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
     The *settings* parameter is Bonito's *settings* module or some compatible one. This
     provides access to any required configuration parameter (e.g. database connection if you need one).
 
 Authentication object is expected to implement following methods:
 
-  * *login(username, password)* - returns bool value (True on success else False) and changes
+  * *validate_user(username, password)* - returns bool value (True on success else False) and changes
     the state of your authentication object to reflect user's properties
   * *get_corplist()* - returns list/tuple containing identifiers of corpora available to the
     logged user
@@ -56,7 +86,19 @@ Authentication object is expected to implement following methods:
     * *validate_new_password(password)* - tests whether provided password candidate matches required password
       properties (like length)
     * *get_required_password_properties()* - returns a text describing what are the properties of a valid password
+    * *is_administrator()* - returns True if current user has administrator's privileges
+    * *get_login_url()* - returns URL of *login* action (because in general, it may be outside the application)
+    * *get_logout_url()* - returns URL of *logout* action (because in general, it may be outside the application)
+    * *anonymous_user()* - returns a dictionary containing anonymous user credentials
 
+Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
+some required methods.
+
+Query storage
+-------------
+
+To be able to use query history a plugin *query_storage* must be implemented. Please refer to the
+*plugins/query_storage.py* file for an example.
 
 Deployment
 ==========
@@ -72,13 +114,16 @@ version of the YUI compressor from https://github.com/yui/yuicompressor/download
 Configuration
 =============
 
-The application itself is configured via an XML configuration file located in the root directory of the application.
+The application itself is configured via an XML configuration file located in the root directory of the application
+(do not confuse this with the root directory of the respective web application).
 By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting an environment
 variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
 
-The configuration XML file is expected to be partially customizable according to the needs of 3rd party modules.
+The configuration XML file is expected to be partially customizable according to the needs of 3rd party plugins.
 Generally it has two-level structure: sections and key->value items (where value can be also a list of items (see
-e.g. */bonito/corpora/default_corpora*). Some parts of the file can be also processed by dedicated functions.
+e.g. */bonito/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
+dedicated functions.
+
 The structure can be understood from the following example::
 
     <bonito>
@@ -146,17 +191,24 @@ You can refer to the **config.sample.xml** to see more examples.
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/global/log_path                        | Path to the logging file (Apache must have write access)          |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/auth_module                     | Name of a Python module to be used for authentication             |
+| /bonito/global/administrators                  | List of usernames with administrative rights                      |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/database/adapter                       | {mysql, sqlite}                                                   |
+| /bonito/global/fonts                           | list of custom CSS fonts to be loaded within HTML document        |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/database/name                          | Name (or path) of the database used with Bonito2                  |
+| /bonito/plugins                                | this section contains plugins' configuration; each plugin         |
+|                                                | requires at least *module* element to specify where code resides  |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/database/host                          | Hostname of the database server                                   |
+| /bonito/plugins/db                             | required plugin to access application's database                  |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/database/password                      | Password to the database                                          |
+| /bonito/plugins/auth                           | required plugin for authentication                                |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/database/username                      | Username of the user with SELECT and UPDATE privileges            |
+| /bonito/plugins/sessions                       | required plugin implementing session storage functions            |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/plugins/settings_storage               | required plugin specifying where and how to store user settings   |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/plugins/query_storage                  | optional plugin allowing to store query history to some storage   |
++------------------------------------------------+-------------------------------------------------------------------+
+| /bonito/plugins/appbar                         | optional plugin allowing remote-loaded toolbar on all pages       |
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/cache/clear_interval                   | number of seconds to keep cached files                            |
 +------------------------------------------------+-------------------------------------------------------------------+
@@ -184,7 +236,7 @@ You can refer to the **config.sample.xml** to see more examples.
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/corpora/speech_segment_struct_attr     | Name of the structural attribute delimiting speeches              |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/speech_data_url                | URL where speech files are stored                                 |
+| /bonito/corpora/speech_files_path              | root path where audio files containing speech segments are stored |
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/corpora/kwicline_max_context           | Maximum size (in words) of the KWIC context                       |
 +------------------------------------------------+-------------------------------------------------------------------+
