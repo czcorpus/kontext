@@ -103,7 +103,7 @@ td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
     max-height: 30%;
     width: auto;
     display: none;
-    background-color: #FFFFCC;
+    background-color: #e9f7fc;
     -moz-border-radius: 7px;
     -webkit-border-radius: 7px;
     -khtml-border-radius: 7px;
@@ -296,5 +296,11 @@ table#conclines .concordance-col-heading {
 }
 
 #conclines tr.active {
-    background-color: #FFFFCC;
+    background-color: #e9f7fc;
+}
+
+.expand-link img {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 5px;
 }
