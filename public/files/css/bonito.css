@@ -648,6 +648,11 @@ fieldset h4 {
     padding-left:6px;
 }
 
+.bonito-pagination a {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .clust {
     font-size:85%;
     padding:0 0 0 1em;
@@ -935,7 +940,7 @@ hr {
 }
 
 img {
-    border:none;
+    border: none;
 }
 
 input[type="text"],
