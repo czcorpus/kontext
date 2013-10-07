@@ -22,6 +22,8 @@ method.
 
 import urllib
 
+from auth import AbstractAuth
+
 
 def create_instance(conf, sessions, db):
     """
@@ -35,7 +37,7 @@ def create_instance(conf, sessions, db):
                        login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
 
 
-class CentralAuth(object):
+class CentralAuth(AbstractAuth):
     """
     A custom authentication class for the Institute of the Czech National Corpus
     """
@@ -65,13 +67,6 @@ class CentralAuth(object):
         self.logout_url = logout_url
         self.cookie_name = cookie_name
         self.user = 'anonymous'
-
-    def anonymous_user(self):
-        return {
-            'id': 0,
-            'user': 'anonymous',
-            'fullname': _('anonymous')
-        }
 
     def get_ticket(self, cookies):
         if self.cookie_name in cookies:

@@ -14,9 +14,10 @@
 A simple authentication module for development, single user and
 testing purposes.
 """
+from auth import AbstractAuth
 
 
-def create_instance(conf):
+def create_instance(conf, *args):
     """
     This function must be always implemented. Bonito uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
@@ -24,7 +25,7 @@ def create_instance(conf):
     return DummyAuthHandler(conf.get_root_url())
 
 
-class DummyAuthHandler(object):
+class DummyAuthHandler(AbstractAuth):
     """
     Sample authentication handler
     """
@@ -33,7 +34,7 @@ class DummyAuthHandler(object):
         self.root_url = root_url
         self.corplist = ('syn2010', 'intercorp_cs', 'intercorp_en')
 
-    def login(self, username, password):
+    def validate_user(self, username, password):
         """
         DummyAuthHandler always allows logging in (i.e. it
         always returns True)
@@ -49,7 +50,11 @@ class DummyAuthHandler(object):
         bool : True on success, False on failure.
         """
         self.user = username
-        return True
+        return {
+            'id': 333,
+            'user': 'Dummy',
+            'fullname': 'Dummy User'
+        }
 
     def logout(self, session_id):
         """
@@ -74,7 +79,7 @@ class DummyAuthHandler(object):
         """
         pass
 
-    def get_corplist(self):
+    def get_corplist(self, user):
         """
         Fetches list of corpora available to the current user
 
@@ -112,9 +117,3 @@ class DummyAuthHandler(object):
         """
         """
         return _('Any string can be used.')
-
-    def get_login_url(self):
-        return '%slogin' % self.root_url
-
-    def get_logout_url(self):
-        return '%slogoutx' % self.root_url
