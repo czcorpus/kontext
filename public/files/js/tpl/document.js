@@ -557,6 +557,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             if (menuId) {
                 $('#' + menuId).removeClass('active').append(jqPrevMenuUl);
                 jqPrevMenuUl.css('display', 'none');
+                this.setActiveSubmenuId(null);
             }
         },
 
@@ -571,23 +572,30 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
         /**
          *
-         * @param jqActiveLi active main menu item LI
-         * @param jqSubMenuUl UL element representing a sub-menu to be activated
+         * @param {jQuery} jqActiveLi active main menu item LI
          */
-        openSubmenu : function (jqActiveLi, jqSubMenuUl) {
-            var menuLeftPos;
+        openSubmenu: function (jqActiveLi) {
+            var menuLeftPos,
+                jqSubMenuUl;
 
-            jqActiveLi.addClass('active');
-            jqSubMenuUl.css('display', 'block');
-            this.jqMenuLevel2.addClass('active').empty().append(jqSubMenuUl);
-            menuLeftPos = jqActiveLi.offset().left + jqActiveLi.width() / 2 - jqSubMenuUl.width() / 2;
-            if (menuLeftPos < this.jqMenuBar.offset().left) {
-                menuLeftPos = this.jqMenuBar.offset().left;
+            jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
+            if (jqSubMenuUl.length > 0) {
 
-            } else if (menuLeftPos + jqSubMenuUl.width() > this.jqMenuBar.offset().left + this.jqMenuBar.width()) {
-                menuLeftPos = this.jqMenuBar.offset().left + this.jqMenuBar.width() - jqSubMenuUl.width();
+                jqActiveLi.addClass('active');
+                jqSubMenuUl.css('display', 'block');
+                this.jqMenuLevel2.addClass('active').empty().append(jqSubMenuUl);
+                menuLeftPos = jqActiveLi.offset().left + jqActiveLi.width() / 2 - jqSubMenuUl.width() / 2;
+                if (menuLeftPos < this.jqMenuBar.offset().left) {
+                    menuLeftPos = this.jqMenuBar.offset().left;
+
+                } else if (menuLeftPos + jqSubMenuUl.width() > this.jqMenuBar.offset().left + this.jqMenuBar.width()) {
+                    menuLeftPos = this.jqMenuBar.offset().left + this.jqMenuBar.width() - jqSubMenuUl.width();
+                }
+                jqSubMenuUl.css('left', menuLeftPos);
+
+            } else {
+                this.jqMenuLevel2.removeClass('active');
             }
-            jqSubMenuUl.css('left', menuLeftPos);
         },
 
         /**
@@ -603,7 +611,6 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             $('#menu-level-1 a.trigger').each(function () {
                 $(this).on('mouseover', function (event) {
                     var jqMenuLi = $(event.target).closest('li'),
-                        jqSubmenu = self.getHiddenSubmenu(jqMenuLi),
                         prevMenuId,
                         newMenuId = jqMenuLi.attr('id');
 
@@ -613,12 +620,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
                         if (!jqMenuLi.hasClass('disabled')) {
                             self.setActiveSubmenuId(jqMenuLi.attr('id'));
-                            if (jqSubmenu.length > 0) {
-                                self.openSubmenu(jqMenuLi, jqSubmenu);
-
-                            } else {
-                                self.jqMenuLevel2.removeClass('active');
-                            }
+                            self.openSubmenu(jqMenuLi);
                         }
                     }
                 });
