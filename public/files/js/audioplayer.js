@@ -62,6 +62,9 @@ define(['win', 'jquery'], function (win, $) {
         this.status = 0;
 
         this.triggerLink = typeof triggerLink === 'string' ? $('#' + triggerLink).get(0) : triggerLink;
+
+        this.itemsToPlay = this.parseSpeechURL($(this.triggerLink).attr('href'));
+
         this.wrapper = typeof wrapper === 'string' ? $('#' + wrapper).get(0) : wrapper;
         this.playSessionId = $(this.triggerLink).attr('href');
 
@@ -79,6 +82,44 @@ define(['win', 'jquery'], function (win, $) {
             height: '48px'
         });
     }
+
+    /**
+     *
+     * @param url
+     * @returns {Array}
+     */
+    SpeechPlayer.prototype.parseSpeechURL = function (url) {
+        var params = {},
+            urlParts,
+            items,
+            rootUrl,
+            ans = [],
+            i;
+
+        urlParts = url.split('?');
+        rootUrl = urlParts[0];
+        items = urlParts[1];
+
+        if (items) {
+            $.each(items.split('&'), function (i, v) {
+                var pair = v.split('=');
+                if (params.hasOwnProperty(pair[0])) {
+                    if ($.inArray(pair[1], params[pair[0]]) < 0) {
+                        params[pair[0]].push(pair[1]);
+                    }
+
+                } else {
+                    params[pair[0]] = [pair[1]];
+                }
+            });
+        }
+        if (params.hasOwnProperty('chunk')) {
+            for (i = 0; i < params.chunk.length; i += 1) {
+                ans.push(rootUrl + '?corpname=' + params.corpname[0] + '&chunk=' + params.chunk[i]);
+            }
+        }
+        return ans;
+    };
 
     /**
      * Animates Play or Pause button according to the state of the player
@@ -183,7 +224,7 @@ define(['win', 'jquery'], function (win, $) {
         this.createUserInterface();
         sound = soundManager.createSound({
             id: this.playSessionId,
-            url: $(this.triggerLink).attr('href'),
+            url: this.itemsToPlay.shift(),
             autoLoad: true,
             autoPlay: false,
             volume: this.volume,
@@ -202,6 +243,9 @@ define(['win', 'jquery'], function (win, $) {
             onfinish: function () {
                 self.status = self.PLAYER_STATUS_STOPPED;
                 self.removeUserInterface();
+                if (self.itemsToPlay.length > 0) {
+                    self.play();
+                }
             }
         });
 
@@ -229,6 +273,7 @@ define(['win', 'jquery'], function (win, $) {
         if (win.audioPlayer) {
             win.audioPlayer.removeUserInterface();
         }
+
         options = options || {};
         player = new SpeechPlayer(wrapper, triggerLink);
         if (options.hasOwnProperty('volume')) {
