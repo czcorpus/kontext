@@ -572,11 +572,12 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
 
         /**
          *
-         * @param {jQuery} jqActiveLi active main menu item LI
+         * @param {jQuery|HTMLElement} activeLi active main menu item LI
          */
-        openSubmenu: function (jqActiveLi) {
+        openSubmenu: function (activeLi) {
             var menuLeftPos,
-                jqSubMenuUl;
+                jqSubMenuUl,
+                jqActiveLi = $(activeLi);
 
             jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
             if (jqSubMenuUl.length > 0) {
@@ -642,6 +643,10 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
                 if (jqSubmenu.length === 0 || self.getActiveSubmenuId() !== jqMenuLi.attr('id')) {
                     jqMenuLi.removeClass('active');
                 }
+            });
+
+            $(win).on('resize', function () {
+                self.closeSubmenu();
             });
         }
     };
