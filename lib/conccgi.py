@@ -385,6 +385,7 @@ class ConcCGI(UserCGI):
                                               ('usesubcorp', self.usesubcorp),
         ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['root_url'] = settings.get_root_uri()
         return result
 
     def add_undefined(self, result, methodname):
@@ -2754,3 +2755,19 @@ class ConcCGI(UserCGI):
         return out
 
     stats.template = 'stats.tmpl'
+
+
+    def audio(self, chunk=''):
+        """
+        Provides access to audio-files containing speech segments.
+        Access rights are per-corpus (i.e. if a user has a permission to
+        access corpus 'X' then all related audio files are accessible).
+        """
+        path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.corpname, chunk)
+        if os.path.exists(path) and not os.path.isdir(path):
+            with open(path, 'r') as f:
+                self._headers['Content-Type'] = 'audio/mpeg'
+                return f.read()
+        else:
+            self._set_not_found()
+            return None

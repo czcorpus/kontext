@@ -156,10 +156,15 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
       $l.linegroup</span>
     #end if
   #end if
+
+  #set $closed_segment = None
   #for $ll in $l.Left
     #if $ll.has_key('open_link')
-    <a href="$ll.open_link.speech_url" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
+        #if $closed_segment# <a class="speech-link" href="${root_url}audio?$closed_segment&$ll.open_link.speech_path">+</a> #end if#
+        #set $closed_segment = None
+    <a href="${root_url}audio?$ll.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
     #end if
+
     #if $ll.has_key('class') and $ll.class
       <i class='$ll.class'>
     #end if
@@ -168,8 +173,10 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
       </i>
     #end if
     #if $ll.has_key('close_link')
-    <a href="$ll.close_link.speech_url" class="speech-link" title="$_("Click to play audio")">]</a>
+       #set $closed_segment = $ll.close_link.speech_path
+    <a href="${root_url}audio?$ll.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
     #end if
+
   #end for
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td><td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
@@ -197,9 +204,13 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
   #else
     </span>
   #end if
+
+  #set $closed_segment = None
   #for $rr in $l.Right
     #if $rr.has_key('open_link')
-    <a href="$rr.open_link.speech_url" class="speech-link" title="$_("Click to play audio")">[</a>
+        #if $closed_segment# <a class="speech-link" href="${root_url}audio?$closed_segment&$rr.open_link.speech_path">+</a> #end if#
+        #set $closed_segment = None
+    <a href="${root_url}audio?$rr.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[</a>
     #end if
     #if $rr.has_key('class') and $rr.class
       <i class='$rr.class'>
@@ -209,7 +220,8 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
       </i>
     #end if
     #if $rr.has_key('close_link')
-    <a href="$rr.close_link.speech_url" class="speech-link" title="$_("Click to play audio")">]</a>
+    <a href="${root_url}audio?$rr.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
+    #set $closed_segment = $rr.close_link.speech_path
     #end if
   #end for
   </td>
