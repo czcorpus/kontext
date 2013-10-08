@@ -2756,7 +2756,6 @@ class ConcCGI(UserCGI):
 
     stats.template = 'stats.tmpl'
 
-
     def audio(self, chunk=''):
         """
         Provides access to audio-files containing speech segments.
@@ -2769,5 +2768,4 @@ class ConcCGI(UserCGI):
                 self._headers['Content-Type'] = 'audio/mpeg'
                 return f.read()
         else:
-            self._set_not_found()
             return None
