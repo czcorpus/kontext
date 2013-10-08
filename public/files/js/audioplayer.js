@@ -244,6 +244,7 @@ define(['win', 'jquery'], function (win, $) {
                 self.status = self.PLAYER_STATUS_STOPPED;
                 self.removeUserInterface();
                 if (self.itemsToPlay.length > 0) {
+                    soundManager.destroySound(self.playSessionId);
                     self.play();
                 }
             }
@@ -272,6 +273,7 @@ define(['win', 'jquery'], function (win, $) {
 
         if (win.audioPlayer) {
             win.audioPlayer.removeUserInterface();
+            delete win.audioPlayer;
         }
 
         options = options || {};
