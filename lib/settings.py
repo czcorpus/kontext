@@ -360,8 +360,21 @@ def create_speech_url(corpus_name, speech_id):
         speech_url = speech_url % os.getenv('SERVER_NAME')
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
 
+def get_uri_scheme_name():
+    if 'HTTPS' in os.environ:
+        return 'https'
+    else:
+        return 'http'
+
 def get_root_uri():
-    return 'http://%s%s' % (os.getenv('SERVER_NAME'), os.getenv('REQUEST_URI').replace('user_password', 'first_form'))
+    """
+    Returns root URL of the application
+    """
+    if 'SCRIPT_URL' in os.environ:
+        path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    else:
+        path = os.getenv('REQUEST_URI')[:os.getenv('REQUEST_URI').rindex('/')]
+    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
 
 if __name__ == '__main__':
     import sys
