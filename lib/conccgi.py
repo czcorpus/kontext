@@ -103,8 +103,6 @@ class ConcCGI(CGIPublisher):
                         'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
                         'gdexcnt', 'gdexconf', 'iquery', 'maincorp')
 
-    NO_OPERATION = 'nop'
-
     ANON_FORBIDDEN_MENU_ITEMS = ('menu-save',)
 
     error = u''
@@ -317,7 +315,7 @@ class ConcCGI(CGIPublisher):
             self._fetch_corpname(form, allowed_corpora)
             if not self.corpname in allowed_corpora:
                 self.corpname = allowed_corpora[-1] if len(allowed_corpora) > 0 else 'susanne'
-                path = [ConcCGI.NO_OPERATION]
+                path = [CGIPublisher.NO_OPERATION]
                 self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
         elif len(allowed_corpora) > 0:
             self.corpname = allowed_corpora[0]
@@ -632,11 +630,6 @@ class ConcCGI(CGIPublisher):
             ans.update(self._session['forms'])
         return ans
 
-    def nop(self):
-        """
-        Represents an empty operation
-        """
-        return {}
 
     kwicleftctx = '-10'
     kwicrightctx = '10'

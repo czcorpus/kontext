@@ -162,6 +162,8 @@ class CGIPublisher(object):
     menupos = ''
     user = None
 
+    NO_OPERATION = 'nop'
+
     def __init__(self, environ=os.environ):
         self.environ = environ
         self.headers_sent = False
@@ -398,7 +400,7 @@ class CGIPublisher(object):
         """
         path = os.getenv('PATH_INFO', '').strip().split('/')[1:]
         if len(path) is 0 or path[0] is '':
-            path = ['methods']
+            path = [CGIPublisher.NO_OPERATION]
         elif path[0].startswith('_'):
             raise Exception('access denied')
         return path
@@ -694,6 +696,14 @@ class CGIPublisher(object):
     def _user_is_anonymous(self):
         return not self._session_get('user', 'id')
 
+    def nop(self):
+        """
+        Represents an empty operation. This is sometimes required
+        to keep the controller in a consistent state. E.g. if a redirect
+        is requested soon, some method must be set.
+        """
+        return None
+
     def get_traceback(self):
         """
         Returns python-generated traceback information
@@ -702,34 +712,3 @@ class CGIPublisher(object):
 
         err_type, err_value, err_trace = sys.exc_info()
         return traceback.format_exception(err_type, err_value, err_trace)
-
-    def methods(self, params=0):
-        """
-        Lists all the methods with a doc string
-        """
-        methodlist = []
-        cldict = self.__class__.__dict__
-        for m in [x for x in cldict.keys() if not x.startswith('_') and hasattr(cldict[x], '__doc__')
-                  and callable(cldict[x])]:
-            mm = {'name': m, 'doc': cldict[m].__doc__}
-            if params:
-                try:
-                    mm['Params'] = [{'name': v}
-                                    for v in cldict[m].func_code.co_varnames[1:]]
-                except AttributeError:
-                    pass
-            methodlist.append(mm)
-        return {'List': methodlist}
-
-    methods.template = """<html><head><title>Methods</title></head><body><ul>
-        #for $l in $List
-           <li><b>$l.name</b>(
-               #set $sep = ''
-               #for $p in $l.get('Params',[])
-                  $sep$p.name
-                  #set $sep = ', '
-               #end for
-                )<br>$l.doc<br>
-        #end for
-        </ul></body></html>
-        """
