@@ -224,7 +224,7 @@ You can refer to the **config.sample.xml** to see more examples.
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/corpora/tags_src_dir                   | A directory where all unique tag combinations for corpora are     |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/tags_cache_dir                 | A directory where tag-builder widget stores some of its data      |
+| /bonito/corpora/tags_cache_dir                 | A directory where tag-builder stores its auxiliary data           |
 +------------------------------------------------+-------------------------------------------------------------------+
 | /bonito/corpora/conc_dir                       | Path where general concordance data is stored                     |
 +------------------------------------------------+-------------------------------------------------------------------+
