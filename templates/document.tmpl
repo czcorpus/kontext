@@ -172,8 +172,8 @@ $_ca_topbar
             </li>
             <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="TODO" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
-                    <li><a title="TODO" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li><a title="$_('List of my subcorpora')" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
                 </ul>
             </li>
             <li class="separator">&nbsp;</li>
@@ -285,7 +285,7 @@ $_ca_topbar
 
     <div id="corpus-details-box">
         <div class="top">
-            <h4 class="corpus-name"></h4>
+            <h4 class="corpus-name">...</h4>
             <p class="metadata">
                 <strong>$_('size'):</strong> <span class="size"></span> $_('positions')<br />
                 <strong class="web_url">$_('website'):</strong> <span class="web_url"></span>
@@ -596,8 +596,8 @@ $corp_full_name</b><br>
                             #set $checked = 'checked="checked"'
                         #end if
                     #end if
-                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" $checked />
-                    <label for="sca.$i.$l['name']">#if $v['v']# $_($v['v']) #else# $empty_attr_value_placeholder #end if#</label>
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#" $checked />
+                    <label for="sca.$i.$l['name']">#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#</label>
                 </td>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
                 <td class="num">$v.get('xcnt', '')</td>
