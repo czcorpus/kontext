@@ -1943,6 +1943,9 @@ msgstr "Maximální počet řádek"
 msgid "Notice: given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus."
 msgstr "Upozornění: uváděné frekvenční údaje jsou vztažené k celému korpusu, ne pouze k jeho části specifikované hodnotami zadaných atributů, na níž jsou výsledky vyhledávání omezeny. Údaje vztažené na část korpusu se zobrazují pouze při vyhledávání v předem definovaném subkorpusu."
 
+msgid "Create new subcorpus"
+msgstr "Vytvořit nový subkorpus"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

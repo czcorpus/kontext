@@ -1366,6 +1366,7 @@ table.results-range-and-paging th {
 #conc-top-bar a.calc-warning {
     display: inline-block;
     padding: 0;
+    vertical-align: middle;
 }
 
 .calc-warning img {
@@ -1374,6 +1375,8 @@ table.results-range-and-paging th {
 
 #show-help-format-link img {
     padding-right: 5px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 #error-page #topbar {
