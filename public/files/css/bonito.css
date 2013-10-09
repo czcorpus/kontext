@@ -1361,6 +1361,8 @@ table.results-range-and-paging th {
 
 .tooltip-box img.info-icon {
     padding: 0 8px 0 0;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 #conc-top-bar a.calc-warning {
