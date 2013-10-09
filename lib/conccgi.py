@@ -1496,12 +1496,12 @@ class ConcCGI(UserCGI):
         saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.xml"' % saved_filename
             result['Scores'] = result['Head'][2:]
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
@@ -1510,7 +1510,7 @@ class ConcCGI(UserCGI):
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.csv' % saved_filename
 
             # write the header first, if required
             if colheaders:
