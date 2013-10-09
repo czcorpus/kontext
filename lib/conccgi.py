@@ -630,6 +630,20 @@ class ConcCGI(CGIPublisher):
             ans.update(self._session['forms'])
         return ans
 
+    def _humanize_corpname(self, c):
+        """
+        Internally we sometimes use path-like corpora names to distinguish between
+        two access levels (this is achieved by two different registry files).
+        E.g. you have 'syn2010' corpus and 'spec/syn2010' corpus which means that somewhere
+        there is a registry file called 'syn2010' and also a directory 'spec' with
+        another registry file 'syn2010'. But this should be transparent to users so that
+        they see 'syn2010' in both cases. This method solves the problem by converting
+        path-like names to basename ones.
+        """
+        t = c.split('/', 1)
+        if len(t) > 1:
+            return t[1]
+        return t[0]
 
     kwicleftctx = '-10'
     kwicrightctx = '10'

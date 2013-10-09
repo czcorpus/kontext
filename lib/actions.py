@@ -1011,22 +1011,23 @@ class Actions(ConcCGI):
         if self.wlattr:
             self.make_wl_query()  # multilevel wordlist
 
+        saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
             from codecs import BOM_UTF8
 
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % saved_filename
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
@@ -1170,14 +1171,15 @@ class Actions(ConcCGI):
         self.collpage = 1
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
+        saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % saved_filename
             result['Scores'] = result['Head'][2:]
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
@@ -1186,7 +1188,7 @@ class Actions(ConcCGI):
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % saved_filename
 
             # write the header first, if required
             if colheaders:
@@ -1595,13 +1597,14 @@ class Actions(ConcCGI):
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
+        saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
             tpl_data = ans
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % saved_filename
             tpl_data = ans
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
@@ -1620,7 +1623,7 @@ class Actions(ConcCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % saved_filename
 
         return tpl_data
     savewl.access_level = 1
@@ -1994,7 +1997,7 @@ class Actions(ConcCGI):
                                                  for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
-            mkfilename = lambda suffix: '%s-concordance.%s' % (self.corpname, suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self._humanize_corpname(self.corpname), suffix)
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
