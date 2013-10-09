@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <collocations>
   #if $heading
   <heading>
-    <corpus>$corpname</corpus>
+    <corpus>$human_corpname</corpus>
     <query>#slurp
     #for $d in $Desc
 $d.arg#slurp
@@ -53,7 +53,7 @@ $d.arg#slurp
 #elif $saveformat == 'text' ## Text format
   #if $heading
 \# Collocations
-\# Corpus: $corpname
+\# Corpus: $human_corpname
     #for $d in $Desc
 \# $d.op:  $d.arg $d.size
     #end for

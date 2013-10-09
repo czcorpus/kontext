@@ -543,6 +543,7 @@ class ConcCGI(CGIPublisher):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['root_url'] = settings.get_root_url()
+        result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url()
