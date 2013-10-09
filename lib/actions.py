@@ -1004,7 +1004,7 @@ class Actions(ConcCGI):
             raise err
 
         self.fpage = 1
-        self.fmaxitems = to_line - from_line
+        self.fmaxitems = to_line - from_line + 1
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
