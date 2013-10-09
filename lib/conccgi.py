@@ -332,7 +332,11 @@ class ConcCGI(CGIPublisher):
             # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
-                named_args[str(k)] = self.recode_input(form.getvalue(k))
+                key = str(k)
+                val = self.recode_input(form.getvalue(k))
+                if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
+                    val = ''
+                named_args[key] = val
         na = named_args.copy()
 
         correct_types(na, self.clone_self())
