@@ -429,7 +429,7 @@ $corp_sel
                             #set $checked = 'checked="checked"'
                         #end if
                     #end if
-                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="$v['v']" $checked />
+                    <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#" $checked />
                     <label for="sca.$i.$l['name']">#if $v['v']# $_($v['v']) #else# $empty_attr_value_placeholder #end if#</label>
                 </td>
               #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
