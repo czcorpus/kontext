@@ -304,6 +304,21 @@ class ConcCGI(UserCGI):
             self._user_settings.append('annotconc')
             self.annotconc = ''
 
+    def _humanize_corpname(self, c):
+        """
+        Internally we sometimes use path-like corpora names to distinguish between
+        two access levels (this is achieved by two different registry files).
+        E.g. you have 'syn2010' corpus and 'spec/syn2010' corpus which means that somewhere
+        there is a registry file called 'syn2010' and also a directory 'spec' with
+        another registry file 'syn2010'. But this should be transparent to users so that
+        they see 'syn2010' in both cases. This method solves the problem by converting
+        path-like names to basename ones.
+        """
+        t = c.split('/', 1)
+        if len(t) > 1:
+            return t[1]
+        return t[0]
+
     def _add_globals(self, result):
         UserCGI._add_globals(self, result)
 
@@ -386,6 +401,7 @@ class ConcCGI(UserCGI):
         ])
         result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
         result['root_url'] = settings.get_root_uri()
+        result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
         return result
 
     def add_undefined(self, result, methodname):
@@ -1317,23 +1333,23 @@ class ConcCGI(UserCGI):
             self.make_wl_query()  # multilevel wordlist
 
         result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
-
+        saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
             from codecs import BOM_UTF8
 
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % saved_filename
 
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
@@ -1476,14 +1492,15 @@ class ConcCGI(UserCGI):
         self.collpage = 1
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
+        saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.xml"' % saved_filename
             result['Scores'] = result['Head'][2:]
             tpl_data = result
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
@@ -1492,7 +1509,7 @@ class ConcCGI(UserCGI):
             csv_buff = Writeable()
             csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % self.corpname
+            self._headers['Content-Disposition'] = 'inline; filename="%s-collocations.csv' % saved_filename
 
             # write the header first, if required
             if colheaders:
@@ -1881,14 +1898,15 @@ class ConcCGI(UserCGI):
         if err is not None:
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
+        saved_filename = self._humanize_corpname(self.corpname)
 
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
             tpl_data = ans
         elif saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % saved_filename
             tpl_data = ans
         elif saveformat == 'csv':
             from butils import UnicodeCSVWriter, Writeable
@@ -1907,7 +1925,7 @@ class ConcCGI(UserCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
             self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % self.corpname
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % saved_filename
 
         return tpl_data
 
@@ -2242,7 +2260,7 @@ class ConcCGI(UserCGI):
                                                  for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
-            mkfilename = lambda suffix: '%s-concordance.%s' % (self.corpname, suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self._humanize_corpname(self.corpname), suffix)
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')

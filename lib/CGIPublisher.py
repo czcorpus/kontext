@@ -578,34 +578,3 @@ class CGIPublisher:
 
         err_type, err_value, err_trace = sys.exc_info()
         return traceback.format_exception(err_type, err_value, err_trace)
-
-    def methods(self, params=0):
-        """
-        Lists all the methods with a doc string
-        """
-        methodlist = []
-        cldict = self.__class__.__dict__
-        for m in [x for x in cldict.keys() if not x.startswith('_') and hasattr(cldict[x], '__doc__')
-                  and callable(cldict[x])]:
-            mm = {'name': m, 'doc': cldict[m].__doc__}
-            if params:
-                try:
-                    mm['Params'] = [{'name': v}
-                                    for v in cldict[m].func_code.co_varnames[1:]]
-                except AttributeError:
-                    pass
-            methodlist.append(mm)
-        return {'List': methodlist}
-
-    methods.template = """<html><head><title>Methods</title></head><body><ul>
-        #for $l in $List
-           <li><b>$l.name</b>(
-               #set $sep = ''
-               #for $p in $l.get('Params',[])
-                  $sep$p.name
-                  #set $sep = ', '
-               #end for
-                )<br>$l.doc<br>
-        #end for
-        </ul></body></html>
-        """

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <frequency>
 #if $heading
   <heading>
-    <corpus>$corpname</corpus>
+    <corpus>$human_corpname</corpus>
     <query>#slurp
     #for $d in $Desc
 $d.get('arg')#slurp
@@ -62,7 +62,7 @@ $item#slurp
 ## text
 #if $heading
 \# Frequency list
-\# Corpus: $corpname
+\# Corpus: $human_corpname
   #for $d in $Desc
 \# $d.get('op'):  $d.get('arg') $d.get('size')
   #end for
