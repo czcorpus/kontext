@@ -1213,7 +1213,8 @@ class ConcCGI(UserCGI):
             else:
                 result['lastpage'] = 0
             result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
-            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total'] / float(items_per_page)))
+            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total']
+                                                              / max(1, float(items_per_page))))
             result['Blocks'][0]['Items'] = result['Blocks'][0]['Items'][fstart:self.fmaxitems - 1]
 
         for b in result['Blocks']:
@@ -1324,7 +1325,7 @@ class ConcCGI(UserCGI):
             raise err
 
         self.fpage = 1
-        self.fmaxitems = to_line - from_line
+        self.fmaxitems = to_line - from_line + 1
         self.wlwords, self.wlcache = self.get_wl_words()
         self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
                                                           'blcache'))
