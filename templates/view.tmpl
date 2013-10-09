@@ -160,7 +160,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
   #set $closed_segment = None
   #for $ll in $l.Left
     #if $ll.has_key('open_link')
-        #if $closed_segment# <a class="speech-link" href="${root_url}audio?$closed_segment&$ll.open_link.speech_path">+</a> #end if#
+        #if $closed_segment and $closed_segment != $ll.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$ll.open_link.speech_path">+</a> #end if#
         #set $closed_segment = None
     <a href="${root_url}audio?$ll.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
     #end if
@@ -208,7 +208,7 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
   #set $closed_segment = None
   #for $rr in $l.Right
     #if $rr.has_key('open_link')
-        #if $closed_segment# <a class="speech-link" href="${root_url}audio?$closed_segment&$rr.open_link.speech_path">+</a> #end if#
+        #if $closed_segment and $closed_segment != $rr.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$rr.open_link.speech_path">+</a> #end if#
         #set $closed_segment = None
     <a href="${root_url}audio?$rr.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[</a>
     #end if
