@@ -824,6 +824,7 @@ class Actions(ConcCGI):
         """
         frequency list form
         """
+        self.disabled_menu_items = ('menu-save',)
         self.active_menu_item = 'menu-frequency'
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
