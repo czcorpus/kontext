@@ -18,7 +18,7 @@
  */
 
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, popupbox, $, bonito) {
+define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupbox, $, kwicAlignUtils) {
 
     'use strict';
 
@@ -117,7 +117,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, 
         layoutModel.init(conf);
         lib.messages = layoutModel.conf.messages;
         lib.maxNumLevels = layoutModel.conf.multilevel_freq_dist_max_levels;
-        bonito.multiLevelKwicFormUtil.init();
+        kwicAlignUtils.fix();
         if (layoutModel.conf.lastNumLevels) {
             for (i = 1; i < layoutModel.conf.lastNumLevels; i += 1) {
                 lib.addLevel();

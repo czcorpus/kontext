@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jquery.cookies', 'bonito',
-        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, cookies, bonito, _sm) {
+define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookies',
+        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, util, cookies, _sm) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -534,7 +534,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
     lib.bindWithinHelper = function (jqLinkElement, corpusName, translatMessages) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
         jqLinkElement.bind('click', function (event) {
-            var caretPos = bonito.getCaretPosition(jqInputElement),
+            var caretPos = util.getCaretPosition(jqInputElement),
                 clickAction,
                 buttonEnterAction;
 

@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, popupBox, $, bonito) {
+define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupBox, $, kwicAlignUtils) {
     'use strict';
 
     var lib = {};
@@ -28,7 +28,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'bonito'], function (layoutModel, 
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        bonito.multiLevelKwicFormUtil.init();
+        kwicAlignUtils.fix();
         $('a.kwic-alignment-help').each(function () {
             popupBox.bind($(this), layoutModel.conf.messages.msg, {
                 'top': 'attached-bottom',
