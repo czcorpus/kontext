@@ -76,7 +76,7 @@ define(['win', 'jquery'], function (win, $) {
             horizPadding = 12,
             borderWidth,
             boxWidth = '620px',
-            boxHeight = '70px',
+            boxHeight = 'auto',
             boxIntWidth,
             boxTop = 0,
             jqWhereElement = $(whereElement),
