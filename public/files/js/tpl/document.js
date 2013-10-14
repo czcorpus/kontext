@@ -48,6 +48,74 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
     lib.conf = {};
 
     /**
+     * Normalizes error representation (sometimes it is a string,
+     * sometimes it is an object) into an object with well defined
+     * properties.
+     *
+     * @param {object|string} obj
+     * @return {{}}
+     */
+    lib.unpackError = function (obj) {
+        var ans = {};
+
+        if (typeof obj === 'object') {
+            ans.message = obj.message;
+            ans.error = obj.error;
+            ans.reset = obj.reset || false;
+
+        } else {
+            ans.message = obj;
+            ans.error = null;
+            ans.reset = false;
+        }
+        return ans;
+    };
+
+    /**
+     * Wrapper for jQuery's $.ajax function which is able
+     * to handle error states using client's capabilities
+     * (error messages, page reload etc.).
+     *
+     * @param url
+     * @param options
+     */
+    lib.ajax = function (url, options) {
+        var succWrapper,
+            origSucc;
+
+        if (arguments.length === 1) {
+            options = url;
+        }
+        origSucc = options.success;
+
+        succWrapper = function (data, textStatus, jqXHR) {
+            var error;
+
+            if (data.hasOwnProperty('error')) {
+                error = lib.unpackError(data.error);
+
+                if (error.reset === true) {
+                    win.location = lib.conf.rootURL + 'first_form';
+                }
+
+                $.modal.close(); // if a modal window is opened close it
+                lib.showErrorMessage(error.message || 'error');
+
+            } else {
+                origSucc(data, textStatus, jqXHR);
+            }
+        };
+
+        options.success = succWrapper;
+        if (arguments.length === 1) {
+            $.ajax(options);
+
+        } else {
+            $.ajax(url, options);
+        }
+    };
+
+    /**
      * Handles modal box displaying information about current corpus.
      *
      * @type {{}}
@@ -117,7 +185,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
         createCorpusInfoBox : function (okCallback, failCallback) {
             lib.corpusInfoBox.resetCorpusInfoBox();
 
-            $.ajax({
+            lib.ajax({
                 url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
                 dataType : 'json',
                 method : 'get',
@@ -161,7 +229,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
      * Displays 'standard' error message box
      *
      * @param {string} message a message to be displayed
-     * @param {function} callback a function to be called after the message is displayed; a single parameter is passed
+     * @param {function} [callback] a function to be called after the message is displayed; a single parameter is passed
      * to the function - a DOM element of the error box
      */
     lib.showErrorMessage = function (message, callback) {

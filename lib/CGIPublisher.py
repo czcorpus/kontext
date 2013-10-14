@@ -711,7 +711,7 @@ class CGIPublisher(object):
         """
         Error page
         """
-        return {'error': error, 'reset': reset}
+        return {'error': {'message': error, 'reset': reset}}
     json_error.return_type = 'json'
 
     def get_traceback(self):
