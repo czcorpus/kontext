@@ -19,7 +19,7 @@
 /**
  * This library provides a clickable 'tag generator' widget.
  */
-define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, multiselect, simpleModalNone, bonito, win) {
+define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, multiselect, simpleModalNone, util, win) {
     'use strict';
 
     var lib = {},
@@ -650,7 +650,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
             }
         }
         $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
-            var caretPos = bonito.getCaretPosition($(opt.inputElement)),
+            var caretPos = util.getCaretPosition($(opt.inputElement)),
                 insertTagClickAction,
                 buttonEnterAction;
 
