@@ -1946,6 +1946,9 @@ msgstr "Upozornění: uváděné frekvenční údaje jsou vztažené k celému k
 msgid "Create new subcorpus"
 msgstr "Vytvořit nový subkorpus"
 
+msgid "Corpus access denied"
+msgstr "Přístup ke korpusu odepřen"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

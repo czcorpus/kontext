@@ -301,11 +301,13 @@ class ConcCGI(CGIPublisher):
                 prop = getattr(a, prop_name)
         return prop
 
-    def _pre_dispatch(self, path, selectorname, named_args):
+    def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
         """
         super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
+        if not action_metadata:
+            action_metadata = {}
         self.environ = os.environ
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
@@ -316,7 +318,12 @@ class ConcCGI(CGIPublisher):
             if not self.corpname in allowed_corpora:
                 self.corpname = allowed_corpora[-1] if len(allowed_corpora) > 0 else 'susanne'
                 path = [CGIPublisher.NO_OPERATION]
-                self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
+                if action_metadata.get('return_type', None) != 'json':
+                    self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
+                else:
+                    path = ['json_error']
+                    named_args['error'] = _('Corpus access denied')
+                    named_args['reset'] = True
         elif len(allowed_corpora) > 0:
             self.corpname = allowed_corpora[0]
         else:

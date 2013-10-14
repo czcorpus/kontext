@@ -385,7 +385,7 @@ class CGIPublisher(object):
                 na[a] = getattr(self, a)
         return na
 
-    def get_method_metadata(self, method_name, data_name):
+    def _get_method_metadata(self, method_name, data_name):
         if hasattr(self, method_name) and hasattr(getattr(self, method_name), data_name):
             return getattr(getattr(self, method_name), data_name)
         return None
@@ -426,7 +426,7 @@ class CGIPublisher(object):
                 ans[k] = getattr(self, k)
         return ans
 
-    def _pre_dispatch(self, path, selectorname, args):
+    def _pre_dispatch(self, path, selectorname, args, action_metadata=None):
         """
         Allows special operations to be done before the action itself is processed
         """
@@ -455,14 +455,17 @@ class CGIPublisher(object):
         try:
             named_args = {}
 
-            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args)
+            action_metadata = {
+                'return_type': self._get_method_metadata(path[0], 'return_type'),
+                'template': self._get_method_metadata(path[0], 'template')
+            }
+            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
             self._post_dispatch(methodname, tmpl, result)
 
-            return_type = self.get_method_metadata(methodname, 'return_type')
-            cont = self.output_headers(return_type)
+            cont = self.output_headers(action_metadata.get('return_type', None))
             if cont:
-                self.output_result(methodname, tmpl, result, return_type)
+                self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None))
 
             if plugins.has_plugin('sessions'):
                 plugins.sessions.save(self._get_session_id(), self._session)
@@ -485,7 +488,7 @@ class CGIPublisher(object):
             from Cheetah.Template import Template
             from cmpltmpl import error_message
 
-            return_type = self.get_method_metadata(path[0], 'return_type')
+            return_type = self._get_method_metadata(path[0], 'return_type')
             if not self.headers_sent:
                 self._headers[''] = 'Status:HTTP/1.1 500 Internal Server Error'
                 self.output_headers(return_type=return_type)
@@ -549,7 +552,7 @@ class CGIPublisher(object):
         except Exception as e:
             logging.getLogger(__name__).error(''.join(self.get_traceback()))
 
-            return_type = self.get_method_metadata(methodname, 'return_type')
+            return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
                 if settings.is_debug_mode() or type(e) is UserActionException:
                     json_msg = u'%s' % e
@@ -703,6 +706,13 @@ class CGIPublisher(object):
         is requested soon, some method must be set.
         """
         return None
+
+    def json_error(self, error='', reset=False):
+        """
+        Error page
+        """
+        return {'error': error, 'reset': reset}
+    json_error.return_type = 'json'
 
     def get_traceback(self):
         """
