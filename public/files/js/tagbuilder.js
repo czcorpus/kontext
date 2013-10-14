@@ -459,7 +459,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
             params = {},
             self = this;
 
-        errorCallback = errorCallback || function () {};
+        errorCallback = errorCallback || this.errorCallback;
 
         if (this.initialValues === null) {
             $.ajax({
@@ -599,6 +599,10 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
         if ($(opt.widgetElement).length > 0) {
             tagLoader.startLoadingNotification(opt.widgetElement);
         }
+        if (typeof opt.errorCallback === 'function') {
+            tagLoader.errorCallback = opt.errorCallback;
+        }
+
         tagLoader.loadInitialVariants(function (data) {
             tagLoader.stopLoadingNotification();
             tagLoader.updateMultiSelectValues(data);
@@ -615,11 +619,6 @@ define(['jquery', 'multiselect', 'simplemodal', 'bonito', 'win'], function ($, m
         if (opt.backButton) {
             $(opt.backButton).bind('click', backButtonClickFunc(tagLoader));
         }
-
-        if (typeof opt.errorCallback === 'function') {
-            tagLoader.errorCallback = opt.errorCallback;
-        }
-
         updateConcordanceQuery();
         return tagLoader;
     };
