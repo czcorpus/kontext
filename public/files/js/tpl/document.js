@@ -48,6 +48,116 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
     lib.conf = {};
 
     /**
+     * Handles modal box displaying information about current corpus.
+     *
+     * @type {{}}
+     */
+    lib.corpusInfoBox = {
+
+        /**
+         *
+         * @param attribListData
+         * @param jqAttribList
+         */
+        appendAttribList : function (attribListData, jqAttribList) {
+            $.each(attribListData, function (i, item) {
+                var newRow;
+
+                if (!item.error) {
+                    newRow = jqAttribList.find('.item').clone();
+                    newRow.removeClass('item');
+                    newRow.addClass('dynamic');
+                    newRow.find('th').text(item.name);
+                    newRow.find('td').text(item.size);
+
+                } else {
+                    newRow = jqAttribList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+                }
+                jqAttribList.append(newRow);
+            });
+        },
+
+        /**
+         *
+         * @param structListData
+         * @param jqStructList
+         */
+        appendStructList: function (structListData, jqStructList) {
+            $.each(structListData, function (i, item) {
+                var newRow;
+                if (!item.error) {
+                    newRow = jqStructList.find('.item').clone();
+                    newRow.removeClass('item');
+                    newRow.addClass('dynamic');
+                    newRow.find('th').text('<' + item.name + '>');
+                    newRow.find('td').text(item.size);
+
+                } else {
+                    newRow = jqStructList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+                }
+                jqStructList.append(newRow);
+            });
+        },
+
+        /**
+         *
+         */
+        resetCorpusInfoBox : function () {
+            $('#corpus-details-box .attrib-list tr.dynamic').remove();
+            if ($('#corpus-details-box .loader-animation').length === 0) {
+                $('#corpus-details-box').append('<img class="loader-animation" src="../files/img/ajax-loader.gif" />');
+            }
+        },
+
+        /**
+         *
+         * @param okCallback
+         * @param failCallback
+         */
+        createCorpusInfoBox : function (okCallback, failCallback) {
+            lib.corpusInfoBox.resetCorpusInfoBox();
+
+            $.ajax({
+                url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
+                dataType : 'json',
+                method : 'get',
+                success : function (data) {
+                    var jqInfoBox = $('#corpus-details-box'),
+                        jqAttribList = $('#corpus-details-box .attrib-list'),
+                        jqStructList = $('#corpus-details-box .struct-list');
+
+                    $('#corpus-details-box .loader-animation').remove();
+
+                    jqInfoBox.find('.corpus-name').text(data.corpname);
+                    jqInfoBox.find('.corpus-description').text(data.description);
+                    jqInfoBox.find('.size').text(data.size);
+                    if (data.web_url) {
+                        jqInfoBox.find('span.web_url').html('<a href="' + data.web_url + '">' + data.web_url + '</a>');
+
+                    } else {
+                        jqInfoBox.find('.web_url').remove();
+                    }
+
+                    lib.corpusInfoBox.appendAttribList(data.attrlist, jqAttribList);
+                    lib.corpusInfoBox.appendStructList(data.structlist, jqStructList);
+
+                    if (typeof okCallback === 'function') {
+                        okCallback();
+                    }
+
+                },
+                error : function () {
+                    this.corpusInfoBox.resetCorpusInfoBox();
+                    if (typeof failCallback === 'function') {
+                        failCallback();
+                    }
+                    lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
+                }
+            });
+        }
+    };
+
+    /**
      * Displays 'standard' error message box
      *
      * @param {string} message a message to be displayed
@@ -275,84 +385,6 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
      *
      */
     lib.bindClicks = function () {
-        var resetCorpusInfoBox,
-            createCorpusInfoBox;
-
-
-        resetCorpusInfoBox = function () {
-            $('#corpus-details-box .attrib-list tr.dynamic').remove();
-            if ($('#corpus-details-box .loader-animation').length === 0) {
-                $('#corpus-details-box').append('<img class="loader-animation" src="../files/img/ajax-loader.gif" />');
-            }
-        };
-
-        createCorpusInfoBox = function (okCallback, failCallback) {
-            resetCorpusInfoBox();
-
-            $.ajax({
-                url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
-                dataType : 'json',
-                method : 'get',
-                success : function (data) {
-                    var jqInfoBox = $('#corpus-details-box'),
-                        jqAttribList = $('#corpus-details-box .attrib-list'),
-                        jqStructList = $('#corpus-details-box .struct-list'),
-                        newRow;
-
-                    $('#corpus-details-box .loader-animation').remove();
-
-                    jqInfoBox.find('.corpus-name').text(data.corpname);
-                    jqInfoBox.find('.corpus-description').text(data.description);
-                    jqInfoBox.find('.size').text(data.size);
-                    if (data.web_url) {
-                        jqInfoBox.find('span.web_url').html('<a href="' + data.web_url + '">' + data.web_url + '</a>');
-
-                    } else {
-                        jqInfoBox.find('.web_url').remove();
-                    }
-
-                    $.each(data.attrlist, function (i, item) {
-                        if (!item.error) {
-                            newRow = jqAttribList.find('.item').clone();
-                            newRow.removeClass('item');
-                            newRow.addClass('dynamic');
-                            newRow.find('th').text(item.name);
-                            newRow.find('td').text(item.size);
-
-                        } else {
-                            newRow = jqAttribList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
-                        }
-                        jqAttribList.append(newRow);
-                    });
-
-                    $.each(data.structlist, function (i, item) {
-                        if (!item.error) {
-                            newRow = jqStructList.find('.item').clone();
-                            newRow.removeClass('item');
-                            newRow.addClass('dynamic');
-                            newRow.find('th').text('<' + item.name + '>');
-                            newRow.find('td').text(item.size);
-
-                        } else {
-                            newRow = jqStructList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
-                        }
-                        jqStructList.append(newRow);
-                    });
-
-                    if (typeof okCallback === 'function') {
-                        okCallback();
-                    }
-
-                },
-                error : function () {
-                    resetCorpusInfoBox();
-                    if (typeof failCallback === 'function') {
-                        failCallback();
-                    }
-                    lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
-                }
-            });
-        };
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
@@ -360,7 +392,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'jque
             $('#corpus-details-box').modal({
                 minHeight: 400,
                 onShow : function () {
-                    createCorpusInfoBox(null, function () { $.modal.close(); });
+                    lib.corpusInfoBox.createCorpusInfoBox(null, function () { $.modal.close(); });
                 },
 
                 onClose : function () {
