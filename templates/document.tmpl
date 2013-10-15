@@ -34,9 +34,14 @@ $text
 <link href='$css_font' rel='stylesheet' type='text/css'>
 #end for
 #end filter
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}bonito.css" />
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}view.css" />
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}widgets.css" />
+
+#if $debug
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}bonito.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
+#else
+<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css" />
+#end if
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}simplemodal/basic.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
 #if $app_bar_css
@@ -47,7 +52,10 @@ $text
 <link rel="stylesheet" type="text/css" href="$app_bar_css_ie" media="all">
 <![endif]-->
 <script type="text/javascript" src="$files_path/js/virtual-keyboard.js" charset="UTF-8"></script>
-<script src="$files_path/js/requirejs.min.js" type="text/javascript"></script>
+#if $debug
+<script type="text/javascript" src="$files_path/js/less.js" ></script>
+#end if
+<script type="text/javascript" src="$files_path/js/requirejs.min.js"></script>
 #block headers
 #end block
 #if $getVar('ca_headers', '')
@@ -422,6 +430,11 @@ $_ca_topbar
             <span id="app-version">
                 $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
             </span>
+            #if $debug
+            <div class="debug-warning">
+            $_('Application is running in debugging mode.')
+            </div>
+            #end if
         </div>
     </div>
 </div>

@@ -7,6 +7,7 @@ log
 *.pyc
 config.xml
 .directory
+public/files/css/kontext.min.css
 
 syntax: regexp
 
