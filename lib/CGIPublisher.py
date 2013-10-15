@@ -169,6 +169,7 @@ class CGIPublisher(object):
         self.headers_sent = False
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
         self._session = {}
+        self._ui_settings = {}
 
         # correct _locale_dir
         if not os.path.isdir(self._locale_dir):
@@ -241,11 +242,8 @@ class CGIPublisher(object):
         """
         if 'uilang' in self._session:
             lgs_string = self._session['uilang']
-        elif 'ui_settings' in self._cookies:
-            ui_settings = json.loads(self._cookies['ui_settings'].value)
-            lgs_string = ui_settings.get('set_uilang', None)
         else:
-            lgs_string = None
+            lgs_string = self._ui_settings.get('set_uilang', None)
         if not lgs_string:
             lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
         if lgs_string == '':
@@ -446,6 +444,13 @@ class CGIPublisher(object):
         """
         tmpl = None
         methodname = None
+
+        if 'ui_settings' in self._cookies:
+            try:
+                self._ui_settings = json.loads(self._cookies['ui_settings'].value)
+            except ValueError as e:
+                logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
+                self._ui_settings = {}
         self.init_locale()
         self._init_session()
 
@@ -471,7 +476,6 @@ class CGIPublisher(object):
                 plugins.sessions.save(self._get_session_id(), self._session)
 
         except Exception as e:
-            import logging
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
@@ -632,6 +636,7 @@ class CGIPublisher(object):
         # which always expects the cookie to exists.
         if not 'ui_settings' in self._cookies:
             self._cookies['ui_settings'] = json.dumps({})
+            logging.getLogger(__name__).info('setting ui cookie for path: %s' % self.environ.get('SCRIPT_NAME', '/'))
             self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
 
         if return_type == 'json':

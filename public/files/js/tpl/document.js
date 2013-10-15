@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookies',
-        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, util, cookies, _sm) {
+define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
+        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, util) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -751,25 +751,6 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util
         }
     };
 
-    /**
-     *
-     */
-    lib.loadSharedBar = function () {
-        $.ajax({
-            url : lib.conf.common_app_bar_url + cookies.get(lib.conf.session_cookie_name),
-            data : {},
-            method : 'get',
-            dataType : 'html',
-            success : function (data) {
-                $('#common-bar').empty().append(data);
-            },
-            error : function () {
-                // err params: jqXHR, textStatus, errorThrown
-                $('#common-bar').empty().append(lib.conf.messages.error_loading_application_bar);
-            }
-        });
-    };
-
     lib.updateNotifications = function () {
         var timeout;
 
@@ -786,9 +767,18 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util
      * @param {object} conf
      */
     lib.init = function (conf) {
+        var settingsObj;
+
+        try {
+            settingsObj = JSON.parse($.cookie('ui_settings'));
+
+        } catch (Error) {
+            settingsObj = {};
+        }
+
         lib.conf = conf;
         lib.userSettings = {
-            data : cookies.get('ui_settings'),
+            data : settingsObj,
 
             cookieParams : {
                 path: lib.conf.rootPath
@@ -800,23 +790,18 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util
 
             set : function (key, value) {
                 lib.userSettings.data[key] = value;
-                $.cookies.set('ui_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
             },
 
             del : function (key) {
                 delete (lib.userSettings.data[key]);
-                $.cookies.set('ui_settings', lib.userSettings.data, lib.userSettings.cookieParams);
+                $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
             }
         };
-
         lib.misc();
         lib.bindClicks();
         lib.mainMenu.init();
         lib.updateNotifications();
-
-        if (lib.conf.common_app_bar_url) {
-            lib.loadSharedBar();
-        }
 
         $('button').button();
         $('input[type="submit"]').button();

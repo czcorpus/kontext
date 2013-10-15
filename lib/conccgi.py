@@ -251,7 +251,6 @@ class ConcCGI(CGIPublisher):
         self._curr_corpus = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
-        self.common_app_bar_url = settings.get('global', 'common_app_bar_url')
         self.cache_dir = settings.get('corpora', 'cache_dir')
 
     def _log_request(self, user_settings, action_name):
