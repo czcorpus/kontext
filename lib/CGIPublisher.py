@@ -634,10 +634,10 @@ class CGIPublisher(object):
 
         # The 'ui_settings' cookie is used only by JavaScript client-side code
         # which always expects the cookie to exists.
-        if not 'ui_settings' in self._cookies:
-            self._cookies['ui_settings'] = json.dumps({})
-            logging.getLogger(__name__).info('setting ui cookie for path: %s' % self.environ.get('SCRIPT_NAME', '/'))
-            self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
+        if 'ui_settings' not in self._cookies:
+            self._cookies['ui_settings'] = None
+        self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
+        self._cookies['ui_settings'] = json.dumps(self._ui_settings)
 
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
@@ -662,6 +662,9 @@ class CGIPublisher(object):
 
     def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
                       return_template=False):
+        """
+        Renders response body
+        """
         from Cheetah.Template import Template
         # JSON
         if return_type == 'json':
