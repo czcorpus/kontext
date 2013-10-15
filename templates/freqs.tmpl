@@ -99,15 +99,12 @@ $_("Frequency list")#slurp
         #end block
     </div>
 
-    <table class="result">
+    <table class="data">
         #for $b in $Blocks
         #set $rowNum = 1
         #if 'Total' in $b
         <tr>
-            <td colspan="2"><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</td>
-            #for $h in $b.Head
-            <td></td>
-            #end for
+            <td colspan="$($len($b.Head) + 2)"><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</td>
         </tr>
         #end if
         <tr>
@@ -125,10 +122,10 @@ $_("Frequency list")#slurp
         #if len($i.Word[0]['n']) == 0:
         #continue
         #end if
-        <tr #if $i.has_key('class')#class="$i.class datarow"#else#class="datarow"#end if#>
+        <tr #if $i.has_key('class')#class="datarow"#else#class="datarow"#end if#>
             <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
             #set $rowNum += 1
-            <td>
+            <td class="nowrap">
                 #if $i.get('pfilter', '')
                 <a href='view?$q;$globals;$i.get('pfilter')'>p</a>/#slurp
                 #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
