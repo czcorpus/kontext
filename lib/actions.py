@@ -221,7 +221,6 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._enable_subcorpora_list(out)
-        logging.getLogger(__name__).debug(out)
         self._session['last_corpus'] = self.corpname
         return out
 

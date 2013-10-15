@@ -21,7 +21,7 @@
 /**
  *
  */
-define(['jquery', 'win', 'jquery.cookies', 'popupbox'], function ($, win, cookies, popupBox) {
+define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies, popupBox) {
     'use strict';
 
     var hideElem;

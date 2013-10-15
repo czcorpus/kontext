@@ -72,13 +72,6 @@ requirejs.config({
         'jscrollpane' : './jscrollpane.min'
     },
     shim : {
-        'jquery': {
-            exports: 'jQuery'
-        },
-        'jquery.cookies' : {
-            deps : ['jquery'],
-            exports : 'jaaulde.utils.cookies'
-        },
         'jqueryui' : {
             deps: ['jquery']
         },
@@ -98,7 +91,6 @@ conf['rootPath'] = "$root_path";
 conf['corpname'] = "$corpname";
 conf['session_cookie_name'] = "$session_cookie_name";
 conf['numTagPos'] = $num_tag_pos;
-conf['common_app_bar_url'] = "$common_app_bar_url";
 conf['messages'] = {};
 conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
 conf['messages'].error_loading_application_bar = "$_('Error loading application bar.')";
