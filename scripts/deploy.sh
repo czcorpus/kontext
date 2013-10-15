@@ -24,11 +24,19 @@ then
   exit 1
 fi
 
+echo "========================= TEMPLATES =================================="
+
 for f in `ls templates/*.tmpl`
 do
     cheetah compile --odir cmpltmpl --idir templates $(basename $f)
 done
 
+echo "====================== LESS STYLESHEETS ==============================="
+csspath="public/files/css/kontext.min.css"
+find . -name "*.less" -exec lessc -x {} \; > $csspath
+echo "...compiled into $csspath"
+
+echo "========================= MINIFICATION ================================"
 DEFAULT_YUICOMP_PATH=/usr/local/lib/YUI/yuicompressor.jar
 
 read -p "Do you want to minify CSS and JS [N/y]? " action_id
