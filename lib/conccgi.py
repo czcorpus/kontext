@@ -555,6 +555,7 @@ class ConcCGI(CGIPublisher):
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['root_url'] = settings.get_root_url()
         result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
+        result['debug'] = settings.is_debug_mode()
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url()
