@@ -63,7 +63,7 @@ $ca_headers
 #else
 <script type="text/javascript">
 requirejs.config({
-    baseUrl : '../files/js',
+    baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
     paths: {
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
