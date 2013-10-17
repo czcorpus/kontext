@@ -33,8 +33,11 @@ if settings.is_debug_mode():
     cgitb.enable()
 
 manatee_dir = settings.get('global', 'manatee_path')
-if manatee_dir and manatee_dir not in sys.path:
-    sys.path.insert(0, manatee_dir)
+if manatee_dir:
+    if not os.path.exists(manatee_dir):
+        raise Exception('Incorrect <manatee_path> configuration. Use either empty value or a valid directory path.')
+    elif manatee_dir not in sys.path:
+        sys.path.insert(0, manatee_dir)
 
 MANATEE_REGISTRY = settings.get('corpora', 'manatee_registry')
 
