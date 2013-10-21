@@ -23,11 +23,12 @@ define(['win', 'jquery'], function (win, $) {
 
     /**
      * @constructor
-     * @param {HTMLElement} triggerElm element which acts as an on/off switch for this box
+     * @param {{}} anchorPosition object with 'left', 'top' and 'height' attributes specifying
+     * height and anchorPosition of an element the pop-up box will be (visually) bound to
      */
-    function TooltipBox(triggerElm) {
+    function TooltipBox(anchorPosition) {
 
-        this.triggerElm = triggerElm;
+        this.anchorPosition = anchorPosition;
 
         this.timer = null;
 
@@ -122,17 +123,17 @@ define(['win', 'jquery'], function (win, $) {
             'font-size': fontSize
         });
         if (options.top === 'attached-bottom') {
-            boxTop = ($(this.triggerElm).position().top - $(this.newElem).outerHeight(true) - 2) + 'px';
+            boxTop = (this.anchorPosition.top - $(this.newElem).outerHeight(true) - 2) + 'px';
 
         } else { // includes 'attached-top' option
-            boxTop = ($(this.triggerElm).position().top + $(this.triggerElm).height()) + 'px';
+            boxTop = (this.anchorPosition.top + this.anchorPosition.height) + 'px';
         }
 
         $(this.newElem).css('top', boxTop);
 
         boxIntWidth = $(this.newElem).outerWidth(true);
-        if (pageWidth - boxIntWidth > $(this.triggerElm).position().left) {
-            $(this.newElem).css('left', $(this.triggerElm).position().left + 'px');
+        if (pageWidth - boxIntWidth > this.anchorPosition.left) {
+            $(this.newElem).css('left', this.anchorPosition.left + 'px');
 
         } else {
             borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
@@ -170,7 +171,8 @@ define(['win', 'jquery'], function (win, $) {
         whereElm = $('body');
 
         $(elm).on('click', function (event) {
-            var windowClickHandler;
+            var windowClickHandler,
+                elmOffset;
 
             if ($(elm).data('popupBox')) {
                 box = $(elm).data('popupBox');
@@ -178,7 +180,12 @@ define(['win', 'jquery'], function (win, $) {
                 $(elm).data('popupBox', null);
 
             } else {
-                box = new TooltipBox(event.target);
+                elmOffset = $(event.target).offset();
+                box = new TooltipBox({
+                    left: elmOffset.left,
+                    top: elmOffset.top,
+                    height: $(event.target).height()
+                });
                 $(elm).data('popupBox', box);
                 box.open(whereElm, contents, options);
 
