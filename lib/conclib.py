@@ -21,6 +21,7 @@ import re
 from sys import stderr
 import time
 import math
+import logging
 
 import manatee
 import settings
@@ -315,7 +316,7 @@ def line_parts_contain_speech(line_left, line_right):
     return False
 
 
-def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_speech_id=None):
+def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_speech_id=None):
     """
     Parameters
     ----------
@@ -323,8 +324,8 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
       name of the corpus
     line : list of dicts
       contains keys 'str', 'class'
-    side : str
-      one of {'left', 'right'}; specifies position according to KWIC
+    column : str
+      one of {'left', 'kwic', 'right'}; specifies position according to KWIC
     filter_speech_tag : bool
       if True then whole speech tag is removed else only its 'speech attribute'
     prev_speech_id : str
@@ -336,9 +337,9 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
       modified line
     str
       last speech id (which is necessary to obtain proper speech ID in case
-      of partial segment on the "left" left side of a KWIC line and similarly
-      in case of a partial segment on the "right" side of a KWIC line - because
-      the KWIC word itself separates left and right side).
+      of partial segment on the "left" left column of a KWIC line and similarly
+      in case of a partial segment on the "right" column of a KWIC line - because
+      the KWIC word itself separates left and right columns).
     """
     import re
     import urllib
@@ -348,8 +349,7 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
     fragment_separator = '<%s' % speech_struct
     last_fragment = None
     last_speech_id = prev_speech_id
-
-    create_speech_path = lambda speech_id: urllib.urlencode({'corpname': corpus_name, 'chunk': speech_id})
+    create_speech_path = lambda sp_id: urllib.urlencode({'corpname': corpus_name, 'chunk': sp_id})
 
     for item in line:
         fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (
@@ -374,7 +374,7 @@ def postproc_kwicline_part(corpus_name, line, side, filter_speech_tag, prev_spee
     # concordance line
     if last_fragment is not None \
             and re.search('^<%s(>|[^>]+>)$' % speech_struct, last_fragment['str'])\
-            and side == 'right':
+            and column == 'right':
         del(last_fragment['open_link'])
     if filter_speech_tag:
         remove_tag_from_line(newline, speech_struct)
@@ -454,13 +454,13 @@ def kwiclines(
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(
-            corpus.get_conf('NAME'), tokens2strclass(kl.get_left()),
-            'left', filter_out_speech_tag, leftmost_speech_id)
-        rightwords = postproc_kwicline_part(
-            corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right',
-            filter_out_speech_tag, last_left_speech_id)[0]
-        kwicwords = tokens2strclass(kl.get_kwic())
+        leftwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_left()),
+                                                                'left', filter_out_speech_tag, leftmost_speech_id)
+        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_kwic()),
+                                                                'kwic', filter_out_speech_tag, last_left_speech_id)
+        rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right',
+                                            filter_out_speech_tag, last_left_speech_id)[0]
+
         if righttoleft:
             # change order for "English" context of "English" keywords
             if isengword(kwicwords[0]):
