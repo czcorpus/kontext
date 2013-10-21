@@ -5,6 +5,8 @@
 @color-light-frame: #D2EDC0;
 @color-error-frame: #AF0000;
 @color-light-green: #ECF3EA;
+@border-radius-default: 6px;
+@border-radius-menu: 5px 5px 0 0;
 
 #container {
   clear: both;
@@ -20,7 +22,7 @@
 
 #content > form {
   border: solid 3px @color-light-frame;
-  border-radius: 9px;
+  border-radius: @border-radius-default;
   display: inline-block;
   margin: 5px;
   padding: 1em;
@@ -102,7 +104,7 @@
 #notification .frame {
   background-color: #FFE3E1;
   border: solid 1px @color-error-frame;
-  border-radius: 4px;
+  border-radius: @border-radius-default;
   box-shadow: 2px 2px 3px #aaa;
   color: @color-logo-pink;
   display: inline-block;
@@ -213,7 +215,7 @@ a#logo-wrapper {
 #mainform .parallel-corp-lang .heading h3 {
   background-color: @color-light-frame;
   padding: 3px 10px;
-  border-radius: 5px;
+  border-radius: @border-radius-default;
   margin: 5px 20px;
   font-weight: normal;
   border: 1px solid #C7E7B2;
@@ -295,10 +297,6 @@ a#logo-wrapper {
   border-color: #FFFFFF;
 }
 
-#menu-level-1 li.current a {
-  text-decoration: underline;
-}
-
 #menu-level-1 li.disabled a {
   color: @light-text;
 }
@@ -333,10 +331,11 @@ a#logo-wrapper {
 
 #menu-level-1 > li.active {
   background-color: @color-light-frame;
-  border-radius: 5px 5px 0 0;
+  border-radius: @border-radius-menu;
   border-width: 1px 1px 0 1px;
   border-style: solid;
   border-color: #C7E7B2;
+  z-index: 600;
 }
 
 #menu-level-1 li ul {
@@ -363,8 +362,8 @@ a#logo-wrapper {
 ul.submenu {
   margin: 0;
   padding: 0;
-  border-radius: 3px;
-  min-width: 90px;
+  border-radius: @border-radius-default;
+  min-width: 110px;
 }
 
 ul.submenu li {
@@ -384,8 +383,8 @@ ul.submenu li.separ {
 #active-corpus {
   font-size: 12pt;
   color: @light-text;
-  float: right;
-  padding: 0;
+  float: left;
+  padding: 2px 0 0 0;
   margin: 0;
   text-align: right;
 }
@@ -404,7 +403,7 @@ ul.submenu li.separ {
   clear: both;
   border-collapse: separate;
   border: 1px solid #ECF3EA;
-  border-radius: 5px;
+  border-radius: @border-radius-default;
   margin-top: 20px;
 }
 
@@ -450,6 +449,7 @@ ul.submenu li.separ {
   padding: 15px 20px 5px 20px;
   color: #000000;
   overflow: hidden;
+  width: 1050px;
 }
 
 #topbar-navigation li {
@@ -627,7 +627,7 @@ fieldset {
   border-style: solid;
   border-color: #DBE2D9;
   border-width: 1px;
-  border-radius: 3px;
+  border-radius: @border-radius-default;
 }
 
 #subcorp-selector {
@@ -721,7 +721,7 @@ pre {
 table.data {
   border-collapse: collapse;
   border: 1px solid @color-light-frame;
-  border-radius: 5px;
+  border-radius: @border-radius-default;
 
 }
 
@@ -996,7 +996,7 @@ div.rgt-block {
 #freqs-wrapper {
   margin-top: 20px;
   border: 3px solid @color-light-frame;
-  border-radius: 9px 9px 9px 9px;
+  border-radius: @border-radius-default;
 }
 
 #coll-wrapper h2,
