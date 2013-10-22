@@ -127,7 +127,7 @@ def parse_corplist_node(root, data, path='/'):
             }
 
             ref_elm = item.find('reference')
-            if ref_elm:
+            if ref_elm is not None:
                 ans['citation_info']['default_ref'] = _translate_markup(getattr(ref_elm.find('default'), 'text', None))
                 ans['citation_info']['article_ref'] = _translate_markup(getattr(ref_elm.find('article'), 'text', None))
                 ans['citation_info']['other_bibliography'] = _translate_markup(getattr(ref_elm.find('other_bibliography'), 'text', None))
