@@ -1,4 +1,3 @@
-import sqlite3
 import uuid
 import json
 from datetime import datetime
