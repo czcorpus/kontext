@@ -1196,6 +1196,7 @@ var VKI_attach, VKI_close;
 
         var kbSelect = document.createElement('div');
             kbSelect.title = this.VKI_i18n['02'];
+            kbSelect.className = 'kbselect';
           VKI_addListener(kbSelect, 'click', function() {
             var ol = this.getElementsByTagName('ol')[0];
             if (!ol.style.display) {
