@@ -27,6 +27,7 @@ class AppBar(object):
     def get_contents(self, cookies):
         if hasattr(self.ticket_id_provider, 'get_ticket'):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
+            response = {'status': None, 'reason': None}
             try:
                 self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=3)
                 self.connection.request('GET', self.path % (ticket_id, '%s%s' % (self.root_url, 'first_form')))
