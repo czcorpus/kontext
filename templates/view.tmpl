@@ -188,6 +188,14 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
   #end if
   #for $k in $l.Kwic
+
+    ## opening audio bracket for KWIC
+    #if $k.has_key('open_link')
+        #if $closed_segment and $closed_segment != $k.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$k.open_link.speech_path">+</a> #end if#
+        #set $closed_segment = None
+    <a href="${root_url}audio?$k.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[#if $k.open_link.has_key('continued') #&hellip;#end if #</a>
+    #end if
+
     #if $k.get('class', '') and $basecorpname in $KWICCorps
       <b class='$k.class'>
     #end if
@@ -195,6 +203,13 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
     #if $k.has_key('class') and $k.class
       </b>
     #end if
+
+    ## closing audio breacket for KWIC
+    #if $k.has_key('close_link')
+       #set $closed_segment = $k.close_link.speech_path
+    <a href="${root_url}audio?$k.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
+    #end if
+
   #end for
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td><td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
