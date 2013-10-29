@@ -28,7 +28,8 @@ class SettingsStorage(object):
 
     def save(self, user_id, data):
         cursor = self.conn.cursor()
-        cursor.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s", (json.dumps(data), user_id))
+        cursor.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
+                       (json.dumps(data), user_id))
         self.conn.commit()
 
     def load(self, user_id, current_settings=None):
