@@ -879,7 +879,10 @@ class Actions(ConcCGI):
             'quick_to_line': 1000
         }
         if not result['Blocks'][0]:
-            raise ConcError(_('Empty list'))
+            logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
+            return {'error': _('Empty list'), 'Blocks': [], 'paging': 0, 'quick_from_line': None, 'quick_to_line': None,
+                    'FCrit': []}
+        
         if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
             fstart = (self.fpage - 1) * self.fmaxitems + line_offset
