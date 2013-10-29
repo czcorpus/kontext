@@ -23,11 +23,11 @@ class AppBar(object):
         self.port = port if port else 80
         self.css_url = css_url
         self.css_url_ie = css_url_ie
+        self.connection = None
 
     def get_contents(self, cookies):
         if hasattr(self.ticket_id_provider, 'get_ticket'):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
-            response = {'status': None, 'reason': None}
             try:
                 self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=3)
                 self.connection.request('GET', self.path % (ticket_id, '%s%s' % (self.root_url, 'first_form')))
@@ -39,6 +39,5 @@ class AppBar(object):
                     logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server (%s %s). ticket: %s'
                                                         % (response.status, response.reason, ticket_id))
             except Exception as e:
-                logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server (%s %s). ticket: %s, reason: %s'
-                                                    % (response.status, response.reason, ticket_id, e))
+                logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server: %s' % (e, ))
         return None
