@@ -352,8 +352,7 @@ def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_sp
     create_speech_path = lambda sp_id: urllib.urlencode({'corpname': corpus_name, 'chunk': sp_id})
 
     for item in line:
-        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (
-            speech_struct, speech_struct), item['str']) if x != '']
+        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str']) if x != '']
         for fragment in fragments:
             frag_ext, speech_id = separate_speech_struct_from_tag(fragment)
             if not speech_id:
@@ -435,7 +434,7 @@ def kwiclines(
             return 'ltr' in strclass['class'].split()
     else:
         leftlabel, rightlabel = 'Left', 'Right'
-    kl = manatee.KWICLines(conc, leftctx, rightctx, attrs, ctxattrs,
+    kl = manatee.KWICLines(corpus, conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
                            all_structs, refs)
 
     labelmap = labelmap.copy()
@@ -445,9 +444,7 @@ def kwiclines(
     filter_out_speech_tag = has_speech and settings.get_speech_structure() not in user_structs \
         and speech_struct_attr_name in all_structs
 
-    for line in range(fromline, toline):
-        if not kl.nextline(line):
-            break
+    while kl.nextline():
         linegroup = str(kl.get_linegroup() or '_')
         linegroup = labelmap.get(linegroup, '#' + linegroup)
         if has_speech:
@@ -563,9 +560,9 @@ class PyConc (manatee.Concordance):
 
     def __init__(self, corp, action, params, sample_size=0, full_size=-1,
                  orig_corp=None):
-        self.corp = corp
+        self.pycorp = corp
         self.corpname = corp.get_conffile()
-        self.orig_corp = orig_corp or self.corp
+        self.orig_corp = orig_corp or self.pycorp
         if action == 'q':
             # query
             manatee.Concordance.__init__(
@@ -582,7 +579,7 @@ class PyConc (manatee.Concordance):
         elif action == 's':
             # stored in _conc_dir
             manatee.Concordance.__init__(self, corp,
-                                         os.path.join(self.corp._conc_dir,
+                                         os.path.join(self.pycorp._conc_dir,
                                                       corp.corpname,
                                                       params + '.conc'))
         elif action == 'w':
@@ -622,7 +619,7 @@ class PyConc (manatee.Concordance):
 
     def command_g(self, options):
         # sort according to linegroups
-        annot = get_stored_conc(self.corp, options, self.corp._conc_dir)
+        annot = get_stored_conc(self.pycorp, options, self.pycorp._conc_dir)
         self.set_linegroup_from_conc(annot)
         lmap = annot.labelmap
         lmap[0] = None
@@ -641,9 +638,9 @@ class PyConc (manatee.Concordance):
             conf = args[1]
         else:
             conf = ''
-        conf = self.corp.cm.gdexdict.get(conf, '')
+        conf = self.pycorp.cm.gdexdict.get(conf, '')
         cnt = int(args[0]) or 100
-        best = gdex.GDEX(self.corp, conf)
+        best = gdex.GDEX(self.pycorp, conf)
         best.entryConc(self)
         best_lines = manatee.IntVector([i for s, i
                                         in best.best_k(cnt, cnt)])
@@ -658,7 +655,7 @@ class PyConc (manatee.Concordance):
 
     def command_a(self, options):
         annotname, options = options.split(' ', 1)
-        annot = get_stored_conc(self.corp, annotname, self.corp._conc_dir)
+        annot = get_stored_conc(self.pycorp, annotname, self.pycorp._conc_dir)
         self.set_linegroup_from_conc(annot)
         if options[0] == '-':
             self.delete_linegroups(options[1:], True)
@@ -719,7 +716,7 @@ class PyConc (manatee.Concordance):
         """
         full_attr_name = re.split(r'\s+', full_attr_name)[0]
         struct_name, attr_name = full_attr_name.split('.')
-        struct = self.corp.get_struct(struct_name)
+        struct = self.pycorp.get_struct(struct_name)
         attr = struct.get_attr(attr_name)
         normvals = dict([(struct.beg(
             i), struct.end(i) - struct.beg(i)) for i in range(struct.size())])
@@ -727,7 +724,7 @@ class PyConc (manatee.Concordance):
         for i in range(attr.id_range()):
             value = attr.id2str(i)
             valid = attr.str2id(unicode(value))
-            r = self.corp.filter_query(struct.attr_val(attr_name, valid))
+            r = self.pycorp.filter_query(struct.attr_val(attr_name, valid))
             cnt = 0
             while not r.end():
                 cnt += normvals[r.peek_beg()]
@@ -777,7 +774,7 @@ class PyConc (manatee.Concordance):
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
-        self.freq_dist(crit, limit, words, freqs, norms)
+        self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
         if not len(freqs):
             return {}
         # now we intentionally rewrite norms as filled in by freq_dist()
@@ -785,7 +782,7 @@ class PyConc (manatee.Concordance):
         if rel_mode == 0:
             norms2_dict = self.get_attr_values_sizes(crit)
             norms = [norms2_dict[x] for x in words]
-            sumn = float(self.corp.size())
+            sumn = float(self.pycorp.size())
         elif rel_mode == 1:
             sumn = float(sum([x for x in norms]))
         sumf = float(sum([x for x in freqs]))
@@ -794,7 +791,7 @@ class PyConc (manatee.Concordance):
         def label(attr):
             if '/' in attr:
                 attr = attr[:attr.index('/')]
-            return self.corp.get_conf(attr + '.LABEL') or attr
+            return self.pycorp.get_conf(attr + '.LABEL') or attr
         head = [{'n': label(attrs[x]), 's': x / 2}
                 for x in range(0, len(attrs), 2)]
         head.append({'n': _('Freq'), 's': 'freq'})
@@ -853,7 +850,7 @@ class PyConc (manatee.Concordance):
                      for w, f, nf in zip(words, freqs, norms)]
 
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
-            attr = self.corp.get_attr(attrs[0])
+            attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
             used_vals = [line['Word'][0]['n'] for line in lines]
             for v in all_vals:
