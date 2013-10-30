@@ -1,7 +1,8 @@
 @color-light-green: #ECF3EA;
+@color-default-green: #D2EDC0;
 
 #conc-wrapper {
-    border: 3px solid #D2EDC0;
+    border: 3px solid @color-default-green;
     border-radius: 9px;
     overflow: hidden;
 }
@@ -9,7 +10,7 @@
 #conc-top-bar,
 #conc-bottom-bar {
     overflow: hidden;
-    background-color: #D2EDC0;
+    background-color: @color-default-green;
     padding: 5px 15px;
 }
 
@@ -93,37 +94,32 @@ td.maincorp { background-color: rgba(0, 100, 255, 0.1); }
 }
 
 
-/* detail frame */
-
-#detailframe  {
+#detail-frame  {
+    padding: 1.5em;
     position: fixed;
-    overflow: auto;
-    bottom: 0px;
-    left: 15%;
-    right: 15%;
+    bottom: 15px;
     height: auto;
-    max-height: 30%;
-    width: auto;
-    display: none;
-    background-color: #e9f7fc;
-    -moz-border-radius: 7px;
-    -webkit-border-radius: 7px;
-    -khtml-border-radius: 7px;
-    border-radius: 10px;
-    border: solid 1px #AAA;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
+    overflow: auto;
 }
 
-#detailframecontent {
-    padding: 5px 10px;
+table.full-ref {
+    border-collapse: collapse;
+    border: 1px solid @color-default-green;
+    margin: 0 auto;
 }
 
-#detailframecontent span.load {
-    display: block;
-    width: 150px;
-    margin: 10px auto 10px auto;
-    text-align: center;
+table.full-ref td,
+table.full-ref th {
+    padding: 0.3em;
+    text-align: left;
+}
+
+table.full-ref td.data {
+    padding-right: 2em;
+}
+
+table.full-ref tr:nth-child(odd) {
+  background-color: @color-light-green;
 }
 
 #hideel img {

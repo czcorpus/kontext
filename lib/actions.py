@@ -1240,6 +1240,7 @@ class Actions(ConcCGI):
         display a full reference
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
+    fullref.return_type = 'json'
 
     def draw_graph(self, fcrit='', flimit=0):
         """

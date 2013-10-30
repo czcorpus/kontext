@@ -36,7 +36,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         callback = function () {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function (event) {
-                    detail.showDetail($(this).data('url'), $(this).data('params'), $(this).data('loadtext'), true, callback);
+                    detail.showDetail($(this).data('url'), $(this).data('params'), callback);
                     event.preventDefault();
                 });
             });
@@ -57,8 +57,6 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             detail.showDetail(
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
-                jqRealTarget.data('loadtext'),
-                true,
                 callback
             );
         });
@@ -66,7 +64,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         $('td.ref').bind('click', function (event) {
             $('#conclines tr.active').removeClass('active');
             $(event.target).closest('tr').addClass('active');
-            detail.showDetail(
+            detail.showRefDetail(
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 $(event.target).data('loadtext'),
@@ -109,7 +107,6 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         });
 
         $('#hideel').bind('click', detail.closeDetail);
-        $('#detailframe').data('corpname', layoutModel.conf.corpname);
 
         $('a.speech-link').each(function () {
             $(this).bind('click', function (event) {

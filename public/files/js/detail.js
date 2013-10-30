@@ -17,67 +17,148 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'audioplayer'], function ($, audioPlayer) {
+define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox) {
 
-    var self = {
+    var lib = {},
+        renderDetailFunc;
 
-        /**
-         *
-         * @param url
-         * @param params
-         * @param loadtext
-         * @param erase
-         * @param callback function called after the ajax's complete event is triggered
-         */
-        showDetail : function (url, params, loadtext, erase, callback) {
-            // show detailed info in bottom div
-            $('#detailframe').fadeIn(100);
-            if (erase) {
-                $('#detailframecontent').html('<span class="load">' + loadtext + '</span>');
+
+    renderDetailFunc = function (data) {
+        return function (parentElm) {
+            var i = 0,
+                j,
+                html = '<table class="full-ref">',
+                currRefs,
+                step;
+
+            if (data.Refs.length > 8) {
+                step = 2;
+
+            } else {
+                step = 1;
             }
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: params,
-                complete: function (data) {
-                    $('#detailframecontent').html(data.responseText);
-                    $(document).on('keyup', self.escKeyEventHandler);
-                    if (callback) {
-                        callback();
+
+            while (i < data.Refs.length) {
+                currRefs = [];
+                for (j = 0; j < step; j += 1) {
+                    if (data.Refs[i + j]) {
+                        currRefs.push(data.Refs[i + j]);
+
+                    } else {
+                        currRefs.push({name: null, val: null});
                     }
                 }
-            });
-        },
+                html += '<tr>';
 
-        /**
-         *
-         */
-        escKeyEventHandler : function (event) {
-            if (event.keyCode === 27) {
-                self.closeDetail(event);
+                $.each(currRefs, function () {
+                    if (this.name) {
+                        html += '<th>' + this.name + ':</th><td class="data">';
+                        if (/https?:\/\//.exec(this.val)) {
+                            html += '<a href="' + this.val + '">' + this.val + '</a>';
+
+                        } else {
+                            html += this.val;
+                        }
+                        html += '</td>';
+
+                    } else {
+                        html += '<th></th><td></td>';
+                    }
+                });
+                html += '</tr>';
+                i += step;
             }
-        },
+            html += '</table>';
 
-        /**
-         *
-         * @param event
-         */
-        closeDetail : function (event) {
-            $(document).off('keyup', self.escKeyEventHandler);
-            $('#detailframe').fadeOut(100);
-            $('#conclines tr.active').removeClass('active');
-            event.stopPropagation();
-        },
-
-        /**
-         *
-         * @param linkElem
-         */
-        openSpeech : function (linkElem) {
-            var speechURL = $(linkElem).attr('href');
-            audioPlayer.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
-        }
+            $(parentElm).html(html);
+        };
     };
 
-    return self;
+    /**
+     *
+     * @param url
+     * @param params
+     */
+    lib.showRefDetail = function (url, params) {
+        $.ajax({
+            url : url,
+            type : 'GET',
+            data : params,
+            dataType : 'json',
+            success: function (data) {
+                var render = renderDetailFunc(data),
+                    box,
+                    leftPos;
+
+                box = popupBox.open(render, null, {
+                    type : 'plain',
+                    domId : 'detail-frame',
+                    calculatePosition : false,
+                    timeout : null
+                });
+                leftPos = $(window).width() / 2 - box.getPosition().width / 2;
+                box.setCss('left', leftPos + 'px');
+                $(document).on('keyup.conc_detail', lib.escKeyEventHandlerFunc(box));
+            }
+        });
+    };
+
+    /**
+     *
+     * @param {String} url
+     * @param {{}} params
+     * @param {Function} [callback] function called after the ajax's complete event is triggered
+     */
+    lib.showDetail = function (url, params, callback) {
+        $.ajax({
+            url : url,
+            type : 'GET',
+            data : params,
+            success: function (data) {
+                var box,
+                    leftPos;
+
+                box = popupBox.open(data, null, {
+                    type : 'plain',
+                    domId : 'detail-frame',
+                    calculatePosition : false,
+                    timeout : null
+                });
+                box.setCss('width', '700px');
+                leftPos = $(window).width() / 2 - box.getPosition().width / 2;
+                box.setCss('left', leftPos + 'px');
+
+                $(document).on('keyup.conc_detail', lib.escKeyEventHandlerFunc(box));
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+        });
+    };
+
+    /**
+     * @param {TooltipBox} [boxInstance]
+     */
+    lib.escKeyEventHandlerFunc = function (boxInstance) {
+        return function (event) {
+            if (event.keyCode === 27) {
+                $('#conclines tr.active').removeClass('active');
+                if (boxInstance) {
+                    boxInstance.close();
+                }
+                $(document).off('keyup.conc_detail');
+            }
+        };
+    };
+
+    /**
+     *
+     * @param linkElem
+     */
+    lib.openSpeech = function (linkElem) {
+        var speechURL = $(linkElem).attr('href');
+        audioPlayer.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
+    };
+
+    return lib;
 });
