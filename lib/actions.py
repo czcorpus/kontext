@@ -298,6 +298,11 @@ class Actions(ConcCGI):
                     })
         return out
 
+    def concdesc_json(self, query_id=''):
+        return self.concdesc(query_id)
+
+    concdesc_json.return_type = 'json'
+
     def viewattrs(self):
         """
         attrs, refs, structs form
@@ -2348,7 +2353,12 @@ class Actions(ConcCGI):
         path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.corpname, chunk)
         if os.path.exists(path) and not os.path.isdir(path):
             with open(path, 'r') as f:
+                file_size = os.path.getsize(path)
                 self._headers['Content-Type'] = 'audio/mpeg'
+                self._headers['Content-Length'] = '%s' % file_size
+                self._headers['Accept-Ranges'] = 'none'
+                if self.environ.get('HTTP_RANGE', None):
+                    self._headers['Content-Range'] = 'bytes 0-%s/%s' % (os.path.getsize(path) - 1, os.path.getsize(path))
                 return f.read()
         else:
             self._set_not_found()
