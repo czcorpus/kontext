@@ -33,13 +33,14 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         $('#groupmenu').attr('queryparams', layoutModel.conf.q);
         $('#groupmenu').mouseleave(lib.close_menu);
 
-        callback = function () {
+        callback = function (boxInst) {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function (event) {
                     detail.showDetail($(this).data('url'), $(this).data('params'), callback);
                     event.preventDefault();
                 });
             });
+            layoutModel.mouseOverImages(boxInst.getRootElement());
         };
 
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
@@ -66,9 +67,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             $(event.target).closest('tr').addClass('active');
             detail.showRefDetail(
                 $(event.target).data('url'),
-                $(event.target).data('params'),
-                $(event.target).data('loadtext'),
-                true
+                $(event.target).data('params')
             );
         });
 

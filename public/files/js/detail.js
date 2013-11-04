@@ -76,8 +76,8 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
 
     /**
      *
-     * @param url
-     * @param params
+     * @param {String} url
+     * @param {{}} params
      */
     lib.showRefDetail = function (url, params) {
         $.ajax({
@@ -130,7 +130,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
 
                 $(document).on('keyup.conc_detail', lib.escKeyEventHandlerFunc(box));
                 if (typeof callback === 'function') {
-                    callback();
+                    callback(box);
                 }
             }
         });

@@ -844,6 +844,35 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         }
     };
 
+    lib.mouseOverImages = function (context) {
+        if (!context) {
+            context = win.document;
+        }
+        $(context).find('.over-img').each(function () {
+            var tmp,
+                wrappingLink,
+                activeElm,
+                img = this;
+
+            wrappingLink = $(this).closest('a');
+            if (wrappingLink.length > 0) {
+                activeElm = wrappingLink.get(0);
+
+            } else {
+                activeElm = this;
+            }
+            if ($(this).data('alt-img')) {
+                $(activeElm).on('mouseover', function () {
+                    tmp = $(img).attr('src');
+                    $(img).attr('src', $(img).data('alt-img'));
+                });
+                $(activeElm).on('mouseout', function () {
+                    $(img).attr('src', tmp);
+                });
+            }
+        });
+    };
+
     /**
      *
      * @param {object} conf
@@ -885,6 +914,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.queryOverview();
         lib.mainMenu.init();
         lib.updateNotifications();
+        lib.mouseOverImages();
 
         $('button').button();
         $('input[type="submit"]').button();
