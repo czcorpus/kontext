@@ -62,6 +62,14 @@ define(['win', 'jquery'], function (win, $) {
     }
 
     /**
+     *
+     * @returns {HTMLElement}
+     */
+    TooltipBox.prototype.getRootElement = function () {
+        return this.newElem;
+    }
+
+    /**
      * Returns 'left', 'top' position plus 'width' and 'height'
      *
      * @returns {{}}
