@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
-        'simplemodal'], function (win, $, ui, hideElem, tagbuilder, popupbox, util) {
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
+        'simplemodal', 'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -452,6 +452,88 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util
     /**
      *
      */
+    lib.queryOverview = function () {
+        var renderOverviewFunc,
+            escKeyEventHandlerFunc;
+
+        renderOverviewFunc = function (data) {
+            return function (parentElm) {
+                var url,
+                    html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">';
+
+                html += '<tr><th>' + lib.conf.messages.operation + '</th>';
+                html += '<th>' + lib.conf.messages.parameters + '</th>';
+                html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
+
+                $.each(data.Desc, function (i, item) {
+                    html += '<tr><td>' + item.op + '</td>';
+                    html += '<td>' + item.arg + '</td>';
+                    html += '<td>' + item.size + '</td>';
+                    html += '<td>';
+                    if (item.tourl) {
+                        url = 'view?' + item.tourl;
+                        html += '<a href="' + url + '">' + lib.conf.messages.view_result + '</a>';
+                    }
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                html += '</table>';
+                $(parentElm).html(html);
+            };
+        };
+
+        escKeyEventHandlerFunc = function (boxInstance) {
+            return function (event) {
+                if (event.keyCode === 27) {
+                    $('#conclines tr.active').removeClass('active');
+                    if (boxInstance) {
+                        boxInstance.close();
+                    }
+                    $(document).off('keyup.query_overview');
+                }
+            };
+        };
+
+        // query overview
+        $('#query-overview-trigger').on('click', function (event) {
+            var reqUrl = $(event.target).data('json-href');
+
+            $.ajax(reqUrl, {
+                dataType : 'json',
+                success : function (data) {
+                    var box,
+                        leftPos;
+
+                    if (data.Desc) {
+                        box = popupbox.open(renderOverviewFunc(data), null, {
+                            type : 'plain',
+                            domId : 'query-overview',
+                            calculatePosition : false,
+                            timeout : null
+                        });
+                        leftPos = $(window).width() / 2 - box.getPosition().width / 2;
+                        box.setCss('left', leftPos + 'px');
+
+                        $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
+
+                    } else {
+                        lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                    }
+                },
+                error : function () {
+                    lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                }
+            });
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        });
+
+    };
+
+    /**
+     *
+     */
     lib.bindClicks = function () {
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
@@ -800,6 +882,7 @@ define(['win', 'jquery', 'jqueryui', 'hideelem', 'tagbuilder', 'popupbox', 'util
         };
         lib.misc();
         lib.bindClicks();
+        lib.queryOverview();
         lib.mainMenu.init();
         lib.updateNotifications();
 

@@ -91,9 +91,15 @@ conf['rootPath'] = "$root_path";
 conf['corpname'] = "$corpname";
 conf['session_cookie_name'] = "$session_cookie_name";
 conf['numTagPos'] = $num_tag_pos;
-conf['messages'] = {};
-conf['messages'].failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
-conf['messages'].error_loading_application_bar = "$_('Error loading application bar.')";
+conf.messages = {};
+conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
+conf.messages.view_result = "$_('View result')";
+conf.messages.operation = "$_('Operation')";
+conf.messages.parameters = "$_('Parameters')";
+conf.messages.num_of_hits = "$_('Num of Hits')";
+conf.messages.query_overview = "$_('Query overview')";
+conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
 
 #if $focus
 conf.focus = $focus;
@@ -102,8 +108,8 @@ conf.focus = $focus;
 conf.queryTypesHints = {
     iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
 };
-conf.messages['msg1'] = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
-conf.messages['failed_to_load_corpus_info'] = "$_('Failed to load corpus information.')";
+conf.messages.msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
+conf.messages.failed_to_load_corpus_info = "$_('Failed to load corpus information.')";
 
 #block bodyonload
 require(['domReady!', 'tpl/document'], function (domReady, pageself) {
@@ -196,7 +202,10 @@ $_ca_topbar
                     <li class="separ"><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
                     <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
                     <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
-                    <li class="separ"><a title="$_('Details about current query and related operations')" href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                    <li class="separ"><a id="query-overview-trigger"
+                        title="$_('Details about current query and related operations')"
+                        href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q"
+                        data-json-href="concdesc_json?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
                     <li>
                     #if len($undo_q) > 0
                     <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
@@ -397,7 +406,7 @@ $_ca_topbar
             </div>
             <div id="conclines-wrapper">
                 <div id="hidden-conc">
-                    <a href="view?$q;$globals" title="$_('click to show current concordance')"><img src="../files/img/expand-conc.png" alt="$_('show current concordance')" /></a>
+                    <a href="view?$q;$globals" title="$_('click to show current concordance')"><img src="../files/img/expand-conc.png" alt="$_('show current concordance')" data-alt-img="../files/img/expand-conc_s.png" /></a>
                 </div>
             </div>
         </div>
