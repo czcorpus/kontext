@@ -1949,6 +1949,9 @@ msgstr "Vytvořit nový subkorpus"
 msgid "Corpus access denied"
 msgstr "Přístup ke korpusu odepřen"
 
+msgid "Failed to load query overview"
+msgstr "Nepodařilo se nahrát podrobnosti dotazu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
