@@ -89,7 +89,7 @@
                 $('#selected-value').val(item);
             };
             $('#transform').on('click', function () {
-                tc.createTreeComponent($('select[name="corpus-name"]'), null, customCallback);
+                tc.createTreeComponent($('select[name="corpus-name"]'), {}, customCallback);
             });
         });
     </script>
