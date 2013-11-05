@@ -543,12 +543,20 @@ fieldset h4 {
   position: relative;
 }
 
-input.cql-input {
+#mainform input.cql-input,
+#mainform input.iquery-input,
+#mainform input.lemma-input,
+#mainform input.phrase-input,
+#mainform input.word-input,
+#mainform input.char-input
+{
   font-family: monospace;
+  padding: 6px 2px 2px 2px;
+  width: 35em;
 }
 
-input#cql {
-  padding: 6px 2px 2px 2px;
+#query-type-hint {
+  padding-left: 5px;
 }
 
 .hidden {
