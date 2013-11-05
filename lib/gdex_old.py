@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import manatee
+import random
 import re
 
 
@@ -24,7 +25,7 @@ class GDEX:
 
     After the creation of a new GDEX(corpus) instance, use the
     entry('"word"') method to load concordance list. Then you can
-    change focus using the next_line(i) method. The other methods are
+    move forward using the next_line() method. The other methods are
     using the focused line.
     """
 
@@ -38,7 +39,7 @@ class GDEX:
       self.conc = conc
 
       # zpristupni contexty
-      self.kw = manatee.KWICLines(self.conc, '-1:s', '1:s',
+      self.kw = manatee.KWICLines(self.corp, self.conc.RS(), '-1:s', '1:s',
                                   'word', 'word', 's', '#')
       # zpristupni obsah korpusu
       self.word = self.corp.get_attr('word')
@@ -48,10 +49,9 @@ class GDEX:
       # vytvor konkordancni seznam
       self.entryConc(manatee.Concordance(self.corp, word, 0))
 
-    def next_line(self, line_num):
+    def next_line(self):
       "Moves cursor onto a certain kwic (sentence)."
-      self.line_num = line_num
-      self.kw.nextcontext(line_num)
+      self.kw.nextcontext()
       self.s_begin = self.kw.get_ctxbeg()
       self.s_end = self.kw.get_ctxend()
       self.kwic_idx = self.kw.get_pos() - self.s_begin
@@ -186,7 +186,7 @@ class GDEX:
       if not linenums:
           linenums = range(5)
       for i in linenums:
-        self.next_line(i)
+        self.next_line()
         self.kwic_score_comparsion()
         print
 
@@ -196,8 +196,10 @@ class GDEX:
          Uses a faster algorithm, but if there are more than one examples with best score, it can return a different one from best_k(1)."""
       best = -1
       best_score = -1
-      for i in range(min(self.conc.size(), maxconcsize)):
-        self.next_line(i)
+      concsize = self.conc.size()
+      samplesize = min(concsize, maxconcsize)
+      for i in sorted(random.Random(5).sample(xrange(concsize), samplesize)):
+        self.next_line()
         score = self.weighted_score()
         if score > best_score :
           best = i
@@ -209,8 +211,8 @@ class GDEX:
 
          Return value: [(score, id)]"""
       lines = []
-      for i in range(min(self.conc.size(), maxconcsize)):
-        self.next_line(i)
+      for i in xrange(min(self.conc.size(), maxconcsize)):
+        self.next_line()
         lines.append((self.weighted_score(), i))
       lines.sort(reverse=True)
       return lines[:k]
@@ -219,19 +221,18 @@ class GDEX:
     def show_best_k(self, k=3, maxconcsize=5000):
       """Prints out k best examples."""
       for s,i in self.best_k(k, maxconcsize):
-        self.next_line(i)
+        self.next_line()
         print s, ': ' , ' '.join(self.word_list)
 
 
 if __name__ == "__main__":
   print 'use help() with gdex or gdex.gdex or gdex_test.GDEX'
 
-#print "Warning: this is test version"
-#print "If you intend to use this module, comment the following inicialization."
+#print "If you intend to use this module, comment the following initialization."
 #print ""
 #
 #if __name__ == "__main__":
-#  print "module GDEX was started as an independet task."
+#  print "module GDEX was started as an independent task."
 #  gdex = GDEX()
 #  gdex.entry()
 #  gdex.test()
