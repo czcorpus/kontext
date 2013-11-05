@@ -27,7 +27,7 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      * This object parses <SELECT> and <OPTION> elements expecting additional path
-     * information stored in OPTIONs' 'data-path' attributes. These values are then transformed into an
+     * information stored in OPTIONs' 'data-path' attributes. These values are then transformed into a
      * UL+LI tree.
      *
      * @constructor
@@ -80,7 +80,7 @@ define(['jquery', 'win'], function ($, win) {
                     jqNewLink.attr('title', itemDesc);
                 }
                 jqNewLink.append(itemTitle);
-                jqNewLink.bind('click', function (event) {
+                jqNewLink.on('click', function (event) {
                     $(self.hiddenInput).val(currPathItem);
                     $(self.button).empty().append(itemTitle);
                     self.button.click();
@@ -134,12 +134,14 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      * @constructor
+     * @param {{}} [options]
      */
-    function TreeComponent() {
+    function TreeComponent(options) {
         this.rootUl = null;
         this.jqWrapper = null;
         this.menuWidth = 200;
         this.nestedTree = null;
+        this.options = options || {};
     }
 
     /**
@@ -241,7 +243,7 @@ define(['jquery', 'win'], function ($, win) {
                 jqNewLink.append(newSpan);
                 $(this).prepend(jqNewLink.get(0));
                 jqNewLink.css('text-decoration', 'none');
-                jqNewLink.bind('click', function (event) {
+                jqNewLink.on('click', function (event) {
                     if (subtree !== null) {
                         self.switchSubtree(subtree, newSpan);
                     }
@@ -279,10 +281,7 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
-     *
-     * @param treeComponentInstance
      * @param currentValue
-     * @param rootElm
      */
     TreeComponent.prototype.expandSelected = function (currentValue) {
         var rootDescendants = $(this.rootUl).find('li'),
@@ -364,10 +363,9 @@ define(['jquery', 'win'], function ($, win) {
      * it becomes a single level list expandable to the original multi-level list by mouse clicking.
      *
      * @param {HTMLElement} selectElm
-     * @param {string} title
      * @param {function} customCallback
      */
-    TreeComponent.prototype.build = function (selectElm, title, customCallback) {
+    TreeComponent.prototype.build = function (selectElm, customCallback) {
         var button,
             wrapper,
             jqSelectBoxItem = $(selectElm),
@@ -388,7 +386,7 @@ define(['jquery', 'win'], function ($, win) {
         });
         jqSelectBoxItem.replaceWith(wrapper);
 
-        button = this.createActivationButton(title || this.getTitleOfSelectedItem(selectElm));
+        button = this.createActivationButton(this.options.title || this.getTitleOfSelectedItem(selectElm));
         this.jqWrapper.append(button);
 
         this.nestedTree = new NestedTree(button, customCallback);
@@ -407,21 +405,20 @@ define(['jquery', 'win'], function ($, win) {
         this.expandSelected($(this.nestedTree.hiddenInput).val());
     };
 
-
     lib.TreeComponent = TreeComponent;
 
     /**
      * Transforms form select box into a tree-rendered selector
      *
      * @param {jQuery} selResult HTML SELECT element to be transformed into an expandable tree
-     * @param {string} title if provided then the initial text label will be equal to this value
-     * @param {function} customCallback custom code to be executed when an item is selected.
+     * @param {{}} [options] (currently supported keys: title)
+     * @param {Function} [customCallback] custom code to be executed when an item is selected.
      * The function is expected to have ignature func(event, selectedItemValue);
      */
-    lib.createTreeComponent = function (selResult, title, customCallback) {
-        selResult.each(function () {
-            var component = new TreeComponent();
-            component.build(this, title, customCallback);
+    lib.createTreeComponent = function (selResult, options, customCallback) {
+        $(selResult).each(function () {
+            var component = new TreeComponent(options);
+            component.build(this, customCallback);
         });
     };
 
