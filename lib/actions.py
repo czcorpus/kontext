@@ -1006,7 +1006,6 @@ class Actions(ConcCGI):
         from_line = int(from_line)
         to_line = int(to_line)
 
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
         err = conccgi.validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
@@ -1019,6 +1018,7 @@ class Actions(ConcCGI):
         if self.wlattr:
             self.make_wl_query()  # multilevel wordlist
 
+        result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
         saved_filename = self._humanize_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
