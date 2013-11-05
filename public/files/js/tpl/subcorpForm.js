@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
+define(['jquery', 'tpl/document', 'treecomponent', 'grid'], function ($, layoutModel, treeComponent, grid) {
     'use strict';
 
     var lib = {};
@@ -108,7 +108,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
      *
      */
     lib.misc = function () {
-        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), null, layoutModel.updForm);
+        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {}, layoutModel.updForm);
 
         $('subc-spec-row').css({ display : 'none' });
 
@@ -122,13 +122,6 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
         lib.createFuncSwitchToInputMethod()($('input[name="method"]:checked').val());
     };
 
-    /**conf
-     *
-     */
-    lib.bindClicks = function () {
-
-    };
-
     /**
      *
      * @param conf
@@ -136,7 +129,6 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.misc();
-        lib.bindClicks();
     };
 
 
