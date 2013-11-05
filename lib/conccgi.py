@@ -436,10 +436,7 @@ class ConcCGI(CGIPublisher):
             self.corpname = cn
 
         if not self.corpname:
-            if self._ui_settings.get('last_corpus'):
-                self.corpname = self._ui_settings.get('last_corpus')
-            else:
-                self.corpname = settings.get_default_corpus(corplist)
+            self.corpname = settings.get_default_corpus(corplist)
 
     def self_encoding(self):
         enc = self._corp().get_conf('ENCODING')

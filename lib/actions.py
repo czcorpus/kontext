@@ -221,7 +221,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._enable_subcorpora_list(out)
-        self._ui_settings['last_corpus'] = self.corpname
+        self._save_options(['corpname'])
         return out
 
     ConcCGI.add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
@@ -1500,7 +1500,7 @@ class Actions(ConcCGI):
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
             # custom save is solved in templates because of compatibility issues
-            self._ui_settings['last_corpus'] = self.corpname
+            self._save_options(['corpname'])
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
