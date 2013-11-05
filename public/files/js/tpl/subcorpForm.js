@@ -108,7 +108,12 @@ define(['jquery', 'tpl/document', 'treecomponent', 'grid'], function ($, layoutM
      *
      */
     lib.misc = function () {
-        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {}, layoutModel.updForm);
+        var updateForm = function () {
+            // in case user only changes current corpus, the form is submitted using GET method
+            // which causes server not to create any subcorpus yet
+            $('form[action="subcorp"]').attr('method', 'GET').submit();
+        };
+        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {}, updateForm);
 
         $('subc-spec-row').css({ display : 'none' });
 

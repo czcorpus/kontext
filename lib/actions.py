@@ -1817,6 +1817,9 @@ class Actions(ConcCGI):
                 actually used only to display proper user interface (i.e. not to detect which
                 values to use when creating the subcorpus)
         """
+        if self.get_http_method() != 'POST':
+            self._redirect('%ssubcorp_form?corpname=%s' % (settings.get_root_url(), self.corpname))
+            return None
         if delete:
             base = os.path.join(self.subcpath[-1], self.corpname, subcname)
             for e in ('.subc', '.used'):
