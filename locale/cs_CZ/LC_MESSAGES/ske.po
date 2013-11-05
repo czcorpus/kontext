@@ -1533,7 +1533,7 @@ msgstr "klikněte pro zobrazení podrobností"
 #: cmpltmpl/document.py:2560
 #, python-format
 msgid "of total %s) positions"
-msgstr "celkem %s pozic"
+msgstr "z celkem %s) pozic"
 
 #: cmpltmpl/document.py:2580 cmpltmpl/document.py:2660
 msgid "How to cite the corpus"
