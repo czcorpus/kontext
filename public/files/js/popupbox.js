@@ -59,6 +59,8 @@ define(['win', 'jquery'], function (win, $) {
         this.newElem = null;
 
         this.timeout = 25000;
+
+        this.onClose = null;
     }
 
     /**
@@ -104,6 +106,9 @@ define(['win', 'jquery'], function (win, $) {
             if (this.timer) {
                 clearInterval(this.timer);
             }
+        }
+        if (typeof this.onClose === 'function') {
+            this.onClose.call(this);
         }
     };
 
@@ -173,7 +178,8 @@ define(['win', 'jquery'], function (win, $) {
      * @param whereElement
      * @param {string|function} contents if a function is provided,
      * following signature is expected: function(htmlElement) where htmlElement is the tooltip box itself
-     * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain),
+     * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
+     * onClose),
      * domId, calculatePosition (true, false)
      *
      */
@@ -190,6 +196,7 @@ define(['win', 'jquery'], function (win, $) {
             finalizationCallback;
 
         this.timeout = fetchOption('timeout', this.timeout);
+        this.onClose = fetchOption('onClose', null);
 
         this.newElem = win.document.createElement('div');
         if (boxId) {
