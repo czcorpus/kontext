@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent', 'grid'], function ($, layoutModel, treeComponent, grid) {
+define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
     'use strict';
 
     var lib = {};
