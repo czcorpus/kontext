@@ -151,29 +151,49 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
          * @param jqStructList
          */
         appendStructList: function (structListData, jqStructList) {
-            $.each(structListData, function (i, item) {
-                var newRow;
-                if (!item.error) {
-                    newRow = jqStructList.find('.item').clone();
-                    newRow.removeClass('item');
-                    newRow.addClass('dynamic');
-                    newRow.find('th').text('<' + item.name + '>');
-                    newRow.find('td').text(item.size);
+            var numCol,
+                i,
+                repeatStr,
+                updateRow;
 
-                } else {
-                    newRow = jqStructList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+            repeatStr = function (str, num) {
+                var k,
+                    ans = '';
+
+                for (k = 0; k < num; k += 1) {
+                    ans += str;
                 }
-                jqStructList.append(newRow);
-            });
-        },
+                return ans;
+            };
 
-        /**
-         *
-         */
-        resetCorpusInfoBox : function () {
-            $('#corpus-details-box .attrib-list tr.dynamic').remove();
-            if ($('#corpus-details-box .loader-animation').length === 0) {
-                $('#corpus-details-box').append('<img class="loader-animation" src="../files/img/ajax-loader.gif" />');
+            updateRow = function (data, idx, rootElm) {
+                var newRow = rootElm.find('.item').clone();
+
+                newRow.removeClass('item');
+                newRow.addClass('dynamic');
+                newRow.find('th').each(function (j) {
+                    var value = data[idx + j];
+
+                    if (value) {
+                        $(this).text('<' + value.name + '>');
+                    }
+                });
+                newRow.find('td').each(function (j) {
+                    var value = data[idx + j];
+
+                    if (value) {
+                        $(this).text(value.size);
+                    }
+                });
+                rootElm.append(newRow);
+            };
+
+            numCol = Math.round(structListData.length / 10);
+            jqStructList.find('.item').empty().html(repeatStr('<th></th><td class="numeric"></td>', numCol));
+            jqStructList.find('.attrib-heading').attr('colspan', 2 * numCol);
+
+            for (i = 0; i < structListData.length; i += numCol) {
+                updateRow(structListData, i, jqStructList);
             }
         },
 
@@ -529,7 +549,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     lib.bindClicks = function () {
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
-
 
         popupbox.bind('#corpus-desc-link', function (box) {
             lib.corpusInfoBox.createCorpusInfoBox(box);
