@@ -189,6 +189,7 @@ define(['win', 'jquery'], function (win, $) {
             jqWhereElement = $(whereElement),
             fontSize = fetchOption('fontSize', 'inherit'),
             closeClickHandler,
+            escKeyHandler,
             self = this,
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
@@ -234,6 +235,15 @@ define(['win', 'jquery'], function (win, $) {
             $(document).off('click', closeClickHandler);
             TooltipBox.prototype.close.call(self);
         };
+
+        escKeyHandler = function (event) {
+            if (event.keyCode === 27) {
+                self.close();
+                $(window).off('keyup', escKeyHandler);
+            }
+        };
+
+        $(window).on('keyup', escKeyHandler);
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);

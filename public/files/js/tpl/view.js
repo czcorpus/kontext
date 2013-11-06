@@ -60,6 +60,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 jqRealTarget.data('params'),
                 callback
             );
+            event.stopPropagation();
         });
 
         $('td.ref').bind('click', function (event) {
@@ -69,6 +70,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 $(event.target).data('url'),
                 $(event.target).data('params')
             );
+            event.stopPropagation();
         });
 
         $('#conclines a.copy-button').on('click', function (event) {
