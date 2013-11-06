@@ -188,7 +188,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 rootElm.append(newRow);
             };
 
-            numCol = Math.round(structListData.length / 10);
+            numCol = Math.ceil(structListData.length / 10);
             jqStructList.find('.item').empty().html(repeatStr('<th></th><td class="numeric"></td>', numCol));
             jqStructList.find('.attrib-heading').attr('colspan', 2 * numCol);
 
