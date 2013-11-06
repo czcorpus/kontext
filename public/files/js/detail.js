@@ -18,18 +18,21 @@
  */
 
 define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox) {
+    'use strict';
 
     var lib = {},
         renderDetailFunc;
 
 
     renderDetailFunc = function (data) {
-        return function (parentElm) {
+        return function (tooltipBox, finalize) {
             var i = 0,
                 j,
                 html = '<table class="full-ref">',
                 currRefs,
-                step;
+                step,
+                parentElm = tooltipBox.getRootElement(),
+                refRender;
 
             if (data.Refs.length > 8) {
                 step = 2;
@@ -37,6 +40,22 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
             } else {
                 step = 1;
             }
+
+            refRender = function () {
+                if (this.name) {
+                    html += '<th>' + this.name + ':</th><td class="data">';
+                    if (/https?:\/\//.exec(this.val)) {
+                        html += '<a href="' + this.val + '">' + this.val + '</a>';
+
+                    } else {
+                        html += this.val;
+                    }
+                    html += '</td>';
+
+                } else {
+                    html += '<th></th><td></td>';
+                }
+            };
 
             while (i < data.Refs.length) {
                 currRefs = [];
@@ -50,27 +69,14 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 }
                 html += '<tr>';
 
-                $.each(currRefs, function () {
-                    if (this.name) {
-                        html += '<th>' + this.name + ':</th><td class="data">';
-                        if (/https?:\/\//.exec(this.val)) {
-                            html += '<a href="' + this.val + '">' + this.val + '</a>';
-
-                        } else {
-                            html += this.val;
-                        }
-                        html += '</td>';
-
-                    } else {
-                        html += '<th></th><td></td>';
-                    }
-                });
+                $.each(currRefs, refRender);
                 html += '</tr>';
                 i += step;
             }
             html += '</table>';
 
             $(parentElm).html(html);
+            finalize();
         };
     };
 
