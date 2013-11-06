@@ -249,6 +249,7 @@ class ConcCGI(CGIPublisher):
     def __init__(self, environ):
         super(ConcCGI, self).__init__(environ=environ)
         self._curr_corpus = None
+        self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.cache_dir = settings.get('corpora', 'cache_dir')
@@ -311,6 +312,9 @@ class ConcCGI(CGIPublisher):
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
 
+        self._setup_action_params(self._init_default_settings)
+
+        # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if not self._is_corpus_free_action(path[0]):
             self._fetch_corpname(form, allowed_corpora)
@@ -327,8 +331,6 @@ class ConcCGI(CGIPublisher):
             self.corpname = allowed_corpora[0]
         else:
             self.corpname = ''
-
-        self._setup_action_params(self._init_default_settings)
 
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
@@ -436,7 +438,10 @@ class ConcCGI(CGIPublisher):
             self.corpname = cn
 
         if not self.corpname:
-            self.corpname = settings.get_default_corpus(corplist)
+            if self.last_corpname:
+                self.corpname = self.last_corpname
+            else:
+                self.corpname = settings.get_default_corpus(corplist)
 
     def self_encoding(self):
         enc = self._corp().get_conf('ENCODING')
