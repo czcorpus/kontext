@@ -178,23 +178,23 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         },
 
         /**
-         *
-         * @param okCallback
-         * @param failCallback
+         * @param {TooltipBox} tooltipBox
          */
-        createCorpusInfoBox : function (okCallback, failCallback) {
-            lib.corpusInfoBox.resetCorpusInfoBox();
+        createCorpusInfoBox : function (tooltipBox) {
+            var rootElm = tooltipBox.getRootElement();
 
             lib.ajax({
                 url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
                 dataType : 'json',
                 method : 'get',
                 success : function (data) {
-                    var jqInfoBox = $('#corpus-details-box'),
-                        jqAttribList = $('#corpus-details-box .attrib-list'),
-                        jqStructList = $('#corpus-details-box .struct-list');
+                    var jqInfoBox = $(rootElm),
+                        jqAttribList,
+                        jqStructList;
 
-                    $('#corpus-details-box .loader-animation').remove();
+                    jqInfoBox.html(data.template);
+                    jqAttribList = $('#corpus-details-box .attrib-list');
+                    jqStructList = $('#corpus-details-box .struct-list');
 
                     jqInfoBox.find('.corpus-name').text(data.corpname);
                     jqInfoBox.find('.corpus-description').text(data.description);
@@ -208,17 +208,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
                     lib.corpusInfoBox.appendAttribList(data.attrlist, jqAttribList);
                     lib.corpusInfoBox.appendStructList(data.structlist, jqStructList);
-
-                    if (typeof okCallback === 'function') {
-                        okCallback();
-                    }
-
                 },
                 error : function () {
-                    this.corpusInfoBox.resetCorpusInfoBox();
-                    if (typeof failCallback === 'function') {
-                        failCallback();
-                    }
+                    tooltipBox.close();
                     lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
                 }
             });
@@ -538,17 +530,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
-        $('#corpus-desc-link').bind('click', function () {
-            $('#corpus-details-box').modal({
-                minHeight: 400,
-                onShow : function () {
-                    lib.corpusInfoBox.createCorpusInfoBox(null, function () { $.modal.close(); });
-                },
 
-                onClose : function () {
-                    $.modal.close();
-                }
-            });
+        popupbox.bind('#corpus-desc-link', function (box) {
+            lib.corpusInfoBox.createCorpusInfoBox(box);
         });
 
         $('#corpus-citation-link a').on('click', function () {

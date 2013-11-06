@@ -2098,6 +2098,8 @@ class Actions(ConcCGI):
         """
         """
         corp_conf_info = settings.get_corpus_info(self._corp().corpname)
+        TemplateClass = self._get_template_class('corpus_detail')
+        template = str(TemplateClass(searchList=[]))
 
         format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
 
@@ -2107,7 +2109,8 @@ class Actions(ConcCGI):
             'size': format_int(self._corp().size()),
             'attrlist': [],
             'structlist': [],
-            'web_url': corp_conf_info['web'] if corp_conf_info is not None else ''
+            'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
+            'template': template
         }
         try:
             ans['attrlist'] = [{'name': item, 'size': format_int(self._corp().get_attr(item).id_range())} for item in
