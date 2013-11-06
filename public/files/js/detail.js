@@ -100,7 +100,11 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
-                    timeout : null
+                    timeout : null,
+                    onClose : function () {
+                        $('#conclines tr.active').removeClass('active');
+                        $(document).off('keyup.conc_detail');
+                    }
                 });
                 leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                 box.setCss('left', leftPos + 'px');
@@ -128,7 +132,11 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
-                    timeout : null
+                    timeout : null,
+                    onClose : function () {
+                        $('#conclines tr.active').removeClass('active');
+                        $(document).off('keyup.conc_detail');
+                    }
                 });
                 box.setCss('width', '700px');
                 leftPos = $(window).width() / 2 - box.getPosition().width / 2;
