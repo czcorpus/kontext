@@ -358,6 +358,11 @@ class CGIPublisher(object):
             pass
         result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
 
+    def _get_template_class(self, name):
+        file, pathname, description = imp.find_module(name, [self._template_dir])
+        module = imp.load_module(name, file, pathname, description)
+        return getattr(module, name)
+
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
         if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
@@ -684,10 +689,7 @@ class CGIPublisher(object):
                 setattr(self, attr, self.rec_recode(getattr(self, attr)))
 
             if template.endswith('.tmpl'):
-                class_name = template[:-5]  # appropriate module import
-                file, pathname, description = imp.find_module(class_name, [self._template_dir])
-                module = imp.load_module(class_name, file, pathname, description)
-                TemplateClass = getattr(module, class_name)
+                TemplateClass = self._get_template_class(template[:-5])
                 result = TemplateClass(searchList=[result, self])
             else:
                 result = Template(template, searchList=[result, self])
