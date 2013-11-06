@@ -162,7 +162,7 @@ define(['win', 'jquery'], function (win, $) {
         jqWhereElement.append(this.newElem);
 
         if (typeof contents === 'function') {
-            contents(this.newElem);
+            contents(this);
 
         } else {
             $(this.newElem).empty().append(contents);
