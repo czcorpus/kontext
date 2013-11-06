@@ -103,12 +103,10 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
-                        $(document).off('keyup.conc_detail');
                     }
                 });
                 leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                 box.setCss('left', leftPos + 'px');
-                $(document).on('keyup.conc_detail', lib.escKeyEventHandlerFunc(box));
             }
         });
     };
@@ -135,34 +133,17 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
-                        $(document).off('keyup.conc_detail');
                     }
                 });
                 box.setCss('width', '700px');
                 leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                 box.setCss('left', leftPos + 'px');
 
-                $(document).on('keyup.conc_detail', lib.escKeyEventHandlerFunc(box));
                 if (typeof callback === 'function') {
                     callback(box);
                 }
             }
         });
-    };
-
-    /**
-     * @param {TooltipBox} [boxInstance]
-     */
-    lib.escKeyEventHandlerFunc = function (boxInstance) {
-        return function (event) {
-            if (event.keyCode === 27) {
-                $('#conclines tr.active').removeClass('active');
-                if (boxInstance) {
-                    boxInstance.close();
-                }
-                $(document).off('keyup.conc_detail');
-            }
-        };
     };
 
     /**
