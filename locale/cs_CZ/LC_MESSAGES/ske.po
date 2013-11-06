@@ -1952,6 +1952,9 @@ msgstr "Přístup ke korpusu odepřen"
 msgid "Failed to load query overview"
 msgstr "Nepodařilo se nahrát podrobnosti dotazu"
 
+msgid "Click to enter a new query"
+msgstr "Klikněte pro přechod na nový dotaz"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

@@ -24,7 +24,7 @@
   border: solid 3px @color-light-frame;
   border-radius: @border-radius-default;
   display: block;
-  margin: 5px;
+  margin: 5px 0 5px 0;
   padding: 1em;
 }
 
@@ -187,7 +187,7 @@
 }
 
 a#logo-wrapper {
-  float: left;
+  display: inline-block;
 }
 
 #logo-wrapper img {
@@ -261,7 +261,7 @@ a#logo-wrapper {
 
 #menu-bar {
   font-size: 10pt;
-  float: left;
+  display: inline-block;
   min-width: 680px;
   width: auto;
   margin: 0 20px;
@@ -384,7 +384,7 @@ ul.submenu li.separ {
 #active-corpus {
   font-size: 12pt;
   color: @light-text;
-  float: left;
+  display: inline-block;
   padding: 2px 0 0 0;
   margin: 0;
   text-align: right;
@@ -444,7 +444,11 @@ ul.submenu li.separ {
   padding: 15px 20px 5px 20px;
   color: #000000;
   overflow: hidden;
-  width: 1050px;
+  white-space: nowrap;
+}
+
+#topbar > * {
+  vertical-align: top;
 }
 
 #error-topbar {
