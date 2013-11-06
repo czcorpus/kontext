@@ -33,15 +33,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      */
     toggleSelectAllLabel = function (buttonElm) {
         var tmpLabel = $(buttonElm).attr('value'),
-            currValue = $(buttonElm).data('status');
+            currValue = $(buttonElm).attr('data-status');
 
-        $(buttonElm).attr('value', $(buttonElm).data('alt-label'));
-        $(buttonElm).data('alt-label', tmpLabel);
-        if (currValue === 1) {
-            $(buttonElm).data('status', 2);
+        $(buttonElm).attr('value', $(buttonElm).attr('data-alt-label'));
+        $(buttonElm).attr('data-alt-label', tmpLabel);
+        if (currValue === '1') {
+            $(buttonElm).attr('data-status', '2');
 
         } else {
-            $(buttonElm).data('status', 1);
+            $(buttonElm).attr('data-status', '1');
         }
     };
 
@@ -564,13 +564,16 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         $('input[class="select-all"]').bind('click', function (event) {
             var parent = $(event.target).closest('table.envelope'),
                 jqCheckboxes = parent.find('input[type="checkbox"]');
-
-            if ($(event.target).data('status') === 1) {
-                jqCheckboxes.prop('checked', true);
+            if ($(event.target).attr('data-status') === '1') {
+                jqCheckboxes.each(function () {
+                    this.checked = true;
+                });
                 toggleSelectAllLabel(event.target);
 
-            } else if ($(event.target).data('status') === 2) {
-                jqCheckboxes.removeProp('checked');
+            } else if ($(event.target).attr('data-status') === '2') {
+                jqCheckboxes.each(function () {
+                    this.checked = false;
+                });
                 toggleSelectAllLabel(event.target);
             }
         });
