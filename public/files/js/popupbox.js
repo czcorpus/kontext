@@ -67,7 +67,7 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.getRootElement = function () {
         return this.newElem;
-    }
+    };
 
     /**
      * Returns 'left', 'top' position plus 'width' and 'height'
@@ -121,9 +121,51 @@ define(['win', 'jquery'], function (win, $) {
         }[type];
 
         if (!ans) {
-            throw Error('unknown tooltip type: ' + type);
+            throw new Error('unknown tooltip type: ' + type);
         }
         return ans;
+    };
+
+    /**
+     *
+     * @param options
+     */
+    TooltipBox.prototype.calcPosition = function (options) {
+        var pageWidth = $(document).width(),
+            horizPadding = 12,
+            borderWidth,
+            fetchOption = fetchOptionFunc(options),
+            boxWidth = fetchOption('width', '620px'),
+            boxHeight = fetchOption('height', 'auto'),
+            boxIntWidth,
+            boxTop = 0;
+
+        $(this.newElem).css({
+            'padding-left': horizPadding + 'px',
+            'padding-right': horizPadding + 'px',
+            width: boxWidth,
+            height: boxHeight
+        });
+        if (options.top === 'attached-bottom') {
+            boxTop = (this.anchorPosition.top - $(this.newElem).outerHeight(true) - 2) + 'px';
+
+        } else { // includes 'attached-top' option
+            boxTop = (this.anchorPosition.top + this.anchorPosition.height) + 'px';
+        }
+
+        $(this.newElem).css('top', boxTop);
+
+        boxIntWidth = $(this.newElem).outerWidth(true);
+        if (pageWidth - boxIntWidth > this.anchorPosition.left) {
+            $(this.newElem).css('left', this.anchorPosition.left + 'px');
+
+        } else {
+            borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
+            $(this.newElem).css({
+                left: '100%',
+                'margin-left': '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+            });
+        }
     };
 
     /**
@@ -136,22 +178,16 @@ define(['win', 'jquery'], function (win, $) {
      *
      */
     TooltipBox.prototype.open = function (whereElement, contents, options) {
-        var pageWidth = $(document).width(),
-            opts = options || {},
+        var opts = options || {},
             fetchOption = fetchOptionFunc(opts),
-            horizPadding = 12,
-            borderWidth,
-            boxWidth = fetchOption('width', '620px'),
-            boxHeight = fetchOption('height', 'auto'),
-            boxIntWidth,
-            boxTop = 0,
             jqWhereElement = $(whereElement),
             fontSize = fetchOption('fontSize', 'inherit'),
             closeClickHandler,
             self = this,
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
-            calculatePosition = fetchOption('calculatePosition', true);
+            calculatePosition = fetchOption('calculatePosition', true),
+            finalizationCallback;
 
         this.timeout = fetchOption('timeout', this.timeout);
 
@@ -162,45 +198,27 @@ define(['win', 'jquery'], function (win, $) {
         jqWhereElement.append(this.newElem);
 
         if (typeof contents === 'function') {
-            contents(this);
+            if (calculatePosition) {
+                finalizationCallback = function () {
+                    self.calcPosition(opts);
+                };
+
+            } else {
+                finalizationCallback = function () {};
+            }
+            contents(this, finalizationCallback);
 
         } else {
             $(this.newElem).empty().append(contents);
+            if (calculatePosition) {
+                this.calcPosition(opts);
+            }
         }
         if (msgType !== 'plain') {
             $(this.newElem).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         }
         $(this.newElem).addClass('tooltip-box');
         $(this.newElem).css('font-size', fontSize);
-
-        if (calculatePosition) {
-            $(this.newElem).css({
-                'padding-left': horizPadding + 'px',
-                'padding-right': horizPadding + 'px',
-                width: boxWidth,
-                height: boxHeight
-            });
-            if (options.top === 'attached-bottom') {
-                boxTop = (this.anchorPosition.top - $(this.newElem).outerHeight(true) - 2) + 'px';
-
-            } else { // includes 'attached-top' option
-                boxTop = (this.anchorPosition.top + this.anchorPosition.height) + 'px';
-            }
-
-            $(this.newElem).css('top', boxTop);
-
-            boxIntWidth = $(this.newElem).outerWidth(true);
-            if (pageWidth - boxIntWidth > this.anchorPosition.left) {
-                $(this.newElem).css('left', this.anchorPosition.left + 'px');
-
-            } else {
-                borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
-                $(this.newElem).css({
-                    left: '100%',
-                    'margin-left': '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
-                });
-            }
-        }
 
         closeClickHandler = function (event) {
             if (event) {

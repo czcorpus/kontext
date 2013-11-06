@@ -188,7 +188,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 rootElm.append(newRow);
             };
 
-            numCol = Math.ceil(structListData.length / 10);
+            numCol = Math.min(4, Math.ceil(structListData.length / 10));
             jqStructList.find('.item').empty().html(repeatStr('<th></th><td class="numeric"></td>', numCol));
             jqStructList.find('.attrib-heading').attr('colspan', 2 * numCol);
 
@@ -199,8 +199,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         /**
          * @param {TooltipBox} tooltipBox
+         * @param {Function} doneCallback called when all is loaded and set
          */
-        createCorpusInfoBox : function (tooltipBox) {
+        createCorpusInfoBox : function (tooltipBox, doneCallback) {
             var rootElm = tooltipBox.getRootElement();
 
             lib.ajax({
@@ -228,6 +229,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
                     lib.corpusInfoBox.appendAttribList(data.attrlist, jqAttribList);
                     lib.corpusInfoBox.appendStructList(data.structlist, jqStructList);
+                    doneCallback();
                 },
                 error : function () {
                     tooltipBox.close();
@@ -469,9 +471,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             escKeyEventHandlerFunc;
 
         renderOverviewFunc = function (data) {
-            return function (parentElm) {
+            return function (tooltipBox, finalize) {
                 var url,
-                    html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">';
+                    html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">',
+                    parentElm = tooltipBox.getRootElement();
 
                 html += '<tr><th>' + lib.conf.messages.operation + '</th>';
                 html += '<th>' + lib.conf.messages.parameters + '</th>';
@@ -491,6 +494,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 });
                 html += '</table>';
                 $(parentElm).html(html);
+                finalize();
             };
         };
 
@@ -550,9 +554,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
-        popupbox.bind('#corpus-desc-link', function (box) {
-            lib.corpusInfoBox.createCorpusInfoBox(box);
-        });
+        popupbox.bind('#corpus-desc-link', function (box, finalize) {
+            lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
+        }, {width : 'auto'});
 
         $('#corpus-citation-link a').on('click', function () {
             $('#corpus-citation-box').modal({
