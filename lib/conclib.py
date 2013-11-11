@@ -158,8 +158,7 @@ def kwicpage(
     except:
         fromp = 1
     out = {'Lines':
-           kwiclines(
-               corpus, conc, has_speech, (
+           kwiclines(conc, has_speech, (
                    fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
            leftctx, rightctx, attrs, ctxattrs, refs, structs,
            labelmap, righttoleft, alignlist)}
@@ -171,8 +170,7 @@ def kwicpage(
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
         sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(
-            corpus, conc, has_speech, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
+        sen_lines = kwiclines(conc, has_speech, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
             '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
@@ -239,7 +237,7 @@ def add_aligns(
         if al_corpname in corps_with_colls:
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(corpus, conc, False, fromline, toline, leftctx,
+                kwiclines(conc, False, fromline, toline, leftctx,
                           rightctx, attrs, ctxattrs, refs,
                           structs, labelmap, righttoleft))
         else:
@@ -247,7 +245,7 @@ def add_aligns(
             conc.add_aligned(al_corp.get_conffile())
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(corpus, conc, False, fromline, toline, '0',
+                kwiclines(conc, False, fromline, toline, '0',
                           '0', 'word', '', refs, structs,
                           labelmap, righttoleft))
     aligns = zip(*al_lines)
@@ -380,8 +378,7 @@ def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_sp
     return newline, last_speech_id
 
 
-def kwiclines(
-    corpus, conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
+def kwiclines(conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
     attrs='word', ctxattrs='word', refs='#', user_structs='p',
     labelmap={}, righttoleft=False, alignlist=[],
         align_attrname='align', aattrs='word', astructs=''):
@@ -392,8 +389,6 @@ def kwiclines(
 
     Parameters
     ----------
-    corpus : manatee.Corpus
-      corpus we are working with
     conc : manatee.Concordance
       concordance we are working with
     has_speech : bool
@@ -410,6 +405,7 @@ def kwiclines(
         else:
             return ';hitlen=%i' % hitlen
 
+    corpus = conc.corp()
     # structs represent which structures are requested by user
     # all_structs contain also internal structures needed to render
     # additional information (like the speech links)
