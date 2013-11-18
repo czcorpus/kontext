@@ -59,164 +59,167 @@ require(['tpl/firstForm', 'domReady!'], function (firstForm, domReady) {
 #end def
 
 #def main
-<h2>$_('Search in the corpus')</h2>
 #filter WebSafe
-<form id="mainform" action="first">
-#if $shuffle
-    <input type="hidden" name="shuffle" value="1" />
-#end if
-<table class="form">
-#filter None
-  $corp_sel_node
-  $query_node
-</table>
-#if $getVar('show_cup_menu', '')
-    $cup_err_menu
-#end if
-
-#end filter
-#if $corp_doc
-  <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
-#end if
-
-<fieldset class="inactive">
-    <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="context-box">$_("Specify context") <span class="status"></span></a></legend>
-    <div class="contents">
-    #if $has_lemmaattr
-      <h3>$_("Lemma filter")</h3>
-    #else
-      <h3>$_("Word form filter")</h3>
+<section>
+    <h2>$_('Search in the corpus')</h2>
+    <form id="mainform" action="first">
+    #if $shuffle
+        <input type="hidden" name="shuffle" value="1" />
     #end if
-      <table class="form">
-        <tr>
-          <th align="left">$_("Window"):</th>
-          <td><select name="fc_lemword_window_type">
-             <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
-             <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
-             <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
-           </select>
-           <select name="fc_lemword_wsize">
-             <option>1</option>
-             <option>2</option>
-             <option>3</option>
-             <option>4</option>
-             <option selected="selected">5</option>
-             <option>7</option>
-             <option>10</option>
-             <option>15</option>
-           </select>
-           $_("tokens").
-          </td>
-        </tr>
-        <tr>
-    #if $has_lemmaattr
-          <th align="left">$_("Lemma(s)"):</th>
-    #else
-          <th align="left">$_("Word form(s)"):</th>
+    <table class="form">
+    #filter None
+      $corp_sel_node
+      $query_node
+    </table>
+    #if $getVar('show_cup_menu', '')
+        $cup_err_menu
     #end if
-          <td>
-          <input type="text" name="fc_lemword" class="fc_lemword" />
-          <select name="fc_lemword_type">
-             <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
-             <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
-             <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
-           </select>
-           $_("of these items").
-          </td>
-        </tr>
-      </table>
 
-    #if $Wposlist
-      <h3>$_("PoS filter")</h3>
-      <table class="form">
-        <tr>
-          <th align="left">$_("Window"):</th>
-          <td colspan="2"><select name="fc_pos_window_type">
-             <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
-             <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
-             <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
-           </select>
-           <select name="fc_pos_wsize">
-             <option>1</option>
-             <option>2</option>
-             <option>3</option>
-             <option>4</option>
-             <option selected="selected">5</option>
-             <option>7</option>
-             <option>10</option>
-             <option>15</option>
-           </select>
-           $_("tokens").
-          </td>
-        </tr>
-        <tr>
-          <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
-    $_("multiple selection"))</span></th>
-        <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
-        #for $w in $Wposlist
-          <option>$_($w.n)</option>
-        #end for
-          </select>
-        </td>
-        <td valign="top">
-          <select name="fc_pos_type">
-             <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
-             <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
-             <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
-           </select>
-           $_("of these items").
-          </td>
-        </tr>
-      </table>
+    #end filter
+    #if $corp_doc
+      <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
     #end if
-</div>
-</fieldset>
 
-
-<fieldset class="inactive">
-  <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information") <span class="status"></span></a></legend>
-  <div class="contents">
-      <table>
-          <tr>
+    <fieldset class="inactive">
+        <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="context-box">$_("Specify context") <span class="status"></span></a></legend>
+        <div class="contents">
+        #if $has_lemmaattr
+          <h3>$_("Lemma filter")</h3>
+        #else
+          <h3>$_("Word form filter")</h3>
+        #end if
+          <table class="form">
+            <tr>
+              <th align="left">$_("Window"):</th>
+              <td><select name="fc_lemword_window_type">
+                 <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+                 <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+                 <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+               </select>
+               <select name="fc_lemword_wsize">
+                 <option>1</option>
+                 <option>2</option>
+                 <option>3</option>
+                 <option>4</option>
+                 <option selected="selected">5</option>
+                 <option>7</option>
+                 <option>10</option>
+                 <option>15</option>
+               </select>
+               $_("tokens").
+              </td>
+            </tr>
+            <tr>
+        #if $has_lemmaattr
+              <th align="left">$_("Lemma(s)"):</th>
+        #else
+              <th align="left">$_("Word form(s)"):</th>
+        #end if
               <td>
-                #filter None
-                $tt_sel
-                #end filter
-          </td></tr>
-      </table>
-  </div>
-</fieldset>
+              <input type="text" name="fc_lemword" class="fc_lemword" />
+              <select name="fc_lemword_type">
+                 <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+                 <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+                 <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+               </select>
+               $_("of these items").
+              </td>
+            </tr>
+          </table>
 
-#filter None
-#if $Aligned
-<fieldset class="parallel">
-    <legend>$_('Aligned corpora')</legend>
-    <div id="add-searched-lang-widget">
-        <button type="button">$_('Add')</button>
-        $_('corpus') <select>
-        #for $a in $Aligned
-        <option value="$a.n">$a.label</option>
-        #end for
-    </select>
+        #if $Wposlist
+          <h3>$_("PoS filter")</h3>
+          <table class="form">
+            <tr>
+              <th align="left">$_("Window"):</th>
+              <td colspan="2"><select name="fc_pos_window_type">
+                 <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+                 <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+                 <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+               </select>
+               <select name="fc_pos_wsize">
+                 <option>1</option>
+                 <option>2</option>
+                 <option>3</option>
+                 <option>4</option>
+                 <option selected="selected">5</option>
+                 <option>7</option>
+                 <option>10</option>
+                 <option>15</option>
+               </select>
+               $_("tokens").
+              </td>
+            </tr>
+            <tr>
+              <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
+        $_("multiple selection"))</span></th>
+            <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
+            #for $w in $Wposlist
+              <option>$_($w.n)</option>
+            #end for
+              </select>
+            </td>
+            <td valign="top">
+              <select name="fc_pos_type">
+                 <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+                 <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+                 <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+               </select>
+               $_("of these items").
+              </td>
+            </tr>
+          </table>
+        #end if
     </div>
-    #set $sel_aln = $align.split(',')
-    #for $a in $Aligned
-    <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
-        <div class="heading">
-            <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a></h3>
+    </fieldset>
+
+
+    <fieldset class="inactive">
+      <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information") <span class="status"></span></a></legend>
+      <div class="contents">
+          <table>
+              <tr>
+                  <td>
+                    #filter None
+                    $tt_sel
+                    #end filter
+              </td></tr>
+          </table>
+      </div>
+    </fieldset>
+
+    #filter None
+    #if $Aligned
+    <fieldset class="parallel">
+        <legend>$_('Aligned corpora')</legend>
+        <div id="add-searched-lang-widget">
+            <button type="button">$_('Add')</button>
+            $_('corpus') <select>
+            #for $a in $Aligned
+            <option value="$a.n">$a.label</option>
+            #end for
+        </select>
         </div>
-        <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
-        <table class="form">$query_node('_'+$a.n)</table>
-    </div>
-    #end for
-</fieldset>
-#end if
-#end filter
+        #set $sel_aln = $align.split(',')
+        #for $a in $Aligned
+        <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
+            <div class="heading">
+                <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a></h3>
+            </div>
+            <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
+            <table class="form">$query_node('_'+$a.n)</table>
+        </div>
+        #end for
+    </fieldset>
+    #end if
+    #end filter
 
-<div class="buttons">
-<input id="make-concordance-button" class="submit" type="submit" value="$_("Search")" />
-<input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
-</div>
-</form>
-#end filter
+    <div class="buttons">
+    <input id="make-concordance-button" class="submit" type="submit" value="$_("Search")" />
+    <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
+    </div>
+    </form>
+    #end filter
+</section>
+
 #end def

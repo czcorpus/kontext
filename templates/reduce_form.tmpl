@@ -29,24 +29,24 @@ $_("Sample form")#slurp
 #end def
 
 #def main
-#filter WebSafe
-<h2>$_("Random sample")</h2>
+<section>
+    #filter WebSafe
+    <h2>$_("Random sample")</h2>
 
-<form action="reduce">
-<fieldset class="anonymous">
-#filter None
-$input_hidden
-#end filter
-  $_("Make a random sample from the concordance").
-  <br/>  
-  $_("Number of lines in the sample"): <input type="text" name="rlines"
-  value="$rlines" size="7" id="number" /><br/>
+    <form action="reduce">
+        #filter None
+        $input_hidden
+        #end filter
+          $_("Make a random sample from the concordance").
+          <br/>
+          $_("Number of lines in the sample"): <input type="text" name="rlines"
+          value="$rlines" size="7" id="number" /><br/>
 
-<div class="buttons">
-  <input type="submit" value="$_("Create Sample")" />
-</div>
-</fieldset>
-</form>
+        <div class="buttons">
+          <input type="submit" value="$_("Create Sample")" />
+        </div>
+    </form>
 
-#end filter
+    #end filter
+</section>
 #end def

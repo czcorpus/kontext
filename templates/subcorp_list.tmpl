@@ -32,33 +32,35 @@ require(['tpl/subcorpList', 'domReady!'], function(pageSelf, domReady) {
 
 
 #def main
-<h2>$_('My subcorpora')</h2>
+<section>
+    <h2>$_('My subcorpora')</h2>
 
-<form id="mainform" action="subcorp_list" method="POST">
+    <form id="mainform" action="subcorp_list" method="POST">
 
-<table class="data" border="0">
-    <tr>
-        <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
-        <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
-        <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
-        <th></th>
-    </tr>
-    #set $counter = 1
-    #for $item in $subcorp_list
-    <tr #if $counter % 2 == 1#class="even"#end if#>
-        <td>$item.n</td>
-        <td class="num">#filter $IntegerFormatter# $item.size #end filter#</td>
-        <td>$item.created</td>
-        <td>
-            <input type="checkbox" name="selected_subc" value="$item.n" />
-        </td>
-    </tr>
-    #set $counter = $counter + 1
-    #end for
-</table>
-<p>
-    <button type="submit" name="action" value="delete">$_('Delete selected')</button>
-</p>
-</form>
+    <table class="data" border="0">
+        <tr>
+            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
+            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
+            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
+            <th></th>
+        </tr>
+        #set $counter = 1
+        #for $item in $subcorp_list
+        <tr #if $counter % 2 == 1#class="even"#end if#>
+            <td>$item.n</td>
+            <td class="num">#filter $IntegerFormatter# $item.size #end filter#</td>
+            <td>$item.created</td>
+            <td>
+                <input type="checkbox" name="selected_subc" value="$item.n" />
+            </td>
+        </tr>
+        #set $counter = $counter + 1
+        #end for
+    </table>
+    <p>
+        <button type="submit" name="action" value="delete">$_('Delete selected')</button>
+    </p>
+    </form>
+</section>
 
 #end def

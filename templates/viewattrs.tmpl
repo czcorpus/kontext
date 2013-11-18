@@ -33,70 +33,71 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
 #end def
 
 #def main
-#filter WebSafe
-<h2>$_("Concordance view options - attributes, structures and references")</h2>
-<p>#filter None#$($_('Following settings apply only for the <em>%s</em> corpus.') % $corpname)#end filter#</p>
-<form id="mainform" action='viewattrsx'>
+<section>
+    #filter WebSafe
+    <h2>$_("Concordance view options - attributes, structures and references")</h2>
+    <p>#filter None#$($_('Following settings apply only for the <em>%s</em> corpus.') % $corpname)#end filter#</p>
+    <form id="mainform" action='viewattrsx'>
 
-#filter None
-$input_hidden
-#end filter
-<input type='hidden' name='fromp' value='$fromp' />
+    #filter None
+    $input_hidden
+    #end filter
+    <input type='hidden' name='fromp' value='$fromp' />
 
-<a name="attributes"></a>
-<fieldset>
-    <legend>$_("Attributes")</legend>
+    <a name="attributes"></a>
+    <fieldset>
+        <legend>$_("Attributes")</legend>
 
-    <div class="lft-block">
-        #set $navid = 'id="firstattr"'
-        #for $a in $AttrList
-        #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
-        <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
-        #set $navid = ''
+        <div class="lft-block">
+            #set $navid = 'id="firstattr"'
+            #for $a in $AttrList
+            #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
+            <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
+            #set $navid = ''
+            #end for
+        </div>
+
+        <div class="rgt-block">
+            <label><input type='radio' name='allpos' value='all'
+            #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
+            <label><input type='radio' name='allpos' value='kw'
+            #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
+        </div>
+    </fieldset>
+
+    #if $Availstructs
+    <a name="structures"></a>
+    <fieldset>
+        <legend>$_("Structures")</legend>
+
+        #set $i = 0
+        #for $a in $Availstructs
+            #set $checked = ($a.sel) and 'checked="checked"' or ''
+            <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' checked />
+            <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
+            #set $i = $i + 1
         #end for
+    </fieldset>
+    #end if
+
+    <a name="references"></a>
+    <fieldset>
+        <legend>$_("References")</legend>
+
+        #set $i = 0
+        #for $a in $Availrefs
+            #set $checked = ($a.sel) and 'checked="checked"' or ''
+            <input id="ref-item-$i" type="checkbox" name="setrefs" value='$a.n' $checked>
+            <label for="ref-item-$i">$a.label</label><br />
+            #set $i = $i + 1
+        #end for
+        </select>
+    </fieldset>
+
+    <div class="buttons">
+        <input type="submit" value='$_("Apply View Options")' />
     </div>
-
-    <div class="rgt-block">
-        <label><input type='radio' name='allpos' value='all'
-        #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
-        <label><input type='radio' name='allpos' value='kw'
-        #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
-    </div>
-</fieldset>
-
-#if $Availstructs
-<a name="structures"></a>
-<fieldset>
-    <legend>$_("Structures")</legend>
-
-    #set $i = 0
-    #for $a in $Availstructs
-        #set $checked = ($a.sel) and 'checked="checked"' or ''
-        <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' checked />
-        <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
-        #set $i = $i + 1
-    #end for
-</fieldset>
-#end if
-
-<a name="references"></a>
-<fieldset>
-    <legend>$_("References")</legend>
-
-    #set $i = 0
-    #for $a in $Availrefs
-        #set $checked = ($a.sel) and 'checked="checked"' or ''
-        <input id="ref-item-$i" type="checkbox" name="setrefs" value='$a.n' $checked>
-        <label for="ref-item-$i">$a.label</label><br />
-        #set $i = $i + 1
-    #end for
-    </select>
-</fieldset>
-
-<div class="buttons">
-    <input type="submit" value='$_("Apply View Options")' />
-</div>
-</form>
-
-#end filter
+    </form>
+    #end filter
+</section>
 #end def
