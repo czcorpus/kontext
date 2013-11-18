@@ -4,7 +4,11 @@ import sys
 
 
 def has_plugin(name):
-    return name in globals() and globals()[name] is not None
+    m = sys.modules[__name__]
+    return hasattr(m, name) \
+        and not name.startswith('__') \
+        and not name in sys.builtin_module_names \
+        and getattr(m, name) is not None
 
 
 def load_plugin(name):
