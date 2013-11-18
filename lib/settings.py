@@ -21,7 +21,6 @@ methods.
 import os
 import sys
 from lxml import etree
-from docutils.core import publish_string
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 
@@ -30,21 +29,10 @@ auth = None  # authentication module (this is set from the outside)
 # This dict defines special parsing of quoted sections. Sections not mentioned there
 # are considered to be lists of key->value pairs (i.e. no complex types).
 conf_parsers = {
-    'corplist': 'parse_corplist',
+    'corplist': None,
     'plugins': 'parse_plugins',
     'tagsets': None,
-
 }
-
-
-def _translate_markup(s):
-    if not s:
-        return None
-    html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-                                 writer_name='html')
-    html = html[html.find('<body>')+6:html.find('</body>')].strip()
-    html = html.decode('utf-8')
-    return html
 
 
 def get(section, key=None, default=None):
@@ -100,40 +88,6 @@ def custom_prefix(elm):
     return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
 
 
-def parse_corplist_node(root, data, path='/'):
-    """
-    """
-    if not hasattr(root, 'tag') or not root.tag == 'corplist':
-        return data
-    if root.attrib['title']:
-        path = "%s%s/" % (path, root.attrib['title'])
-    for item in root:
-        if not hasattr(item, 'tag'):
-            continue
-        elif item.tag == 'corplist':
-            parse_corplist_node(item, data, path)
-        elif item.tag == 'corpus':
-            web_url = item.attrib['web'] if 'web' in item.attrib else None
-            sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
-            num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
-
-            ans = {
-                'id': item.attrib['id'].lower(),
-                'path': path,
-                'web': web_url,
-                'sentence_struct': sentence_struct,
-                'num_tag_pos': num_tag_pos,
-                'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None}
-            }
-
-            ref_elm = item.find('reference')
-            if ref_elm is not None:
-                ans['citation_info']['default_ref'] = _translate_markup(getattr(ref_elm.find('default'), 'text', None))
-                ans['citation_info']['article_ref'] = _translate_markup(getattr(ref_elm.find('article'), 'text', None))
-                ans['citation_info']['other_bibliography'] = _translate_markup(getattr(ref_elm.find('other_bibliography'), 'text', None))
-            data.append(ans)
-
-
 def parse_general_tree(section):
     ans = {}
     for item in section:
@@ -163,14 +117,6 @@ def parse_plugins(root):
     _conf['plugins'] = {}
     for item in root:
         _conf['plugins'][item.tag] = parse_general_tree(item)
-
-
-def parse_corplist(root):
-    global _conf
-
-    data = []
-    parse_corplist_node(root, data, path='/')
-    _conf['corpora_hierarchy'] = data
 
 
 def parse_config(path):
@@ -219,33 +165,6 @@ def load(conf_path='../config.xml'):
     if get('corpora', 'manatee_registry'):
         os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
-
-
-def get_corpus_info(corp_name):
-    """
-    Returns an information related to provided corpus name and contained within
-    the configuration XML file (i.e. not the data from the registry file). It is
-    able to handle names containing the '/' character.
-
-    Parameters
-    ----------
-    corp_name : str, name of the corpus
-
-    Returns
-    -------
-    a dictionary containing following keys:
-    path, web
-    or None if no such item is found
-    """
-    tmp = corp_name.split('/')
-    if len(tmp) > 1:
-        corp_name = tmp[1]
-    else:
-        corp_name = tmp[0]
-    for item in _conf['corpora_hierarchy']:
-        if item['id'].lower() == corp_name.lower():
-            return item
-    return {}
 
 
 def get_default_corpus(corplist):
@@ -332,12 +251,8 @@ def supports_password_change():
     return True
 
 if __name__ == '__main__':
-    import sys
-
     if len(sys.argv) > 1:
         parse_config(sys.argv[1])
-        corplist = _conf['corpora_hierarchy']
-        del(_conf['corpora_hierarchy'])
         for block in _conf:
             print('\n[%s]' % block)
             for key in _conf[block]:
@@ -347,8 +262,5 @@ if __name__ == '__main__':
                     else:
                         value = '******'
                     print('%s: %s' % (key, value))
-        print('\n[corpora hierarchy]')
-        for item in corplist:
-            print('%s%s' % (item['path'], item['id']))
     else:
         print('No config XML specified')

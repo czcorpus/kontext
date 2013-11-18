@@ -457,6 +457,10 @@ class CGIPublisher(object):
                 logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
                 self._ui_settings = {}
         self.init_locale()
+        # plugins setup
+        for p in plugins.list_plugins():
+            if hasattr(p, 'setup') and callable(p.setup):
+                p.setup(os.environ['LANG'])
         self._init_session()
 
         if path is None:

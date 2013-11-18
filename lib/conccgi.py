@@ -490,7 +490,7 @@ class ConcCGI(CGIPublisher):
         result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
-        result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
+        result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min(len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf('NAME')
@@ -499,7 +499,7 @@ class ConcCGI(CGIPublisher):
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = locale.format('%d', thecorp.size(), True).decode('utf-8')
         result['user_info'] = self._session['user']
-        corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
+        corp_conf_info = plugins.corptree.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:

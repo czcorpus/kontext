@@ -129,7 +129,7 @@ class Actions(ConcCGI):
             self.leftctx = 'a,%s' % os.path.basename(self.corpname)
             self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
-            sentence_struct = settings.get_corpus_info(self.corpname)['sentence_struct']
+            sentence_struct = plugins.corptree.get_corpus_info(self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
             self.rightctx = self.senrightctx_tpl % sentence_struct
             # GDEX changing and turning on and off
@@ -1361,7 +1361,7 @@ class Actions(ConcCGI):
         if hasattr(self, 'compatible_corpora'):
             refcm = corplib.CorpusManager(
                 [str(c) for c in self.compatible_corpora], self.subcpath)
-            out['CompatibleCorpora'] = refcm.corplist_with_names(settings.get('corpora_hierarchy'),
+            out['CompatibleCorpora'] = refcm.corplist_with_names(plugins.corptree.get(),
                                                                  settings.get_bool('corpora', 'use_db_whitelist'))
         else:
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
@@ -2098,7 +2098,7 @@ class Actions(ConcCGI):
     def ajax_get_corp_details(self):
         """
         """
-        corp_conf_info = settings.get_corpus_info(self._corp().corpname)
+        corp_conf_info = plugins.corptree.get_corpus_info(self._corp().corpname)
         TemplateClass = self._get_template_class('corpus_detail')
         template = str(TemplateClass(searchList=[]))
 
@@ -2146,7 +2146,7 @@ class Actions(ConcCGI):
 
         try:
             tag_loader = taghelper.TagVariantLoader(self.corpname,
-                                                    settings.get_corpus_info(self.corpname)['num_tag_pos'])
+                                                    plugins.corptree.get_corpus_info(self.corpname)['num_tag_pos'])
         except IOError as e:
             raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
 

@@ -55,6 +55,9 @@ plugins.settings_storage = settings_storage_module.create_instance(settings, plu
 auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
 plugins.auth = auth_module.create_instance(settings, plugins.sessions, plugins.db)
 
+corptree_module = plugins.load_plugin(settings.get('plugins', 'corptree')['module'])
+plugins.corptree = corptree_module.create_instance(settings)
+
 try:
     query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])
     if query_storage_module:
