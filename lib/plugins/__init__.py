@@ -1,5 +1,6 @@
 """
 """
+import sys
 
 
 def has_plugin(name):
@@ -13,3 +14,10 @@ def load_plugin(name):
     except AttributeError:
         module = None
     return module
+
+
+def list_plugins():
+    m = sys.modules[__name__]
+    return [item for item in dir(m) if not callable(getattr(m, item))
+            and not item.startswith('__')
+            and not item in sys.builtin_module_names]
