@@ -45,95 +45,92 @@ $_("Collocations")#slurp
     #filter WebSafe
     #set global $allhref = 'collx?%s;%s;cattr=%s;cbgrfns=%s;cminfreq=%s;cminbgr=%s;cfromw=%s;ctow=%s;csortfn=%s' % ($q, $globals, $cattr, $cbgrfns, $cminfreq, $cminbgr, $cfromw, $ctow, $csortfn)
     <h2>$_("Collocation candidates")</h2>
-    <div id="coll-wrapper">
-        #block navigation($navid="next")
-        <div class="navig-bar">
-        #if $collpage > 1 or not $lastpage
-            <div class="bonito-pagination">
-                <form action="collx">
-                    <fieldset class="float">
-                        #if $collpage > 1
-                        <div class="bonito-pagination-left">
-                            <a href="$allhref"><img class="alt-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                            <a href="$allhref;collpage=$(int($collpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
-                        </div>
-                        #end if
+    #block navigation($navid="next")
 
-                        <div class="bonito-pagination-core">
-                            #filter None
-                            $input_hidden
-                            #end filter
-                            <input type="hidden" name="cattr" value='$cattr' />
-                            <input type="hidden" name="cbgrfns" value='$cbgrfns' />
-                            <input type="hidden" name="cminfreq" value='$cminfreq' />
-                            <input type="hidden" name="cminbgr" value='$cminbgr' />
-                            <input type="hidden" name="cfromw" value='$cfromw' />
-                            <input type="hidden" name="ctow" value='$ctow' />
-                            <input type="hidden" name="csortfn" value='$csortfn' />
+    #if $collpage > 1 or not $lastpage
+        <div class="bonito-pagination">
+            <form action="collx">
+                <fieldset class="float">
+                    #if $collpage > 1
+                    <div class="bonito-pagination-left">
+                        <a href="$allhref"><img class="alt-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                        <a href="$allhref;collpage=$(int($collpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                    </div>
+                    #end if
 
-                            $_("Page")
-                            <input type="text" name="collpage" value="$collpage" size="4" />
-                        </div>
+                    <div class="bonito-pagination-core">
+                        #filter None
+                        $input_hidden
+                        #end filter
+                        <input type="hidden" name="cattr" value='$cattr' />
+                        <input type="hidden" name="cbgrfns" value='$cbgrfns' />
+                        <input type="hidden" name="cminfreq" value='$cminfreq' />
+                        <input type="hidden" name="cminbgr" value='$cminbgr' />
+                        <input type="hidden" name="cfromw" value='$cfromw' />
+                        <input type="hidden" name="ctow" value='$ctow' />
+                        <input type="hidden" name="csortfn" value='$csortfn' />
 
-                        #if not $lastpage
-                        <div class="bonito-pagination-right">
-                            <a href="$allhref;collpage=$(int($collpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
-                        </div>
-                        #else
-                        <a id="$navid"></a>
-                        #end if
-                    </fieldset>
-                </form>
-            </div>
-        #end if
+                        $_("Page")
+                        <input type="text" name="collpage" value="$collpage" size="4" />
+                    </div>
+
+                    #if not $lastpage
+                    <div class="bonito-pagination-right">
+                        <a href="$allhref;collpage=$(int($collpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+                    </div>
+                    #else
+                    <a id="$navid"></a>
+                    #end if
+                </fieldset>
+            </form>
         </div>
-        #end block
+    #end if
+    #end block
 
-        <table class='result numtab'>
-        #set $rowNum = 1
-            <tr>
-                <td colspan="2"><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</td>
-                #for $h in $Head
-                <td></td>
-                #end for
-            </tr>
-          <tr><th></th><th></th>
-          #for $h in $Head
-            <th
-            #if $h.has_key('style')
-              $h.style
-            #end if
-            #if $h.has_key('s')
-              #set $hs = $h.s
-            #else
-              #set $hs = ''
-            #end if
-            ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h.n)</a>
-            </th>
+    <table class='result numtab'>
+    #set $rowNum = 1
+        <tr>
+            <td colspan="2"><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</td>
+            #for $h in $Head
+            <td></td>
+            #end for
+        </tr>
+      <tr><th></th><th></th>
+      #for $h in $Head
+        <th
+        #if $h.has_key('style')
+          $h.style
+        #end if
+        #if $h.has_key('s')
+          #set $hs = $h.s
+        #else
+          #set $hs = ''
+        #end if
+        ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h.n)</a>
+        </th>
+      #end for
+      </tr>
+      #for $i in $Items
+        <tr
+        #if $i.has_key('class')
+          class='$i.class'
+        #end if
+        >
+            <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
+        #set $rowNum += 1
+          <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
+          <td class='left'>$i.str</td><td> $i.freq</td>
+          #for $s in $i.Stats
+            <td> $s.s</td>
           #end for
-          </tr>
-          #for $i in $Items
-            <tr
-            #if $i.has_key('class')
-              class='$i.class'
-            #end if
-            >
-                <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
-            #set $rowNum += 1
-              <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
-              <td class='left'>$i.str</td><td> $i.freq</td>
-              #for $s in $i.Stats
-                <td> $s.s</td>
-              #end for
-            </tr>
-          #end for
-        </table>
-        #end filter
+        </tr>
+      #end for
+    </table>
+    #end filter
 
-        #filter None
-        $navigation("next2")
-        #end filter
+    #filter None
+    $navigation("next2")
+    #end filter
 
-    </div>
 </section>
 #end def
