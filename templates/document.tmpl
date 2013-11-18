@@ -166,8 +166,8 @@ $_ca_topbar
 </span>
 #end if
 </div>
-<div id="topbar">
 
+<header id="topbar">
     <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 194px;height: 58px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
 
     <div id="menu-bar">
@@ -312,97 +312,96 @@ $_ca_topbar
         #end if
     </div>
     #end if
-</div>
+</header>
 #end filter
 #end if
 
 
 #filter WebSafe
-<div id="container">
-    <div id="content">
-        #if $error
-        <div id="error">
-            <div class="frame">
-                <img class="icon" alt="Error" src="../files/img/error-icon.png">
-                <span>$error</span>
-                <a class="close-icon">
-                    <img src="../files/img/close-icon.png" />
-                </a>
-            </div>
-        </div>
-        #end if
-        #if $varExists('notification') and $notification
-        <div id="notification">
-            <div class="frame">
-                <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
-                <span>$notification</span>
-                <a class="close-icon">
-                    <img src="../files/img/close-icon.png" />
-                </a>
-            </div>
-        </div>
-        #end if
-        #filter None
-        #block concordance
-        #if $show_conc_bar
-        <div id="conc-wrapper">
-            <div id="conc-top-bar">
-                <div id="result-info">
-                    #if $usesubcorp
-                        $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
-                    #end if
-
-                    $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
-                        #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
-                        <span class="separ">|</span> #end if
-
-                    <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-                    <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
-                    $result_relative_freq_rel_to
-                    #if $result_arf
-                    <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-                    <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
-                    #end if
-                    #if $result_shuffled
-                    <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
-                    #end if
-                </div>
-            </div>
-            <div id="conclines-wrapper">
-                <div id="hidden-conc">
-                    <a href="view?$q;$globals" title="$_('click to show current concordance')"><img class="over-img" src="../files/img/expand-conc.png" alt="$_('show current concordance')" data-alt-img="../files/img/expand-conc_s.png" /></a>
-                </div>
-            </div>
-        </div>
-        #end if
-        #end block
-
-        #block main
-        #end block
-
-        #end filter
-    </div>
-    <div id="footer">
-        <div id="switch-language-box">$_("user interface languages"):
-            <a data-lang="en">English</a> |
-            <a data-lang="cs">česky</a>
-        </div>
-        <div>
-            <span id="copyright-info">
-                &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,
-                &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>
-            </span>,
-            <span id="app-version">
-                $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
-            </span>
-            #if $debug
-            <div class="debug-warning">
-            $_('Application is running in debugging mode.')
-            </div>
-            #end if
+<div id="content">
+    #if $error
+    <div id="error">
+        <div class="frame">
+            <img class="icon" alt="Error" src="../files/img/error-icon.png">
+            <span>$error</span>
+            <a class="close-icon">
+                <img src="../files/img/close-icon.png" />
+            </a>
         </div>
     </div>
+    #end if
+    #if $varExists('notification') and $notification
+    <div id="notification">
+        <div class="frame">
+            <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
+            <span>$notification</span>
+            <a class="close-icon">
+                <img src="../files/img/close-icon.png" />
+            </a>
+        </div>
+    </div>
+    #end if
+    #filter None
+    #block concordance
+    #if $show_conc_bar
+    <div id="conc-wrapper">
+        <div id="conc-top-bar">
+            <div id="result-info">
+                #if $usesubcorp
+                    $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
+                #end if
+
+                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
+                    #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+                    <span class="separ">|</span> #end if
+
+                <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
+                <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+                $result_relative_freq_rel_to
+                #if $result_arf
+                <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+                <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+                #end if
+                #if $result_shuffled
+                <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
+                #end if
+            </div>
+        </div>
+        <div id="conclines-wrapper">
+            <div id="hidden-conc">
+                <a href="view?$q;$globals" title="$_('click to show current concordance')"><img class="over-img" src="../files/img/expand-conc.png" alt="$_('show current concordance')" data-alt-img="../files/img/expand-conc_s.png" /></a>
+            </div>
+        </div>
+    </div>
+    #end if
+    #end block
+
+    #block main
+    #end block
+
+    #end filter
 </div>
+<footer>
+    <div id="switch-language-box">$_("user interface languages"):
+        <a data-lang="en">English</a> |
+        <a data-lang="cs">česky</a>
+    </div>
+    <div>
+        <span id="copyright-info">
+            &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,
+            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>
+        </span>,
+        <span id="app-version">
+            $_('version'): <span title="manatee $_version[0]">$_version[0]</span>&#8212;<span title="bonito $_version[1]">$_version[1]</span>
+        </span>
+        #if $debug
+        <div class="debug-warning">
+        $_('Application is running in debugging mode.')
+        </div>
+        #end if
+    </div>
+</footer>
+
 #end filter
 ## end of left menu
 

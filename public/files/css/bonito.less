@@ -8,11 +8,6 @@
 @border-radius-default: 6px;
 @border-radius-menu: 5px 5px 0 0;
 
-#container {
-  clear: both;
-  overflow: auto;
-}
-
 #content {
   display: block;
   margin: 0;
@@ -165,25 +160,26 @@ section h2 {
   width: 70%;
 }
 
-#footer {
+footer {
   margin-top: 20px;
   color: @light-text;
   clear: both;
   padding: 10px 20px;
   text-align: right;
+  line-height: 1.3em;
 }
 
-#footer #copyright-info,
-#footer #app-version {
+footer #copyright-info,
+footer #app-version {
   font-size: 7.5pt;
 }
 
-#footer #copyright-info a {
+footer #copyright-info a {
   color: @light-text;
   text-decoration: none;
 }
 
-#footer #copyright-info a:hover {
+footer #copyright-info a:hover {
   text-decoration: underline;
 }
 
@@ -191,10 +187,6 @@ section h2 {
   margin: 0;
   padding: 0;
   width: 100%;
-}
-
-#footer {
-  line-height: 1.3em;
 }
 
 #logo {
