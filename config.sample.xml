@@ -50,6 +50,11 @@
             <cleanup_probability>0.9</cleanup_probability>
             <db_path extension-by="ucnk">/var/www/korpus/db/sessions.db</db_path>
         </sessions>
+        <corptree>
+            <module>corptree</module>
+            <file>../config.xml</file>
+            <root_elm_path>//corpora/corplist</root_elm_path>
+        </corptree>
     </plugins>
     <cache>
         <clear_interval>3600</clear_interval>
