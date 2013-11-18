@@ -20,12 +20,28 @@
   padding: 10px 20px;
 }
 
-#content > form {
+#content section {
   border: solid 3px @color-light-frame;
   border-radius: @border-radius-default;
   display: block;
-  margin: 5px 0 5px 0;
-  padding: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+#content section:nth-child(n + 1) {
+  margin-top: 10px;
+}
+
+section > * {
+  margin: 20px;
+}
+
+section h2 {
+  margin: 0;
+  padding: 0.4em 20px;
+  background-color: @color-light-frame;
+  font-size: 160%;
+  font-weight: 200;
 }
 
 #content form.tblexform {
@@ -497,8 +513,18 @@ fieldset h4 {
 }
 
 .bonito-pagination {
-  width: 100%;
   background-color: @color-light-frame;
+}
+
+section > .bonito-pagination {
+  margin: 0;
+  text-align: right;
+}
+
+section > .bonito-pagination form {
+  margin: 0 20px;
+  padding-bottom: 5px;
+  padding-top: 5px;
 }
 
 #conc-wrapper .bonito-pagination {
@@ -511,8 +537,12 @@ fieldset h4 {
   display: inline;
 }
 
-.bonito-pagination-core input[name="fromp"] {
+.bonito-pagination-core input[type='text'] {
   width: 40px;
+}
+
+.bonito-pagination-core > * {
+  vertical-align: middle;
 }
 
 .bonito-pagination-left {
@@ -674,10 +704,6 @@ a.form-extension-switch:hover {
   font-size: 80%;
 }
 
-fieldset.anonymous {
-  border: none;
-}
-
 fieldset fieldset {
   margin: 6px 10px 6px 6px;
 }
@@ -706,10 +732,6 @@ h2 {
   font-size: 140%;
   margin: 0.5em auto 0.5em 0.5em;
   font-weight: 500;
-}
-
-h3 {
-  margin: 10px 0 5px 0;
 }
 
 h3 a:focus, h3 a:focus img {
@@ -894,7 +916,7 @@ input#cql {
 
 table.form th,
 table.form td {
-  padding: 5px 15px;
+  padding: 5px 15px 5px 0;
 }
 
 table.form th {
@@ -1010,35 +1032,23 @@ div.rgt-block {
   margin: 0 auto;
 }
 
-#coll-wrapper,
-#freqs-wrapper {
-  margin-top: 20px;
-  border: 3px solid @color-light-frame;
-  border-radius: @border-radius-default;
-}
-
-#coll-wrapper h2,
-#freqs-wrapper h2 {
+#coll-wrapper h2 {
   background-color: @color-light-frame;
   margin: 0;
   padding-left: 15px;
 }
 
-#coll-wrapper .bonito-pagination,
-#freqs-wrapper .bonito-pagination {
+#coll-wrapper .bonito-pagination {
   width: 250px;
   float: right;
   text-align: right;
 }
 
-#freqs-wrapper form[action='freqs'] {
-  display: inline-block;
-}
-
-#coll-wrapper .navig-bar,
-#freqs-wrapper .navig-bar {
+#coll-wrapper .navig-bar {
   background-color: @color-light-frame;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 table.results-range-and-paging {

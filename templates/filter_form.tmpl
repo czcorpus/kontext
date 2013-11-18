@@ -40,80 +40,80 @@ require(['jquery', 'tpl/filterForm', 'domReady!'], function (\$, filterForm, dom
 #end def
 
 #def main
-#filter WebSafe
-<h2>$_("Concordance Filter")</h2>
-<form id="mainform" action="filter">
-<input type="hidden" name="within" value="$within" />
-<fieldset class="anonymous">
-#filter None
-$input_hidden
-#end filter
+<section>
+    #filter WebSafe
+    <h2>$_("Concordance Filter")</h2>
+    <form id="mainform" action="filter">
+        <input type="hidden" name="within" value="$within" />
+        #filter None
+        $input_hidden
+        #end filter
 
-<table class="form">
-#if $within
-<input type="hidden" name="pnfilter" value="p"/>
-#else ## ordinary filter
-<tbody>
-<tr class="required">
-  <th>$_("Filter"):</th>
-    <td><label><input type="radio" name="pnfilter" value="p"
-    #if $pnfilter == 'p'
-      checked="checked"
-    #end if
-    /> $_("positive")</label>
-    <label><input type="radio" name="pnfilter" value="n"
-    #if $pnfilter == 'n'
-      checked="checked"
-    #end if
-    /> $_("negative")</label></td></tr>
-    
-<tr>
-  <th>$_("Selected token"):</th>
-    <td><label><input type="radio" name="filfl" value="f" 
-    #if $filfl == 'f'
-      checked="checked"
-    #end if
-    /> $_("first")</label>
-    <label><input type="radio" name="filfl" value="l" 
-    #if $filfl == 'l'
-      checked="checked"
-    #end if
-    />  $_("last")</label></td></tr>
-<tr><th>$_("Search Span"):</th>
-    <td>
-    $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
-    $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
-    <input type="checkbox" name="inclkwic" value="True" checked="checked" /> $_("include KWIC")
-    </td>
-</tr>
-</tbody>
-#end if
-#filter None
-$query_node
-#end filter
-</table>
+        <table class="form">
+        #if $within
+        <input type="hidden" name="pnfilter" value="p"/>
+        #else ## ordinary filter
+        <tbody>
+        <tr class="required">
+          <th>$_("Filter"):</th>
+            <td><label><input type="radio" name="pnfilter" value="p"
+            #if $pnfilter == 'p'
+              checked="checked"
+            #end if
+            /> $_("positive")</label>
+            <label><input type="radio" name="pnfilter" value="n"
+            #if $pnfilter == 'n'
+              checked="checked"
+            #end if
+            /> $_("negative")</label></td></tr>
 
-#if $TextTypeSel
-  #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
-  #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
-  <div class="advanced_options$hidden">
-  <h3>$_("Text Types")</h3>
+        <tr>
+          <th>$_("Selected token"):</th>
+            <td><label><input type="radio" name="filfl" value="f"
+            #if $filfl == 'f'
+              checked="checked"
+            #end if
+            /> $_("first")</label>
+            <label><input type="radio" name="filfl" value="l"
+            #if $filfl == 'l'
+              checked="checked"
+            #end if
+            />  $_("last")</label></td></tr>
+        <tr><th>$_("Search Span"):</th>
+            <td>
+            $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
+            $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
+            <input type="checkbox" name="inclkwic" value="True" checked="checked" /> $_("include KWIC")
+            </td>
+        </tr>
+        </tbody>
+        #end if
+        #filter None
+        $query_node
+        #end filter
+        </table>
 
-    <div class="indent">
-    #filter None
-    $tt_sel
+        #if $TextTypeSel
+          #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
+          #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
+          <div class="advanced_options$hidden">
+          <h3>$_("Text Types")</h3>
+
+            <div class="indent">
+            #filter None
+            $tt_sel
+            #end filter
+            </div>
+
+            </div>
+
+        #end if
+
+        <div class="buttons">
+          <input class="submit" type="submit" value="$_("Filter Concordance")" />
+          <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
+        </div>
+    </form>
     #end filter
-    </div>
-
-    </div>
-
-#end if
-
-<div class="buttons">
-  <input class="submit" type="submit" value="$_("Filter Concordance")" />
-  <input id="conc-form-clear-button" class="button" type="button" value="$_("Clear All")" />
-</div>
-</fieldset>
-</form>
-#end filter
+</section>
 #end def

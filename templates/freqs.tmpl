@@ -37,67 +37,62 @@ $_("Frequency list")#slurp
 
 
 #def main
-#filter WebSafe
-#set global $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
+<section>
+    #filter WebSafe
+    #set global $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
 
-<h2>$_("Frequency list")</h2>
-<div id="freqs-wrapper">
-    <div class="navig-bar">
+    <h2>$_("Frequency list")</h2>
+
+    #block navigation($navid="next")
+    #if $paging and ($fpage > 1 or not $lastpage)
+    <div class="bonito-pagination">
         <form action="freqs">
-            <fieldset class="float anonymous">
+            #if $fpage > 1
+            <div class="bonito-pagination-left">
+                <a href="$allhref"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                <a href="$allhref;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
+            </div>
+            #end if
+
+            <div class="bonito-pagination-core">
                 #filter None
-                    $input_hidden
+                $input_hidden
                 #end filter
-                #for $f in $FCrit
-                <input type="hidden" name="fcrit" value="$f.fcrit" />
+                #for $fcr in $FCrit
+                <input type="hidden" name="fcrit" value="$fcr.fcrit" />
                 #end for
-                <input type="hidden" name="ml" value="$ml" />
-                <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
-                $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
-                <input type="submit" value="$_("Set limit")" />
-            </fieldset>
+                <input type="hidden" name="flimit" value='$flimit' />
+                <input type="hidden" name="freq_sort" value='$freq_sort' />
+                <input type="hidden" name="ml" value='$ml' />
+
+                $_("Page")
+                <input type="text" name="fpage" value="$fpage" size="4" />
+            </div>
+
+            #if not $lastpage
+            <div class="bonito-pagination-right">
+                <a href="$allhref;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+            </div>
+            #else
+            <a id="$navid"></a>
+            #end if
         </form>
-
-        #block navigation($navid="next")
-        #if $paging and ($fpage > 1 or not $lastpage)
-        <div class="bonito-pagination">
-            <form action="freqs">
-                <fieldset class="float anonymous">
-                    #if $fpage > 1
-                    <div class="bonito-pagination-left">
-                        <a href="$allhref"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                        <a href="$allhref;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
-                    </div>
-                    #end if
-
-                    <div class="bonito-pagination-core">
-                        #filter None
-                        $input_hidden
-                        #end filter
-                        #for $fcr in $FCrit
-                        <input type="hidden" name="fcrit" value="$fcr.fcrit" />
-                        #end for
-                        <input type="hidden" name="flimit" value='$flimit' />
-                        <input type="hidden" name="freq_sort" value='$freq_sort' />
-                        <input type="hidden" name="ml" value='$ml' />
-
-                        $_("Page")
-                        <input type="text" name="fpage" value="$fpage" size="4" />
-                    </div>
-
-                    #if not $lastpage
-                    <div class="bonito-pagination-right">
-                        <a href="$allhref;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
-                    </div>
-                    #else
-                    <a id="$navid"></a>
-                    #end if
-                </fieldset>
-            </form>
-        </div>
-        #end if
-        #end block
     </div>
+    #end if
+    #end block
+
+    <form action="freqs">
+        #filter None
+            $input_hidden
+        #end filter
+        #for $f in $FCrit
+        <input type="hidden" name="fcrit" value="$f.fcrit" />
+        #end for
+        <input type="hidden" name="ml" value="$ml" />
+        <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
+        $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
+        <input type="submit" value="$_("Set limit")" />
+    </form>
 
     <table class="data">
         #for $b in $Blocks
@@ -153,12 +148,10 @@ $_("Frequency list")#slurp
     #end for
     </table>
 
-    <div class="navig-bar">
-        #filter none
-        $navigation("next2")
-        #end filter
-    </div>
-</div>
-#end filter
+    #filter none
+    $navigation("next2")
+    #end filter
 
+    #end filter
+</section>
 #end def
