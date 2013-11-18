@@ -120,11 +120,11 @@ class Actions(ConcCGI):
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.q))
 
         self.righttoleft = False
+        if self._corp().get_conf('RIGHTTOLEFT'):
+            self.righttoleft = True
         if self.viewmode == 'kwic':
             self.leftctx = self.kwicleftctx
             self.rightctx = self.kwicrightctx
-            if self._corp().get_conf('RIGHTTOLEFT'):
-                self.righttoleft = True
         elif self.viewmode == 'align' and self.align:
             self.leftctx = 'a,%s' % os.path.basename(self.corpname)
             self.rightctx = 'a,%s' % os.path.basename(self.corpname)
@@ -788,6 +788,7 @@ class Actions(ConcCGI):
         if within:
             wquery = ' within %s:(%s)' % (self.maincorp or self.corpname, query)
             self.q[0] += wquery
+            self.q.append('x-' + (self.maincorp or self.corpname))
         else:
             self.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
                                              rank, query))
