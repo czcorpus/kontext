@@ -273,7 +273,8 @@ a#logo-wrapper {
   min-width: 680px;
   width: auto;
   margin: 0 20px;
-  height: 50px;
+  height: auto;
+  white-space: normal;
 }
 
 #menu-bar a:hover, #active-corpus a.corpus-desc:hover {
@@ -282,6 +283,10 @@ a#logo-wrapper {
 
 #menu-bar ul img {
   vertical-align: middle;
+}
+
+#menu-bar a.trigger {
+  color: @color-logo-pink;
 }
 
 #menu-bar a.trigger:hover {
@@ -297,7 +302,7 @@ a#logo-wrapper {
 
 #menu-level-1 li {
   display: inline-block;
-  padding: 3px 6px;
+  padding: 0;
   font-weight: bold;
   z-index: 100;
   position: relative;
@@ -348,7 +353,6 @@ a#logo-wrapper {
 }
 
 #menu-level-1 li ul {
-  display: none;
 }
 
 #menu-level-wrapper-2 {
@@ -373,6 +377,7 @@ ul.submenu {
   padding: 0;
   border-radius: @border-radius-default;
   min-width: 110px;
+  display: inline;  /* javascript overrides this */
 }
 
 ul.submenu li {
@@ -451,7 +456,6 @@ ul.submenu li.separ {
 #topbar {
   padding: 15px 20px 5px 20px;
   color: #000000;
-  overflow: hidden;
   white-space: nowrap;
 }
 
