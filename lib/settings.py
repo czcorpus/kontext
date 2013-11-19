@@ -23,6 +23,7 @@ import sys
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
+_meta = {}  # contains data of attributes of XML elements representing configuration values
 
 auth = None  # authentication module (this is set from the outside)
 
@@ -54,14 +55,25 @@ def get(section, key=None, default=None):
     return default
 
 
-def set(section, key, value):
+def get_meta(section, key):
     """
-    Sets configuration value. Please note that this action is neither
-    persistent nor shared between users/requests.
+    Returns metadata (= XML element attributes) attached to a respective element
     """
-    if not section in _conf:
-        _conf[section] = {}
-    _conf[section][key] = value
+    if section in _meta and key in _meta[section]:
+        return _meta[section][key]
+    return {}
+
+
+def get_full(section, key):
+    """
+    Returns both value and metadata of a respective configuration element
+    """
+    m = get_meta(section, key)
+    d = get(section, key)
+    if hasattr(m, '__iter__') and hasattr(d, '__iter__'):
+        return zip(d, m)
+    else:
+        return d, m
 
 
 def get_bool(section, key):
@@ -84,12 +96,23 @@ def get_int(section, key):
     return int(get(section, key))
 
 
+def set(section, key, value):
+    """
+    Sets a configuration value. Please note that this action is neither
+    persistent nor shared between users/requests.
+    """
+    if not section in _conf:
+        _conf[section] = {}
+    _conf[section][key] = value
+
+
 def custom_prefix(elm):
     return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
 
 
 def parse_general_tree(section):
     ans = {}
+    meta = {}
     for item in section:
         if item.tag is etree.Comment:
             continue
@@ -103,20 +126,25 @@ def parse_general_tree(section):
             item_id = '%s%s' % (custom_prefix(item), item.tag)
             if len(item.getchildren()) == 0:
                 ans[item_id] = item.text
+                meta[item_id] = dict(item.attrib)
             else:
                 item_list = []
+                meta_list = []
                 for sub_item in item:
                     item_list.append(sub_item.text)
+                    meta_list.append(dict(sub_item.attrib))
                 ans[item_id] = tuple(item_list)
-    return ans
+                meta[item_id] = tuple(meta_list)
+    return ans, meta
 
 
 def parse_plugins(root):
-    global _conf
+    global _conf, _meta
 
     _conf['plugins'] = {}
+    _meta['plugins'] = {}
     for item in root:
-        _conf['plugins'][item.tag] = parse_general_tree(item)
+        _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_general_tree(item)
 
 
 def parse_config(path):
@@ -134,7 +162,7 @@ def parse_config(path):
     path : str
       a file system path to the configuration file
     """
-    global _conf
+    global _conf, _meta
 
     xml = etree.parse(open(path))
     root = xml.getroot()
@@ -144,7 +172,7 @@ def parse_config(path):
             getattr(sys.modules[__name__], conf_parsers[section.tag])(section)
         else:
             section_id = '%s%s' % (custom_prefix(section), section.tag)
-            _conf[section_id] = parse_general_tree(section)
+            _conf[section_id], _meta[section_id] = parse_general_tree(section)
 
 
 def load(conf_path='../config.xml'):
