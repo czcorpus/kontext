@@ -50,6 +50,11 @@ class CorpTree(object):
         Returns locale-correct title of a corpus group (= CORPLIST XML element)
         """
         ans = None
+
+        if self.lang:
+            lang = self.lang.split('_')[0]
+        else:
+            lang = 'en'
         if 'title' in elm.attrib:
             if elm.attrib['title']:
                 ans = elm.attrib['title']
@@ -58,7 +63,7 @@ class CorpTree(object):
         else:
             titles = elm.findall('title')
             if len(titles) > 0:
-                matching = [s.text for s in titles if 'lang' in s.attrib and s.attrib['lang'] == self.lang]
+                matching = [s.text for s in titles if 'lang' in s.attrib and s.attrib['lang'] == lang]
                 if len(matching) > 0:
                     ans = matching[0]
         return ans
