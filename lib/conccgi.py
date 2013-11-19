@@ -574,6 +574,9 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
 
+        # avalilable languages
+        result['avail_languages'] = settings.get('global', 'translations')
+
         # is there a concordance information in session?
         if 'conc' in self._session:
             result['show_conc_bar'] = True
