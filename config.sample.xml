@@ -12,9 +12,9 @@
             <item>http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&amp;subset=latin-ext</item>
         </fonts>
         <translations>
-            <language>cs</language>
-            <language>en</language>
-            <language>sk</language>
+            <language label="česky">cs</language>
+            <language label="English">en</language>
+            <language label="slovensky">sk</language>
         </translations>
     </global>
 
