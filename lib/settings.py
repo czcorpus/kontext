@@ -299,6 +299,9 @@ def get_corplist():
         else:
             corpora = []
 
+        #!!!
+        corpora += ['intercorp_cs', 'intercorp_en']
+
         corpora.sort()
         _corplist = corpora
     return _corplist

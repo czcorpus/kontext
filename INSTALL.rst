@@ -118,59 +118,59 @@ Configuration
 The application itself is configured via config.xml file located in the root directory of the application.
 Please refer to the **config.sample.xml** to see the structure.
 
-+----------------------------------------------+-----------------------------------------------------------+
-| Xpath                                        | Description                                               |
-+==============================================+===========================================================+
-| /bonito/global/manatee_path                  | Location of your Python interface to the manatee          |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/global/debug                         | true/false (true => detailed error info is visible)       |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/global/log_path                      | Path to the logging file (Apache must have write access)  |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/adapter                     | {mysql, sqlite}                                           +
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/name                        | Name (or path) of the database used with Bonito2          |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/host                        | Hostname of the database server                           |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/password                    | Password to the database                                  |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/database/username                    | Username of the user with SELECT and UPDATE privileges    |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/cache/clear_interval                 | number of seconds to keep cached files                    |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/manatee_registry             | Path where corpora registry files are stored              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/options_dir                  | Path where 'options' files are stored                     |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/cache_dir                    | Path where application stores general cached data         |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/subcpath                     | Path where general subcorpora data is stored              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/users_subcpath               | Path where user's subcorpora are stored                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/tags_src_dir                 | TODO (incoming feature)                                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/tags_cache_dir               | TODO (incoming feature)                                   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/conc_dir                     | Path where general concordance data is stored             |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/helpsite                     | URL of the help site (refer to the config.sample.xml)     |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/default_corpora              | Contains list of default corpora (see below)              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/default_corpora/item         | Represents individual default corpus (multiple allowed)   |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/speech_segment_struct_attr   | Name of the structural attribute delimiting speeches      |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/speech_data_url              | URL where speech files are stored                         |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/kwicline_max_context         | Maximum size (in words) of the KWIC context               |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/use_db_whitelist             | 0/1 (0 => any user has access to any corpus)              |
-+----------------------------------------------+-----------------------------------------------------------+
-| /bonito/corpora/empty_attr_value_placeholder | An alternative string to show if some structattr is empty |
-+----------------------------------------------+-----------------------------------------------------------+
++----------------------------------------------+-------------------------------------------------------------------+
+| Xpath                                        | Description                                                       |
++==============================================+===================================================================+
+| /bonito/global/manatee_path                  | Location of your Python interface to the manatee                  |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/global/debug                         | true/false (true => detailed error info is visible)               |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/global/log_path                      | Path to the logging file (Apache must have write access)          |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/adapter                     | {mysql, sqlite}                                                   +
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/name                        | Name (or path) of the database used with Bonito2                  |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/host                        | Hostname of the database server                                   |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/password                    | Password to the database                                          |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/database/username                    | Username of the user with SELECT and UPDATE privileges            |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/cache/clear_interval                 | number of seconds to keep cached files                            |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/manatee_registry             | Path where corpora registry files are stored                      |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/options_dir                  | Path where 'options' files are stored                             |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/cache_dir                    | Path where application stores general cached data                 |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/subcpath                     | Path where general subcorpora data is stored                      |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/users_subcpath               | Path where user's subcorpora are stored                           |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/tags_src_dir                 | A directory where all unique tag combinations for corpora are     |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/tags_cache_dir               | A directory where tag-builder stores its auxiliary data           |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/conc_dir                     | Path where general concordance data is stored                     |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/helpsite                     | URL of the help site (refer to the config.sample.xml)             |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/default_corpora              | Contains list of default corpora (see below)                      |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/default_corpora/item         | Represents individual default corpus (multiple allowed)           |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/speech_segment_struct_attr   | Name of the structural attribute delimiting speeches              |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/speech_files_path            | root path where audio files containing speech segments are stored |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/kwicline_max_context         | Maximum size (in words) of the KWIC context                       |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/use_db_whitelist             | 0/1 (0 => any user has access to any corpus)                      |
++----------------------------------------------+-------------------------------------------------------------------+
+| /bonito/corpora/empty_attr_value_placeholder | An alternative string to show if some structattr is empty         |
++----------------------------------------------+-------------------------------------------------------------------+
 
 Corpora hierarchy
 -----------------

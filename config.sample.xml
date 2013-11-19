@@ -35,7 +35,7 @@
             <item>anothercorpus</item>
         </default_corpora>
         <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
-        <speech_data_url>http://@SERVER_NAME/data</speech_data_url>
+		<speech_files_path>/var/www/data</speech_files_path>
         <kwicline_max_context>500</kwicline_max_context>
         <use_db_whitelist>1</use_db_whitelist>
         <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>

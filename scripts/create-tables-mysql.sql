@@ -1,25 +1,27 @@
 CREATE TABLE user (
-  user varchar(25) NOT NULL,
-  pass varchar(13) NOT NULL,
-  host varchar(30) DEFAULT NULL,
-  hardcut int(11) DEFAULT NULL,
-  content int(11) DEFAULT NULL,
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user varchar(255) NOT NULL,
   corplist text,
-  subcorp varchar(7) DEFAULT NULL,
-  fullname varchar(50) DEFAULT NULL,
-  email varchar(50) DEFAULT NULL,
-  regist date DEFAULT NULL,
-  expire date DEFAULT NULL,
-  valid int(11) DEFAULT NULL,
-  sketches tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (user)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  sketches text,
+  pass varchar(16) DEFAULT NULL,
+  firstName varchar(255) DEFAULT NULL,
+  surname varchar(255) DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY user (user)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE corpora (
   id int(11) NOT NULL AUTO_INCREMENT,
   name varchar(50) DEFAULT NULL,
   PRIMARY KEY (id)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE user_corpus (
+  user_id int(11) NOT NULL,
+  name varchar(255) NOT NULL,
+  user varchar(255) DEFAULT NULL,
+  PRIMARY KEY (user_id,name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE relation (
   corplist int(11) NOT NULL DEFAULT '0',

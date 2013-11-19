@@ -682,12 +682,13 @@ class ConcCGI(UserCGI):
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.refs.split(',')
+        ref_is_allowed = lambda r: r and r not in ('#', settings.get('corpora', 'speech_segment_struct_attr'))
         out['Availrefs'] = [{'n': '#', 'label': _('Token number'), 'sel':
             ((('#' in reflist) and 'selected') or '')}] + \
                            [{'n': '=' + n, 'sel':
                                ((('=' + n in reflist) and 'selected') or ''),
                              'label': (corp.get_conf(n + '.LABEL') or n)}
-                            for n in availref if n and n != '#']
+                            for n in availref if ref_is_allowed(n)]
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
             out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),

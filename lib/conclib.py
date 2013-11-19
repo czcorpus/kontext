@@ -1436,7 +1436,7 @@ def get_full_ref(corp, pos):
     data = {}
     refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str(pos)))
-            for n in corp.get_conf('FULLREF').split(',')]
+            for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'speech_segment_struct_attr')]
     data['Refs'] = [{'name': n == '#' and _('Token number')
                              or corp.get_conf(n + '.LABEL') or n,
                      'val': v}
