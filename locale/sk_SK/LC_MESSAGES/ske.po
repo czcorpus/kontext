@@ -1,0 +1,3088 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-28 09:06+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: CGIPublisher.py:258
+msgid "You are not allowed to use this corpus."
+msgstr "Nie ste oprávnený používať tento korpus."
+
+#: conccgi.py:416
+msgid "Empty result"
+msgstr "Nenájdené"
+
+#: conccgi.py:629 conccgi.py:895
+msgid "No query entered."
+msgstr "Zadajte hľadaný reťazec."
+
+#: conccgi.py:674
+msgid "Undefined lemma PoS"
+msgstr "Nezadaná lema PoS"
+
+#: conccgi.py:684 conccgi.py:705
+msgid "Undefined word form PoS"
+msgstr "Nezadaný tvar slova PoS"
+
+#: conccgi.py:886
+msgid "Select Positive or Negative filter type"
+msgstr "Vybrať pozitívny alebo negatívny filter"
+
+#: conccgi.py:934
+msgid "Empty list"
+msgstr "Prázdny zoznam"
+
+#: conccgi.py:1090
+msgid "No text type selected"
+msgstr "Nevybraný typ textu"
+
+#: conccgi.py:1335
+msgid "Text types are limited to Simple output"
+msgstr "Typy textov sú obmedzené jednoduchým zobrazením"
+
+#: conccgi.py:1337
+msgid "ARF cannot be used with text types"
+msgstr "ARF nemožno použiť s typmi textu"
+
+#: conccgi.py:1443
+msgid "No output attribute specified"
+msgstr "Nešpecifikovaný výstupný atribút"
+
+#: conccgi.py:1447
+msgid ""
+"You must specify either a pattern or a file to get the multilevel wordlist"
+msgstr ""
+"Musíte zadať regulárny výraz alebo súbor, aby ste získali viacúrovňový zoznam slov"
+
+#: conccgi.py:1484
+msgid "No meta-information to create a subcorpus."
+msgstr "Chýbajú metainformácie na utvorenie podkorpusu."
+
+#: conccgi.py:1586
+msgid "No subcorpus name specified!"
+msgstr "Zadajte názov podkorpusu!"
+
+#: conccgi.py:1601
+msgid "Nothing specified!"
+msgstr "Nie je nič uvedené!"
+
+#: conccgi.py:1614
+msgid "Empty subcorpus!"
+msgstr "Žiaden podkorpus"
+
+#: conclib.py:273
+msgid "Unknown action"
+msgstr "Neznámy príkaz"
+
+#: corplib.py:54
+#, python-format
+msgid "Subcorpus \"%s\" not found"
+msgstr "Podkorpus \"%s\" nenájdený"
+
+#: addlngrouplabel.py:115 view.py:905
+msgid "Add next"
+msgstr "Pridať ďalšie"
+
+#: addlngrouplabel.py:121 document.py:1373 view.py:911
+msgid "None"
+msgstr "Žiaden"
+
+#: coll.py:88
+msgid "Collocation form"
+msgstr "Kolokácie - formulár"
+
+#: coll.py:127 viewattrs.py:127
+msgid "Selected options successfully saved"
+msgstr "Zvolené možnosti boli úspešne uložené"
+
+#: coll.py:194 collx.py:374 conc.py:403
+msgid "Collocation candidates"
+msgstr "Kolokáty"
+
+#: coll.py:205 coll.py:214
+msgid "? Help on Collocations"
+msgstr "? Pomocník: Kolokácie"
+
+#: coll.py:236 freq.py:208 sort.py:168 sort.py:322 sort.py:418 sort.py:514
+msgid "Attribute"
+msgstr "Atribút"
+
+#: coll.py:262
+msgid "In the range from"
+msgstr "V rozsahu od"
+
+#: coll.py:271 filter_form.py:363
+msgid "to"
+msgstr "do"
+
+#: coll.py:283
+msgid "Minimum frequency in corpus"
+msgstr "Minimálna frekvencia v korpuse"
+
+#: coll.py:295
+msgid "Minimum frequency in given range"
+msgstr "Minimálna frekvencia v danom rozsahu"
+
+#: coll.py:311
+msgid "Show functions"
+msgstr "Zobraziť funkcie"
+
+#: coll.py:325 coll.py:424
+msgid "T-score"
+msgstr "T-score"
+
+#: coll.py:338 coll.py:437
+msgid "MI"
+msgstr "MI"
+
+#: coll.py:351 coll.py:450
+msgid "MI3"
+msgstr "MI3"
+
+#: coll.py:364 coll.py:463
+msgid "log likelihood"
+msgstr "log likelihood"
+
+#: coll.py:377 coll.py:476
+msgid "min. sensitivity"
+msgstr "min. sensitivity"
+
+#: coll.py:390 coll.py:489
+msgid "logDice"
+msgstr "logDice"
+
+#: coll.py:403 coll.py:502
+msgid "MI.log_f"
+msgstr "MI.log_f"
+
+#: coll.py:410
+msgid "Sort by"
+msgstr "Triediť podľa"
+
+#: coll.py:514
+msgid "Make Candidate List"
+msgstr "Vytvoriť zoznam kandidátov"
+
+#: coll.py:522 viewattrs.py:459
+msgid "Save Options"
+msgstr "Uložiť možnosti"
+
+#: collx.py:88 conc.py:414 simple_search.py:374
+msgid "Collocations"
+msgstr "Kolokácie"
+
+#: collx.py:146
+msgid "Save Collocation candidates to a text file or XML"
+msgstr "Uložiť kolokáty do textového súboru alebo vo formáte XML"
+
+#: collx.py:184 freqs.py:186 view.py:204 wordlist.py:224
+msgid "Save"
+msgstr "Uložiť"
+
+#: collx.py:227 freqs.py:233 wordlist.py:270
+msgid "<< First"
+msgstr "<< Prvá"
+
+#: collx.py:239 freqs.py:245 wordlist.py:281
+msgid "< Previous"
+msgstr "< Predchádzajúca"
+
+#: collx.py:291 freqs.py:292 view.py:565 wordlist.py:356
+msgid "Page"
+msgstr "Strana"
+
+#: collx.py:301 freqs.py:302 view.py:603 wordlist.py:366
+msgid "Go"
+msgstr "Prejsť"
+
+#: collx.py:321 freqs.py:322 wordlist.py:385
+msgid "Next >"
+msgstr "Ďalšia >"
+
+#: concdesc.py:88 concdesc.py:127 conc.py:461 saveconc_form.py:164
+msgid "Concordance description"
+msgstr "Popis konkordancie"
+
+#: concdesc.py:133 document.py:369 document.py:1613 document-SNK.py:369
+#: selectstored.py:126 simple_search.py:237 view.py:717 wordlist.py:442
+msgid "Corpus"
+msgstr "Korpus"
+
+#: concdesc.py:143 document.py:1624 first_form.py:711 simple_search.py:248
+#: view.py:728 wordlist_form.py:338 wordlist.py:453
+msgid "Subcorpus"
+msgstr "Podkorpus"
+
+#: concdesc.py:159 saveconc_form.py:191
+msgid "Operation"
+msgstr "Operácia"
+
+#: concdesc.py:165 saveconc_form.py:197
+msgid "Parameters"
+msgstr "Parametre"
+
+#: concdesc.py:171 saveconc_form.py:203
+msgid "Num of Hits"
+msgstr "Počet výskytov"
+
+#: conc.py:101 conc.py:110
+#, fuzzy
+msgid "? Help on Concordance"
+msgstr "? Pomocník: Konkordancia"
+
+#: conc.py:145
+msgid "View current concordance"
+msgstr "Zobraziť aktuálnu konkordanciu"
+
+#: conc.py:156
+msgid "View concordance"
+msgstr "Zobraziť konkordanciu"
+
+#: conc.py:189
+msgid "Make a random sample from the concordance."
+msgstr "Vytvoriť náhodnú vzorku z konkordancie"
+
+#: conc.py:200
+msgid "Sample"
+msgstr "Vzorka"
+
+#: conc.py:233
+msgid "Make a query on the current concordance."
+msgstr "Vyhľadávať v aktuálnej konkordancii."
+
+#: conc.py:244 filter_form.py:289
+msgid "Filter"
+msgstr "Filter"
+
+#: conc.py:277
+msgid "Entry form for computing frequencies"
+msgstr "Formulár na výpočet frekvencií"
+
+#: conc.py:288
+msgid "Frequency"
+msgstr "Frekv. zoznamy"
+
+#: conc.py:295
+msgid "Show frequencies of Node tags"
+msgstr "Zobraziť frekvencie podľa tagov KWIC"
+
+#: conc.py:306
+msgid "Node tags"
+msgstr "Tagy KWIC"
+
+#: conc.py:312
+msgid "Show frequencies of Node forms"
+msgstr "Zobraziť frekvencie podľa KWIC"
+
+#: conc.py:323
+msgid "Node forms"
+msgstr "Tvary KWIC"
+
+#: conc.py:331
+msgid "Show frequencies of Doc IDs"
+msgstr "Zobraziť frekvencie podľa Doc IDs"
+
+#: conc.py:345
+msgid "Doc IDs"
+msgstr "Doc IDs"
+
+#: conc.py:353
+msgid "Show frequencies of Text Types"
+msgstr "Zobraziť frekvencie podľa typov textov"
+
+#: conc.py:367 filter_form.py:203 filter_form.py:399 first_form.py:284
+#: first_form.py:701 simple_search.py:454 wordlist_form.py:406
+msgid "Text Types"
+msgstr "Typy textov"
+
+#: conc.py:475
+msgid "ConcDesc"
+msgstr "Popis hľadania"
+
+#: conc.py:484
+msgid "Take me to the original concordance"
+msgstr "Návrat k pôvodnej konkordancii"
+
+#: conc.py:492
+msgid "Original Conc."
+msgstr "Originálna konk."
+
+#: cmpltmpl/cpa_form.py:89
+# cmpltmpl/leftmenu.py:247
+#: cmpltmpl/leftmenu.py:252
+msgid "Corpus Pattern Analysis"
+msgstr "Korpusová analýza vzorcov"
+
+#: cpa_form.py:162
+msgid "Annotate"
+msgstr ""
+
+#: document.py:434 document-SNK.py:434
+msgid "None (whole corpus)"
+msgstr "Nič (celý korpus)"
+
+#: document.py:457 document-SNK.py:457
+msgid "info"
+msgstr "info"
+
+#: document.py:471 subcorp.py:222
+msgid "create new"
+msgstr "vytvoriť nový"
+
+#: document.py:642 saveconc_form.py:178
+msgid "hide/show"
+msgstr "skryť/zobraziť"
+
+#: document.py:663 document-SNK.py:663
+msgid "leaf"
+msgstr "list"
+
+#: document.py:713 document.py:743 document.py:752 document-SNK.py:713
+#: document-SNK.py:752
+msgid "Select All"
+msgstr "Vybrať všetky"
+
+#: document.py:718 document.py:757 document-SNK.py:757
+msgid "Deselect All"
+msgstr "Zrušiť všetky"
+
+#: document.py:843 document-SNK.py:843
+msgid "Query Type"
+msgstr "Typ hľadania"
+
+#: document.py:855 wordlist_form.py:556
+msgid "Simple"
+msgstr "Základné"
+
+#: document.py:867 document.py:944 document-SNK.py:944
+msgid "Lemma"
+msgstr "Lema"
+
+#: document.py:878 document.py:999 document-SNK.py:999
+msgid "Phrase"
+msgstr "Fráza"
+
+#: document.py:889 document.py:1016 document-SNK.py:1016
+msgid "Word Form"
+msgstr "Slovný tvar"
+
+#: document.py:900 document.py:1080 document-SNK.py:1080
+msgid "Character"
+msgstr "Podreťazec"
+
+#: document.py:911 document.py:1102 document-SNK.py:1102
+msgid "CQL"
+msgstr "CQL"
+
+#: document.py:926 document-SNK.py:926
+msgid "Query"
+msgstr "Hľadanie"
+
+#: document.py:962 document.py:1029 document-SNK.py:1029 first_form.py:605
+msgid "PoS"
+msgstr "Slovný druh (PoS)"
+
+#: document.py:968 document.py:1035 document-SNK.py:1035
+msgid "unspecified"
+msgstr "nešpecifikované"
+
+#: document.py:1060 document-SNK.py:1060
+msgid "Match case"
+msgstr "Rozlišovať veľkosť písmen"
+
+#: document.py:1097 document-SNK.py:1097
+msgid "Corpus Query Language"
+msgstr "CQL"
+
+#: document.py:1113 document-SNK.py:1113
+msgid "Default attribute"
+msgstr "Prednastavený atribút"
+
+#: document.py:1140 document-SNK.py:1140
+msgid "Tagset summary"
+msgstr "Prehľad značiek"
+
+#: document.py:1193 document-SNK.py:1193
+msgid "Error Code"
+msgstr "Chybný kód"
+
+#: document.py:1199 document-SNK.py:1199
+msgid "Correction Code"
+msgstr "Oprava kódu"
+
+#: document.py:1212 document-SNK.py:1212
+msgid "Incorrect word(s)"
+msgstr "Nesprávne slovo/á"
+
+#: document.py:1223 document-SNK.py:1223
+msgid "Corrected word(s)"
+msgstr "Opravené slovo/á"
+
+#: document.py:1239 document-SNK.py:1239
+#, fuzzy
+msgid "highlighting options"
+msgstr "voľby zvýraznenia"
+
+#: document.py:1246 document-SNK.py:1246
+msgid "Highlight error words"
+msgstr "Zvýrazniť chybné slová"
+
+#: document.py:1248 document-SNK.py:1248
+#, fuzzy
+msgid "Highlight corrected words"
+msgstr "Zvýrazniť opravené slová"
+
+#: document.py:1250 document-SNK.py:1250
+msgid "Highlight both"
+msgstr "Zvýrazniť obe"
+
+#: document.py:1252 document-SNK.py:1252
+msgid "Highlight query result"
+msgstr "Zvýrazniť výsledok hľadania"
+
+#: document.py:1384 document-SNK.py:1384
+msgid "default"
+msgstr "prednastavené"
+
+#: document.py:1565 document-SNK.py:1565
+msgid "Sketch Engine"
+msgstr "Sketch Engine"
+
+#: document.py:1580 document.py:1638 document-SNK.py:1638
+msgid "Search"
+msgstr "Hľadať"
+
+#: document.py:1587 document.py:1648 document-SNK.py:1648
+msgid "in"
+msgstr "v"
+
+#: document.py:1593 document-SNK.py:1593
+msgid "Help"
+msgstr "Pomocník"
+
+#: document.py:1684 document-SNK.py:1684
+msgid "New query entry form"
+msgstr "Formulár na nové hľadanie"
+
+#: document.py:1698 simple_search.py:88 view.py:88
+msgid "Concordance"
+msgstr "Konkordancia"
+
+#: document.py:1704 document-SNK.py:1704
+msgid "Various methods for creating word lists"
+msgstr "Rôzne metódy na utvorenie zoznamov slov"
+
+#: document.py:1712 document-SNK.py:1712
+msgid "Word List"
+msgstr "Zoznam slov"
+
+#: document.py:1720 document-SNK.py:1720
+msgid "Word Sketch query entry form"
+msgstr "Formulár - Word Sketch hľadanie"
+
+#: document.py:1734 wordlist_form.py:387
+msgid "Word Sketch"
+msgstr "Word Sketch"
+
+#: document.py:1740 document-SNK.py:1740
+msgid "Thesaurus query entry form"
+msgstr "Formulár - Thesaurus hľadanie"
+
+#: document.py:1754 document-SNK.py:1754
+msgid "Thesaurus"
+msgstr "Thesaurus"
+
+#: document.py:1760 document-SNK.py:1760
+msgid "Find X entry form"
+msgstr "Formulár - Nájsť X"
+
+#: document.py:1768 document-SNK.py:1768
+msgid "Find X"
+msgstr "Nájsť X"
+
+#: cmpltmpl/leftmenu.py:203
+msgid "Word sketch difference"
+msgstr "Porovnanie Word Sketches"
+
+#: document.py:1788 document-SNK.py:1788
+msgid "Sketch-Diff"
+msgstr "Sketch-Diff"
+
+#: cmpltmpl/leftmenu.py:225
+# cmpltmpl/store_wseval.py:92
+#: cmpltmpl/wseval.py:92
+msgid "Word Sketch Evaluation"
+msgstr "Vyhodnotenie Word Sketches"
+
+#: document.py:1810 document-SNK.py:1810
+msgid "Sketch-Eval"
+msgstr "Sketch-Eval"
+
+#: document.py:1832 document-SNK.py:1832
+msgid "CPA"
+msgstr "CPA"
+
+#: document.py:1840 document.py:1854 document-SNK.py:1854
+msgid "Word Sketch Patterns"
+msgstr "Word Sketch Patterns"
+
+#: document.py:1878 document.py:1887 document-SNK.py:1887
+msgid "? Help on main menu"
+msgstr "? Pomocník: Hlavné menu"
+
+#: document.py:1920 document-SNK.py:1920
+#, fuzzy
+msgid "Menu position"
+msgstr "Umiestnenie menu"
+
+#: document.py:1938 document-SNK.py:1938
+msgid "Back"
+msgstr "Späť"
+
+#: document.py:1967 document-SNK.py:1967
+msgid "Interface language"
+msgstr "Jazyk rozhrania"
+
+#: filter_form.py:88
+msgid "Concordance: Filter form"
+msgstr "Konkordancia: Formulár - filter"
+
+#: filter_form.py:196
+msgid "Expert options:"
+msgstr "Pokročilé možnosti:"
+
+#: filter_form.py:245
+msgid "Concordance Filter"
+msgstr "Filter konkordancie"
+
+#: filter_form.py:256 filter_form.py:265
+msgid "? Help on Filter form"
+msgstr "? Pomocník: Filter"
+
+#: filter_form.py:300
+msgid "positive"
+msgstr "pozitívny"
+
+#: filter_form.py:311
+msgid "negative"
+msgstr "negatívny"
+
+#: filter_form.py:319
+msgid "Selected token"
+msgstr "Vybraný token"
+
+#: filter_form.py:330
+msgid "first"
+msgstr "prvý"
+
+#: filter_form.py:341
+msgid "last"
+msgstr "posledný"
+
+#: filter_form.py:347
+msgid "Search Span"
+msgstr "Rozsah hľadania"
+
+#: filter_form.py:354
+msgid "from"
+msgstr "od"
+
+#: filter_form.py:372
+msgid "include KWIC"
+msgstr "zahrnúť KWIC"
+
+#: filter_form.py:421
+msgid "Filter Concordance"
+msgstr "Filtrovať konkordanciu"
+
+#: first_form.py:89
+msgid "Concordance - First query form"
+msgstr "Konkordancia: Formulár na prvé hľadanie"
+
+#: first_form.py:201
+msgid "? Help on Expert Options"
+msgstr "? Pomocník: Pokročilé možnosti"
+
+#: first_form.py:210
+#, fuzzy
+msgid "? Help on Expert options"
+msgstr "? Pomocník: Pokročilé možnosti"
+
+#: first_form.py:225
+msgid "? Help on Error Query"
+msgstr "? Pomocník: Chyby v hľadaní"
+
+#: first_form.py:232
+msgid "Standard Query"
+msgstr "Bežné hľadanie"
+
+#: first_form.py:238
+msgid "Error Query"
+msgstr "Chyba v hľadaní"
+
+#: first_form.py:271
+msgid "Expert options"
+msgstr "Pokročilé možnosti"
+
+#: first_form.py:278 first_form.py:363
+msgid "Context"
+msgstr "Kontext"
+
+#: first_form.py:373
+msgid "Lemma filter"
+msgstr "Filter - lema"
+
+#: first_form.py:381
+msgid "Word form filter"
+msgstr "Filter - tvar slova"
+
+#: first_form.py:391 first_form.py:539
+msgid "Window"
+msgstr "Okno"
+
+#: first_form.py:405 first_form.py:553
+msgid "left"
+msgstr "vľavo"
+
+#: first_form.py:418 first_form.py:566
+msgid "right"
+msgstr "vpravo"
+
+#: first_form.py:431 first_form.py:579
+msgid "both"
+msgstr "obe"
+
+#: first_form.py:448 first_form.py:596 subcorp_info.py:111 subcorp.py:252
+msgid "tokens"
+msgstr "tokeny"
+
+#: first_form.py:459
+msgid "Lemma(s)"
+msgstr "lema/lemy"
+
+#: first_form.py:467
+msgid "Word form(s)"
+msgstr "Slovný tvar/slovné tvary"
+
+#: first_form.py:484 first_form.py:646
+msgid "all"
+msgstr "všetko"
+
+#: first_form.py:497 first_form.py:659
+msgid "any"
+msgstr "nejaký"
+
+#: first_form.py:510 first_form.py:672
+msgid "none"
+msgstr "žiaden"
+
+#: first_form.py:517 first_form.py:679
+msgid "of these items"
+msgstr "z nasledujúcich"
+
+#: first_form.py:530
+msgid "PoS filter"
+msgstr "PoS filter"
+
+#: first_form.py:610
+msgid "use Ctrl+click for"
+msgstr "použiť Ctrl+click na"
+
+#: first_form.py:616
+msgid "multiple selection"
+msgstr "viacnásobný výber"
+
+#: first_form.py:622
+msgid "Select one or more PoS tags"
+msgstr "Vyberte jednu alebo viac PoS značiek"
+
+#: first_form.py:749
+msgid "This corpus is aligned with"
+msgstr "Tento korpus je zarovnaný s"
+
+#: first_form.py:766
+#, fuzzy
+msgid "Aligned part"
+msgstr "Zarovnaná časť"
+
+#: first_form.py:778
+msgid "NOT in aligned part"
+msgstr "NIE v zarovnanej časti"
+
+#: first_form.py:793
+msgid "Make Concordance"
+msgstr "Vytvoriť konkordanciu"
+
+#: first_form.py:799
+msgid "Clear All"
+msgstr "Vyčistiť všetko"
+
+#: freq.py:88
+#, fuzzy
+msgid "Frequency form"
+msgstr "Frekvencia - formulár"
+
+#: freq.py:126
+msgid "Multilevel frequency distribution"
+msgstr "Viacúrovňová frekvenčná distribúcia"
+
+#: freq.py:137 freq.py:146
+msgid "? Help on Frequency form"
+msgstr "? Pomocník: Frekvencia"
+
+#: freq.py:167 freq.py:301 freqs.py:420
+msgid "Frequency limit"
+msgstr "Frekvenčný limit"
+
+#: freq.py:178
+msgid "first level"
+msgstr "prvá úroveň"
+
+#: freq.py:180
+msgid "second level"
+msgstr "druhá úroveň"
+
+#: freq.py:182
+msgid "third level"
+msgstr "tretia úroveň"
+
+#: freq.py:184
+msgid "fourth level"
+msgstr "štvrtá úroveň"
+
+#: freq.py:228 sort.py:251 sort.py:351 sort.py:448 sort.py:544
+msgid "Ignore case"
+msgstr "Nerozlišovať veľkosť"
+
+#: freq.py:242 sort.py:376 sort.py:472 sort.py:568
+msgid "Position"
+msgstr "Pozícia"
+
+#: freq.py:271 freq.py:339
+msgid "Make Frequency List"
+msgstr "Vytvoriť frekvenčný zoznam"
+
+#: freq.py:283
+msgid "Text Type frequency distribution"
+msgstr "Frekvenčná distribúcia podľa typov textov"
+
+#: freq.py:313
+msgid "Include categories with no hits"
+msgstr "Zahrnúť kategórie bez výskytu"
+
+#: freqs.py:95 freqs.py:374
+msgid "Frequency list"
+msgstr "Frekvenčný zoznam"
+
+#: freqs.py:137 wordlist.py:175
+msgid "Change options"
+msgstr "Použiť voľby"
+
+#: freqs.py:178
+msgid "Save Frequency list to a text file or XML"
+msgstr "Uložiť frekvenčný zoznam do textového súboru alebo vo formáte XML"
+
+#: freqs.py:429
+msgid "Set limit"
+msgstr "Nastaviť limit"
+
+#: lngroupinfo.py:129
+msgid "Line Group Info"
+msgstr "Skupina riadkov - info"
+
+#: lngroupinfo.py:195 view.py:801
+msgid "Annotating"
+msgstr "Anotácia"
+
+#: lngroupinfo.py:293
+msgid "Automatically annotated"
+msgstr "Označkované automaticky"
+
+#: lngroupinfo.py:301
+msgid "hits"
+msgstr "výskyty"
+
+#: lngroupinfo.py:318
+msgid "Minscore"
+msgstr "Minscore"
+
+#: lngroupinfo.py:327
+msgid "Mindiff"
+msgstr "Mindiff"
+
+#: reduce_form.py:88
+msgid "Sample form"
+msgstr "Vzorka"
+
+#: reduce_form.py:152
+msgid "Random sample"
+msgstr "Náhodná vzorka"
+
+#: reduce_form.py:163 reduce_form.py:172
+msgid "? Help on Sample form"
+msgstr "? Pomocník: Vzorka"
+
+#: reduce_form.py:192
+msgid "Make a random sample from the concordance"
+msgstr "Vybrať z konkordancie náhodnú vzorku"
+
+#: reduce_form.py:199
+msgid "Number of lines in the sample"
+msgstr "Počet riadkov vo vzorke"
+
+#: reduce_form.py:211
+msgid "Create Sample"
+msgstr "Vytvoriť vzorku"
+
+#: savecoll_form.py:88
+msgid "Save Collocations"
+msgstr "Uložiť kolokácie"
+
+#: savecoll_form.py:126
+msgid "Save Collocation Candidates"
+msgstr "Uložiť kolokáty"
+
+#: savecoll_form.py:177
+msgid "Save collocations as"
+msgstr "Uložiť kolokácie ako"
+
+#: savecoll_form.py:190 saveconc_form.py:318 savefreq_form.py:200
+#: savewl_form.py:235
+msgid "Text"
+msgstr "Text"
+
+#: savecoll_form.py:203 saveconc_form.py:331 savefreq_form.py:213
+#: savewl_form.py:248
+msgid "XML"
+msgstr "XML"
+
+#: savecoll_form.py:213 saveconc_form.py:341 savefreq_form.py:225
+#: savewl_form.py:258
+msgid "Save pages"
+msgstr "Uložiť strany"
+
+#: savecoll_form.py:226 saveconc_form.py:354 savefreq_form.py:238
+#: savewl_form.py:271
+msgid "All"
+msgstr "Všetky"
+
+#: savecoll_form.py:243 saveconc_form.py:371 savefreq_form.py:255
+#: savewl_form.py:288
+msgid "Only page"
+msgstr "Iba stranu"
+
+#: savecoll_form.py:257 saveconc_form.py:385 savefreq_form.py:270
+#: savewl_form.py:302
+msgid "Include heading"
+msgstr "Uviesť záhlavie"
+
+#: savecoll_form.py:266 saveconc_form.py:414 savefreq_form.py:281
+#: savewl_form.py:311
+msgid "Maximum number of lines"
+msgstr "Maximálny počet riadkov"
+
+#: savecoll_form.py:280
+msgid "Save Collocation candidates"
+msgstr "Uložiť kolokáty"
+
+#: saveconc_form.py:88
+msgid "Save Concordance Form"
+msgstr "Uložiť konk. formulár"
+
+#: saveconc_form.py:252 saveconc_form.py:428
+msgid "Save Concordance"
+msgstr "Uložiť konkordanciu"
+
+#: saveconc_form.py:263 saveconc_form.py:272
+msgid "? Help on Saving Conc."
+msgstr "? Pomocník: Ukladanie konk."
+
+#: saveconc_form.py:305
+msgid "Save concordance as"
+msgstr "Uložiť konkordanciu ako"
+
+#: saveconc_form.py:393
+msgid "Number lines"
+msgstr "Číslovať riadky"
+
+#: saveconc_form.py:406
+msgid "Align KWIC"
+msgstr "Zarovnať KWIC"
+
+#: saveconc_form.py:441
+msgid "Store Concordance"
+msgstr "Uskladniť konkordanciu"
+
+#: saveconc_form.py:449
+msgid "Concordance stored"
+msgstr "Konkordancia uskladnená"
+
+#: saveconc_form.py:469
+msgid "Concordance name"
+msgstr "Názov konkordancie"
+
+#: saveconc_form.py:479
+msgid "Store Concordance For Annotation"
+msgstr "Uskladniť konkordanciu na anotáciu"
+
+#: savefreq_form.py:88 savefreq_form.py:296
+msgid "Save Frequency List"
+msgstr "Uložiť frekvenčný zoznam"
+
+#: savefreq_form.py:126
+msgid "Save Frequency list"
+msgstr "Uložiť frekvenčný zoznam"
+
+#: savefreq_form.py:187
+msgid "Save frequency list as"
+msgstr "Uložiť  frekvenčný zoznam ako"
+
+#: savewl_form.py:88 savewl_form.py:137 savewl_form.py:325
+msgid "Save Word List"
+msgstr "Uložiť zoznam slov"
+
+#: savewl_form.py:129
+msgid "Save Keywords"
+msgstr "Uložiť kľúčové slová"
+
+#: savewl_form.py:221
+msgid "Save word list as"
+msgstr "Uložiť zoznam slov ako"
+
+#: selectstored.py:88
+msgid "Select stored concordance"
+msgstr "Vybrať uskladnenú konkordanciu"
+
+#: selectstored.py:140
+msgid "Selected"
+msgstr "Vybrané"
+
+#: selectstored.py:160
+msgid "View conc"
+msgstr "Zobraziť konk."
+
+#: selectstored.py:167
+msgid "Last Stored Concordances"
+msgstr "Posledné uskladnené konkordancie"
+
+#: simple_search.py:261 view.py:741
+msgid "Hits"
+msgstr "Výskytov"
+
+#: simple_search.py:285
+msgid "Concordance lines"
+msgstr "Riadky konkordancie"
+
+#: simple_search.py:362 simple_search.py:442 simple_search.py:530
+msgid ">> More"
+msgstr ">> Viac"
+
+#: simple_search.py:398
+msgid "other"
+msgstr "iný"
+
+#: sort.py:88
+msgid "Sort form"
+msgstr "Triedenie"
+
+#: sort.py:126
+msgid "Simple Sort"
+msgstr "Jednoduché triedenie"
+
+#: sort.py:137 sort.py:146
+msgid "? Help on Sort form"
+msgstr "? Pomocník: Triedenie"
+
+#: sort.py:197
+msgid "Sort key"
+msgstr "Triediaci kľúč"
+
+#: sort.py:208
+msgid "Left context"
+msgstr "Ľavý kontext"
+
+#: sort.py:219 view.py:374
+msgid "Node"
+msgstr "KWIC"
+
+#: sort.py:230
+msgid "Right context"
+msgstr "Pravý kontext"
+
+#: sort.py:238
+msgid "Number of tokens to sort"
+msgstr "Počet tokenov na triedenie"
+
+#: sort.py:262 sort.py:363 sort.py:459 sort.py:555
+msgid "Backward"
+msgstr "Spätne"
+
+#: sort.py:277 sort.py:596
+msgid "Sort Concordance"
+msgstr "Triediť konkordanciu"
+
+#: sort.py:287
+msgid "Multilevel sort"
+msgstr "Viacúrovňové triedenie"
+
+#: sort.py:313
+msgid "first level (Sort by ...)"
+msgstr "prvá úroveň (Triediť podľa ...)"
+
+#: sort.py:409
+msgid "second level (... then sort by ...)"
+msgstr "druhá úroveň (... potom triediť podľa ...)"
+
+#: sort.py:506
+msgid "third level (... finally sort by)"
+msgstr "tretia úroveň (... nakoniec utriediť podľa)"
+
+#: sort.py:608
+msgid "Line group sort"
+msgstr "Triedenie podľa čísel riadkov"
+
+#: subcorp_form.py:88 subcorp_form.py:217
+msgid "Create Subcorpus"
+msgstr "Vytvoriť podkorpus"
+
+#: subcorp_form.py:174
+msgid "Sorry, creating user subcorpora is not available in the open version"
+msgstr "Vytváranie užívateľského podkorpusu nie je povolené v otvorenej verzii"
+
+#: subcorp_form.py:196
+msgid "New subcorpus name"
+msgstr "Meno nového podkorpusu"
+
+#: subcorp_info.py:103 subcorp.py:244 view.py:594
+msgid "of"
+msgstr "z"
+
+#: subcorp.py:88
+msgid "Subcorpus Info"
+msgstr "Podkorpus - info"
+
+#: subcorp.py:176
+msgid "Subcorpora"
+msgstr "Podkorpusy"
+
+#: subcorp.py:207
+msgid "no subcorpus"
+msgstr "žiaden podkorpus"
+
+#: subcorp.py:268
+msgid "Delete Selected"
+msgstr "Vymazať vybrané"
+
+#: viewattrs.py:88 viewattrs.py:167 view.py:252
+msgid "View options"
+msgstr "Možnosti zobrazenia"
+
+#: viewattrs.py:178 viewattrs.py:187
+msgid "? Help on View Options"
+msgstr "? Pomocník: Možnosti zobrazenia"
+
+#: viewattrs.py:213
+msgid "Attributes"
+msgstr "Atribúty"
+
+#: viewattrs.py:221
+msgid "Structures"
+msgstr "Štruktúry"
+
+#: viewattrs.py:228 view.py:402
+msgid "References"
+msgstr "Referencie"
+
+#: viewattrs.py:257
+msgid "Display attributes"
+msgstr "Zobraziť atribúty"
+
+#: viewattrs.py:268
+msgid "For each token"
+msgstr "Pre každý token"
+
+#: viewattrs.py:279
+msgid "KWIC tokens only"
+msgstr "Iba KWIC"
+
+#: viewattrs.py:334
+msgid "Page size (number of lines)"
+msgstr "Veľkosť strany (počet riadkov)"
+
+#: viewattrs.py:343
+msgid "KWIC Context size (number of characters)"
+msgstr "Veľkosť kontextu KWIC (počet znakov)"
+
+#: viewattrs.py:358
+msgid "Sort good dictionary examples"
+msgstr "Triediť do slovníka vhodné príklady"
+
+#: viewattrs.py:365
+msgid "Number of lines to be sorted"
+msgstr "Počet riadkov na triedenie"
+
+#: viewattrs.py:378
+msgid "GDEX configuration for current corpus"
+msgstr "GDEX konfigurácia pre aktuálny korpus"
+
+#: viewattrs.py:404
+msgid "Icon for one-click sentence copying"
+msgstr "Ikona na kopírovanie vety na jeden klik"
+
+#: viewattrs.py:416
+msgid "Allow multiple lines selection"
+msgstr "Povoliť výber viacerých riadkov"
+
+#: viewattrs.py:423
+msgid "XML template for one-click copying"
+msgstr "XML šablóna na kopírovanie vety na jeden klik"
+
+#: viewattrs.py:451
+msgid "Change View Options"
+msgstr "Použiť voľby zobrazenia"
+
+#: view.py:181
+msgid "Save concordance to a text file or xml"
+msgstr "Uložiť konkordanciu do textového súboru alebo vo formáte XML"
+
+#: view.py:238
+msgid "Concordance view settings"
+msgstr "Nastavenie zobrazenia konkordancie"
+
+#: cmpltmpl/view.py:208
+msgid "Swap concordance view mode"
+msgstr "Zmeniť mod zobrazenia konkordancie"
+
+#: view.py:273
+msgid "KWIC/Sentence"
+msgstr "KWIC/Veta"
+
+#: view.py:308
+msgid "Complex sorting options"
+msgstr "Komplexné možnosti triedenia"
+
+#: view.py:319 view.py:831
+msgid "Sort"
+msgstr "Triedenie"
+
+#: view.py:326
+msgid "Sort to left"
+msgstr "Triediť vľavo"
+
+#: view.py:338
+msgid "Left"
+msgstr "Vľavo"
+
+#: view.py:344
+msgid "Sort to right"
+msgstr "Triediť vpravo"
+
+#: view.py:356
+msgid "Right"
+msgstr "Vpravo"
+
+#: view.py:362
+msgid "Sort by node word"
+msgstr "Triedieť podľa kľúčového slova"
+
+#: view.py:388
+msgid "Sort according to the 'References' field"
+msgstr "Triediť podľa poľa 'Referencie'"
+
+#: view.py:408
+msgid "Randomize ordering of lines"
+msgstr "Náhodné usporiadanie riadkov"
+
+#: view.py:419
+msgid "Shuffle"
+msgstr "Náhodne"
+
+#: view.py:531
+msgid "First"
+msgstr "Prvá"
+
+#: view.py:546
+msgid "Previous"
+msgstr "Predchádzajúca"
+
+#: view.py:626
+msgid "Next"
+msgstr "Ďalšia"
+
+#: view.py:641
+msgid "Last"
+msgstr "Posledná"
+
+#: view.py:656
+msgid "Concordance is sorted. Jump to"
+msgstr "Konkordancia je utriedená. Prejsť na"
+
+#: view.py:761
+msgid "per million"
+msgstr "na milión"
+
+#: view.py:769
+msgid "sampled to"
+msgstr ""
+
+#: view.py:816
+msgid "Info"
+msgstr "Info"
+
+#: view.py:843
+msgid "Finish"
+msgstr "Dokončiť"
+
+#: view.py:852
+msgid "New pattern"
+msgstr "Nový pattern"
+
+#: view.py:859
+msgid "Number globally"
+msgstr "Celkový súčet"
+
+#: view.py:867
+msgid "Number selected"
+msgstr "Počet vybraných"
+
+#: view.py:875
+#, fuzzy
+msgid "Clear selection"
+msgstr "Zrušiť výber"
+
+#: view.py:1030 view.py:1202
+msgid "Copy the relevant sentence into the clipboard"
+msgstr "Kopírovať relevantnú vetu do schránky"
+
+#: view.py:1302
+msgid "hide detail"
+msgstr "skryť detail"
+
+#: widectx.py:101 widectx.py:171
+msgid "expand"
+msgstr "rozšíriť"
+
+#: widectx.py:189
+msgid "display whole document"
+msgstr "zobraziť celý dokument"
+
+#: wordlist_form.py:88
+msgid "Word List Form"
+msgstr "Zoznam slov"
+
+#: wordlist_form.py:130 wordlist_form.py:139 wordlist_form.py:295
+#: wordlist_form.py:304
+msgid "? Help on Word Lists"
+msgstr "? Pomocník: Zoznam slov"
+
+#: wordlist_form.py:181
+msgid "Compute a list of all words"
+msgstr "Vytvoriť zoznam všetkých slov"
+
+#: wordlist_form.py:189
+msgid "All words"
+msgstr "Všetky slová"
+
+#: wordlist_form.py:197
+msgid "Compute a list of all lemmas"
+msgstr "Vytvoriť zoznam všetkých lem"
+
+#: wordlist_form.py:205
+msgid "All lemmas"
+msgstr "Všetky lemy"
+
+#: wordlist_form.py:284
+msgid "Word list options"
+msgstr "Možnosti zoznamu slov"
+
+#: wordlist_form.py:357
+msgid "Search attribute"
+msgstr "Atribúty hľadania"
+
+#: wordlist_form.py:364
+msgid "Positional Attributes"
+msgstr "Pozičné atribúty"
+
+#: wordlist_form.py:398
+msgid "collocations"
+msgstr "kolokácie"
+
+#: wordlist_form.py:431
+msgid "Filter wordlist by"
+msgstr "Filtrovať zoznam slov podľa"
+
+#: wordlist_form.py:436
+msgid "RE pattern"
+msgstr "Regulárny výraz"
+
+#: wordlist_form.py:447
+msgid "Minimum frequency"
+msgstr "Minimálna frekvencia"
+
+#: wordlist_form.py:458
+msgid "Whitelist"
+msgstr "Whitelist"
+
+#: wordlist_form.py:466
+msgid "Blacklist"
+msgstr "Blacklist"
+
+#: wordlist_form.py:473
+msgid "format"
+msgstr "formát"
+
+#: wordlist_form.py:480
+msgid ""
+"Wordlist whitelists and blacklists must be plain text (.txt), with one item "
+"per line.  The items must correspond to the selected attribute, so, eg, if "
+"'lemma' is selected from the attribute menu, then the list should be a list "
+"of lemmas. We use exact matching, not regular-expression matching, for file "
+"input."
+msgstr ""
+"Wordlist whitelists and blacklists must be plain text (.txt), with one item "
+"per line.  The items must correspond to the selected attribute, so, eg, if "
+"'lemma' is selected from the attribute menu, then the list should be a list "
+"of lemmas. We use exact matching, not regular-expression matching, for file "
+"input."
+
+#: wordlist_form.py:494
+msgid "Include non-words"
+msgstr "Vrátane číslic a interpunkcie"
+
+#: wordlist_form.py:503
+msgid "Frequency figures"
+msgstr ""
+
+#: wordlist_form.py:515
+msgid "Word counts"
+msgstr ""
+
+msgid "Document counts"
+msgstr "Počty dokumentov"
+
+#: wordlist_form.py:537
+msgid "ARF"
+msgstr "ARF"
+
+#: wordlist_form.py:545
+msgid "Output type"
+msgstr "Spôsob výstupu"
+
+#: wordlist_form.py:568
+msgid "Keywords"
+msgstr "Kľúčové slová"
+
+#: wordlist_form.py:575
+msgid "Reference (sub)corpus"
+msgstr "Referenčný (pod)korpus"
+
+#: wordlist_form.py:604
+msgid "whole corpus"
+msgstr "celý korpus"
+
+#: wordlist_form.py:620
+msgid "SimpleMaths parameter N"
+msgstr "SimpleMaths parameter N"
+
+#: wordlist_form.py:636
+msgid "Multilevel"
+msgstr "Viacúrovňové"
+
+#: wordlist_form.py:672
+msgid "Make Word List"
+msgstr "Vytvoriť zoznam slov"
+
+#: wordlist.py:88 wordlist.py:436
+msgid "Word list"
+msgstr "Zoznam slov"
+
+#: wordlist.py:216
+msgid "Save Word List/Keywords to a text file or XML"
+msgstr "Uložiť zoznam slov/kľúčových slov do textového súboru alebo vo formáte XML"
+
+#: cmpltmpl/wordlist.py:332
+msgid "Reference corpus"
+msgstr "Referenčný korpus"
+
+#: cmpltmpl/wordlist.py:343
+msgid "Reference subcorpus"
+msgstr "Referenčný podkorpus"
+
+#: wordlist.py:490
+msgid ""
+"Subcorpora operations need more preprocessing. It will take a while, please "
+"wait."
+msgstr ""
+"Operácie nad podkorpusmi sú náročnejšie z hľadiska predspracovania. Môže to trvať dlhší čas. Prosím, "
+"čakajte."
+
+#: wordlist.py:496
+msgid ""
+"Once the list has been computed, it will be stored, so will be immediately "
+"available next time."
+msgstr ""
+"Po prvom výpočte se výsledok uloží, takže nabudúce bude dostupný okamžite."
+
+#: wordlist.py:502
+msgid ""
+"You can close this window. Repeating wordlist or keywords queries on the "
+"same subcorpus will show you progress of the computation."
+msgstr ""
+"Toto okno môžete zavrieť. Postup výpočtu sa zobrazí pri opakovaní hľadania "
+"nad týmto podkorpusom."
+
+#: wordlist.py:571 wordlist.py:583 wordlist.py:693 wordlist.py:706
+msgid "Freq"
+msgstr "Frekv"
+
+#: wordlist.py:699 wordlist.py:712
+msgid "Freq/mill"
+msgstr "Frek/mil"
+
+#: wordlist.py:719
+msgid "Score"
+msgstr "Score"
+
+#: wordlist.py:849
+msgid "Nothing found."
+msgstr "Nenájdené"
+
+msgid "User"
+msgstr "Používateľ"
+
+msgid "Create subcorpus"
+msgstr "Vytvoriť podkorpus"
+
+msgid "Create subcorpus entry form"
+msgstr "Formulár - Tvorba podkorpusu"
+
+# Seznam slov > Typy textu > Zobrazit pole z hlavičky
+msgid "Numbers stand for:"
+msgstr "Číselné údaje označujú:"
+
+msgid "Tokens"
+msgstr "tokeny"
+
+msgid "Header fields"
+msgstr "Polia hlavičky"
+
+msgid "pronoun"
+msgstr "zámeno"
+
+msgid "numeral"
+msgstr "číslovka"
+
+msgid "adverb"
+msgstr "príslovka"
+
+msgid "preposition"
+msgstr "predložka"
+
+msgid "conjunction"
+msgstr "spojka"
+
+msgid "particle"
+msgstr "častica"
+
+msgid "interjection"
+msgstr "citoslovce"
+
+msgid "punctuation"
+msgstr "interpunkcia"
+
+#: cmpltmpl/conc.py:459
+msgid "? Help on Conc. menu"
+msgstr "? Pomocník: Menu konk."
+
+msgid "New query"
+msgstr "Nové hľadanie"
+
+#: cmpltmpl/viewattrs.py:354
+msgid "KWIC Context size"
+msgstr "Veľkosť KWIC kontextu"
+
+#: cmpltmpl/viewattrs.py:436
+msgid "Apply View Options"
+msgstr "Použiť voľby zobrazenia"
+
+#: cmpltmpl/view.py:749
+msgid "Clear sel"
+msgstr "Zmazať výber"
+
+#: cmpltmpl/wordlist_form.py:432
+msgid ""
+"Files containing wordlists for which frequencies are required must be plain "
+"text (.txt), with one item per line.  The items must correspond to the "
+"selected attribute, so, eg, if 'lemma' is selected from the attribute menu, "
+"then the list should be a list of lemmas. We use exact matching, not regular-"
+"expression matching, for file input."
+msgstr ""
+"Súbory obsahujúce zoznamy slov, pre ktoré sa požadujú frekvencie, musia "
+"byť jednoduché textové súbory (.txt) s jednou položkou na každom riadku. Položky "
+"musia zodpovedať vybranému atribútu. Ak je teda napr. v menu atribútu "
+"zvolená možnosť 'lema', musí byť zoznam zoznamom lem. Na vstupný súbor sa "
+"používa presné porovnánanie, nie porovnávanie pomocou regulárnych výrazov."
+
+msgid "(whole corpus)"
+msgstr "(celý korpus)"
+
+#: UCNK changes start here
+msgid "Click to play audio"
+msgstr "Kliknite na prehranie audio súboru"
+
+msgid "(Node) start at"
+msgstr "(Node) začať od"
+
+msgid "This counts only for multi-word KWICs"
+msgstr "Platí len pre viacslovné KWIC"
+
+msgid "leftmost KWIC word"
+msgstr "slova KWIC najviac vľavo"
+
+msgid "rightmost KWIC word"
+msgstr "slova KWIC najviac vpravo"
+
+msgid "Sentences"
+msgstr "Vety"
+
+msgid ""
+"Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
+msgstr ""
+"Hodnotu [%s] nie je možné použiť na určenie šírky kontextu. Použite čísla 0,1,2,..."
+
+msgid "Access to the corpus \"%s\" or its requested variant denied"
+msgstr "Nemáte prístup ku korpusu \"%s\" alebo k jeho požadovanému variantu."
+
+msgid "home page"
+msgstr "hlavná stránka"
+
+msgid "Error"
+msgstr "Chyba"
+
+msgid "Help on main menu"
+msgstr "Pomocník - Hlavné menu"
+
+msgid "positions"
+msgstr "pozície"
+
+msgid "Help on Conc. menu"
+msgstr "Pomocník - Menu konk."
+
+msgid "Help on Expert Options"
+msgstr "Pomocník - Pokroč. funkcie"
+
+msgid "%s positions"
+msgstr "%s pozícií"
+
+msgid "Description"
+msgstr "Popis"
+
+msgid "Size"
+msgstr "Veľkosť"
+
+msgid "click for details"
+msgstr "kliknite na zobrazenie podrobností"
+
+msgid "random <strong>%s</strong> displayed"
+msgstr "zobrazuje se náhodných <strong>%s</strong>"
+
+msgid "Average Reduced Frequency"
+msgstr "Priemerná redukovaná frekvencia"
+
+msgid "instances per million"
+msgstr "výskytov na milión"
+
+msgid "click for detailed description"
+msgstr "kliknite na detailný popis"
+
+msgid "Total"
+msgstr "Spolu"
+
+msgid ""
+"Positions are basic units for searching the corpus that correspond to "
+"tokens: every single occurrence of a word form, number or punctuation symbol "
+"in the corpus constitutes a position. Corpus size in positions given by the "
+"search interface is therefore higher than corpus size in number of words "
+"given on the <a href=\"http://www.korpus.cz/english/struktura.php\" target="
+"\"_blank\">ICNC web pages</a>, where only postions containing at least one "
+"alphabetic character are considered."
+msgstr ""
+"Pozície sú základné jednotky na vyhľadávanie v korpuse, ktoré zodpovedajú "
+"tokenom: samostatnú pozíciu tvorí každý jednotlivý výskyt slovného tvaru, "
+"čísla alebo interpunkčného znamienka v korpuse. Veľkosť korpusu v pozíciách "
+"udávaná vyhľadávacím rozhraním je teda vždy vyššia ako veľkosť korpusu udávaná v <a href=\"http:http://korpus.juls.savba.sk/prim(2d)6(2e)0.html\" target="
+"\"_blank\">počtoch slov</a>. "
+"Za slovo sa totiž pokladá iba pozícia obsahujúca "
+"aspoň jeden alfabetický znak."
+
+msgid "Help on Word Lists"
+msgstr "Pomocník - Zoznam slov"
+
+msgid "available attributes"
+msgstr "dostupné atributy"
+
+msgid "Specify subcorpus using"
+msgstr "Špecifikovať podkorpus pomocou"
+
+msgid "Custom 'within' condition"
+msgstr "Vlastná 'within' podmienka"
+
+msgid "Attribute list"
+msgstr "Zoznam atribútov"
+
+msgid "Condition within"
+msgstr "Podmienka 'within'"
+
+msgid "Password change"
+msgstr "Zmena hesla"
+
+msgid "Your password has been changed successfully."
+msgstr "Vaše heslo bolo úspešne zmenené."
+
+msgid "Unknown user"
+msgstr "Neznámy používateľ"
+
+msgid "Invalid password"
+msgstr "Nesprávne heslo"
+
+msgid "New password and its confirmation do not match."
+msgstr "Nové heslo a jeho overenie nie sú totožné."
+
+msgid "Current password"
+msgstr "Aktuálne heslo"
+
+msgid "New password"
+msgstr "Nové heslo"
+
+msgid "New password again"
+msgstr "Potvrdenie nového hesla"
+
+msgid ""
+"After a successful password update, you will be logged out and prompted to "
+"enter your new credentials."
+msgstr ""
+"Po úspešnej aktualizácii hesla budete odhlásený a vyzvaný na zadanie vašich "
+"nových prihlasovacích údajov."
+
+msgid "pages"
+msgstr "str."
+
+msgid "related to the selected subcorpus"
+msgstr "týkajúce sa vybraného podkorpusu"
+
+msgid "related to the whole corpus"
+msgstr "týkajúce sa celého korpusu"
+
+msgid "instances per million (refers to the respective category)"
+msgstr "výskytov na milión (týkajúce sa príslušnej kategórie)"
+
+msgid ""
+"Failed to process your request. Please try again later or contact system "
+"support."
+msgstr ""
+"Chyba pri spracovaní požiadavky. Opakujte, prosím, akciu neskôr alebo "
+"kontaktujte technickú podporu."
+
+msgid "Corpus %s is not supported by this widget."
+msgstr "Korpus %s nie je možné použiť s touto funkcionalitou."
+
+msgid "Basic"
+msgstr "Základný"
+
+msgid ""
+"Query type <em>basic</em> is suitable for getting to know the corpus. It "
+"searches for the input expression as a word form case-insensitively; if it "
+"is also a canonical dictionary form (lemma), all its word forms are searched "
+"as well."
+msgstr ""
+"Typ hľadania <em>základný</em> je vhodný na prvé zoznámenie sa s korpusom. "
+"Vyhľadá vložený výraz ako slovný tvar bez ohľadu na veľkosť písmen; ak ide "
+"zároveň o základný slovníkový tvar (lema), vyhľadajú sa tiež všetky jeho "
+"tvary."
+
+msgid "language"
+msgstr "jazyk"
+
+msgid "insert tag"
+msgstr "vložiť tag"
+
+msgid "insert \"within\""
+msgstr "vložiť \"within\""
+
+msgid "Insert"
+msgstr "Vložiť"
+
+msgid "Create a within condition"
+msgstr "Vytvoriť within podmienku"
+
+msgid "Create a tag"
+msgstr "Vytvoriť tag"
+
+msgid "Insert into CQL"
+msgstr "Vložiť do CQL"
+
+msgid "Reset"
+msgstr "Zmazať"
+
+msgid "Custom"
+msgstr "Vlastné"
+
+msgid "Sentence"
+msgstr "Veta"
+
+msgid "Alignment"
+msgstr "Zarovnanie"
+
+msgid "Result is shuffled"
+msgstr "Výsledok je premiešaný"
+
+msgid "Always shuffle concordance results"
+msgstr "Vždy premiešať konkordančné riadky"
+
+msgid "Remove the language"
+msgstr "Odstrániť tento jazyk"
+
+msgid "Contains"
+msgstr "Obsahuje"
+
+msgid "Does NOT contain"
+msgstr "NEobsahuje"
+
+msgid "filter out empty lines"
+msgstr "odfiltrovať prázdne riadky"
+
+msgid "size information"
+msgstr "informácie o veľkosti"
+
+msgid "Invert selection"
+msgstr "Invertovať výber"
+
+msgid "include empty lines"
+msgstr "zobraziť prázdne riadky"
+
+msgid ""
+"The selection condition you have specified is too long. Please create a "
+"subcorpus instead."
+msgstr ""
+"Podmienka generovaná vaším výberom je príliš dlhá. Vytvorte, prosím, namiesto nej "
+"podkorpus."
+
+msgid "Open the subcorpus form"
+msgstr "Prejsť na formulár podkorpusu"
+
+msgid "Aligned corpora"
+msgstr "Zarovnané korpusy"
+
+msgid "calculating..."
+msgstr "prebieha výpočet..."
+
+msgid "Available subcorpora"
+msgstr "Dostupné podkorpusy"
+
+msgid "Please specify positive filter to switch"
+msgstr "Na zmenu jazyka je nevyhnutné zadať pozitívný filter"
+
+#~ msgid "---"
+#~ msgstr "---"
+
+#~ msgid "Advanced options"
+#~ msgstr "Pokročilé možnosti"
+
+#~ msgid "Any"
+#~ msgstr "Některý"
+
+#~ msgid "Cluster items"
+#~ msgstr "Zoskupovať položky"
+
+#~ msgid "Collocation"
+#~ msgstr "Kolokace"
+
+#~ msgid "Compute patterns"
+#~ msgstr "Vyhodnotit patterny"
+
+#~ msgid "Delete Selected Subcorpora"
+#~ msgstr "Vymazat vybrané subkorpusy"
+
+#~ msgid "Delete Subcorpora"
+#~ msgstr "Smazat subkorpusy"
+
+#~ msgid "Find Keywords"
+#~ msgstr "Nájsť kľúčové slová"
+
+#~ msgid "First lemma"
+#~ msgstr "První lemma"
+
+#~ msgid "Freq in"
+#~ msgstr "Frekvence v"
+
+#~ msgid "Freqs form"
+#~ msgstr "Frekvence - formulář"
+
+#~ msgid "Home"
+#~ msgstr "Úvodná stránka"
+
+#~ msgid "Keyword(s)"
+#~ msgstr "Kľúčové slovo/á"
+
+#~ msgid "Maximum number of displayed lines"
+#~ msgstr "Maximální počet zobrazených řádků"
+
+#~ msgid "Maximum number of items"
+#~ msgstr "Maximální počet položek"
+
+#~ msgid "Maximum number of patterns"
+#~ msgstr "Maximální počet patternů"
+
+#~ msgid "Minimum salience"
+#~ msgstr "Minimální salience"
+
+#~ msgid "Minimum similarity"
+#~ msgstr "Minimálna podobnosť"
+
+#~ msgid "Part of speech"
+#~ msgstr "Slovný druh"
+
+#~ msgid "Pattern"
+#~ msgstr "Pattern"
+
+#~ msgid "Save Thesaurus"
+#~ msgstr "Uložit tezaurus"
+
+#~ msgid "Save Thesaurus as"
+#~ msgstr "Uložit tezaurus jako"
+
+#~ msgid "Save Word Sketch"
+#~ msgstr "Uložit Word Sketch"
+
+#~ msgid "Save keywords as"
+#~ msgstr "Uložiť kľúčové slová ako"
+
+#~ msgid "Save thesaurus to a text file or XML"
+#~ msgstr "Uložiť tezaurus do textového súboru alebo ako XML"
+
+#~ msgid "Save word sketch as"
+#~ msgstr "Uložit Word Sketch jako"
+
+#~ msgid "Save word sketch to a text file or XML"
+#~ msgstr "Uložiť word sketch do textového súboru alebo ako XML"
+
+#~ msgid "Second lemma"
+#~ msgstr "Druhá lema"
+
+#~ msgid "Select subcorpora"
+#~ msgstr "Vybrat subkorpus"
+
+#~ msgid "Separate blocks"
+#~ msgstr "Rozlišení bloků"
+
+#~ msgid "Show Diff"
+#~ msgstr "Ukaž rozdíl"
+
+#~ msgid "Show Similar Words"
+#~ msgstr "Ukázat podobná slova"
+
+#~ msgid "Show Word Sketch"
+#~ msgstr "Zobraziť Word Sketch"
+
+#~ msgid "Sort grammatical relations"
+#~ msgstr "Setřídit gramatické relace"
+
+#~ msgid "Text Type 1"
+#~ msgstr "1. typ textu"
+
+#~ msgid "Text Type 2"
+#~ msgstr "2. typ textu"
+
+#~ msgid "Thesaurus Entry Form"
+#~ msgstr "Tezaurus - formulář"
+
+msgid "View"
+msgstr "Zobrazenie"
+
+#~ msgid "WS Diff Entry Form"
+#~ msgstr "WS Diff - formulář"
+
+#~ msgid "WS Text Type Diff Entry Form"
+#~ msgstr "Word Sketch - rozdíly v typech textů - formulář"
+
+#~ msgid "Window Size"
+#~ msgstr "Velikost kontextu"
+
+#~ msgid "Word Sketch Differences Entry Form"
+#~ msgstr "Word Sketch - rozdíly - formulář"
+
+#~ msgid "Word Sketch Entry Form"
+#~ msgstr "Word Sketch - formulář"
+
+#~ msgid "Word Sketch Patterns Entry Form"
+#~ msgstr "Word Sketch Patterns - formulář"
+
+#~ msgid "Word Sketch Text Type Differences Entry Form"
+#~ msgstr "Word Sketch - rozdíly v typech textů - formulář"
+
+#~ msgid "adjective"
+#~ msgstr "prídavné meno"
+
+#~ msgid "all in one block"
+#~ msgstr "všetko v jednom bloku"
+
+#~ msgid "between cluster items"
+#~ msgstr "mezi sdruženými položkami"
+
+#~ msgid "common/exclusive blocks"
+#~ msgstr "rozlišit společné a výhradní bloky"
+
+#~ msgid "conc description"
+#~ msgstr "popis konkordance"
+
+msgid "expand left"
+msgstr "rozšíriť vľavo"
+
+msgid "expand right"
+msgstr "rozšíriť vpravo"
+
+#~ msgid "freq"
+#~ msgstr "frekv."
+
+#~ msgid "in a grammatical relation"
+#~ msgstr "v gramatické relaci"
+
+#~ msgid "noun"
+#~ msgstr "podstatné meno"
+
+#~ msgid "of the common block"
+#~ msgstr "ve společném bloku"
+
+#~ msgid "of the exclusive block"
+#~ msgstr "ve výhradním bloku"
+
+#~ msgid "salience"
+#~ msgstr "salience"
+
+#~ msgid "verb"
+#~ msgstr "sloveso"
+
+#~ msgid "Evaluation error."
+#~ msgstr "Napaka v evalvaciji."
+
+#~ msgid "label"
+#~ msgstr "označenie"
+
+#~ msgid "n"
+#~ msgstr "n"
+
+#~ msgid "v"
+#~ msgstr "v"
+
+#~ msgid "name"
+#~ msgstr "ime"
+
+#~ msgid "Header Fields"
+#~ msgstr "Polja v glavi"
+
+#~ msgid "Numbers stand for"
+#~ msgstr "Številke predstavljajo"
+
+#~ msgid "#"
+#~ msgstr "#"
+
+#~ msgid "Word Sketch Text-type difference"
+#~ msgstr "Primerjaj skice po tipu besedila"
+
+#~ msgid "WS Text-type diff."
+#~ msgstr "WS Text-type diff."
+
+#~ msgid "Switch menu position"
+#~ msgstr "Preklopi položaj menija"
+
+#~ msgid "Head"
+#~ msgstr "Glava"
+
+#~ msgid "can use regular expressions"
+#~ msgstr "regularni izrazi dovoljeni"
+
+#~ msgid "or"
+#~ msgstr "ali"
+
+#~ msgid "List from file"
+#~ msgstr "Zoznam zo súboru"
+
+#~ msgid "Use multilevel wordlist"
+#~ msgstr "Použiť viacúrovňový zoznam slov"
+
+#~ msgid "Use ARF instead of raw frequency"
+#~ msgstr "Použiť ARF namiesto prvotnej frekvencie "
+
+#~ msgid "Show Header Fields"
+#~ msgstr "Ukázať položky hlavičky"
+
+#~ msgid "Find keywords of"
+#~ msgstr "Nájsť kľúčové slová z"
+
+#~ msgid "compared with"
+#~ msgstr "v porovnaní s"
+
+#~ msgid "create new subcorpus"
+#~ msgstr "izdelaj nov podkorpus"
+
+#, fuzzy
+#~ msgid "Minimum frequency per million"
+#~ msgstr "Minimálna frekvencia na milión"
+
+#~ msgid "find all the words that are most X"
+#~ msgstr "nájsť všetky slová, ktoré sú najviac X"
+
+#~ msgid "Existing lists"
+#~ msgstr "Existujúci zoznam"
+
+#~ msgid "no lists available"
+#~ msgstr "žiadne zoznamy nie sú k dispozícii"
+
+#~ msgid "See Upload progress"
+#~ msgstr "Poglej napredek nalaganja"
+
+#~ msgid "Upload new list"
+#~ msgstr "Naloži nov seznam"
+
+#~ msgid "Minimum ratio (percent)"
+#~ msgstr "Minimálny progres (%)"
+
+#~ msgid "ARF/mill"
+#~ msgstr "ARF/mill"
+
+#~ msgid "\"%s\" only patterns"
+#~ msgstr "Vzorci samo pri \"%s\""
+
+#~ msgid ""
+#~ "(if this page is not redirected in a few seconds, please click the \"Back"
+#~ "\" button)"
+#~ msgstr ""
+#~ "(če v nekaj sekundah ne boste preusmerjeni na drugo stran, kliknite na "
+#~ "gumb \"Nazaj\""
+
+#~ msgid ">>"
+#~ msgstr ">>"
+
+#~ msgid "? Help on Query form"
+#~ msgstr "? Pomoč za Iskanje"
+
+#~ msgid "? Help on Thesaurus"
+#~ msgstr "? Pomoč za Tezaver"
+
+#~ msgid "? Help on WS differences"
+#~ msgstr "? Pomoč za Primerjavo skic"
+
+#~ msgid "? Help on Word Sketches"
+#~ msgstr "? Pomoč za Skice"
+
+#~ msgid "Alternative GDEX configuration"
+#~ msgstr "Konfiguracija GDEX za primerjavo"
+
+#~ msgid "Available records"
+#~ msgstr "Razpoložljivi zapisi"
+
+#~ msgid "Bad"
+#~ msgstr "Slabo"
+
+#~ msgid "Building histograms can be time-consuming on bigger corpora"
+#~ msgstr "Izdelava histogramov pri večjih korpusih je lahko zamudna"
+
+#~ msgid ""
+#~ "Building uploaded histograms in progress (reload the page to show current "
+#~ "status)"
+#~ msgstr ""
+#~ "Izdelava naloženih histogramov v teku (osveži stran za prikaz napredka)"
+
+#~ msgid "Cluster"
+#~ msgstr "Grupa"
+
+#~ msgid "Cluster collocations"
+#~ msgstr "Grupiraj kolokacije"
+
+#~ msgid "Clustering"
+#~ msgstr "Grupiranje"
+
+#~ msgid "Common patterns"
+#~ msgstr "Skupni vzorci"
+
+#~ msgid "Commonest match"
+#~ msgstr "Najboljše ujemanje"
+
+#~ msgid "Copy to clipboard"
+#~ msgstr "Kopiraj v odložišče"
+
+#~ msgid "Corrupted evaluation file"
+#~ msgstr "Napaka v evalvacijski datoteki"
+
+#~ msgid "Display less data (increases limits and decreases number of items)"
+#~ msgstr ""
+#~ "Prikaži manj podatkov (poviša mejne vrednosti in zmanjša število besed)"
+
+#~ msgid "Display more data (decreases limits and increases number of items)"
+#~ msgstr ""
+#~ "Prikaži več podatkov (zniža mejne vrednosti in poveča število besed)"
+
+#~ msgid "Display more data (increases limits and decreases number of items)"
+#~ msgstr ""
+#~ "Prikaži več podatkov (poviša mejne vrednosti in zniža število besed)"
+
+#~ msgid "Evaluation Settings"
+#~ msgstr "Nastavitve evalvacije"
+
+#~ msgid "Evaluation set"
+#~ msgstr "Evalvacija pripravljena"
+
+#~ msgid "Examples per collocate"
+#~ msgstr "Zgledov na kolokator"
+
+#~ msgid "Find X File Upload"
+#~ msgstr "Nalaganje datoteke za Najdi X"
+
+#~ msgid "Find X File Upload Form"
+#~ msgstr "Nalaganje datoteke za Najdi X"
+
+#~ msgid "Find X form"
+#~ msgstr "Najdi X"
+
+#~ msgid "Find keywords of subcorpus"
+#~ msgstr "Poišči ključne besede podkorpusa"
+
+#~ msgid "First subcorpus"
+#~ msgstr "Prvi podkorpus"
+
+#~ msgid "First word form"
+#~ msgstr "Prva besedna oblika"
+
+#~ msgid "Good"
+#~ msgstr "Dobro"
+
+#~ msgid "Good but wrong grammatical relation"
+#~ msgstr "Dobro, a napačna slovnična relacija"
+
+#~ msgid "Gramrel"
+#~ msgstr "Relacija"
+
+#~ msgid "Insufficient data for"
+#~ msgstr "Premalo podatkov za"
+
+#~ msgid "Insufficient data for id"
+#~ msgstr "Premalo podatkov za id"
+
+#~ msgid "Lemma \"%s\" not found in the corpus"
+#~ msgstr "Lema \"%s\" v korpusu ni bila najdena"
+
+#~ msgid "Less data"
+#~ msgstr "Manj podatkov"
+
+#~ msgid "Max number of collocates"
+#~ msgstr "Maksimalno število kolokatorjev"
+
+#~ msgid "Maybe (not striking collocate)"
+#~ msgstr "Mogoče (ne preveč relevanten kolokator)"
+
+#~ msgid "Maybe (specialized vocab)"
+#~ msgstr "Mogoče (specializirano besedišče)"
+
+#~ msgid "Min. freq"
+#~ msgstr "Min. frekvenca"
+
+#~ msgid "Min. salience"
+#~ msgstr "Min. salience"
+
+#~ msgid "More data"
+#~ msgstr "Več podatkov"
+
+#~ msgid "New label"
+#~ msgstr "Nova oznaka"
+
+#~ msgid "Next Evaluation"
+#~ msgstr "Naslednja evalvacija"
+
+#~ msgid "No Word Sketch available"
+#~ msgstr "Besedna skica ne obstaja"
+
+#~ msgid "No. collocations"
+#~ msgstr "Št. kolokacij"
+
+#~ msgid "Number of collocations"
+#~ msgstr "Število kolokatorjev"
+
+#~ msgid "Percentil"
+#~ msgstr "Percentil"
+
+#~ msgid "Percentile"
+#~ msgstr "Percentil"
+
+#~ msgid "Preloaded evaluation sets:"
+#~ msgstr "Vnaprej naloženi nizi za evalvacijo:"
+
+#~ msgid "Process >>"
+#~ msgstr "Obdelaj >>"
+
+#~ msgid "Rating"
+#~ msgstr "Ocena"
+
+#~ msgid "Rating not complete!"
+#~ msgstr "Ocena še ni končana!"
+
+#~ msgid "Ratio"
+#~ msgstr "Razmerje"
+
+#~ msgid "Raw frequency"
+#~ msgstr "frekvenco"
+
+#~ msgid "Record ID"
+#~ msgstr "ID zapisa"
+
+#~ msgid "Relevant gramrels"
+#~ msgstr "Relevantne relacije"
+
+#~ msgid "Rubric"
+#~ msgstr "Rubrika"
+
+#~ msgid "Salience"
+#~ msgstr "Salience"
+
+#~ msgid "Search in"
+#~ msgstr "Išči v"
+
+#~ msgid "Search the corpus"
+#~ msgstr "Išči v korpusu"
+
+#~ msgid "Second subcorpus"
+#~ msgstr "Drugi podkorpus"
+
+#~ msgid "Second word form"
+#~ msgstr "Druga besedna oblika"
+
+#~ msgid "Select gramrels"
+#~ msgstr "Izberi relacije"
+
+#~ msgid "Select gramrels:"
+#~ msgstr "Izberi slovnične relacije:"
+
+#~ msgid "Selected list"
+#~ msgstr "Izbrani seznam"
+
+#~ msgid "Send me an e-mail when finished"
+#~ msgstr "Pošlji mi e-sporočilo, ko bo končano"
+
+#~ msgid "Show Word Sketch for Evaluation"
+#~ msgstr "Prikaži besedno skico za evalvacijo"
+
+#~ msgid "Show available records"
+#~ msgstr "Pokaži razpoložljive zapise"
+
+#~ msgid "Show commonest match"
+#~ msgstr "Pokaži najboljše ujemanje"
+
+#~ msgid "Show concordances"
+#~ msgstr "Pokaži konkordance"
+
+#~ msgid "Show salience scores"
+#~ msgstr "Pokaži rezultate za salience"
+
+#~ msgid "Show word sketch"
+#~ msgstr "Pokaži besedno skico"
+
+#~ msgid "Showing page"
+#~ msgstr "Stran"
+
+#~ msgid "Sketch diff by"
+#~ msgstr "Način primerjave skic"
+
+#~ msgid "Sorry, you are not allowed to evaluate Word Sketches on this corpus."
+#~ msgstr "Žal nimate pravic za evalvacijo besednih skic za ta korpus."
+
+#~ msgid "Sorry, you are not allowed to use the tickbox lexicography"
+#~ msgstr "Žal nimate pravic za uporabo kliksikografije"
+
+#~ msgid "Sort collocations"
+#~ msgstr "Sortiraj kolokatorje"
+
+#~ msgid "Sorting"
+#~ msgstr "Sortiraj"
+
+#~ msgid "Store Word Sketch Evaluation"
+#~ msgstr "Shrani evalvacijo besedne skice"
+
+#~ msgid "Structure word sketch by gramrels"
+#~ msgstr "Razpordi besedno skico po relacijah"
+
+#~ msgid "Successfully Stored"
+#~ msgstr "Uspešno shranjeno"
+
+#~ msgid "Switch between clustered and unclustered thesaurus"
+#~ msgstr "Preklopi med grupiranim in negrupiranim tezavrom"
+
+#~ msgid "Switch between clustered and unclustered word sketches"
+#~ msgstr "Preklopi med grupiranimi in negrupiranimi besednimi skicami"
+
+#~ msgid ""
+#~ "Switch between sorting collocates according to raw frequency and salience"
+#~ msgstr "Preklopi med sortiranjem kolokatorjev po frekvenci in po salience"
+
+#~ msgid "The following word sketch evaluation was successfully stored"
+#~ msgstr "Evalvacija besedne skice je bila uspešno shranjena"
+
+#~ msgid "Tickbox Lexicography - Select Examples"
+#~ msgstr "Kliksikografija - Izberi zglede"
+
+#~ msgid "Tickbox Lexicography template"
+#~ msgstr "Predloga za kliksikografijo"
+
+#~ msgid "Timestamp"
+#~ msgstr "Čas"
+
+#~ msgid "Turn off clustering"
+#~ msgstr "Izključi grupiranje"
+
+#~ msgid "Turn on clustering"
+#~ msgstr "Vključi grupiranje"
+
+#~ msgid "Upload"
+#~ msgstr "Naloži"
+
+#~ msgid "Upload file"
+#~ msgstr "Naloži datoteko"
+
+#~ msgid "Use word sketch collocations instead of simple words"
+#~ msgstr "Uporabi kolokacije besednih skic namesto navadnih besed"
+
+#~ msgid "View Word Sketch Evaluation"
+#~ msgstr "Pokaži evalvacijo besednih skic"
+
+#~ msgid "View Word Sketch for Evaluation"
+#~ msgstr "Pokaži besedno skico za evalvacijo"
+
+#~ msgid "WMapStream: end of stream"
+#~ msgstr "WMapStream: konec"
+
+#~ msgid "WS Diff for"
+#~ msgstr "Primejava skic za"
+
+#~ msgid ""
+#~ "Warning: Another evaluation record for this lemma was found in the "
+#~ "database."
+#~ msgstr ""
+#~ "Opozorilo: V bazi je bil najden še en evalvacijski zapis za to lemo."
+
+#~ msgid "Word Sketch for Evaluation"
+#~ msgstr "Besedna skica za evalvacijo"
+
+#~ msgid "Word Sketch for Evaluation Entry Form"
+#~ msgstr "Evalvacija besednih skic"
+
+#~ msgid "Word sketch (simple view)"
+#~ msgstr "Besedna skica (enostaven pogled)"
+
+#~ msgid "Working with existing record"
+#~ msgstr "Delo z obstoječim zapisom"
+
+#~ msgid "according to"
+#~ msgstr "glede na"
+
+#~ msgid "and"
+#~ msgstr "in"
+
+#~ msgid "cluster frequency"
+#~ msgstr "frekvenca grupe"
+
+#~ msgid "corpus"
+#~ msgstr "korpus"
+
+#~ msgid "displaying only"
+#~ msgstr "prikazujem samo"
+
+#~ msgid "filename"
+#~ msgstr "ime datoteke"
+
+#~ msgid "freqs"
+#~ msgstr "frekvence"
+
+#~ msgid "frequency"
+#~ msgstr "frekvenca"
+
+#~ msgid "frequency for the first"
+#~ msgstr "frekvenca za prvo"
+
+#~ msgid "frequency for the first lemma"
+#~ msgstr "frekvenca prve leme"
+
+#~ msgid "frequency for the second"
+#~ msgstr "frekvenca za drugo"
+
+#~ msgid "frequency for the second lemma"
+#~ msgstr "frekvenca druge leme"
+
+#~ msgid "lemma"
+#~ msgstr "lema"
+
+#~ msgid "logging..."
+#~ msgstr "shranjujem..."
+
+#~ msgid "overall frequency"
+#~ msgstr "skupna frekvenca"
+
+#~ msgid "overall frequency for the first"
+#~ msgstr "skupna frekvenca za prvo"
+
+#~ msgid "overall frequency for the first lemma"
+#~ msgstr "skupna frekvenca prve leme"
+
+#~ msgid "overall frequency for the second"
+#~ msgstr "skupna frekvenca za drugo"
+
+#~ msgid "overall frequency for the second lemma"
+#~ msgstr "skupna frekvenca druge leme"
+
+#~ msgid "overall score"
+#~ msgstr "skupni rezultat"
+
+#~ msgid "overall score for the first"
+#~ msgstr "skupni rezultat za prvo"
+
+#~ msgid "overall score for the first lemma"
+#~ msgstr "skupni rezultat prve leme"
+
+#~ msgid "overall score for the second"
+#~ msgstr "skupni rezultat za drugo"
+
+#~ msgid "overall score for the second lemma"
+#~ msgstr "skupni rezultat druge leme"
+
+#~ msgid "per gramrel"
+#~ msgstr "na relacijo"
+
+#~ msgid "score"
+#~ msgstr "rezultat"
+
+#~ msgid "score for the first"
+#~ msgstr "rezultat za prvo"
+
+#~ msgid "score for the first lemma"
+#~ msgstr "vrednost za prvo lemo"
+
+#~ msgid "score for the second"
+#~ msgstr "rezultat za drugo"
+
+#~ msgid "score for the second lemma"
+#~ msgstr "vrednost za drugo lemo"
+
+#~ msgid "subcorpus"
+#~ msgstr "podkorpus"
+
+#~ msgid "testing set"
+#~ msgstr "testni niz"
+
+#~ msgid "the last page"
+#~ msgstr "zadnja stran"
+
+#~ msgid "whole"
+#~ msgstr "celoten"
+
+#~ msgid "whole word sketch"
+#~ msgstr "celotna besedna skica"
+
+#~ msgid "word form"
+#~ msgstr "besedna oblika"
+
+#~ msgid "word frequency"
+#~ msgstr "frekvenca besede"
+
+#~ msgid "Display structures"
+#~ msgstr "Zobraziť štruktúry"
+
+#~ msgid "Collocations results"
+#~ msgstr "Výsledky kolokácií"
+
+#~ msgid "Connection error"
+#~ msgstr "Chyba pri pripojení"
+
+#~ msgid "List of templates"
+#~ msgstr "Zoznam predlôh"
+
+#~ msgid "Change Language"
+#~ msgstr "Zmeniť jazyk"
+
+#~ msgid "Attribute:"
+#~ msgstr "Atribút:"
+
+#~ msgid "Optional query name"
+#~ msgstr "Voliteľný názov hľadania"
+
+#~ msgid "Rebuild Corpus"
+#~ msgstr "Znovuvytvoriť korpus"
+
+#~ msgid "Template"
+#~ msgstr "Šablóna"
+
+#~ msgid "Retain"
+#~ msgstr "Ponechať"
+
+#~ msgid "Default display range"
+#~ msgstr "Predvolený rozsah zobrazenia"
+
+#~ msgid "Distribution overview"
+#~ msgstr "Prehľad rozloženia"
+
+#~ msgid "Line number:"
+#~ msgstr "Číslo riadku:"
+
+#~ msgid "Full"
+#~ msgstr "Plné"
+
+#~ msgid "20"
+#~ msgstr "20"
+
+#~ msgid "Computing frequency distribution ..."
+#~ msgstr "Počítajú sa frekvencie ..."
+
+#~ msgid "Save to file"
+#~ msgstr "Uložiť do súboru"
+
+#~ msgid "Result Lines to display"
+#~ msgstr "Riadky výsledku, ktoré sa zobrazujú"
+
+#~ msgid "Add to list"
+#~ msgstr "Pridať do zoznamu"
+
+#~ msgid "Where to count from"
+#~ msgstr "Odkiaľ počítať jednotky"
+
+#~ msgid "Result line to jump to"
+#~ msgstr "Riadok výsledku, od ktorého zobrazovať"
+
+#~ msgid "Output context"
+#~ msgstr "Kontext na výstup"
+
+#~ msgid "4"
+#~ msgstr "4"
+
+#~ msgid "8"
+#~ msgstr "8"
+
+#~ msgid "Optional"
+#~ msgstr "Voliteľne"
+
+#~ msgid "Swap KWIC and Collocate"
+#~ msgstr "Prepnúť KWIC a kolokáciu"
+
+#~ msgid "Positions"
+#~ msgstr "Pozície"
+
+#~ msgid "Connection to server"
+#~ msgstr "Pripojenie na server"
+
+#~ msgid "Computing bigrams ..."
+#~ msgstr "Prebieha výpočet bigramov ..."
+
+#~ msgid "descending"
+#~ msgstr "zostupne"
+
+#~ msgid "Limit:"
+#~ msgstr "Limit:"
+
+#~ msgid "Or"
+#~ msgstr "Alebo"
+
+#~ msgid "Alternative"
+#~ msgstr "Alternatívne"
+
+#~ msgid "Line Group Frequencies"
+#~ msgstr "Frekvencie skupín riadkov"
+
+#~ msgid "Incorrect password."
+#~ msgstr "Nesprávne heslo."
+
+#~ msgid "Are you sure you want to delete selected lines?"
+#~ msgstr "Naozaj zmazať vybrané riadky?"
+
+#~ msgid "OK"
+#~ msgstr "Dobre"
+
+#~ msgid "You are connecting from wrong computer."
+#~ msgstr "Pripájate sa z nesprávneho počítača."
+
+#~ msgid "Cannot open configuration file on server."
+#~ msgstr "Na serveri sa nedá otvoriť konfiguračný súbor."
+
+#~ msgid "Browser command (for online help)"
+#~ msgstr "Príkaz na spustenie prehliadača (s pomocníkom)"
+
+#~ msgid "Computation of the most frequent collocations"
+#~ msgstr "Výpočet najfrekventovanejších kolokácií"
+
+#~ msgid ""
+#~ "\n"
+#~ "Copyright (c) 1998 - 2003 Pavel Rychly"
+#~ msgstr ""
+#~ "\n"
+#~ "Copyright (c) 1998 -- 2003 Pavel Rychlý"
+
+#~ msgid "Word1"
+#~ msgstr "Word1"
+
+#~ msgid "Default context size"
+#~ msgstr "Východisková veľkosť kontextu"
+
+#~ msgid "Frequency (number of occurrences):"
+#~ msgstr "Frekvencia (počet výskytov):"
+
+#~ msgid "Word2"
+#~ msgstr "Word2"
+
+#~ msgid "Number of Occurrences"
+#~ msgstr "Počet výskytov"
+
+#~ msgid "Rebuilding ..."
+#~ msgstr "Vytváram opätovne ..."
+
+#~ msgid "90"
+#~ msgstr "90"
+
+#~ msgid "Sorting ..."
+#~ msgstr "Prebieha triedenie ..."
+
+#~ msgid "Frequency distribution settings"
+#~ msgstr "Zadanie frekvenčnej distribúcie"
+
+#~ msgid "Statistics"
+#~ msgstr "Štatistiky"
+
+#~ msgid "Left edge of span"
+#~ msgstr "Ľavá hranica intervalu"
+
+#~ msgid "Lines: %i    Selected: %i    Sum: %i"
+#~ msgstr "Riadkov: %i    Vybrané: %i    Súčet: %i"
+
+#~ msgid "Display context"
+#~ msgstr "Zobraziť kontext"
+
+#~ msgid "Re-entered password don't match."
+#~ msgstr "Druhý raz zadané heslo sa líši od prvého."
+
+#~ msgid "maximum"
+#~ msgstr "maximálne"
+
+#~ msgid "Version"
+#~ msgstr "Verzia"
+
+#~ msgid "Print"
+#~ msgstr "Vytlačiť"
+
+#~ msgid "Generic sort"
+#~ msgstr "Univerzálne triedenie"
+
+#~ msgid "80"
+#~ msgstr "80"
+
+#~ msgid "Current password:"
+#~ msgstr "Súčasné heslo:"
+
+#~ msgid "blue"
+#~ msgstr "blue"
+
+#~ msgid "hide"
+#~ msgstr "schovať"
+
+#~ msgid "Query errors"
+#~ msgstr "Chyba v zadaní"
+
+#~ msgid "Accept"
+#~ msgstr "Súhlasím"
+
+#~ msgid "sum"
+#~ msgstr "súčet"
+
+#~ msgid "Jump to line"
+#~ msgstr "Skok na riadok"
+
+#~ msgid "MI-score T-score {Rel. f [%]} {Abs. f}"
+#~ msgstr "MI-score T-score {Rel. f [%]} {Abs. f}"
+
+#~ msgid "line numbering"
+#~ msgstr "číslovať riadky"
+
+#~ msgid "Server port number"
+#~ msgstr "Číslo portu na serveri"
+
+#~ msgid "coll. %i"
+#~ msgstr "%i. kol."
+
+#~ msgid "Repetition"
+#~ msgstr "Opakovane"
+
+#~ msgid "Span:"
+#~ msgstr "Rozpätie:"
+
+#~ msgid "Value 2:"
+#~ msgstr "Hodnota2:"
+
+#~ msgid "Character encoding"
+#~ msgstr "Kódovanie"
+
+#~ msgid "Server command:"
+#~ msgstr "Príkaz serveru:"
+
+#~ msgid "Value 1:"
+#~ msgstr "Hodnota 1:"
+
+#~ msgid "Page Down"
+#~ msgstr "O stranu nižšie"
+
+#~ msgid "ascending"
+#~ msgstr "vzostupne"
+
+#~ msgid "Range"
+#~ msgstr "Rozsah"
+
+#~ msgid "Structure:"
+#~ msgstr "Značka:"
+
+#~ msgid "Default query attribute"
+#~ msgstr "Implicitný atribút na hľadanie"
+
+#~ msgid "Subcorpus Size:"
+#~ msgstr "Veľkosť subkorpusu:"
+
+#~ msgid "Unknown user."
+#~ msgstr "Neznámy užívateľ."
+
+#~ msgid "Attribute 1:"
+#~ msgstr "Atribút 1:"
+
+#~ msgid "Exporting ..."
+#~ msgstr "Prebieha export ..."
+
+#~ msgid "30"
+#~ msgstr "30"
+
+#~ msgid "Language of user interface"
+#~ msgstr "Jazyk užívateľského rozhrania"
+
+#~ msgid "To file:"
+#~ msgstr "Do súboru:"
+
+#~ msgid "Yes"
+#~ msgstr "Áno"
+
+#~ msgid "Query itself"
+#~ msgstr "Vlastné hľadanie"
+
+#~ msgid "Computing collocations ..."
+#~ msgstr "Prebieha výpočet kolokácií ..."
+
+#~ msgid "Encodings of diffrent keyboards"
+#~ msgstr "Kódovanie rôznych klávesníc"
+
+#~ msgid "Find Pattern"
+#~ msgstr "Nájdi vzor"
+
+#~ msgid "Rebuilding Corpus, it may take a while ..."
+#~ msgstr "Vytváram korpus, môže to chvíľu trvať ..."
+
+#~ msgid "Lines to display:"
+#~ msgstr "Riadky na zobrazenie:"
+
+#~ msgid "Server address:"
+#~ msgstr "Adresa servera:"
+
+#~ msgid "No"
+#~ msgstr "Nie"
+
+#~ msgid "Number of lines read per batch during display"
+#~ msgstr "Počet naraz načítaných riadkov pri zobrazovaní"
+
+#~ msgid "Named queries"
+#~ msgstr "Pomenované hľadania"
+
+#~ msgid "Add"
+#~ msgstr "Pridať"
+
+#~ msgid "Attribute values (words) matching the pattern"
+#~ msgstr "Hodnoty atribútu (slová) zodpovedajúce danému vzoru"
+
+#~ msgid "ascending/descending"
+#~ msgstr "Vzostupne/Zostupne"
+
+#~ msgid ""
+#~ "I will use Bonito and the whole Manatee system\n"
+#~ "according to the user license\n"
+#~ "at address www.textforge.cz/license.html"
+#~ msgstr ""
+#~ "Bonito a celý systém Manatee budem\n"
+#~ "používať podľa podmienok uvedených\n"
+#~ "na adrese www.textforge.cz/license.html"
+
+#~ msgid "Aborted"
+#~ msgstr "Prerušené"
+
+#~ msgid "Login"
+#~ msgstr "Login"
+
+#~ msgid "Line:"
+#~ msgstr "Riadok:"
+
+#~ msgid "Attribute 2:"
+#~ msgstr "Atribút 2:"
+
+#~ msgid "Deleting ..."
+#~ msgstr "Prebieha mazanie ..."
+
+#~ msgid "Run local"
+#~ msgstr "Spustiť lokálne"
+
+#~ msgid "Local server command"
+#~ msgstr "Príkaz na spustenie servera lokálne"
+
+#~ msgid "Token number"
+#~ msgstr "Číslo pozície"
+
+#~ msgid "browse"
+#~ msgstr "prehliadať"
+
+#~ msgid ""
+#~ "What occurrence in span is a collocation (1=first, 2=second, -1=last, ...)"
+#~ msgstr "Koľký výskyt v intervale je kolokácia"
+
+#~ msgid "Display references"
+#~ msgstr "Zobraziť referencie"
+
+#~ msgid "Template substitution error"
+#~ msgstr "Chyba pri substitúcii predlohy"
+
+#~ msgid "Password changed."
+#~ msgstr "Heslo úspešne zmenené."
+
+#~ msgid "Delete"
+#~ msgstr "Zmazať"
+
+#~ msgid "Size (number of positions):"
+#~ msgstr "Veľkosť (počet pozícií):"
+
+#~ msgid "To:"
+#~ msgstr "Do"
+
+#~ msgid "Only in  KWIC"
+#~ msgstr "Iba v KWIC"
+
+#~ msgid "Selected corpus has only one attribute (word)!"
+#~ msgstr "Vybraný korpus má iba atribút 'word'!"
+
+#~ msgid "6"
+#~ msgstr "6"
+
+#~ msgid "User name:"
+#~ msgstr "Užívateľ:"
+
+#~ msgid "Not"
+#~ msgstr "Negácia"
+
+#~ msgid "Count of units"
+#~ msgstr "Počet jednotiek"
+
+#~ msgid "Condition:"
+#~ msgstr "Podmienka:"
+
+#~ msgid "Count sort"
+#~ msgstr "Triedenie podľa frekvencií v kontexte"
+
+#~ msgid "Incorrect substitution"
+#~ msgstr "Chybná substitúcia"
+
+#~ msgid "10"
+#~ msgstr "10"
+
+#~ msgid "13"
+#~ msgstr "13"
+
+#~ msgid "Frequency distribution results"
+#~ msgstr "Výsledok frekvenčnej distribúcie"
+
+#~ msgid "14"
+#~ msgstr "14"
+
+#~ msgid "Internet connection"
+#~ msgstr "Pripojiť cez internet"
+
+#~ msgid "Distribution of concordance lines in corpus"
+#~ msgstr "Rozloženie výskytov v korpuse"
+
+#~ msgid "Incorrect entry"
+#~ msgstr "Chybné zadanie"
+
+#~ msgid "Corresponding texts in parallel corpora"
+#~ msgstr "Texty zodpovedajúce si v paralelnom korpuse"
+
+#~ msgid "Corpus frequency:"
+#~ msgstr "Corpus frequency:"
+
+#~ msgid "Cancel"
+#~ msgstr "Zrušiť"
+
+#~ msgid "Close"
+#~ msgstr "Zavrieť"
+
+#~ msgid "Re-enter new password:"
+#~ msgstr "Overenie nového hesla:"
+
+#~ msgid "Unit"
+#~ msgstr "Jednotka"
+
+#~ msgid "Context:"
+#~ msgstr "Kontext:"
+
+#~ msgid "Change password"
+#~ msgstr "Zmena hesla"
+
+#~ msgid "Select collocate number for swap."
+#~ msgstr "Ktorá kolokácia sa má prehodiť s KWIC?"
+
+#~ msgid "KWIC"
+#~ msgstr "KWIC"
+
+#~ msgid "Connect to an internet server"
+#~ msgstr "Pripojiť na internetový server"
+
+#~ msgid "Make unique"
+#~ msgstr "Vynechať duplicity"
+
+#~ msgid "(not displayed lines)"
+#~ msgstr "(nezobrazené riadky)"
+
+#~ msgid "bonito-en.html"
+#~ msgstr "bonito-cz.html"
+
+#~ msgid "KWIC from left"
+#~ msgstr "KWIC zľava"
+
+#~ msgid "15"
+#~ msgstr "15"
+
+#~ msgid "To"
+#~ msgstr "Do"
+
+#~ msgid "minimum"
+#~ msgstr "minimálne"
+
+#~ msgid "Swap"
+#~ msgstr "Prehodiť"
+
+#~ msgid "Non-existing corpus or incorrect corpus configuration!"
+#~ msgstr "Korpus neexistuje alebo má zlú konfiguráciu!"
+
+#~ msgid "%a, %d %b %Y %I:%M%p"
+#~ msgstr "%d.%m.%Y %H:%M"
+
+#~ msgid "Save windows size and position"
+#~ msgstr "Ukladať veľkosť a pozíciu okien"
+
+#~ msgid "Templates"
+#~ msgstr "Predlohy"
+
+#~ msgid "11"
+#~ msgstr "11"
+
+#~ msgid "Connot make connection"
+#~ msgstr "Nemožno nadviazať spojenie"
+
+#~ msgid "Reduction ..."
+#~ msgstr "Prebieha redukcia ..."
+
+#~ msgid "percent"
+#~ msgstr "percent"
+
+#~ msgid "Change password error. The password is unchanged."
+#~ msgstr "Pri zmene hesla došlo k chybe. Heslo nezmenené."
+
+#~ msgid "5"
+#~ msgstr "5"
+
+#~ msgid "Contextually similar words"
+#~ msgstr "Contextually similar words"
+
+#~ msgid "List of named queries"
+#~ msgstr "Zoznam pomenovaných hľadaní"
+
+#~ msgid "absolute"
+#~ msgstr "absolútnej"
+
+#~ msgid "Occurrence:"
+#~ msgstr "Výskyt:"
+
+#~ msgid "From:"
+#~ msgstr "Od"
+
+#~ msgid "200"
+#~ msgstr "200"
+
+#~ msgid "Name"
+#~ msgstr "Meno"
+
+#~ msgid "License"
+#~ msgstr "Licenčné podmienky"
+
+#~ msgid "Remove"
+#~ msgstr "Zmazať"
+
+#~ msgid "Default corpus"
+#~ msgstr "Východiskový korpus"
+
+#~ msgid "Second is in the range from:"
+#~ msgstr "Vzdialené od seba od:"
+
+#~ msgid "Query graph"
+#~ msgstr "Graf hľadania"
+
+#~ msgid "Displayed:"
+#~ msgstr "Zobrazené:"
+
+#~ msgid "New password:"
+#~ msgstr "Nové heslo:"
+
+#~ msgid "Bonito -- graphical user interfase of the Manatee system"
+#~ msgstr "Bonito -- grafické užívateľské rozhranie systému Manatee"
+
+#~ msgid "Right edge of span"
+#~ msgstr "Pravá hranica intervalu"
+
+#~ msgid "1/100 percent"
+#~ msgstr "1/100 percent"
+
+#~ msgid "Sequence"
+#~ msgstr "Postupnosť"
+
+#~ msgid "Use language:"
+#~ msgstr "Použiť jazyk:"
+
+#~ msgid "Password:"
+#~ msgstr "Heslo:"
+
+#~ msgid "Reduce"
+#~ msgstr "Redukcia"
+
+#~ msgid "Ingnore case"
+#~ msgstr "AaAa"
+
+#~ msgid "KWIC from right"
+#~ msgstr "KWIC sprava"
+
+#~ msgid "Middle"
+#~ msgstr "Prostredných"
+
+#~ msgid "New item"
+#~ msgstr "Nový prvok"
+
+#~ msgid "Apply"
+#~ msgstr "Použiť"
+
+#~ msgid "Corpus Position"
+#~ msgstr "Pozícia v korpuse"
