@@ -24,6 +24,8 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
         renderDetailFunc;
 
 
+    lib.currentDetail = null;
+
     renderDetailFunc = function (data) {
         return function (tooltipBox, finalize) {
             var i = 0,
@@ -93,20 +95,23 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
             dataType : 'json',
             success: function (data) {
                 var render = renderDetailFunc(data),
-                    box,
                     leftPos;
 
-                box = popupBox.open(render, null, {
+                if (lib.currentDetail) {
+                    lib.currentDetail.close();
+                }
+                lib.currentDetail = popupBox.open(render, null, {
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
+                        lib.currentDetail = null;
                     }
                 });
-                leftPos = $(window).width() / 2 - box.getPosition().width / 2;
-                box.setCss('left', leftPos + 'px');
+                leftPos = $(window).width() / 2 - lib.currentDetail.getPosition().width / 2;
+                lib.currentDetail.setCss('left', leftPos + 'px');
             }
         });
     };
@@ -123,24 +128,28 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
             type : 'GET',
             data : params,
             success: function (data) {
-                var box,
-                    leftPos;
+                var leftPos;
 
-                box = popupBox.open(data, null, {
+                if (lib.currentDetail) {
+                    lib.currentDetail.close();
+                }
+
+                lib.currentDetail = popupBox.open(data, null, {
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
+                        lib.currentDetail = null;
                     }
                 });
-                box.setCss('width', '700px');
-                leftPos = $(window).width() / 2 - box.getPosition().width / 2;
-                box.setCss('left', leftPos + 'px');
+                lib.currentDetail.setCss('width', '700px');
+                leftPos = $(window).width() / 2 - lib.currentDetail.getPosition().width / 2;
+                lib.currentDetail.setCss('left', leftPos + 'px');
 
                 if (typeof callback === 'function') {
-                    callback(box);
+                    callback(lib.currentDetail);
                 }
             }
         });
