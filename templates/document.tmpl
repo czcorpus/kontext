@@ -141,10 +141,10 @@ $_ca_topbar
 #else
 
 #def menu_status($id)
-    #if $id == $active_menu_item
-        current
-    #elif $id in $disabled_menu_items
+    #if $id in $disabled_menu_items
         disabled
+    #elif $id == $active_menu_item
+        current
     #end if
 #end def
 
@@ -169,15 +169,13 @@ $_ca_topbar
 
 <header id="topbar">
     <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 194px;height: 58px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
-
     <div id="menu-bar">
         <ul id="menu-level-1">
-
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
                 <ul class="submenu">
                     <li class="separ"><a title="$_('Enter new query')" href="first_form?$corpname_url;lemma=$lemma;lpos=$lpos;align=$align">$_('New query')&#8230;</a></li>
-                    <li class="separ"><a title="$_('List of recent queries')" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
-                    <li><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
+                    <li class="separ $menu_status('menu-new-query:history')"><a title="$_('List of recent queries')" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
+                    <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
             <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>

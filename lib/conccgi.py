@@ -103,7 +103,9 @@ class ConcCGI(CGIPublisher):
                         'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
                         'gdexcnt', 'gdexconf', 'iquery', 'maincorp')
 
-    ANON_FORBIDDEN_MENU_ITEMS = ('menu-save',)
+    ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
+                                 'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
+                                 'menu-frequency', 'menu-collocations')
 
     error = u''
     fc_lemword_window_type = u'both'
