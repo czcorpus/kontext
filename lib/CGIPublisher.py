@@ -442,92 +442,68 @@ class CGIPublisher(object):
         """
         pass
 
-    def run_unprotected(self, path=None, selectorname=None):
-        """
-        Runs an HTTP-mapped action in a mode which does wrap
-        error processing (i.e. it may throw an exception).
-        """
-        tmpl = None
-        methodname = None
-
+    def _restore_ui_settings(self):
         if 'ui_settings' in self._cookies:
             try:
                 self._ui_settings = json.loads(self._cookies['ui_settings'].value)
             except ValueError as e:
                 logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
                 self._ui_settings = {}
-        self.init_locale()
-        # plugins setup
-        for p in plugins.list_plugins():
-            if hasattr(p, 'setup') and callable(p.setup):
-                p.setup(os.environ['LANG'])
-        self._init_session()
-
-        if path is None:
-                path = self.import_req_path()
-
-        try:
-            named_args = {}
-
-            action_metadata = {
-                'return_type': self._get_method_metadata(path[0], 'return_type'),
-                'template': self._get_method_metadata(path[0], 'template')
-            }
-            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
-            methodname, tmpl, result = self.process_method(path[0], path, named_args)
-            self._post_dispatch(methodname, tmpl, result)
-
-            cont = self.output_headers(action_metadata.get('return_type', None))
-            if cont:
-                self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None))
-
-            if plugins.has_plugin('sessions'):
-                plugins.sessions.save(self._get_session_id(), self._session)
-
-        except Exception as e:
-            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
-            raise RequestProcessingException(e.message, tmpl=tmpl, methodname=methodname)
 
     def run(self, path=None, selectorname=None):
         """
         This method wraps run_unprotected by try-except clause and presents
         only brief error messages to the user.
         """
-        if path is None:
-            path = self.import_req_path()
+        path = path if path is not None else self.import_req_path()
+        named_args = {}
+
+        self._restore_ui_settings()
+
+        # locales initialization
+        self.init_locale()
+
+        # plugins setup
+        for p in plugins.list_plugins():
+            if hasattr(p, 'setup') and callable(p.setup):
+                p.setup(os.environ['LANG'])
+
+        # user session initialization
+        self._init_session()
+
+        # user action processing
+        action_metadata = {
+            'return_type': self._get_method_metadata(path[0], 'return_type'),
+            'template': self._get_method_metadata(path[0], 'template')
+        }
         try:
-            self.run_unprotected(path, selectorname)
-        except Exception as err:
-            from Cheetah.Template import Template
-            from cmpltmpl import error_message
+            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
+            methodname, tmpl, result = self.process_method(path[0], path, named_args)
 
-            return_type = self._get_method_metadata(path[0], 'return_type')
-            if not self.headers_sent:
-                self._headers[''] = 'Status:HTTP/1.1 500 Internal Server Error'
-                self.output_headers(return_type=return_type)
-                self.headers_sent = True
+        except (UserActionException, RuntimeError) as e:
+            named_args['error'] = u'%s' % e
+            named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
+            methodname, tmpl, result = self.process_method('message', path, named_args)
 
-            if settings.is_debug_mode() or type(err) is UserActionException:
-                message = u'%s' % err
-            elif type(err) is auth.AuthException:
-                message = err.message
+        except Exception as e:
+            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
+            if settings.is_debug_mode():
+                named_args['error'] = u'%s' % e
             else:
-                message = _('Failed to process your request. Please try again later or contact system support.')
+                named_args['error'] = _('Failed to process your request. Please try again later or contact system support.')
+            named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
+            methodname, tmpl, result = self.process_method('message', path, named_args)
 
-            if return_type == 'json':
-                print(json.dumps({'error': self.rec_recode('%s' % err, 'utf-8', True)}))
-            else:
-                tpl_data = {
-                    'message': message,
-                    'corp_full_name': '?',
-                    'corplist_size': '?',
-                    'Corplist': [],
-                    'corp_description': '',
-                    'corp_size': '',
-                    'mode_included': bool(getattr(err, 'tmpl', False)),
-                    'method_name': getattr(err, 'methodname', '')
-                }
-                error_message.error_message(searchList=[tpl_data, self]).respond(CheetahResponseFile(sys.stdout))
+        self._post_dispatch(methodname, tmpl, result)
+
+        # response rendering
+        cont = self.output_headers(action_metadata.get('return_type', None))
+        if cont:
+            self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None))
+
+        # session closing
+        if plugins.has_plugin('sessions'):
+            plugins.sessions.save(self._get_session_id(), self._session)
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
@@ -720,6 +696,11 @@ class CGIPublisher(object):
         is requested soon, some method must be set.
         """
         return None
+
+    def message(self, **kwargs):
+        return kwargs
+
+    message.accept_kwargs = True
 
     def json_error(self, error='', reset=False):
         """

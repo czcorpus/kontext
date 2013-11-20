@@ -88,7 +88,4 @@ if __name__ == '__main__':
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
-    if not settings.is_debug_mode():
-        Actions(environ=os.environ).run(selectorname='corpname')
-    else:
-        Actions(environ=os.environ).run_unprotected(selectorname='corpname')
+    Actions(environ=os.environ).run(selectorname='corpname')
