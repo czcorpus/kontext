@@ -31,7 +31,7 @@ import locale
 
 import plugins
 import settings
-import auth
+from auth import AuthException
 
 
 def replace_dot_error_handler(err):
@@ -479,6 +479,12 @@ class CGIPublisher(object):
         try:
             path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
+
+        except AuthException as e:
+            self._headers[''] = 'Status: 401 Unauthorized'
+            named_args['error'] = u'%s' % e
+            named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
+            methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             named_args['error'] = u'%s' % e
