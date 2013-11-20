@@ -626,7 +626,7 @@ class ConcCGI(CGIPublisher):
             if len(conc_desc) > 1:
                 result['tourl'] = self.urlencode(conc_desc[0][3])
         if methodname.startswith('first'):
-            result['show_cup_menu'] = self.is_err_corpus()
+            result['show_cup_menu'] = self._is_err_corpus()
 
     def _store_query_selector_types(self):
         """
