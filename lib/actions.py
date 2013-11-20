@@ -2137,7 +2137,7 @@ class Actions(ConcCGI):
         """
         corp_conf_info = plugins.corptree.get_corpus_info(self._corp().corpname)
         TemplateClass = self._get_template_class('corpus_detail')
-        template = str(TemplateClass(searchList=[]))
+        template = unicode(TemplateClass(searchList=[]))
 
         format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
 
