@@ -87,14 +87,20 @@ requirejs.config({
 define('win', [], function () { return window; });
 
 var conf = {};
-conf['menuAutoHideInterval'] = 1500;
-conf['messageAutoHideInterval'] = 5000;
-conf['rootURL'] = "$root_url";
-conf['rootPath'] = "$root_path";
-conf['corpname'] = "$corpname";
-conf['session_cookie_name'] = "$session_cookie_name";
-conf['numTagPos'] = $num_tag_pos;
+conf.menuAutoHideInterval = 1500;
+conf.messageAutoHideInterval = 5000;
+conf.rootURL = "$root_url";
+conf.rootPath = "$root_path";
+conf.corpname = "$corpname";
+conf.session_cookie_name = "$session_cookie_name";
+conf.numTagPos = $num_tag_pos;
+conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
+conf.loginUrl = "$login_url";
+
 conf.messages = {};
+#if $_anonymous
+conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
+#end if
 conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
 conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
 conf.messages.view_result = "$_('View result')";
