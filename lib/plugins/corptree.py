@@ -137,7 +137,7 @@ class CorpTree(object):
         with open(self.file_path) as f:
             xml = etree.parse(f)
             root = xml.find(self.root_xpath)
-            if root:
+            if root is not None:
                 self._parse_corplist_node(root, data, path='/')
         self.list = data
 
