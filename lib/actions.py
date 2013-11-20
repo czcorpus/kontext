@@ -1119,11 +1119,12 @@ class Actions(ConcCGI):
         """
         self.active_menu_item = 'menu-collocations'
 
+        self.cbgrfns = ''.join(cbgrfns)
         self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
                     'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
 
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
-        self.cbgrfns = ''.join(cbgrfns)
+
         if csortfn is '' and cbgrfns:
             self.csortfn = cbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
