@@ -43,6 +43,7 @@ class Actions(ConcCGI):
             return {'error': _('This function is disabled.')}
         return {}
 
+    user_password_form.access_level = 1
     user_password_form.template = 'user_password_form.tmpl'
 
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
@@ -65,6 +66,7 @@ class Actions(ConcCGI):
         settings.auth.update_user_password(new_passwd)
         self._redirect(settings.get_root_uri())
 
+    user_password.access_level = 1
     user_password.template = 'user_password.tmpl'
 
     def login(self):
@@ -100,6 +102,7 @@ class Actions(ConcCGI):
             'notification': _('You have been logged out')
         }
 
+    logoutx.access_level = 1
     logoutx.template = 'login.tmpl'
 
     def view(self, view_params={}):
@@ -249,7 +252,7 @@ class Actions(ConcCGI):
         sampled_size = 0
         while i < len(self.q) and not self.q[i].startswith('r'): i += 1
         if i < len(self.q): sampled_size = concsize
-        j = i + 1
+
         for j in range(i + 1, len(self.q)):
             if self.q[j][0] in ('pn'):
                 return {'concsize': concsize, 'sampled_size': 0,
@@ -346,6 +349,7 @@ class Actions(ConcCGI):
         out['tbl_labels'] = tbl_labels
         return out
 
+    viewattrs.access_level = 1
     ConcCGI.add_vars['viewattrs'] = ['concsize']
 
     def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', ctxunit=''):
@@ -378,6 +382,7 @@ class Actions(ConcCGI):
         # TODO refs_up ???
         return self.view()
 
+    viewattrsx.access_level = 1
     viewattrsx.template = 'view.tmpl'
 
     def viewopts(self):
@@ -390,6 +395,8 @@ class Actions(ConcCGI):
         }
         return out
 
+    viewopts.access_level = 1
+
     def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
@@ -398,6 +405,7 @@ class Actions(ConcCGI):
                             'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
         return self.view()
 
+    viewoptsx.access_level = 1
     viewoptsx.template = 'view.tmpl'
 
     def sort(self):
@@ -408,6 +416,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
+    sort.access_level = 1
     ConcCGI.add_vars['sort'] = ['concsize']
 
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
@@ -429,6 +438,7 @@ class Actions(ConcCGI):
         self.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
+    sortx.access_level = 1
     sortx.template = 'view.tmpl'
 
     def mlsortx(self,
@@ -450,9 +460,10 @@ class Actions(ConcCGI):
         self.q.append(crit)
         return self.view()
 
+    mlsortx.access_level = 1
     mlsortx.template = 'view.tmpl'
 
-    def is_err_corpus(self):
+    def _is_err_corpus(self):
         availstruct = self._corp().get_conf('STRUCTLIST').split(',')
         if not ('err' in availstruct and 'corr' in availstruct):
             return False
@@ -565,7 +576,7 @@ class Actions(ConcCGI):
         return cql
 
     def _compile_query(self, qtype=None, cname=''):
-        if not self.is_err_corpus():
+        if not self._is_err_corpus():
             return self._compile_basic_query(qtype, cname=cname)
         err_code = getattr(self, 'cup_err_code', '')
         err = getattr(self, 'cup_err', '')
@@ -624,7 +635,7 @@ class Actions(ConcCGI):
 
     query.template = 'view.tmpl'
 
-    def set_first_query(self, fc_lemword_window_type='',
+    def _set_first_query(self, fc_lemword_window_type='',
                         fc_lemword_wsize=0,
                         fc_lemword_type='',
                         fc_lemword='',
@@ -730,7 +741,7 @@ class Actions(ConcCGI):
               fc_pos_type='',
               fc_pos=[]):
         self.active_menu_item = 'menu-view'
-        self.set_first_query(fc_lemword_window_type,
+        self._set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
                              fc_lemword,
@@ -764,6 +775,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         return out
 
+    filter_form.access_level = 1
     ConcCGI.add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
 
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
@@ -802,12 +814,12 @@ class Actions(ConcCGI):
                 del self.q[-1]
             raise
 
+    filter.access_level = 1
     filter.template = 'view.tmpl'
     ConcCGI.add_vars['filter'] = ['orig_query']
 
     def reduce_form(self):
         """
-
         """
         self.active_menu_item = 'menu-sample'
         self.disabled_menu_items = ('menu-save',)
@@ -824,7 +836,7 @@ class Actions(ConcCGI):
         return self.view()
 
     ConcCGI.add_vars['reduce'] = ['concsize']
-
+    reduce.access_level = 1
     reduce.template = 'view.tmpl'
 
     def freq(self):
@@ -839,6 +851,7 @@ class Actions(ConcCGI):
             'last_num_levels': self._session_get('last_freq_level')
         }
 
+    freq.access_level = 1
     ConcCGI.add_vars['freq'] = ['concsize']
     fcrit = []
 
@@ -978,6 +991,7 @@ class Actions(ConcCGI):
                  'norel': 1, 'fbar': 0})
         return result
 
+    freqs.access_level = 1
     ConcCGI.add_vars['savefreq_form'] = ['concsize']
 
     def savefreq_form(self, fcrit=[], flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
@@ -1057,8 +1071,8 @@ class Actions(ConcCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
         return tpl_data
-    savefreq.access_level = 1
 
+    savefreq.access_level = 1
     ConcCGI.add_vars['savefreq'] = ['Desc']
 
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
@@ -1074,6 +1088,7 @@ class Actions(ConcCGI):
         self._session['last_freq_level'] = freqlevel
         return result
 
+    freqml.access_level = 1
     freqml.template = 'freqs.tmpl'
     freqml.accept_kwargs = True
 
@@ -1083,6 +1098,7 @@ class Actions(ConcCGI):
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
+    freqtt.access_level = 1
     freqtt.template = 'freqs.tmpl'
 
     cattr = 'word'
@@ -1111,6 +1127,7 @@ class Actions(ConcCGI):
                'Pos_ctxs': conclib.pos_ctxs(1, 1)}
         return out
 
+    coll.access_level = 1
     ConcCGI.add_vars['coll'] = ['concsize']
 
     def collx(self, csortfn='d', cbgrfns=['t', 'm', 'd'], line_offset=0, num_lines=None):
@@ -1145,6 +1162,7 @@ class Actions(ConcCGI):
         result['to_line'] = 10000  # TODO
         return result
 
+    collx.access_level = 1
     ConcCGI.add_vars['collx'] = ['concsize']
 
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
@@ -1214,6 +1232,7 @@ class Actions(ConcCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
         return tpl_data
+
     savecoll.access_level = 1
     ConcCGI.add_vars['savecoll'] = ['Desc', 'concsize']
 
@@ -1230,6 +1249,7 @@ class Actions(ConcCGI):
         result['no_display_links'] = True
         return result
 
+    structctx.access_level = 1
     structctx.template = 'widectx.tmpl'
 
     def widectx(self, pos=0):
@@ -1238,10 +1258,13 @@ class Actions(ConcCGI):
         """
         return self.call_function(conclib.get_detail_context, (self._corp(),
                                                                pos))
+    widectx.access_level = 1
 
     def widectx_raw(self, pos=0):
         data = conclib.get_detail_context(self._corp(), pos)
         return data
+
+    widectx_raw.access_level = 1
     widectx_raw.return_type = 'json'
 
     def fullref(self, pos=0):
@@ -1249,6 +1272,8 @@ class Actions(ConcCGI):
         display a full reference
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
+
+    fullref.access_level = 1
     fullref.return_type = 'json'
 
     def draw_graph(self, fcrit='', flimit=0):
@@ -1372,6 +1397,7 @@ class Actions(ConcCGI):
         self._enable_subcorpora_list(out)
         return out
 
+    wordlist_form.access_level = 1
     ConcCGI.add_vars['wordlist_form'] = ['LastSubcorp']
 
     def findx_upload_form(self):
@@ -1525,6 +1551,8 @@ class Actions(ConcCGI):
                 processing = '0'
             result.update({'processing': processing == '100' and '99' or processing})
             return result
+
+    wordlist.access_level = 1
 
     wlstruct_attr1 = ''
     wlstruct_attr2 = ''
@@ -1879,6 +1907,8 @@ class Actions(ConcCGI):
         else:
             raise ConcError(_('Empty subcorpus!'))
 
+    subcorp.access_level = 1
+
     def subcorp_list(self, selected_subc=[], sort='n'):
         """
         """
@@ -1925,11 +1955,15 @@ class Actions(ConcCGI):
         self.cm.get_Corpus(current_corp)  # this is necessary to reset manatee module back to its original state
         return {'subcorp_list': data, 'sort_keys': sort_keys, 'rev': rev}
 
+    subcorp_list.access_level = 1
+
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
         return {'subCorpusName': subcname,
                 'corpusSize': conccgi.formatnum(sc.size()),
                 'subCorpusSize': conccgi.formatnum(sc.search_size())}
+
+    ajax_subcorp_info.access_level = 1
     ajax_subcorp_info.return_type = 'json'
 
     def attr_vals(self, avattr='', avpat=''):
@@ -2094,6 +2128,7 @@ class Actions(ConcCGI):
         os.umask(um)
         return {'stored': storeconcname, 'conc_size': conc.size()}
 
+    storeconc.access_level = 1
     storeconc.template = 'saveconc_form.tmpl'
     ConcCGI.add_vars['storeconc'] = ['Desc']
 
@@ -2308,11 +2343,15 @@ class Actions(ConcCGI):
         query_id = plugins.query_storage.write(user=self._session_get('user', 'id'), corpname=self.corpname, url=url,
                                                tmp=0, description=description, query_id=query_id, public=int(public))
         return {'rawHtml': html, 'queryId': query_id}
+
+    ajax_save_query.access_level = 1
     ajax_save_query.return_type = 'json'
 
     def ajax_delete_query(self, query_id=''):
         plugins.query_storage.delete_user_query(self._session_get('user', 'id'), query_id)
         return {}
+
+    ajax_delete_query.access_level = 1
     ajax_delete_query.return_type = 'json'
 
     def ajax_undelete_query(self, query_id=''):
@@ -2331,6 +2370,8 @@ class Actions(ConcCGI):
         return {
             'html': html
         }
+
+    ajax_undelete_query.access_level = 1
     ajax_undelete_query.return_type = 'json'
 
     def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
@@ -2350,6 +2391,8 @@ class Actions(ConcCGI):
             'to_date': to_date,
             'types': types
         }
+
+    query_history.access_level = 1
 
     def to(self, q=''):
         row = plugins.query_storage.get_user_query(self._session_get('user', 'id'), q)
@@ -2376,3 +2419,5 @@ class Actions(ConcCGI):
         else:
             self._set_not_found()
             return None
+
+    audio.access_level = 1
