@@ -86,8 +86,9 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
      *
      * @param {String} url
      * @param {{}} params
+     * @param {Function} errorCallback
      */
-    lib.showRefDetail = function (url, params) {
+    lib.showRefDetail = function (url, params, errorCallback) {
         $.ajax({
             url : url,
             type : 'GET',
@@ -112,7 +113,9 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 });
                 leftPos = $(window).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
-            }
+            },
+
+            error : errorCallback
         });
     };
 
@@ -120,9 +123,10 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
      *
      * @param {String} url
      * @param {{}} params
+     * @param {Function} errorCallback
      * @param {Function} [callback] function called after the ajax's complete event is triggered
      */
-    lib.showDetail = function (url, params, callback) {
+    lib.showDetail = function (url, params, errorCallback, callback) {
         $.ajax({
             url : url,
             type : 'GET',
@@ -151,7 +155,9 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 if (typeof callback === 'function') {
                     callback(lib.currentDetail);
                 }
-            }
+            },
+
+            error : errorCallback
         });
     };
 

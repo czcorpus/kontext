@@ -58,6 +58,9 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             detail.showDetail(
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
+                function (jqXHR, textStatus, errorThrown) {
+                    layoutModel.showErrorMessage(errorThrown);
+                },
                 callback
             );
             event.stopPropagation();
@@ -68,7 +71,10 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             $(event.target).closest('tr').addClass('active');
             detail.showRefDetail(
                 $(event.target).data('url'),
-                $(event.target).data('params')
+                $(event.target).data('params'),
+                function (jqXHR, textStatus, errorThrown) {
+                    layoutModel.showErrorMessage(errorThrown);
+                }
             );
             event.stopPropagation();
         });
@@ -238,12 +244,34 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
 
     /**
      *
+     */
+    lib.anonymousUserWarning = function () {
+        var left,
+            box,
+            top;
+
+        box = popupBox.open(layoutModel.conf.messages.anonymous_user_warning,
+            {top: 0, left: 0}, {type: 'warning'});
+        left = $(window).width() / 2 - box.getPosition().width / 2;
+        top = $('#conc-wrapper').offset().top + 40;
+        box.setCss('left', left + 'px');
+        box.setCss('top', top + 'px');
+        box.setCss('font-size', '120%');
+        box.setCss('height', '70px');
+
+    };
+
+    /**
+     *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.misc();
         lib.initConcViewScrollbar();
+        if (conf.anonymousUser) {
+            lib.anonymousUserWarning();
+        }
     };
 
 
