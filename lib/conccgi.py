@@ -413,6 +413,9 @@ class ConcCGI(CGIPublisher):
         out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
             + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
 
+    def _get_save_excluded_attributes(self):
+        return ('corpname', )
+
     def _save_query(self):
         if plugins.has_plugin('query_storage'):
             q_encoded = self.urlencode([('q', q) for q in self.q])
