@@ -55,6 +55,8 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
             <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
             #set $navid = ''
             #end for
+
+            <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
         </div>
 
         <div class="rgt-block">
@@ -77,6 +79,8 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
             <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
             #set $i = $i + 1
         #end for
+
+        <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
     </fieldset>
     #end if
 
@@ -91,7 +95,7 @@ require(['jquery', 'tpl/viewattrs', 'domReady!'], function (\$, viewAttrs, domRe
             <label for="ref-item-$i">$a.label</label><br />
             #set $i = $i + 1
         #end for
-        </select>
+        <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
     </fieldset>
 
     <div class="buttons">

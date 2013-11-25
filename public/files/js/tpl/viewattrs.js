@@ -30,6 +30,10 @@ define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, layoutMo
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
+
+        $('button.select-all').each(function () {
+            layoutModel.applySelectAll(this, $(this).closest('fieldset'));
+        });
     };
 
     return lib;
