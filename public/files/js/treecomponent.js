@@ -134,7 +134,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      * @constructor
-     * @param {{}} [options]
+     * @param {{clickableText: Boolean, title: String}} [options]
      */
     function TreeComponent(options) {
         this.rootUl = null;
@@ -241,7 +241,32 @@ define(['jquery', 'win'], function ($, win) {
                 newSpan = win.document.createElement('span');
                 $(newSpan).empty().append('&#x25BA;&nbsp;');
                 jqNewLink.append(newSpan);
-                $(this).prepend(jqNewLink.get(0));
+
+                if (!self.options.clickableText) {
+                    $(this).prepend(jqNewLink.get(0));
+
+                } else {
+                    (function (element) {
+                        var originalTextNode,
+                            originalText,
+                            jqTextLink;
+
+                        originalTextNode = $(element).contents().filter(function () {return this.nodeType === 3;});
+                        originalText = $(originalTextNode).text();
+                        originalTextNode.remove();
+                        jqTextLink = $(win.document.createElement('a'));
+                        jqTextLink.text(originalText);
+                        jqTextLink.addClass('node-link');
+                        $(element).prepend(jqTextLink);
+                        $(element).prepend(jqNewLink.get(0));
+                        jqTextLink.on('click', function (event) {
+                            if (subtree !== null) {
+                                self.switchSubtree(subtree, newSpan);
+                            }
+                            event.stopPropagation();
+                        });
+                    }(this));
+                }
                 jqNewLink.css('text-decoration', 'none');
                 jqNewLink.on('click', function (event) {
                     if (subtree !== null) {
@@ -411,7 +436,7 @@ define(['jquery', 'win'], function ($, win) {
      * Transforms form select box into a tree-rendered selector
      *
      * @param {jQuery} selResult HTML SELECT element to be transformed into an expandable tree
-     * @param {{}} [options] (currently supported keys: title)
+     * @param {{clickableText: Boolean, title: String}} [options]
      * @param {Function} [customCallback] custom code to be executed when an item is selected.
      * The function is expected to have ignature func(event, selectedItemValue);
      */
