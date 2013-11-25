@@ -47,6 +47,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     #if $heading
     <heading>
         <corpus>$human_corpname</corpus>
+        #if $usesubcorp
+        <subcorpus>$usesubcorp</subcorpus>
+        #end if
         <hits>$concsize</hits>
         <relative_freq note="$result_relative_freq_rel_to">$result_relative_freq</relative_freq>
         #if $result_arf != ''
@@ -111,6 +114,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ## Text format
 #if $heading
 \# Corpus: $corp_full_name
+#if $usesubcorp
+\# Subcorpus: $usesubcorp
+#end if
+
 \# Hits: $concsize
 \# Relative frequency: $result_relative_freq ($result_relative_freq_rel_to)
 #if $result_arf != ''
