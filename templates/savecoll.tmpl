@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   #if $heading
   <heading>
     <corpus>$human_corpname</corpus>
+    #if $usesubcorp
+    <subcorpus>$usesubcorp</subcorpus>
+    #end if
+
     <query>#slurp
     #for $d in $Desc
 $d.arg#slurp
@@ -54,6 +58,10 @@ $d.arg#slurp
   #if $heading
 \# Collocations
 \# Corpus: $human_corpname
+#if $usesubcorp
+\# Subcorpus: $usesubcorp
+#end if
+
     #for $d in $Desc
 \# $d.op:  $d.arg $d.size
     #end for
