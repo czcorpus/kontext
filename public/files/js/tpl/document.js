@@ -552,18 +552,27 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      */
     lib.applySelectAll = function (elm, context) {
         var jqElm = $(elm),
-            jqContext = $(context);
+            jqContext = $(context),
+            jqCheckboxes,
+            numChecked;
+
+        if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
+            jqCheckboxes = jqContext.find('input[type="checkbox"]');
+
+        } else {
+            jqCheckboxes = jqContext;
+        }
+
+        numChecked = jqCheckboxes.filter(':checked').length;
+
+        if (jqCheckboxes.length > numChecked) {
+            jqElm.attr('data-status', '1');
+
+        } else {
+            jqElm.attr('data-status', '2');
+        }
 
         jqElm.bind('click', function (event) {
-            var jqCheckboxes;
-
-            if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
-                jqCheckboxes = jqContext.find('input[type="checkbox"]');
-
-            } else {
-                jqCheckboxes = jqContext;
-            }
-
             if ($(event.target).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
