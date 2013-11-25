@@ -33,7 +33,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
             $('#mainform').attr('method', 'GET');
             layoutModel.updForm(event);
         };
-        treeComponent.createTreeComponent($('form#mainform select[name="corpname"]'), {}, preSubmit);
+        treeComponent.createTreeComponent($('form#mainform select[name="corpname"]'), {clickableText: true}, preSubmit);
     };
 
     /**

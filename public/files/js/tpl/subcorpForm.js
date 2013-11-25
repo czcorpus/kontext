@@ -113,7 +113,8 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
             // which causes server not to create any subcorpus yet
             $('form[action="subcorp"]').attr('method', 'GET').submit();
         };
-        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {}, updateForm);
+        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {clickableText: true},
+            updateForm);
 
         $('subc-spec-row').css({ display : 'none' });
 
