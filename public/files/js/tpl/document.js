@@ -29,19 +29,41 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib = {};
 
     /**
-     *
+     * @param {HTMLElement} buttonElm
+     * @param {String} [forceStatus]
      */
-    toggleSelectAllLabel = function (buttonElm) {
-        var tmpLabel = $(buttonElm).attr('value'),
-            currValue = $(buttonElm).attr('data-status');
+    toggleSelectAllLabel = function (buttonElm, forceStatus) {
+        var tmpLabel,
+            currValue,
+            newValue;
 
-        $(buttonElm).attr('value', $(buttonElm).attr('data-alt-label'));
-        $(buttonElm).attr('data-alt-label', tmpLabel);
-        if (currValue === '1') {
-            $(buttonElm).attr('data-status', '2');
-
-        } else {
+        if (!$(buttonElm).attr('data-status')) {
             $(buttonElm).attr('data-status', '1');
+        }
+        currValue = $(buttonElm).attr('data-status');
+
+        if (forceStatus) {
+            newValue = forceStatus;
+
+        } else if (currValue === '1') {
+            newValue = '2';
+
+        } else if (currValue === '2') {
+            newValue = '1';
+        }
+
+        if (currValue !== newValue) {
+            if ($(buttonElm).get(0).nodeName === 'INPUT') {
+                tmpLabel = $(buttonElm).attr('value');
+                $(buttonElm).attr('value', $(buttonElm).attr('data-alt-label'));
+                $(buttonElm).attr('data-alt-label', tmpLabel);
+
+            } else if ($(buttonElm).get(0).nodeName === 'BUTTON') {
+                tmpLabel = $(buttonElm).button('option', 'label');
+                $(buttonElm).button('option', 'label', $(buttonElm).attr('data-alt-label'));
+                $(buttonElm).attr('data-alt-label', tmpLabel);
+            }
+            $(buttonElm).attr('data-status', newValue);
         }
     };
 
@@ -309,29 +331,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
-     * @param jqParents where to search for input checkboxes
-     */
-    lib.autoUpdateSelectAll = function (jqParents) {
-        jqParents.each(function () {
-            var button = $(this).find('input[type="button"]'),
-                parent = this;
-            $(this).find('input[type="checkbox"]').on('click', function () {
-                var jqCheckboxes = $(parent).find('input[type="checkbox"]'),
-                    jqChecked = $(parent).find('input[type="checkbox"]:checked');
-
-                if (jqChecked.length === jqCheckboxes.length) {
-                    toggleSelectAllLabel(button);
-
-                } else if (jqChecked.length < jqCheckboxes.length) {
-                    if ($(button).data('status') === 2) {
-                        toggleSelectAllLabel(button);
-                    }
-                }
-            });
-        });
-    };
-
-    /**
      * Disables (if state === true) or enables (if state === false)
      * all empty/unused form fields. This is used to reduce number of passed parameters,
      * especially in case of parallel corpora.
@@ -447,9 +446,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         hideElem.loadHideElementStoreSimple();
 
-        // update checkboxes in subcorp form to make (select all)/(deselect all) updated according to user's selection
-        lib.autoUpdateSelectAll($('table.envelope'));
-
         $('select.qselector').bind('change', function (event) {
             hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
         });
@@ -554,7 +550,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         var jqElm = $(elm),
             jqContext = $(context),
             jqCheckboxes,
-            numChecked;
+            updateButtonStatus;
 
         if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
             jqCheckboxes = jqContext.find('input[type="checkbox"]');
@@ -563,14 +559,19 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             jqCheckboxes = jqContext;
         }
 
-        numChecked = jqCheckboxes.filter(':checked').length;
+        updateButtonStatus = function () {
+            var numChecked = jqCheckboxes.filter(':checked').length;
 
-        if (jqCheckboxes.length > numChecked) {
-            jqElm.attr('data-status', '1');
+            if (jqCheckboxes.length > numChecked) {
+                toggleSelectAllLabel(elm, '1');
 
-        } else {
-            jqElm.attr('data-status', '2');
-        }
+            } else {
+                toggleSelectAllLabel(elm, '2');
+            }
+        };
+
+        jqCheckboxes.on('click', updateButtonStatus);
+        updateButtonStatus();
 
         jqElm.bind('click', function (event) {
             if ($(event.target).attr('data-status') === '1') {
