@@ -544,7 +544,39 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             event.stopPropagation();
             return false;
         });
+    };
 
+    /**
+     * @param {HTMLElement|String|jQuery} elm
+     * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
+     */
+    lib.applySelectAll = function (elm, context) {
+        var jqElm = $(elm),
+            jqContext = $(context);
+
+        jqElm.bind('click', function (event) {
+            var jqCheckboxes;
+
+            if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
+                jqCheckboxes = jqContext.find('input[type="checkbox"]');
+
+            } else {
+                jqCheckboxes = jqContext;
+            }
+
+            if ($(event.target).attr('data-status') === '1') {
+                jqCheckboxes.each(function () {
+                    this.checked = true;
+                });
+                toggleSelectAllLabel(event.target);
+
+            } else if ($(event.target).attr('data-status') === '2') {
+                jqCheckboxes.each(function () {
+                    this.checked = false;
+                });
+                toggleSelectAllLabel(event.target);
+            }
+        });
     };
 
     /**
@@ -568,21 +600,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         });
 
         // 'Select all' buttons for structural attribute lists
-        $('input[class="select-all"]').bind('click', function (event) {
-            var parent = $(event.target).closest('table.envelope'),
-                jqCheckboxes = parent.find('input[type="checkbox"]');
-            if ($(event.target).attr('data-status') === '1') {
-                jqCheckboxes.each(function () {
-                    this.checked = true;
-                });
-                toggleSelectAllLabel(event.target);
-
-            } else if ($(event.target).attr('data-status') === '2') {
-                jqCheckboxes.each(function () {
-                    this.checked = false;
-                });
-                toggleSelectAllLabel(event.target);
-            }
+        $('input[class="select-all"]').each(function () {
+            lib.applySelectAll(this, $(this).closest('table.envelope'));
         });
 
         $('a#top-level-help-link').bind('click', function (event) {
