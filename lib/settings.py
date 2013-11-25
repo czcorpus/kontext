@@ -25,6 +25,8 @@ _conf = {}
 _user = None
 _corplist = None
 
+CONFIG_PATH = '../config.xml'
+
 
 def fq(q):
     """
@@ -108,31 +110,6 @@ def get_int(section, key):
     return int(get(section, key))
 
 
-def parse_corplist(root, path='/', data=[]):
-    """
-    """
-    if not hasattr(root, 'tag') or not root.tag == 'corplist':
-        return data
-    if root.attrib['title']:
-        path = "%s%s/" % (path, root.attrib['title'])
-    for item in root:
-        if not hasattr(item, 'tag'):
-            continue
-        elif item.tag == 'corplist':
-            parse_corplist(item, path, data)
-        elif item.tag == 'corpus':
-            web_url = item.attrib['web'] if 'web' in item.attrib else None
-            sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
-            num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
-            data.append({
-                'id': item.attrib['id'].lower(),
-                'path': path,
-                'web': web_url,
-                'sentence_struct': sentence_struct,
-                'num_tag_pos': num_tag_pos
-            })
-
-
 def parse_config(path):
     """
     """
@@ -154,11 +131,7 @@ def parse_config(path):
         _conf['cache'][item.tag] = item.text
     _conf['corpora'] = {}
     for item in xml.find('corpora'):
-        if item.tag == 'corplist':
-            data = []
-            parse_corplist(item, data=data)
-            _conf['corpora_hierarchy'] = data
-        elif item.tag == 'default_corpora':
+        if item.tag == 'default_corpora':
             data = []
             for item in item.findall('item'):
                 data.append(item.text)
@@ -167,14 +140,14 @@ def parse_config(path):
             _conf['corpora'][item.tag] = item.text
 
 
-def load(user, conf_path='../config.xml'):
+def load(user, conf_path=CONFIG_PATH):
     """
     Loads application's configuration from provided file
 
     Parameters
     ----------
     user : str
-    conf_path : str, optional (default is 'config.xml')
+    conf_path : str, optional (default is CONFIG_PATH)
       path to the configuration XML file
     """
     global _user
@@ -183,33 +156,6 @@ def load(user, conf_path='../config.xml'):
     parse_config(conf_path)
     os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
-
-
-def get_corpus_info(corp_name):
-    """
-    Returns information related to provided corpus name and contained within
-    the configuration XML file (i.e. not the data from the registry file). It is
-    able to handle names containing the '/' character.
-
-    Parameters
-    ----------
-    corp_name : str, name of the corpus
-
-    Returns
-    -------
-    a dictionary containing following keys:
-    path, web
-    or None if no such item is found
-    """
-    tmp = corp_name.split('/')
-    if len(tmp) > 1:
-        corp_name = tmp[1]
-    else:
-        corp_name = tmp[0]
-    for item in _conf['corpora_hierarchy']:
-        if item['id'].lower() == corp_name.lower():
-            return item
-    return None
 
 
 def get_default_corpus(corplist):
@@ -345,29 +291,33 @@ def has_configured_speech(corpus):
     """
     return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
 
+
 def get_speech_structure():
     """
     Returns name of the structure configured as a 'speech' delimiter
     """
     return get('corpora', 'speech_segment_struct_attr').split('.')[0]
 
+
 def create_speech_url(corpus_name, speech_id):
     """
     Builds a URL string to the provided speech_id and corpus_name
     """
     speech_url = get('corpora', 'speech_data_url')
-    if speech_url[-1] <> '/':
+    if speech_url[-1] != '/':
         speech_url += '/'
     if '@SERVER_NAME' in speech_url:
         speech_url = speech_url.replace('@SERVER_NAME', '%s')
-        speech_url = speech_url % os.getenv('SERVER_NAME')
+        speech_url %= os.getenv('SERVER_NAME')
     return "%s%s/%s" % (speech_url, corpus_name, speech_id)
+
 
 def get_uri_scheme_name():
     if 'HTTPS' in os.environ:
         return 'https'
     else:
         return 'http'
+
 
 def get_root_uri():
     """
@@ -384,8 +334,6 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         parse_config(sys.argv[1])
-        corplist = _conf['corpora_hierarchy']
-        del(_conf['corpora_hierarchy'])
         for block in _conf:
             print('\n[%s]' % block)
             for key in _conf[block]:
@@ -396,7 +344,5 @@ if __name__ == '__main__':
                         value = '******'
                     print('%s: %s' % (key, value))
         print('\n[corpora hierarchy]')
-        for item in corplist:
-            print('%s%s' % (item['path'], item['id']))
     else:
         print('No config XML specified')

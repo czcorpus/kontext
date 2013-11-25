@@ -11,7 +11,6 @@
 # GNU General Public License for more details.
 
 import os
-import re
 import sys
 from sys import stderr
 import time
@@ -29,6 +28,7 @@ from butils import *
 from CGIPublisher import JsonEncodedData, UserActionException
 import settings
 import taghelper
+from corptree import CorpTree
 
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
@@ -247,6 +247,7 @@ class ConcCGI(UserCGI):
         self._curr_corpus = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
+        self.corptree = CorpTree(file_path=settings.CONFIG_PATH, root_xpath='//corpora/corplist')
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -343,7 +344,7 @@ class ConcCGI(UserCGI):
         result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
         result['can_wseval'] = getattr(self, '_can_wseval', '')
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
-        result['Corplist'] = self.cm.corplist_with_names(settings.get('corpora_hierarchy'),
+        result['Corplist'] = self.cm.corplist_with_names(self.corptree.get(),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min(len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf('NAME')
@@ -351,7 +352,7 @@ class ConcCGI(UserCGI):
 
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
-        corp_conf_info = settings.get_corpus_info(thecorp.get_conf('NAME'))
+        corp_conf_info = self.corptree.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info['web']
         else:
@@ -399,7 +400,7 @@ class ConcCGI(UserCGI):
                                               ('lpos', self.lpos),
                                               ('usesubcorp', self.usesubcorp),
         ])
-        result['num_tag_pos'] = settings.get_corpus_info(self.corpname)['num_tag_pos']
+        result['num_tag_pos'] = self.corptree.get_corpus_info(self.corpname)['num_tag_pos']
         result['root_url'] = settings.get_root_uri()
         result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
         return result
@@ -456,6 +457,12 @@ class ConcCGI(UserCGI):
     sel_aligned = []
     maincorp = ''
     refs_up = 0
+
+    def process_method(self, methodname, pos_args, named_args, tpl_data=None):
+        if hasattr(self, 'corptree'):
+            lang = os.environ['LANG'] if 'LANG' in os.environ and os.environ['LANG'] else 'en'
+            self.corptree.setup(lang)
+        return UserCGI.process_method(self, methodname, pos_args, named_args, tpl_data=None)
 
     def simple_search(self):
         "simple search result -- all in one"
@@ -528,7 +535,7 @@ class ConcCGI(UserCGI):
             self.leftctx = 'a,%s' % os.path.basename(self.corpname)
             self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
-            sentence_struct = settings.get_corpus_info(self.corpname)['sentence_struct']
+            sentence_struct = self.corptree.get_corpus_info(self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
             self.rightctx = self.senrightctx_tpl % sentence_struct
             # GDEX changing and turning on and off
@@ -1671,7 +1678,7 @@ class ConcCGI(UserCGI):
         if hasattr(self, 'compatible_corpora'):
             refcm = corplib.CorpusManager(
                 [str(c) for c in self.compatible_corpora], self.subcpath)
-            out['CompatibleCorpora'] = refcm.corplist_with_names(settings.get('corpora_hierarchy'),
+            out['CompatibleCorpora'] = refcm.corplist_with_names(self.corptree.get(),
                                                                  settings.get_bool('corpora', 'use_db_whitelist'))
         else:
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
@@ -2577,7 +2584,7 @@ class ConcCGI(UserCGI):
     def ajax_get_corp_details(self):
         """
         """
-        corp_conf_info = settings.get_corpus_info(self._corp().corpname)
+        corp_conf_info = self.corptree.get_corpus_info(self._corp().corpname)
         ans = {
             'corpname': self._corp().get_conf('NAME'),
             'corpus': self._corp().get_info(),
@@ -2619,7 +2626,7 @@ class ConcCGI(UserCGI):
 
         try:
             tag_loader = taghelper.TagVariantLoader(self.corpname,
-                                                    settings.get_corpus_info(self.corpname)['num_tag_pos'])
+                                                    self.corptree.get_corpus_info(self.corpname)['num_tag_pos'])
         except IOError as e:
             raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
 
