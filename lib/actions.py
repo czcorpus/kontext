@@ -40,7 +40,7 @@ class Actions(ConcCGI):
 
     def user_password_form(self):
         if not settings.supports_password_change():
-            return {'error': _('This function is disabled.')}
+            return {'message': ('error', _('This function is disabled.'))}
         return {}
 
     user_password_form.access_level = 1
@@ -48,7 +48,7 @@ class Actions(ConcCGI):
 
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         if not settings.supports_password_change():
-            return {'error': _('This function is disabled.')}
+            return {'message': ('error', _('This function is disabled.'))}
         logged_in = settings.auth.validate_user(self._user, curr_passwd)
         if not logged_in:
             raise UserActionException(_('Unknown user'))
@@ -85,7 +85,7 @@ class Actions(ConcCGI):
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc')
-            ans['error'] = _('Incorrect username or password')
+            ans['message'] = ('error', _('Incorrect username or password'))
         return ans
     loginx.template = 'login.tmpl'
 
@@ -99,7 +99,7 @@ class Actions(ConcCGI):
         }
         self._user = None
         return {
-            'notification': _('You have been logged out')
+            'message': ('info', _('You have been logged out'))
         }
 
     logoutx.access_level = 1
@@ -176,7 +176,7 @@ class Actions(ConcCGI):
         if self.align and not self.maincorp:
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
-            out['notification'] = _('Empty result')
+            out['message'] = ('info', _('Empty result'))
             out['next_url'] = '%sfirst_form' % settings.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
@@ -283,7 +283,7 @@ class Actions(ConcCGI):
                 query_desc = plugins.query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
             else:
-                out['error'] = _('Cannot access recorded query.')
+                out['message'] = ('error', _('Cannot access recorded query.'))
                 query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
         conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname, cache_dir=self.cache_dir,
@@ -768,7 +768,7 @@ class Actions(ConcCGI):
         self.lpos = ''
         out = {'within': within}
         if within and not self.error:
-            out['error'] = _('Please specify positive filter to switch')
+            out['message'] = ('error', _('Please specify positive filter to switch'))
         # TODO dirty hack ...
         if self.align:
             main_corp = 'x-%s' % self.maincorp
@@ -902,7 +902,7 @@ class Actions(ConcCGI):
         }
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
-            return {'error': _('Empty list'), 'Blocks': [], 'paging': 0, 'quick_from_line': None, 'quick_to_line': None,
+            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0, 'quick_from_line': None, 'quick_to_line': None,
                     'FCrit': []}
         
         if len(result['Blocks']) == 1:  # paging
@@ -1620,7 +1620,7 @@ class Actions(ConcCGI):
             'to_line': to_line,
         }
         if to_line == 0:
-            ans['error'] = _('Empty result cannot be saved.')
+            ans['message'] = ('error', _('Empty result cannot be saved.'))
         return ans
     savewl_form.access_level = 1
 
@@ -1684,7 +1684,7 @@ class Actions(ConcCGI):
             subcorpattrs = corp.get_conf('SUBCORPATTRS') \
                 or corp.get_conf('FULLREF')
         if not subcorpattrs or subcorpattrs == '#':
-            return {'error': _('No meta-information to create a subcorpus.'),
+            return {'message': ('error', _('No meta-information to create a subcorpus.')),
                     'Normslist': [], 'Blocks': [],
             }
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
@@ -1793,7 +1793,7 @@ class Actions(ConcCGI):
 
         if 'error' in tt_sel:
             out.update({
-                'error': tt_sel['error'],
+                'message': ('error', tt_sel['error']),
                 'TextTypeSel': tt_sel,
                 'structs_and_attrs': structs_and_attrs,
                 'method': method,
@@ -2156,7 +2156,7 @@ class Actions(ConcCGI):
                                self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
-            ans['attrlist'] = [{'error': _('Failed to load')}]
+            ans['attrlist'] = [{'message': ('error', _('Failed to load'))}]
         ans['structlist'] = [{'name': item, 'size': format_int(self._corp().get_struct(item).size())} for item in
                              self._corp().get_conf('STRUCTLIST').split(',')]
 
@@ -2212,7 +2212,7 @@ class Actions(ConcCGI):
         # implicit result sent to template
         out = {'operation': operation, 'version': current_version,
                'recordPacking': recordPacking, 'result': [],
-               'error': False, 'numberOfRecords': numberOfRecords,
+               'numberOfRecords': numberOfRecords,
                'server_name': self.environ.get('SERVER_NAME', ''),
                'server_port': self.environ.get('SERVER_PORT', '80'),
                'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
@@ -2310,7 +2310,7 @@ class Actions(ConcCGI):
 
         # catch exception and amend diagnostics in template
         except Exception as e:
-            out['error'] = True
+            out['message'] = ('error', True)   # TODO 'True' is quite a meaningless message
             try:  # concrete error, catch message from lower levels
                 out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
             except:  # general error
@@ -2335,7 +2335,7 @@ class Actions(ConcCGI):
                 'min_occur': min_occur
             }
         else:
-            out = {'error': _('You don\'t have enough privileges to see this page.')}
+            out = {'message': ('error', _('You don\'t have enough privileges to see this page.'))}
         return out
     stats.template = 'stats.tmpl'
 

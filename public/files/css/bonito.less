@@ -114,8 +114,7 @@ section h2 {
   width: 15em;
 }
 
-#error,
-#notification {
+.message {
   background-color: #FEFEFE;
   border: solid 1px @light-text;
   border-radius: @border-radius-default;
@@ -127,14 +126,13 @@ section h2 {
   padding: 1em 5px 1em 1em;
 }
 
-#notification {
+.message.info {
   background-color: transparent;
   border-color: #000;
   color: #000;
 }
 
-#error a.close-icon,
-#notification a.close-icon {
+.message a.close-icon {
   display: inline-block;
   vertical-align: middle;
   margin-left: 10px;
@@ -152,29 +150,16 @@ a.close-icon img {
   top: -10px;
 }
 
-#error img.icon, #notification img.icon {
+.message img.icon {
   display: inline-block;
   vertical-align: middle;
 }
 
-#error span, #notification span {
+.message span {
   display: inline-block;
   vertical-align: middle;
   margin: 0 1em 0 1em;
   max-width: 700px;
-}
-
-#error.system-error {
-  display: block;
-  margin: 30px auto;
-  width: 50%;
-  overflow: hidden;
-}
-
-#error.system-error p {
-  display: inline;
-  padding: 0 10px;
-  width: 70%;
 }
 
 footer {
@@ -217,10 +202,6 @@ a#logo-wrapper {
 
 #logo-wrapper img {
   display: inline-block;
-}
-
-#notification span {
-  font-weight: 400;
 }
 
 #add-searched-lang-widget {
@@ -476,16 +457,6 @@ ul.submenu li.separ {
 
 #topbar > * {
   vertical-align: top;
-}
-
-#error-topbar {
-  text-align: center;
-  padding-top: 20px;
-  padding-bottom: 50px;
-}
-
-#error-topbar #logo-wrapper img {
-  display: inline;
 }
 
 #topbar-navigation li {
@@ -1087,21 +1058,6 @@ table.results-range-and-paging th {
   padding-right: 5px;
   display: inline-block;
   vertical-align: middle;
-}
-
-#error-page #topbar {
-  text-align: center;
-  margin-bottom: 80px;
-}
-
-#error-page p.menu {
-  margin-top: 50px;
-  text-align: center;
-  font-size: 15pt;
-}
-
-#error-page #logo-wrapper {
-  float: none;
 }
 
 #common-bar {

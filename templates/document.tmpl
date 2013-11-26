@@ -323,24 +323,16 @@ $_ca_topbar
 
 #filter WebSafe
 <div id="content">
-    #if $error
-    <div id="error" class="message" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
-        <img class="icon" alt="Error" src="../files/img/error-icon.png">
-        <span>$error</span>
+    #if $message
+    <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
+        <img class="icon" alt="$message[0]" src="../files/img/#if $message[0] == 'error'#error-icon.png#else#info-icon.png#end if#">
+        <span>$message[1]</span>
         <a class="close-icon">
             <img src="../files/img/close-icon.png" />
         </a>
     </div>
     #end if
-    #if $varExists('notification') and $notification
-    <div id="notification" class="message" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
-        <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
-        <span>$notification</span>
-        <a class="close-icon">
-            <img src="../files/img/close-icon.png" />
-        </a>
-    </div>
-    #end if
+
     #filter None
     #block concordance
     #if $show_conc_bar

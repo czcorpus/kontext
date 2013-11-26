@@ -262,56 +262,43 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
-     * Displays 'standard' error message box
-     *
-     * @param {string} message a message to be displayed
-     * @param {function} [callback] a function to be called after the message is displayed; a single parameter is passed
-     * to the function - a DOM element of the error box
+     * @param {String} type one of 'info', 'warning', 'error'
+     * @param {String} message text of the message
+     * @param {Function} [callback] do something after message is rendered
      */
-    lib.showErrorMessage = function (message, callback) {
-        var html = '<div id="error">'
-            + '<img class="icon" alt="Error" src="../files/img/error-icon.png">'
-            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
-            + '</div>';
+    lib.showMessage = function (type, message, callback) {
+        var innerHTML,
+            parentElem,
+            timeout,
+            typeIconMap;
 
-        $('#content #error').remove();
-        $('#content').prepend(html);
-        $('#error a.close-icon').bind('click', function () {
-            $('#error').remove();
-        });
-        if (typeof callback === 'function') {
-            callback($('#error').get(0));
-        }
-    };
+        typeIconMap = {
+            info : '../files/img/info-icon.png',
+            warning : '../files/img/warning-icon.png',
+            error : '../files/img/error-icon.png'
+        };
 
-    /**
-     *
-     * @param message
-     * @param callback
-     */
-    lib.showMessage = function (message, callback) {
-        var html = '<div id="notification">'
-                + '<img class="icon" alt="Notification" src="../files/img/info-icon.png">'
-                + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
-                + '</div>',
-            timeout;
+        innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[type] + '">'
+                  + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
 
-        $('#content #notification').remove();
-        $('#content').prepend(html);
+        parentElem = win.document.createElement('div');
+        $(parentElem).addClass('message').addClass(type);
+        $(parentElem).html(innerHTML);
+        $('#content').prepend(parentElem);
 
-        $('#notification a.close-icon').bind('click', function () {
-            $('#notification').hide('slide', {}, 500);
+        $(parentElem).find('a.close-icon').bind('click', function () {
+            $(parentElem).hide('slide', {}, 500);
         });
 
         if (lib.conf.messageAutoHideInterval) {
             timeout = win.setTimeout(function () {
-                $('#notification').hide('slide', {}, 500);
+                $(parentElem).hide('slide', {}, 500);
                 win.clearTimeout(timeout);
             }, lib.conf.messageAutoHideInterval);
         }
 
         if (typeof callback === 'function') {
-            callback($('#error').get(0));
+            callback(parentElem);
         }
     };
 
@@ -620,21 +607,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         });
 
         // Click which removes the 'error box'
-        $('#error a.close-icon').bind('click', function (event) {
-            var nextUrl = $(event.target).closest('.message').data('next-url');
+        $('.message a.close-icon').bind('click', function (event) {
+            var nextUrl,
+                parentElm;
 
-            $('#error').hide('slide', {}, 500, function () {
-                if (nextUrl) {
-                    win.location = nextUrl;
-                }
-            });
-        });
+            parentElm = $(event.target).closest('.message').get(0);
+            nextUrl = $(parentElm).data('next-url');
 
-        // Click which removes the 'notification box'
-        $('#notification a.close-icon').bind('click', function (event) {
-            var nextUrl = $(event.target).closest('.message').data('next-url');
-
-            $('#notification').hide('slide', {}, 500, function () {
+            $(parentElm).hide('slide', {}, 500, function () {
                 if (nextUrl) {
                     win.location = nextUrl;
                 }
@@ -889,15 +869,16 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         }
     };
 
-    lib.updateNotifications = function () {
-        var timeout;
+    lib.timeoutMessages = function () {
+        var timeout,
+            jqMessage = $('.message');
 
-        if ($('#notification').length > 0 && lib.conf.messageAutoHideInterval) {
+        if (jqMessage.length > 0 && lib.conf.messageAutoHideInterval) {
             timeout = win.setTimeout(function () {
-                $('#notification').hide('slide', {}, 500);
+                jqMessage.hide('slide', {}, 500);
                 win.clearTimeout(timeout);
-                if ($('#notification').data('next-url')) {
-                    win.location = $('#notification').data('next-url');
+                if (jqMessage.data('next-url')) {
+                    win.location = jqMessage.data('next-url');
                 }
             }, lib.conf.messageAutoHideInterval);
         }
@@ -972,7 +953,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.bindStaticElements();
         lib.queryOverview();
         lib.mainMenu.init();
-        lib.updateNotifications();
+        lib.timeoutMessages();
         lib.mouseOverImages();
 
         $('button').button();
