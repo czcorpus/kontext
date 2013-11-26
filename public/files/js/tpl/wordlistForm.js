@@ -113,7 +113,7 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindStaticElements = function () {
         popupbox.bind($('#show-help-format-link'), layoutModel.conf.messages.whiteLists, {});
         $('#select-output-type-simple').on('click', function () {
             selectOutputType('simple');
@@ -132,7 +132,7 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        lib.bindClicks();
+        lib.bindStaticElements();
         treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'), {clickableText: true},
             updForm);
     };

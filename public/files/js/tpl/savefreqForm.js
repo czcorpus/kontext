@@ -52,7 +52,7 @@ define(['jquery', 'tpl/document'], function ($, layoutModel) {
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindStaticElements = function () {
         var jqForm = $('form[action="savefreq"]');
 
         jqForm.find('input[name="saveformat"]').on('click', function (event) {
@@ -66,7 +66,7 @@ define(['jquery', 'tpl/document'], function ($, layoutModel) {
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        lib.bindClicks();
+        lib.bindStaticElements();
 
         // obtain current state of the form and update
         (function () {

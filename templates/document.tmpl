@@ -88,7 +88,7 @@ define('win', [], function () { return window; });
 
 var conf = {};
 conf.menuAutoHideInterval = 1500;
-conf.messageAutoHideInterval = 5000;
+conf.messageAutoHideInterval = 9000;
 conf.rootURL = "$root_url";
 conf.rootPath = "$root_path";
 conf.corpname = "$corpname";
@@ -324,25 +324,21 @@ $_ca_topbar
 #filter WebSafe
 <div id="content">
     #if $error
-    <div id="error">
-        <div class="frame">
-            <img class="icon" alt="Error" src="../files/img/error-icon.png">
-            <span>$error</span>
-            <a class="close-icon">
-                <img src="../files/img/close-icon.png" />
-            </a>
-        </div>
+    <div id="error" class="message" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
+        <img class="icon" alt="Error" src="../files/img/error-icon.png">
+        <span>$error</span>
+        <a class="close-icon">
+            <img src="../files/img/close-icon.png" />
+        </a>
     </div>
     #end if
     #if $varExists('notification') and $notification
-    <div id="notification">
-        <div class="frame">
-            <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
-            <span>$notification</span>
-            <a class="close-icon">
-                <img src="../files/img/close-icon.png" />
-            </a>
-        </div>
+    <div id="notification" class="message" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
+        <img class="icon" src="../files/img/info-icon.png" alt="Notification" />
+        <span>$notification</span>
+        <a class="close-icon">
+            <img src="../files/img/close-icon.png" />
+        </a>
     </div>
     #end if
     #filter None

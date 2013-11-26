@@ -184,7 +184,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindStaticElements = function () {
         $('a.form-extension-switch').on('click', function (event) {
             var jqTriggerLink = $(event.target),
                 jqFieldset = jqTriggerLink.closest('fieldset');
@@ -322,7 +322,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.misc();
-        lib.bindClicks();
+        lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
     };

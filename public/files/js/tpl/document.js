@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
-        'simplemodal', 'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
+    'simplemodal', 'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -149,7 +149,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
          * @param attribListData
          * @param jqAttribList
          */
-        appendAttribList : function (attribListData, jqAttribList) {
+        appendAttribList: function (attribListData, jqAttribList) {
             $.each(attribListData, function (i, item) {
                 var newRow;
 
@@ -223,14 +223,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
          * @param {TooltipBox} tooltipBox
          * @param {Function} doneCallback called when all is loaded and set
          */
-        createCorpusInfoBox : function (tooltipBox, doneCallback) {
+        createCorpusInfoBox: function (tooltipBox, doneCallback) {
             var rootElm = tooltipBox.getRootElement();
 
             lib.ajax({
-                url : 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
-                dataType : 'json',
-                method : 'get',
-                success : function (data) {
+                url: 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
+                dataType: 'json',
+                method: 'get',
+                success: function (data) {
                     var jqInfoBox = $(rootElm),
                         jqAttribList,
                         jqStructList;
@@ -253,7 +253,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                     lib.corpusInfoBox.appendStructList(data.structlist, jqStructList);
                     doneCallback();
                 },
-                error : function () {
+                error: function () {
                     tooltipBox.close();
                     lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
                 }
@@ -269,12 +269,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      * to the function - a DOM element of the error box
      */
     lib.showErrorMessage = function (message, callback) {
-        var html = '<div id="error"><div class="frame">'
+        var html = '<div id="error">'
             + '<img class="icon" alt="Error" src="../files/img/error-icon.png">'
             + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
-            + '</div></div>';
+            + '</div>';
 
-        $('#content #error').hide('slide', {}, 500);
+        $('#content #error').remove();
         $('#content').prepend(html);
         $('#error a.close-icon').bind('click', function () {
             $('#error').remove();
@@ -290,12 +290,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      * @param callback
      */
     lib.showMessage = function (message, callback) {
-        var html = '<div id="notification"><div class="frame">'
+        var html = '<div id="notification">'
                 + '<img class="icon" alt="Notification" src="../files/img/info-icon.png">'
                 + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>'
-                + '</div></div>',
+                + '</div>',
             timeout;
-
 
         $('#content #notification').remove();
         $('#content').prepend(html);
@@ -422,19 +421,19 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 corpName,
                 lib.conf.numTagPos,
                 {
-                    inputElement : $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
-                    widgetElement : 'tag-widget',
-                    modalWindowElement : 'tag-builder-modal',
-                    insertTagButtonElement : 'insert-tag-button',
-                    tagDisplayElement : 'tag-display',
-                    resetButtonElement : 'reset-tag-button'
+                    inputElement: $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
+                    widgetElement: 'tag-widget',
+                    modalWindowElement: 'tag-builder-modal',
+                    insertTagButtonElement: 'insert-tag-button',
+                    tagDisplayElement: 'tag-display',
+                    resetButtonElement: 'reset-tag-button'
                 },
                 {
-                    width : '556px',
-                    useNamedCheckboxes : false,
-                    allowMultipleOpenedBoxes : false,
-                    padding : 0,
-                    margin : 0
+                    width: '556px',
+                    useNamedCheckboxes: false,
+                    allowMultipleOpenedBoxes: false,
+                    padding: 0,
+                    margin: 0
                 },
                 function (message) {
                     lib.showErrorMessage(message || lib.conf.messages.failed_to_contact_server);
@@ -511,17 +510,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             var reqUrl = $(event.target).data('json-href');
 
             $.ajax(reqUrl, {
-                dataType : 'json',
-                success : function (data) {
+                dataType: 'json',
+                success: function (data) {
                     var box,
                         leftPos;
 
                     if (data.Desc) {
                         box = popupbox.open(renderOverviewFunc(data), null, {
-                            type : 'plain',
-                            domId : 'query-overview',
-                            calculatePosition : false,
-                            timeout : null
+                            type: 'plain',
+                            domId: 'query-overview',
+                            calculatePosition: false,
+                            timeout: null
                         });
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                         box.setCss('left', leftPos + 'px');
@@ -532,7 +531,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
                     }
                 },
-                error : function () {
+                error: function () {
                     lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
                 }
             });
@@ -592,18 +591,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindStaticElements = function () {
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
         popupbox.bind('#corpus-desc-link', function (box, finalize) {
             lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
-        }, {width : 'auto'});
+        }, {width: 'auto'});
 
         $('#corpus-citation-link a').on('click', function () {
             $('#corpus-citation-box').modal({
                 minHeight: 400,
-                onClose : function () {
+                onClose: function () {
                     $.modal.close();
                 }
             });
@@ -620,20 +619,32 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             return false;
         });
 
-        // Removes the 'error box'
-        $('#error a.close-icon').bind('click', function () {
-            $('#error').hide('slide', {}, 500);
+        // Click which removes the 'error box'
+        $('#error a.close-icon').bind('click', function (event) {
+            var nextUrl = $(event.target).closest('.message').data('next-url');
+
+            $('#error').hide('slide', {}, 500, function () {
+                if (nextUrl) {
+                    win.location = nextUrl;
+                }
+            });
         });
 
-        // Removes the 'notification box'
-        $('#notification a.close-icon').bind('click', function () {
-            $('#notification').hide('slide', {}, 500);
+        // Click which removes the 'notification box'
+        $('#notification a.close-icon').bind('click', function (event) {
+            var nextUrl = $(event.target).closest('.message').data('next-url');
+
+            $('#notification').hide('slide', {}, 500, function () {
+                if (nextUrl) {
+                    win.location = nextUrl;
+                }
+            });
         });
 
         $('img.plus-minus').each(function () {
             $(this).bind('click', function () {
                 hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'),
-                        lib.userSettings);
+                    lib.userSettings);
             });
         });
 
@@ -683,15 +694,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             };
 
             $('#within-builder-modal').modal({
-                onShow : function () {
+                onShow: function () {
                     $('#within-builder-modal .selection-container')
                         .append('<img src="../files/img/ajax-loader.gif" alt="loading" />');
                     $.ajax({
-                        url : 'ajax_get_structs_details?corpname=' + corpusName,
-                        data : {},
-                        method : 'get',
-                        dataType : 'json',
-                        success : function (data) {
+                        url: 'ajax_get_structs_details?corpname=' + corpusName,
+                        data: {},
+                        method: 'get',
+                        dataType: 'json',
+                        success: function (data) {
                             var prop,
                                 html,
                                 i;
@@ -715,14 +726,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                                 $(win.document).on('keypress', buttonEnterAction);
                             }
                         },
-                        error : function () {
+                        error: function () {
                             $.modal.close();
                             lib.showErrorMessage(translatMessages.failed_to_contact_server);
                         }
                     });
                 },
 
-                onClose : function () {
+                onClose: function () {
                     $(win.document).off('keypress', buttonEnterAction);
                     $.modal.close();
                     jqInputElement.focus();
@@ -742,18 +753,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         /**
          * Wrapping element for whole main-menu
          */
-        jqMenuBar : $('#menu-bar'),
+        jqMenuBar: $('#menu-bar'),
 
         /**
          * Wrapper where sub-menu is rendered
          */
-        jqMenuLevel2 : $('#menu-level-2'),
+        jqMenuLevel2: $('#menu-level-2'),
 
         /**
          *
          * @returns {*}
          */
-        getActiveSubmenuId : function () {
+        getActiveSubmenuId: function () {
             return this.jqMenuLevel2.attr('data-current-menu');
         },
 
@@ -761,14 +772,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
          *
          * @param {string} id
          */
-        setActiveSubmenuId : function (id) {
+        setActiveSubmenuId: function (id) {
             this.jqMenuLevel2.attr('data-current-menu', id);
         },
 
         /**
          * @param {string} [menuId]
          */
-        closeSubmenu : function (menuId) {
+        closeSubmenu: function (menuId) {
             var jqPrevMenuUl = this.jqMenuLevel2.find('ul');
 
             if (!menuId) {
@@ -787,7 +798,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
          * @param li
          * @returns {*}
          */
-        getHiddenSubmenu : function (li) {
+        getHiddenSubmenu: function (li) {
             return $(li).find('ul');
         },
 
@@ -823,7 +834,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         /**
          * Initializes main menu logic
          */
-        init : function () {
+        init: function () {
             var self = this;
 
             $('#menu-level-1 li.disabled a').each(function () {
@@ -885,6 +896,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             timeout = win.setTimeout(function () {
                 $('#notification').hide('slide', {}, 500);
                 win.clearTimeout(timeout);
+                if ($('#notification').data('next-url')) {
+                    win.location = $('#notification').data('next-url');
+                }
             }, lib.conf.messageAutoHideInterval);
         }
     };
@@ -934,28 +948,28 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         lib.conf = conf;
         lib.userSettings = {
-            data : settingsObj,
+            data: settingsObj,
 
-            cookieParams : {
+            cookieParams: {
                 path: lib.conf.rootPath
             },
 
-            get : function (key) {
+            get: function (key) {
                 return lib.userSettings.data[key];
             },
 
-            set : function (key, value) {
+            set: function (key, value) {
                 lib.userSettings.data[key] = value;
                 $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
             },
 
-            del : function (key) {
+            del: function (key) {
                 delete (lib.userSettings.data[key]);
                 $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
             }
         };
         lib.misc();
-        lib.bindClicks();
+        lib.bindStaticElements();
         lib.queryOverview();
         lib.mainMenu.init();
         lib.updateNotifications();
