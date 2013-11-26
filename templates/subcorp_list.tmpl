@@ -47,7 +47,7 @@ require(['tpl/subcorpList', 'domReady!'], function(pageSelf, domReady) {
         #set $counter = 1
         #for $item in $subcorp_list
         <tr #if $counter % 2 == 1#class="even"#end if#>
-            <td>$item.n</td>
+            <td><a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">$item.n</a></td>
             <td class="num">#filter $IntegerFormatter# $item.size #end filter#</td>
             <td>$item.created</td>
             <td>
