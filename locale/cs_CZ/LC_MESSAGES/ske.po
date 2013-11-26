@@ -1909,8 +1909,8 @@ msgid "Last"
 msgstr "poslední"
 
 #: cmpltmpl/view.py:846
-msgid "Concordance is sorted. Jump to"
-msgstr "Konkordance je přetříděna. Přejít na"
+msgid "Jump to"
+msgstr "Přejít na"
 
 #: cmpltmpl/view.py:963
 msgid "using first"
