@@ -427,7 +427,7 @@ $corp_full_name</b><br>
 #if $SubcorpList
 <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
     #for $subc in $SubcorpList
-    <option value="$subc.v">$subc.n</option>
+    <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
     #end for
 </select>
 #end if ## SubcorpList
