@@ -293,16 +293,18 @@ require(['tpl/view', 'domReady!'], function(pageSelf, domReady) {
             #end if
 
             #if $Sort_idx
-                &nbsp; &nbsp; $_("Concordance is sorted. Jump to"):
-                <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-                #for $idx in $Sort_idx
-                    <option value="$idx.page"
-                    #if $idx.page == $fromp
-                        selected="selected"
-                    #end if
-                    >$idx.label</option>
-                #end for
-                </select>
+                <div class="jump-to">
+                    $_("Jump to"):
+                    <select onchange="this.form.fromp.value = this.value; this.form.submit();">
+                    #for $idx in $Sort_idx
+                        <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
+                        #filter $Shortener
+                        ${idx.label, length=20}
+                        #end filter
+                        </option>
+                    #end for
+                    </select>
+                </div>
             #end if
             </form>
             </div>
