@@ -53,3 +53,13 @@ class HtmlEscape(Filter):
         val = val.replace('"', '&quot;')
         val = val.replace("'", '&apos;')
         return val
+
+
+class Shortener(Filter):
+    """
+    """
+
+    def filter(self, val, **kw):
+        length = kw['length'] if 'length' in kw else 8
+        suff = kw['suffix'] if 'suffix' in kw else '...'
+        return '%s%s' % (val[:length], suff)
