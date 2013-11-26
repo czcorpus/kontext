@@ -489,21 +489,22 @@ class CGIPublisher(object):
 
         except AuthException as e:
             self._headers[''] = 'Status: 401 Unauthorized'
-            named_args['error'] = u'%s' % e
+            named_args['message'] = ('error', u'%s' % e)
             named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as e:
-            named_args['error'] = u'%s' % e
+            named_args['message'] = ('error', u'%s' % e)
             named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except Exception as e:
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             if settings.is_debug_mode():
-                named_args['error'] = u'%s' % e
+                named_args['message'] = ('error', u'%s' % e)
             else:
-                named_args['error'] = _('Failed to process your request. Please try again later or contact system support.')
+                named_args['message'] = ('error',
+                                         _('Failed to process your request. Please try again later or contact system support.'))
             named_args['next_url'] = '%sfirst_form' % settings.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
@@ -563,7 +564,7 @@ class CGIPublisher(object):
                 return (methodname, None,
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname + '_form'):
-                tpl_data['error'] = e.message if type(e.message) == unicode else e.message.decode('utf-8')
+                tpl_data['message'] = ('error', e.message if type(e.message) == unicode else e.message.decode('utf-8'))
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
                    raise e
