@@ -61,5 +61,8 @@ class Shortener(Filter):
 
     def filter(self, val, **kw):
         length = kw['length'] if 'length' in kw else 8
-        suff = kw['suffix'] if 'suffix' in kw else '...'
+        if len(val) > length:
+            suff = kw['suffix'] if 'suffix' in kw else '...'
+        else:
+            suff = ''
         return '%s%s' % (val[:length], suff)
