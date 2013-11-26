@@ -354,9 +354,10 @@ $_ca_topbar
                 <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
                 <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
                 #end if
-                #if $result_shuffled
-                <span class="separ">|</span> <span class="notice-shuffled">$_('Result is shuffled')</span>
-                #end if
+                <span class="separ">|</span>
+                <span class="notice-shuffled">
+                #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
+                </span>
             </div>
         </div>
         <div id="conclines-wrapper">

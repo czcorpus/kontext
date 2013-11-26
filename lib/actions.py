@@ -164,7 +164,8 @@ class Actions(ConcCGI):
 
         out['Sort_idx'] = self.call_function(conclib.get_sort_idx, (conc,),
                                              enc=self.self_encoding())
-        out['result_shuffled'] = True if 'f' in self.q else False
+        out['result_shuffled'] = not conclib.conc_is_sorted(self.q)
+
         out.update(self.get_conc_sizes(conc))
         if self.viewmode == 'sen':
             conclib.add_block_items(out['Lines'], block_size=1)
