@@ -114,8 +114,8 @@ section h2 {
   width: 15em;
 }
 
-#error .frame,
-#notification .frame {
+#error,
+#notification {
   background-color: #FEFEFE;
   border: solid 1px @light-text;
   border-radius: @border-radius-default;
@@ -127,10 +127,22 @@ section h2 {
   padding: 1em 5px 1em 1em;
 }
 
+#notification {
+  background-color: transparent;
+  border-color: #000;
+  color: #000;
+}
+
 #error a.close-icon,
 #notification a.close-icon {
-  float: right;
+  display: inline-block;
+  vertical-align: middle;
   margin-left: 10px;
+}
+
+a.close-icon img {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 #contextel a.close-icon {
@@ -140,24 +152,26 @@ section h2 {
   top: -10px;
 }
 
-#error img, #notification img {
-  float: left;
+#error img.icon, #notification img.icon {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 #error span, #notification span {
-  float: left;
-  margin: 0 2em 0 1em;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 1em 0 1em;
   max-width: 700px;
 }
 
-#error.system-error .frame {
+#error.system-error {
   display: block;
   margin: 30px auto;
   width: 50%;
   overflow: hidden;
 }
 
-#error.system-error .frame p {
+#error.system-error p {
   display: inline;
   padding: 0 10px;
   width: 70%;
@@ -203,12 +217,6 @@ a#logo-wrapper {
 
 #logo-wrapper img {
   display: inline-block;
-}
-
-#notification .frame {
-  background-color: #FF9;
-  border-color: #000;
-  color: #000;
 }
 
 #notification span {

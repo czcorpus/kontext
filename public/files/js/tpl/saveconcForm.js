@@ -51,7 +51,7 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, layoutModel, hideEle
     /**
      *
      */
-    lib.bindClicks = function () {
+    lib.bindStaticElements = function () {
         var jqForm = $('form[action="saveconc"]');
 
         jqForm.find('input[name="saveformat"]').on('click', function (event) {
@@ -82,7 +82,7 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, layoutModel, hideEle
         }());
 
 
-        lib.bindClicks();
+        lib.bindStaticElements();
     };
 
 

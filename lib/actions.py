@@ -177,6 +177,7 @@ class Actions(ConcCGI):
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
             out['notification'] = _('Empty result')
+            out['next_url'] = '%sfirst_form' % settings.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
             % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
