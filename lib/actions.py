@@ -1000,6 +1000,7 @@ class Actions(ConcCGI):
         """
         Displays a form to set-up the 'save frequencies' operation
         """
+        self.disabled_menu_items = ('menu-save', )
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         is_multiblock = len(result['Blocks']) > 1
         if not to_line:
@@ -1611,8 +1612,6 @@ class Actions(ConcCGI):
                usesubcorp='', ref_corpname='', ref_usesubcorp='',
                saveformat='text'):
         self.disabled_menu_items = ('menu-save', )
-        wl = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
-                             ref_corpname, ref_usesubcorp, wlpage=self.wlpage)
         if to_line == '':
             to_line = 1000
 
@@ -1992,6 +1991,7 @@ class Actions(ConcCGI):
     maxsavelines = 1000
 
     def saveconc_form(self, from_line=1, to_line=''):
+        self.disabled_menu_items = ('menu-save', )
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         self.leftctx = self.kwicleftctx
         self.rightctx = self.kwicrightctx
