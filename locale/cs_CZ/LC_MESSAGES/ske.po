@@ -1180,6 +1180,9 @@ msgstr "ARF"
 msgid "Result is shuffled"
 msgstr "Výsledek je promíchán"
 
+msgid "Result is sorted"
+msgstr "Výsledek je setříděn"
+
 #: cmpltmpl/document.py:315
 msgid "click to show current concordance"
 msgstr "klikněte pro zobrazení aktuální konkordance"

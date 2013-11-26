@@ -1331,6 +1331,18 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
     return conc
 
 
+def conc_is_sorted(q):
+    """
+    """
+    ans = True
+    for item in q:
+        if item[0] in ('r', 'f'):
+            ans = False
+        elif item[0] in ('s', ):
+            ans = True
+    return ans
+
+
 def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate=True):
     if translate:
         _t = lambda s: _(s)
