@@ -1,3 +1,16 @@
+version 0.3.6
+-------------------------------------------------------------------------------
+  * fixed #132
+  * some of audio segment issues solved
+  * HTTP Content-Range issues - some issues solved but there are still some
+    OS X + Safari related problems
+  * fixed #163
+  * added Slovak translation
+  * fixed #164
+
+version 0.3.5
+-------------------------------------------------------------------------------
+
 version 0.2
 -------------------------------------------------------------------------------
 
