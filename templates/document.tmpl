@@ -36,6 +36,17 @@ $text
 #end filter
 
 #if $debug
+<style type="text/css">
+._prepare-state #menu-bar {display: none;}
+</style>
+<script type="text/javascript">
+(function (d) {
+    var html = d.getElementsByTagName('html');
+    if (html.length === 1) {
+        html[0].setAttribute('class', '_prepare-state');
+    }
+}(document));
+</script>
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}bonito.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />

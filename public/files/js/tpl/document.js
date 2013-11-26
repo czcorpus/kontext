@@ -959,6 +959,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         $('button').button();
         $('input[type="submit"]').button();
         $('input[type="button"]').button();
+
+        $('html').removeClass('_prepare-state');
     };
 
     return lib;
