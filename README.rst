@@ -1,6 +1,6 @@
-========================
-Bonito 2-UCNK
-========================
+=======
+KonText
+=======
 
 Introduction
 ============
@@ -16,12 +16,18 @@ Features
   * miscellaneous bug fixes
   * code-level changes
 
-    * removed legacy code required by Python 2.5 and older
-    * modularized JavaScript code based on the RequireJS library
+    * partially refactored Python code
+    * completely refactored/rewritten JavaScript code (based on the RequireJS library)
     * improved logging and error processing
 
-  * enhanced user interface
+  * general changes
+    - ability to control user access via custom authentication services
+    - support for spoken corpora
+    - simplified installation and configuration
 
+  * enhanced user interface
+    - improved user interface and design
+    - access to previous queries
     - hierarchical corpora organization
     - extended corpora information (size, structures, attributes)
     - concordance results contain also the Average Reduced Frequency (see for example http://lrec.elra.info/proceedings/lrec2006/pdf/11_pdf.pdf for the explanation)
@@ -30,21 +36,17 @@ Features
     - interactive "tag" and "within condition" building widget in CQL query mode
     - result shuffling can be pre-set
 
-  * support for spoken corpora
-  * simplified installation and configuration
-
 
 Requirements
 ============
 
-  * Apache 2 web server
+  * Apache 2.x web server
 
     - CGI
     - mod_rewrite (suitable but not necessary)
 
   * Python *2.6* or *2.7*
 
-    - lxml
-    - pymox (if you want to run the unit tests)
+    - lxml support
 
-  * Manatee corpus manager: from version *open-2.68* to *open-2.73.2*
+  * `Manatee corpus search engine <http://nlp.fi.muni.cz/trac/noske>`_, version *2.83* and up
