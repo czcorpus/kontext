@@ -1,6 +1,6 @@
 <bonito>
     <global>
-        <manatee_path>x</manatee_path>
+        <manatee_path>/path/to/some/non-default/manatee</manatee_path>
         <log_path>/var/log/bonito/application.log</log_path>
         <debug>true</debug>
         <max_attr_list_size>30</max_attr_list_size>
@@ -27,14 +27,14 @@
             <username extension-by="ucnk">bonito</username>
         </db>
         <auth>
-            <module>remote_auth</module>
+            <module>acme_remote_auth</module>
             <auth_cookie_name>ucnksessionid</auth_cookie_name>
             <login_url>http://korpus.test/login?continue=%s</login_url>
             <logout_url>http://korpus.test/logout?continue=%s</logout_url>
             <central_auth_cookie_name extension-by="ucnk">cnc_toolbar_sid</central_auth_cookie_name>
         </auth>
         <appbar>
-            <module>ucnk_appbar</module>
+            <module>acme_appbar</module>
             <server>korpus.test</server>
             <path>/shared-bar?current=kontext&amp;id=%s&amp;continue=%s</path>
             <port>80</port>
@@ -42,15 +42,15 @@
             <css_url_ie></css_url_ie>
         </appbar>
         <query_storage>
-            <module>query_storage</module>
+            <module>acme_query_storage</module>
             <db_path extension-by="ucnk">/var/www/korpus/db/korpus.db</db_path>
             <num_kept_records extension-by="ucnk">5</num_kept_records>
         </query_storage>
         <settings_storage>
-            <module>settings_storage</module>
+            <module>acme_settings_storage</module>
         </settings_storage>
         <sessions>
-            <module>sessions</module>
+            <module>acme_sessions</module>
             <ttl>14400</ttl>
             <cleanup_probability>0.9</cleanup_probability>
             <db_path extension-by="ucnk">/var/www/korpus/db/sessions.db</db_path>
