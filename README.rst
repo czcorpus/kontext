@@ -21,11 +21,13 @@ Features
     * improved logging and error processing
 
   * general changes
+
     - ability to control user access via custom authentication services
     - support for spoken corpora
     - simplified installation and configuration
 
   * enhanced user interface
+
     - improved user interface and design
     - access to previous queries
     - hierarchical corpora organization

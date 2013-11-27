@@ -127,6 +127,7 @@ Debugging mode
 This can be set in *config.xml*'s */kontext/global/debug* by putting *true*.
 
   * file post-processing:
+
     * \*.tmpl files must be compiled by Cheetah templating compiler
   * LESS dynamic stylesheets are translated to CSS on client-side
   * server-side errors are displayed in a raw form (i.e. page layout disappears and Python stack-trace is shown with some
@@ -139,6 +140,7 @@ Production mode
 This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false*.
 
   * file post-processing:
+  
     * \*.tmpl files must be compiled by Cheetah templating compiler
     * LESS dynamic stylesheets must be compiled (optionally minified) and merged into a single CSS file
     * optionally, JavaScript can be minimized
