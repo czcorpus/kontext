@@ -121,7 +121,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 }
 
                 $.modal.close(); // if a modal window is opened close it
-                lib.showErrorMessage(error.message || 'error');
+                lib.showMessage('error', error.message || 'error');
 
             } else {
                 origSucc(data, textStatus, jqXHR);
@@ -255,7 +255,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 },
                 error: function () {
                     tooltipBox.close();
-                    lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
+                    lib.showMessage('error', lib.conf.messages.failed_to_load_corpus_info);
                 }
             });
         }
@@ -423,7 +423,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                     margin: 0
                 },
                 function (message) {
-                    lib.showErrorMessage(message || lib.conf.messages.failed_to_contact_server);
+                    lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);
                 }
             );
 
@@ -515,11 +515,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
 
                     } else {
-                        lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                        lib.showMessage('error', lib.conf.messages.failed_to_load_query_overview);
                     }
                 },
                 error: function () {
-                    lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                    lib.showMessage('error', lib.conf.messages.failed_to_load_query_overview);
                 }
             });
             event.preventDefault();
@@ -689,7 +689,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
                             if (data.hasOwnProperty('error')) {
                                 $.modal.close();
-                                lib.showErrorMessage(data.error);
+                                lib.showMessage('error', data.error);
 
                             } else {
                                 html = '<select id="within-structattr">';
@@ -708,7 +708,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         },
                         error: function () {
                             $.modal.close();
-                            lib.showErrorMessage(translatMessages.failed_to_contact_server);
+                            lib.showMessage('error', translatMessages.failed_to_contact_server);
                         }
                     });
                 },

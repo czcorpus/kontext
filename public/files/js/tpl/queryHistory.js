@@ -44,14 +44,14 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
                 if (!data.error) {
                     $('#removed-query-history-item').replaceWith(data.html);
                     lib.bindEvents($('div.query-history-item[data-query-id="' + queryId + '"]'));
-                    layoutModel.showMessage(layoutModel.conf.messages.undeleted_query);
+                    layoutModel.showMessage('info', layoutModel.conf.messages.undeleted_query);
 
                 } else {
-                    layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_undelete_the_query);
+                    layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_undelete_the_query);
                 }
             },
             error: function () {
-                layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_undelete_the_query);
+                layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_undelete_the_query);
             }
         };
     };
@@ -93,17 +93,17 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
                 },
                 success : function (data) {
                     if (!data.error) {
-                        layoutModel.showMessage(infoMessage, bindUndeleteAction);
+                        layoutModel.showMessage('info', infoMessage, bindUndeleteAction);
                         $('#removed-query-history-item').remove();
                         $(event.target).closest('.query-history-item').replaceWith('<div id="removed-query-history-item"></div>');
 
                     } else {
-                        layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_delete_the_query);
+                        layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_delete_the_query);
                     }
 
                 },
                 error: function () {
-                    layoutModel.showErrorMessage(layoutModel.conf.messages.failed_to_delete_the_query);
+                    layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_delete_the_query);
                 }
             });
         });
