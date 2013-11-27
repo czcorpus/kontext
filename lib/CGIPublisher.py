@@ -473,7 +473,7 @@ class CGIPublisher(object):
         # plugins setup
         for p in plugins.list_plugins():
             if hasattr(p, 'setup') and callable(p.setup):
-                p.setup(os.environ['LANG'])
+                p.setup(lang=os.environ['LANG'])
 
         # user session initialization
         self._init_session()
