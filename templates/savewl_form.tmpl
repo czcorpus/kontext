@@ -33,8 +33,7 @@ $_("Save Word List")#slurp
 </title>
 
 #def bodyonload
-require(['jquery', 'tpl/savewlForm', 'domReady!'], function (\$, savewlForm, domReady) {
-    ## conf object is defined within document.tmpl
+require(['jquery', 'tpl/savewlForm', 'conf', 'domReady!'], function (\$, savewlForm, conf) {
     conf.files_path = '${files_path}';
     savewlForm.init(conf);
 });

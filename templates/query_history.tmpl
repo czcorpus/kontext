@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end def
 
 #def bodyonload
-    require(['tpl/queryHistory'], function (pageSelf) {
+    require(['tpl/queryHistory', 'conf'], function (pageSelf, conf) {
         conf.messages.failed_to_delete_the_query = "$_('Failed to delete the query')";
         conf.messages.deleted_query = "$_('Deleted the query.')";
         conf.messages.undeleted_query = "$_('Undeleted the query.')";

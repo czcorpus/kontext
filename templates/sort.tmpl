@@ -26,9 +26,8 @@ $_("Sort form")#slurp
 #attr $focus = "'#select'"
 
 #def bodyonload
-require(['tpl/sort', 'domReady!'], function (pageSelf, domReady) {
+require(['tpl/sort', 'conf', 'domReady!'], function (pageSelf, conf) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
-
     pageSelf.init(conf);
 });
 #end def
