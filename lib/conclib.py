@@ -1167,6 +1167,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
 
 def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize):
     q = tuple(q)
+    start_time = time.time()
     if q[0][0] == "R":  # online sample
         if fullsize == -1:  # need to compute original conc first
             q_copy = list(q)
@@ -1187,9 +1188,12 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize):
                 fullsize = conc.fullsize()
                 os.remove(pidfile.name)
                 pidfile.close()
-        return PyConc(corp, q[0][1], q[0][2:], samplesize, fullsize)
+        conc = PyConc(corp, q[0][1], q[0][2:], samplesize, fullsize)
     else:
-        return PyConc(corp, q[0][0], q[0][1:], samplesize)
+        conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
+    start_time = time.time() - start_time
+    logging.getLogger(__name__).info('@analysis: concordance calculation time: %s => %s' % ('#'.join(q), start_time))
+    return conc
 
 
 def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
@@ -1210,9 +1214,10 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
     fullsize = -1
     # try to locate concordance in cache
     if save:
-        toprocess, conc = get_cached_conc(
-            corp, subchash, q, cache_dir, pid_dir,
-                                          minsize)
+        curr_time = time.time()
+        toprocess, conc = get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize)
+        curr_time = time.time() - curr_time
+        logging.getLogger(__name__).info('@analysis: concordance load time: %s => %s' % (':'.join(q), curr_time))
         if toprocess == len(q):
             save = 0
         if not conc and q[0][0] == "R":  # online sample
@@ -1230,7 +1235,6 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         toprocess = 1
 
         if async and len(q) == 1:  # asynchronous processing
-
             r, w = os.pipe()
             r, w = os.fdopen(r, 'r'), os.fdopen(w, 'w')
             if os.fork() == 0:  # child
@@ -1252,9 +1256,12 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                         # conc got started meanwhile by another process
                         w.write(cachefile + "\n" + pidfile)
                         w.close()
+                        logging.getLogger(__name__).info('PID FUCK =============')
                         os._exit(0)
                     w.write(cachefile + "\n" + pidfile.name)
                     w.close()
+
+                    logging.getLogger(__name__).info('going to calculate conc XXX: %s' % cache_dir)
                     conc = compute_conc(
                         corp, q, cache_dir, subchash, samplesize,
                                          fullsize)
@@ -1289,6 +1296,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                         err_log.close()
                     os._exit(0)
             else:  # parent
+                logging.getLogger(__name__).info('PARENT PROC =============')
                 w.close()  # parent reads
                 cachefile, pidfile = r.read().split("\n")
                 r.close()
@@ -1301,6 +1309,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                     raise RuntimeError(unicode(msg, "utf-8"))
                 conc = PyConc(corp, 'l', cachefile)
         else:  # synchronous processing
+            logging.getLogger(__name__).info('SYNCHRO PROC =============')
             conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
                                  fullsize)
             conc.sync()  # wait for the computation to finish

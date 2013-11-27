@@ -59,7 +59,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showErrorMessage(errorThrown);
+                    layoutModel.showMessage('error', errorThrown);
                 },
                 callback
             );
@@ -73,7 +73,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showErrorMessage(errorThrown);
+                    layoutModel.showMessage('error', errorThrown);
                 }
             );
             event.stopPropagation();
