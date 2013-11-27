@@ -1,15 +1,16 @@
-==================
-Installation guide
-==================
+=========================
+Installation instructions
+=========================
 
+------------------------
 Web server configuration
-========================
+------------------------
 
 Please note that currently only Apache 2.x web server is supported. Support for other web servers is being considered.
 
 Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
 
-  Alias /bonito /path/to/your/app/public
+  Alias /kontext /path/to/your/app/public
 
   <Directory /path/to/your/app/public>
     Options +ExecCGI
@@ -19,46 +20,62 @@ Define a loadable configuration file for your Apache 2 installation or update so
     RewriteRule ^$ run.cgi/first_form [L,R=301]
   </Directory>
 
+VirtualHost-based configuration is possible too. Please refer to the
+`Apache documentation <http://httpd.apache.org/docs/2.2/>`_ for more information.
+
 Please note that Apache's document root should be set to the *public* subdirectory
-of the application to prevent access to configuration, source code and other sensitive data.
+of the application to prevent access to configuration files, source code and other sensitive data.
 
-Using described configuration, your web application should be available at URL http://your_server_hostname/bonito.
+Using shown configuration, your web application should be available at URL http://your_server_hostname/kontext .
 
+---------------
 Plugin approach
-===============
+---------------
 
-To be able to fit in different environments, some of application's functionality is not implemented concretely. It means
-you have to implement a solution compatible with your existing systems by yourself (e.g. you have already some database
-schema specifying user accounts). You can start by exploring plugins we use in our institute - they are included
-in the *plugins* directory.
+Because it is impossible to implement KonText in such a way that fits all the possible requirements in terms of
+integrability into existing information systems, some parts of the application are implemented as plug-ins with
+predefined interface.
+
+For example, if you have an existing user database or if you do not want to bother with user authentication at all
+you can easily implement your own version of the *auth* plugin. If you for example want to store user session data to
+files instead to a database, all you have to do is to rewrite the *sessions* plugin.
+
+You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
+*ucnk_* prefix.
 
 Typically, a plugin module is required to implement *create_instance(settings, \*args, \**kwargs) * method which returns
-an instance of required service.
+an instance of required service. Additionally a *setup(\**kwargs)* method can be defined to allow further plugin
+configuration after *CGIPublisher* object is fully operational.
+
+Following plugins are mandatory:
+
++------------------+------------------------------------------------------------------------------+
+| id               | description                                                                  |
++==================+==============================================================================+
+| auth             | user authentication                                                          |
++------------------+------------------------------------------------------------------------------+
+| corptree         | loads a hierarchy of corpora from an XML file                                |
++------------------+------------------------------------------------------------------------------+
+| query_storage    | stores recent queries entered by users and allows their reopening            |
++------------------+------------------------------------------------------------------------------+
+| sessions         | handles user sessions (i.e. between-requests persistence)                    |
++------------------+------------------------------------------------------------------------------+
+| settings_storage | stores users' settings to a persistent storage                               |
++------------------+------------------------------------------------------------------------------+
+
+Following plugins are optional:
+
++------------------+------------------------------------------------------------------------------+
+| id               | description                                                                  |
++==================+==============================================================================+
+| appbar           | loads a between-app-shared page element (e.g. a bar at the top of the page)  |
++------------------+------------------------------------------------------------------------------+
+| db               | provides a connection to a database (if required by other plugins)           |
++------------------+------------------------------------------------------------------------------+
 
 
-Database
---------
-
-Because many implicit plugins require a storage of some kind, application defines plugin *db* which is intended to
-provide an application-wide access to a database. The most convenient approach is thus based on a single database
-server (e.g. MariaDB, MySQL or PostreSQL) serving to the whole application. But there is nothing wrong with
-per-plugin storage solution too.
-
-Sessions
---------
-
-The application uses web sessions to store persistent user data. Please refer to *plugins/sessions.py* for an
-example of possible implementation.
-
-User settings storage
----------------------
-
-When user changes some of application's settings (e.g. the context size for concordance lines) these data are
-stored via *settings_storage* plugin. Please refer to *plugins/settings_storage.py* for an example.
-
-
-Authentication
---------------
+Authentication plugin notes
+===========================
 
 The application expects you to provide a custom implementation of authentication module. If you want to test the
 application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
@@ -69,7 +86,7 @@ module with the following properties:
 
   * the module resides in the *plugins* package (= *./lib/plugins* directory)
   * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
-    The *settings* parameter is Bonito's *settings* module or some compatible one. This
+    The *settings* parameter is KonText's *settings* module or some compatible one. This
     provides access to any required configuration parameter (e.g. database connection if you need one).
 
 Authentication object is expected to implement following methods:
@@ -94,55 +111,75 @@ Authentication object is expected to implement following methods:
 Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
 some required methods.
 
-Query storage
+----------------------
+Deployment and running
+----------------------
+
+To be able to be deployed and run, the application requires some additional file post-processing to be done. These
+steps also depend on whether the application runs in *debugging* or *production* mode.
+
+All the required tasks are configured to be performed by `Grunt <http://gruntjs.com/>`_ task automater (see file
+*Gruntfile.js*).
+
+Debugging mode
+==============
+
+This can be set in *config.xml*'s */kontext/global/debug* by putting *true*.
+
+  * file post-processing:
+    * \*.tmpl files must be compiled by Cheetah templating compiler
+  * LESS dynamic stylesheets are translated to CSS on client-side
+  * server-side errors are displayed in a raw form (i.e. page layout disappears and Python stack-trace is shown with some
+    description)
+
+
+Production mode
+===============
+
+This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false*.
+
+  * file post-processing:
+    * \*.tmpl files must be compiled by Cheetah templating compiler
+    * LESS dynamic stylesheets must be compiled (optionally minified) and merged into a single CSS file
+    * optionally, JavaScript can be minimized
+
+If you have a working node.js and Grunt (grunt-cli package) installation, you can prepare KonText for deployment just by
+running *grunt* command in application's root directory.
+
+-------------
+Configuration
 -------------
 
-To be able to use query history a plugin *query_storage* must be implemented. Please refer to the
-*plugins/query_storage.py* file for an example.
-
-Deployment
-==========
-
-Copy/unpack your application directory/archive to the location of your choice and run the deployment script::
-
-   ./scripts/deploy.sh
-
-The script compiles HTML templates and then asks you for the location of the YUI compressor. If you don't want to minify
-JavaScript and CSS just answer "no" in the prompt (= default choice). If you want to use this feature, please download latest
-version of the YUI compressor from https://github.com/yui/yuicompressor/downloads.
-
-Configuration
-=============
-
-The application itself is configured via an XML configuration file located in the root directory of the application
+KonText is configured via an XML configuration file located in the root directory of the application
 (do not confuse this with the root directory of the respective web application).
-By default Bonito loads its configuration from *../config.xml*. This can be overridden by setting an environment
-variable *BONITO_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
+By default KonText loads its configuration from the path *../config.xml*. This can be overridden by setting an environment
+variable *KONTEXT_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
 
 The configuration XML file is expected to be partially customizable according to the needs of 3rd party plugins.
-Generally it has two-level structure: sections and key->value items (where value can be also a list of items (see
-e.g. */bonito/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
-dedicated functions.
+Generally it has two-level structure: *sections* and *key->value items* (where value can be also a list of items (see
+e.g. */kontext/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
+dedicated functions or modules.
 
 The structure can be understood from the following example::
 
-    <bonito>
+    <kontext>
       <global>
         <key1>value1</key>
       </global>
       <some_other_section>
         <key2>value2</key>
         <key3>
+          <!-- array value -->
           <item>value3a</item>
           <item>value3b</item>
         </key3>
       </some_other_section>
-    </bonito>
+    </kontext>
 
 Custom sections and items should have attribute *extension-by* where value identifies you, your project or your
 installation ::
 
-    <bonito>
+    <kontext>
         <global>
         ...
         </global>
@@ -152,21 +189,21 @@ installation ::
         <my_section extension-by="acme">
             <key1>value1</key1>
         </my_section>
-    </bonito>
+    </kontext>
 
 
 The value of the attribute is then used as a prefix to access custom items. While core configuration items are accessible
 via two parameters *[section_name]* and *[item_name]* in case of custom values it is *[value_of_extension_for:section_name]*
-or *[value_of_extension_for:item_name]*. If you define your custom section as show in the previous code example
+or *[value_of_extension_for:item_name]*. If you define your custom section as shown in the previous code example
 then you must use following call to obtain for example the value *value1*::
 
     settings.get('acme:my_section', 'key1')
 
-Please note that items of your custom section are accessed without any prefix.
+Please note that items of your custom section are accessed without any prefix (because whole section is custom).
 
-You can also add a custom item to a core section ::
+You can also add a custom item to a KonText-fixed section ::
 
-    <bonito>
+    <kontext>
         <global>
         ...
           <my_item extension-by="acme">foo</my_item>
@@ -174,84 +211,116 @@ You can also add a custom item to a core section ::
         <corpora>
         ...
         </corpora>
-    </bonito>
+    </kontext>
 
 Such value is then accessible via following call ::
 
     settings.get('global', 'acme:my_item')
 
-You can refer to the **config.sample.xml** to see more examples.
+Sample configuration file **config.sample.xml** provides more examples.
+
+Global configuration
+====================
 
 +------------------------------------------------+-------------------------------------------------------------------+
 | Xpath                                          | Description                                                       |
 +================================================+===================================================================+
-| /bonito/global/manatee_path                    | Location of your Python interface to the manatee                  |
+| /kontext/global/manatee_path                   | If you want to use some non-default path to be searched by        |
+|                                                | Python when looking for manatee library, you can define it here   |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/debug                           | true/false (true => detailed error info is visible)               |
+| /kontext/global/debug                          | true/false (true => detailed error info is visible etc.)          |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/log_path                        | Path to the logging file (Apache must have write access)          |
+| /kontext/global/log_path                       | Path to the logging file (webserver must have write access)       |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/administrators                  | List of usernames with administrative rights                      |
+| /kontext/global/administrators                 | List of usernames with administrative rights; this is deprecated  |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/global/fonts                           | list of custom CSS fonts to be loaded within HTML document        |
+| /kontext/global/fonts                          | list of custom CSS fonts to be loaded within HTML document        |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins                                | this section contains plugins' configuration; each plugin         |
-|                                                | requires at least *module* element to specify where code resides  |
+| /kontext/global/translations                   | list of supported languages for user interface (this requires     |
+|                                                | proper *\*.mo* file and also enabled support in your OS)          |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/db                             | required plugin to access application's database                  |
+| /kontext/global/translations/language          | language item - besides language code, it may contain *label*     |
+|                                                | attribute - if defined then the label is shown to user            |
 +------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/auth                           | required plugin for authentication                                |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/sessions                       | required plugin implementing session storage functions            |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/settings_storage               | required plugin specifying where and how to store user settings   |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/query_storage                  | optional plugin allowing to store query history to some storage   |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/plugins/appbar                         | optional plugin allowing remote-loaded toolbar on all pages       |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/cache/clear_interval                   | number of seconds to keep cached files                            |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/manatee_registry               | Path where corpora registry files are stored                      |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/options_dir                    | Path where 'options' files are stored                             |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/cache_dir                      | Path where application stores general cached data                 |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/subcpath                       | Path where general subcorpora data is stored                      |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/users_subcpath                 | Path where user's subcorpora are stored                           |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/tags_src_dir                   | A directory where all unique tag combinations for corpora are     |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/tags_cache_dir                 | A directory where tag-builder stores its auxiliary data           |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/conc_dir                       | Path where general concordance data is stored                     |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/helpsite                       | URL of the help site (refer to the config.sample.xml)             |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/default_corpora                | Contains list of default corpora (see below)                      |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/default_corpora/item           | Represents individual default corpus (multiple allowed)           |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/speech_segment_struct_attr     | Name of the structural attribute delimiting speeches              |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/speech_files_path              | root path where audio files containing speech segments are stored |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/kwicline_max_context           | Maximum size (in words) of the KWIC context                       |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/use_db_whitelist               | 0/1 (0 => any user has access to any corpus)                      |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/empty_attr_value_placeholder   | An alternative string to show if some structattr is empty         |
-+------------------------------------------------+-------------------------------------------------------------------+
-| /bonito/corpora/multilevel_freq_dist_max_levels| Multi-level freq. distrib. - max. number of levels for a query    |
-+------------------------------------------------+-------------------------------------------------------------------+
+
+
+Plugins configuration
+=====================
+
++-------------------------------------------------+-------------------------------------------------------------------+
+| Xpath                                           | Description                                                       |
++=================================================+===================================================================+
+| /kontext/plugins                                | this section contains plugins' configuration; each plugin         |
+|                                                 | requires at least *module* element to specify where code resides  |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/db                             | required plugin to access application's database                  |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/auth                           | required plugin for authentication                                |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/sessions                       | required plugin implementing session storage functions            |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/settings_storage               | required plugin specifying where and how to store user settings   |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/query_storage                  | optional plugin allowing to store query history to some storage   |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/plugins/appbar                         | optional plugin allowing remote-loaded toolbar on all pages       |
++-------------------------------------------------+-------------------------------------------------------------------+
+
+Caching configuration
+=====================
+
++------------------------------------------------+------------------------------------------------------------------+
+| Xpath                                          | Description                                                      |
++================================================+==================================================================+
+| /kontext/cache/clear_interval                  | number of seconds to keep cached files                           |
++------------------------------------------------+------------------------------------------------------------------+
+
+Corpus-related configuration
+============================
+
++-------------------------------------------------+-------------------------------------------------------------------+
+| Xpath                                           | Description                                                       |
++=================================================+===================================================================+
+| /kontext/corpora/manatee_registry               | Path where corpora registry files are stored                      |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/options_dir                    | Path where 'options' files are stored                             |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/cache_dir                      | Path where application stores general cached data                 |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/subcpath                       | Path where general subcorpora data is stored                      |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/users_subcpath                 | Path where user's subcorpora are stored                           |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/tags_src_dir                   | A directory where all unique tag combinations for corpora are     |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/tags_cache_dir                 | A directory where tag-builder stores its auxiliary data           |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/conc_dir                       | Path where general concordance data is stored                     |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/helpsite                       | URL of the help site (refer to the config.sample.xml)             |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/default_corpora                | Contains list of default corpora (see below)                      |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/default_corpora/item           | Represents individual default corpus (multiple allowed)           |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/speech_segment_struct_attr     | Name of the structural attribute delimiting speeches              |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/speech_files_path              | root path where audio files containing speech segments are stored |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/kwicline_max_context           | Maximum size (in words) of the KWIC context                       |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/use_db_whitelist               | 0/1 (0 => any user has access to any corpus)                      |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/empty_attr_value_placeholder   | An alternative string to show if some structattr is empty         |
++-------------------------------------------------+-------------------------------------------------------------------+
+| /kontext/corpora/multilevel_freq_dist_max_levels| Multi-level freq. distrib. - max. number of levels for a query    |
++-------------------------------------------------+-------------------------------------------------------------------+
 
 Corpora hierarchy
------------------
+=================
 
-Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool. It supports nested (i.e. multi-level)
-organization::
+Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool which is handled by the *corptree*
+plugin. It supports nested (i.e. multi-level) organization::
 
     <corplist title="">
       <corplist title="Synchronic Corpora">
@@ -264,6 +333,7 @@ organization::
          </corplist>
       </corplist>
     </corplist>
+
 
 Attributes for the **corplist** element:
 
@@ -287,13 +357,22 @@ Attributes for the **corpus** element:
 | web             | (optional) external link containing information about the corpus   |
 +-----------------+--------------------------------------------------------------------+
 
+Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
+to load any XML file and search for the tree node anywhere you want.
+
 
 Tag-builder component configuration
------------------------------------
+===================================
+
+Currently, KonText supports a single tagset helper tool which allows creating tag queries in an interactive way.
 
 Sample file::
 
-    <tagsets>
+  <kontext>
+  ...
+    <corpora>
+      ...
+      <tagsets>
         <tagset position="0">
             <label>
                 <desc lang="en">Part of speech</desc>
@@ -312,5 +391,8 @@ Sample file::
         ...
         </tagset>
         ...
-    </tagsets>
-
+      </tagsets>
+      ...
+    </corpora>
+    ...
+  </kontext>

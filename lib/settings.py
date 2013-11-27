@@ -184,10 +184,10 @@ def load(conf_path='../config.xml'):
     auth_handler : object
     conf_path : str, optional (default is 'config.xml')
       path to the configuration XML file. This value can be
-      overridden by an environment variable BONITO_CONF_PATH
+      overridden by an environment variable KONTEXT_CONF_PATH
     """
-    if 'BONITO_CONF_PATH' in os.environ:
-        conf_path = os.environ['BONITO_CONF_PATH']
+    if 'KONTEXT_CONF_PATH' in os.environ:
+        conf_path = os.environ['KONTEXT_CONF_PATH']
     parse_config(conf_path)
 
     if get('corpora', 'manatee_registry'):

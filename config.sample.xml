@@ -1,4 +1,4 @@
-<bonito>
+<kontext>
     <global>
         <manatee_path>/path/to/some/non-default/manatee</manatee_path>
         <log_path>/var/log/bonito/application.log</log_path>
@@ -112,5 +112,5 @@
             <!-- ... etc ... -->
         </tagsets>
     </corpora>
-</bonito>
+</kontext>
 
