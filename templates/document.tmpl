@@ -97,42 +97,46 @@ requirejs.config({
 
 define('win', [], function () { return window; });
 
-var conf = {};
-conf.menuAutoHideInterval = 1500;
-conf.messageAutoHideInterval = 9000;
-conf.rootURL = "$root_url";
-conf.rootPath = "$root_path";
-conf.corpname = "$corpname";
-conf.session_cookie_name = "$session_cookie_name";
-conf.numTagPos = $num_tag_pos;
-conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
-conf.loginUrl = "$login_url";
+define('conf', [], function () {
+    var conf = {};
+    conf.menuAutoHideInterval = 1500;
+    conf.messageAutoHideInterval = 9000;
+    conf.rootURL = "$root_url";
+    conf.rootPath = "$root_path";
+    conf.corpname = "$corpname";
+    conf.session_cookie_name = "$session_cookie_name";
+    conf.numTagPos = $num_tag_pos;
+    conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
+    conf.loginUrl = "$login_url";
 
-conf.messages = {};
-#if $_anonymous
-conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
-#end if
-conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
-conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
-conf.messages.view_result = "$_('View result')";
-conf.messages.operation = "$_('Operation')";
-conf.messages.parameters = "$_('Parameters')";
-conf.messages.num_of_hits = "$_('Num of Hits')";
-conf.messages.query_overview = "$_('Query overview')";
-conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
+    conf.messages = {};
+    #if $_anonymous
+    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
+    #end if
+    conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+    conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
+    conf.messages.view_result = "$_('View result')";
+    conf.messages.operation = "$_('Operation')";
+    conf.messages.parameters = "$_('Parameters')";
+    conf.messages.num_of_hits = "$_('Num of Hits')";
+    conf.messages.query_overview = "$_('Query overview')";
+    conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
 
-#if $focus
-conf.focus = $focus;
-#end if
+    #if $focus
+    conf.focus = $focus;
+    #end if
 
-conf.queryTypesHints = {
-    iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
-};
-conf.messages.msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
-conf.messages.failed_to_load_corpus_info = "$_('Failed to load corpus information.')";
+    conf.queryTypesHints = {
+        iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
+    };
+    conf.messages.msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
+    conf.messages.failed_to_load_corpus_info = "$_('Failed to load corpus information.')";
+
+    return conf;
+});
 
 #block bodyonload
-require(['domReady!', 'tpl/document'], function (domReady, pageself) {
+require(['tpl/document', 'conf', 'domReady!'], function (pageself, conf) {
     pageself.init(conf);
 });
 #end block

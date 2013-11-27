@@ -24,8 +24,7 @@ $_("Save Collocations")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/savecollForm', 'domReady!'], function (\$, savecollForm, domReady) {
-    ## conf object is defined within document.tmpl
+require(['jquery', 'tpl/savecollForm', 'conf', 'domReady!'], function (\$, savecollForm, conf) {
     conf.files_path = '${files_path}';
     savecollForm.init(conf);
 });

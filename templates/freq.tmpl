@@ -26,7 +26,7 @@ $_("Freqs form")#slurp
 #attr $focus = "'#submit'"
 
 #def bodyonload
-require(['tpl/freq', 'domReady!'], function (pageSelf, domReady) {
+require(['tpl/freq', 'conf', 'domReady!'], function (pageSelf, conf) {
     conf.messages['msg'] = "$_('This counts only for multi-word KWICs')";
     conf.messages['remove_item'] = "$_('Remove item')";
     conf.messages['max_level_reached'] = "$_('Maximum level reached.')";
