@@ -147,12 +147,12 @@ class CorpTree(object):
         """
         return self.list
 
-    def setup(self, lang):
+    def setup(self, **kwargs):
         """
         Interface method expected by KonText if a module wants to be set-up by
         some "late" information (like locales)
         """
-        self.lang = lang
+        self.lang = kwargs.get('lang', None)
         self._load()
 
 
