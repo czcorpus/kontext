@@ -65,12 +65,13 @@ try:
 except ImportError:
     pass
 
-try:
-    appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
-    if appbar_module:
-        plugins.application_bar = appbar_module.create_instance(settings, plugins.auth)
-except ImportError:
-    pass
+if settings.get('plugins', 'appbar').get('module', None):
+    try:
+        appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
+        if appbar_module:
+            plugins.application_bar = appbar_module.create_instance(settings, plugins.auth)
+    except ImportError:
+        pass
 
 ###### implicit plugins END ######
 
