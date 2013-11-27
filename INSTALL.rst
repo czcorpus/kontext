@@ -140,7 +140,7 @@ Production mode
 This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false*.
 
   * file post-processing:
-  
+
     * \*.tmpl files must be compiled by Cheetah templating compiler
     * LESS dynamic stylesheets must be compiled (optionally minified) and merged into a single CSS file
     * optionally, JavaScript can be minimized
