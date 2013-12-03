@@ -1548,6 +1548,9 @@ msgstr "Literatura"
 msgid "General references"
 msgstr "Obecné odkazy"
 
+msgid "Corpus <em class=\"corpname\">%s</em> as a language resource"
+msgstr "Korpus <em class=\"corpname\">%s</em> jako zdroj dat"
+
 #: cmpltmpl/document.py:2606
 msgid "website"
 msgstr "webová stránka"
