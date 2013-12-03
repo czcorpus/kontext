@@ -317,7 +317,7 @@ $_ca_topbar
     #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
-        <strong>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $corpname)#end filter#:</strong>
+        <strong>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</strong>
         #filter None# $citation_info.default_ref #end filter#
 
         #if len($citation_info.article_ref) > 0
