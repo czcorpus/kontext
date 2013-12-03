@@ -317,11 +317,11 @@ $_ca_topbar
     #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
-        <strong>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</strong>
+        <h4>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</h4>
         #filter None# $citation_info.default_ref #end filter#
 
         #if len($citation_info.article_ref) > 0
-            <strong>$_('Reference(s)'):</strong>
+            <h4>$_('Reference(s)'):</h4>
             <ul>
             #for $article_item in $citation_info.article_ref
                 <li>#filter None# $article_item #end filter#</li>
@@ -330,7 +330,7 @@ $_ca_topbar
         #end if
 
         #if $citation_info.other_bibliography
-        <strong>$_('General references'):</strong>
+        <h4>$_('General references'):</h4>
         #filter None# $citation_info.other_bibliography #end filter#
         #end if
     </div>

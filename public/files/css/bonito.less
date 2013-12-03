@@ -1,5 +1,6 @@
 @main-background: #d7d7d7;
 @color-default-text: #010101;
+@middle-light-text: #2E2E2E;
 @light-text: #999999;
 @color-logo-pink: #E2007A;
 @color-logo-blue: #009EE0;
@@ -568,7 +569,7 @@ section > .bonito-pagination form {
 #mainform input.word-input,
 #mainform input.char-input
 {
-  font-family: monospace;
+  font-family: 'Droid Sans Mono', monospace;
   padding: 6px 2px 2px 2px;
   width: 35em;
 }
@@ -1043,13 +1044,23 @@ table.results-range-and-paging th {
   display: none;
 }
 
+#corpus-citation-box h3 {
+  font-size: 120%;
+}
+
+#corpus-citation-box h4 {
+  font-size: 110%;
+}
+
 #corpus-citation-box em {
-  color: @color-logo-pink;
+  font-family: 'Droid Sans Mono', monospace;
+  font-style: normal;
+  font-weight: bold;
 }
 
 #corpus-citation-box em.corpname {
-  font-style: normal;
   text-transform: capitalize;
+  font-family: inherit;
 }
 
 #corpus-citation-box div.document blockquote {
