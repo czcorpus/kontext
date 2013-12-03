@@ -268,14 +268,17 @@ class ConcCGI(CGIPublisher):
             name of the action
         """
         import json
-        import datetime
+        import datetime    
 
-        params = dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]])
+        params = {}
+        if self.environ.get('QUERY_STRING'):
+            params.update(dict([item.split('=', 1) for item in [x for x in self.environ.get('QUERY_STRING').split('&')
+                                                                if x]]))
 
         ans = {
             'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
             'action': action_name,
-            'user': os.getenv('REMOTE_USER'),
+            'user': self.environ.get('REMOTE_USER'),
             'params': dict([(k, v) for k, v in params.items() if v]),
             'settings': dict([(k, v) for k, v in user_settings.items() if v])
         }
@@ -310,7 +313,6 @@ class ConcCGI(CGIPublisher):
         super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
         if not action_metadata:
             action_metadata = {}
-        self.environ = os.environ
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
 
@@ -318,6 +320,7 @@ class ConcCGI(CGIPublisher):
 
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
+
         if not self._is_corpus_free_action(path[0]):
             self._fetch_corpname(form, allowed_corpora)
             if not self.corpname in allowed_corpora:

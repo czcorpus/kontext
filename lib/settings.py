@@ -18,13 +18,14 @@
 This module wraps application's configuration (as specified in config.xml) and provides some additional helper
 methods.
 """
-import os
+
 import sys
+import os
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 _meta = {}  # contains data of attributes of XML elements representing configuration values
-
+_env = {}
 auth = None  # authentication module (this is set from the outside)
 
 # This dict defines special parsing of quoted sections. Sections not mentioned there
@@ -175,19 +176,22 @@ def parse_config(path):
             _conf[section_id], _meta[section_id] = parse_general_tree(section)
 
 
-def load(conf_path='../config.xml'):
+def load(env, conf_path='../config.xml'):
     """
     Loads application's configuration from provided file
 
     Parameters
     ----------
-    auth_handler : object
+    env: request environment variables
     conf_path : str, optional (default is 'config.xml')
       path to the configuration XML file. This value can be
       overridden by an environment variable KONTEXT_CONF_PATH
     """
-    if 'KONTEXT_CONF_PATH' in os.environ:
-        conf_path = os.environ['KONTEXT_CONF_PATH']
+    global _env
+
+    _env = env
+    if 'KONTEXT_CONF_PATH' in _env:
+        conf_path = _env['KONTEXT_CONF_PATH']
     parse_config(conf_path)
 
     if get('corpora', 'manatee_registry'):
@@ -253,21 +257,19 @@ def get_speech_structure():
 
 
 def get_uri_scheme_name():
-    if 'HTTPS' in os.environ:
-        return 'https'
-    else:
-        return 'http'
+    return _env['wsgi.url_scheme']
 
 
 def get_root_url():
     """
     Returns root URL of the application
     """
-    if 'SCRIPT_URL' in os.environ:
-        path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    path = '/'  # TODO
+    if _env['SERVER_PORT'] and _env['SERVER_PORT'] != '80':
+        port_s = ':%s' % _env['SERVER_PORT']
     else:
-        path = os.getenv('REQUEST_URI')[:os.getenv('REQUEST_URI').rindex('/')]
-    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
+        port_s = ''
+    return '%s://%s%s%s' % (get_uri_scheme_name(), _env.get('SERVER_NAME'), port_s, path)
 
 
 def supports_password_change():

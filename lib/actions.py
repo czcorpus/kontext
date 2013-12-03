@@ -1784,7 +1784,7 @@ class Actions(ConcCGI):
 
         out = {}
         out['SubcorpList'] = ()
-        if os.environ['REQUEST_METHOD'] == 'POST':
+        if self.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
             for p in self._url_parameters:
                 if p.startswith('sca_'):

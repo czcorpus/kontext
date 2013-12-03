@@ -28,6 +28,7 @@ import json
 import logging
 import gettext
 import locale
+import StringIO
 
 import plugins
 import settings
@@ -164,9 +165,16 @@ class CGIPublisher(object):
 
     NO_OPERATION = 'nop'
 
-    def __init__(self, environ=os.environ):
+    STATUS_MAP = {
+        200: 'OK',
+        301: 'Moved Permanently',
+        303: 'See Other',
+        404: 'Not Found',
+        500: 'Internal Server Error'
+    }
+
+    def __init__(self, environ):
         self.environ = environ
-        self.headers_sent = False
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
         self._session = {}
         self._ui_settings = {}
@@ -245,7 +253,7 @@ class CGIPublisher(object):
         else:
             lgs_string = self._ui_settings.get('set_uilang', None)
         if not lgs_string:
-            lgs_string = os.environ.get('HTTP_ACCEPT_LANGUAGE', '')
+            lgs_string = self.environ.get('HTTP_ACCEPT_LANGUAGE', '')
         if lgs_string == '':
             return ''  # english
         lgs_string = re.sub(';q=[^,]*', '', lgs_string)
@@ -273,10 +281,10 @@ class CGIPublisher(object):
                 # hereby we retrieve the system default locale directory back:
                 locale_dir = gettext.bindtextdomain('ske')
 
-        os.environ['LANG'] = self.get_uilang(locale_dir)
-        settings.set('session', 'lang', os.environ['LANG'] if os.environ['LANG'] else 'en')
-        os.environ['LC_ALL'] = os.environ['LANG']
-        formatting_lang = '%s.utf-8' % (os.environ['LANG'] if os.environ['LANG'] else 'en_US')
+        self.environ['LANG'] = self.get_uilang(locale_dir)
+        settings.set('session', 'lang', self.environ['LANG'] if self.environ['LANG'] else 'en')
+        self.environ['LC_ALL'] = self.environ['LANG']
+        formatting_lang = '%s.utf-8' % (self.environ['LANG'] if self.environ['LANG'] else 'en_US')
         locale.setlocale(locale.LC_ALL, formatting_lang)
         translat = gettext.translation('ske', locale_dir, fallback=True)
         try:
@@ -291,6 +299,10 @@ class CGIPublisher(object):
             return True
         except ImportError:
             return False
+
+    def _export_status(self, status):
+        s = CGIPublisher.STATUS_MAP.get(status, '')
+        return '%s  %s' % (status, s)
 
     def _setup_user_paths(self, user_file_id):
         if not self._anonymous:
@@ -408,7 +420,7 @@ class CGIPublisher(object):
         -------
         list of path elements
         """
-        path = os.getenv('PATH_INFO', '').strip().split('/')[1:]
+        path = self.environ.get('PATH_INFO', '').strip().split('/')[1:]
         if len(path) is 0 or path[0] is '':
             path = [CGIPublisher.NO_OPERATION]
         elif path[0].startswith('_'):
@@ -424,7 +436,7 @@ class CGIPublisher(object):
         self._headers[''] = 'Status: 404'
 
     def get_http_method(self):
-        return os.getenv('REQUEST_METHOD', '')
+        return self.environ.get('REQUEST_METHOD', '')
 
     def _get_persistent_attrs(self):
         return []
@@ -473,7 +485,7 @@ class CGIPublisher(object):
         # plugins setup
         for p in plugins.list_plugins():
             if hasattr(p, 'setup') and callable(p.setup):
-                p.setup(lang=os.environ['LANG'])
+                p.setup(lang=self.environ['LANG'])
 
         # user session initialization
         self._init_session()
@@ -483,10 +495,10 @@ class CGIPublisher(object):
             'return_type': self._get_method_metadata(path[0], 'return_type'),
             'template': self._get_method_metadata(path[0], 'template')
         }
+
         try:
             path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
-
         except AuthException as e:
             self._headers[''] = 'Status: 401 Unauthorized'
             named_args['message'] = ('error', u'%s' % e)
@@ -511,13 +523,16 @@ class CGIPublisher(object):
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
-        cont = self.output_headers(action_metadata.get('return_type', None))
-        if cont:
-            self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None))
-
+        status, headers = self.output_headers(action_metadata.get('return_type', None))
+        output = StringIO.StringIO()
+        if status < 300 or status >= 400:
+            self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None), outf=output)
+        ans_body = output.getvalue()
+        output.close()
         # session closing
         if plugins.has_plugin('sessions'):
             plugins.sessions.save(self._get_session_id(), self._session)
+        return self._export_status(status), headers, ans_body
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
@@ -620,7 +635,7 @@ class CGIPublisher(object):
         return urlencode([(k, self.rec_recode(v, enc, utf8_out=True))
                           for (k, v) in key_val_pairs])
 
-    def output_headers(self, return_type='html', outf=sys.stdout):
+    def output_headers(self, return_type='html'):
         """
         Generates proper content-type signature and
         creates a cookie to store user's settings
@@ -629,7 +644,7 @@ class CGIPublisher(object):
         -------
         bool : True if content should follow else False
         """
-        has_body = True
+        status = 200
 
         # The 'ui_settings' cookie is used only by JavaScript client-side code
         # which always expects the cookie to exists.
@@ -637,29 +652,26 @@ class CGIPublisher(object):
             self._cookies['ui_settings'] = None
         self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
         self._cookies['ui_settings'] = json.dumps(self._ui_settings)
-
+        logging.getLogger(__name__).debug('type: %s' % return_type)
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
 
-        if outf:
-            if '' in self._headers:
-                outf.write(self._headers[''])
-            # Headers
-            if 'Location' in self._headers:
-                outf.write('Location: %s\n' % self._headers['Location'])
-                has_body = False
-            for k in sorted(self._headers.keys()):
-                if self._headers[k]:
-                    outf.write('%s: %s\n' % (k, self._headers[k]))
-            # Cookies
-            if self._cookies and outf:
-                outf.write(self._cookies.output() + '\n')
-            outf.write('\n')
+        ans = []
 
-        self.headers_sent = True
-        return has_body
+        if '' in self._headers:
+            ans.append(('', self._headers['']))  # TODO probably won't work with WSGI
+        # Headers
+        if 'Location' in self._headers:
+            status = 301  # TODO
+        for k in sorted(self._headers.keys()):
+            if self._headers[k]:
+                ans.append((k, self._headers[k]))
+        # Cookies
+        if self._cookies:
+            ans.extend([('Set-Cookie', v.OutputString()) for v in self._cookies.values()])   # cookies
+        return status, ans
 
-    def output_result(self, methodname, template, result, return_type, outf=sys.stdout,
+    def output_result(self, methodname, template, result, return_type, outf,
                       return_template=False):
         """
         Renders response body
@@ -670,8 +682,8 @@ class CGIPublisher(object):
             if type(result) != JsonEncodedData:
                 json.dump(self.rec_recode(result, utf8_out=True), outf)
             else:
+                # TODO
                 print >> outf, result  # this is obsolete
-
         # Template
         elif type(result) is DictType:
             self._add_globals(result)
