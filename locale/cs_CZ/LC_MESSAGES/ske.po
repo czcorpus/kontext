@@ -1542,6 +1542,12 @@ msgstr "z celkem %s) pozic"
 msgid "How to cite the corpus"
 msgstr "Jak citovat korpus"
 
+msgid "Reference(s)"
+msgstr "Literatura"
+
+msgid "General references"
+msgstr "Obecné odkazy"
+
 #: cmpltmpl/document.py:2606
 msgid "website"
 msgstr "webová stránka"
