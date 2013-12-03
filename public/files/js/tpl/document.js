@@ -70,6 +70,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     lib.conf = {};
 
     /**
+     * Escapes general string containing HTML elements and entities
+     *
+     * @param {String} html
+     * @returns {string}
+     */
+    lib.escapeHTML = function (html) {
+        var elm = document.createElement('div');
+        elm.appendChild(document.createTextNode(html));
+        return elm.innerHTML;
+    };
+
+    /**
      * Normalizes error representation (sometimes it is a string,
      * sometimes it is an object) into an object with well defined
      * properties.
@@ -461,11 +473,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 html += '<tr><th>' + lib.conf.messages.operation + '</th>';
                 html += '<th>' + lib.conf.messages.parameters + '</th>';
                 html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
-
+                
                 $.each(data.Desc, function (i, item) {
-                    html += '<tr><td>' + item.op + '</td>';
-                    html += '<td>' + item.arg + '</td>';
-                    html += '<td>' + item.size + '</td>';
+                    html += '<tr><td>' + lib.escapeHTML(item.op) + '</td>';
+                    html += '<td>' + lib.escapeHTML(item.arg) + '</td>';
+                    html += '<td>' + lib.escapeHTML(item.size) + '</td>';
                     html += '<td>';
                     if (item.tourl) {
                         url = 'view?' + item.tourl;
