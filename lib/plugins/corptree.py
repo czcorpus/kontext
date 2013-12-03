@@ -92,6 +92,7 @@ class CorpTree(object):
                     'web': web_url,
                     'sentence_struct': sentence_struct,
                     'num_tag_pos': num_tag_pos,
+                    'speech_segment': item.attrib.get('speech_segment', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None}
                 }
 

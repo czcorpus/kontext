@@ -230,28 +230,6 @@ def is_debug_mode():
     return value is not None and value.lower() in ('true', '1')
 
 
-def has_configured_speech(corpus):
-    """
-    Tests whether the provided corpus contains
-    structural attributes compatible with current application's configuration
-    (e.g. corpus contains structural attribute seg.id and the configuration INI
-    file contains line speech_segment_struct_attr = seg.id).
-
-    Parameters
-    ----------
-    corpus : manatee.Corpus
-      corpus object we want to test
-    """
-    return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
-
-
-def get_speech_structure():
-    """
-    Returns name of the structure configured as a 'speech' delimiter
-    """
-    return get('corpora', 'speech_segment_struct_attr').split('.')[0]
-
-
 def get_uri_scheme_name():
     if 'HTTPS' in os.environ:
         return 'https'
