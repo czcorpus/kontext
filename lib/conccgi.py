@@ -687,7 +687,10 @@ class ConcCGI(CGIPublisher):
         Returns:
             tuple (structname, attr_name)
         """
-        return tuple(plugins.corptree.get_corpus_info(self.corpname).get('speech_segment').split('.'))
+        segment_str = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
+        if segment_str:
+            return tuple(segment_str.split('.'))
+        return None
 
 
     kwicleftctx = '-10'

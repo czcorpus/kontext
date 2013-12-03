@@ -276,7 +276,7 @@ def separate_speech_struct_from_tag(speech_segment, text):
     """
     import re
 
-    speech_struct, speech_struct_attr = speech_segment
+    speech_struct, speech_struct_attr = speech_segment if speech_segment else (None, None)
     pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (
         speech_struct, speech_struct_attr)
     srch = re.search(pattern, text)
@@ -346,7 +346,7 @@ def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_spe
     import urllib
 
     newline = []
-    speech_struct_str = speech_segment[0]
+    speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
     fragment_separator = '<%s' % speech_struct_str
     last_fragment = None
     last_speech_id = prev_speech_id
