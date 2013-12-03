@@ -321,7 +321,7 @@ $_ca_topbar
         #filter None# $citation_info.default_ref #end filter#
 
         #if len($citation_info.article_ref) > 0
-            <strong>$_('It is possible to cite the following article(s) too'):</strong>
+            <strong>$_('Reference(s)'):</strong>
             <ul>
             #for $article_item in $citation_info.article_ref
                 <li>#filter None# $article_item #end filter#</li>
@@ -330,7 +330,7 @@ $_ca_topbar
         #end if
 
         #if $citation_info.other_bibliography
-        <strong>$_('other bibliography'):</strong>
+        <strong>$_('General references'):</strong>
         #filter None# $citation_info.other_bibliography #end filter#
         #end if
     </div>
