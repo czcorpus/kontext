@@ -317,12 +317,16 @@ $_ca_topbar
     #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
-        <strong>$($_('Corpus %s as a language resource') % $corpname):</strong>
+        <strong>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $corpname)#end filter#:</strong>
         #filter None# $citation_info.default_ref #end filter#
 
-        #if $citation_info.article_ref
-        <strong>$_('It is possible to cite the following article too'):</strong>
-        #filter None# $citation_info.article_ref #end filter#
+        #if len($citation_info.article_ref) > 0
+            <strong>$_('It is possible to cite the following article(s) too'):</strong>
+            <ul>
+            #for $article_item in $citation_info.article_ref
+                <li>#filter None# $article_item #end filter#</li>
+            #end for
+            </ul>
         #end if
 
         #if $citation_info.other_bibliography

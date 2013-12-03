@@ -97,10 +97,13 @@ class CorpTree(object):
 
                 ref_elm = item.find('reference')
                 if ref_elm is not None:
-                    ans['citation_info']['default_ref'] = self._translate_markup(getattr(ref_elm.find('default'), 'text', None))
-                    ans['citation_info']['article_ref'] = self._translate_markup(getattr(ref_elm.find('article'), 'text', None))
-                    ans['citation_info']['other_bibliography'] = self._translate_markup(getattr(ref_elm.find('other_bibliography'),
-                                                                                                'text', None))
+                    ans['citation_info']['default_ref'] = self._translate_markup(getattr(ref_elm.find('default'),
+                                                                                         'text', None))
+                    articles = [self._translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
+                    ans['citation_info']['article_ref'] = articles
+                    ans['citation_info']['other_bibliography'] = self._translate_markup(
+                        getattr(ref_elm.find('other_bibliography'),
+                                'text', None))
                 data.append(ans)
 
     def get_corpus_info(self, corp_name):
