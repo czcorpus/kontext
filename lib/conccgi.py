@@ -667,6 +667,29 @@ class ConcCGI(CGIPublisher):
             return t[1]
         return t[0]
 
+    def _has_configured_speech(self):
+        """
+        Tests whether the provided corpus contains
+        structural attributes compatible with current application's configuration
+        (e.g. corpus contains structural attribute seg.id and the configuration INI
+        file contains line speech_segment_struct_attr = seg.id).
+
+        Parameters
+        ----------
+        corpus : manatee.Corpus
+          corpus object we want to test
+        """
+        speech_struct = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
+        return speech_struct in self._corp().get_conf('STRUCTATTRLIST').split(',')
+
+    def _get_speech_segment(self):
+        """
+        Returns:
+            tuple (structname, attr_name)
+        """
+        return tuple(plugins.corptree.get_corpus_info(self.corpname).get('speech_segment').split('.'))
+
+
     kwicleftctx = '-10'
     kwicrightctx = '10'
     senleftctx_tpl = '-1:%s'

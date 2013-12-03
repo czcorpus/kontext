@@ -154,8 +154,8 @@ class Actions(ConcCGI):
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
         labelmap = {}
-        contains_speech = settings.has_configured_speech(self._corp())
-        out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech),
+
+        out = self.call_function(conclib.kwicpage, (self._corp(), conc, self._get_speech_segment()),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                             for c in self.align.split(',') if c],
@@ -335,7 +335,7 @@ class Actions(ConcCGI):
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.refs.split(',')
-        ref_is_allowed = lambda r: r and r not in ('#', settings.get('corpora', 'speech_segment_struct_attr'))
+        ref_is_allowed = lambda r: r and r not in ('#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
         out['Availrefs'] = [{'n': '#', 'label': _('Token number'), 'sel':
             ((('#' in reflist) and 'selected') or '')}] + \
                            [{'n': '=' + n, 'sel':
@@ -2052,8 +2052,7 @@ class Actions(ConcCGI):
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
-            contains_speech = settings.has_configured_speech(self._corp())
-            data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+            data = self.call_function(conclib.kwicpage, (self._corp(), conc, self._get_speech_segment()), fromp=fromp,
                                       pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
                                       alignlist=[self.cm.get_Corpus(c)
                                                  for c in self.align.split(',') if c],
