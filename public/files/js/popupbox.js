@@ -177,7 +177,7 @@ define(['win', 'jquery'], function (win, $) {
      *
      * @param whereElement
      * @param {string|function} contents if a function is provided,
-     * following signature is expected: function(TooltipBox) where htmlElement is the tooltip box itself
+     * following signature is expected: function(TooltipBox, finalizeCallback) where htmlElement is the tooltip box itself
      * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
      * onClose),
      * domId, calculatePosition (true, false)
@@ -288,7 +288,8 @@ define(['win', 'jquery'], function (win, $) {
      * anchoring element. Default behaviour of anchoring element's click event is suppressed.
      *
      * @param {jQuery|HTMLElement|string} elm
-     * @param {Function|String} contents if function then following signature is expected: function(TooltipBox)
+     * @param {Function|String} contents if function then following signature
+     * is expected: function(TooltipBox, finalizeCallback)
      * where function updates the box (i.e. no return value is involved here) by accessing TooltipBox object
      * @param {object} [options]
      */

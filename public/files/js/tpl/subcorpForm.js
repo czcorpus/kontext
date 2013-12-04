@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
+define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, layoutModel, treeComponent, popupBox) {
     'use strict';
 
     var lib = {};
@@ -57,51 +57,18 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
     /**
      *
      */
-    lib.createFuncSwitchToInputMethod = function () {
-        return function (value) {
-            if (value === 'raw') {
-                $('#subc-spec-section').css({ display : '' });
-                $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : null});
-                });
-                lib.createFuncShowWithinHint()({ element : function () { return $('within-struct-selector'); } });
+    lib.subcCreateVariantSwitch = function (value) {
+        if (value === 'raw') {
+            $('#subc-within-row').css({ display: 'table-row' });
+            $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
+            $('.text-type-params').css('display', 'none');
 
-            } else if (value === 'gui') {
-                $('#subc-spec-section').css({ display : 'none' });
-                $('table.text-type-params').each(function (i, item) {
-                    $(item).css({ display : null});
-                });
-                if ($('within-select-hint-row')) {
-                    $('within-select-hint-row').remove();
-                }
-            }
-        };
-    };
-
-    /**
-     *
-     * @returns {Function}
-     */
-    lib.createFuncShowWithinHint = function () {
-        return function (event) {
-            var findValueOption = function (value) {
-                var i, options;
-
-                options = event.element().select('option[value="' + value + '"]');
-                for (i = 0; i < options.length; i += 1) {
-                    if (options[i].readAttribute('value') === value) {
-                        return options[i].readAttribute('title');
-                    }
-                }
-                return '';
-            };
-            if ($('within-select-hint-row')) {
-                $('within-select-hint-row').remove();
-            }
-            $('subc-spec-row').append('<tr id="within-select-hint-row" style="font-size: 90%; color: #444"><td></td><td>'
-                + '<div style="width: 70%">' + layoutModel.conf.messages.available_attributes
-                + ': <strong>' + findValueOption($(event.element()).val()) + '</strong></div></td>');
-        };
+        } else if (value === 'gui') {
+            $('#subc-within-row').css({ display: 'none' });
+            $('.text-type-params')
+                .css('display', 'block')
+                .find('input[type="checkbox"]').attr('disabled', null);
+        }
     };
 
     /**
@@ -116,16 +83,25 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
         treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'), {clickableText: true},
             updateForm);
 
-        $('subc-spec-row').css({ display : 'none' });
+        $('subc-within-row').css({ display : 'none' });
 
         $('input.method-select').each(function (i, item) {
             $(item).bind('click', function (event) {
-                lib.createFuncSwitchToInputMethod()($(event.target).val());
+                lib.subcCreateVariantSwitch($(event.target).val());
             });
         });
 
-        $('#within-struct-selector').bind('change', lib.createFuncShowWithinHint());
-        lib.createFuncSwitchToInputMethod()($('input[name="method"]:checked').val());
+        // attributes hint
+        popupBox.bind($('#struct-hint'), function (tooltipBox, finalize) {
+            var v;
+
+            v = $('#within-struct-selector').find('option[value="' + $('#within-struct-selector').val() + '"]').attr('title');
+            $(tooltipBox.getRootElement()).append('<strong>' + layoutModel.conf.messages.available_attributes + '</strong>: ');
+            $(tooltipBox.getRootElement()).append(v);
+            finalize();
+        });
+
+        lib.subcCreateVariantSwitch($('input[name="method"]:checked').val());
     };
 
     /**

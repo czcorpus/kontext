@@ -30,7 +30,7 @@ $_("Create Subcorpus")#slurp
 
 require(['tpl/subcorpForm', 'conf', 'domReady!'], function(pageSelf, conf) {
     conf.inputMethod = "$method";
-    conf.messages['available_messages'] = "$_('available attributes')";
+    conf.messages['available_attributes'] = "$_('available attributes')";
     conf.messages['and'] = "$_('and')";
     conf.messages['close'] = "$_('close')";
     pageSelf.init(conf);
@@ -63,16 +63,16 @@ require(['tpl/subcorpForm', 'conf', 'domReady!'], function(pageSelf, conf) {
                 <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
             </td>
         </tr>
-        <tr id="subc-spec-row">
-            <th>$_('Condition within')
-                <select id="within-struct-selector" name="within_struct">
+        <tr id="subc-within-row">
+            <th>$_('Condition within'):</th>
+            <td>
+                <strong>&lt;</strong><select id="within-struct-selector" name="within_struct">
                     #for key, value in $structs_and_attrs.items()
                     <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
                     #end for
-                </select>:
-            </th>
-            <td>
+                </select>&nbsp;<sup><a id="struct-hint">?</a></sup>
                 <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
+                <strong>/&gt;</strong>
             </td>
         </tr>
         </tbody>
