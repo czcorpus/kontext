@@ -73,8 +73,7 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
 
         #set $i = 0
         #for $a in $Availstructs
-            #set $checked = ($a.sel) and 'checked="checked"' or ''
-            <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' checked />
+            <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' #if $a.sel#checked#end if# />
             <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
             #set $i = $i + 1
         #end for
