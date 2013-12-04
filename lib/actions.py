@@ -2390,6 +2390,9 @@ class Actions(ConcCGI):
         if plugins.has_plugin('query_storage'):
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
                                                           to_date=to_date, offset=offset, limit=limit, types=types)
+            for row in rows:
+                row['corpname'] = self._humanize_corpname(row['corpname'])
+                row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
         else:
             rows = []
 

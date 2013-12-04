@@ -967,27 +967,60 @@ table#multilevel-freq-params td.level {
   font-weight: bold;
 }
 
-table.query-history {
+.query-history {
   border: 1px solid @color-light-frame;
+  border-radius: @border-radius-menu;
+  padding: 10px;
+}
+
+.query-history table {
+  width: 100%;
   border-collapse: collapse;
 }
 
-.query-history span.query-action {
-  border: 1px solid #494949;
-  color: #494949;
+.query-history table th {
+  text-align: left;
+}
+
+.query-history .corpname {
+  color: @color-logo-pink;
+}
+
+.query-history .query {
+  font-size: 110%;
+  padding: 15px 20px 5px 20px;
+  font-family: 'Droid Sans Mono', monospace;
+}
+
+.query-history .options {
+  text-align: left;
+  font-size: 80%;
+  padding: 5px 20px;
+  color: @color-logo-blue;
+}
+
+.query-history .options span.query-action {
+  border: 1px solid @color-logo-blue;
+  color: @color-logo-blue;
   border-radius: 3px;
-  padding: 1px 2px;
+  padding: 1px 4px;
   white-space: nowrap;
 }
 
-table.query-history th,
-table.query-history td {
-  padding: 4px 10px;
+.query-history table td.date {
+  color: #999999;
 }
 
-table.query-history th {
-  color: @color-logo-pink;
+.query-history table td.date strong {
+  padding-left: 0.4em;
 }
+
+.query-history table td.link,
+.query-history table td.date {
+  text-align: right;
+}
+
+
 
 .query-export-url {
   margin: 20px 0;
