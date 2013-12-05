@@ -256,15 +256,17 @@ class CGIPublisher(object):
             return ''  # english
         lgs_string = re.sub(';q=[^,]*', '', lgs_string)
         lgs = lgs_string.split(',')
-        lgdirs = os.listdir(locale_dir)
+        lgdirs = os.listdir(locale_dir)  # available translations
+        ans = ''
         for lg in lgs:
             lg = lg.replace('-', '_').lower()
             if lg.startswith('en'):  # english
-                return ''
+                break
             for lgdir in lgdirs:
                 if lgdir.lower().startswith(lg):
-                    return lgdir
-        return ''
+                    ans = lgdir
+                    break
+        return ans
 
     def init_locale(self):
         # locale
