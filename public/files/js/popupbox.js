@@ -177,7 +177,9 @@ define(['win', 'jquery'], function (win, $) {
      *
      * @param whereElement
      * @param {string|function} contents if a function is provided,
-     * following signature is expected: function(TooltipBox, finalizeCallback) where htmlElement is the tooltip box itself
+     * following signature is expected: function(TooltipBox, finalizeCallback) where first argument is a TooltipBox
+     * instance and second argument is a finalization callback which is expected to be called by a user once he
+     * finishes content generation.
      * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
      * onClose),
      * domId, calculatePosition (true, false)
@@ -200,6 +202,7 @@ define(['win', 'jquery'], function (win, $) {
         this.onClose = fetchOption('onClose', null);
 
         this.newElem = win.document.createElement('div');
+        $(this.newElem).addClass('tooltip-box').hide();
         if (boxId) {
             this.newElem.setAttribute('id', boxId);
         }
@@ -209,10 +212,13 @@ define(['win', 'jquery'], function (win, $) {
             if (calculatePosition) {
                 finalizationCallback = function () {
                     self.calcPosition(opts);
+                    $(self.newElem).show();
                 };
 
             } else {
-                finalizationCallback = function () {};
+                finalizationCallback = function () {
+                    $(self.newElem).show();
+                };
             }
             contents(this, finalizationCallback);
 
@@ -221,11 +227,11 @@ define(['win', 'jquery'], function (win, $) {
             if (calculatePosition) {
                 this.calcPosition(opts);
             }
+            $(self.newElem).show();
         }
         if (msgType !== 'plain') {
             $(this.newElem).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         }
-        $(this.newElem).addClass('tooltip-box');
         $(this.newElem).css('font-size', fontSize);
 
         closeClickHandler = function (event) {
