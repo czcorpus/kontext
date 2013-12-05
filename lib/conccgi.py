@@ -571,7 +571,7 @@ class ConcCGI(CGIPublisher):
             result['logout_url'] = 'login'
 
         if plugins.has_plugin('application_bar'):
-            result['app_bar'] = plugins.application_bar.get_contents(self._cookies)
+            result['app_bar'] = plugins.application_bar.get_contents(self._cookies, os.environ['LANG'])
             result['app_bar_css'] = plugins.application_bar.css_url
             result['app_bar_css_ie'] = plugins.application_bar.css_url_ie
         else:
