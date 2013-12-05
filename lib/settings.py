@@ -36,6 +36,16 @@ conf_parsers = {
 }
 
 
+def contains(section, key=None):
+    """
+    Tests whether the config contains a section or a section+key (if a key provided is not None)
+    """
+    if (key is None and section in _conf) or (key is not None and section in _conf and key in _conf[section]):
+        return True
+    else:
+        return False
+
+
 def get(section, key=None, default=None):
     """
     Gets a configuration value. This function never throws an exception in
@@ -255,18 +265,3 @@ def supports_password_change():
         if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
             return False
     return True
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        parse_config(sys.argv[1])
-        for block in _conf:
-            print('\n[%s]' % block)
-            for key in _conf[block]:
-                if type(key) == str:
-                    if key.find('passw') == -1:
-                        value = _conf[block][key]
-                    else:
-                        value = '******'
-                    print('%s: %s' % (key, value))
-    else:
-        print('No config XML specified')
