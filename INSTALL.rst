@@ -72,6 +72,8 @@ Following plugins are optional:
 +------------------+------------------------------------------------------------------------------+
 | db               | provides a connection to a database (if required by other plugins)           |
 +------------------+------------------------------------------------------------------------------+
+| setlang          | if you want to read current UI language in a non-KonText way                 |
++------------------+------------------------------------------------------------------------------+
 
 
 Authentication plugin notes
@@ -110,6 +112,43 @@ Authentication object is expected to implement following methods:
 
 Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
 some required methods.
+
+The "appbar" plugin
+===================
+
+This optional plugin provides a way how to integrate KonText to an existing group of applications sharing some
+visual page component (typically, a top-positioned toolbar - like e.g. in case of Google applications).
+
+Such page component may provide miscellaneous information (e.g. links to your other applications, knowledge base
+links,...) but it is expected that its main purpose is to provide user-login status and links to shared login/logout
+website. KonText uses this plugin to fetch an HTML fragment of such "toolbar". The HTML data is loaded internally
+(between KonText's hosting server and a "toolbar provider" server, via HTTP) and rendered along with KonText's own
+output.
+
+Please note that if you configure "appbar" plugin then KonText will stop showing its own authentication information
+and login/logout links.
+
+Because of its specific nature, the "appbar" plugin is instantiated in a slightly different way from other plugins.
+Module your plugin resides in is expected to implement following factory method::
+
+    def create_instance(conf, auth_plugin):
+        pass
+
+This means that even if your "appbar" implementation does not need an *auth_plugin* instance you still must implement
+compatible *create_instance* method::
+
+    def create_instance(conf, *args, **kwargs):
+        return MyAppBarImplementation()
+
+Your plugin object is expected to implement single method *get_contents*::
+
+    def get_contents(self, cookies, current_lang):
+        pass
+
+*cookies* is a *BonitoCookie(Cookie.BaseCookie)* instance providing dictionary-like access to cookie values,
+*current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
+contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
+notify your toolbar/app-bar/whatever content provider which language is currently in use.
 
 ----------------------
 Deployment and running
