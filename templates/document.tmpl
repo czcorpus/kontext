@@ -394,6 +394,7 @@ $_ca_topbar
     #end filter
 </div>
 <footer>
+    #if $len($avail_languages) > 0
     <div id="switch-language-box">$_("user interface languages"):
         #set $i = 0
         #for $lang in $avail_languages
@@ -401,6 +402,7 @@ $_ca_topbar
         #set $i = $i + 1
         #end for
     </div>
+    #end if
     <div>
         <div id="copyright-info">
             &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,

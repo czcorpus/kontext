@@ -238,10 +238,16 @@ class CGIPublisher(object):
 
     def get_uilang(self, locale_dir):
         """
-        loads user language from user settings or from browser's configuration
+        Returns proper locale directory according to the set language.
+        Method tries to determine the language using three following sources
+        (the order determines the priority:
+
+        1) optional plugin "setlang"
+        2) KonText's ui_settings (stored in the 'settings cookie' as a part of JSON object)
+        3) user agent language
         """
-        if 'uilang' in self._session:
-            lgs_string = self._session['uilang']
+        if plugins.has_plugin('setlang'):
+            lgs_string = plugins.setlang.fetch_current_language(self._cookies)
         else:
             lgs_string = self._ui_settings.get('set_uilang', None)
         if not lgs_string:

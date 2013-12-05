@@ -580,7 +580,10 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css_ie'] = None
 
         # avalilable languages
-        result['avail_languages'] = settings.get_full('global', 'translations')
+        if plugins.has_plugin('setlang'):
+            result['avail_languages'] = ()
+        else:
+            result['avail_languages'] = settings.get_full('global', 'translations')
 
         # is there a concordance information in session?
         if 'conc' in self._session:

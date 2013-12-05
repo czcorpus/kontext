@@ -65,11 +65,19 @@ try:
 except ImportError:
     pass
 
-if settings.get('plugins', 'appbar').get('module', None):
+if settings.contains('plugins', 'appbar') and settings.get('plugins', 'appbar').get('module', None):
     try:
         appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
         if appbar_module:
             plugins.application_bar = appbar_module.create_instance(settings, plugins.auth)
+    except ImportError:
+        pass
+
+if settings.contains('plugins', 'setlang') and settings.get('plugins', 'setlang').get('module', None):
+    try:
+        setlang_module = plugins.load_plugin(settings.get('plugins', 'setlang')['module'])
+        if setlang_module:
+            plugins.setlang = setlang_module.create_instance(settings)
     except ImportError:
         pass
 
