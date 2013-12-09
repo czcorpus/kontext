@@ -21,7 +21,9 @@ class SetLang(object):
         self.cookie_name = cookie_name
 
     def fetch_current_language(self, cookie):
-        return cookie[self.cookie_name].value
+        if self.cookie_name in cookie:
+            return cookie[self.cookie_name].value
+        return ''
 
 
 def create_instance(conf):
