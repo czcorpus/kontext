@@ -36,7 +36,10 @@ except NameError:
 
 class Actions(ConcCGI):
 
-    contains_within = False
+    def __init__(self, environ):
+        super(Actions, self).__init__(environ=environ)
+        self.contains_within = False
+        self.disabled_menu_items = ()
 
     def user_password_form(self):
         if not settings.supports_password_change():
@@ -64,7 +67,7 @@ class Actions(ConcCGI):
             raise UserActionException(settings.auth.get_required_password_properties())
 
         settings.auth.update_user_password(new_passwd)
-        self._redirect(settings.get_root_uri())
+        self._redirect(settings.get_root_url())
 
     user_password.access_level = 1
     user_password.template = 'user_password.tmpl'
@@ -83,10 +86,12 @@ class Actions(ConcCGI):
             self._redirect('%s%s' % (settings.get_root_url(), 'first_form'))
         else:
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+                                        'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter',
+                                        'menu-frequency',
+                                        'menu-collocations', 'menu-conc-desc')
             ans['message'] = ('error', _('Incorrect username or password'))
         return ans
+
     loginx.template = 'login.tmpl'
 
     def logoutx(self):
@@ -179,9 +184,10 @@ class Actions(ConcCGI):
             out['message'] = ('info', _('Empty result'))
             out['next_url'] = '%sfirst_form' % settings.get_root_url()
 
-        params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
-            % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
-               self.align_kwic, 1, conc.size())
+        params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
+                 '&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
+                 % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
+                    self.align_kwic, 1, conc.size())
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
@@ -250,11 +256,13 @@ class Actions(ConcCGI):
         concsize = conc.size()
         fullsize = conc.fullsize()
         sampled_size = 0
-        while i < len(self.q) and not self.q[i].startswith('r'): i += 1
-        if i < len(self.q): sampled_size = concsize
+        while i < len(self.q) and not self.q[i].startswith('r'):
+            i += 1
+        if i < len(self.q):
+            sampled_size = concsize
 
         for j in range(i + 1, len(self.q)):
-            if self.q[j][0] in ('pn'):
+            if self.q[j][0] in ('p', 'n'):
                 return {'concsize': concsize, 'sampled_size': 0,
                         'relconcsize': 0, 'fullsize': fullsize,
                         'finished': conc.finished()}
@@ -263,9 +271,9 @@ class Actions(ConcCGI):
                                            q=self.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
-        return {'sampled_size': sampled_size, 'concsize': concsize,
-                'relconcsize': 1000000.0 * fullsize / self._corp().search_size(),
-                'fullsize': fullsize, 'finished': conc.finished()}
+        return dict(sampled_size=sampled_size, concsize=concsize,
+                    relconcsize=1000000.0 * fullsize / self._corp().search_size(), fullsize=fullsize,
+                    finished=conc.finished())
 
     def concdesc(self, query_id=''):
         self.disabled_menu_items = ('menu-save',)
@@ -291,14 +299,14 @@ class Actions(ConcCGI):
                               'churl': self.urlencode(u1),
                               'tourl': self.urlencode(u2),
                               'size': s} for o, a, u1, u2, s in conc_desc
-                             ],
+        ],
                     'supports_query_save': plugins.has_plugin('query_storage'),
                     'query_desc': query_desc,
                     'query_desc_raw': query_desc_raw,
                     'query_id': query_id,
                     'export_url': '%sto?q=%s' % (settings.get_root_url(), query_id),
                     'is_public': is_public
-                    })
+        })
         return out
 
     def concdesc_json(self, query_id=''):
@@ -331,13 +339,20 @@ class Actions(ConcCGI):
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.refs.split(',')
-        ref_is_allowed = lambda r: r and r not in ('#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
-        out['Availrefs'] = [{'n': '#', 'label': _('Token number'), 'sel':
-            ((('#' in reflist) and 'selected') or '')}] + \
-                           [{'n': '=' + n, 'sel':
-                               ((('=' + n in reflist) and 'selected') or ''),
-                             'label': (corp.get_conf(n + '.LABEL') or n)}
-                            for n in availref if ref_is_allowed(n)]
+        ref_is_allowed = lambda r: r and r not in (
+            '#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
+        out['Availrefs'] = [{
+                            'n': '#',
+                            'label': _('Token number'),
+                            'sel': ((('#' in reflist) and 'selected') or '')
+                            }] + \
+                           [{
+                            'n': '=' + n,
+                            'sel': ((('=' + n in reflist) and 'selected') or ''),
+                            'label': (corp.get_conf(n + '.LABEL') or n)
+                            }
+                            for n in availref if ref_is_allowed(n)
+                            ]
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
             out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
@@ -445,13 +460,13 @@ class Actions(ConcCGI):
         "multiple level sort concordance"
 
         crit = conccgi.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
-                            ml1icase, ml1bward)
+                                    ml1icase, ml1bward)
         if sortlevel > 1:
             crit += conccgi.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
-                                 ml2icase, ml2bward)
+                                         ml2icase, ml2bward)
             if sortlevel > 2:
                 crit += conccgi.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
-                                     ml3icase, ml3bward)
+                                             ml3icase, ml3bward)
 
         self.q.append(crit)
         return self.view()
@@ -632,13 +647,13 @@ class Actions(ConcCGI):
     query.template = 'view.tmpl'
 
     def _set_first_query(self, fc_lemword_window_type='',
-                        fc_lemword_wsize=0,
-                        fc_lemword_type='',
-                        fc_lemword='',
-                        fc_pos_window_type='',
-                        fc_pos_wsize=0,
-                        fc_pos_type='',
-                        fc_pos=[]):
+                         fc_lemword_wsize=0,
+                         fc_lemword_type='',
+                         fc_lemword='',
+                         fc_pos_window_type='',
+                         fc_pos_wsize=0,
+                         fc_pos_type='',
+                         fc_pos=[]):
         """
         first query screen
         """
@@ -723,7 +738,7 @@ class Actions(ConcCGI):
                           fc_pos_type)
         for al_corpname in self.sel_aligned:
             if al_corpname in nopq and not getattr(self,
-                                               'include_empty_' + al_corpname, ''):
+                                                   'include_empty_' + al_corpname, ''):
                 self.q.append('x-%s' % al_corpname)
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
@@ -738,13 +753,13 @@ class Actions(ConcCGI):
               fc_pos=[]):
 
         self._set_first_query(fc_lemword_window_type,
-                             fc_lemword_wsize,
-                             fc_lemword_type,
-                             fc_lemword,
-                             fc_pos_window_type,
-                             fc_pos_wsize,
-                             fc_pos_type,
-                             fc_pos)
+                              fc_lemword_wsize,
+                              fc_lemword_type,
+                              fc_lemword,
+                              fc_pos_window_type,
+                              fc_pos_wsize,
+                              fc_pos_type,
+                              fc_pos)
         if self.sel_aligned:
             self.align = ','.join(self.sel_aligned)
         if self.shuffle == 1 and 'f' not in self.q:
@@ -763,7 +778,7 @@ class Actions(ConcCGI):
         out = {'within': within}
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
-        # TODO dirty hack ...
+            # TODO dirty hack ...
         if self.align:
             main_corp = 'x-%s' % self.maincorp
             self.q = [item for item in self.q if item != main_corp] + [main_corp]
@@ -788,7 +803,9 @@ class Actions(ConcCGI):
             query = self._compile_query(cname=self.maincorp)
         except ConcError:
             if texttypes:
-                query = '[]'; filfpos = '0'; filtpos = '0'
+                query = '[]';
+                filfpos = '0';
+                filtpos = '0'
             else:
                 raise ConcError(_('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
@@ -850,6 +867,7 @@ class Actions(ConcCGI):
         """
         display a frequency list
         """
+
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -890,9 +908,10 @@ class Actions(ConcCGI):
         }
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
-            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0, 'quick_from_line': None, 'quick_to_line': None,
+            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0, 'quick_from_line': None,
+                    'quick_to_line': None,
                     'FCrit': []}
-        
+
         if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
             fstart = (self.fpage - 1) * self.fmaxitems + line_offset
@@ -910,7 +929,7 @@ class Actions(ConcCGI):
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-            ## generating positive and negative filter references
+                ## generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
@@ -937,7 +956,7 @@ class Actions(ConcCGI):
                         else:  # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
-                    else: # text types
+                    else:  # text types
                         structname, attrname = attr.split('.')
                         if self._corp().get_conf(structname + '.NESTED'):
                             block['unprecise'] = True
@@ -1002,6 +1021,7 @@ class Actions(ConcCGI):
             'to_line': to_line if not is_multiblock else 'auto',
             'is_multiblock': is_multiblock
         }
+
     savefreq_form.access_level = 1
 
     def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
@@ -1051,7 +1071,7 @@ class Actions(ConcCGI):
                 # write the header first, if required
                 if colheaders:
                     csv_writer.writerow([item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
-                # then write the data (first block only)
+                    # then write the data (first block only)
                 for item in block['Items']:
                     csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
                 csv_writer.writerow('')
@@ -1070,8 +1090,8 @@ class Actions(ConcCGI):
         multilevel frequency list
         """
         fcrit = ' '.join([conccgi.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
-                                       kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
-                                       kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
+                                               kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
+                                               kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
@@ -1125,7 +1145,7 @@ class Actions(ConcCGI):
         """
         self.cbgrfns = ''.join(cbgrfns)
         self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
-                    'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
+                            'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
 
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
 
@@ -1153,7 +1173,7 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['collx'] = ['concsize']
 
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                 heading=0):
+                      heading=0):
         """
         """
         self.disabled_menu_items = ('menu-save', )
@@ -1167,6 +1187,7 @@ class Actions(ConcCGI):
             'to_line': to_line,
             'saveformat': saveformat
         }
+
     savecoll_form.access_level = 1
 
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
@@ -1209,9 +1230,10 @@ class Actions(ConcCGI):
             # write the header first, if required
             if colheaders:
                 csv_writer.writerow([item['n'] for item in result['Head']])
-            # then write the data
+                # then write the data
             for item in result['Items']:
-                csv_writer.writerow((item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+                csv_writer.writerow(
+                    (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
 
             tpl_data = {
                 'data': [row.decode('utf-8') for row in csv_buff.rows],
@@ -1244,6 +1266,7 @@ class Actions(ConcCGI):
         """
         return self.call_function(conclib.get_detail_context, (self._corp(),
                                                                pos))
+
     widectx.access_level = 1
 
     def widectx_raw(self, pos=0):
@@ -1479,18 +1502,18 @@ class Actions(ConcCGI):
                                              'rel': round(rel, 1),
                                              'rel_ref': round(relref, 1)}
                                             for s, rel, relref, f, fr, w in out],
-                          'ref_corp_full_name': ref_name
+                               'ref_corp_full_name': ref_name
                 })
                 result_list = result['Keywords']
             else:  # ordinary list
                 if self.wlattr == 'ws_collocations':
                     result.update({'Items': self.call_function(corplib.ws_wordlist,
-                                                          (self._corp(),))[wlstart:]})
+                                                               (self._corp(),))[wlstart:]})
                 else:
                     if hasattr(self, 'wlfile') and self.wlpat == '.*':
                         self.wlsort = ''
                     result.update({'Items': self.call_function(corplib.wordlist,
-                                                          (self._corp(), self.wlwords))[wlstart:]})
+                                                               (self._corp(), self.wlwords))[wlstart:]})
                     if self.wlwords:
                         result['wlcache'] = self.wlcache
                     if self.blacklist:
@@ -1577,9 +1600,9 @@ class Actions(ConcCGI):
                                                           'blcache'))
         if not self.wlstruct_attr1:
             raise ConcError(_('No output attribute specified'))
-        if not self.wlstruct_attr3: 
+        if not self.wlstruct_attr3:
             level = 2
-        if not self.wlstruct_attr2: 
+        if not self.wlstruct_attr2:
             level = 1
         if not self.wlpat and not self.wlwords:
             raise ConcError(_('You must specify either a pattern or a file to get the multilevel wordlist'))
@@ -1592,8 +1615,8 @@ class Actions(ConcCGI):
     struct_wordlist.template = 'freqs.tmpl'
 
     def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
-               usesubcorp='', ref_corpname='', ref_usesubcorp='',
-               saveformat='text'):
+                    usesubcorp='', ref_corpname='', ref_usesubcorp='',
+                    saveformat='text'):
         self.disabled_menu_items = ('menu-save', )
         if to_line == '':
             to_line = 1000
@@ -1605,6 +1628,7 @@ class Actions(ConcCGI):
         if to_line == 0:
             ans['message'] = ('error', _('Empty result cannot be saved.'))
         return ans
+
     savewl_form.access_level = 1
 
     def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
@@ -1641,7 +1665,7 @@ class Actions(ConcCGI):
             # write the header first, if required
             if colheaders:
                 csv_writer.writerow((self.wlattr, 'freq'))
-            # then write the data
+                # then write the data
             for item in ans['Items']:
                 csv_writer.writerow((item['str'], str(item['freq'])))
             tpl_data = {
@@ -1652,6 +1676,7 @@ class Actions(ConcCGI):
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % saved_filename
 
         return tpl_data
+
     savewl.access_level = 1
 
     def wordlist_process(self, attrname=''):
@@ -1851,7 +1876,7 @@ class Actions(ConcCGI):
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
-                or (subcname and not delete and not create)):
+            or (subcname and not delete and not create)):
             subc_list = self.cm.subcorp_names(basecorpname)
             for item in subc_list:
                 item['selected'] = False
@@ -1985,12 +2010,13 @@ class Actions(ConcCGI):
         self.rightctx = self.kwicrightctx
         if not to_line:
             to_line = conc.size()
-        # TODO Save menu should be active here
+            # TODO Save menu should be active here
         return {'from_line': from_line, 'to_line': to_line}
 
     saveconc_form.access_level = 1
 
-    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40', rightctx='40'):
+    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
+                 rightctx='40'):
 
         def merge_conc_line_parts(items):
             """
@@ -2089,7 +2115,7 @@ class Actions(ConcCGI):
         except Exception as e:
             self._headers['Content-Type'] = 'text/html'
             if 'Content-Disposition' in self._headers:
-                del(self._headers['Content-Disposition'])
+                del (self._headers['Content-Disposition'])
             raise e
 
     saveconc.access_level = 1
@@ -2310,7 +2336,9 @@ class Actions(ConcCGI):
 
         if plugins.auth.is_administrator():
             import system_stats
-            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date, min_occur=min_occur)
+
+            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date,
+                                     min_occur=min_occur)
             maxmin = {}
             for label, section in data.items():
                 maxmin[label] = system_stats.get_max_min(section)
@@ -2325,6 +2353,7 @@ class Actions(ConcCGI):
         else:
             out = {'message': ('error', _('You don\'t have enough privileges to see this page.'))}
         return out
+
     stats.template = 'stats.tmpl'
 
     def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
@@ -2355,7 +2384,7 @@ class Actions(ConcCGI):
         html = """<div class="query-history-item%s" data-query-id="%s">
                 <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a>%s</h4>
                 %s""" % (autosaved_class, query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
-                          _('delete'), notification_autosaved, desc)
+                         _('delete'), notification_autosaved, desc)
         return {
             'html': html
         }
@@ -2406,7 +2435,8 @@ class Actions(ConcCGI):
                 self._headers['Content-Length'] = '%s' % file_size
                 self._headers['Accept-Ranges'] = 'none'
                 if self.environ.get('HTTP_RANGE', None):
-                    self._headers['Content-Range'] = 'bytes 0-%s/%s' % (os.path.getsize(path) - 1, os.path.getsize(path))
+                    self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
+                        os.path.getsize(path) - 1, os.path.getsize(path))
                 return f.read()
         else:
             self._set_not_found()
