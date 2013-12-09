@@ -601,6 +601,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         $('#corpus-citation-link a').on('click', function () {
             $('#corpus-citation-box').modal({
                 minHeight: 400,
+                onShow: function () {
+                    $('#corpus-citation-box').find('a').attr('target', '_blank');
+                },
                 onClose: function () {
                     $.modal.close();
                 }
