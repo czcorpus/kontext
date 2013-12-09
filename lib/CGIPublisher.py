@@ -168,6 +168,7 @@ class CGIPublisher(object):
         self.environ = environ
         self.headers_sent = False
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._user = None
         self._session = {}
         self._ui_settings = {}
 
