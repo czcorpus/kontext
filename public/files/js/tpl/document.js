@@ -833,11 +833,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 $(this).attr('href', '#');
             });
 
-            $('<link/>', {
-                rel: 'stylesheet',
-                type: 'text/css',
-                href: '../files/css/main-menu.css'
-            }).appendTo('head');
+
+            if (document.createStyleSheet) {
+                document.createStyleSheet('../files/css/main-menu.css');
+
+            } else {
+                $(win.document.createElement('link')).attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: '../files/css/main-menu.css'
+                }).appendTo('head');
+            }
 
             $('#menu-level-1 a.trigger').each(function () {
                 $(this).on('mouseover', function (event) {
