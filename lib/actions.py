@@ -115,7 +115,6 @@ class Actions(ConcCGI):
         view_params : dict
             parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
         """
-        self.active_menu_item = 'menu-view'
         for k, v in view_params.items():
             if k in self.__dict__:
                 self.__dict__[k] = v
@@ -203,7 +202,6 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['view'] = ['orig_query']
 
     def first_form(self):
-        self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
@@ -270,7 +268,6 @@ class Actions(ConcCGI):
                 'fullsize': fullsize, 'finished': conc.finished()}
 
     def concdesc(self, query_id=''):
-        self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-save',)
         out = {}
 
@@ -315,7 +312,6 @@ class Actions(ConcCGI):
         """
         from tbl_settings import tbl_labels
 
-        self.active_menu_item = 'menu-view'
         self.disabled_menu_items = ('menu-save',)
         out = {}
         if self.maincorp:
@@ -414,7 +410,6 @@ class Actions(ConcCGI):
         """
         sort concordance form
         """
-        self.active_menu_item = 'menu-concordance'
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
@@ -425,8 +420,7 @@ class Actions(ConcCGI):
         """
         simple sort concordance
         """
-        self.active_menu_item = 'menu-concordance'
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = ()
 
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
@@ -742,7 +736,7 @@ class Actions(ConcCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=[]):
-        self.active_menu_item = 'menu-view'
+
         self._set_first_query(fc_lemword_window_type,
                              fc_lemword_wsize,
                              fc_lemword_type,
@@ -762,7 +756,6 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
 
     def filter_form(self, within=0):
-        self.active_menu_item = 'menu-filter'
         self.disabled_menu_items = ('menu-save',)
 
         self.lemma = ''
@@ -785,7 +778,6 @@ class Actions(ConcCGI):
         """
         Positive/Negative filter
         """
-        self.active_menu_item = 'menu-view'
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
@@ -823,7 +815,6 @@ class Actions(ConcCGI):
     def reduce_form(self):
         """
         """
-        self.active_menu_item = 'menu-sample'
         self.disabled_menu_items = ('menu-save',)
         return {}
 
@@ -831,7 +822,6 @@ class Actions(ConcCGI):
         """
         random sample
         """
-        self.active_menu_item = 'menu-view'
         self.disabled_menu_items = ('menu-save',)
 
         self.q.append('r' + rlines)
@@ -846,7 +836,6 @@ class Actions(ConcCGI):
         frequency list form
         """
         self.disabled_menu_items = ('menu-save',)
-        self.active_menu_item = 'menu-frequency'
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
             'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1),
@@ -861,8 +850,6 @@ class Actions(ConcCGI):
         """
         display a frequency list
         """
-        self.active_menu_item = 'menu-frequency'
-
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -1117,7 +1104,6 @@ class Actions(ConcCGI):
         """
         collocations form
         """
-        self.active_menu_item = 'menu-collocations'
         self.disabled_menu_items = ('menu-save', )
         if self.maincorp:
             corp = conclib.manatee.Corpus(self.maincorp)
@@ -1137,8 +1123,6 @@ class Actions(ConcCGI):
         """
         list collocations
         """
-        self.active_menu_item = 'menu-collocations'
-
         self.cbgrfns = ''.join(cbgrfns)
         self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
                     'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
@@ -1172,7 +1156,6 @@ class Actions(ConcCGI):
                  heading=0):
         """
         """
-        self.active_menu_item = 'menu-collocations'
         self.disabled_menu_items = ('menu-save', )
 
         self.citemsperpage = sys.maxint
@@ -1381,7 +1364,6 @@ class Actions(ConcCGI):
         """
         Word List Form
         """
-        self.active_menu_item = 'menu-new-query'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         self._reset_session_conc()
@@ -1442,7 +1424,8 @@ class Actions(ConcCGI):
 
     def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
                  ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
-        self.active_menu_item = 'menu-word-list'
+        """
+        """
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-concordance')
 
@@ -1771,7 +1754,6 @@ class Actions(ConcCGI):
         method : str
             the same meaning as in subcorp()
         """
-        self.active_menu_item = 'menu-subcorpus'
         self.disabled_menu_items = ('menu-save',)
         self._reset_session_conc()
 
@@ -1916,7 +1898,6 @@ class Actions(ConcCGI):
         import tables
         import locale
 
-        self.active_menu_item = 'menu-subcorpus'
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 

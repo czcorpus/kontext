@@ -241,7 +241,6 @@ class ConcCGI(CGIPublisher):
 
     shuffle = 0
 
-    active_menu_item = None
     disabled_menu_items = []
     SubcorpList = []
     save_menu = []
