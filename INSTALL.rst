@@ -72,7 +72,7 @@ Following plugins are optional:
 +------------------+------------------------------------------------------------------------------+
 | db               | provides a connection to a database (if required by other plugins)           |
 +------------------+------------------------------------------------------------------------------+
-| setlang          | if you want to read current UI language in a non-KonText way                 |
+| getlang          | if you want to read current UI language in a non-KonText way                 |
 +------------------+------------------------------------------------------------------------------+
 
 

@@ -579,7 +579,7 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css_ie'] = None
 
         # avalilable languages
-        if plugins.has_plugin('setlang'):
+        if plugins.has_plugin('getlang'):
             result['avail_languages'] = ()
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
