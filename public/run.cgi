@@ -73,11 +73,11 @@ if settings.contains('plugins', 'appbar') and settings.get('plugins', 'appbar').
     except ImportError:
         pass
 
-if settings.contains('plugins', 'setlang') and settings.get('plugins', 'setlang').get('module', None):
+if settings.contains('plugins', 'getlang') and settings.get('plugins', 'getlang').get('module', None):
     try:
-        setlang_module = plugins.load_plugin(settings.get('plugins', 'setlang')['module'])
-        if setlang_module:
-            plugins.setlang = setlang_module.create_instance(settings)
+        getlang_module = plugins.load_plugin(settings.get('plugins', 'getlang')['module'])
+        if getlang_module:
+            plugins.getlang = getlang_module.create_instance(settings)
     except ImportError:
         pass
 

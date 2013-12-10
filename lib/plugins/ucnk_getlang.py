@@ -15,7 +15,7 @@ A custom solution to obtain language settings in a non-KonText way
 """
 
 
-class SetLang(object):
+class GetLang(object):
     """
     Please note that both fetch_current_language() and
     get_fallback_language() should not return None in any case.
@@ -46,9 +46,9 @@ class SetLang(object):
 
 
 def create_instance(conf):
-    cookie_name = conf.get('plugins', 'setlang')['ucnk:cookie']
-    fallback_lang = conf.get('plugins', 'setlang').get('ucnk:fallback_lang', '')
+    cookie_name = conf.get('plugins', 'getlang')['ucnk:cookie']
+    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', '')
     if fallback_lang is None:  # this is important ('' == default locale while None produces error)
         fallback_lang = ''
-    return SetLang(cookie_name=cookie_name, fallback_lang=fallback_lang)
+    return GetLang(cookie_name=cookie_name, fallback_lang=fallback_lang)
 

@@ -243,12 +243,12 @@ class CGIPublisher(object):
         Method tries to determine the language using three following sources
         (the order determines the priority:
 
-        1) optional plugin "setlang"
+        1) optional plugin "getlang"
         2) KonText's ui_settings (stored in the 'settings cookie' as a part of JSON object)
         3) user agent language
         """
-        if plugins.has_plugin('setlang'):
-            lgs_string = plugins.setlang.fetch_current_language(self._cookies)
+        if plugins.has_plugin('getlang'):
+            lgs_string = plugins.getlang.fetch_current_language(self._cookies)
         else:
             lgs_string = self._ui_settings.get('set_uilang', None)
         if not lgs_string:
@@ -267,8 +267,8 @@ class CGIPublisher(object):
                 if lgdir.lower().startswith(lg):
                     ans = lgdir
                     break
-        if ans == '' and plugins.has_plugin('setlang') and hasattr(plugins.setlang, 'get_fallback_language'):
-            ans = plugins.setlang.get_fallback_language()
+        if ans == '' and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
+            ans = plugins.getlang.get_fallback_language()
         return ans
 
     def init_locale(self):
