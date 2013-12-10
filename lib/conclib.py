@@ -1535,6 +1535,7 @@ def get_detail_context(corp, pos, hitlen=1,
                                       detail_right_ctx + detail_ctx_incr))
     data['righttoleft'] = corp.get_conf('RIGHTTOLEFT')
     data['pos'] = pos
+    data['maxdetail'] = maxdetail
     return data
 
 
