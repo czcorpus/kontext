@@ -1264,8 +1264,10 @@ class Actions(ConcCGI):
         """
         display a hit in a wider context
         """
-        return self.call_function(conclib.get_detail_context, (self._corp(),
-                                                               pos))
+        data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
+        data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < int(data['maxdetail'])
+        data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
+        return data
 
     widectx.access_level = 0
 
