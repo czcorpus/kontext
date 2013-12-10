@@ -267,6 +267,8 @@ class CGIPublisher(object):
                 if lgdir.lower().startswith(lg):
                     ans = lgdir
                     break
+        if ans == '' and plugins.has_plugin('setlang') and hasattr(plugins.setlang, 'get_fallback_language'):
+            ans = plugins.setlang.get_fallback_language()
         return ans
 
     def init_locale(self):
