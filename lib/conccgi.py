@@ -274,7 +274,8 @@ class ConcCGI(CGIPublisher):
         ans = {
             'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
             'action': action_name,
-            'user': os.getenv('REMOTE_USER'),
+            'user_id': self._session_get('user', 'id'),
+            'user': self._session_get('user', 'user'),
             'params': dict([(k, v) for k, v in params.items() if v]),
             'settings': dict([(k, v) for k, v in user_settings.items() if v])
         }
