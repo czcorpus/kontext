@@ -778,10 +778,6 @@ class Actions(ConcCGI):
         out = {'within': within}
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
-            # TODO dirty hack ...
-        if self.align:
-            main_corp = 'x-%s' % self.maincorp
-            self.q = [item for item in self.q if item != main_corp] + [main_corp]
         self._attach_tag_builder(out)
         return out
 
@@ -803,8 +799,8 @@ class Actions(ConcCGI):
             query = self._compile_query(cname=self.maincorp)
         except ConcError:
             if texttypes:
-                query = '[]';
-                filfpos = '0';
+                query = '[]'
+                filfpos = '0'
                 filtpos = '0'
             else:
                 raise ConcError(_('No query entered.'))
