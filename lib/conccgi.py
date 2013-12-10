@@ -409,8 +409,10 @@ class ConcCGI(CGIPublisher):
         out : dict
         """
         basecorpname = self.corpname.split(':')[0]
-        out['SubcorpList'] = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] \
-            + sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+        subcorp_list = sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+        if len(subcorp_list) > 0:
+            subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
+        out['SubcorpList'] = subcorp_list
 
     def _get_save_excluded_attributes(self):
         return ('corpname', )
