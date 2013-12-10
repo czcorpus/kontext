@@ -43,9 +43,17 @@ files instead to a database, all you have to do is to rewrite the *sessions* plu
 You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
 *ucnk_* prefix.
 
-Typically, a plugin module is required to implement *create_instance(settings, \*args, \**kwargs) * method which returns
-an instance of required service. Additionally a *setup(\**kwargs)* method can be defined to allow further plugin
-configuration after *CGIPublisher* object is fully operational.
+Typically, a plugin module is required to implement method ::
+
+    def create_instance(settings, *args, **kwargs):
+        return MyPluginImplementation()
+
+which returns an instance of required service. Additionally, a method ::
+
+    def setup(**kwargs):
+        pass
+
+can be defined to allow further plugin configuration after *CGIPublisher* object is fully operational.
 
 Following plugins are mandatory:
 
@@ -91,24 +99,73 @@ module with the following properties:
     The *settings* parameter is KonText's *settings* module or some compatible one. This
     provides access to any required configuration parameter (e.g. database connection if you need one).
 
-Authentication object is expected to implement following methods:
+Authentication object is expected to implement following methods: ::
 
-  * *validate_user(username, password)* - returns bool value (True on success else False) and changes
-    the state of your authentication object to reflect user's properties
-  * *get_corplist()* - returns list/tuple containing identifiers of corpora available to the
-    logged user
-  * *is_administrator()* - returns True if the user is admin else False is returned
-  * if the password update interface is required then the following additional methods must be implemented:
+    def validate_user(self, username, password):
+        """
+        Returns bool
+        """
+        pass
 
-    * *update_password(new_password)*
-    * *validate_password(password)* - tests whether provided password matches user's current password
-    * *validate_new_password(password)* - tests whether provided password candidate matches required password
-      properties (like length)
-    * *get_required_password_properties()* - returns a text describing what are the properties of a valid password
-    * *is_administrator()* - returns True if current user has administrator's privileges
-    * *get_login_url()* - returns URL of *login* action (because in general, it may be outside the application)
-    * *get_logout_url()* - returns URL of *logout* action (because in general, it may be outside the application)
-    * *anonymous_user()* - returns a dictionary containing anonymous user credentials
+Returns True on success else False and changes the state of your authentication object to reflect user's properties ::
+
+    def get_corplist(self):
+        pass
+
+Returns list/tuple containing identifiers of corpora available to the logged user. ::
+
+    def is_administrator(self):
+        pass
+
+Returns True if the user is admin else False is returned.
+::
+
+    def anonymous_user(self):
+        """
+        returns a dictionary containing anonymous user credentials
+        """
+        pass
+
+If a password update interface is required then the following additional methods must be implemented: ::
+
+    def update_password(self, new_password):
+        pass
+
+
+    def validate_password(self, password):
+        """
+        tests whether provided password matches user's current password
+        """
+        pass
+
+    def validate_new_password(self, password):
+        """
+        tests whether provided password candidate matches required password
+        properties (like length)
+        """
+        pass
+
+    def get_required_password_properties(self):
+        """
+        returns a text describing what are the properties of a valid password
+        """
+        pass
+
+In case you want to use some other web application to log-in/log-out your users you have also to specify following
+methods telling the KonText where a user should be redirected: ::
+
+    def get_login_url(self):
+        """
+        returns URL of *login* action (because in general, it may be outside the application)
+        """
+        pass
+
+    def get_logout_url(self):
+        """
+        returns URL of *logout* action (because in general, it may be outside the application)
+        """
+        pass
+
 
 Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
 some required methods.
@@ -149,6 +206,26 @@ Your plugin object is expected to implement single method *get_contents*::
 *current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
 contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
 notify your toolbar/app-bar/whatever content provider which language is currently in use.
+
+The "getlang" plugin
+====================
+
+This optional plugin allows you to obtain language settings set by some other application (i.e. you want to have a shared
+toolbar with centralized authentication and user interface settings).
+
+It is required to implement a single method::
+
+    def fetch_current_language(self, cookie):
+        pass
+
+where *cookie* is an instance of *Cookie.BaseCookie*
+
+Additionally, you can implement also a method to get a fallback language in case your "other application" sets some
+language your version of KonText does not support.::
+
+    def get_fallback_language(self):
+        pass
+
 
 ----------------------
 Deployment and running
