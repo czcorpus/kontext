@@ -245,11 +245,10 @@ define(['win', 'jquery'], function (win, $) {
         escKeyHandler = function (event) {
             if (event.keyCode === 27) {
                 self.close();
-                $(window).off('keyup', escKeyHandler);
+                $(win.document).off('keyup', escKeyHandler);
             }
         };
-
-        $(window).on('keyup', escKeyHandler);
+        $(win.document).on('keyup', escKeyHandler);
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);
@@ -280,11 +279,11 @@ define(['win', 'jquery'], function (win, $) {
 
         windowClickHandler = function (event) {
             if (event.target !== box.newElem) {
-                $(win).off('click', windowClickHandler);
+                $(win.document).off('click', windowClickHandler);
                 box.close();
             }
         };
-        $(win).on('click', windowClickHandler);
+        $(win.document).on('click', windowClickHandler);
         return box;
     };
 
@@ -327,12 +326,12 @@ define(['win', 'jquery'], function (win, $) {
 
                 windowClickHandler = function (event) {
                     if (event.target !== box.newElem) {
-                        $(win).off('click', windowClickHandler);
+                        $(win.document).off('click', windowClickHandler);
                         box.close();
                         $(elm).data('popupBox', null);
                     }
                 };
-                $(win).on('click', windowClickHandler);
+                $(win.document).on('click', windowClickHandler);
             }
             event.preventDefault();
             event.stopPropagation();
