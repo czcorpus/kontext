@@ -83,9 +83,22 @@ Following plugins are optional:
 | getlang          | if you want to read current UI language in a non-KonText way                 |
 +------------------+------------------------------------------------------------------------------+
 
+The "db" plugin
+===============
 
-Authentication plugin notes
-===========================
+The "db" plugin provides a connection to a database. An implementation must provide following method: ::
+
+    def get(self):
+        """
+        returns a database connection object
+        """
+        pass
+
+
+The "auth" plugin
+=================
+
+KonText supports two authentication plugin types
 
 The application expects you to provide a custom implementation of authentication module. If you want to test the
 application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
@@ -109,7 +122,14 @@ Authentication object is expected to implement following methods: ::
 
 Returns True on success else False and changes the state of your authentication object to reflect user's properties ::
 
-    def get_corplist(self):
+    def logout(self, session_id):
+        pass
+
+Changes current user's status to 'anonymous' user.
+
+::
+
+    def get_corplist(self, user):
         pass
 
 Returns list/tuple containing identifiers of corpora available to the logged user. ::
@@ -128,7 +148,7 @@ Returns True if the user is admin else False is returned.
 
 If a password update interface is required then the following additional methods must be implemented: ::
 
-    def update_password(self, new_password):
+    def update_user_password(self, new_password):
         pass
 
 
@@ -169,6 +189,120 @@ methods telling the KonText where a user should be redirected: ::
 
 Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
 some required methods.
+
+The "sessions" plugin
+=====================
+
+The "session" plugin is expected to handle web sessions where users are identified by some cookie *(key, value)* pair.
+
+::
+
+    def start_new(self, data=None):
+        """
+        starts a new session
+
+        returns a dictionary {'id': session_id, 'data': data}
+        """
+        pass
+
+    def delete(self, session_id):
+        """
+        Deletes session identified by session_id
+        """
+        pass
+
+    def load(self, session_id, data=None):
+        """
+        Loads existing session from a storage
+
+        returns  {'id': session_id, 'data': ...}
+        """
+        pass
+
+    def save(self, session_id, data):
+        """
+        Saves session data to a storage
+        """
+        pass
+
+    def delete_old_sessions(self):
+        """
+        This function should provide some cleaning mechanism for old/unused sessions.
+        It is called by KonText from time to time.
+        """
+
+The "settings_storage" plugin
+=============================
+
+This plugin allows users to store their concordance view settings. In general, it does not matter what kind of storage
+is used here but KonText always provides a database connection plugin (if defined). ::
+
+    def __init__(self, conf, db):
+        """
+        Parameters
+        ----------
+        conf : the 'settings' module (or some compatible object)
+        db : a database connection
+        """
+        pass
+
+    def save(self, user_id, data):
+        """
+        saves user data (encoded to JSON) to a storage
+        """
+        pass
+
+    def load(self, user_id, current_settings=None):
+        """
+        loads user data from a storage and decoded them from
+        JSON to a Python dict/list/etc. types
+        """
+        pass
+
+The "corptree" plugin"
+======================
+
+The *corptree* plugin reads a hierarchical list of corpora from an XML file (it could be part of *config.xml* but not
+necessarily). Enclosed version of the plugin requires following format: ::
+
+    <corplist title="">
+      <corplist title="Synchronic Corpora">
+         <corplist title="SYN corpora">
+           <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
+           ... etc...
+         </corplist>
+         <corplist title="Diachronic Corpora">
+            <corpus id="DIA" />
+         </corplist>
+      </corplist>
+    </corplist>
+
+
+Attributes for the **corplist** element:
+
++--------------+---------------------+
+| attr. name   | description         |
++==============+=====================+
+| title        | name of the group   |
++--------------+---------------------+
+
+Attributes for the **corpus** element:
+
++-----------------+--------------------------------------------------------------------+
+| attr. name      | description                                                        |
++=================+====================================================================+
+| id              | name of the corpus (as used within registry files)                 |
++-----------------+--------------------------------------------------------------------+
+| sentence_struct | structure delimiting sentences                                     |
++-----------------+--------------------------------------------------------------------+
+| num_tag_pos     | number of character positions in a tag                             |
++-----------------+--------------------------------------------------------------------+
+| web             | (optional) external link containing information about the corpus   |
++-----------------+--------------------------------------------------------------------+
+
+Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
+to load any XML file and search for the tree node anywhere you want.
+
 
 The "appbar" plugin
 ===================
@@ -433,50 +567,6 @@ Corpus-related configuration
 +-------------------------------------------------+-------------------------------------------------------------------+
 | /kontext/corpora/multilevel_freq_dist_max_levels| Multi-level freq. distrib. - max. number of levels for a query    |
 +-------------------------------------------------+-------------------------------------------------------------------+
-
-Corpora hierarchy
-=================
-
-Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool which is handled by the *corptree*
-plugin. It supports nested (i.e. multi-level) organization::
-
-    <corplist title="">
-      <corplist title="Synchronic Corpora">
-         <corplist title="SYN corpora">
-           <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
-           ... etc...
-         </corplist>
-         <corplist title="Diachronic Corpora">
-            <corpus id="DIA" />
-         </corplist>
-      </corplist>
-    </corplist>
-
-
-Attributes for the **corplist** element:
-
-+--------------+---------------------+
-| attr. name   | description         |
-+==============+=====================+
-| title        | name of the group   |
-+--------------+---------------------+
-
-Attributes for the **corpus** element:
-
-+-----------------+--------------------------------------------------------------------+
-| attr. name      | description                                                        |
-+=================+====================================================================+
-| id              | name of the corpus (as used within registry files)                 |
-+-----------------+--------------------------------------------------------------------+
-| sentence_struct | structure delimiting sentences                                     |
-+-----------------+--------------------------------------------------------------------+
-| num_tag_pos     | number of character positions in a tag                             |
-+-----------------+--------------------------------------------------------------------+
-| web             | (optional) external link containing information about the corpus   |
-+-----------------+--------------------------------------------------------------------+
-
-Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
-to load any XML file and search for the tree node anywhere you want.
 
 
 Tag-builder component configuration
