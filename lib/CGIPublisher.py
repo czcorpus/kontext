@@ -309,55 +309,6 @@ class CGIPublisher(object):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
-    def _setup_action_params(self, actions=None):
-        """
-        Sets-up parameters related to processing of current action.
-        This typically includes concordance-related values (to be able to keep the state),
-        user's options etc.
-
-        Parameters
-        ----------
-        actions : callable
-            a function taking a single parameter (a dictionary) which can can be used
-            to alter some of the parameters
-        """
-        options = {}
-        if self._user:
-            user_file_id = self._user
-        else:
-            user_file_id = 'anonymous'
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        correct_types(options, self.clone_self(), selector=1)
-        if callable(actions):
-            actions(options)
-        self._setup_user_paths(user_file_id)
-        self.__dict__.update(options)
-
-    def _get_save_excluded_attributes(self):
-        return ()
-
-    def _save_options(self, optlist=[], selector=''):
-        """
-        Saves user's options to a storage
-        """
-        if selector:
-            tosave = [(selector + ':' + opt, self.__dict__[opt])
-                      for opt in optlist if opt in self.__dict__]
-        else:
-            tosave = [(opt, self.__dict__[opt]) for opt in optlist
-                      if opt in self.__dict__]
-        options = {}
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        excluded_attrs = self._get_save_excluded_attributes()
-        for k in options.keys():
-            if k in excluded_attrs:
-                del(options[k])
-        options.update(tosave)
-        if not self._anonymous:
-            plugins.settings_storage.save(self._session_get('user', 'id'), options)
-        else:
-            pass  # TODO save to the session
-
     def self_encoding(self):
         return 'iso-8859-1'
 

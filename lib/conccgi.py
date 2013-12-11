@@ -303,6 +303,70 @@ class ConcCGI(CGIPublisher):
                 prop = getattr(a, prop_name)
         return prop
 
+    def _filter_out_unused_settings(self, options):
+        """
+        Removes settings related to others than
+        current corpus.
+        This is not very effective but currently it is the
+        simplest and still quite effective solution.
+        """
+        if self.corpname:
+            for k in options.keys():
+                elms = k.split(':')
+                if len(elms) == 2 and elms[0] != self.corpname:
+                    del(options[k])
+
+    def _setup_action_params(self, actions=None):
+        """
+        Sets-up parameters related to processing of current action.
+        This typically includes concordance-related values (to be able to keep the state),
+        user's options etc.
+
+        Parameters
+        ----------
+        actions : callable
+            a function taking a single parameter (a dictionary) which can can be used
+            to alter some of the parameters
+        """
+        options = {}
+        if self._user:
+            user_file_id = self._user
+        else:
+            user_file_id = 'anonymous'
+        plugins.settings_storage.load(self._session_get('user', 'id'), options)
+        correct_types(options, self.clone_self(), selector=1)
+        if callable(actions):
+            actions(options)
+        self._setup_user_paths(user_file_id)
+        self.__dict__.update(options)
+
+    def _get_save_excluded_attributes(self):
+        return ()
+
+    def _save_options(self, optlist=[], selector=''):
+        """
+        Saves user's options to a storage
+        """
+        if selector:
+            tosave = [(selector + ':' + opt, self.__dict__[opt])
+                      for opt in optlist if opt in self.__dict__]
+        else:
+            tosave = [(opt, self.__dict__[opt]) for opt in optlist
+                      if opt in self.__dict__]
+        options = {}
+        # data must be loaded (again) because in-memory settings are
+        # in general a subset of the ones stored in db
+        plugins.settings_storage.load(self._session_get('user', 'id'), options)
+        excluded_attrs = self._get_save_excluded_attributes()
+        for k in options.keys():
+            if k in excluded_attrs:
+                del(options[k])
+        options.update(tosave)
+        if not self._anonymous:
+            plugins.settings_storage.save(self._session_get('user', 'id'), options)
+        else:
+            pass  # TODO save to the session
+
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -333,6 +397,11 @@ class ConcCGI(CGIPublisher):
             self.corpname = allowed_corpora[0]
         else:
             self.corpname = ''
+        # Once we know the current corpus we can remove
+        # settings related to other corpora. It is quite
+        # a dumb solution but currently there is no other way
+        # (other than always loading all the settings)
+        self._filter_out_unused_settings(self.__dict__)
 
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
