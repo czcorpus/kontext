@@ -43,17 +43,23 @@ files instead to a database, all you have to do is to rewrite the *sessions* plu
 You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
 *ucnk_* prefix.
 
-Typically, a plugin module is required to implement method ::
+In general, a plugin is a Python object defined in a Python module. the module must implement factory function
+*create_instance* ::
 
     def create_instance(settings, *args, **kwargs):
         return MyPluginImplementation()
 
-which returns an instance of required service. Additionally, a method ::
+The factory function should create and return a plugin object. Because plugins are instantiated very soon, it is
+sometimes necessary to perform additional configuration after *CGIPublisher* object is fully operational. In such
+cases, the plugin can implement a method *setup*: ::
 
-    def setup(**kwargs):
+    def setup(self, **kwargs):
         pass
 
-can be defined to allow further plugin configuration after *CGIPublisher* object is fully operational.
+
+-----------------------------------
+List of currently supported plugins
+-----------------------------------
 
 Following plugins are mandatory:
 
@@ -98,21 +104,11 @@ The "db" plugin provides a connection to a database. An implementation must prov
 The "auth" plugin
 =================
 
-KonText supports two authentication plugin types
-
 The application expects you to provide a custom implementation of authentication module. If you want to test the
-application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
+it without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
 and always returns the same list of corpora (you probably want to set your own list).
 
-To be able to provide different lists of corpora for different users, you have to implement an authentication
-module with the following properties:
-
-  * the module resides in the *plugins* package (= *./lib/plugins* directory)
-  * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
-    The *settings* parameter is KonText's *settings* module or some compatible one. This
-    provides access to any required configuration parameter (e.g. database connection if you need one).
-
-Authentication object is expected to implement following methods: ::
+Authentication object is expected to implement the following methods: ::
 
     def validate_user(self, username, password):
         """
@@ -125,19 +121,19 @@ Returns True on success else False and changes the state of your authentication 
     def logout(self, session_id):
         pass
 
-Changes current user's status to 'anonymous' user.
+Changes current user's status to an 'anonymous' user.
 
 ::
 
     def get_corplist(self, user):
         pass
 
-Returns list/tuple containing identifiers of corpora available to the logged user. ::
+Returns list/tuple containing identifiers of corpora available to the *user* (= username). ::
 
     def is_administrator(self):
         pass
 
-Returns True if the user is admin else False is returned.
+Returns True if the current user has administrator's privileges else False is returned.
 ::
 
     def anonymous_user(self):
@@ -146,7 +142,7 @@ Returns True if the user is admin else False is returned.
         """
         pass
 
-If a password update interface is required then the following additional methods must be implemented: ::
+If a password update page is required to be active then the following additional methods must be implemented: ::
 
     def update_user_password(self, new_password):
         pass
@@ -171,8 +167,14 @@ If a password update interface is required then the following additional methods
         """
         pass
 
-In case you want to use some other web application to log-in/log-out your users you have also to specify following
-methods telling the KonText where a user should be redirected: ::
+KonText is written to support log-in/log-out process realized in two ways:
+
+1) within KonText application (i.e. log-in/log-out pages are within KonText and KonText also cares about user
+   credentials validation)
+
+2) outside KonText application (log-in/log-out pages and user session validation are defined outside KonText)
+
+Because of that, all the *auth* plugins must implement methods which tell the KonText where log-in/log-out pages are: ::
 
     def get_login_url(self):
         """
@@ -187,15 +189,23 @@ methods telling the KonText where a user should be redirected: ::
         pass
 
 
-Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
-some required methods.
+Class *auth.AbstractAuth* can be used as a base class when implementing custom authentication object. It already
+provides some of required methods.
+
+In case you want to implement "outside KonText" authentication variant, an additional method *revalidate* must
+be implemented: ::
+
+    def revalidate(cookies, session):
+        pass
+
+KonText call this method (if it is provided by your plugin) during session initialization. If an external service
+responds user is logged in no more, method *revalidate* should change user's session data to an "anonymous user".
 
 The "sessions" plugin
 =====================
 
-The "session" plugin is expected to handle web sessions where users are identified by some cookie *(key, value)* pair.
-
-::
+The *sessions* plugin is expected to handle web sessions where users are identified by some cookie
+*(key, value)* pair. ::
 
     def start_new(self, data=None):
         """
@@ -262,8 +272,8 @@ is used here but KonText always provides a database connection plugin (if define
 The "corptree" plugin"
 ======================
 
-The *corptree* plugin reads a hierarchical list of corpora from an XML file (it could be part of *config.xml* but not
-necessarily). Enclosed version of the plugin requires following format: ::
+The *corptree* plugin reads a hierarchical list of corpora from an XML file (it can be part of *config.xml* but not
+necessarily). Enclosed version of the plugin requires the following format: ::
 
     <corplist title="">
       <corplist title="Synchronic Corpora">
@@ -311,12 +321,12 @@ This optional plugin provides a way how to integrate KonText to an existing grou
 visual page component (typically, a top-positioned toolbar - like e.g. in case of Google applications).
 
 Such page component may provide miscellaneous information (e.g. links to your other applications, knowledge base
-links,...) but it is expected that its main purpose is to provide user-login status and links to shared login/logout
-website. KonText uses this plugin to fetch an HTML fragment of such "toolbar". The HTML data is loaded internally
-(between KonText's hosting server and a "toolbar provider" server, via HTTP) and rendered along with KonText's own
-output.
+links etc.) but it is expected that its main purpose is to provide user-login status and links to an external
+authentication page. KonText uses this plugin to fetch an HTML fragment of such "toolbar". The HTML data is loaded
+internally (between KonText's hosting server and a "toolbar provider" server, via HTTP) and rendered along with
+KonText's own output.
 
-Please note that if you configure "appbar" plugin then KonText will stop showing its own authentication information
+Please note that if you configure *appbar* plugin then KonText will stop showing its own authentication information
 and login/logout links.
 
 Because of its specific nature, the "appbar" plugin is instantiated in a slightly different way from other plugins.
@@ -325,13 +335,14 @@ Module your plugin resides in is expected to implement following factory method:
     def create_instance(conf, auth_plugin):
         pass
 
-This means that even if your "appbar" implementation does not need an *auth_plugin* instance you still must implement
+This means that even if your *appbar* implementation does not need an *auth_plugin* instance you still must implement
 compatible *create_instance* method::
 
     def create_instance(conf, *args, **kwargs):
+        # all the arguments KonText passes are covered by *args and **kwargs
         return MyAppBarImplementation()
 
-Your plugin object is expected to implement single method *get_contents*::
+Your plugin object is expected to implement a single method *get_contents*::
 
     def get_contents(self, cookies, current_lang):
         pass
@@ -344,8 +355,8 @@ notify your toolbar/app-bar/whatever content provider which language is currentl
 The "getlang" plugin
 ====================
 
-This optional plugin allows you to obtain language settings set by some other application (i.e. you want to have a shared
-toolbar with centralized authentication and user interface settings).
+This optional plugin allows you to obtain language settings set by some other application (i.e. you want to have a
+shared toolbar with centralized authentication and user interface settings).
 
 It is required to implement a single method::
 
@@ -365,8 +376,8 @@ language your version of KonText does not support.::
 Deployment and running
 ----------------------
 
-To be able to be deployed and run, the application requires some additional file post-processing to be done. These
-steps also depend on whether the application runs in *debugging* or *production* mode.
+To be able to be deployed and run, *KonText* requires some additional file post-processing to be performed. These
+steps also depend on whether the *KonText* runs in *debugging* or *production* mode.
 
 All the required tasks are configured to be performed by `Grunt <http://gruntjs.com/>`_ task automater (see file
 *Gruntfile.js*).
@@ -398,9 +409,9 @@ This can be set in *config.xml*'s */kontext/global/debug* by setting the value *
 If you have a working node.js and Grunt (grunt-cli package) installation, you can prepare KonText for deployment just by
 running *grunt* command in application's root directory.
 
--------------
-Configuration
--------------
+---------------------
+KonText configuration
+---------------------
 
 KonText is configured via an XML configuration file located in the root directory of the application
 (do not confuse this with the root directory of the respective web application).
@@ -502,20 +513,13 @@ Plugins configuration
 +-------------------------------------------------+-------------------------------------------------------------------+
 | Xpath                                           | Description                                                       |
 +=================================================+===================================================================+
-| /kontext/plugins                                | this section contains plugins' configuration; each plugin         |
-|                                                 | requires at least *module* element to specify where code resides  |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/db                             | required plugin to access application's database                  |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/auth                           | required plugin for authentication                                |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/sessions                       | required plugin implementing session storage functions            |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/settings_storage               | required plugin specifying where and how to store user settings   |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/query_storage                  | optional plugin allowing to store query history to some storage   |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/appbar                         | optional plugin allowing remote-loaded toolbar on all pages       |
+| /kontext/plugins                                | This section contains a configuration of plugins. Each plugin has |
+|                                                 | its own subtree with a root element named with the name of the    |
+|                                                 | respective plugin (e.g. *auth*, *db*, *getlang*). This element    |
+|                                                 | must contain at least a *module* element specifying the name of   |
+|                                                 | the Python package implementing the plugin. See the               |
+|                                                 | *config.sample.xml*                                               |
+|                                                 |                                                                   |
 +-------------------------------------------------+-------------------------------------------------------------------+
 
 Caching configuration
