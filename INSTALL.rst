@@ -344,13 +344,15 @@ compatible *create_instance* method::
 
 Your plugin object is expected to implement a single method *get_contents*::
 
-    def get_contents(self, cookies, current_lang):
+    def get_contents(self, cookies, current_lang, return_url=None):
         pass
 
 *cookies* is a *BonitoCookie(Cookie.BaseCookie)* instance providing dictionary-like access to cookie values,
 *current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
 contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
-notify your toolbar/app-bar/whatever content provider which language is currently in use.
+notify your toolbar/app-bar/whatever content provider which language is currently in use. Argument *return_url*
+serves in case user leaves KonText to some of *appbar*'s pages and these pages are able to navigate him back to
+KonText (typically, user logs in and expects to be redirected back).
 
 The "getlang" plugin
 ====================

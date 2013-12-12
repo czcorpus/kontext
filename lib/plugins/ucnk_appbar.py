@@ -25,7 +25,7 @@ class AppBar(object):
         self.css_url_ie = css_url_ie
         self.connection = None
 
-    def get_contents(self, cookies, curr_lang):
+    def get_contents(self, cookies, curr_lang, return_url=None):
         if not curr_lang:
             curr_lang = 'en'
         curr_lang = curr_lang.split('_')[0]
@@ -33,10 +33,12 @@ class AppBar(object):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
             try:
                 self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=3)
+                if return_url is None:
+                    return_url = '%s%s' % (self.root_url, 'first_form')
                 self.connection.request('GET', self.path % {
                     'id': ticket_id,
                     'lang': curr_lang,
-                    'continue': '%s%s' % (self.root_url, 'first_form')
+                    'continue': return_url
                 })
                 response = self.connection.getresponse()
                 
