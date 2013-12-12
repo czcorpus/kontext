@@ -597,7 +597,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         popupbox.bind('#corpus-desc-link', function (box, finalize) {
             lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
-        }, {width: 'auto'});
+        }, {width: 'auto', closeIcon: true});
 
         $('#corpus-citation-link a').on('click', function () {
             $('#corpus-citation-box').modal({
