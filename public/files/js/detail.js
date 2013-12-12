@@ -105,6 +105,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
+                    closeIcon : true,
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
@@ -142,6 +143,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
+                    closeIcon : true,
                     timeout : null,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');

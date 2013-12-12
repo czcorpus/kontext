@@ -518,6 +518,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         box = popupbox.open(renderOverviewFunc(data), null, {
                             type: 'plain',
                             domId: 'query-overview',
+                            closeIcon: true,
                             calculatePosition: false,
                             timeout: null
                         });
