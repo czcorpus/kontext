@@ -61,6 +61,8 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = 25000;
 
         this.onClose = null;
+
+        this.jqCloseIcon = null;
     }
 
     /**
@@ -196,7 +198,7 @@ define(['win', 'jquery'], function (win, $) {
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
             calculatePosition = fetchOption('calculatePosition', true),
-            finalizationCallback;
+            useCloseIcon = fetchOption('closeIcon', false);
 
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
@@ -209,21 +211,24 @@ define(['win', 'jquery'], function (win, $) {
         jqWhereElement.append(this.newElem);
 
         if (typeof contents === 'function') {
-            if (calculatePosition) {
-                finalizationCallback = function () {
+            contents(this, function () {
+                if (calculatePosition) {
                     self.calcPosition(opts);
-                    $(self.newElem).show();
-                };
-
-            } else {
-                finalizationCallback = function () {
-                    $(self.newElem).show();
-                };
-            }
-            contents(this, finalizationCallback);
+                }
+                if (useCloseIcon) {
+                    self.jqCloseIcon = $('<a class="close-link"></a>');
+                    $(self.newElem).prepend(self.jqCloseIcon);
+                }
+                $(self.newElem).show();
+            });
 
         } else {
             $(this.newElem).empty().append(contents);
+            if (useCloseIcon) {
+                this.jqCloseIcon = $('<a class="close-link"></a>');
+                $(this.newElem).prepend(this.jqCloseIcon);
+            }
+
             if (calculatePosition) {
                 this.calcPosition(opts);
             }
@@ -238,7 +243,7 @@ define(['win', 'jquery'], function (win, $) {
             if (event) {
                 $(event.target).off('click', closeClickHandler);
             }
-            $(document).off('click', closeClickHandler);
+            $(win.document).off('click', closeClickHandler);
             TooltipBox.prototype.close.call(self);
         };
 
@@ -283,7 +288,13 @@ define(['win', 'jquery'], function (win, $) {
                 box.close();
             }
         };
-        $(win.document).on('click', windowClickHandler);
+
+        if (box.jqCloseIcon) { // explicit closing element is defined
+            box.jqCloseIcon.on('click', windowClickHandler);
+
+        } else { // click anywhere closes the box
+            $(win.document).on('click', windowClickHandler);
+        }
         return box;
     };
 
