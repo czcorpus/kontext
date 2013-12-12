@@ -194,15 +194,16 @@ define(['win', 'jquery'], function (win, $) {
             self = this,
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
-            calculatePosition = fetchOption('calculatePosition', true),
-            useCloseIcon = fetchOption('closeIcon', false);
+            calculatePosition = fetchOption('calculatePosition', true);
 
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
 
         this.newElem = win.document.createElement('div');
         $(this.newElem).addClass('tooltip-box').hide();
-        if (useCloseIcon) {
+
+        if (fetchOption('closeIcon', false)) {
+            this.jqCloseIcon = $('<a class="close-link"></a>');
             $(this.newElem).addClass('framed');
         }
         if (boxId) {
@@ -212,20 +213,18 @@ define(['win', 'jquery'], function (win, $) {
 
         if (typeof contents === 'function') {
             contents(this, function () {
+                if (self.jqCloseIcon) {
+                    $(self.newElem).prepend(self.jqCloseIcon);
+                }
                 if (calculatePosition) {
                     self.calcPosition(opts);
-                }
-                if (useCloseIcon) {
-                    self.jqCloseIcon = $('<a class="close-link"></a>');
-                    $(self.newElem).prepend(self.jqCloseIcon);
                 }
                 $(self.newElem).show();
             });
 
         } else {
-            $(this.newElem).empty().append(contents);
-            if (useCloseIcon) {
-                this.jqCloseIcon = $('<a class="close-link"></a>');
+            $(this.newElem).append(contents);
+            if (this.jqCloseIcon) {
                 $(this.newElem).prepend(this.jqCloseIcon);
             }
 
@@ -342,7 +341,13 @@ define(['win', 'jquery'], function (win, $) {
                         $(elm).data('popupBox', null);
                     }
                 };
-                $(win.document).on('click', windowClickHandler);
+
+                if (box.jqCloseIcon) { // explicit closing element is defined
+                    box.jqCloseIcon.on('click', windowClickHandler);
+
+                } else { // click anywhere closes the box
+                    $(win.document).on('click', windowClickHandler);
+                }
             }
             event.preventDefault();
             event.stopPropagation();
