@@ -139,7 +139,6 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.calcPosition = function (options) {
         var pageWidth = $(document).width(),
-            horizPadding = 12,
             borderWidth,
             fetchOption = fetchOptionFunc(options),
             boxWidth = fetchOption('width', '620px'),
@@ -148,8 +147,6 @@ define(['win', 'jquery'], function (win, $) {
             boxTop = 0;
 
         $(this.newElem).css({
-            'padding-left': horizPadding + 'px',
-            'padding-right': horizPadding + 'px',
             width: boxWidth,
             height: boxHeight
         });
@@ -170,7 +167,7 @@ define(['win', 'jquery'], function (win, $) {
             borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
             $(this.newElem).css({
                 left: '100%',
-                'margin-left': '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+                'margin-left': '-' + $(this.newElem).outerWidth() + 'px'
             });
         }
     };
@@ -205,6 +202,9 @@ define(['win', 'jquery'], function (win, $) {
 
         this.newElem = win.document.createElement('div');
         $(this.newElem).addClass('tooltip-box').hide();
+        if (useCloseIcon) {
+            $(this.newElem).addClass('framed');
+        }
         if (boxId) {
             this.newElem.setAttribute('id', boxId);
         }
