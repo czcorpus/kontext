@@ -2155,7 +2155,7 @@ class Actions(ConcCGI):
         format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
 
         ans = {
-            'corpname': self._humanize_corpname(self.corpname),
+            'corpname': self._humanize_corpname(self._corp().get_conf('NAME')),
             'description': self._corp().get_info(),
             'size': format_int(self._corp().size()),
             'attrlist': [],
