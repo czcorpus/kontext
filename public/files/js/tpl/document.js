@@ -592,6 +592,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      *
      */
     lib.bindStaticElements = function () {
+        var citationHtml = $('#corpus-citation-box').html();
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
 
@@ -599,17 +600,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
         }, {width: 'auto', closeIcon: true});
 
-        $('#corpus-citation-link a').on('click', function () {
-            $('#corpus-citation-box').modal({
-                minHeight: 400,
-                onShow: function () {
-                    $('#corpus-citation-box').find('a').attr('target', '_blank');
-                },
+        popupbox.bind('#corpus-citation-link a',
+            function(box, finalizeCallback) {
+                $(box.getRootElement()).html(citationHtml).find('a').attr('target', '_blank');
+                $('#corpus-citation-box').empty();
+                finalizeCallback();
+            },
+            {
+                type: 'plain',
+                domId: 'citation-information',
+                closeIcon: true,
+                calculatePosition: true,
+                timeout: null,
                 onClose: function () {
-                    $.modal.close();
+                    $('#corpus-citation-box').html(citationHtml);
                 }
             });
-        });
 
         // 'Select all' buttons for structural attribute lists
         $('input[class="select-all"]').each(function () {
