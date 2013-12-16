@@ -18,7 +18,7 @@
  */
 
 
-define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupbox, $, kwicAlignUtils) {
+define(['tpl/document', 'win', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, win, popupbox, $, kwicAlignUtils) {
 
     'use strict';
 
@@ -51,6 +51,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
             addLevelButton.attr('disabled', null);
             addLevelButton.attr('title', null);
         }
+
+        kwicAlignUtils.fix();
     };
 
     /**
@@ -90,6 +92,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
             $('#add-freq-level-button').attr('disabled', 'disabled');
             $('#add-freq-level-button').attr('title', lib.messages.max_level_reached);
         }
+
+        kwicAlignUtils.fix(newLine);
     };
 
     /**
