@@ -96,7 +96,7 @@
 	position: relative;
 	padding: 0;
 	line-height: normal;
-	margin-right: .1em;
+	margin-right: .7em;
 	cursor: pointer;
 	vertical-align: middle;
 	text-align: center;
@@ -130,20 +130,20 @@ button.ui-button-icons-only {
 	line-height: normal;
 }
 .ui-button-text-only .ui-button-text {
-	padding: .4em 1em;
+	padding: .3em 1em;
 }
 .ui-button-icon-only .ui-button-text,
 .ui-button-icons-only .ui-button-text {
-	padding: .4em;
+	padding: .3em;
 	text-indent: -9999999px;
 }
 .ui-button-text-icon-primary .ui-button-text,
 .ui-button-text-icons .ui-button-text {
-	padding: .4em 1em .4em 2.1em;
+	padding: .3em 1em .3em 2.1em;
 }
 .ui-button-text-icon-secondary .ui-button-text,
 .ui-button-text-icons .ui-button-text {
-	padding: .4em 2.1em .4em 1em;
+	padding: .3em 2.1em .3em 1em;
 }
 .ui-button-text-icons .ui-button-text {
 	padding-left: 2.1em;
@@ -151,7 +151,7 @@ button.ui-button-icons-only {
 }
 /* no icon support for input elements, provide padding by default */
 input.ui-button {
-	padding: .4em 1em;
+	padding: .3em 1em;
 }
 
 /* button icon element(s) */
@@ -441,7 +441,7 @@ button.ui-button::-moz-focus-inner {
 ----------------------------------*/
 .ui-widget {
     font-family: "Roboto",Verdana,Arial,sans-serif;
-	font-size: 1.1em;
+	font-size: 1em;
 }
 .ui-widget .ui-widget {
 	font-size: 1em;
