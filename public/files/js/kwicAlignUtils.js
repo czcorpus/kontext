@@ -72,7 +72,7 @@ define(['jquery'], function ($) {
      * of these select-boxes.
      */
     lib.fix = function () {
-        $('#kwic-alignment-box').css({ display: 'table-row' });
+        $('.kwic-alignment-box').css({ display: 'table-row' });
         $('select.kwic-alignment').each(function () {
             switchAlignment($(this).val(), getColumnId(this));
         });
