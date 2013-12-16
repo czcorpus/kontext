@@ -302,7 +302,9 @@ $_ca_topbar
             #if $usesubcorp
                 <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
             #else
-                <strong>$corp_size</strong> $_('positions')<a id="positions-help-link">?</a>
+                #filter None
+                $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">?</a>
+                #end filter
             #end if
             </div>
             #if 'default_ref' in $citation_info and $citation_info.default_ref
