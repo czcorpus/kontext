@@ -1280,7 +1280,7 @@ class Actions(ConcCGI):
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
 
-    fullref.access_level = 1
+    fullref.access_level = 0
     fullref.return_type = 'json'
 
     def draw_graph(self, fcrit='', flimit=0):
