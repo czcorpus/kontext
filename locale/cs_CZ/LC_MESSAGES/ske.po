@@ -1967,6 +1967,9 @@ msgstr "Nepodařilo se nahrát podrobnosti dotazu"
 msgid "Click to enter a new query"
 msgstr "Klikněte pro přechod na nový dotaz"
 
+msgid "<strong>%s</strong> positions"
+msgstr "<strong>%s</strong> pozic"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

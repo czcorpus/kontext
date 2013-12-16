@@ -174,7 +174,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             });
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
-                $('#queryselector').after('<sup id="query-type-hint"><a href="#">?</a></sup>');
+                $('#queryselector').after('<sup id="query-type-hint"><a href="#" class="context-help">?</a></sup>');
                 popupBox.bind($('#query-type-hint'), hints['iqueryrow'], {'top' : 'attached-bottom', 'fontSize' : '10pt' });
 
             } else {

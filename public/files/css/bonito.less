@@ -4,10 +4,13 @@
 @light-text: #999999;
 @color-logo-pink: #E2007A;
 @color-logo-blue: #009EE0;
+@color-bg-light-blue: #E9F7FC;
 @color-light-frame: #D2EDC0;
 @color-light-green: #ECF3EA;
 @border-radius-default: 6px;
 @border-radius-menu: 5px 5px 0 0;
+@portal-box-shadow: 0 0 4px #A0A0A0;
+@text-shadow: 0 0 2px #A0A0A0;
 
 #content {
   display: block;
@@ -17,13 +20,13 @@
 }
 
 #content section {
-  border: solid 3px @color-light-frame;
   border-radius: @border-radius-default;
   display: inline-block;
   vertical-align: top;
   margin: 0;
   padding: 0;
   background-color: #F3FBED;
+  box-shadow: @portal-box-shadow;
 }
 
 #content section:nth-child(n + 1) {
@@ -37,9 +40,9 @@ section > * {
 
 section h2 {
   margin: 0;
-  padding: 0.4em 20px;
+  padding: 0.2em 20px;
   background-color: @color-light-frame;
-  font-size: 200%;
+  font-size: 180%;
   font-weight: 300;
 }
 
@@ -199,10 +202,12 @@ footer #copyright-info a:hover {
 
 a#logo-wrapper {
   display: inline-block;
+  background-color: transparent;
 }
 
 #logo-wrapper img {
   display: inline-block;
+  box-shadow: @portal-box-shadow;
 }
 
 #add-searched-lang-widget {
@@ -305,7 +310,7 @@ a#logo-wrapper {
   position: relative;
   border-width: 1px 1px 0 1px;
   border-style: solid;
-  border-color: #FFFFFF;
+  border-color: transparent;
 }
 
 #menu-level-1 li.disabled a {
@@ -349,6 +354,10 @@ a#logo-wrapper {
   z-index: 600;
 }
 
+#menu-level-1 > li.active a {
+  text-shadow: none;
+}
+
 #menu-level-1 li ul {
 }
 
@@ -359,7 +368,8 @@ a#logo-wrapper {
 #menu-level-2 ul {
   position: absolute;
   background-color: @color-light-frame;
-  border: 1px solid #C7E7B2;
+  //border: 1px solid #C7E7B2;
+  box-shadow: @portal-box-shadow;
   margin: -1px 0 0 0;
   z-index: 500;
 }
@@ -396,16 +406,28 @@ ul.submenu li.separ {
 }
 
 #active-corpus {
-  font-size: 12pt;
-  color: @light-text;
+  font-size: 11pt;
+  color: @color-default-text;
   display: inline-block;
-  padding: 2px 0 0 0;
+  padding: 4px 10px;
   margin: 0;
   text-align: right;
+  border: 2px solid @color-logo-blue;
+  border-radius: @border-radius-default;
+  background-color: @color-bg-light-blue;
+  box-shadow: @portal-box-shadow;
 }
 
 #active-corpus a.corpus-desc {
-  color: inherit;
+  text-decoration: underline;
+}
+
+#active-corpus a {
+  color: @color-default-text;
+  text-decoration: none;
+}
+
+#active-corpus a:hover {
   text-decoration: underline;
 }
 
@@ -625,6 +647,7 @@ a:hover {
 body {
   font-family: "Roboto", Verdana, Arial, sans-serif;
   color: @color-default-text;
+  background-image: url(../img/groovepaper2.png);
   font-size: 10pt;
   margin: 0;
   padding: 0;
@@ -1071,10 +1094,6 @@ table.results-range-and-paging th {
   font-size: 8pt;
 }
 
-#corpus-citation-link a {
-  color: #A4A4A4;
-}
-
 #corpus-citation-box {
   display: none;
 }
@@ -1104,7 +1123,20 @@ table.results-range-and-paging th {
 
 #positions-help-link {
   vertical-align: super;
-  font-size: 80%;
+}
+
+#positions-help-link a.context-help {
+  display: block;
+  position: absolute;
+}
+
+a.context-help {
+  text-decoration: none;
+  padding: 0em 0.2em;
+}
+
+a.context-help:hover {
+  text-decoration: underline;
 }
 
 #conc-top-bar a.calc-warning {
