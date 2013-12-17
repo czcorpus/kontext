@@ -527,6 +527,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                             {
                                 type: 'plain',
                                 domId: 'query-overview',
+                                htmlClass: 'query-overview',
                                 closeIcon: true,
                                 calculatePosition: false,
                                 timeout: null
