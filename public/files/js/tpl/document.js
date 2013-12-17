@@ -458,39 +458,42 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * Renders a query overview within tooltipBox
+     * instance based on provided data
+     *
+     * @param data
+     * @param {TooltipBox} tooltipBox
+     */
+    lib.renderOverview = function (data, tooltipBox) {
+        var url,
+            html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">',
+            parentElm = tooltipBox.getRootElement();
+
+        html += '<tr><th>' + lib.conf.messages.operation + '</th>';
+        html += '<th>' + lib.conf.messages.parameters + '</th>';
+        html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
+
+        $.each(data.Desc, function (i, item) {
+            html += '<tr><td>' + lib.escapeHTML(item.op) + '</td>';
+            html += '<td>' + lib.escapeHTML(item.arg) + '</td>';
+            html += '<td>' + lib.escapeHTML(item.size) + '</td>';
+            html += '<td>';
+            if (item.tourl) {
+                url = 'view?' + item.tourl;
+                html += '<a href="' + url + '">' + lib.conf.messages.view_result + '</a>';
+            }
+            html += '</td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+        $(parentElm).html(html);
+    };
+
+    /**
      *
      */
     lib.queryOverview = function () {
-        var renderOverviewFunc,
-            escKeyEventHandlerFunc;
-
-        renderOverviewFunc = function (data) {
-            return function (tooltipBox, finalize) {
-                var url,
-                    html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">',
-                    parentElm = tooltipBox.getRootElement();
-
-                html += '<tr><th>' + lib.conf.messages.operation + '</th>';
-                html += '<th>' + lib.conf.messages.parameters + '</th>';
-                html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
-                
-                $.each(data.Desc, function (i, item) {
-                    html += '<tr><td>' + lib.escapeHTML(item.op) + '</td>';
-                    html += '<td>' + lib.escapeHTML(item.arg) + '</td>';
-                    html += '<td>' + lib.escapeHTML(item.size) + '</td>';
-                    html += '<td>';
-                    if (item.tourl) {
-                        url = 'view?' + item.tourl;
-                        html += '<a href="' + url + '">' + lib.conf.messages.view_result + '</a>';
-                    }
-                    html += '</td>';
-                    html += '</tr>';
-                });
-                html += '</table>';
-                $(parentElm).html(html);
-                finalize();
-            };
-        };
+        var escKeyEventHandlerFunc;
 
         escKeyEventHandlerFunc = function (boxInstance) {
             return function (event) {
@@ -515,13 +518,20 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         leftPos;
 
                     if (data.Desc) {
-                        box = popupbox.open(renderOverviewFunc(data), null, {
-                            type: 'plain',
-                            domId: 'query-overview',
-                            closeIcon: true,
-                            calculatePosition: false,
-                            timeout: null
-                        });
+                        box = popupbox.open(
+                            function (box2, finalize) {
+                                lib.renderOverview(data, box2);
+                                finalize();
+                            },
+                            null,
+                            {
+                                type: 'plain',
+                                domId: 'query-overview',
+                                closeIcon: true,
+                                calculatePosition: false,
+                                timeout: null
+                            }
+                        );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                         box.setCss('left', leftPos + 'px');
 
