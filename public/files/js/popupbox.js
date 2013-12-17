@@ -194,6 +194,7 @@ define(['win', 'jquery'], function (win, $) {
             self = this,
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
+            boxClass = fetchOption('htmlClass', null),
             calculatePosition = fetchOption('calculatePosition', true);
 
         this.timeout = fetchOption('timeout', this.timeout);
@@ -208,6 +209,9 @@ define(['win', 'jquery'], function (win, $) {
         }
         if (boxId) {
             this.newElem.setAttribute('id', boxId);
+        }
+        if (boxClass) {
+            $(this.newElem).addClass(boxClass);
         }
         jqWhereElement.append(this.newElem);
 
