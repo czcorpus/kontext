@@ -20,7 +20,7 @@
  * This module contains functionality related directly to the query_history.tmpl template
  *
  */
-define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
+define(['jquery', 'tpl/document', 'popupbox'], function ($, layoutModel, popupBox) {
     'use strict';
 
     var lib = {},
@@ -109,6 +109,31 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
         });
     };
 
+    lib.setupQueryOverviewLinks = function () {
+        $('.query-history .link a').each(function () {
+            var self = this;
+            $(this).attr('data-json-href', $(this).attr('href').replace('/concdesc?', '/concdesc_json?'));
+
+            popupBox.bind(this,
+                function (box, finalize) {
+                    $.ajax($(self).data('json-href'), {
+                        success: function (data) {
+                            layoutModel.renderOverview(data, box);
+                            finalize();
+                            box.setCss('left', '0');
+                        }
+                    });
+                },
+                {
+                    type: 'plain',
+                    htmlClass: 'query-overview',
+                    closeIcon: true,
+                    timeout: null
+                }
+            );
+        });
+    };
+
     /**
      *
      * @param conf
@@ -116,15 +141,7 @@ define(['jquery', 'jqueryui', 'tpl/document'], function ($, $ui, layoutModel) {
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.bindEvents();
-
-        $('#from-date-filter').datepicker({
-            dateFormat: "yy-mm-dd",
-            defaultDate: -2
-        });
-        $('#to-date-filter').datepicker({
-            dateFormat: "yy-mm-dd",
-            defaultDate: 0
-        });
+        lib.setupQueryOverviewLinks();
     };
 
     return lib;
