@@ -1970,6 +1970,9 @@ msgstr "Klikněte pro přechod na nový dotaz"
 msgid "<strong>%s</strong> positions"
 msgstr "<strong>%s</strong> pozic"
 
+msgid "KonText is running in anonymous mode. Please <a href=\\\"%s\\\">sign-in</a> to unlock all the functions."
+msgstr "Všechny funkce KonTextu jsou k dispozici až po <a href=\\\"%s\\\">přihlášení</a>."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
