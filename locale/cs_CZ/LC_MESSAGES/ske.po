@@ -1579,7 +1579,7 @@ msgstr "jazyky uživatelského rozhraní"
 
 #: cmpltmpl/document.py:2737
 msgid "version"
-msgstr "Verze"
+msgstr "verze"
 
 #: cmpltmpl/viewattrs.py:158
 msgid "Concordance view options - attributes, structures and references"
@@ -1972,6 +1972,9 @@ msgstr "<strong>%s</strong> pozic"
 
 msgid "KonText is running in anonymous mode. Please <a href=\\\"%s\\\">sign-in</a> to unlock all the functions."
 msgstr "Všechny funkce KonTextu jsou k dispozici až po <a href=\\\"%s\\\">přihlášení</a>."
+
+msgid "uses"
+msgstr "používá"
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
