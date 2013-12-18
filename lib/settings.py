@@ -251,11 +251,16 @@ def get_root_url():
     """
     Returns root URL of the application
     """
-    if 'SCRIPT_URL' in os.environ:
-        path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+        port_s = ':%s' % os.getenv('SERVER_PORT')
     else:
-        path = os.getenv('REQUEST_URI')[:os.getenv('REQUEST_URI').rindex('/')]
-    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
+        port_s = ''
+    return '%(protocol)s://%(server)s%(port)s%(script)s/' % {
+        'protocol': get_uri_scheme_name(),
+        'port': port_s,
+        'server': os.getenv('HTTP_HOST'),
+        'script': os.getenv('SCRIPT_NAME')
+    }
 
 
 def supports_password_change():
