@@ -383,9 +383,8 @@ class ConcCGI(CGIPublisher):
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if not self._is_corpus_free_action(path[0]):
-            self._fetch_corpname(form, allowed_corpora)
-            if not self.corpname in allowed_corpora:
-                self.corpname = allowed_corpora[-1] if len(allowed_corpora) > 0 else 'susanne'
+            self.corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
+            if redirect:
                 path = [CGIPublisher.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
                     self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
@@ -501,23 +500,48 @@ class ConcCGI(CGIPublisher):
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=corpname,
                                         url=url, params=json.dumps(self.q), tmp=1, description=description, query_id=None, public=0)
 
-    def _fetch_corpname(self, form, corplist):
+    def _determine_curr_corpus(self, form, corp_list):
+        """
+        This method tries to determine which corpus is currently in use.
+        If no answer is found or in case there is a conflict between selected
+        corpus and user access rights then some fallback alternative is found -
+        in such case the 'fallback' flag is set to True.
+
+        Parameters:
+        form -- currently processed HTML form (if any)
+        corp_list -- list of all the corpora user can access
+
+        Return:
+        2-tuple containing a corpus name and the 'fallback' boolean flag
+        """
         cn = ''
+        fallback = False
+
         if 'json' in form:
             import json
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
-        if 'corpname' in form and not cn:
+
+        if not cn and 'corpname' in form:
             cn = form.getvalue('corpname')
         if cn:
             if isinstance(cn, ListType):
                 cn = cn[-1]
-            self.corpname = cn
 
-        if not self.corpname:
+        if not cn:
             if self.last_corpname:
-                self.corpname = self.last_corpname
+                cn = self.last_corpname
             else:
-                self.corpname = settings.get_default_corpus(corplist)
+                cn = settings.get_default_corpus(corp_list)
+
+        if not cn in corp_list and '/' in cn and cn.split('/')[1] in corp_list:
+            cn = cn.split('/')[1]
+            fallback = True
+
+        if not cn in corp_list:
+            cn = corp_list[0] if len(corp_list) > 0 else 'susanne'
+            fallback = True
+
+        return cn, fallback
 
     def self_encoding(self):
         enc = self._corp().get_conf('ENCODING')
