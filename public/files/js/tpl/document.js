@@ -585,17 +585,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         updateButtonStatus();
 
         jqElm.bind('click', function (event) {
-            if ($(event.target).attr('data-status') === '1') {
+            var evtTarget = event.target;
+
+            if (evtTarget.nodeName !== 'BUTTON') { // <= Safari issue
+                evtTarget = $(evtTarget).closest('button').get(0);
+            }
+            if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
                 });
-                toggleSelectAllLabel(event.target);
+                toggleSelectAllLabel(evtTarget);
 
-            } else if ($(event.target).attr('data-status') === '2') {
+            } else if ($(evtTarget).attr('data-status') === '2') {
                 jqCheckboxes.each(function () {
                     this.checked = false;
                 });
-                toggleSelectAllLabel(event.target);
+                toggleSelectAllLabel(evtTarget);
             }
         });
     };
