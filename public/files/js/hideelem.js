@@ -144,7 +144,8 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
                 elementId,
                 elementIdCom,
                 jqOldElem,
-                jqElem;
+                jqElem,
+                jqQueryTypeHint;
 
             hints = hints || {};
             newidCom = jqQs.val();
@@ -174,8 +175,15 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             });
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
-                $('#queryselector').after('<sup id="query-type-hint"><a href="#" class="context-help">?</a></sup>');
-                popupBox.bind($('#query-type-hint'), hints['iqueryrow'], {'top' : 'attached-bottom', 'fontSize' : '10pt' });
+                jqQueryTypeHint = $('<sup><a href="#" class="context-help">?</a></sup>');
+                $('#queryselector').after(jqQueryTypeHint);
+                popupBox.bind(jqQueryTypeHint,
+                    hints['iqueryrow'],
+                    {
+                        'top' : 'attached-bottom',
+                        'fontSize' : '10pt',
+                        width: '30%'
+                    });
 
             } else {
                 $('#query-type-hint').remove();
