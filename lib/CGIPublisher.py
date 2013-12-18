@@ -258,16 +258,17 @@ class CGIPublisher(object):
         lgs_string = re.sub(';q=[^,]*', '', lgs_string)
         lgs = lgs_string.split(',')
         lgdirs = os.listdir(locale_dir)  # available translations
-        ans = ''
+        ans = None
         for lg in lgs:
             lg = lg.replace('-', '_').lower()
             if lg.startswith('en'):  # english
+                ans = ''
                 break
             for lgdir in lgdirs:
                 if lgdir.lower().startswith(lg):
                     ans = lgdir
                     break
-        if ans == '' and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
+        if ans is None and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
             ans = plugins.getlang.get_fallback_language()
         return ans
 
