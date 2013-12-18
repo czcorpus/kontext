@@ -143,9 +143,8 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.calcPosition = function (options) {
         var pageWidth = $(document).width(),
-            borderWidth,
             fetchOption = fetchOptionFunc(options),
-            boxWidth = fetchOption('width', '620px'),
+            boxWidth = fetchOption('width', 'auto'),
             boxHeight = fetchOption('height', 'auto'),
             boxIntWidth,
             boxTop = 0;
@@ -168,7 +167,6 @@ define(['win', 'jquery'], function (win, $) {
             $(this.newElem).css('left', this.anchorPosition.left + 'px');
 
         } else {
-            borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
             $(this.newElem).css({
                 left: '100%',
                 'margin-left': '-' + $(this.newElem).outerWidth() + 'px'
@@ -378,6 +376,31 @@ define(['win', 'jquery'], function (win, $) {
             }
             event.preventDefault();
             event.stopPropagation();
+        });
+    };
+
+    /**
+     * Modifies all the ABBR elements within 'context'
+     * so that instead of mouse-over title there is a
+     * clickable question mark appended.
+     *
+     * @param {String|HTMLElement|jQuery} [context]
+     */
+    lib.abbr = function (context) {
+
+        context = context || win.document;
+
+        $(context).find('abbr').each(function () {
+            var supElm,
+                linkElm;
+
+            $(this).css('border', 'none');
+            supElm = $(win.document.createElement('sup'));
+            $(this).after(supElm);
+            linkElm = $('<a class="abbr-like">?</a>');
+            lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
+            $(this).attr('title', null);
+            supElm.append(linkElm);
         });
     };
 
