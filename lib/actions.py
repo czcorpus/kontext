@@ -835,8 +835,6 @@ class Actions(ConcCGI):
         """
         random sample
         """
-        self.disabled_menu_items = ('menu-save',)
-
         self.q.append('r' + rlines)
         return self.view()
 
