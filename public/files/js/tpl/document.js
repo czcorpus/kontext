@@ -530,7 +530,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                                 htmlClass: 'query-overview',
                                 closeIcon: true,
                                 calculatePosition: false,
-                                timeout: null
+                                timeout: null,
+                                messages: lib.conf.messages
                             }
                         );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
@@ -605,11 +606,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     lib.bindStaticElements = function () {
         var citationHtml = $('#corpus-citation-box').html();
 
-        popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
+        popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1, {messages: lib.conf.messages});
 
         popupbox.bind('#corpus-desc-link', function (box, finalize) {
             lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
-        }, {width: 'auto', closeIcon: true});
+        }, {width: 'auto', closeIcon: true, messages: lib.conf.messages});
 
         popupbox.bind('#corpus-citation-link a',
             function(box, finalizeCallback) {
@@ -623,6 +624,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 closeIcon: true,
                 calculatePosition: true,
                 timeout: null,
+                messages: lib.conf.messages,
                 onClose: function () {
                     $('#corpus-citation-box').html(citationHtml);
                 }
