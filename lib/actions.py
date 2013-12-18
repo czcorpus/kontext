@@ -83,7 +83,7 @@ class Actions(ConcCGI):
         user = plugins.auth.validate_user(username, password)
         if user.get('id', None) is not None:
             self._session['user'] = user
-            self._redirect('%s%s' % (settings.get_root_url(), 'first_form'))
+            self._redirect('%sfirst_form' % (settings.get_root_url(), ))
         else:
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                         'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter',
@@ -1874,7 +1874,7 @@ class Actions(ConcCGI):
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
-            or (subcname and not delete and not create)):
+                or (subcname and not delete and not create)):
             subc_list = self.cm.subcorp_names(basecorpname)
             for item in subc_list:
                 item['selected'] = False
