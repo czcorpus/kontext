@@ -63,6 +63,10 @@ define(['win', 'jquery'], function (win, $) {
         this.onClose = null;
 
         this.jqCloseIcon = null;
+
+        this.messages = {
+            close : 'close'
+        };
     }
 
     /**
@@ -180,8 +184,7 @@ define(['win', 'jquery'], function (win, $) {
      * instance and second argument is a finalization callback which is expected to be called by a user once he
      * finishes content generation.
      * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
-     * onClose),
-     * domId, calculatePosition (true, false)
+     * onClose), domId, htmlClass, calculatePosition (true, false), messages (= a dictionary with translations)
      *
      */
     TooltipBox.prototype.open = function (whereElement, contents, options) {
@@ -200,11 +203,15 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
 
+        if (options.hasOwnProperty('messages')) {
+            this.importMessages(fetchOption('messages', {}));
+        }
+
         this.newElem = win.document.createElement('div');
         $(this.newElem).addClass('tooltip-box').hide();
 
         if (fetchOption('closeIcon', false)) {
-            this.jqCloseIcon = $('<a class="close-link"></a>');
+            this.jqCloseIcon = $('<a class="close-link" title="' + this.messages.close + '"></a>');
             $(this.newElem).addClass('framed');
         }
         if (boxId) {
@@ -260,6 +267,22 @@ define(['win', 'jquery'], function (win, $) {
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);
+        }
+    };
+
+    /**
+     * Imports custom user messages/labels etc.
+     * In most cases, it is not to call this from outside.
+     *
+     * @param {{}} messages
+     */
+    TooltipBox.prototype.importMessages = function (messages) {
+        var prop;
+
+        for (prop in messages) {
+            if (messages.hasOwnProperty(prop) && this.messages.hasOwnProperty(prop)) {
+                this.messages[prop] = messages[prop];
+            }
         }
     };
 
