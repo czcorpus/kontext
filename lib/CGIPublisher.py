@@ -531,7 +531,7 @@ class CGIPublisher(object):
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
                 if settings.is_debug_mode() or type(e) is UserActionException:
-                    json_msg = u'%s' % e
+                    json_msg = str(e).decode('utf-8')
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
                 return (methodname, None,
