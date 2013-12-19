@@ -390,6 +390,7 @@ class ConcCGI(CGIPublisher):
                 path = [CGIPublisher.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
                     import hashlib
+                    self._session['__message'] = _('Please <span class="sign-in">sign-in</span> to continue.')
                     curr_url = self._get_current_url()
                     curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
                     self._session[curr_url_key] = curr_url
@@ -674,6 +675,10 @@ class ConcCGI(CGIPublisher):
         result['root_url'] = settings.get_root_url()
         result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
+
+        if self._session_get('__message'):
+            result['message'] = ('info', self._session_get('__message'))
+            del(self._session['__message'])
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url()
