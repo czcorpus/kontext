@@ -1,4 +1,5 @@
 import httplib
+import urllib
 import logging
 
 
@@ -38,7 +39,7 @@ class AppBar(object):
                 self.connection.request('GET', self.path % {
                     'id': ticket_id,
                     'lang': curr_lang,
-                    'continue': return_url
+                    'continue': urllib.quote(return_url)
                 })
                 response = self.connection.getresponse()
                 
