@@ -1,4 +1,17 @@
-/* multiselect */
+@main-background: #d7d7d7;
+@color-default-text: #010101;
+@middle-light-text: #2E2E2E;
+@light-text: #999999;
+@color-logo-pink: #E2007A;
+@color-logo-blue: #009EE0;
+@color-bg-light-blue: #E9F7FC;
+@color-light-frame: #D2EDC0;
+@color-light-green: #ECF3EA;
+@border-radius-default: 6px;
+@border-radius-menu: 5px 5px 0 0;
+@portal-box-shadow: 0 0 4px #A0A0A0;
+@text-shadow: 0 0 2px #A0A0A0;
+@color-logo-orange: #F0680B;
 
 ul.multiselect {
     list-style-type : none;
@@ -24,7 +37,7 @@ ul.multiselect a.switch-link  {
     margin: 1px;
     text-decoration : none;
     color: #444444;
-    background-color: #ECF3EA;
+    background-color: @color-light-green;
     border-radius: 3px;
     border: 1px solid #B7CCCC;
 }
@@ -174,4 +187,19 @@ a.abbr-like {
 
 a.abbr-like:hover {
   text-decoration: underline;
+}
+
+#tag-widget {
+  overflow: auto;
+  max-height: 500px;
+}
+
+
+button#insert-tag-button, button#reset-tag-button {
+  height: 30px;
+  vertical-align: middle;
+}
+
+button#reset-tag-button {
+  color: #FFB7B4;
 }
