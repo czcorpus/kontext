@@ -1976,6 +1976,9 @@ msgstr "Všechny funkce KonTextu jsou k dispozici až po <a href=\\\"%s\\\">při
 msgid "uses"
 msgstr "používá"
 
+msgid "Please <span class=\"sign-in\">sign-in</span> to continue."
+msgstr "Pro pokračování se prosím <span class=\"sign-in\">přihlašte</span>."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

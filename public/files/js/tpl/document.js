@@ -964,6 +964,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * @todo this is currently Czech National Corpus specific solution
+     */
+    lib.enhanceMessages = function () {
+        $('.message .sign-in').each(function () {
+            var text = $(this).text(),
+                findSignInUrl;
+
+            findSignInUrl = function () {
+                return $('#cnc-toolbar-user a:nth-child(1)').attr('href');
+            };
+
+            $(this).replaceWith('<a href="' + findSignInUrl() + '">' + text + '</a>');
+        });
+    };
+
+    /**
      *
      * @param {object} conf
      */
@@ -1005,6 +1021,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.mainMenu.init();
         lib.timeoutMessages();
         lib.mouseOverImages();
+        lib.enhanceMessages();
 
         $('button').button();
         $('input[type="submit"]').button();

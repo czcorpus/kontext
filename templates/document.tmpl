@@ -348,7 +348,7 @@ $_ca_topbar
     <div class="messages">
         <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
             <img class="icon" alt="$message[0]" src="../files/img/#if $message[0] == 'error'#error-icon.png#else#info-icon.png#end if#">
-            <span>$message[1]</span>
+            <div class="message-text">#filter None#$message[1]#end filter#</div>
             <a class="close-icon">
                 <img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />
             </a>
