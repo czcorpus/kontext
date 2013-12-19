@@ -333,6 +333,16 @@ class CGIPublisher(object):
         module = imp.load_module(name, file, pathname, description)
         return getattr(module, name)
 
+    def _get_current_url(self):
+        if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+            port_s = ':%s' % os.getenv('SERVER_PORT')
+        else:
+            port_s = ''
+        return '%(req_scheme)s://%(host)s%(port_s)s%(uri)s' % {'req_scheme': self.environ.get('REQUEST_SCHEME', 'http'),
+                                                               'host': self.environ.get('HTTP_HOST'),
+                                                               'port_s': port_s,
+                                                               'uri': self.environ.get('REQUEST_URI', '')}
+
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
         if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
