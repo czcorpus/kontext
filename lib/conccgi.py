@@ -254,6 +254,8 @@ class ConcCGI(CGIPublisher):
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.cache_dir = settings.get('corpora', 'cache_dir')
+        self.return_url = None
+        self.ua = None
 
     def _log_request(self, user_settings, action_name):
         """
@@ -387,7 +389,12 @@ class ConcCGI(CGIPublisher):
             if redirect:
                 path = [CGIPublisher.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
-                    self._redirect('%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname))
+                    import hashlib
+                    curr_url = self._get_current_url()
+                    curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
+                    self._session[curr_url_key] = curr_url
+                    self._redirect('%sfirst_form?corpname=%s&ua=%s' %
+                                   (settings.get_root_url(), self.corpname, curr_url_key))
                 else:
                     path = ['json_error']
                     named_args['error'] = _('Corpus access denied')
@@ -425,6 +432,16 @@ class ConcCGI(CGIPublisher):
         if not 'refs' in self.__dict__:
             self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
+
+        # return url (for 3rd party pages etc.)
+        if self.ua in self._session:
+            self.return_url = self._session[self.ua]
+            del(self._session[self.ua])
+            self.ua = None
+        elif self.get_http_method() == 'GET':
+            self.return_url = self._get_current_url()
+        else:
+            self.return_url = '%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname)
 
         if len(path) > 0:
             access_level = self._get_action_prop(path[0], 'access_level')
@@ -666,7 +683,9 @@ class ConcCGI(CGIPublisher):
             result['logout_url'] = 'login'
 
         if plugins.has_plugin('application_bar'):
-            result['app_bar'] = plugins.application_bar.get_contents(self._cookies, os.environ['LANG'])
+            result['app_bar'] = plugins.application_bar.get_contents(cookies=self._cookies,
+                                                                     curr_lang=os.environ['LANG'],
+                                                                     return_url=self.return_url)
             result['app_bar_css'] = plugins.application_bar.css_url
             result['app_bar_css_ie'] = plugins.application_bar.css_url_ie
         else:
