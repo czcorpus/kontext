@@ -70,6 +70,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     lib.conf = {};
 
     /**
+     * Escapes general string containing HTML elements and entities
+     *
+     * @param {String} html
+     * @returns {string}
+     */
+    lib.escapeHTML = function (html) {
+        var elm = document.createElement('div');
+        elm.appendChild(document.createTextNode(html));
+        return elm.innerHTML;
+    };
+
+    /**
      * Normalizes error representation (sometimes it is a string,
      * sometimes it is an object) into an object with well defined
      * properties.
@@ -121,7 +133,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 }
 
                 $.modal.close(); // if a modal window is opened close it
-                lib.showErrorMessage(error.message || 'error');
+                lib.showMessage('error', error.message || 'error');
 
             } else {
                 origSucc(data, textStatus, jqXHR);
@@ -255,7 +267,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 },
                 error: function () {
                     tooltipBox.close();
-                    lib.showErrorMessage(lib.conf.messages.failed_to_load_corpus_info);
+                    lib.showMessage('error', lib.conf.messages.failed_to_load_corpus_info);
                 }
             });
         }
@@ -423,7 +435,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                     margin: 0
                 },
                 function (message) {
-                    lib.showErrorMessage(message || lib.conf.messages.failed_to_contact_server);
+                    lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);
                 }
             );
 
@@ -446,39 +458,42 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * Renders a query overview within tooltipBox
+     * instance based on provided data
+     *
+     * @param data
+     * @param {TooltipBox} tooltipBox
+     */
+    lib.renderOverview = function (data, tooltipBox) {
+        var url,
+            html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">',
+            parentElm = tooltipBox.getRootElement();
+
+        html += '<tr><th>' + lib.conf.messages.operation + '</th>';
+        html += '<th>' + lib.conf.messages.parameters + '</th>';
+        html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
+
+        $.each(data.Desc, function (i, item) {
+            html += '<tr><td>' + lib.escapeHTML(item.op) + '</td>';
+            html += '<td>' + lib.escapeHTML(item.arg) + '</td>';
+            html += '<td>' + lib.escapeHTML(item.size) + '</td>';
+            html += '<td>';
+            if (item.tourl) {
+                url = 'view?' + item.tourl;
+                html += '<a href="' + url + '">' + lib.conf.messages.view_result + '</a>';
+            }
+            html += '</td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+        $(parentElm).html(html);
+    };
+
+    /**
      *
      */
     lib.queryOverview = function () {
-        var renderOverviewFunc,
-            escKeyEventHandlerFunc;
-
-        renderOverviewFunc = function (data) {
-            return function (tooltipBox, finalize) {
-                var url,
-                    html = '<h3>' + lib.conf.messages.query_overview + '</h3><table border="1">',
-                    parentElm = tooltipBox.getRootElement();
-
-                html += '<tr><th>' + lib.conf.messages.operation + '</th>';
-                html += '<th>' + lib.conf.messages.parameters + '</th>';
-                html += '<th>' + lib.conf.messages.num_of_hits + '</th><th></th></tr>';
-
-                $.each(data.Desc, function (i, item) {
-                    html += '<tr><td>' + item.op + '</td>';
-                    html += '<td>' + item.arg + '</td>';
-                    html += '<td>' + item.size + '</td>';
-                    html += '<td>';
-                    if (item.tourl) {
-                        url = 'view?' + item.tourl;
-                        html += '<a href="' + url + '">' + lib.conf.messages.view_result + '</a>';
-                    }
-                    html += '</td>';
-                    html += '</tr>';
-                });
-                html += '</table>';
-                $(parentElm).html(html);
-                finalize();
-            };
-        };
+        var escKeyEventHandlerFunc;
 
         escKeyEventHandlerFunc = function (boxInstance) {
             return function (event) {
@@ -503,23 +518,33 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         leftPos;
 
                     if (data.Desc) {
-                        box = popupbox.open(renderOverviewFunc(data), null, {
-                            type: 'plain',
-                            domId: 'query-overview',
-                            calculatePosition: false,
-                            timeout: null
-                        });
+                        box = popupbox.open(
+                            function (box2, finalize) {
+                                lib.renderOverview(data, box2);
+                                finalize();
+                            },
+                            null,
+                            {
+                                type: 'plain',
+                                domId: 'query-overview',
+                                htmlClass: 'query-overview',
+                                closeIcon: true,
+                                calculatePosition: false,
+                                timeout: null,
+                                messages: lib.conf.messages
+                            }
+                        );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
                         box.setCss('left', leftPos + 'px');
 
                         $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
 
                     } else {
-                        lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                        lib.showMessage('error', lib.conf.messages.failed_to_load_query_overview);
                     }
                 },
                 error: function () {
-                    lib.showErrorMessage(lib.conf.messages.failed_to_load_query_overview);
+                    lib.showMessage('error', lib.conf.messages.failed_to_load_query_overview);
                 }
             });
             event.preventDefault();
@@ -560,17 +585,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         updateButtonStatus();
 
         jqElm.bind('click', function (event) {
-            if ($(event.target).attr('data-status') === '1') {
+            var evtTarget = event.target;
+
+            if (evtTarget.nodeName !== 'BUTTON') { // <= Safari issue
+                evtTarget = $(evtTarget).closest('button').get(0);
+            }
+            if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
                 });
-                toggleSelectAllLabel(event.target);
+                toggleSelectAllLabel(evtTarget);
 
-            } else if ($(event.target).attr('data-status') === '2') {
+            } else if ($(evtTarget).attr('data-status') === '2') {
                 jqCheckboxes.each(function () {
                     this.checked = false;
                 });
-                toggleSelectAllLabel(event.target);
+                toggleSelectAllLabel(evtTarget);
             }
         });
     };
@@ -579,21 +609,33 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      *
      */
     lib.bindStaticElements = function () {
+        var citationHtml = $('#corpus-citation-box').html();
 
-        popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1);
+        popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1,
+            {messages: lib.conf.messages, width: '30%'});
 
         popupbox.bind('#corpus-desc-link', function (box, finalize) {
             lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
-        }, {width: 'auto'});
+        }, {width: 'auto', closeIcon: true, messages: lib.conf.messages});
 
-        $('#corpus-citation-link a').on('click', function () {
-            $('#corpus-citation-box').modal({
-                minHeight: 400,
+        popupbox.bind('#corpus-citation-link a',
+            function(box, finalizeCallback) {
+                $(box.getRootElement()).html(citationHtml).find('a').attr('target', '_blank');
+                $('#corpus-citation-box').empty();
+                finalizeCallback();
+            },
+            {
+                type: 'plain',
+                domId: 'citation-information',
+                closeIcon: true,
+                calculatePosition: true,
+                timeout: null,
+                messages: lib.conf.messages,
+                width: '40%',
                 onClose: function () {
-                    $.modal.close();
+                    $('#corpus-citation-box').html(citationHtml);
                 }
             });
-        });
 
         // 'Select all' buttons for structural attribute lists
         $('input[class="select-all"]').each(function () {
@@ -689,7 +731,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
                             if (data.hasOwnProperty('error')) {
                                 $.modal.close();
-                                lib.showErrorMessage(data.error);
+                                lib.showMessage('error', data.error);
 
                             } else {
                                 html = '<select id="within-structattr">';
@@ -708,7 +750,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                         },
                         error: function () {
                             $.modal.close();
-                            lib.showErrorMessage(translatMessages.failed_to_contact_server);
+                            lib.showMessage('error', translatMessages.failed_to_contact_server);
                         }
                     });
                 },
@@ -821,11 +863,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 $(this).attr('href', '#');
             });
 
-            $('<link/>', {
-                rel: 'stylesheet',
-                type: 'text/css',
-                href: '../files/css/main-menu.css'
-            }).appendTo('head');
+
+            if (document.createStyleSheet) {
+                document.createStyleSheet('../files/css/main-menu.css');
+
+            } else {
+                $(win.document.createElement('link')).attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: '../files/css/main-menu.css'
+                }).appendTo('head');
+            }
 
             $('#menu-level-1 a.trigger').each(function () {
                 $(this).on('mouseover', function (event) {
@@ -866,6 +914,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             $(win).on('resize', function () {
                 self.closeSubmenu();
             });
+
+            popupbox.abbr();
         }
     };
 
@@ -914,6 +964,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * @todo this is currently Czech National Corpus specific solution
+     */
+    lib.enhanceMessages = function () {
+        $('.message .sign-in').each(function () {
+            var text = $(this).text(),
+                findSignInUrl;
+
+            findSignInUrl = function () {
+                return $('#cnc-toolbar-user a:nth-child(1)').attr('href');
+            };
+
+            $(this).replaceWith('<a href="' + findSignInUrl() + '">' + text + '</a>');
+        });
+    };
+
+    /**
      *
      * @param {object} conf
      */
@@ -955,6 +1021,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.mainMenu.init();
         lib.timeoutMessages();
         lib.mouseOverImages();
+        lib.enhanceMessages();
 
         $('button').button();
         $('input[type="submit"]').button();

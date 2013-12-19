@@ -108,7 +108,7 @@ ul.multiselect li td.checkbox-cell {
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
-    box-shadow: 8px 5px 5px #a5a5a5;
+    box-shadow: 0px 0px 15px #a5a5a5;
 }
 
 .tree-component a.tree-expand {
@@ -136,17 +136,42 @@ ul.multiselect li td.checkbox-cell {
 .tooltip-box {
   z-index: 1000;
   position: absolute;
-  background-color: #FFFFFF;
-  border: 1px solid #DDDDDD;
+  border: 1px solid #E3F1F5;
+  background-color: #E9F7FC;
   border-radius: 5px;
   box-shadow: 5px 5px 7px #aaa;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding: 12px;
   color: #444444;
+}
+
+.tooltip-box.framed {
+  padding: 23px 23px 14px 23px;
 }
 
 .tooltip-box img.info-icon {
   padding: 0 8px 0 0;
   display: inline-block;
   vertical-align: middle;
+}
+
+.tooltip-box a.close-link {
+  display: block;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  right: 4px;
+  background-image: url(../img/close-icon.png);
+}
+
+.tooltip-box a.close-link:hover {
+  background-image: url(../img/close-icon_s.png);
+}
+
+a.abbr-like {
+  text-decoration: none;
+}
+
+a.abbr-like:hover {
+  text-decoration: underline;
 }

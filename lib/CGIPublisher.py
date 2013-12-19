@@ -168,6 +168,7 @@ class CGIPublisher(object):
         self.environ = environ
         self.headers_sent = False
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._user = None
         self._session = {}
         self._ui_settings = {}
 
@@ -238,10 +239,16 @@ class CGIPublisher(object):
 
     def get_uilang(self, locale_dir):
         """
-        loads user language from user settings or from browser's configuration
+        Returns proper locale directory according to the set language.
+        Method tries to determine the language using three following sources
+        (the order determines the priority:
+
+        1) optional plugin "getlang"
+        2) KonText's ui_settings (stored in the 'settings cookie' as a part of JSON object)
+        3) user agent language
         """
-        if 'uilang' in self._session:
-            lgs_string = self._session['uilang']
+        if plugins.has_plugin('getlang'):
+            lgs_string = plugins.getlang.fetch_current_language(self._cookies)
         else:
             lgs_string = self._ui_settings.get('set_uilang', None)
         if not lgs_string:
@@ -250,15 +257,20 @@ class CGIPublisher(object):
             return ''  # english
         lgs_string = re.sub(';q=[^,]*', '', lgs_string)
         lgs = lgs_string.split(',')
-        lgdirs = os.listdir(locale_dir)
+        lgdirs = os.listdir(locale_dir)  # available translations
+        ans = None
         for lg in lgs:
             lg = lg.replace('-', '_').lower()
             if lg.startswith('en'):  # english
-                return ''
+                ans = ''
+                break
             for lgdir in lgdirs:
                 if lgdir.lower().startswith(lg):
-                    return lgdir
-        return ''
+                    ans = lgdir
+                    break
+        if ans is None and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
+            ans = plugins.getlang.get_fallback_language()
+        return ans
 
     def init_locale(self):
         # locale
@@ -298,55 +310,6 @@ class CGIPublisher(object):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
-    def _setup_action_params(self, actions=None):
-        """
-        Sets-up parameters related to processing of current action.
-        This typically includes concordance-related values (to be able to keep the state),
-        user's options etc.
-
-        Parameters
-        ----------
-        actions : callable
-            a function taking a single parameter (a dictionary) which can can be used
-            to alter some of the parameters
-        """
-        options = {}
-        if self._user:
-            user_file_id = self._user
-        else:
-            user_file_id = 'anonymous'
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        correct_types(options, self.clone_self(), selector=1)
-        if callable(actions):
-            actions(options)
-        self._setup_user_paths(user_file_id)
-        self.__dict__.update(options)
-
-    def _get_save_excluded_attributes(self):
-        return ()
-
-    def _save_options(self, optlist=[], selector=''):
-        """
-        Saves user's options to a storage
-        """
-        if selector:
-            tosave = [(selector + ':' + opt, self.__dict__[opt])
-                      for opt in optlist if opt in self.__dict__]
-        else:
-            tosave = [(opt, self.__dict__[opt]) for opt in optlist
-                      if opt in self.__dict__]
-        options = {}
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        excluded_attrs = self._get_save_excluded_attributes()
-        for k in options.keys():
-            if k in excluded_attrs:
-                del(options[k])
-        options.update(tosave)
-        if not self._anonymous:
-            plugins.settings_storage.save(self._session_get('user', 'id'), options)
-        else:
-            pass  # TODO save to the session
-
     def self_encoding(self):
         return 'iso-8859-1'
 
@@ -369,6 +332,16 @@ class CGIPublisher(object):
         file, pathname, description = imp.find_module(name, [self._template_dir])
         module = imp.load_module(name, file, pathname, description)
         return getattr(module, name)
+
+    def _get_current_url(self):
+        if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+            port_s = ':%s' % os.getenv('SERVER_PORT')
+        else:
+            port_s = ''
+        return '%(req_scheme)s://%(host)s%(port_s)s%(uri)s' % {'req_scheme': self.environ.get('REQUEST_SCHEME', 'http'),
+                                                               'host': self.environ.get('HTTP_HOST'),
+                                                               'port_s': port_s,
+                                                               'uri': self.environ.get('REQUEST_URI', '')}
 
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
@@ -558,7 +531,7 @@ class CGIPublisher(object):
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
                 if settings.is_debug_mode() or type(e) is UserActionException:
-                    json_msg = u'%s' % e
+                    json_msg = str(e).decode('utf-8')
                 else:
                     json_msg = _('Failed to process your request. Please try again later or contact system support.')
                 return (methodname, None,

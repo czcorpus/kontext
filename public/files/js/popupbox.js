@@ -61,6 +61,12 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = 25000;
 
         this.onClose = null;
+
+        this.jqCloseIcon = null;
+
+        this.messages = {
+            close : 'close'
+        };
     }
 
     /**
@@ -137,17 +143,13 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.calcPosition = function (options) {
         var pageWidth = $(document).width(),
-            horizPadding = 12,
-            borderWidth,
             fetchOption = fetchOptionFunc(options),
-            boxWidth = fetchOption('width', '620px'),
+            boxWidth = fetchOption('width', 'auto'),
             boxHeight = fetchOption('height', 'auto'),
             boxIntWidth,
             boxTop = 0;
 
         $(this.newElem).css({
-            'padding-left': horizPadding + 'px',
-            'padding-right': horizPadding + 'px',
             width: boxWidth,
             height: boxHeight
         });
@@ -165,10 +167,9 @@ define(['win', 'jquery'], function (win, $) {
             $(this.newElem).css('left', this.anchorPosition.left + 'px');
 
         } else {
-            borderWidth = $(this.newElem).css('border-left-width').replace(/([0-9]+)[a-z]+/, '$1');
             $(this.newElem).css({
                 left: '100%',
-                'margin-left': '-' + (boxIntWidth + 2 * horizPadding + 2 * borderWidth) + 'px'
+                'margin-left': '-' + $(this.newElem).outerWidth() + 'px'
             });
         }
     };
@@ -177,10 +178,11 @@ define(['win', 'jquery'], function (win, $) {
      *
      * @param whereElement
      * @param {string|function} contents if a function is provided,
-     * following signature is expected: function(htmlElement) where htmlElement is the tooltip box itself
+     * following signature is expected: function(TooltipBox, finalizeCallback) where first argument is a TooltipBox
+     * instance and second argument is a finalization callback which is expected to be called by a user once he
+     * finishes content generation.
      * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
-     * onClose),
-     * domId, calculatePosition (true, false)
+     * onClose), domId, htmlClass, calculatePosition (true, false), messages (= a dictionary with translations)
      *
      */
     TooltipBox.prototype.open = function (whereElement, contents, options) {
@@ -193,60 +195,92 @@ define(['win', 'jquery'], function (win, $) {
             self = this,
             msgType = fetchOption('type', 'info'),
             boxId = fetchOption('domId', null),
-            calculatePosition = fetchOption('calculatePosition', true),
-            finalizationCallback;
+            boxClass = fetchOption('htmlClass', null),
+            calculatePosition = fetchOption('calculatePosition', true);
 
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
 
+        if (options.hasOwnProperty('messages')) {
+            this.importMessages(fetchOption('messages', {}));
+        }
+
         this.newElem = win.document.createElement('div');
+        $(this.newElem).addClass('tooltip-box').hide();
+
+        if (fetchOption('closeIcon', false)) {
+            this.jqCloseIcon = $('<a class="close-link" title="' + this.messages.close + '"></a>');
+            $(this.newElem).addClass('framed');
+        }
         if (boxId) {
             this.newElem.setAttribute('id', boxId);
+        }
+        if (boxClass) {
+            $(this.newElem).addClass(boxClass);
         }
         jqWhereElement.append(this.newElem);
 
         if (typeof contents === 'function') {
-            if (calculatePosition) {
-                finalizationCallback = function () {
+            contents(this, function () {
+                if (self.jqCloseIcon) {
+                    $(self.newElem).prepend(self.jqCloseIcon);
+                }
+                if (calculatePosition) {
                     self.calcPosition(opts);
-                };
-
-            } else {
-                finalizationCallback = function () {};
-            }
-            contents(this, finalizationCallback);
+                }
+                $(self.newElem).show();
+            });
 
         } else {
-            $(this.newElem).empty().append(contents);
+            $(this.newElem).append(contents);
+            if (this.jqCloseIcon) {
+                $(this.newElem).prepend(this.jqCloseIcon);
+            }
+
             if (calculatePosition) {
                 this.calcPosition(opts);
             }
+            $(self.newElem).show();
         }
         if (msgType !== 'plain') {
             $(this.newElem).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         }
-        $(this.newElem).addClass('tooltip-box');
         $(this.newElem).css('font-size', fontSize);
 
         closeClickHandler = function (event) {
             if (event) {
                 $(event.target).off('click', closeClickHandler);
             }
-            $(document).off('click', closeClickHandler);
+            $(win.document).off('click', closeClickHandler);
             TooltipBox.prototype.close.call(self);
         };
 
         escKeyHandler = function (event) {
             if (event.keyCode === 27) {
                 self.close();
-                $(window).off('keyup', escKeyHandler);
+                $(win.document).off('keyup', escKeyHandler);
             }
         };
-
-        $(window).on('keyup', escKeyHandler);
+        $(win.document).on('keyup', escKeyHandler);
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);
+        }
+    };
+
+    /**
+     * Imports custom user messages/labels etc.
+     * In most cases, it is not to call this from outside.
+     *
+     * @param {{}} messages
+     */
+    TooltipBox.prototype.importMessages = function (messages) {
+        var prop;
+
+        for (prop in messages) {
+            if (messages.hasOwnProperty(prop) && this.messages.hasOwnProperty(prop)) {
+                this.messages[prop] = messages[prop];
+            }
         }
     };
 
@@ -274,11 +308,17 @@ define(['win', 'jquery'], function (win, $) {
 
         windowClickHandler = function (event) {
             if (event.target !== box.newElem) {
-                $(win).off('click', windowClickHandler);
+                $(win.document).off('click', windowClickHandler);
                 box.close();
             }
         };
-        $(win).on('click', windowClickHandler);
+
+        if (box.jqCloseIcon) { // explicit closing element is defined
+            box.jqCloseIcon.on('click', windowClickHandler);
+
+        } else { // click anywhere closes the box
+            $(win.document).on('click', windowClickHandler);
+        }
         return box;
     };
 
@@ -288,7 +328,9 @@ define(['win', 'jquery'], function (win, $) {
      * anchoring element. Default behaviour of anchoring element's click event is suppressed.
      *
      * @param {jQuery|HTMLElement|string} elm
-     * @param {function|string} contents
+     * @param {Function|String} contents if function then following signature
+     * is expected: function(TooltipBox, finalizeCallback)
+     * where function updates the box (i.e. no return value is involved here) by accessing TooltipBox object
      * @param {object} [options]
      */
     lib.bind = function (elm, contents, options) {
@@ -319,15 +361,46 @@ define(['win', 'jquery'], function (win, $) {
 
                 windowClickHandler = function (event) {
                     if (event.target !== box.newElem) {
-                        $(win).off('click', windowClickHandler);
+                        $(win.document).off('click', windowClickHandler);
                         box.close();
                         $(elm).data('popupBox', null);
                     }
                 };
-                $(win).on('click', windowClickHandler);
+
+                if (box.jqCloseIcon) { // explicit closing element is defined
+                    box.jqCloseIcon.on('click', windowClickHandler);
+
+                } else { // click anywhere closes the box
+                    $(win.document).on('click', windowClickHandler);
+                }
             }
             event.preventDefault();
             event.stopPropagation();
+        });
+    };
+
+    /**
+     * Modifies all the ABBR elements within 'context'
+     * so that instead of mouse-over title there is a
+     * clickable question mark appended.
+     *
+     * @param {String|HTMLElement|jQuery} [context]
+     */
+    lib.abbr = function (context) {
+
+        context = context || win.document;
+
+        $(context).find('abbr').each(function () {
+            var supElm,
+                linkElm;
+
+            $(this).css('border', 'none');
+            supElm = $(win.document.createElement('sup'));
+            $(this).after(supElm);
+            linkElm = $('<a class="abbr-like">?</a>');
+            lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
+            $(this).attr('title', null);
+            supElm.append(linkElm);
         });
     };
 

@@ -10,6 +10,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+try:
+    _
+except NameError:
+    _ = lambda s: s
+
 
 class AbstractAuth(object):
     """
@@ -18,6 +23,11 @@ class AbstractAuth(object):
     """
 
     def anonymous_user(self):
+        """
+        Returns a dictionary containing (key, value) pairs
+        specifying anonymous user. By default it is ID = 0,
+        user = 'anonymous', fullname = _('anonymous')
+        """
         return {
             'id': 0,
             'user': 'anonymous',
@@ -25,16 +35,31 @@ class AbstractAuth(object):
         }
 
     def get_login_url(self):
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log in. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
         return '%slogin' % self.root_url
 
     def get_logout_url(self):
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log out. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
         return '%slogoutx' % self.root_url
 
     def is_administrator(self):
+        """
+        Should return True if user has administrator's privileges
+        else False
+        """
         return False
 
 
 class AuthException(Exception):
     """
+    General authentication/authorization exception
     """
     pass

@@ -36,6 +36,16 @@ conf_parsers = {
 }
 
 
+def contains(section, key=None):
+    """
+    Tests whether the config contains a section or a section+key (if a key provided is not None)
+    """
+    if (key is None and section in _conf) or (key is not None and section in _conf and key in _conf[section]):
+        return True
+    else:
+        return False
+
+
 def get(section, key=None, default=None):
     """
     Gets a configuration value. This function never throws an exception in
@@ -230,28 +240,6 @@ def is_debug_mode():
     return value is not None and value.lower() in ('true', '1')
 
 
-def has_configured_speech(corpus):
-    """
-    Tests whether the provided corpus contains
-    structural attributes compatible with current application's configuration
-    (e.g. corpus contains structural attribute seg.id and the configuration INI
-    file contains line speech_segment_struct_attr = seg.id).
-
-    Parameters
-    ----------
-    corpus : manatee.Corpus
-      corpus object we want to test
-    """
-    return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
-
-
-def get_speech_structure():
-    """
-    Returns name of the structure configured as a 'speech' delimiter
-    """
-    return get('corpora', 'speech_segment_struct_attr').split('.')[0]
-
-
 def get_uri_scheme_name():
     if 'HTTPS' in os.environ:
         return 'https'
@@ -263,11 +251,16 @@ def get_root_url():
     """
     Returns root URL of the application
     """
-    if 'SCRIPT_URL' in os.environ:
-        path = os.getenv('SCRIPT_URL')[:os.getenv('SCRIPT_URL').rindex('/')]
+    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+        port_s = ':%s' % os.getenv('SERVER_PORT')
     else:
-        path = os.getenv('REQUEST_URI')[:os.getenv('REQUEST_URI').rindex('/')]
-    return '%s://%s%s/' % (get_uri_scheme_name(), os.getenv('SERVER_NAME'), path)
+        port_s = ''
+    return '%(protocol)s://%(server)s%(port)s%(script)s/' % {
+        'protocol': get_uri_scheme_name(),
+        'port': port_s,
+        'server': os.getenv('HTTP_HOST'),
+        'script': os.getenv('SCRIPT_NAME')
+    }
 
 
 def supports_password_change():
@@ -277,18 +270,3 @@ def supports_password_change():
         if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
             return False
     return True
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        parse_config(sys.argv[1])
-        for block in _conf:
-            print('\n[%s]' % block)
-            for key in _conf[block]:
-                if type(key) == str:
-                    if key.find('passw') == -1:
-                        value = _conf[block][key]
-                    else:
-                        value = '******'
-                    print('%s: %s' % (key, value))
-    else:
-        print('No config XML specified')

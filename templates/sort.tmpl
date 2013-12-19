@@ -95,8 +95,10 @@ require(['tpl/sort', 'conf', 'domReady!'], function (pageSelf, conf) {
             </div>
         </fieldset>
     </form>
+</section>
 
-    <h3>$_("Multilevel sort")</h3>
+<section>
+    <h2>$_("Multilevel sort")</h2>
     <form action="mlsortx">
         <fieldset>
             #filter None
@@ -246,7 +248,7 @@ require(['tpl/sort', 'conf', 'domReady!'], function (pageSelf, conf) {
             </table>
             </td>
                 </tr>
-                <tr id="kwic-alignment-box" style="display: none">
+                <tr class="kwic-alignment-box" style="display: none">
                     <td>
                         $_("(Node) start at") <sup><a class="kwic-alignment-help">?</a></sup>:<br />
                         <select class="kwic-alignment" id="kwic-alignment-1">

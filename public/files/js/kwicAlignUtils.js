@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery'], function ($) {
+define(['win', 'jquery'], function (win, $) {
     'use strict';
 
     var getColumnId,
@@ -70,14 +70,26 @@ define(['jquery'], function ($) {
      * related HTML templates and controller logic.
      * It initializes "KWIC alignment" select-box event handlers and sets form values according to the state
      * of these select-boxes.
+     *
+     * @param {HTMLElement|String|jQuery} [searchContext]
      */
-    lib.fix = function () {
-        $('#kwic-alignment-box').css({ display: 'table-row' });
-        $('select.kwic-alignment').each(function () {
+    lib.fix = function (searchContext) {
+        var srch;
+
+        if (!searchContext) {
+            srch = $(win.document);
+
+        } else {
+            srch = $(searchContext);
+        }
+
+        $('.kwic-alignment-box').css({ display: 'table-row' });
+        srch.find('select.kwic-alignment').each(function () {
             switchAlignment($(this).val(), getColumnId(this));
         });
-        $('select.kwic-alignment').each(function () {
-            $(this).bind('change', function (event) {
+        srch.find('select.kwic-alignment').each(function () {
+            $(this).off('changeKwicAlign');
+            $(this).on('change.kwicAlign', function (event) {
                 switchAlignment($(event.target).val(), getColumnId(this));
             });
         });

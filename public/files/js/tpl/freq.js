@@ -18,7 +18,7 @@
  */
 
 
-define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupbox, $, kwicAlignUtils) {
+define(['tpl/document', 'win', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, win, popupbox, $, kwicAlignUtils) {
 
     'use strict';
 
@@ -51,6 +51,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
             addLevelButton.attr('disabled', null);
             addLevelButton.attr('title', null);
         }
+
+        kwicAlignUtils.fix();
     };
 
     /**
@@ -77,8 +79,11 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
         newLine.find('td:nth-child(4) select').attr('name', 'ml' + newLevelNum + 'ctx');
         newLine.find('td:nth-child(5) select').attr('id', 'kwic-alignment-' + newLevelNum);
         newLine.find('td input[name="freqlevel"]').val(newLevelNum);
+        // close icon
         newLine.find('td:last').empty().append('<a class="remove-level" title="' + lib.messages.remove_item + '">' +
-            '<img src="../files/img/close-icon.png" alt="' + lib.messages.remove_item + '" /></a>');
+            '<img class="over-img" src="../files/img/close-icon.png" alt="' + lib.messages.remove_item + '" data-alt-img="../files/img/close-icon_s.png" /></a>');
+        layoutModel.mouseOverImages(newLine);
+
         newLine.find('td:last a.remove-level').on('click', function (event) {
             lib.removeLevel($(event.target).closest('tr'));
         });
@@ -87,6 +92,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
             $('#add-freq-level-button').attr('disabled', 'disabled');
             $('#add-freq-level-button').attr('title', lib.messages.max_level_reached);
         }
+
+        kwicAlignUtils.fix(newLine);
     };
 
     /**

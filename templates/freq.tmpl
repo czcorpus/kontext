@@ -73,15 +73,15 @@ require(['tpl/freq', 'conf', 'domReady!'], function (pageSelf, conf) {
                     <input type="checkbox" name="ml1icase" value="i" #if $ml1icase#checked="checked"#end if# />
                 </td>
                 <td>
-                    <select name="ml1ctx">
+                    <select name="ml1ctx" autocomplete="off">
                         #for $p in $Pos_ctxs
                         <option value="$p.ctx" #if $p.ctx == $ml1ctx#selected="selected"#end if#>$_($p.n)</option>
                         #end for
                     </select>
                 </td>
                 <td>
-                    <div id="kwic-alignment-box" style="display: none">
-                        <select class="kwic-alignment" id="kwic-alignment-1">
+                    <div class="kwic-alignment-box" style="display: none">
+                        <select class="kwic-alignment" id="kwic-alignment-1" autocomplete="off">
                             <option value="left">$_("leftmost KWIC word")</option>
                             <option value="right">$_("rightmost KWIC word")</option>
                         </select>

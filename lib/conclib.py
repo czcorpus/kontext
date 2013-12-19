@@ -100,7 +100,7 @@ def add_block_items(items, attr='class', val='even', block_size=3):
 
 
 def kwicpage(
-    corpus, conc, has_speech=False, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
+    corpus, conc, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
     ctxattrs='word', refs='#', structs='p', pagesize=40,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
         tbl_template='none', hidenone=0):
@@ -113,8 +113,8 @@ def kwicpage(
       corpus we are working with
     conc : manatee.Concordance
       a concordance object
-    has_speech : bool
-      sets whether the corpus concordance is derived from contains speech files
+    speech_attr : 2-tuple
+      sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
     fromp : int
       page number (starts from 1)
     line_offset : int
@@ -158,7 +158,7 @@ def kwicpage(
     except:
         fromp = 1
     out = {'Lines':
-           kwiclines(conc, has_speech, (
+           kwiclines(conc, speech_attr, (
                    fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
            leftctx, rightctx, attrs, ctxattrs, refs, structs,
            labelmap, righttoleft, alignlist)}
@@ -170,7 +170,7 @@ def kwicpage(
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
         sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(conc, has_speech, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
+        sen_lines = kwiclines(conc, speech_attr, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
             '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
@@ -237,7 +237,7 @@ def add_aligns(
         if al_corpname in corps_with_colls:
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(conc, False, fromline, toline, leftctx,
+                kwiclines(conc, None, fromline, toline, leftctx,
                           rightctx, attrs, ctxattrs, refs,
                           structs, labelmap, righttoleft))
         else:
@@ -245,7 +245,7 @@ def add_aligns(
             conc.add_aligned(al_corp.get_conffile())
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(conc, False, fromline, toline, '0',
+                kwiclines(conc, None, fromline, toline, '0',
                           '0', 'word', '', refs, structs,
                           labelmap, righttoleft))
     aligns = zip(*al_lines)
@@ -253,15 +253,17 @@ def add_aligns(
         line['Align'] = aligns[i]
 
 
-def separate_speech_struct_from_tag(text):
+def separate_speech_struct_from_tag(speech_segment, text):
     """
     Removes structural attribute related to speech file identification.
     E.g. getting input "<seg foo=bar speechfile=1234.wav time=1234>lorem ipsum</seg>" and
-    having configuration directive "speech_segment_struct_attr = seg.speechfile" the function
+    having configuration directive "speech_segment == seg.speechfile" the function
     returns "<seg foo=bar time=1234>lorem ipsum</seg>"
 
     Parameters
     ----------
+    speech_segment: 2-tupe
+        (struct_name, attr_name)
     text : str
       string to be processed
 
@@ -274,8 +276,7 @@ def separate_speech_struct_from_tag(text):
     """
     import re
 
-    struct_attr = settings.get('corpora', 'speech_segment_struct_attr')
-    speech_struct, speech_struct_attr = struct_attr.split('.')
+    speech_struct, speech_struct_attr = speech_segment if speech_segment else (None, None)
     pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (
         speech_struct, speech_struct_attr)
     srch = re.search(pattern, text)
@@ -314,12 +315,14 @@ def line_parts_contain_speech(line_left, line_right):
     return False
 
 
-def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_speech_id=None):
+def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_speech_tag, prev_speech_id=None):
     """
     Parameters
     ----------
     corpus_name : str
       name of the corpus
+    speech_attr: 2-tupe
+      (struct_name, attr_name)
     line : list of dicts
       contains keys 'str', 'class'
     column : str
@@ -343,16 +346,16 @@ def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_sp
     import urllib
 
     newline = []
-    speech_struct = settings.get_speech_structure()
-    fragment_separator = '<%s' % speech_struct
+    speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
+    fragment_separator = '<%s' % speech_struct_str
     last_fragment = None
     last_speech_id = prev_speech_id
     create_speech_path = lambda sp_id: urllib.urlencode({'corpname': corpus_name, 'chunk': sp_id})
 
     for item in line:
-        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct, speech_struct), item['str']) if x != '']
+        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct_str, speech_struct_str), item['str']) if x != '']
         for fragment in fragments:
-            frag_ext, speech_id = separate_speech_struct_from_tag(fragment)
+            frag_ext, speech_id = separate_speech_struct_from_tag(speech_segment, fragment)
             if not speech_id:
                 speech_id = last_speech_id
             else:
@@ -363,22 +366,22 @@ def postproc_kwicline_part(corpus_name, line, column, filter_speech_tag, prev_sp
             }
             if frag_ext.startswith(fragment_separator):
                 newline_item['open_link'] = {'speech_path': create_speech_path(speech_id)}
-            elif frag_ext.endswith('</%s>' % speech_struct):
+            elif frag_ext.endswith('</%s>' % speech_struct_str):
                 newline_item['close_link'] = {'speech_path': create_speech_path(speech_id)}
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the
     # concordance line
     if last_fragment is not None \
-            and re.search('^<%s(>|[^>]+>)$' % speech_struct, last_fragment['str'])\
+            and re.search('^<%s(>|[^>]+>)$' % speech_struct_str, last_fragment['str'])\
             and column == 'right':
         del(last_fragment['open_link'])
     if filter_speech_tag:
-        remove_tag_from_line(newline, speech_struct)
+        remove_tag_from_line(newline, speech_struct_str)
     return newline, last_speech_id
 
 
-def kwiclines(conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
+def kwiclines(conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
     attrs='word', ctxattrs='word', refs='#', user_structs='p',
     labelmap={}, righttoleft=False, alignlist=[],
         align_attrname='align', aattrs='word', astructs=''):
@@ -391,8 +394,9 @@ def kwiclines(conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
     ----------
     conc : manatee.Concordance
       concordance we are working with
-    has_speech : bool
-      if true then rendering procedures expect to find speech related structural attribute in the corpus
+    speech_attr : str
+      if empty then no speech structure is present else a full attribute name
+      (i.e. including a structure name - e.g. "seg.speech") is expected
     TODO
 
     Returns
@@ -410,9 +414,8 @@ def kwiclines(conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
     # all_structs contain also internal structures needed to render
     # additional information (like the speech links)
     all_structs = user_structs
-    if has_speech:
-        speech_struct_attr_name = settings.get(
-            'corpora', 'speech_segment_struct_attr')
+    if speech_segment:
+        speech_struct_attr_name = '.'.join(speech_segment)
         speech_struct_attr = corpus.get_attr(speech_struct_attr_name)
         if not speech_struct_attr_name in user_structs:
             all_structs += ',' + speech_struct_attr_name
@@ -437,21 +440,24 @@ def kwiclines(conc, has_speech, fromline, toline, leftctx='-5', rightctx='5',
     labelmap['_'] = '_'
     maxleftsize = 0
     maxrightsize = 0
-    filter_out_speech_tag = has_speech and settings.get_speech_structure() not in user_structs \
+    filter_out_speech_tag = speech_segment and speech_segment[0] not in user_structs \
         and speech_struct_attr_name in all_structs
 
     while kl.nextline():
         linegroup = str(kl.get_linegroup() or '_')
         linegroup = labelmap.get(linegroup, '#' + linegroup)
-        if has_speech:
+        if speech_segment:
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_left()),
+        leftwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+                                                                tokens2strclass(kl.get_left()),
                                                                 'left', filter_out_speech_tag, leftmost_speech_id)
-        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_kwic()),
+        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+                                                                tokens2strclass(kl.get_kwic()),
                                                                 'kwic', filter_out_speech_tag, last_left_speech_id)
-        rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), tokens2strclass(kl.get_right()), 'right',
+        rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+                                            tokens2strclass(kl.get_right()), 'right',
                                             filter_out_speech_tag, last_left_speech_id)[0]
 
         if righttoleft:
@@ -1529,6 +1535,7 @@ def get_detail_context(corp, pos, hitlen=1,
                                       detail_right_ctx + detail_ctx_incr))
     data['righttoleft'] = corp.get_conf('RIGHTTOLEFT')
     data['pos'] = pos
+    data['maxdetail'] = maxdetail
     return data
 
 
@@ -1586,7 +1593,7 @@ def fcs_search(corp, fcs_query, max_rec, start):
         conc = get_conc(corp, q=['q' + rq])
     except Exception, e:
         raise Exception(10, repr(e), 'Query syntax error')
-    page = kwicpage(conc) # convert concordance
+    page = kwicpage(conc)  # convert concordance
     if len(page['Lines']) < start:
         raise Exception(61, '', 'First record position out of range')
     return [(kwicline['Left'][0]['str'], kwicline['Kwic'][0]['str'],

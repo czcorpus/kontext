@@ -43,9 +43,23 @@ files instead to a database, all you have to do is to rewrite the *sessions* plu
 You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
 *ucnk_* prefix.
 
-Typically, a plugin module is required to implement *create_instance(settings, \*args, \**kwargs) * method which returns
-an instance of required service. Additionally a *setup(\**kwargs)* method can be defined to allow further plugin
-configuration after *CGIPublisher* object is fully operational.
+In general, a plugin is a Python object defined in a Python module. the module must implement factory function
+*create_instance* ::
+
+    def create_instance(settings, *args, **kwargs):
+        return MyPluginImplementation()
+
+The factory function should create and return a plugin object. Because plugins are instantiated very soon, it is
+sometimes necessary to perform additional configuration after *CGIPublisher* object is fully operational. In such
+cases, the plugin can implement a method *setup*: ::
+
+    def setup(self, **kwargs):
+        pass
+
+
+-----------------------------------
+List of currently supported plugins
+-----------------------------------
 
 Following plugins are mandatory:
 
@@ -72,51 +86,300 @@ Following plugins are optional:
 +------------------+------------------------------------------------------------------------------+
 | db               | provides a connection to a database (if required by other plugins)           |
 +------------------+------------------------------------------------------------------------------+
+| getlang          | if you want to read current UI language in a non-KonText way                 |
++------------------+------------------------------------------------------------------------------+
+
+The "db" plugin
+===============
+
+The "db" plugin provides a connection to a database. An implementation must provide following method: ::
+
+    def get(self):
+        """
+        returns a database connection object
+        """
+        pass
 
 
-Authentication plugin notes
-===========================
+The "auth" plugin
+=================
 
 The application expects you to provide a custom implementation of authentication module. If you want to test the
-application without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
+it without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
 and always returns the same list of corpora (you probably want to set your own list).
 
-To be able to provide different lists of corpora for different users, you have to implement an authentication
-module with the following properties:
+Authentication object is expected to implement the following methods: ::
 
-  * the module resides in the *plugins* package (= *./lib/plugins* directory)
-  * contains function *create_instance(settings)* which creates and returns a new instance of your authentication object.
-    The *settings* parameter is KonText's *settings* module or some compatible one. This
-    provides access to any required configuration parameter (e.g. database connection if you need one).
+    def validate_user(self, username, password):
+        """
+        Returns bool
+        """
+        pass
 
-Authentication object is expected to implement following methods:
+Returns True on success else False and changes the state of your authentication object to reflect user's properties ::
 
-  * *validate_user(username, password)* - returns bool value (True on success else False) and changes
-    the state of your authentication object to reflect user's properties
-  * *get_corplist()* - returns list/tuple containing identifiers of corpora available to the
-    logged user
-  * *is_administrator()* - returns True if the user is admin else False is returned
-  * if the password update interface is required then the following additional methods must be implemented:
+    def logout(self, session_id):
+        pass
 
-    * *update_password(new_password)*
-    * *validate_password(password)* - tests whether provided password matches user's current password
-    * *validate_new_password(password)* - tests whether provided password candidate matches required password
-      properties (like length)
-    * *get_required_password_properties()* - returns a text describing what are the properties of a valid password
-    * *is_administrator()* - returns True if current user has administrator's privileges
-    * *get_login_url()* - returns URL of *login* action (because in general, it may be outside the application)
-    * *get_logout_url()* - returns URL of *logout* action (because in general, it may be outside the application)
-    * *anonymous_user()* - returns a dictionary containing anonymous user credentials
+Changes current user's status to an 'anonymous' user.
 
-Class auth.AbstractAuth can be used as a base class when implementing custom authentication object. It already provides
-some required methods.
+::
+
+    def get_corplist(self, user):
+        pass
+
+Returns list/tuple containing identifiers of corpora available to the *user* (= username). ::
+
+    def is_administrator(self):
+        pass
+
+Returns True if the current user has administrator's privileges else False is returned.
+::
+
+    def anonymous_user(self):
+        """
+        returns a dictionary containing anonymous user credentials
+        """
+        pass
+
+If a password update page is required to be active then the following additional methods must be implemented: ::
+
+    def update_user_password(self, new_password):
+        pass
+
+
+    def validate_password(self, password):
+        """
+        tests whether provided password matches user's current password
+        """
+        pass
+
+    def validate_new_password(self, password):
+        """
+        tests whether provided password candidate matches required password
+        properties (like length)
+        """
+        pass
+
+    def get_required_password_properties(self):
+        """
+        returns a text describing what are the properties of a valid password
+        """
+        pass
+
+KonText is written to support log-in/log-out process realized in two ways:
+
+1) within KonText application (i.e. log-in/log-out pages are within KonText and KonText also cares about user
+   credentials validation)
+
+2) outside KonText application (log-in/log-out pages and user session validation are defined outside KonText)
+
+Because of that, all the *auth* plugins must implement methods which tell the KonText where log-in/log-out pages are: ::
+
+    def get_login_url(self):
+        """
+        returns URL of *login* action (because in general, it may be outside the application)
+        """
+        pass
+
+    def get_logout_url(self):
+        """
+        returns URL of *logout* action (because in general, it may be outside the application)
+        """
+        pass
+
+
+Class *auth.AbstractAuth* can be used as a base class when implementing custom authentication object. It already
+provides some of required methods.
+
+In case you want to implement "outside KonText" authentication variant, an additional method *revalidate* must
+be implemented: ::
+
+    def revalidate(cookies, session):
+        pass
+
+KonText call this method (if it is provided by your plugin) during session initialization. If an external service
+responds user is logged in no more, method *revalidate* should change user's session data to an "anonymous user".
+
+The "sessions" plugin
+=====================
+
+The *sessions* plugin is expected to handle web sessions where users are identified by some cookie
+*(key, value)* pair. ::
+
+    def start_new(self, data=None):
+        """
+        starts a new session
+
+        returns a dictionary {'id': session_id, 'data': data}
+        """
+        pass
+
+    def delete(self, session_id):
+        """
+        Deletes session identified by session_id
+        """
+        pass
+
+    def load(self, session_id, data=None):
+        """
+        Loads existing session from a storage
+
+        returns  {'id': session_id, 'data': ...}
+        """
+        pass
+
+    def save(self, session_id, data):
+        """
+        Saves session data to a storage
+        """
+        pass
+
+    def delete_old_sessions(self):
+        """
+        This function should provide some cleaning mechanism for old/unused sessions.
+        It is called by KonText from time to time.
+        """
+
+The "settings_storage" plugin
+=============================
+
+This plugin allows users to store their concordance view settings. In general, it does not matter what kind of storage
+is used here but KonText always provides a database connection plugin (if defined). ::
+
+    def __init__(self, conf, db):
+        """
+        Parameters
+        ----------
+        conf : the 'settings' module (or some compatible object)
+        db : a database connection
+        """
+        pass
+
+    def save(self, user_id, data):
+        """
+        saves user data (encoded to JSON) to a storage
+        """
+        pass
+
+    def load(self, user_id, current_settings=None):
+        """
+        loads user data from a storage and decoded them from
+        JSON to a Python dict/list/etc. types
+        """
+        pass
+
+The "corptree" plugin"
+======================
+
+The *corptree* plugin reads a hierarchical list of corpora from an XML file (it can be part of *config.xml* but not
+necessarily). Enclosed version of the plugin requires the following format: ::
+
+    <corplist title="">
+      <corplist title="Synchronic Corpora">
+         <corplist title="SYN corpora">
+           <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
+           ... etc...
+         </corplist>
+         <corplist title="Diachronic Corpora">
+            <corpus id="DIA" />
+         </corplist>
+      </corplist>
+    </corplist>
+
+
+Attributes for the **corplist** element:
+
++--------------+---------------------+
+| attr. name   | description         |
++==============+=====================+
+| title        | name of the group   |
++--------------+---------------------+
+
+Attributes for the **corpus** element:
+
++-----------------+--------------------------------------------------------------------+
+| attr. name      | description                                                        |
++=================+====================================================================+
+| id              | name of the corpus (as used within registry files)                 |
++-----------------+--------------------------------------------------------------------+
+| sentence_struct | structure delimiting sentences                                     |
++-----------------+--------------------------------------------------------------------+
+| num_tag_pos     | number of character positions in a tag                             |
++-----------------+--------------------------------------------------------------------+
+| web             | (optional) external link containing information about the corpus   |
++-----------------+--------------------------------------------------------------------+
+
+Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
+to load any XML file and search for the tree node anywhere you want.
+
+
+The "appbar" plugin
+===================
+
+This optional plugin provides a way how to integrate KonText to an existing group of applications sharing some
+visual page component (typically, a top-positioned toolbar - like e.g. in case of Google applications).
+
+Such page component may provide miscellaneous information (e.g. links to your other applications, knowledge base
+links etc.) but it is expected that its main purpose is to provide user-login status and links to an external
+authentication page. KonText uses this plugin to fetch an HTML fragment of such "toolbar". The HTML data is loaded
+internally (between KonText's hosting server and a "toolbar provider" server, via HTTP) and rendered along with
+KonText's own output.
+
+Please note that if you configure *appbar* plugin then KonText will stop showing its own authentication information
+and login/logout links.
+
+Because of its specific nature, the "appbar" plugin is instantiated in a slightly different way from other plugins.
+Module your plugin resides in is expected to implement following factory method::
+
+    def create_instance(conf, auth_plugin):
+        pass
+
+This means that even if your *appbar* implementation does not need an *auth_plugin* instance you still must implement
+compatible *create_instance* method::
+
+    def create_instance(conf, *args, **kwargs):
+        # all the arguments KonText passes are covered by *args and **kwargs
+        return MyAppBarImplementation()
+
+Your plugin object is expected to implement a single method *get_contents*::
+
+    def get_contents(self, cookies, current_lang, return_url=None):
+        pass
+
+*cookies* is a *BonitoCookie(Cookie.BaseCookie)* instance providing dictionary-like access to cookie values,
+*current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
+contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
+notify your toolbar/app-bar/whatever content provider which language is currently in use. Argument *return_url*
+serves in case user leaves KonText to some of *appbar*'s pages and these pages are able to navigate him back to
+KonText (typically, user logs in and expects to be redirected back).
+
+The "getlang" plugin
+====================
+
+This optional plugin allows you to obtain language settings set by some other application (i.e. you want to have a
+shared toolbar with centralized authentication and user interface settings).
+
+It is required to implement a single method::
+
+    def fetch_current_language(self, cookie):
+        pass
+
+where *cookie* is an instance of *Cookie.BaseCookie*
+
+Additionally, you can implement also a method to get a fallback language in case your "other application" sets some
+language your version of KonText does not support.::
+
+    def get_fallback_language(self):
+        pass
+
 
 ----------------------
 Deployment and running
 ----------------------
 
-To be able to be deployed and run, the application requires some additional file post-processing to be done. These
-steps also depend on whether the application runs in *debugging* or *production* mode.
+To be able to be deployed and run, *KonText* requires some additional file post-processing to be performed. These
+steps also depend on whether the *KonText* runs in *debugging* or *production* mode.
 
 All the required tasks are configured to be performed by `Grunt <http://gruntjs.com/>`_ task automater (see file
 *Gruntfile.js*).
@@ -148,9 +411,9 @@ This can be set in *config.xml*'s */kontext/global/debug* by setting the value *
 If you have a working node.js and Grunt (grunt-cli package) installation, you can prepare KonText for deployment just by
 running *grunt* command in application's root directory.
 
--------------
-Configuration
--------------
+---------------------
+KonText configuration
+---------------------
 
 KonText is configured via an XML configuration file located in the root directory of the application
 (do not confuse this with the root directory of the respective web application).
@@ -252,20 +515,13 @@ Plugins configuration
 +-------------------------------------------------+-------------------------------------------------------------------+
 | Xpath                                           | Description                                                       |
 +=================================================+===================================================================+
-| /kontext/plugins                                | this section contains plugins' configuration; each plugin         |
-|                                                 | requires at least *module* element to specify where code resides  |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/db                             | required plugin to access application's database                  |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/auth                           | required plugin for authentication                                |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/sessions                       | required plugin implementing session storage functions            |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/settings_storage               | required plugin specifying where and how to store user settings   |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/query_storage                  | optional plugin allowing to store query history to some storage   |
-+-------------------------------------------------+-------------------------------------------------------------------+
-| /kontext/plugins/appbar                         | optional plugin allowing remote-loaded toolbar on all pages       |
+| /kontext/plugins                                | This section contains a configuration of plugins. Each plugin has |
+|                                                 | its own subtree with a root element named with the name of the    |
+|                                                 | respective plugin (e.g. *auth*, *db*, *getlang*). This element    |
+|                                                 | must contain at least a *module* element specifying the name of   |
+|                                                 | the Python package implementing the plugin. See the               |
+|                                                 | *config.sample.xml*                                               |
+|                                                 |                                                                   |
 +-------------------------------------------------+-------------------------------------------------------------------+
 
 Caching configuration
@@ -317,50 +573,6 @@ Corpus-related configuration
 +-------------------------------------------------+-------------------------------------------------------------------+
 | /kontext/corpora/multilevel_freq_dist_max_levels| Multi-level freq. distrib. - max. number of levels for a query    |
 +-------------------------------------------------+-------------------------------------------------------------------+
-
-Corpora hierarchy
-=================
-
-Corpora hierarchy serves as a source for the 'tree-like' corpus selection tool which is handled by the *corptree*
-plugin. It supports nested (i.e. multi-level) organization::
-
-    <corplist title="">
-      <corplist title="Synchronic Corpora">
-         <corplist title="SYN corpora">
-           <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
-           ... etc...
-         </corplist>
-         <corplist title="Diachronic Corpora">
-            <corpus id="DIA" />
-         </corplist>
-      </corplist>
-    </corplist>
-
-
-Attributes for the **corplist** element:
-
-+--------------+---------------------+
-| attr. name   | description         |
-+==============+=====================+
-| title        | name of the group   |
-+--------------+---------------------+
-
-Attributes for the **corpus** element:
-
-+-----------------+--------------------------------------------------------------------+
-| attr. name      | description                                                        |
-+=================+====================================================================+
-| id              | name of the corpus (as used within registry files)                 |
-+-----------------+--------------------------------------------------------------------+
-| sentence_struct | structure delimiting sentences                                     |
-+-----------------+--------------------------------------------------------------------+
-| num_tag_pos     | number of character positions in a tag                             |
-+-----------------+--------------------------------------------------------------------+
-| web             | (optional) external link containing information about the corpus   |
-+-----------------+--------------------------------------------------------------------+
-
-Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
-to load any XML file and search for the tree node anywhere you want.
 
 
 Tag-builder component configuration

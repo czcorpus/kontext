@@ -80,7 +80,6 @@
             <item>spec/susanne</item>
             <item>anothercorpus</item>
         </default_corpora>
-        <speech_segment_struct_attr>seg.soundfile</speech_segment_struct_attr>
         <speech_files_path>/var/www/data</speech_files_path>
         <kwicline_max_context>500</kwicline_max_context>
         <use_db_whitelist>1</use_db_whitelist>
@@ -95,6 +94,7 @@
                 <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
 		<corpus id="BNC" sentence_struct="s" />
             </corplist>
+        <corpus id="spoken_stuff" sentence_struct="p" num_tag_pos="16" speech_segment="seg.soundfile" />
         </corplist>
 
         <tagsets>

@@ -203,7 +203,9 @@ require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
         #for $a in $Aligned
         <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
             <div class="heading">
-                <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img src="../files/img/close-icon.png" alt="close icon" /></a></h3>
+                <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img
+                    class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png"
+                    alt="close icon" /></a></h3>
             </div>
             <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
             <table class="form">$query_node('_'+$a.n)</table>

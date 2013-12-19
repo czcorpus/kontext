@@ -1,4 +1,5 @@
 import httplib
+import urllib
 import logging
 
 
@@ -25,12 +26,21 @@ class AppBar(object):
         self.css_url_ie = css_url_ie
         self.connection = None
 
-    def get_contents(self, cookies):
+    def get_contents(self, cookies, curr_lang, return_url=None):
+        if not curr_lang:
+            curr_lang = 'en'
+        curr_lang = curr_lang.split('_')[0]
         if hasattr(self.ticket_id_provider, 'get_ticket'):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
             try:
                 self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=3)
-                self.connection.request('GET', self.path % (ticket_id, '%s%s' % (self.root_url, 'first_form')))
+                if return_url is None:
+                    return_url = '%s%s' % (self.root_url, 'first_form')
+                self.connection.request('GET', self.path % {
+                    'id': ticket_id,
+                    'lang': curr_lang,
+                    'continue': urllib.quote(return_url)
+                })
                 response = self.connection.getresponse()
                 
                 if response and response.status == 200:

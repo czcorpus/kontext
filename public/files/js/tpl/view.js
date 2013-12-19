@@ -36,7 +36,11 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         callback = function (boxInst) {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function (event) {
-                    detail.showDetail($(this).data('url'), $(this).data('params'), callback);
+                    detail.showDetail($(this).data('url'), $(this).data('params'),
+                        function (jqXHR, textStatus, errorThrown) {
+                            layoutModel.showMessage('error', errorThrown);
+                        },
+                        callback);
                     event.preventDefault();
                 });
             });
@@ -59,7 +63,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showErrorMessage(errorThrown);
+                    layoutModel.showMessage('error', errorThrown);
                 },
                 callback
             );
@@ -73,7 +77,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showErrorMessage(errorThrown);
+                    layoutModel.showMessage('error', errorThrown);
                 }
             );
             event.stopPropagation();

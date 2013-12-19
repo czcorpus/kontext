@@ -35,9 +35,8 @@ $text
 #end for
 #end filter
 
-#if $debug
 <style type="text/css">
-._prepare-state #menu-bar {display: none;}
+._prepare-state #menu-bar {visibility: hidden; width: 700px;}
 </style>
 <script type="text/javascript">
 (function (d) {
@@ -47,6 +46,8 @@ $text
     }
 }(document));
 </script>
+
+#if $debug
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}bonito.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
@@ -100,7 +101,7 @@ define('win', [], function () { return window; });
 define('conf', [], function () {
     var conf = {};
     conf.menuAutoHideInterval = 1500;
-    conf.messageAutoHideInterval = 9000;
+    conf.messageAutoHideInterval = 15000;
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_path";
     conf.corpname = "$corpname";
@@ -121,6 +122,7 @@ define('conf', [], function () {
     conf.messages.num_of_hits = "$_('Num of Hits')";
     conf.messages.query_overview = "$_('Query overview')";
     conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
+    conf.messages.close = "$_('close')";
 
     #if $focus
     conf.focus = $focus;
@@ -164,8 +166,6 @@ $_ca_topbar
 #def menu_status($id)
     #if $id in $disabled_menu_items
         disabled
-    #elif $id == $active_menu_item
-        current
     #end if
 #end def
 
@@ -189,7 +189,7 @@ $_ca_topbar
 </div>
 
 <header id="topbar">
-    <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 194px;height: 58px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
+    <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 208px;height: 68px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
     <div id="menu-bar">
         <ul id="menu-level-1">
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
@@ -303,7 +303,9 @@ $_ca_topbar
             #if $usesubcorp
                 <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
             #else
-                <strong>$corp_size</strong> $_('positions')<a id="positions-help-link">?</a>
+                #filter None
+                $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">?</a>
+                #end filter
             #end if
             </div>
             #if 'default_ref' in $citation_info and $citation_info.default_ref
@@ -317,16 +319,20 @@ $_ca_topbar
     #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
-        <strong>$($_('Corpus %s as a language resource') % $corpname):</strong>
+        <h4>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</h4>
         #filter None# $citation_info.default_ref #end filter#
 
-        #if $citation_info.article_ref
-        <strong>$_('It is possible to cite the following article too'):</strong>
-        #filter None# $citation_info.article_ref #end filter#
+        #if len($citation_info.article_ref) > 0
+            <h4>$_('Reference(s)'):</h4>
+            <ul>
+            #for $article_item in $citation_info.article_ref
+                <li>#filter None# $article_item #end filter#</li>
+            #end for
+            </ul>
         #end if
 
         #if $citation_info.other_bibliography
-        <strong>$_('other bibliography'):</strong>
+        <h4>$_('General references'):</h4>
         #filter None# $citation_info.other_bibliography #end filter#
         #end if
     </div>
@@ -339,12 +345,14 @@ $_ca_topbar
 #filter WebSafe
 <div id="content">
     #if $message
-    <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
-        <img class="icon" alt="$message[0]" src="../files/img/#if $message[0] == 'error'#error-icon.png#else#info-icon.png#end if#">
-        <span>$message[1]</span>
-        <a class="close-icon">
-            <img src="../files/img/close-icon.png" />
-        </a>
+    <div class="messages">
+        <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
+            <img class="icon" alt="$message[0]" src="../files/img/#if $message[0] == 'error'#error-icon.png#else#info-icon.png#end if#">
+            <div class="message-text">#filter None#$message[1]#end filter#</div>
+            <a class="close-icon">
+                <img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />
+            </a>
+        </div>
     </div>
     #end if
 
@@ -390,6 +398,7 @@ $_ca_topbar
     #end filter
 </div>
 <footer>
+    #if $len($avail_languages) > 0
     <div id="switch-language-box">$_("user interface languages"):
         #set $i = 0
         #for $lang in $avail_languages
@@ -397,13 +406,14 @@ $_ca_topbar
         #set $i = $i + 1
         #end for
     </div>
+    #end if
     <div>
         <div id="copyright-info">
-            &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>,
-            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>
+            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
+            &copy; <a href="http://www.sketchengine.co.uk">Lexical Computing Ltd.</a>
         </div>
         <div id="app-version">
-            $_('version'): <span>$_version[1]</span>, $_('uses Manatee') <span>$_version[0]</span>
+            $_('version') <span>$_version[1]</span>, $_('uses') manatee-<span>$_version[0]</span>
         </div>
         #if $debug
         <div class="debug-warning">

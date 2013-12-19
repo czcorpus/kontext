@@ -1542,6 +1542,15 @@ msgstr "z celkem %s) pozic"
 msgid "How to cite the corpus"
 msgstr "Jak citovat korpus"
 
+msgid "Reference(s)"
+msgstr "Literatura"
+
+msgid "General references"
+msgstr "Obecné odkazy"
+
+msgid "Corpus <em class=\"corpname\">%s</em> as a language resource"
+msgstr "Korpus <em class=\"corpname\">%s</em> jako zdroj dat"
+
 #: cmpltmpl/document.py:2606
 msgid "website"
 msgstr "webová stránka"
@@ -1570,7 +1579,7 @@ msgstr "jazyky uživatelského rozhraní"
 
 #: cmpltmpl/document.py:2737
 msgid "version"
-msgstr "Verze"
+msgstr "verze"
 
 #: cmpltmpl/viewattrs.py:158
 msgid "Concordance view options - attributes, structures and references"
@@ -1943,8 +1952,8 @@ msgstr "zobrazit celý dokument"
 msgid "Maximum number of lines"
 msgstr "Maximální počet řádek"
 
-msgid "Notice: given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus."
-msgstr "Upozornění: uváděné frekvenční údaje jsou vztažené k celému korpusu, ne pouze k jeho části specifikované hodnotami zadaných atributů, na níž jsou výsledky vyhledávání omezeny. Údaje vztažené na část korpusu se zobrazují pouze při vyhledávání v předem definovaném subkorpusu."
+msgid "Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus."
+msgstr "Uváděné frekvenční údaje jsou vztažené k celému korpusu, ne pouze k jeho části specifikované hodnotami zadaných atributů, na níž jsou výsledky vyhledávání omezeny. Údaje vztažené na část korpusu se zobrazují pouze při vyhledávání v předem definovaném subkorpusu."
 
 msgid "Create new subcorpus"
 msgstr "Vytvořit nový subkorpus"
@@ -1957,6 +1966,18 @@ msgstr "Nepodařilo se nahrát podrobnosti dotazu"
 
 msgid "Click to enter a new query"
 msgstr "Klikněte pro přechod na nový dotaz"
+
+msgid "<strong>%s</strong> positions"
+msgstr "<strong>%s</strong> pozic"
+
+msgid "KonText is running in anonymous mode. Please <a href=\\\"%s\\\">sign-in</a> to unlock all the functions."
+msgstr "Všechny funkce KonTextu jsou k dispozici až po <a href=\\\"%s\\\">přihlášení</a>."
+
+msgid "uses"
+msgstr "používá"
+
+msgid "Please <span class=\"sign-in\">sign-in</span> to continue."
+msgstr "Pro pokračování se prosím <span class=\"sign-in\">přihlašte</span>."
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"

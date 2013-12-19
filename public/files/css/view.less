@@ -1,12 +1,13 @@
 @color-light-green: #F3FBED;
 @color-default-green: #D2EDC0;
 @color-logo-pink: #E2007A;
+@portal-box-shadow: 0 0 4px #A0A0A0;
 
 #conc-wrapper {
-  border: 3px solid @color-default-green;
   border-radius: 9px;
   overflow: hidden;
   margin-bottom: 20px;
+  box-shadow: @portal-box-shadow;
 }
 
 #conc-top-bar,
@@ -42,6 +43,7 @@ table#conclines {
 
 #hidden-conc {
   text-align: center;
+  background-color: #FFFFFF;
 }
 
 #hidden-conc a {
@@ -116,22 +118,21 @@ tr.active .ref {
 
 #detail-frame,
 #query-overview {
-  padding: 1.5em;
   position: fixed;
   bottom: 15px;
   height: auto;
-  overflow: auto;
 }
 
-#detail-frame {
+.query-overview {
+  padding: 1.5em;
   background-color: #E9F7FC;
 }
 
-#query-overview {
+.query-overview {
   text-align: center;
 }
 
-#query-overview h3 {
+.query-overview h3 {
   display: inline-block;
   margin-top: 0;
   margin-bottom: 0.5em;
@@ -140,22 +141,22 @@ tr.active .ref {
   border-width: 0 0 1px 0;
 }
 
-#query-overview table {
+.query-overview table {
   border-collapse: collapse;
   border: none;
 }
 
-#query-overview table th,
-#query-overview table td {
+.query-overview table th,
+.query-overview table td {
   padding: 5px 1em;
 }
 
-#query-overview table th {
+.query-overview table th {
   color: @color-logo-pink;
   border: none;
 }
 
-#query-overview table td {
+.query-overview table td {
   text-align: left;
   border: 1px solid @color-default-green;
 }
