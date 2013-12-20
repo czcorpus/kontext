@@ -241,7 +241,7 @@ def is_debug_mode():
 
 
 def get_uri_scheme_name():
-    if 'HTTPS' in os.environ:
+    if 'HTTPS' in os.environ and os.environ['HTTPS'].lower() == 'on':
         return 'https'
     else:
         return 'http'
