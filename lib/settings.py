@@ -251,7 +251,7 @@ def get_root_url():
     """
     Returns root URL of the application
     """
-    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in('80', '443'):
         port_s = ':%s' % os.getenv('SERVER_PORT')
     else:
         port_s = ''
