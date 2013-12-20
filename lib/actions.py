@@ -2423,7 +2423,12 @@ class Actions(ConcCGI):
         Access rights are per-corpus (i.e. if a user has a permission to
         access corpus 'X' then all related audio files are accessible).
         """
-        path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.corpname, chunk)
+        corp_name_elements = self.corpname.split('/')
+        if len(corp_name_elements) > 1:
+            corp_name = corp_name_elements[1]
+        else:
+            corp_name = corp_name_elements[0]
+        path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), corp_name, chunk)
 
         if os.path.exists(path) and not os.path.isdir(path):
             with open(path, 'r') as f:
