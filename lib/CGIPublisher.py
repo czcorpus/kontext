@@ -334,11 +334,11 @@ class CGIPublisher(object):
         return getattr(module, name)
 
     def _get_current_url(self):
-        if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') != '80':
+        if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in ('80', '443'):
             port_s = ':%s' % os.getenv('SERVER_PORT')
         else:
             port_s = ''
-        return '%(req_scheme)s://%(host)s%(port_s)s%(uri)s' % {'req_scheme': self.environ.get('REQUEST_SCHEME', 'http'),
+        return '%(req_scheme)s://%(host)s%(port_s)s%(uri)s' % {'req_scheme': settings.get_uri_scheme_name(),
                                                                'host': self.environ.get('HTTP_HOST'),
                                                                'port_s': port_s,
                                                                'uri': self.environ.get('REQUEST_URI', '')}
