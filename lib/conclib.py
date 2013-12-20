@@ -150,6 +150,7 @@ def kwicpage(
     -------
     custom dict containing data as required by related HTML template
     """
+    corpus, corpus_fullname = corpus
     refs = refs.replace('.MAP_OUP', '')  # to be removed ...
     try:
         fromp = int(fromp)
@@ -158,11 +159,11 @@ def kwicpage(
     except:
         fromp = 1
     out = {'Lines':
-           kwiclines(conc, speech_attr, (
+           kwiclines(corpus_fullname, conc, speech_attr, (
                    fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
            leftctx, rightctx, attrs, ctxattrs, refs, structs,
            labelmap, righttoleft, alignlist)}
-    add_aligns(corpus, out, conc, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
+    add_aligns(corpus_fullname, out, conc, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                leftctx, rightctx, attrs, ctxattrs, refs, structs,
                labelmap, righttoleft, alignlist)
     if copy_icon:
@@ -170,7 +171,7 @@ def kwicpage(
         sen_refs = tbl_refs.get(tbl_template, '') + ',#'
         sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
         sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(conc, speech_attr, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
+        sen_lines = kwiclines(corpus_fullname, conc, speech_attr, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
             '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
         for old, new in zip(out['Lines'], sen_lines):
             old['Sen_Left'] = new['Left']
@@ -219,7 +220,7 @@ def kwicpage(
 
 
 def add_aligns(
-    corpus, result, conc, fromline, toline, leftctx='40#', rightctx='40#',
+    corpus_fullname, result, conc, fromline, toline, leftctx='40#', rightctx='40#',
     attrs='word', ctxattrs='word', refs='#', structs='p',
         labelmap={}, righttoleft=False, alignlist=[]):
     if not alignlist:
@@ -237,7 +238,7 @@ def add_aligns(
         if al_corpname in corps_with_colls:
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(conc, None, fromline, toline, leftctx,
+                kwiclines(corpus_fullname, conc, None, fromline, toline, leftctx,
                           rightctx, attrs, ctxattrs, refs,
                           structs, labelmap, righttoleft))
         else:
@@ -245,7 +246,7 @@ def add_aligns(
             conc.add_aligned(al_corp.get_conffile())
             conc.switch_aligned(al_corp.get_conffile())
             al_lines.append(
-                kwiclines(conc, None, fromline, toline, '0',
+                kwiclines(corpus_fullname, conc, None, fromline, toline, '0',
                           '0', 'word', '', refs, structs,
                           labelmap, righttoleft))
     aligns = zip(*al_lines)
@@ -381,7 +382,7 @@ def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_spe
     return newline, last_speech_id
 
 
-def kwiclines(conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
+def kwiclines(corpus_fullname, conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
     attrs='word', ctxattrs='word', refs='#', user_structs='p',
     labelmap={}, righttoleft=False, alignlist=[],
         align_attrname='align', aattrs='word', astructs=''):
@@ -392,6 +393,7 @@ def kwiclines(conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5'
 
     Parameters
     ----------
+    corpus_fullname : str
     conc : manatee.Concordance
       concordance we are working with
     speech_attr : str
@@ -450,13 +452,13 @@ def kwiclines(conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5'
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+        leftwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
                                                                 tokens2strclass(kl.get_left()),
                                                                 'left', filter_out_speech_tag, leftmost_speech_id)
-        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
                                                                 tokens2strclass(kl.get_kwic()),
                                                                 'kwic', filter_out_speech_tag, last_left_speech_id)
-        rightwords = postproc_kwicline_part(corpus.get_conf('NAME'), speech_segment,
+        rightwords = postproc_kwicline_part(corpus_fullname, speech_segment,
                                             tokens2strclass(kl.get_right()), 'right',
                                             filter_out_speech_tag, last_left_speech_id)[0]
 
