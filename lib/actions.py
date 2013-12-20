@@ -159,7 +159,7 @@ class Actions(ConcCGI):
         conc.switch_aligned(os.path.basename(self.corpname))
         labelmap = {}
 
-        out = self.call_function(conclib.kwicpage, (self._corp(), conc, self._get_speech_segment()),
+        out = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                             for c in self.align.split(',') if c],
@@ -2055,7 +2055,7 @@ class Actions(ConcCGI):
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
-            data = self.call_function(conclib.kwicpage, (self._corp(), conc, self._get_speech_segment()), fromp=fromp,
+            data = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()), fromp=fromp,
                                       pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
                                       alignlist=[self.cm.get_Corpus(c)
                                                  for c in self.align.split(',') if c],
@@ -2424,6 +2424,7 @@ class Actions(ConcCGI):
         access corpus 'X' then all related audio files are accessible).
         """
         path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.corpname, chunk)
+
         if os.path.exists(path) and not os.path.isdir(path):
             with open(path, 'r') as f:
                 file_size = os.path.getsize(path)
