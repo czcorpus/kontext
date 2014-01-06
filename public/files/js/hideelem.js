@@ -186,7 +186,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
                     });
 
             } else {
-                $('#query-type-hint').remove();
+                $('#queryselector').parent().find('.context-help').remove();
             }
             jqFocusElem.focus();
         },
