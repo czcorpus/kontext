@@ -21,9 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $, treeComponent,
-                                                                                                layoutModel, hideElem,
-                                                                                                _sm) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function (win, $, treeComponent, layoutModel,
+                                                                                 hideElem) {
     'use strict';
 
     var lib = {},
@@ -225,7 +224,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             var data = $('#mainform').serialize().split('&'),
                 cleanData = '',
                 unusedLangs = {},
-                belongsToUnusedLanguage;
+                belongsToUnusedLanguage,
+                dialogAns;
 
             $('.parallel-corp-lang').each(function () {
                 if ($(this).css('display') === 'none') {
@@ -254,33 +254,13 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             });
 
             if (cleanData.length > lib.maxEncodedParamsLength) {
-                $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
-                    + layoutModel.conf.messages.too_long_condition + '</p>'
-                    + '<button id="alt-form-open-subcorp-form" type="submit">'
-                    + layoutModel.conf.messages.open_the_subcorpus_form + '</button>'
-                    + '<button id="alt-form-cancel" type="button">' + layoutModel.conf.messages.cancel + '</button></div>');
-
-                $('#alt-form-open-subcorp-form').on('click', function () {
-                    $('#alt-form').remove();
+                dialogAns = window.confirm(layoutModel.conf.messages.too_long_condition);
+                if (dialogAns) {
                     $(win).unload(function () {
-                        $.modal.close();
-                        $('#mainform').attr('method', 'GET').action('first');
+                        $('#mainform').attr('method', 'GET').attr('action', 'first');
                     });
                     $('#mainform').attr('method', 'POST').attr('action', 'subcorp_form').submit();
-                });
-
-                $('#alt-form-cancel').on('click', function () {
-                    $.modal.close();
-                });
-
-                $('#alt-form').modal({
-                    onClose : function () {
-                        $.modal.close();
-                        $('#alt-form').remove();
-                    },
-                    minHeight : 120
-                });
-
+                }
                 event.stopPropagation();
                 return false;
             }
