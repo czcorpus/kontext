@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
-    'simplemodal', 'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
+    'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -106,6 +106,26 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * @param {HTMLElement|string|jQuery} elm
+     * @param {{*}} [options]
+     * @return
+     */
+    lib.appendLoader = function (elm, options) {
+        var jImage = $('<img />'),
+            options = options || {};
+
+        jImage.attr('src', '../files/img/ajax-loader.gif');
+        if (options.domId) {
+            jImage.addClass(options.domId);
+        }
+        if (options.htmlClass) {
+            jImage.addClass(options.htmlClass);
+        }
+        $(elm).append(jImage);
+        return jImage;
+    };
+
+    /**
      * Wrapper for jQuery's $.ajax function which is able
      * to handle error states using client's capabilities
      * (error messages, page reload etc.).
@@ -132,7 +152,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                     win.location = lib.conf.rootURL + 'first_form';
                 }
 
-                $.modal.close(); // if a modal window is opened close it
                 lib.showMessage('error', error.message || 'error');
 
             } else {
@@ -686,40 +705,58 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      * @param {object} translatMessages
      */
     lib.bindWithinHelper = function (jqLinkElement, corpusName, translatMessages) {
-        var jqInputElement = $('#' + jqLinkElement.data('bound-input'));
-        jqLinkElement.bind('click', function (event) {
-            var caretPos = util.getCaretPosition(jqInputElement),
-                clickAction,
-                buttonEnterAction;
+        var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
+            clickAction,
+            buttonEnterAction;
 
-            clickAction = function () {
-                var structattr,
-                    wthn,
+        clickAction = function (box) {
+            return function () {
+                var structAttr,
+                    within,
                     bef,
-                    aft;
+                    aft,
+                    caretPos = util.getCaretPosition(jqInputElement);
 
-                structattr = $('#within-structattr').val().split('.');
-                wthn = 'within <' + structattr[0] + ' ' + structattr[1] + '="' + $('#within-value').val() + '" />';
+                structAttr = $('#within-structattr').val().split('.');
+                within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
                 bef = jqInputElement.val().substring(0, caretPos);
                 aft = jqInputElement.val().substring(caretPos);
 
-                jqInputElement.val(bef + wthn + aft);
+                jqInputElement.val(bef + within + aft);
                 jqInputElement.focus();
-                $.modal.close();
-                $(win.document).off('keypress', buttonEnterAction);
+                $(win.document).off('keypress.withinBoxEnter', buttonEnterAction);
+                box.close();
             };
+        };
 
-            buttonEnterAction = function (event) {
+        buttonEnterAction = function (box) {
+            return function (event) {
                 if (event.which === 13) {
-                    clickAction(event);
+                    clickAction(box)(event);
+                    event.stopPropagation();
+                    event.preventDefault();
                 }
             };
+        };
 
-            $('#within-builder-modal').modal({
-                onShow: function () {
-                    $('#within-builder-modal .selection-container')
-                        .append('<img src="../files/img/ajax-loader.gif" alt="loading" />');
-                    $.ajax({
+        popupbox.bind(jqLinkElement,
+            function (box, finalize) {
+                var loaderGIF,
+                    jqWithinModal = $('#within-builder-modal');
+
+                if ($('#within-structattr').length > 0) {
+                    jqWithinModal.css('display', 'block');
+                    box.import(jqWithinModal);
+                    $('#within-insert-button').off('click');
+                    $('#within-insert-button').one('click', clickAction(box));
+                    $(win.document).off('keypress.withinBoxEnter');
+                    $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+                    finalize();
+
+                } else {
+                    loaderGIF = lib.appendLoader(box.getRootElement());
+
+                    lib.ajax({
                         url: 'ajax_get_structs_details?corpname=' + corpusName,
                         data: {},
                         method: 'get',
@@ -729,41 +766,40 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                                 html,
                                 i;
 
-                            if (data.hasOwnProperty('error')) {
-                                $.modal.close();
-                                lib.showMessage('error', data.error);
-
-                            } else {
-                                html = '<select id="within-structattr">';
-                                for (prop in data) {
-                                    if (data.hasOwnProperty(prop)) {
-                                        for (i = 0; i < data[prop].length; i += 1) {
-                                            html += '<option>' + prop + '.' + data[prop][i] + '</option>';
-                                        }
+                            html = '<select id="within-structattr">';
+                            for (prop in data) {
+                                if (data.hasOwnProperty(prop)) {
+                                    for (i = 0; i < data[prop].length; i += 1) {
+                                        html += '<option>' + prop + '.' + data[prop][i] + '</option>';
                                     }
                                 }
-                                html += '</select>';
-                                $('#within-builder-modal .selection-container').empty().append(html);
-                                $('#within-insert-button').one('click', clickAction);
-                                $(win.document).on('keypress', buttonEnterAction);
                             }
+                            html += '</select>';
+                            loaderGIF.remove();
+
+                            box.import(jqWithinModal);
+                            jqWithinModal.find('.inputs').prepend(html);
+                            jqWithinModal.css('display', 'block');
+
+                            $('#within-insert-button').one('click', clickAction(box));
+                            $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+
+                            finalize();
                         },
                         error: function () {
-                            $.modal.close();
+                            box.close();
                             lib.showMessage('error', translatMessages.failed_to_contact_server);
+                            finalize();
                         }
                     });
-                },
-
-                onClose: function () {
-                    $(win.document).off('keypress', buttonEnterAction);
-                    $.modal.close();
-                    jqInputElement.focus();
                 }
-            });
-            event.stopPropagation();
-            return false;
-        });
+            },
+            {
+                closeIcon : true,
+                type : 'plain',
+                timeout : null
+            }
+        );
     };
 
     /**
