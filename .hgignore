@@ -1,0 +1,16 @@
+syntax: glob
+
+*.*~
+.idea
+doc
+log
+*.pyc
+config.xml
+.directory
+node_modules
+public/files/js/min
+public/files/css/kontext.min.css
+
+syntax: regexp
+
+^cmpltmpl/[^_]{2}
