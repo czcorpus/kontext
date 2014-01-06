@@ -19,12 +19,11 @@
 /**
  * This library provides a clickable 'tag generator' widget.
  */
-define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, multiselect, simpleModalNone, util, win) {
+define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multiselect, popupbox, util, win) {
     'use strict';
 
     var lib = {},
         objectIsEmpty,
-        resetButtonClickFunc,
         backButtonClickFunc;
 
     /**
@@ -43,18 +42,10 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
     };
 
     /**
-     *
+     * @param {TooltipBox} box
+     * @param {TagLoader} tagLoader
      */
-    resetButtonClickFunc = function (tagLoader) {
-        return function () {
-            tagLoader.resetWidget();
-        };
-    };
-
-    /**
-     *
-     */
-    backButtonClickFunc = function (tagLoader) {
+    backButtonClickFunc = function (box, tagLoader) {
         return function () {
             var prevSelection,
                 prevActiveBlock,
@@ -92,7 +83,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
             } else { // empty => load initial values
                 prevSelection = {};
                 prevSelection[tagLoader.multiSelectComponent.activeBlockId] = [];
-                tagLoader.loadInitialVariants(function (data) {
+                tagLoader.loadInitialVariants(box, function (data) {
                     tagLoader.stopLoadingNotification();
                     tagLoader.updateMultiSelectValues(data, prevSelection, updateActiveBlock);
                     tagLoader.multiSelectComponent.activeBlockId = prevActiveBlock;
@@ -108,6 +99,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
      * @param {number} numTagPos
      * @param {MultiSelect} multiSelectComponent
      * @param {HTMLElement} hiddenElm
+     * @param {HTMLElement} tagDisplay
      * @constructor
      */
     function TagLoader(corpusName, numTagPos, multiSelectComponent, hiddenElm, tagDisplay) {
@@ -179,7 +171,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
             positionCode,
             i;
 
-        data = data || this.multiSelectComponent.exportStatus();
+        data = this.multiSelectComponent.exportStatus();
         for (prop in data) {
             if (data.hasOwnProperty(prop)) {
                 positionCode = [];
@@ -451,10 +443,11 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
     };
 
     /**
-     * @param {function} callback function to be called when variants are loaded, JSON data is passed as a parameter
-     * @param {function} [errorCallback]
+     * @param {TooltipBox} box
+     * @param {Function} callback function to be called when variants are loaded, JSON data is passed as a parameter
+     * @param {Function} [errorCallback]
      */
-    TagLoader.prototype.loadInitialVariants = function (callback, errorCallback) {
+    TagLoader.prototype.loadInitialVariants = function (box, callback, errorCallback) {
         var url = 'ajax_get_tag_variants?corpname=' + this.corpusName,
             params = {},
             self = this;
@@ -470,7 +463,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
                 // requestHeaders: {Accept: 'application/json'},
                 success: function (data) {
                     if (data.hasOwnProperty('error')) {
-                        $.modal.close();
+                        box.close();
                         errorCallback(data.error);
 
                     } else {
@@ -479,7 +472,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
                     }
                 },
                 error: function () {
-                    $.modal.close();
+                    box.close();
                     errorCallback();
                 }
             });
@@ -510,9 +503,9 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
     };
 
     /**
-     *
+     * @param {TooltipBox} box
      */
-    TagLoader.prototype.resetWidget = function () {
+    TagLoader.prototype.resetWidget = function (box) {
         var prop,
             self = this;
 
@@ -520,7 +513,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
         this.activeBlockHistory = [];
         this.multiSelectComponent.uncheckAll();
         this.multiSelectComponent.collapseAll();
-        this.loadInitialVariants(function (data) {
+        this.loadInitialVariants(box, function (data) {
             self.updateMultiSelectValues(data);
             self.stopLoadingNotification();
         });
@@ -552,8 +545,9 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
     /**
      * A helper method that does whole 'create a tag loader for me' job.
      *
-     * @param corpusName identifier of a corpus to be used along with this tag loader
-     * @param numOfPos number of positions in the tag string
+     * @param {TooltipBox} box
+     * @param {string} corpusName identifier of a corpus to be used along with this tag loader
+     * @param {Number} numOfPos number of positions in the tag string
      * @param multiSelectComponent
      * @param opt a dictionary with following keys:
      *     resetButton    : ID or element itself for the "reset" button
@@ -564,7 +558,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
      *     widgetElement : HTMLElement where the widget is rendered
      * @return {TagLoader}
      */
-    lib.attachTagLoader = function (corpusName, numOfPos, multiSelectComponent, opt) {
+    lib.attachTagLoader = function (box, corpusName, numOfPos, multiSelectComponent, opt) {
         var tagLoader,
             hiddenElm,
             tagDisplay,
@@ -603,7 +597,7 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
             tagLoader.errorCallback = opt.errorCallback;
         }
 
-        tagLoader.loadInitialVariants(function (data) {
+        tagLoader.loadInitialVariants(box, function (data) {
             tagLoader.stopLoadingNotification();
             tagLoader.updateMultiSelectValues(data);
         });
@@ -611,7 +605,9 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
             opt.resetButton = $(opt.resetButton);
         }
         if (opt.resetButton) {
-            $(opt.resetButton).bind('click', resetButtonClickFunc(tagLoader));
+            $(opt.resetButton).bind('click', function () {
+                tagLoader.resetWidget(box);
+            });
         }
         if (typeof (opt.backButton) === 'string') {
             opt.backButton = $(opt.backButton);
@@ -649,54 +645,58 @@ define(['jquery', 'multiselect', 'simplemodal', 'util', 'win'], function ($, mul
                 opt[prop] = '#' + opt[prop];
             }
         }
-        $(opt.inputElement).parent().find('.insert-tag a').bind('click', function () {
-            var caretPos = util.getCaretPosition($(opt.inputElement)),
-                insertTagClickAction,
-                buttonEnterAction;
 
-            insertTagClickAction = function () {
-                var bef, aft;
+        popupbox.bind($('.insert-tag a'),
+            function (box, finalizeCallback) {
+                var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts),
+                    insertTagClickAction,
+                    buttonEnterAction,
+                    caretPos = util.getCaretPosition($(opt.inputElement));
 
-                if ($(opt.inputElement).val()) {
-                    bef = $(opt.inputElement).val().substring(0, caretPos);
-                    aft = $(opt.inputElement).val().substring(caretPos);
-                    $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
+                insertTagClickAction = function () {
+                    var bef, aft;
 
-                } else {
-                    $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
-                }
-                $.modal.close();
-                $(win.document).off('keypress', buttonEnterAction);
-                $(opt.inputElement).focus();
-            };
+                    if ($(opt.inputElement).val()) {
+                        bef = $(opt.inputElement).val().substring(0, caretPos);
+                        aft = $(opt.inputElement).val().substring(caretPos);
+                        $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
 
-            buttonEnterAction = function (event) {
-                if (event.which === 13) {
-                    insertTagClickAction(event);
-                }
-            };
-
-            $(opt.modalWindowElement).modal({
-                onShow : function () {
-                    var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts);
-
-                    lib.attachTagLoader(corpusName, numTagPos, msComponent, {
-                        tagDisplay : $(opt.tagDisplayElement),
-                        resetButton : $(opt.resetButtonElement),
-                        errorCallback : errorCallback,
-                        widgetElement : opt.widgetElement
-                    });
-
-                    $(opt.insertTagButtonElement).one('click', insertTagClickAction);
-                    $(win.document).on('keypress', buttonEnterAction);
-                },
-                onClose : function () {
+                    } else {
+                        $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
+                    }
+                    box.close();
                     $(win.document).off('keypress', buttonEnterAction);
-                    $.modal.close();
                     $(opt.inputElement).focus();
-                }
-            });
-        });
+                };
+
+                buttonEnterAction = function (event) {
+                    if (event.which === 13) {
+                        insertTagClickAction(event);
+                    }
+                };
+
+                lib.attachTagLoader(box, corpusName, numTagPos, msComponent, {
+                    tagDisplay : $(opt.tagDisplayElement),
+                    resetButton : $(opt.resetButtonElement),
+                    errorCallback : errorCallback,
+                    widgetElement : opt.widgetElement
+                });
+
+                box.import('#tag-builder-modal'); // TODO !!!
+
+                $(opt.insertTagButtonElement).one('click', insertTagClickAction);
+                $(win.document).on('keypress', buttonEnterAction);
+
+
+                finalizeCallback();
+            },
+            {
+                closeIcon : true,
+                type : 'plain',
+                timeout : null
+            }
+        );
+
     };
 
     return lib;
