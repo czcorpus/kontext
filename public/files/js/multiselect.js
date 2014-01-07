@@ -85,25 +85,24 @@ define(['jquery', 'win'], function ($, win) {
      * @param wrapperElem multi-select component will be inserted into this element
      */
     MultiSelect.prototype.init = function (wrapperElem) {
-        var marginStyle,
-            paddingStyle,
-            widthStyle;
+        var style = {};
 
         this.useNamedCheckboxes = this.opt.hasOwnProperty('useNamedCheckboxes') ? this.opt.useNamedCheckboxes : true;
         this.allowMultipleOpenedBoxes = this.opt.allowMultipleOpenedBoxes;
         if (typeof wrapperElem === 'string' && wrapperElem.indexOf('#') !== 0) {
             wrapperElem = $('#' + wrapperElem).get(0);
         }
-        marginStyle = this.opt.hasOwnProperty('margin') ? this.opt.margin : '5px';
-        paddingStyle = this.opt.hasOwnProperty('padding') ? this.opt.padding : '5px';
-        widthStyle = this.opt.hasOwnProperty('width') ? this.opt.width : '200px';
+        if (this.opt.hasOwnProperty('margin')) {
+            style.margin = this.opt.margin;
+        }
+        if (this.opt.hasOwnProperty('padding')) {
+            style.padding = this.opt.padding;
+        }
+        if (this.opt.hasOwnProperty('width')) {
+            style.width = this.opt.width;
+        }
+        $(wrapperElem).css(style);
 
-
-        $(wrapperElem).css({
-            width: widthStyle,
-            margin: marginStyle,
-            padding: paddingStyle
-        });
         this.ulElement = win.document.createElement('UL');
         $(this.ulElement).attr('class', 'multiselect');
         $(wrapperElem).empty().append(this.ulElement);
