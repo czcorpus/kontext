@@ -425,7 +425,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             hideElem.focusEx(hideElem.focus);
         }
 
-        $('.cql-toolbox').each(function () {
+        $('#cqlrow .query-toolbox').each(function () {
             var corpName,
                 cqlInputId = $(this).closest('td').find("input.cql-input").attr('id');
 

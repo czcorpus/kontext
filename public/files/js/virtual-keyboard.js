@@ -6,8 +6,7 @@
  *  - Licenced for free distribution under the BSDL
  *          http://www.opensource.org/licenses/bsd-license.php
  *
- * Add a script-driven keyboard interface to text fields, password
- * fields and textareas.
+ * Add a script-driven keyboard interface to text fields, VKI_imageURI
  *
  * See http://www.greywyvern.com/code/javascript/keyboard for examples
  * and usage instructions.
@@ -53,6 +52,8 @@
  *   - Turkish keyboard layouts by offcu
  *   - Dutch and US Int'l keyboard layouts by jerone
  *
+ *   This file contains minor modifications created by Institute of the Czech National Corpus
+ *
  */
 var VKI_attach, VKI_close;
 (function() {
@@ -73,7 +74,7 @@ var VKI_attach, VKI_close;
   this.VKI_size = 2;  // Default keyboard size (1-5)
   this.VKI_sizeAdj = true;  // Allow user to adjust keyboard size
   this.VKI_clearPasswords = false;  // Clear password fields on focus
-  this.VKI_imageURI = "../files/img/keyboard.png";  // If empty string, use imageless mode
+  this.VKI_imageURI = null; //"../files/img/keyboard.png";  // If empty string, use imageless mode
   this.VKI_clickless = 0;  // 0 = disabled, > 0 = delay in ms
   this.VKI_activeTab = 0;  // Tab moves to next: 1 = element, 2 = keyboard enabled element
   this.VKI_enterSubmit = true;  // Submit forms when Enter is pressed
@@ -643,7 +644,7 @@ var VKI_attach, VKI_close;
    * Attach the keyboard to an element
    *
    */
-  VKI_attach = function(elem) {
+  VKI_attach = function(elem, triggerElem) {
     if (elem.getAttribute("VKI_attached")) return false;
     if (self.VKI_imageURI) {
       var keybut = document.createElement('img');
@@ -658,6 +659,22 @@ var VKI_attach, VKI_close;
             self.VKI_show(this.elem);
           };
       elem.parentNode.insertBefore(keybut, (elem.dir == "rtl") ? elem : elem.nextSibling);
+
+    } else if (triggerElem) {
+        if ({}.toString.call(triggerElem) != '[object Array]') {
+            triggerElem = [triggerElem];
+        }
+        triggerElem.forEach(function (trigElm) {
+            trigElm.onclick = function () {
+                if (!self.VKI_target) {
+                    self.VKI_show(elem);
+
+                } else {
+                    self.VKI_close(elem);
+                }
+            };
+        });
+
     } else {
       elem.onfocus = function() {
         if (self.VKI_target != this) {
@@ -1358,7 +1375,7 @@ var VKI_attach, VKI_close;
   VKI_addListener(window, 'resize', this.VKI_position, false);
   VKI_addListener(window, 'scroll', this.VKI_position, false);
   this.VKI_kbsize();
-  VKI_addListener(window, 'load', VKI_buildKeyboardInputs, false);
+  //VKI_addListener(window, 'load', VKI_buildKeyboardInputs, false);
   // VKI_addListener(window, 'load', function() {
   //   setTimeout(VKI_buildKeyboardInputs, 5);
   // }, false);

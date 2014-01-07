@@ -130,7 +130,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     };
 
     /**
-     *
+     * @todo rename/refactor this stuff
      */
     lib.misc = function () {
         // let's override the focus
@@ -305,6 +305,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
+        hideElem.initVirtualKeyboard();
     };
 
     return lib;

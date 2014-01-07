@@ -133,9 +133,8 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
         /**
          * @param querySelector
          * @param hints
-         * @param {object} userSettings
          */
-        cmdSwitchQuery : function (querySelector, hints, userSettings) {
+        cmdSwitchQuery : function (querySelector, hints) {
             var jqQs = $(querySelector),
                 newidCom,
                 newid,
@@ -189,6 +188,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
                 $('#queryselector').parent().find('.context-help').remove();
             }
             jqFocusElem.focus();
+            hideElem.initVirtualKeyboard();
         },
 
         /**
@@ -293,6 +293,15 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             if (jqTargetElem.length > 0 && hideElem.elementIsFocusableFormInput(jqTargetElem)) {
                 jqTargetElem.focus();
             }
+        },
+
+        /**
+         *
+         */
+        initVirtualKeyboard: function () {
+            win.VKI_close($('#mainform tr:visible input[type="text"]').get(0));
+            win.VKI_attach($('#mainform tr:visible input[type="text"]').get(0),
+                $('#mainform tr:visible .virtual-keyboard-trigger').get());
         }
     };
 
