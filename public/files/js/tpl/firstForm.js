@@ -296,6 +296,13 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     };
 
     /**
+     * @todo the jQuery selector can become unusable in case HTML design/structure is changed
+     */
+    lib.onLoadVirtualKeyboardInit = function () {
+        hideElem.initVirtualKeyboard($('#mainform table.form tr:visible td > input[type="text"]'));
+    };
+
+    /**
      *
      * @param {object} conf
      */
@@ -305,7 +312,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
-        hideElem.initVirtualKeyboard();
+        lib.onLoadVirtualKeyboardInit();
     };
 
     return lib;
