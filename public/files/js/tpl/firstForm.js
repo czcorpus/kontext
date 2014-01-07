@@ -101,29 +101,36 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     createAddLanguageClickHandler = function (forcedCorpusId) {
         return function () {
             var corpusId,
-                jqHiddenStatus;
+                jqHiddenStatus,
+                jqNewLangNode;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
 
             if (corpusId) {
                 jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
 
-                $('[id="qnode_' + corpusId + '"]').show();
-                addActiveParallelCorpus(corpusId);
-                $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+                jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
+
+                if (jqNewLangNode.length > 0) {
+                    jqNewLangNode.show();
+                    addActiveParallelCorpus(corpusId);
+                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
 
 
-                jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-                $('[id="qnode_' + corpusId + '"] a.close-button').on('click', function () {
-                    $('[id="qnode_' + corpusId + '"]').hide();
-                    jqHiddenStatus.val('');
-                    removeActiveParallelCorpus(corpusId);
-                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                    jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
+                    jqNewLangNode.find('a.close-button').on('click', function () {
+                        $('[id="qnode_' + corpusId + '"]').hide();
+                        jqHiddenStatus.val('');
+                        removeActiveParallelCorpus(corpusId);
+                        $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                    });
 
-                });
-                if (!$.support.cssFloat) {
-                    // refresh content in IE < 9
-                    $('#content').css('overflow', 'visible').css('overflow', 'auto');
+                    hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > input[type="text"]').get(0));
+
+                    if (!$.support.cssFloat) {
+                        // refresh content in IE < 9
+                        $('#content').css('overflow', 'visible').css('overflow', 'auto');
+                    }
                 }
             }
         };
