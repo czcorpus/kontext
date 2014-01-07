@@ -449,9 +449,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 {
                     width: '556px',
                     useNamedCheckboxes: false,
-                    allowMultipleOpenedBoxes: false,
-                    padding: 0,
-                    margin: 0
+                    allowMultipleOpenedBoxes: false
                 },
                 function (message) {
                     lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);

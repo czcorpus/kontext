@@ -12,6 +12,7 @@
 @portal-box-shadow: 0 0 4px #A0A0A0;
 @text-shadow: 0 0 2px #A0A0A0;
 @color-logo-orange: #F0680B;
+@input-border-radius: 3px;
 
 ul.multiselect {
     list-style-type : none;
@@ -37,9 +38,9 @@ ul.multiselect a.switch-link  {
     margin: 1px;
     text-decoration : none;
     color: #444444;
-    background-color: @color-light-green;
+    background-color: #F3FBED;
     border-radius: 3px;
-    border: 1px solid #B7CCCC;
+    border: 1px solid @color-light-frame;
 }
 
 ul.multiselect a.switch-link:hover {
@@ -47,7 +48,7 @@ ul.multiselect a.switch-link:hover {
 }
 
 ul.multiselect a.used {
-    background-color: #CC0066;
+    background-color: #F76B0B;
     color: #ffffff;
 }
 
@@ -82,16 +83,22 @@ ul.multiselect li td.checkbox-cell {
     width: 15px;
 }
 
+#tag-builder-modal > button {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .tag-display-box {
+    display: inline-block;
+    vertical-align: middle;
     width: 380px;
-    float: left;
-    margin-bottom: 5px;
-    padding: 2px;
-    margin-right: 5px;
+    margin-right: 10px;
+    padding: 2px 5px;
     font-size: 15pt;
     font-family: "Courier New", Courier, monospace;
     background-color: #ffffff;
-    border: 1px solid #979f9f;
+    border: 1px solid #DADADA;
+    border-radius: @input-border-radius;
 }
 
 .tag-display-box a.backlink:hover,
@@ -190,6 +197,7 @@ a.abbr-like:hover {
 }
 
 #tag-widget {
+  margin-top: 10px;
   overflow: auto;
   max-height: 500px;
 }
