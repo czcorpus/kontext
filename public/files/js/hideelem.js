@@ -188,7 +188,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
                 $('#queryselector').parent().find('.context-help').remove();
             }
             jqFocusElem.focus();
-            hideElem.initVirtualKeyboard();
+            hideElem.initVirtualKeyboard(jqFocusElem);
         },
 
         /**
@@ -296,12 +296,13 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
         },
 
         /**
-         *
+         * @param {HTMLElement|string|jQuery} input element the VirtualKeyboard binds to
          */
-        initVirtualKeyboard: function () {
-            win.VKI_close($('#mainform tr:visible input[type="text"]').get(0));
-            win.VKI_attach($('#mainform tr:visible input[type="text"]').get(0),
-                $('#mainform tr:visible .virtual-keyboard-trigger').get());
+        initVirtualKeyboard: function (elm) {
+            var jqElm = $(elm);
+
+            win.VKI_close(jqElm.get(0));
+            win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
         }
     };
 
