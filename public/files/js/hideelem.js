@@ -174,7 +174,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             });
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
-                jqQueryTypeHint = $('<sup><a href="#" class="context-help">?</a></sup>');
+                jqQueryTypeHint = $('<a href="#" class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
                 $('#queryselector').after(jqQueryTypeHint);
                 popupBox.bind(jqQueryTypeHint,
                     hints['iqueryrow'],
