@@ -587,8 +587,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         jqElm.bind('click', function (event) {
             var evtTarget = event.target;
 
-            if (evtTarget.nodeName !== 'BUTTON') { // <= Safari issue
-                evtTarget = $(evtTarget).closest('button').get(0);
+            if (evtTarget.nodeName !== 'BUTTON' && evtTarget.nodeName != 'INPUT') { // <= Safari issue
+                evtTarget = $(evtTarget).closest('button,input').get(0);
             }
             if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
