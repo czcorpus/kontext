@@ -969,28 +969,29 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     lib.mouseOverImages = function (context) {
-        if (!context) {
-            context = win.document;
-        }
+        context = context || win.document;
+
         $(context).find('.over-img').each(function () {
             var tmp,
                 wrappingLink,
                 activeElm,
                 img = this;
 
-            wrappingLink = $(this).closest('a');
+            wrappingLink = $(img).closest('a');
             if (wrappingLink.length > 0) {
                 activeElm = wrappingLink.get(0);
 
             } else {
-                activeElm = this;
+                activeElm = img;
             }
-            if ($(this).data('alt-img')) {
-                $(activeElm).on('mouseover', function () {
+            if ($(img).attr('data-alt-img')) {
+                $(activeElm).off('mouseover.overimg');
+                $(activeElm).on('mouseover.overimg', function () {
                     tmp = $(img).attr('src');
-                    $(img).attr('src', $(img).data('alt-img'));
+                    $(img).attr('src', $(img).attr('data-alt-img'));
                 });
-                $(activeElm).on('mouseout', function () {
+                $(activeElm).off('mouseout.overimg');
+                $(activeElm).on('mouseout.overimg', function () {
                     $(img).attr('src', tmp);
                 });
             }
