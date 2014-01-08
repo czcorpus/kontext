@@ -17,7 +17,7 @@
   display: block;
   margin: 0;
   overflow: auto;
-  padding: 31px 50px;
+  padding: 17px 30px 30px 30px;
 }
 
 #content section {
@@ -199,11 +199,6 @@ footer #copyright-info a:hover {
   width: 100%;
 }
 
-#logo {
-  padding-bottom: .4em;
-  width: 180px;
-}
-
 a#logo-wrapper {
   display: inline-block;
   background-color: transparent;
@@ -211,6 +206,8 @@ a#logo-wrapper {
 
 #logo-wrapper img {
   display: inline-block;
+  position: relative;
+  top: -4px;
 }
 
 #add-searched-lang-widget {
@@ -426,9 +423,6 @@ ul.submenu li.separ {
   text-decoration: none;
 }
 
-#active-corpus a:hover {
-  text-decoration: underline;
-}
 
 #corpus-details-box table.structs-and-attrs {
   clear: both;
@@ -476,7 +470,7 @@ ul.submenu li.separ {
 }
 
 #topbar {
-  padding: 20px 20px 5px 50px;
+  padding: 28px 20px 0 27px;
   color: #000000;
   white-space: nowrap;
 }
@@ -1096,10 +1090,6 @@ table.results-range-and-paging th {
   margin-left: 0;
 }
 
-#positions-help-link {
-  vertical-align: super;
-}
-
 #positions-help-link a.context-help {
   display: block;
   position: absolute;
@@ -1111,7 +1101,12 @@ a.context-help {
 }
 
 a.context-help:hover {
-  text-decoration: underline;
+  // text-decoration: underline;
+}
+
+a.context-help img {
+  display: inline-block;
+  vertical-align: top;
 }
 
 #conc-top-bar a.calc-warning {
