@@ -1,17 +1,4 @@
-@main-background: #d7d7d7;
-@color-default-text: #010101;
-@middle-light-text: #2E2E2E;
-@light-text: #999999;
-@color-logo-pink: #E2007A;
-@color-logo-blue: #009EE0;
-@color-bg-light-blue: #E9F7FC;
-@color-light-frame: #D2EDC0;
-@color-light-green: #ECF3EA;
-@border-radius-default: 6px;
-@border-radius-menu: 5px 5px 0 0;
-@portal-box-shadow: 0 0 4px #A0A0A0;
-@text-shadow: 0 0 2px #A0A0A0;
-@input-border-radius: 3px;
+@import "shared.less";
 
 #content {
   display: block;
@@ -168,7 +155,7 @@ a.close-icon img {
 
 footer {
   margin-top: 20px;
-  color: @light-text;
+  color: @color-light-text;
   clear: both;
   padding: 10px 20px;
   text-align: right;
@@ -185,7 +172,7 @@ footer #copyright-info {
 }
 
 footer #copyright-info a {
-  color: @light-text;
+  color: @color-light-text;
   text-decoration: none;
 }
 
@@ -314,7 +301,7 @@ a#logo-wrapper {
 }
 
 #menu-level-1 li.disabled a {
-  color: @light-text;
+  color: @color-light-text;
 }
 
 #menu-level-1 a:hover {
@@ -324,7 +311,7 @@ a#logo-wrapper {
 #menu-level-1 li.disabled a:hover {
   background-color: transparent;
   border: none;
-  color: @light-text !important;
+  color: @color-light-text !important;
 }
 
 #menu-level-1 > li a,
@@ -627,7 +614,7 @@ a {
 }
 
 a.disabled, .disabled {
-  color: @light-text !important;
+  color: @color-light-text !important;
 }
 
 a:hover {
@@ -636,9 +623,9 @@ a:hover {
 }
 
 body {
-  font-family: "Roboto", Verdana, Arial, sans-serif;
+  font-family: @default-font-family;
   color: @color-default-text;
-  background-image: url(../img/groovepaper2.png);
+  background-image: @main-background;
   font-size: 10pt;
   margin: 0;
   padding: 0;
@@ -741,7 +728,7 @@ img {
 
 input[type="text"],
 input[type="password"] {
-  border: solid 1px #DADADA;
+  border: @input-border-style;
   border-radius: @input-border-radius;
   display: inline-block;
   vertical-align: middle;
