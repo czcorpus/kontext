@@ -1015,6 +1015,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     * @todo the jQuery selector can become unusable in case HTML design/structure is changed
+     */
+    lib.onLoadVirtualKeyboardInit = function () {
+        hideElem.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
+    };
+
+    /**
      *
      * @param {object} conf
      */
@@ -1057,6 +1064,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.timeoutMessages();
         lib.mouseOverImages();
         lib.enhanceMessages();
+        lib.onLoadVirtualKeyboardInit();
 
         $('button').button();
         $('input[type="submit"]').button();

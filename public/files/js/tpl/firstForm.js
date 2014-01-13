@@ -125,7 +125,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                         $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
                     });
 
-                    hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > input[type="text"]').get(0));
+                    hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
 
                     if (!$.support.cssFloat) {
                         // refresh content in IE < 9
@@ -312,13 +312,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     };
 
     /**
-     * @todo the jQuery selector can become unusable in case HTML design/structure is changed
-     */
-    lib.onLoadVirtualKeyboardInit = function () {
-        hideElem.initVirtualKeyboard($('#mainform table.form tr:visible td > input[type="text"]'));
-    };
-
-    /**
      *
      * @param {object} conf
      */
@@ -328,7 +321,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
-        lib.onLoadVirtualKeyboardInit();
     };
 
     return lib;

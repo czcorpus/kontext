@@ -683,7 +683,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" id="iquery$suff" class="iquery-input" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+        <input type="text" id="iquery$suff" class="spec-chars iquery-input" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
       </td>
 </tr>
 
@@ -696,9 +696,9 @@ $corp_full_name</b><br>
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
             #if $q
-            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="lemma-input" />
+            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" />
             #else
-            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="lemma-input" />
+            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input" />
             #end if
 
             #if $Lposlist
@@ -723,7 +723,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="phrase-input" />
+        <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input" />
     </td>
 </tr>
 
@@ -734,7 +734,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="word-input" />
+        <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input" />
         #if $Wposlist
         <span class="no-wrap">
             $_("PoS"):
@@ -761,7 +761,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="char-input" />
+        <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="spec-chars char-input" />
     </td>
 </tr>
 
@@ -793,7 +793,7 @@ $corp_full_name</b><br>
             <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input id="cql$suff" class="cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+        <input id="cql$suff" class="spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
 
         #if not $suff
         <span class="no-wrap">
