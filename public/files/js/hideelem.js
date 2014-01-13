@@ -301,8 +301,10 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
         initVirtualKeyboard: function (elm) {
             var jqElm = $(elm);
 
-            win.VKI_close(jqElm.get(0));
-            win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
+            if (jqElm.length > 0) {
+                win.VKI_close(jqElm.get(0));
+                win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
+            }
         }
     };
 
