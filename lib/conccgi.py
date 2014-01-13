@@ -354,7 +354,7 @@ class ConcCGI(UserCGI):
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
         corp_conf_info = self.corptree.get_corpus_info(thecorp.get_conf('NAME'))
         if corp_conf_info is not None:
-            result['corp_web'] = corp_conf_info['web']
+            result['corp_web'] = corp_conf_info.get('web', '')
         else:
             result['corp_web'] = ''
         if self.usesubcorp:
@@ -569,8 +569,8 @@ class ConcCGI(UserCGI):
             else:
                 self._user_settings.append('annotconc')
                 self.annotconc = ''
-        contains_speech = settings.has_configured_speech(self._corp())
-        out = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech),
+        speech_segment = settings.speech_segment(self._corp())
+        out = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, speech_segment),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                             for c in self.align.split(',') if c],
@@ -2262,8 +2262,8 @@ class ConcCGI(UserCGI):
                     labelmap = anot.labelmap
                 except conclib.manatee.FileAccessError:
                     pass
-            contains_speech = settings.has_configured_speech(self._corp())
-            data = self.call_function(conclib.kwicpage, (self._corp(), conc, contains_speech), fromp=fromp,
+            speech_segment = settings.speech_segment(self._corp())
+            data = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, speech_segment), fromp=fromp,
                                       pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
                                       alignlist=[self.cm.get_Corpus(c)
                                                  for c in self.align.split(',') if c],

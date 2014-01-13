@@ -245,9 +245,6 @@ def get_corplist():
         else:
             corpora = []
 
-        #!!!
-        corpora += ['intercorp_cs', 'intercorp_en']
-
         corpora.sort()
         _corplist = corpora
     return _corplist
@@ -277,19 +274,13 @@ def is_debug_mode():
     return value is not None and value.lower() in ('true', '1')
 
 
-def has_configured_speech(corpus):
+def speech_segment(corpus):
     """
-    Tests whether the provided corpus contains
-    structural attributes compatible with current application's configuration
-    (e.g. corpus contains structural attribute seg.id and the configuration INI
-    file contains line speech_segment_struct_attr = seg.id).
-
-    Parameters
-    ----------
-    corpus : manatee.Corpus
-      corpus object we want to test
     """
-    return get('corpora', 'speech_segment_struct_attr') in corpus.get_conf('STRUCTATTRLIST').split(',')
+    s = get('corpora', 'speech_segment_struct_attr')
+    if s and s in corpus.get_conf('STRUCTATTRLIST').split(','):
+        return s.split('.')
+    return False
 
 
 def get_speech_structure():
