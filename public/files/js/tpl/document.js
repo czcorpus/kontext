@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
-    'simplemodal', 'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
+    'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
     'use strict';
 
     var toggleSelectAllLabel,
