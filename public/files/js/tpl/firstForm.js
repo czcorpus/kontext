@@ -21,9 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemodal'], function (win, $, treeComponent,
-                                                                                                layoutModel, hideElem,
-                                                                                                _sm) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function (win, $, treeComponent, layoutModel,
+                                                                                 hideElem) {
     'use strict';
 
     var lib = {},
@@ -102,36 +101,43 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
     createAddLanguageClickHandler = function (forcedCorpusId) {
         return function () {
             var corpusId,
-                jqHiddenStatus;
+                jqHiddenStatus,
+                jqNewLangNode;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
 
             if (corpusId) {
                 jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
 
-                $('[id="qnode_' + corpusId + '"]').show();
-                addActiveParallelCorpus(corpusId);
-                $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+                jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
+
+                if (jqNewLangNode.length > 0) {
+                    jqNewLangNode.show();
+                    addActiveParallelCorpus(corpusId);
+                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
 
 
-                jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-                $('[id="qnode_' + corpusId + '"] a.close-button').on('click', function () {
-                    $('[id="qnode_' + corpusId + '"]').hide();
-                    jqHiddenStatus.val('');
-                    removeActiveParallelCorpus(corpusId);
-                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                    jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
+                    jqNewLangNode.find('a.close-button').on('click', function () {
+                        $('[id="qnode_' + corpusId + '"]').hide();
+                        jqHiddenStatus.val('');
+                        removeActiveParallelCorpus(corpusId);
+                        $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                    });
 
-                });
-                if (!$.support.cssFloat) {
-                    // refresh content in IE < 9
-                    $('#content').css('overflow', 'visible').css('overflow', 'auto');
+                    hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
+
+                    if (!$.support.cssFloat) {
+                        // refresh content in IE < 9
+                        $('#content').css('overflow', 'visible').css('overflow', 'auto');
+                    }
                 }
             }
         };
     };
 
     /**
-     *
+     * @todo rename/refactor this stuff
      */
     lib.misc = function () {
         // let's override the focus
@@ -169,16 +175,20 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
                 jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').empty().html('&#8593;');
+                jqFieldset.find('.status').attr('src', '../files/img/arrow_up.png')
+                    .attr('data-alt-img', '../files/img/arrow_up_s.png')
+                    .attr('alt', layoutModel.conf.messages.click_to_hide);
                 jqLink.attr('title', layoutModel.conf.messages.click_to_hide);
 
             } else {
                 jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').empty().html('&#8595;');
+                jqFieldset.find('.status').attr('src', '../files/img/arrow_down.png')
+                    .attr('data-alt-img', '../files/img/arrow_down_s.png')
+                    .attr('alt', layoutModel.conf.messages.click_to_expand);
                 jqLink.attr('title', layoutModel.conf.messages.click_to_expand);
-
             }
         });
+        layoutModel.mouseOverImages();
     };
 
     /**
@@ -192,16 +202,21 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             jqFieldset.toggleClass('inactive');
             if (jqFieldset.hasClass('inactive')) {
                 jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').empty().html('&#8595;');
+                jqFieldset.find('.status').attr('src', '../files/img/arrow_down.png')
+                    .attr('data-alt-img', '../files/img/arrow_down_s.png')
+                    .attr('alt', layoutModel.conf.messages.click_to_expand);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
                 jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').empty().html('&#8593;');
+                jqFieldset.find('.status').attr('src', '../files/img/arrow_up.png')
+                    .attr('data-alt-img', '../files/img/arrow_up_s.png')
+                    .attr('alt', layoutModel.conf.messages.click_to_hide);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
+            layoutModel.mouseOverImages();
         });
 
         // context-switch TODO
@@ -225,7 +240,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             var data = $('#mainform').serialize().split('&'),
                 cleanData = '',
                 unusedLangs = {},
-                belongsToUnusedLanguage;
+                belongsToUnusedLanguage,
+                dialogAns;
 
             $('.parallel-corp-lang').each(function () {
                 if ($(this).css('display') === 'none') {
@@ -254,33 +270,13 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'simplemod
             });
 
             if (cleanData.length > lib.maxEncodedParamsLength) {
-                $('#make-concordance-button').parent().append('<div id="alt-form"><p>'
-                    + layoutModel.conf.messages.too_long_condition + '</p>'
-                    + '<button id="alt-form-open-subcorp-form" type="submit">'
-                    + layoutModel.conf.messages.open_the_subcorpus_form + '</button>'
-                    + '<button id="alt-form-cancel" type="button">' + layoutModel.conf.messages.cancel + '</button></div>');
-
-                $('#alt-form-open-subcorp-form').on('click', function () {
-                    $('#alt-form').remove();
+                dialogAns = window.confirm(layoutModel.conf.messages.too_long_condition);
+                if (dialogAns) {
                     $(win).unload(function () {
-                        $.modal.close();
-                        $('#mainform').attr('method', 'GET').action('first');
+                        $('#mainform').attr('method', 'GET').attr('action', 'first');
                     });
                     $('#mainform').attr('method', 'POST').attr('action', 'subcorp_form').submit();
-                });
-
-                $('#alt-form-cancel').on('click', function () {
-                    $.modal.close();
-                });
-
-                $('#alt-form').modal({
-                    onClose : function () {
-                        $.modal.close();
-                        $('#alt-form').remove();
-                    },
-                    minHeight : 120
-                });
-
+                }
                 event.stopPropagation();
                 return false;
             }

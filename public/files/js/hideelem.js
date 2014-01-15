@@ -133,9 +133,8 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
         /**
          * @param querySelector
          * @param hints
-         * @param {object} userSettings
          */
-        cmdSwitchQuery : function (querySelector, hints, userSettings) {
+        cmdSwitchQuery : function (querySelector, hints) {
             var jqQs = $(querySelector),
                 newidCom,
                 newid,
@@ -175,7 +174,7 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             });
             jqFocusElem.val(oldval);
             if (newid === 'iqueryrow') {
-                jqQueryTypeHint = $('<sup><a href="#" class="context-help">?</a></sup>');
+                jqQueryTypeHint = $('<a href="#" class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
                 $('#queryselector').after(jqQueryTypeHint);
                 popupBox.bind(jqQueryTypeHint,
                     hints['iqueryrow'],
@@ -186,9 +185,10 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
                     });
 
             } else {
-                $('#query-type-hint').remove();
+                $('#queryselector').parent().find('.context-help').remove();
             }
             jqFocusElem.focus();
+            hideElem.initVirtualKeyboard(jqFocusElem);
         },
 
         /**
@@ -292,6 +292,18 @@ define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies
             }
             if (jqTargetElem.length > 0 && hideElem.elementIsFocusableFormInput(jqTargetElem)) {
                 jqTargetElem.focus();
+            }
+        },
+
+        /**
+         * @param {HTMLElement|string|jQuery} input element the VirtualKeyboard binds to
+         */
+        initVirtualKeyboard: function (elm) {
+            var jqElm = $(elm);
+
+            if (jqElm.length > 0) {
+                win.VKI_close(jqElm.get(0));
+                win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
             }
         }
     };

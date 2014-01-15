@@ -385,8 +385,8 @@ class ConcCGI(CGIPublisher):
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if not self._is_corpus_free_action(path[0]):
-            self.corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
-            if redirect:
+            self.corpname, fallback = self._determine_curr_corpus(form, allowed_corpora)
+            if fallback:
                 path = [CGIPublisher.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
                     import hashlib

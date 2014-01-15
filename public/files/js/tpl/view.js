@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane', 'simplemodal',
-        'popupbox'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, _sm, popupBox) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane',
+        'popupbox'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, popupBox) {
     'use strict';
 
     var lib = {};
@@ -81,40 +81,6 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                 }
             );
             event.stopPropagation();
-        });
-
-        $('#conclines a.copy-button').on('click', function (event) {
-            var url = $(event.target).data('url'),
-                data = $(event.target).data('params');
-
-            $('#content #copy-conc-modal').remove();
-            $('#content').append('<div id="copy-conc-modal">'
-                + '<strong>' + layoutModel.conf.messages.ctrlc_to_copy + '</strong><br />'
-                + '<textarea id="text-to-copy" rows="8" cols="70"></textarea>'
-                + '</div>');
-
-            $('#copy-conc-modal').modal({
-                onShow : function () {
-                    $.ajax({
-                        url: url,
-                        type: 'GET',
-                        data: data,
-                        dataType : 'json',
-                        success: function (data) {
-                            var rawText = '...';
-                            $.each(data.content, function (i, item) {
-                                rawText += item.str;
-                            });
-                            rawText += '...';
-                            $('#text-to-copy').val(rawText).select();
-                        }
-                    });
-                },
-                onClose : function () {
-                    $.modal.close();
-                    $('#content #copy-conc-modal').remove();
-                }
-            });
         });
 
         $('#hideel').bind('click', detail.closeDetail);

@@ -64,6 +64,10 @@ define(['win', 'jquery'], function (win, $) {
 
         this.jqCloseIcon = null;
 
+        this.origContentParent = null;
+
+        this.importedElement = null;
+
         this.messages = {
             close : 'close'
         };
@@ -92,6 +96,17 @@ define(['win', 'jquery'], function (win, $) {
     };
 
     /**
+     *
+     * @param {HTMLElement|String|jQuery} elm
+     */
+    TooltipBox.prototype.import = function (elm) {
+        this.origContentParent = $(elm).parent();
+        this.importedElement = $(elm);
+        this.importedElement.css('display', 'block'); // TODO
+        $(this.getRootElement()).append(this.importedElement);
+    };
+
+    /**
      * Sets a CSS property of wrapping HTML Element
      *
      * @param {String} name
@@ -106,6 +121,10 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.close = function () {
         if (this.newElem) {
+            if (this.importedElement) {
+                this.importedElement.css('display', 'none');
+                this.origContentParent.append(this.importedElement);
+            }
             $(this.newElem).remove();
             this.newElem = null;
 
@@ -397,7 +416,7 @@ define(['win', 'jquery'], function (win, $) {
             $(this).css('border', 'none');
             supElm = $(win.document.createElement('sup'));
             $(this).after(supElm);
-            linkElm = $('<a class="abbr-like">?</a>');
+            linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
             lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
             $(this).attr('title', null);
             supElm.append(linkElm);

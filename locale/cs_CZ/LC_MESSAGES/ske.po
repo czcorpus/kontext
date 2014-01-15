@@ -1979,6 +1979,9 @@ msgstr "používá"
 msgid "Please <span class=\"sign-in\">sign-in</span> to continue."
 msgstr "Pro pokračování se prosím <span class=\"sign-in\">přihlašte</span>."
 
+msgid "keyboard"
+msgstr "klávesnice"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
