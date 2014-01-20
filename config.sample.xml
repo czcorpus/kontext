@@ -1,0 +1,116 @@
+<kontext>
+    <global>
+        <manatee_path>/path/to/some/non-default/manatee</manatee_path>
+        <log_path>/var/log/bonito/application.log</log_path>
+        <debug>true</debug>
+        <max_attr_list_size>30</max_attr_list_size>
+        <administrators extension-by="ucnk">
+            <user>johndoe</user>
+            <user>janedoe</user>
+        </administrators>
+        <fonts>
+            <item>http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&amp;subset=latin-ext</item>
+        </fonts>
+        <translations>
+            <language label="česky">cs</language>
+            <language label="English">en</language>
+            <language label="slovensky">sk</language>
+        </translations>
+    </global>
+
+    <plugins>
+        <db>
+            <module>ucnk_db</module>
+            <name extension-by="ucnk">bonito</name>
+            <host extension-by="ucnk">localhost</host>
+            <password extension-by="ucnk">some_password</password>
+            <username extension-by="ucnk">bonito</username>
+        </db>
+        <auth>
+            <module>acme_remote_auth</module>
+            <auth_cookie_name>ucnksessionid</auth_cookie_name>
+            <login_url>http://korpus.test/login?continue=%s</login_url>
+            <logout_url>http://korpus.test/logout?continue=%s</logout_url>
+            <central_auth_cookie_name extension-by="ucnk">cnc_toolbar_sid</central_auth_cookie_name>
+        </auth>
+        <appbar>
+            <module>acme_appbar</module>
+            <server>korpus.test</server>
+            <path>/shared-bar?current=kontext&amp;id=%s&amp;continue=%s</path>
+            <port>80</port>
+            <css_url>http://korpus.test/static/cnc-toolbar.css</css_url>
+            <css_url_ie></css_url_ie>
+        </appbar>
+        <query_storage>
+            <module>acme_query_storage</module>
+            <db_path extension-by="ucnk">/var/www/korpus/db/korpus.db</db_path>
+            <num_kept_records extension-by="ucnk">5</num_kept_records>
+        </query_storage>
+        <settings_storage>
+            <module>acme_settings_storage</module>
+        </settings_storage>
+        <sessions>
+            <module>acme_sessions</module>
+            <ttl>14400</ttl>
+            <cleanup_probability>0.9</cleanup_probability>
+            <db_path extension-by="ucnk">/var/www/korpus/db/sessions.db</db_path>
+        </sessions>
+        <corptree>
+            <module>corptree</module>
+            <file>../config.xml</file>
+            <root_elm_path>//corpora/corplist</root_elm_path>
+        </corptree>
+    </plugins>
+    <cache>
+        <clear_interval>3600</clear_interval>
+    </cache>
+    <corpora>
+        <manatee_registry>/var/local/corpora/registry</manatee_registry>
+        <options_dir>/var/local/corpora/registry/options</options_dir>
+        <cache_dir>/var/local/corpora/cache</cache_dir>
+        <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
+        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
+        <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
+        <conc_dir>/var/local/corpora/conc</conc_dir>
+        <wseval_dir></wseval_dir>
+        <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
+        <default_corpora>
+            <item>susanne</item>
+            <item>spec/susanne</item>
+            <item>anothercorpus</item>
+        </default_corpora>
+        <speech_files_path>/var/www/data</speech_files_path>
+        <kwicline_max_context>500</kwicline_max_context>
+        <use_db_whitelist>1</use_db_whitelist>
+        <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
+        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
+
+        <corplist title="">
+            <corplist title="Our corpora">
+		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16"  />
+	    </corplist>
+            <corplist title="Foreign corpora">
+                <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
+		<corpus id="BNC" sentence_struct="s" />
+            </corplist>
+        <corpus id="spoken_stuff" sentence_struct="p" num_tag_pos="16" speech_segment="seg.soundfile" />
+        </corplist>
+
+        <tagsets>
+            <tagset position="0">
+                <label>
+                    <desc lang="en">Position 1</desc>
+                    <desc lang="cs">Pozice 1</desc>
+                </label>
+                <value id="A">
+                    <desc lang="en">adjective</desc>
+                    <desc lang="cs">adjektivum (přídavné jméno)</desc>
+                </value>
+                <!-- ... etc ... -->
+            </tagset>
+            <!-- ... etc ... -->
+        </tagsets>
+    </corpora>
+</kontext>
+

@@ -1,0 +1,77 @@
+#*
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from cmpltmpl.document import document
+#from templating.filters import *
+
+#extends document
+
+#def title
+#end def
+
+#def bodyonload
+    require(['tpl/queryHistory', 'conf'], function (pageSelf, conf) {
+        conf.messages.failed_to_delete_the_query = "$_('Failed to delete the query')";
+        conf.messages.deleted_query = "$_('Deleted the query.')";
+        conf.messages.undeleted_query = "$_('Undeleted the query.')";
+        conf.messages.failed_to_undelete_the_query = "$_('Failed to undelete the query.')";
+        conf.messages.undo = "$_('Undo')";
+        pageSelf.init(conf);
+    });
+#end def
+
+#block main
+<section>
+    <h2>$_('Recent queries')</h2>
+
+    #set $i = 0
+    #for $row in $data
+    <div border="0" class="query-history">
+        <table border="0">
+            <tr>
+                <td class="corpname">$row.corpname</td>
+                <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="query">#if $len($row.params_description) > 0#$row.params_description[0][1]#end if#</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="options">
+                $_('additional actions'):
+                #set $j = 0
+                    #for $item in $row.params_description[1:]
+                        <span class="query-action" title="#filter $HtmlEscape#$item[1]#end filter#">$item[0]</span>
+                        #if $j < $len($row.params_description[1:]) - 1
+                        +
+                        #end if
+                    #set $j += 1
+                    #end for
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="link">
+                    <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('open')</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    #set $i += 1
+    #end for
+</section>
+#end block
