@@ -221,6 +221,22 @@ def update_user_password(password):
     return ans
 
 
+def get_user_id(db):
+    cursor = db.cursor()
+    cursor.execute(fq("SELECT id FROM user WHERE user = %(p)s"), (_user, ))
+    row = cursor.fetchone()
+    cursor.close()
+    if row:
+        return row[0]
+    return None
+
+
+def update_user_activity(db):
+    cursor = db.cursor()
+    cursor.execute(fq("CALL shift_user_expiration(%(p)s)"), (get_user_id(db), ))
+    cursor.close()
+
+
 def get_corplist():
     """
     Fetches list of available corpora according to provided user
@@ -239,14 +255,15 @@ def get_corplist():
                           " WHERE un.user = %(p)s"),  (_user, ))
         rows = cursor.fetchall()
         if len(rows) > 0:
-            cursor.close()
-            conn.close()
             corpora = [row[0] for row in rows]
         else:
             corpora = []
 
         corpora.sort()
         _corplist = corpora
+    update_user_activity(conn)
+    cursor.close()
+    conn.commit()
     return _corplist
 
 
