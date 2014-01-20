@@ -142,7 +142,7 @@ class CorpusManager(object):
                 except Exception, e:
                     manatee.setEncoding(orig_encoding)
                     import logging
-                    logging.getLogger(__name__).warn('Failed to fetch info about %s with error %s (%s)'
+                    logging.getLogger(__name__).warn(u'Failed to fetch info about %s with error %s (%r)'
                                                      % (corp_name, type(e).__name__, e))
                     cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
         manatee.setEncoding(orig_encoding)
