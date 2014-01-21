@@ -221,19 +221,9 @@ def update_user_password(password):
     return ans
 
 
-def get_user_id(db):
-    cursor = db.cursor()
-    cursor.execute(fq("SELECT id FROM user WHERE user = %(p)s"), (_user, ))
-    row = cursor.fetchone()
-    cursor.close()
-    if row:
-        return row[0]
-    return None
-
-
 def update_user_activity(db):
     cursor = db.cursor()
-    cursor.execute(fq("CALL shift_user_expiration(%(p)s)"), (get_user_id(db), ))
+    cursor.execute(fq("CALL shift_user_expiration((SELECT id FROM user WHERE user = %(p)s))"), (_user, ))
     cursor.close()
 
 
