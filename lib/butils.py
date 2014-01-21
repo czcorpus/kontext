@@ -43,7 +43,7 @@ def escape(s):
     """
     Escape CQL attribute value to protect it against RE evaluation
     """
-    return escape_regexp.sub(r'\\\g<0>', s)
+    return escape_regexp.sub(r'\\g<0>', s)
 
 try:
     from setproctitle import setproctitle

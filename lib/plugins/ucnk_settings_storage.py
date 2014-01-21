@@ -22,13 +22,14 @@ class SettingsStorage(object):
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = db.get()
+        self.db = db
 
     def save(self, user_id, data):
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
                        (json.dumps(data), user_id))
-        self.conn.commit()
+        conn.commit()
 
     def load(self, user_id, current_settings=None):
         """
@@ -47,7 +48,8 @@ class SettingsStorage(object):
         """
         if current_settings is None:
             current_settings = {}
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,))
         row = cursor.fetchone()
         if row:

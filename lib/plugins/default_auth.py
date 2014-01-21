@@ -22,10 +22,10 @@ def create_instance(*args, **kwargs):
     This function must be always implemented. Bonito uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
-    return DummyAuthHandler()
+    return DefaultAuthHandler()
 
 
-class DummyAuthHandler(AbstractAuth):
+class DefaultAuthHandler(AbstractAuth):
     """
     Sample authentication handler
     """
@@ -116,3 +116,4 @@ class DummyAuthHandler(AbstractAuth):
         """
         """
         return _('Any string can be used.')
+
