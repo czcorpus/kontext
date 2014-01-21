@@ -18,13 +18,13 @@
 This module wraps application's configuration (as specified in config.xml) and provides some additional helper
 methods.
 """
-import os
+
 import sys
+import os
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 _meta = {}  # contains data of attributes of XML elements representing configuration values
-
 auth = None  # authentication module (this is set from the outside)
 
 # This dict defines special parsing of quoted sections. Sections not mentioned there
@@ -191,18 +191,11 @@ def load(conf_path='../config.xml'):
 
     Parameters
     ----------
-    auth_handler : object
     conf_path : str, optional (default is 'config.xml')
       path to the configuration XML file. This value can be
       overridden by an environment variable KONTEXT_CONF_PATH
     """
-    if 'KONTEXT_CONF_PATH' in os.environ:
-        conf_path = os.environ['KONTEXT_CONF_PATH']
     parse_config(conf_path)
-
-    if get('corpora', 'manatee_registry'):
-        os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
-    set('session', 'conf_path', conf_path)
 
 
 def get_default_corpus(corplist):
@@ -238,29 +231,6 @@ def is_debug_mode():
     """
     value = get('global', 'debug')
     return value is not None and value.lower() in ('true', '1')
-
-
-def get_uri_scheme_name():
-    if 'HTTPS' in os.environ and os.environ['HTTPS'].lower() == 'on':
-        return 'https'
-    else:
-        return 'http'
-
-
-def get_root_url():
-    """
-    Returns root URL of the application
-    """
-    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in('80', '443'):
-        port_s = ':%s' % os.getenv('SERVER_PORT')
-    else:
-        port_s = ''
-    return '%(protocol)s://%(server)s%(port)s%(script)s/' % {
-        'protocol': get_uri_scheme_name(),
-        'port': port_s,
-        'server': os.getenv('HTTP_HOST'),
-        'script': os.getenv('SCRIPT_NAME')
-    }
 
 
 def supports_password_change():

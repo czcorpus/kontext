@@ -29,12 +29,13 @@ class QueryStorage(object):
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = db.get()
+        self.db = db
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
     def _users_last_record_url(self, user_id):
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute('SELECT url FROM noske_saved_queries WHERE user_id = %s ORDER BY created DESC LIMIT 1', (user_id,))
         ans = cursor.fetchone()
         if ans:
@@ -51,7 +52,8 @@ class QueryStorage(object):
         """
         last_url = self._users_last_record_url(user_id)
         if url != last_url:
-            cursor = self.conn.cursor()
+            conn = self.db.get()
+            cursor = conn.cursor()
             if not query_id:
                 created = int(time.mktime(datetime.now().timetuple()))
                 cursor.execute(u"INSERT INTO noske_saved_queries "
@@ -71,7 +73,7 @@ class QueryStorage(object):
                                u"tmp = %s WHERE user_id = %s AND id = %s", (description, updated, public, tmp, user_id, query_id))
 
             self.delete_old_records(cursor, user_id)
-            self.conn.commit()
+            conn.commit()
             return query_id
         else:
             # if latest action equals to user's previous action then nothing is done
@@ -123,7 +125,8 @@ class QueryStorage(object):
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
 
         sql_params.insert(0, user_id)
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute(sql, tuple(sql_params))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
         for row in rows:
@@ -157,7 +160,8 @@ class QueryStorage(object):
         Returns concrete query specified by its ID.
         In case the query is not public also user identifier has to match (else None is returned.
         """
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute("SELECT %s FROM noske_saved_queries WHERE id = %%s" % ','.join(QueryStorage.cols), (id, ))
         row = cursor.fetchone()
         if row:
@@ -167,15 +171,17 @@ class QueryStorage(object):
         return row
 
     def delete_user_query(self, user_id, id):
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         deleted = int(time.mktime(datetime.now().timetuple()))
         cursor.execute("UPDATE noske_saved_queries SET deleted = %s WHERE user_id = %s AND id = %s", (deleted, user_id, id))
-        self.conn.commit()
+        conn.commit()
 
     def undelete_user_query(self, user_id, id):
-        cursor = self.conn.cursor()
+        conn = self.db.get()
+        cursor = conn.cursor()
         cursor.execute("UPDATE noske_saved_queries SET deleted = NULL WHERE user_id = %s AND id = %s", (user_id, id))
-        self.conn.commit()
+        conn.commit()
 
     def make_query_hash(self, user_id, url):
         """
