@@ -27,7 +27,7 @@ class QueryStorage(object):
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.conn = db.get()
+        self.db = db
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
