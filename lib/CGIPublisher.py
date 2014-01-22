@@ -700,7 +700,7 @@ class CGIPublisher(object):
         """
         return None
 
-    def message(self, **kwargs):
+    def message(self, *args, **kwargs):
         return kwargs
 
     message.accept_kwargs = True
