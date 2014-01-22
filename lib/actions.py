@@ -18,6 +18,7 @@ import sys
 import re
 import locale
 import csv
+import time
 
 import conccgi
 from conccgi import ConcCGI, ConcError
@@ -193,7 +194,7 @@ class Actions(ConcCGI):
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
 
-        self._session['conc'] = {
+        self._store_conc_results({
             'sampled_size': out.get('sampled_size', None),
             'fullsize': out.get('fullsize', None),
             'concsize': out.get('concsize', None),
@@ -201,7 +202,7 @@ class Actions(ConcCGI):
             'result_relative_freq_rel_to': out.get('result_relative_freq_rel_to', None),
             'result_arf': out.get('result_arf', None),
             'result_shuffled': out.get('result_shuffled', False)
-        }
+        })
         self._save_query()
         return out
 

@@ -16,6 +16,7 @@
             <language label="English">en</language>
             <language label="slovensky">sk</language>
         </translations>
+        <conc_persistence_time>1800</conc_persistence_time>
     </global>
 
     <plugins>
