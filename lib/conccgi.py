@@ -676,6 +676,7 @@ class ConcCGI(CGIPublisher):
         result['root_url'] = settings.get_root_url()
         result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
+        result['display_closed_conc'] = len(self.q) > 0
 
         if self._session_get('__message'):
             result['message'] = ('info', self._session_get('__message'))
