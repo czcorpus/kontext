@@ -460,6 +460,7 @@ class CGIPublisher(object):
         """
         path = path if path is not None else self.import_req_path()
         named_args = {}
+        headers = []
 
         # user action processing
         action_metadata = {
@@ -514,7 +515,7 @@ class CGIPublisher(object):
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
-        headers = self.output_headers(action_metadata.get('return_type', 'html'))
+        headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None), outf=output)
