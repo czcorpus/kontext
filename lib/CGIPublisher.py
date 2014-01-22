@@ -485,7 +485,6 @@ class CGIPublisher(object):
             self._init_session()
             path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
             methodname, tmpl, result = self.process_method(path[0], path, named_args)
-            self._close_session()
 
         except AuthException as e:
             self._status = 401
@@ -521,6 +520,7 @@ class CGIPublisher(object):
             self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None), outf=output)
         ans_body = output.getvalue()
         output.close()
+        self._close_session()
 
         return self._export_status(self._status), headers, ans_body
 
