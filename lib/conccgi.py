@@ -37,7 +37,7 @@ escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
 
 
 def escape(s):
-    return escape_regexp.sub(r'\\\g<0>', s)
+    return escape_regexp.sub(r'\\g<0>', s)
 
 
 try:
@@ -178,7 +178,7 @@ class ConcCGI(CGIPublisher):
     subcname = u''
     subcpath = []
     _conc_dir = u''
-    _home_url = u'../run.cgi/first_form'
+    _home_url = u'./first_form'
     files_path = u'../files'
     css_prefix = u''
     iquery = u''
@@ -242,9 +242,7 @@ class ConcCGI(CGIPublisher):
 
     shuffle = 0
 
-    disabled_menu_items = []
     SubcorpList = []
-    save_menu = []
 
     add_vars['findx_upload'] = [u'LastSubcorp']
 
@@ -257,6 +255,8 @@ class ConcCGI(CGIPublisher):
         self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
         self.ua = None
+        self.disabled_menu_items = []
+        self.save_menu = []
 
     def _log_request(self, user_settings, action_name):
         """
@@ -270,9 +270,12 @@ class ConcCGI(CGIPublisher):
             name of the action
         """
         import json
-        import datetime
+        import datetime    
 
-        params = dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]])
+        params = {}
+        if self.environ.get('QUERY_STRING'):
+            params.update(dict([item.split('=', 1) for item in [x for x in self.environ.get('QUERY_STRING').split('&')
+                                                                if x]]))
 
         ans = {
             'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
@@ -377,7 +380,6 @@ class ConcCGI(CGIPublisher):
         super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
         if not action_metadata:
             action_metadata = {}
-        self.environ = os.environ
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=None)
 
@@ -396,7 +398,7 @@ class ConcCGI(CGIPublisher):
                     curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
                     self._session[curr_url_key] = curr_url
                     self._redirect('%sfirst_form?corpname=%s&ua=%s' %
-                                   (settings.get_root_url(), self.corpname, curr_url_key))
+                                   (self.get_root_url(), self.corpname, curr_url_key))
                 else:
                     path = ['json_error']
                     named_args['error'] = _('Corpus access denied')
@@ -410,7 +412,6 @@ class ConcCGI(CGIPublisher):
         # a dumb solution but currently there is no other way
         # (other than always loading all the settings)
         self._filter_out_unused_settings(self.__dict__)
-
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
@@ -443,7 +444,7 @@ class ConcCGI(CGIPublisher):
         elif self.get_http_method() == 'GET':
             self.return_url = self._get_current_url()
         else:
-            self.return_url = '%sfirst_form?corpname=%s' % (settings.get_root_url(), self.corpname)
+            self.return_url = '%sfirst_form?corpname=%s' % (self.get_root_url(), self.corpname)
 
         if len(path) > 0:
             access_level = self._get_action_prop(path[0], 'access_level')
@@ -508,7 +509,7 @@ class ConcCGI(CGIPublisher):
     def _save_query(self):
         if plugins.has_plugin('query_storage'):
             q_encoded = self.urlencode([('q', q) for q in self.q])
-            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (settings.get_root_url(), self.corpname,
+            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (self.get_root_url(), self.corpname,
                                                                self.usesubcorp, q_encoded)
 
             description = ''  # "%s::\n\n\t%s\n" % (_('Notes'), ','.join(add_q))
@@ -585,79 +586,58 @@ class ConcCGI(CGIPublisher):
             from empty_corpus import EmptyCorpus
             return EmptyCorpus()
 
-    def _add_globals(self, result):
-        """
-        Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
-        HTML templates properly.
-        It is called after an action is processed but before any output starts
-        """
-        CGIPublisher._add_globals(self, result)
-
-        if self.maincorp:
-            thecorp = conclib.manatee.Corpus(self.maincorp)
-        else:
-            thecorp = self._corp()
-        result['q'] = self.urlencode([('q', q) for q in self.q])
-        result['Q'] = [{'q': q} for q in self.q]
-        result['corpname_url'] = 'corpname=' + self.corpname
-
-        global_var_val = [(n, val) for n in self._conc_state_vars
-                          for val in [getattr(self, n)]
-                          if getattr(self.__class__, n, None) is not val]
-
-        result['globals'] = self.urlencode(global_var_val)
-        result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
-        result['struct_ctx'] = thecorp.get_conf('STRUCTCTX')
-        result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
-        result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
-                                                         settings.get_bool('corpora', 'use_db_whitelist'))
-        result['corplist_size'] = min(len(result['Corplist']), 20)
-        result['corp_full_name'] = (thecorp.get_conf('NAME')
+    def _add_corpus_related_globals(self, result, corpus):
+        result['struct_ctx'] = corpus.get_conf('STRUCTCTX')
+        result['corp_doc'] = corpus.get_conf('DOCUMENTATION')
+        result['corp_full_name'] = (corpus.get_conf('NAME')
                                     or self.corpname)
 
-        result['corp_description'] = thecorp.get_info()
-        result['corp_size'] = locale.format('%d', thecorp.size(), True).decode('utf-8')
-        result['user_info'] = self._session['user']
-        corp_conf_info = plugins.corptree.get_corpus_info(thecorp.get_conf('NAME'))
+        result['corp_description'] = corpus.get_info()
+        result['corp_size'] = locale.format('%d', corpus.size(), True).decode('utf-8')
+        corp_conf_info = plugins.corptree.get_corpus_info(corpus.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
+
+        result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
+                                                         settings.get_bool('corpora', 'use_db_whitelist'))
+        result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
             result['subcorp_size'] = locale.format('%d', sc.search_size(), True).decode('utf-8')
         else:
             result['subcorp_size'] = None
-        attrlist = thecorp.get_conf('ATTRLIST').split(',')
-        sref = thecorp.get_conf('SHORTREF')
+        attrlist = corpus.get_conf('ATTRLIST').split(',')
+        sref = corpus.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
-        result['corpencoding'] = thecorp.get_conf('ENCODING')
-        result['_version'] = (conclib.manatee.version(), version.version)
-        poslist = self.cm.corpconf_pairs(thecorp, 'WPOSLIST')
+        result['corpencoding'] = corpus.get_conf('ENCODING')
+        poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
         result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        poslist = self.cm.corpconf_pairs(thecorp, 'LPOSLIST')
+        poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
         if 'lempos' not in attrlist:
-            poslist = self.cm.corpconf_pairs(thecorp, 'WPOSLIST')
+            poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
         result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['lpos_dict'] = dict([(y, x) for x, y in poslist])
-        poslist = self.cm.corpconf_pairs(thecorp, 'WSPOSLIST')
+        poslist = self.cm.corpconf_pairs(corpus, 'WSPOSLIST')
         if not poslist:
-            poslist = self.cm.corpconf_pairs(thecorp, 'LPOSLIST')
+            poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
-        result['default_attr'] = thecorp.get_conf('DEFAULTATTR')
+        result['default_attr'] = corpus.get_conf('DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
-            if listname in result: continue
+            if listname in result:
+                continue
             result[listname] = \
-                [{'label': thecorp.get_conf(n + '.LABEL') or n, 'n': n}
-                 for n in thecorp.get_conf(listname.upper()).split(',')
+                [{'label': corpus.get_conf(n + '.LABEL') or n, 'n': n}
+                 for n in corpus.get_conf(listname.upper()).split(',')
                  if n]
-        result['tagsetdoc'] = thecorp.get_conf('TAGSETDOC')
+        result['tagsetdoc'] = corpus.get_conf('TAGSETDOC')
         result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a) for a in
-                                           thecorp.get_conf('SUBCORPATTRS')
+                                           corpus.get_conf('SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
-        result['corp_uses_tag'] = 'tag' in thecorp.get_conf('ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus.get_conf('ATTRLIST').split(',')
         if self.annotconc and not result.has_key('GroupNumbers'):
             labelmap = conclib.get_conc_labelmap(self._storeconc_path()
                                                  + '.info')
@@ -668,23 +648,56 @@ class ConcCGI(CGIPublisher):
                                               ('usesubcorp', self.usesubcorp),
                                               ])
         result['num_tag_pos'] = corp_conf_info.get('num_tag_pos', 0)
-        result['supports_password_change'] = settings.supports_password_change()
-        result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
         result['citation_info'] = corp_conf_info.get('citation_info', '')
-        result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
+
+    def _add_globals(self, result):
+        """
+        Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
+        HTML templates properly.
+        It is called after an action is processed but before any output starts
+        """
+        CGIPublisher._add_globals(self, result)
+
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
-        result['root_url'] = settings.get_root_url()
         result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
+        result['_version'] = (conclib.manatee.version(), version.version)
         result['display_closed_conc'] = len(self.q) > 0
+
+        result['q'] = self.urlencode([('q', q) for q in self.q])
+        result['Q'] = [{'q': q} for q in self.q]
+        result['corpname_url'] = 'corpname=' + self.corpname
+
+        global_var_val = [(n, val) for n in self._conc_state_vars
+                          for val in [getattr(self, n, None)]
+                          if getattr(self.__class__, n, None) is not val]
+
+        result['globals'] = self.urlencode(global_var_val)
+        result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
+
+        if self.maincorp:
+            thecorp = conclib.manatee.Corpus(self.maincorp)
+        else:
+            thecorp = self._corp()
+        try:
+            self._add_corpus_related_globals(result, thecorp)
+        except Exception as ex:
+            pass
+
+        result['supports_password_change'] = settings.supports_password_change()
+        result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
+        result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
+
+        result['root_url'] = self.get_root_url()
+        result['user_info'] = self._session.get('user', {'fullname': None})
 
         if self._session_get('__message'):
             result['message'] = ('info', self._session_get('__message'))
             del(self._session['__message'])
 
         if plugins.has_plugin('auth'):
-            result['login_url'] = plugins.auth.get_login_url()
-            result['logout_url'] = plugins.auth.get_logout_url()
+            result['login_url'] = plugins.auth.get_login_url(self.get_root_url())
+            result['logout_url'] = plugins.auth.get_logout_url(self.get_root_url())
         else:
             result['login_url'] = 'login'
             result['logout_url'] = 'login'

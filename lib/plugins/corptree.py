@@ -16,8 +16,9 @@
 
 try:
     from docutils.core import publish_string
-except ImportError:
-    publish_string = lambda s: s
+except ImportError:    
+    def publish_string(source, *args, **kwargs):
+        return source
 from lxml import etree
 
 
@@ -42,7 +43,8 @@ class CorpTree(object):
         html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
                                      writer_name='html')
         html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        html = html.decode('utf-8')
+        if type(html) is not unicode:  # we expect that in such case it is still utf-8
+            html = html.decode('utf-8')
         return html
 
     def get_corplist_title(self, elm):
