@@ -128,11 +128,16 @@ class App(object):
         Works as specified by the WSGI
         """
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
-        if self.static_dispatcher_class and environ['PATH_INFO'].startswith('/files'):
+        if '/run.cgi/' in environ['REQUEST_URI']:  # old-style (CGI version) URLs are redirected to new ones
+            status = '301 Moved Permanently'
+            headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
+            body = ''
+        elif self.static_dispatcher_class and environ['PATH_INFO'].startswith('/files'):
             app = self.static_dispatcher_class(environ=environ)
+            status, headers, body = app.run()
         else:
             app = self.controller_class(environ=environ)
-        status, headers, body = app.run()
+            status, headers, body = app.run()
         start_response(status, headers)
         return [body]
 
