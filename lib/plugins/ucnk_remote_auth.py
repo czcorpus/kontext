@@ -99,6 +99,8 @@ class CentralAuth(AbstractAuth):
         else:
             row = {}
         cursor.close()
+        if not 'user' in session:
+            session['user'] = {}
         if 'u.id' in row:
             session['user']['id'] = row['u.id']
             session['user']['user'] = row['u.user']
