@@ -251,9 +251,9 @@ def get_corplist():
 
         corpora.sort()
         _corplist = corpora
-    update_user_activity(conn)
-    cursor.close()
-    conn.commit()
+        update_user_activity(conn)
+        cursor.close()
+        conn.commit()
     return _corplist
 
 
