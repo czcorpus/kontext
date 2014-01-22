@@ -49,9 +49,9 @@ In general, a plugin is a Python object defined in a Python module. the module m
     def create_instance(settings, *args, **kwargs):
         return MyPluginImplementation()
 
-The factory function should create and return a plugin object. Because plugins are instantiated very soon, it is
-sometimes necessary to perform additional configuration after *CGIPublisher* object is fully operational. In such
-cases, the plugin can implement a method *setup*: ::
+The factory function should create and return a plugin object. Because plugins are instantiated early in the request
+processing workflow, it is sometimes necessary to perform additional configuration after *CGIPublisher* object is fully
+operational. In such cases, the plugin can implement a method *setup*: ::
 
     def setup(self, **kwargs):
         pass

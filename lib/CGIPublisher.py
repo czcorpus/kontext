@@ -200,6 +200,12 @@ class CGIPublisher(object):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
     def _init_session(self):
+        """
+        Starts/reloads user's web session data. It can be called even
+        if there is no 'sessions' plugin installed (in such case, it just
+        creates an empty dictionary with some predefined keys to allow other
+        parts of the application to operate properly)
+        """
         cookie_id = self._get_session_id()
         if plugins.has_plugin('sessions'):
             ans = plugins.sessions.load(cookie_id, {'user': plugins.auth.anonymous_user()})
@@ -218,6 +224,11 @@ class CGIPublisher(object):
             self._anonymous = 1
 
     def _close_session(self):
+        """
+        Closes user's web session. Basically, it stores session data to some
+        defined storage via a 'sessions' plugin. It can be called even if there is
+        no 'sessions' plugin defined.
+        """
         if plugins.has_plugin('sessions'):
                 plugins.sessions.save(self._get_session_id(), self._session)
 
@@ -226,6 +237,9 @@ class CGIPublisher(object):
         Retrieves a value from session dictionary. If no such value is found
         then None is returned. More than one key is understood as a 'path' of
         a nested dictionaries.
+
+        Arguments:
+        *nested_keys -- keys to access required value (e.g. a['user']['car']['name'] would be 'user', 'car', 'name')
         """
         curr = self._session
         for k in nested_keys:
@@ -236,25 +250,25 @@ class CGIPublisher(object):
         return curr
 
     def _get_session_id(self):
+        """
+        Returns session ID. If no ID is found then None is returned
+        """
         if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
             return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
         return None
 
     def _set_session_id(self, val):
-        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
+        """
+        Sets session ID
 
-    def _from_session(self, *keys):
-        curr = self._session
-        for k in keys:
-            if k in curr:
-                curr = curr[k]
-            else:
-                return None
-        return curr
+        Arguments:
+        val -- session ID value (a string is expected)
+        """
+        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
 
     def get_root_url(self):
         """
-        Returns root URL of the application
+        Returns the root URL of the application (based on environmental variables)
         """
         return '%(protocol)s://%(server)s%(script)s/' % {
             'protocol': self.environ['wsgi.url_scheme'],
@@ -271,6 +285,9 @@ class CGIPublisher(object):
         1) optional plugin "getlang"
         2) KonText's ui_settings (stored in the 'settings cookie' as a part of JSON object)
         3) user agent language
+
+        Arguments:
+        locale_dir -- where locale files are located
         """
         if plugins.has_plugin('getlang'):
             lgs_string = plugins.getlang.fetch_current_language(self._cookies)
@@ -298,7 +315,10 @@ class CGIPublisher(object):
         return ans
 
     def init_locale(self):
-        # locale
+        """
+        Sets application's locales according to user preferences.
+        This method also sets global '_' function (via __builtin__.__dict__)
+        """
         locale_dir = '../locale/'  # TODO
         if not os.path.isdir(locale_dir):
             p = os.path.join(os.path.dirname(__file__), locale_dir)
@@ -323,6 +343,13 @@ class CGIPublisher(object):
         __builtin__.__dict__['_'] = translat.ugettext
 
     def is_template(self, template):
+        """
+        Tests whether provided template name corresponds
+        to a respective python module (= compiled template).
+
+        Arguments:
+        template -- template name (e.g. document, first_form,...)
+        """
         try:
             imp.find_module(template, [self._template_dir])
             return True
@@ -330,6 +357,9 @@ class CGIPublisher(object):
             return False
 
     def _export_status(self, status):
+        """
+        TODO
+        """
         s = CGIPublisher.STATUS_MAP.get(status, '')
         return '%s  %s' % (status, s)
 
