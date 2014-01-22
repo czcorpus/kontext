@@ -24,6 +24,7 @@ import os
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
+_conf_path = None
 _meta = {}  # contains data of attributes of XML elements representing configuration values
 auth = None  # authentication module (this is set from the outside)
 
@@ -185,17 +186,21 @@ def parse_config(path):
             _conf[section_id], _meta[section_id] = parse_general_tree(section)
 
 
-def load(conf_path='../config.xml'):
+def load(conf_path):
     """
-    Loads application's configuration from provided file
+    Loads application's configuration from a provided file
 
-    Parameters
-    ----------
-    conf_path : str, optional (default is 'config.xml')
-      path to the configuration XML file. This value can be
-      overridden by an environment variable KONTEXT_CONF_PATH
+    Arguments:
+    conf_path -- path to a configuration XML file
     """
-    parse_config(conf_path)
+    global _conf_path
+
+    _conf_path = conf_path
+    parse_config(_conf_path)
+
+
+def conf_path():
+    return _conf_path
 
 
 def get_default_corpus(corplist):
