@@ -68,7 +68,7 @@ class Actions(ConcCGI):
             raise UserActionException(settings.auth.get_required_password_properties())
 
         settings.auth.update_user_password(new_passwd)
-        self._redirect(settings.get_root_url())
+        self._redirect(self.get_root_url())
 
     user_password.access_level = 1
     user_password.template = 'user_password.tmpl'
@@ -84,7 +84,7 @@ class Actions(ConcCGI):
         user = plugins.auth.validate_user(username, password)
         if user.get('id', None) is not None:
             self._session['user'] = user
-            self._redirect('%sfirst_form' % (settings.get_root_url(), ))
+            self._redirect('%sfirst_form' % (self.get_root_url(), ))
         else:
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                         'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter',
@@ -183,7 +183,7 @@ class Actions(ConcCGI):
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
             out['message'] = ('info', _('Empty result'))
-            out['next_url'] = '%sfirst_form' % settings.get_root_url()
+            out['next_url'] = '%sfirst_form' % self.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
                  '&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
@@ -305,7 +305,7 @@ class Actions(ConcCGI):
                     'query_desc': query_desc,
                     'query_desc_raw': query_desc_raw,
                     'query_id': query_id,
-                    'export_url': '%sto?q=%s' % (settings.get_root_url(), query_id),
+                    'export_url': '%sto?q=%s' % (self.get_root_url(), query_id),
                     'is_public': is_public
         })
         return out
@@ -1788,7 +1788,7 @@ class Actions(ConcCGI):
 
         out = {}
         out['SubcorpList'] = ()
-        if os.environ['REQUEST_METHOD'] == 'POST':
+        if self.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
             for p in self._url_parameters:
                 if p.startswith('sca_'):
@@ -1858,7 +1858,7 @@ class Actions(ConcCGI):
         if self.get_http_method() != 'POST':
             self.last_corpname = self.corpname
             self._save_options(['last_corpname'])
-            self._redirect('%ssubcorp_form?corpname=%s' % (settings.get_root_url(), self.corpname))
+            self._redirect('%ssubcorp_form?corpname=%s' % (self.get_root_url(), self.corpname))
             return None
         if delete:
             base = os.path.join(self.subcpath[-1], self.corpname, subcname)

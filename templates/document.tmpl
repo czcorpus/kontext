@@ -99,12 +99,12 @@ define('win', [], function () { return window; });
 define('conf', [], function () {
     var conf = {};
     conf.menuAutoHideInterval = 1500;
-    conf.messageAutoHideInterval = 15000;
+    conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 15000);
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_path";
     conf.corpname = "$corpname";
     conf.session_cookie_name = "$session_cookie_name";
-    conf.numTagPos = $num_tag_pos;
+    conf.numTagPos = $getVar('num_tag_pos', 'null');
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
 
@@ -245,14 +245,14 @@ $_ca_topbar
 
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
-                    #if 'tag' in [x['n'] for x in $AttrList]
+                    #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
                     <li class="separ"><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
                     #end if
                     <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
-                    #if '.' in $fcrit_shortref.split('/')[0]
+                    #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
                     <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
                     #end if
-                    #if $ttcrit
+                    #if $varExists('ttcrit') and $ttcrit
                     <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
                     #end if
                     <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
@@ -293,29 +293,29 @@ $_ca_topbar
         </div>
     </div>
 
+    #if $corp_full_name
     <div id="active-corpus">
-        #if $corp_full_name
-            $_('corpus')
-            <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
-            <div id="corp-size-information">
-            #if $usesubcorp
-                <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
-            #else
-                #filter None
-                $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">
-                <img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
-                #end filter
-            #end if
-            </div>
-            #if 'default_ref' in $citation_info and $citation_info.default_ref
-            <div id="corpus-citation-link">
-                <a href="#">$_('How to cite the corpus')</a>
-            </div>
-            #end if
+        $_('corpus')
+        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+        <div id="corp-size-information">
+        #if $usesubcorp
+            <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
+        #else
+            #filter None
+            $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">
+            <img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
+            #end filter
+        #end if
+        </div>
+        #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
+        <div id="corpus-citation-link">
+            <a href="#">$_('How to cite the corpus')</a>
+        </div>
         #end if
     </div>
+    #end if
 
-    #if 'default_ref' in $citation_info and $citation_info.default_ref
+    #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
         <h4>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</h4>
@@ -803,7 +803,7 @@ $corp_full_name</b><br>
         <span class="no-wrap">
             $_("Default attribute"):
             <select name="default_attr$suff">
-                #for $a in $AttrList
+                #for $a in $getVar('AttrList', ())
                 <option value="$a.n" #if $a.n == $getVar('default_attr' + $suff, '')#selected="selected" #end if#>$a.n</option>
                 #end for
             </select>

@@ -21,8 +21,8 @@ Features
     * improved logging and error processing
 
   * general changes
-
-    - ability to control user access via custom authentication services
+    - based on WSGI interface (original version runs as a CGI script)
+    - authentication/sessions/query history/user settings implemented as custom modules
     - support for spoken corpora
     - simplified installation and configuration
 
@@ -44,11 +44,11 @@ Requirements
 
   * Apache 2.x web server
 
-    - CGI
-    - mod_rewrite (suitable but not necessary)
+    - WSGI module
 
   * Python *2.6* or *2.7*
 
-    - lxml support
+    - lxml module
+    - docutils module (optional)
 
   * `Manatee corpus search engine <http://nlp.fi.muni.cz/trac/noske>`_, version *2.83* and up

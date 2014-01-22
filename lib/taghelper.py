@@ -155,7 +155,7 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translations, label_table = load_tag_descriptions(settings.get('session', 'conf_path'),
+        translations, label_table = load_tag_descriptions(settings.conf_path(),
                                                           settings.get('session', 'lang'))
         item_sequences = tuple([tuple([item[0] for item in position]) for position in translations])
 
@@ -225,7 +225,7 @@ class TagVariantLoader(object):
                    a dictionary where keys represent tag-string position and values are lists of
                    tuples containing pairs 'ID, description'
         """
-        translations = load_tag_descriptions(settings.get('session', 'conf_path'), settings.get('session', 'lang'))[0]
+        translations = load_tag_descriptions(settings.conf_path(), settings.get('session', 'lang'))[0]
         item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in translations])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
