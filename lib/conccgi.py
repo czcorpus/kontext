@@ -241,9 +241,7 @@ class ConcCGI(CGIPublisher):
 
     shuffle = 0
 
-    disabled_menu_items = []
     SubcorpList = []
-    save_menu = []
 
     add_vars['findx_upload'] = [u'LastSubcorp']
 
@@ -256,6 +254,8 @@ class ConcCGI(CGIPublisher):
         self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
         self.ua = None
+        self.disabled_menu_items = []
+        self.save_menu = []
 
     def _log_request(self, user_settings, action_name):
         """
