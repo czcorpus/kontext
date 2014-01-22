@@ -357,7 +357,6 @@ $_ca_topbar
 
     #filter None
     #block concordance
-    #if $show_conc_bar
     <div id="conc-wrapper">
         <div id="conc-top-bar">
             <div id="result-info">
@@ -365,6 +364,7 @@ $_ca_topbar
                     $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
                 #end if
 
+                #if $conc_persist
                 $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
                     #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
                     <span class="separ">|</span> #end if
@@ -380,6 +380,9 @@ $_ca_topbar
                 <span class="notice-shuffled">
                 #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
                 </span>
+                #else
+                &nbsp;
+                #end if
             </div>
         </div>
         <div id="conclines-wrapper">
@@ -388,7 +391,6 @@ $_ca_topbar
             </div>
         </div>
     </div>
-    #end if
     #end block
 
     #block main

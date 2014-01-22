@@ -16,6 +16,7 @@ from types import ListType
 import os
 import cgi
 import json
+import time
 
 import corplib
 import conclib
@@ -705,18 +706,38 @@ class ConcCGI(CGIPublisher):
             result['avail_languages'] = settings.get_full('global', 'translations')
 
         # is there a concordance information in session?
-        if 'conc' in self._session:
-            result['show_conc_bar'] = True
-            result['sampled_size'] = self._session['conc'].get('sampled_size', None)
-            result['fullsize'] = self._session['conc'].get('fullsize', None)
-            result['concsize'] = self._session['conc'].get('concsize', None)
-            result['result_relative_freq'] = self._session['conc'].get('result_relative_freq', None)
-            result['result_relative_freq_rel_to'] = self._session['conc'].get('result_relative_freq_rel_to', None)
-            result['result_arf'] = self._session['conc'].get('result_arf', None)
-            result['result_shuffled'] = self._session['conc'].get('result_shuffled', None)
-        else:
-            result['show_conc_bar'] = False
+        self._restore_conc_results(result)
+
         return result
+
+    def _restore_conc_results(self, storage):
+        conc_key = '#'.join(self.q)
+        if 'conc' in self._session and conc_key in self._session['conc']:
+            tmp = self._session['conc']
+            storage['conc_persist'] = True
+            storage['sampled_size'] = tmp[conc_key].get('sampled_size', None)
+            storage['fullsize'] = tmp[conc_key].get('fullsize', None)
+            storage['concsize'] = tmp[conc_key].get('concsize', None)
+            storage['result_relative_freq'] = tmp[conc_key].get('result_relative_freq', None)
+            storage['result_relative_freq_rel_to'] = tmp[conc_key].get('result_relative_freq_rel_to', None)
+            storage['result_arf'] = tmp[conc_key].get('result_arf', None)
+            storage['result_shuffled'] = tmp[conc_key].get('result_shuffled', None)
+        else:
+            storage['conc_persist'] = False
+
+    def _store_conc_results(self, data):
+        if not 'conc' in self._session:
+            self._session['conc'] = {}
+
+        curr_time = int(time.time())
+        for k in self._session['conc'].keys():
+            if '__timestamp__' in self._session['conc'] \
+                or curr_time - self._session['conc'][k]['__timestamp__'] > settings.get_int('global',
+                                                                                            'conc_persistence_time'):
+                self._session['conc'].pop(k)
+
+        data['__timestamp__'] = int(curr_time)
+        self._session['conc']['#'.join(self.q)] = data
 
     def _add_undefined(self, result, methodname):
         result['methodname'] = methodname
