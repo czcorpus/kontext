@@ -177,7 +177,7 @@ class ConcCGI(CGIPublisher):
     subcname = u''
     subcpath = []
     _conc_dir = u''
-    _home_url = u'../run.cgi/first_form'
+    _home_url = u'./first_form'
     files_path = u'../files'
     css_prefix = u''
     iquery = u''
