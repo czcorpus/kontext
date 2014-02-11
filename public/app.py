@@ -46,6 +46,8 @@ from actions import Actions
 logger = logging.getLogger('')  # root logger
 __builtin__.__dict__['_'] = lambda s: s  # default '_' (gettext) function is just the identity
 
+settings.load(conf_path=CONF_PATH)
+
 
 def setup_logger(conf):
     handler = handlers.RotatingFileHandler(conf.get('global', 'log_path'), maxBytes=(1 << 23), backupCount=50)
@@ -118,7 +120,6 @@ class App(object):
         self.controller_class = controller_class
         self.static_dispatcher_class = static_dispatcher_class
 
-        settings.load(conf_path=CONF_PATH)
         setup_logger(settings)
         setup_plugins()
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
@@ -150,9 +151,10 @@ class App(object):
         return [body]
 
 
-from paste.exceptions.errormiddleware import ErrorMiddleware
 application = App(Actions, StaticDispatcher)
-application = ErrorMiddleware(application, debug=True)
+if settings.is_debug_mode():
+    from werkzeug.debug import DebuggedApplication
+    application = DebuggedApplication(application)
 
 
 if __name__ == '__main__':
