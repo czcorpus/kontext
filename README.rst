@@ -50,5 +50,6 @@ Requirements
 
     - lxml module
     - docutils module (optional)
+    - werkzeug.debug middleware (required in case the 'debug' mode is on)
 
   * `Manatee corpus search engine <http://nlp.fi.muni.cz/trac/noske>`_, version *2.83* and up
