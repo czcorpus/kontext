@@ -128,9 +128,13 @@ class App(object):
         Works as specified by the WSGI
         """
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
-        if environ['PATH_INFO'] == '/':
+        logging.getLogger(__name__).info('path: %s' % environ['PATH_INFO'])
+        if environ['PATH_INFO'] in ('/', ''):
+            url = environ['REQUEST_URI']
+            if not url.endswith('/'):
+                url += '/'
             status = '303 See Other'
-            headers = [('Location', '%sfirst_form' % environ['REQUEST_URI'])]
+            headers = [('Location', '%sfirst_form' % url)]
             body = ''
         elif '/run.cgi/' in environ['REQUEST_URI']:  # old-style (CGI version) URLs are redirected to new ones
             status = '301 Moved Permanently'

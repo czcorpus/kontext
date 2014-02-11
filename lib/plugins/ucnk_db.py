@@ -52,9 +52,9 @@ class DbConnection(object):
         if self.conn is not None:
             try:
                 self.conn.close()
-                self.get(force_reconnect=True)
             except MySQLdb.OperationalError:
                 pass
+        self.get(force_reconnect=True)
 
     def _open_connection(self):
         conn = MySQLdb.connect(host=self.conf['ucnk:host'], user=self.conf['ucnk:username'],
