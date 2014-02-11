@@ -24,6 +24,7 @@ from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
 
+from strings import import_string
 import manatee
 
 
@@ -33,6 +34,7 @@ class CorpusManager(object):
         self.corplist = corplist
         self.subcpath = subcpath
         self.gdexdict = dict(gdexpath)
+        self.encoding = 'iso-8859-2'  # TODO
 
     def default_subcpath(self, corp):
         if type(corp) is not manatee.Corpus:
@@ -46,7 +48,6 @@ class CorpusManager(object):
         if ':' in corpname:
             corpname, subcname = corpname.split(':', 1)
         corp = manatee.Corpus(corpname)
-        manatee.setEncoding(corp.get_conf('ENCODING'))
         corp.corpname = str(corpname)  # never unicode (paths)
         corp.cm = self
         dsubcpath = self.default_subcpath(corp)
@@ -82,7 +83,7 @@ class CorpusManager(object):
     def corpconf_pairs(self, corp, label):
         if type(corp) is UnicodeType:
             corp = self.get_Corpus(corp)
-        val = corp.get_conf(label)
+        val = corp.get_conf(label).decode(self.encoding)
         if len(val) > 2:
             val = val[1:].split(val[0])
         else:
@@ -115,11 +116,7 @@ class CorpusManager(object):
                 simple_names.append(tmp[0])
                 subdir_map[tmp[0]] = ''
         cl = []
-        # we have to store current encoding because each instantiated
-        # corpus requires that the encoding is set via the manatee module
-        # function setEncoding() which messes up all currently instantiated
-        # corpora with different encodings...
-        orig_encoding = manatee.getEncoding()
+
         for item in paths:
             c, path, web = item['id'], item['path'], item['sentence_struct']
             if c in simple_names or not use_db_whitelist:
@@ -127,25 +124,21 @@ class CorpusManager(object):
                 corp_name = '?'
                 try:
                     corp = manatee.Corpus(c)
-                    manatee.setEncoding(corp.get_conf('ENCODING'))
                     corp_name = corp.get_conf('NAME') or c
                     size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
                     corp_info = corp.get_info()
 
-
                     cl.append({'id': '%s%s' % (id_prefix, c),
                                'name': corp_name,
-                               'desc': corp_info,
+                               'desc': import_string(corp_info, from_encoding=corp.get_conf('ENCODING')),
                                'size': size,
                                'path': path
                     })
                 except Exception, e:
-                    manatee.setEncoding(orig_encoding)
                     import logging
                     logging.getLogger(__name__).warn(u'Failed to fetch info about %s with error %s (%r)'
                                                      % (corp_name, type(e).__name__, e))
                     cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
-        manatee.setEncoding(orig_encoding)
         return cl
 
     def subcorpora(self, corpname):
@@ -415,7 +408,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                             for i in range(attr.id_range())
                             if not multisep in attr.id2str(i)]
                 else:
-                    vals = [{'v': attr.id2str(i)}
+                    vals = [{'v': attr.id2str(i).decode('iso-8859-2')}
                             for i in range(attr.id_range())]
                 if hsep: # hierarchical
                     attrval['hierarchical'] = hsep

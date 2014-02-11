@@ -17,15 +17,16 @@
 # 02110-1301, USA.
 
 import os
-import re
 from sys import stderr
 import time
 import math
-import logging
+from functools import partial
 
 import manatee
 import settings
 from butils import *
+from strings import import_string, export_string
+from kwiclib import tokens2strclass, lngrp_sortstr
 
 try:
     import fcntl
@@ -62,513 +63,20 @@ except NameError:
     _ = lambda s: s
 
 
-def tokens2strclass(tokens):
-    return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
-            for i in range(0, len(tokens), 2)]
-
-
-def printkwic(conc, froml=0, tol=5, leftctx='15#', rightctx='15#',
-              attrs='word', refs='#', maxcontext=0):
-    def strip_tags(tokens):
-        return ''.join([tokens[i] for i in range(0, len(tokens), 2)])
-    kl = manatee.KWICLines(
-        conc, leftctx, rightctx, attrs, 'word', 'p', refs, maxcontext)
-    for line in range(froml, tol):
-        kl.nextline(line)
-        print '%s %s <%s> %s' % (kl.get_refs(), strip_tags(kl.get_left()),
-                                 strip_tags(kl.get_kwic()),
-                                 strip_tags(kl.get_right()))
-
-
-def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
-    ctxs = [{'n': _('%iL') % -c, 'ctx': '%i<0' % c} for c in range(-
-                                                                   max_ctx, 0)]
-    if max_hitlen == 1:
-        ctxs.append({'n': _('Node'), 'ctx': '0~0>0'})
-    else:
-        ctxs.extend([{'n': 'Node %i' % c, 'ctx': '%i<0' % c}
-                    for c in range(1, max_hitlen + 1)])
-    ctxs.extend([{'n': _('%iR') % c, 'ctx': '%i>0' % c}
-                for c in range(1, max_ctx + 1)])
-    return ctxs
-
-
-def add_block_items(items, attr='class', val='even', block_size=3):
-    for i in [i for i in range(len(items)) if (i / block_size) % 2]:
-        items[i][attr] = val
-    return items
-
-
-def kwicpage(
-    corpus, conc, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
-    ctxattrs='word', refs='#', structs='p', pagesize=40,
-    labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
-        tbl_template='none', hidenone=0):
-    """
-    Generates template data for page displaying provided concordance
-
-    Parameters
-    ----------
-    corpus : manatee.Corpus
-      corpus we are working with
-    conc : manatee.Concordance
-      a concordance object
-    speech_attr : 2-tuple
-      sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
-    fromp : int
-      page number (starts from 1)
-    line_offset : int
-      first line of the listing (starts from 0)
-    leftctx : str, optional (default is '-5')
-      how many characters/positions/whatever_struct_attrs display on the left side
-    rightctx : str, optional (default is '5')
-      how many characters/positions/whatever_struct_attrs display on the right side
-    attrs : str, optional (default is 'word')
-      TODO
-    ctxattrs : str, optional (default is 'word')
-      TODO
-    refs : str, optional (default is '#')
-      TODO
-    structs : str, optional (default is 'p')
-      TODO
-    pagesize : int, optional (default is 40)
-      number of lines per page
-    labelmap : dict, optional (default is {})
-      TODO
-    righttoleft : bool, optional (default is False)
-      TODO
-    alignlist : list, optional (default is [])
-      TODO
-    copy_icon : int, optional (default is 0)
-      TODO
-    tbl_template : str, optional (default is 'none')
-      TODO
-    hidenone : int (0 or 1)
-      TODO
-
-    Returns
-    -------
-    custom dict containing data as required by related HTML template
-    """
-    corpus, corpus_fullname = corpus
-    refs = refs.replace('.MAP_OUP', '')  # to be removed ...
-    try:
-        fromp = int(fromp)
-        if fromp < 1:
-            fromp = 1
-    except:
-        fromp = 1
-    out = {'Lines':
-           kwiclines(corpus_fullname, conc, speech_attr, (
-                   fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-           leftctx, rightctx, attrs, ctxattrs, refs, structs,
-           labelmap, righttoleft, alignlist)}
-    add_aligns(corpus_fullname, out, conc, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-               leftctx, rightctx, attrs, ctxattrs, refs, structs,
-               labelmap, righttoleft, alignlist)
-    if copy_icon:
-        from tbl_settings import tbl_refs, tbl_structs
-        sen_refs = tbl_refs.get(tbl_template, '') + ',#'
-        sen_refs = sen_refs.replace('.MAP_OUP', '')  # to be removed ...
-        sen_structs = tbl_structs.get(tbl_template, '') or 'g'
-        sen_lines = kwiclines(corpus_fullname, conc, speech_attr, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-            '-1:s', '1:s', refs=sen_refs, user_structs=sen_structs)
-        for old, new in zip(out['Lines'], sen_lines):
-            old['Sen_Left'] = new['Left']
-            old['Sen_Right'] = new['Right']
-            old['Tbl_refs'] = new['Tbl_refs']
-    if labelmap:
-        out['GroupNumbers'] = format_labelmap(labelmap)
-    if fromp > 1:
-        out['prevlink'] = 'fromp=%i' % (fromp - 1)
-        out['firstlink'] = 'fromp=1'
-    if conc.size() > pagesize:
-        out['fromp'] = fromp
-        out['numofpages'] = numofpages = (conc.size() - 1) / pagesize + 1
-        if numofpages < 30:
-            out['Page'] = [{'page': x} for x in range(1, numofpages + 1)]
-        if fromp < numofpages:
-            out['nextlink'] = 'fromp=%i' % (fromp + 1)
-            out['lastlink'] = 'fromp=%i' % numofpages
-    out['concsize'] = conc.size()
-
-    if type(corpus) == manatee.SubCorpus:
-        out['result_arf'] = ''
-    else:
-        out['result_arf'] = round(conc.compute_ARF(), 2)
-
-    if type(corpus) is manatee.SubCorpus:
-        corpsize = corpus.search_size(
-        )  # TODO this is unverified solution trying to bypass possible manatee bug
-    else:
-        corpsize = corpus.size()
-    out['result_relative_freq'] = round(
-        conc.size() / (float(corpsize) / 1e6), 2)
-
-    out['result_relative_freq_rel_to'] = _('related to the whole %s') % corpus.get_conf('NAME')
-    if hasattr(corpus, 'subcname'):
-        out['result_relative_freq_rel_to'] += ':%s' % getattr(corpus, 'subcname', '')
-    out['result_relative_freq_rel_to'] = '(%s)' % out['result_relative_freq_rel_to']
-
-    if hidenone:
-        for line in out['Lines']:
-            for part in ('Kwic', 'Left', 'Right'):
-                for item in line[part]:
-                    item['str'] = item['str'].replace('===NONE===', '')
-
-    return out
-
-
-def add_aligns(
-    corpus_fullname, result, conc, fromline, toline, leftctx='40#', rightctx='40#',
-    attrs='word', ctxattrs='word', refs='#', structs='p',
-        labelmap={}, righttoleft=False, alignlist=[]):
-    if not alignlist:
-        return
-    al_lines = []
-    corps_with_colls = manatee.StrVector()
-    conc.get_aligned(corps_with_colls)
-    result['CollCorps'] = corps_with_colls
-    result['Par_conc_corpnames'] = [{'n': c.get_conffile(),
-                                     'label': c.get_conf('NAME')
-                                     or c.get_conffile()}
-                                    for c in [conc.orig_corp] + alignlist]
-    for al_corp in alignlist:
-        al_corpname = al_corp.get_conffile()
-        if al_corpname in corps_with_colls:
-            conc.switch_aligned(al_corp.get_conffile())
-            al_lines.append(
-                kwiclines(corpus_fullname, conc, None, fromline, toline, leftctx,
-                          rightctx, attrs, ctxattrs, refs,
-                          structs, labelmap, righttoleft))
-        else:
-            conc.switch_aligned(conc.orig_corp.get_conffile())
-            conc.add_aligned(al_corp.get_conffile())
-            conc.switch_aligned(al_corp.get_conffile())
-            al_lines.append(
-                kwiclines(corpus_fullname, conc, None, fromline, toline, '0',
-                          '0', 'word', '', refs, structs,
-                          labelmap, righttoleft))
-    aligns = zip(*al_lines)
-    for i, line in enumerate(result['Lines']):
-        line['Align'] = aligns[i]
-
-
-def separate_speech_struct_from_tag(speech_segment, text):
-    """
-    Removes structural attribute related to speech file identification.
-    E.g. getting input "<seg foo=bar speechfile=1234.wav time=1234>lorem ipsum</seg>" and
-    having configuration directive "speech_segment == seg.speechfile" the function
-    returns "<seg foo=bar time=1234>lorem ipsum</seg>"
-
-    Parameters
-    ----------
-    speech_segment: 2-tupe
-        (struct_name, attr_name)
-    text : str
-      string to be processed
-
-    Returns
-    -------
-    str
-      modified string
-    str
-      structural attribute value
-    """
-    import re
-
-    speech_struct, speech_struct_attr = speech_segment if speech_segment else (None, None)
-    pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (
-        speech_struct, speech_struct_attr)
-    srch = re.search(pattern, text)
-    if srch is not None:
-        return srch.group(1).rstrip() + srch.group(3), srch.group(2)
-    return text, ''
-
-
-def remove_tag_from_line(line, tag_name):
-    """
-    Parameters
-    ----------
-    line : list of dicts containing at least the key 'str'
-      line as used in postproc_kwicline
-    tag_name : str
-
-    Returns
-    -------
-    the same object as the 'line' parameter
-    """
-    import re
-
-    for item in line:
-        item['str'] = re.sub('<%s[^>]*>' % tag_name, '', re.sub(
-            '</%s>' % tag_name, '', item['str']))
-    return line
-
-
-def line_parts_contain_speech(line_left, line_right):
-    """
-    Tests whether the line's left and right parts contain speech information
-    """
-    for fragment in line_left + line_right:
-        if 'open_link' in fragment or 'close_link' in fragment:
-            return True
-    return False
-
-
-def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_speech_tag, prev_speech_id=None):
-    """
-    Parameters
-    ----------
-    corpus_name : str
-      name of the corpus
-    speech_attr: 2-tupe
-      (struct_name, attr_name)
-    line : list of dicts
-      contains keys 'str', 'class'
-    column : str
-      one of {'left', 'kwic', 'right'}; specifies position according to KWIC
-    filter_speech_tag : bool
-      if True then whole speech tag is removed else only its 'speech attribute'
-    prev_speech_id : str
-      identifier of the previously processed speech segment
-
-    Returns
-    -------
-    str
-      modified line
-    str
-      last speech id (which is necessary to obtain proper speech ID in case
-      of partial segment on the "left" left column of a KWIC line and similarly
-      in case of a partial segment on the "right" column of a KWIC line - because
-      the KWIC word itself separates left and right columns).
-    """
-    import re
-    import urllib
-
-    newline = []
-    speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
-    fragment_separator = '<%s' % speech_struct_str
-    last_fragment = None
-    last_speech_id = prev_speech_id
-    create_speech_path = lambda sp_id: urllib.urlencode({'corpname': corpus_name, 'chunk': sp_id})
-
-    for item in line:
-        fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct_str, speech_struct_str), item['str']) if x != '']
-        for fragment in fragments:
-            frag_ext, speech_id = separate_speech_struct_from_tag(speech_segment, fragment)
-            if not speech_id:
-                speech_id = last_speech_id
-            else:
-                last_speech_id = speech_id
-            newline_item = {
-                'str': frag_ext,
-                'class': item['class']
-            }
-            if frag_ext.startswith(fragment_separator):
-                newline_item['open_link'] = {'speech_path': create_speech_path(speech_id)}
-            elif frag_ext.endswith('</%s>' % speech_struct_str):
-                newline_item['close_link'] = {'speech_path': create_speech_path(speech_id)}
-            newline.append(newline_item)
-            last_fragment = newline_item
-    # we have to treat specific situations related to the end of the
-    # concordance line
-    if last_fragment is not None \
-            and re.search('^<%s(>|[^>]+>)$' % speech_struct_str, last_fragment['str'])\
-            and column == 'right':
-        del(last_fragment['open_link'])
-    if filter_speech_tag:
-        remove_tag_from_line(newline, speech_struct_str)
-    return newline, last_speech_id
-
-
-def kwiclines(corpus_fullname, conc, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
-    attrs='word', ctxattrs='word', refs='#', user_structs='p',
-    labelmap={}, righttoleft=False, alignlist=[],
-        align_attrname='align', aattrs='word', astructs=''):
-    """
-    Generates list of 'kwic' (= keyword in context) lines according to
-    the provided Concordance object and additional parameters (like
-    page number, width of the left and right context etc.).
-
-    Parameters
-    ----------
-    corpus_fullname : str
-    conc : manatee.Concordance
-      concordance we are working with
-    speech_attr : str
-      if empty then no speech structure is present else a full attribute name
-      (i.e. including a structure name - e.g. "seg.speech") is expected
-    TODO
-
-    Returns
-    -------
-    TODO
-    """
-    def non1hitlen(hitlen):
-        if hitlen == 1:
-            return ''
-        else:
-            return ';hitlen=%i' % hitlen
-
-    corpus = conc.corp()
-    # structs represent which structures are requested by user
-    # all_structs contain also internal structures needed to render
-    # additional information (like the speech links)
-    all_structs = user_structs
-    if speech_segment:
-        speech_struct_attr_name = '.'.join(speech_segment)
-        speech_struct_attr = corpus.get_attr(speech_struct_attr_name)
-        if not speech_struct_attr_name in user_structs:
-            all_structs += ',' + speech_struct_attr_name
-    else:
-        speech_struct_attr_name = None
-        speech_struct_attr = None
-    lines = []
-    if righttoleft:
-        rightlabel, leftlabel = 'Left', 'Right'
-        user_structs += ',ltr'
-        # from unicodedata import bidirectional
-
-        def isengword(strclass):
-            # return bidirectional(word[0]) in ('L', 'LRE', 'LRO')
-            return 'ltr' in strclass['class'].split()
-    else:
-        leftlabel, rightlabel = 'Left', 'Right'
-    kl = manatee.KWICLines(corpus, conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
-                           all_structs, refs)
-
-    labelmap = labelmap.copy()
-    labelmap['_'] = '_'
-    maxleftsize = 0
-    maxrightsize = 0
-    filter_out_speech_tag = speech_segment and speech_segment[0] not in user_structs \
-        and speech_struct_attr_name in all_structs
-
-    while kl.nextline():
-        linegroup = str(kl.get_linegroup() or '_')
-        linegroup = labelmap.get(linegroup, '#' + linegroup)
-        if speech_segment:
-            leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
-        else:
-            leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
-                                                                tokens2strclass(kl.get_left()),
-                                                                'left', filter_out_speech_tag, leftmost_speech_id)
-        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
-                                                                tokens2strclass(kl.get_kwic()),
-                                                                'kwic', filter_out_speech_tag, last_left_speech_id)
-        rightwords = postproc_kwicline_part(corpus_fullname, speech_segment,
-                                            tokens2strclass(kl.get_right()), 'right',
-                                            filter_out_speech_tag, last_left_speech_id)[0]
-
-        if righttoleft:
-            # change order for "English" context of "English" keywords
-            if isengword(kwicwords[0]):
-                # preceding words
-                nprev = len(leftwords) - 1
-                while nprev >= 0 and isengword(leftwords[nprev]):
-                    nprev -= 1
-                if nprev == -1:
-                    # move whole context
-                    moveleft = leftwords
-                    leftwords = []
-                else:
-                    moveleft = leftwords[nprev + 1:]
-                    del leftwords[nprev + 1:]
-
-                # following words
-                nfollow = 0
-                while (nfollow < len(rightwords)
-                       and isengword(rightwords[nfollow])):
-                    nfollow += 1
-                moveright = rightwords[:nfollow]
-                del rightwords[:nfollow]
-
-                leftwords = leftwords + moveright
-                rightwords = moveleft + rightwords
-
-        leftsize = 0
-        for w in leftwords:
-            if not w['class'] == 'strc':
-                leftsize += len(w['str']) + 1
-        if leftsize > maxleftsize:
-            maxleftsize = leftsize
-
-        rightsize = 0
-        for w in rightwords:
-            if not w['class'] == 'strc':
-                rightsize += len(w['str']) + 1
-        if rightsize > maxrightsize:
-            maxrightsize = rightsize
-
-        lines.append({'toknum': kl.get_pos(),
-                      'hitlen': non1hitlen(kl.get_kwiclen()),
-                      'ref': kl.get_refs(),
-                      'Tbl_refs': list(kl.get_ref_list()),
-                      leftlabel: leftwords,
-                      'Kwic': kwicwords,
-                      rightlabel: rightwords,
-                      'linegroup': linegroup,
-                      'leftsize': leftsize,
-                      'rightsize': rightsize,
-                      })
-    for l in lines:
-        l['leftspace'] = ' ' * (maxleftsize - l['leftsize'])
-        l['rightspace'] = ' ' * (maxrightsize - l['rightsize'])
-    return lines
-
-
-def strkwiclines(conc, fromline, toline=None, leftctx='-5', rightctx='5'):
-    """
-    TODO: no direct call found for this method
-    """
-    def tokens2str(tokens):
-        return ''.join([tokens[i] for i in range(0, len(tokens), 2)])
-    toline = toline or fromline + 1
-    kl = manatee.KWICLines(conc, leftctx, rightctx, 'word', 'word', '', '')
-    return [{'left': tokens2str(kl.get_left()),
-             'kwic': tokens2str(kl.get_kwic()),
-             'right': tokens2str(kl.get_right())}
-            for line in range(fromline, toline) if kl.nextline(line)]
-
-
-def get_sort_idx(conc, q=[], pagesize=20, enc='latin1'):
-    crit = ''
-    for qq in q:
-        if qq.startswith('s') and not qq.startswith('s*'):
-            crit = qq[1:]
-    if not crit:
-        return []
-    vals = manatee.StrVector()
-    idx = manatee.IntVector()
-    if '.' in crit.split('/')[0]:
-        just_letters = False
-    else:
-        just_letters = True
-    conc.sort_idx(crit, vals, idx, just_letters)
-    out = [(v, pos / pagesize + 1) for v, pos in zip(vals, idx)]
-    if just_letters:
-        result = []
-        keys = []
-        for v, p in out:
-            if not v[0] in keys:
-                result.append((v[0], p))
-                keys.append(v[0])
-        out = result
-    return [{'page': p, 'label': v} for v, p in out]
-
-
-class PyConc (manatee.Concordance):
+class PyConc(manatee.Concordance):
     selected_grps = []
 
     def __init__(self, corp, action, params, sample_size=0, full_size=-1,
-                 orig_corp=None):
+                 orig_corp=None, corpus_encoding='iso-8859-2'):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
+        self.corpus_encoding = corpus_encoding
+        self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
+        self.export_string = partial(export_string, from_encoding=self.corpus_encoding)
+
         if action == 'q':
-            # query
+            params = self.export_string(params)
             manatee.Concordance.__init__(
                 self, corp, params, sample_size, full_size)
         elif action == 'a':
@@ -576,7 +84,7 @@ class PyConc (manatee.Concordance):
             default_attr, query = params.split(',', 1)
             corp.set_default_attr(default_attr)
             manatee.Concordance.__init__(
-                self, corp, query, sample_size, full_size)
+                self, corp, self.export_string(query), sample_size, full_size)
         elif action == 'l':
             # load from a file
             manatee.Concordance.__init__(self, corp, params)
@@ -586,38 +94,6 @@ class PyConc (manatee.Concordance):
                                          os.path.join(self.pycorp._conc_dir,
                                                       corp.corpname,
                                                       params + '.conc'))
-        elif action == 'w':
-            # word sketch
-            import wmap
-            incoll = 1
-            if params[0] in [',', ':']:
-                # seek list
-                slist = wmap.IntVector(map(int, params[1:].split(',')))
-                incoll += len([x for x in slist if x < 0])
-                self.ws = wmap.WMap(corp.get_conf('WSBASE'),
-                                    params[0] == ":" and 1 or 2,
-                                    0, 0, self.corpname)
-                # self.* prevents freeing at the end of constructor (async
-                # conc)
-                fs = self.ws.selected_poss(slist)
-            elif params[0] == '-':
-                # gramrel level
-                self.ws = wmap.WMap(corp.get_conf('WSBASE'), 1,
-                                    int(params[1:]), 0, self.corpname)
-                fs = self.ws.poss()  # self to prevent freeing
-            else:
-                # only one seek
-                self.ws = wmap.WMap(corp.get_conf('WSBASE'), 2, int(params),
-                                    0, self.corpname)
-                fs = self.ws.poss()  # self to prevent freeing (async conc)
-            manatee.Concordance.__init__(self, corp, fs, incoll)
-        elif action == 't':
-            # text type wordsketch -- will be replaced with filtered sketches
-            import wmap
-            suff, seek = params.split()
-            ws = wmap.WMap(corp.get_conf('WSBASE') + suff, 2, int(seek),
-                           0, self.corpname)
-            manatee.Concordance.__init__(self, corp, ws.poss())
         else:
             raise RuntimeError(_('Unknown action: %s') % action)
 
@@ -696,12 +172,18 @@ class PyConc (manatee.Concordance):
     def command_P(self, options):
         self.pn_filter(options, 1, True)
 
-    def pn_filter(self, options, ispositive, excludekwic = False):
-        lctx, rctx, rank, query = options.split (None, 3)
-        collnum = self.numofcolls() +1
-        self.set_collocation(collnum, query + ';', lctx, rctx, int(rank),
+    def pn_filter(self, options, ispositive, excludekwic=False):
+        lctx, rctx, rank, query = options.split(None, 3)
+        collnum = self.numofcolls() + 1
+        self.set_collocation(collnum, self.export_string(query) + ';', lctx, rctx, int(rank),
                              excludekwic)
         self.delete_pnfilter(collnum, ispositive)
+
+    @staticmethod
+    def add_block_items(items, attr='class', val='even', block_size=3):
+        for i in [i for i in range(len(items)) if (i / block_size) % 2]:
+            items[i][attr] = val
+        return items
 
     def get_attr_values_sizes(self, full_attr_name):
         """
@@ -801,7 +283,7 @@ class PyConc (manatee.Concordance):
         head.append({'n': _('Freq'), 's': 'freq'})
 
         tofbar, tonbar = compute_corrections(freqs, norms)
-        if (tonbar and not(ml)):
+        if tonbar and not ml:
             maxf = max(freqs)  # because of bar height
             minf = min(freqs)
             maxrel = 0
@@ -821,6 +303,7 @@ class PyConc (manatee.Concordance):
 
             lines = []
             for w, f, nf in zip(words, freqs, norms):
+                w = self.import_string(w)
                 rel_norm_freq = {
                     0: round(f * 1e6 / nf, 1),
                     1: round(f / sumf * 100, 1)
@@ -848,10 +331,14 @@ class PyConc (manatee.Concordance):
                     'rel': rel_norm_freq
                 })
         else:
-            lines = [{'Word': [{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
-                      'freq': f, 'fbar': int(f * tofbar) + 1,
-                      'norel': 1}
-                     for w, f, nf in zip(words, freqs, norms)]
+            lines = []
+            for w, f, nf in zip(words, freqs, norms):
+                w = self.import_string(w)
+                lines.append({
+                    'Word': [{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    'freq': f, 'fbar': int(f * tofbar) + 1,
+                    'norel': 1
+                })
 
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
@@ -885,7 +372,7 @@ class PyConc (manatee.Concordance):
             lines.reverse()
 
         return {'Head': head,
-                'Items': add_block_items([x[1] for x in lines], block_size=2)}
+                'Items': self.add_block_items([x[1] for x in lines], block_size=2)}
 
     def xdistribution(self, xrange, yrange):
         """
@@ -920,8 +407,8 @@ class PyConc (manatee.Concordance):
                     {'str': colls.get_item(), 'freq': colls.get_cnt(),
                      'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
                                for s in cbgrfns],
-                     'pfilter': qfilter % ('P', escape(colls.get_item())),
-                     'nfilter': qfilter % ('N', escape(colls.get_item()))
+                     'pfilter': qfilter % ('P', escape(self.import_string(colls.get_item()))),
+                     'nfilter': qfilter % ('N', escape(self.import_string(colls.get_item())))
                      })
             colls.next()
             i += 1
@@ -930,7 +417,7 @@ class PyConc (manatee.Concordance):
             + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
         return {
             'Head': head,
-            'Items': add_block_items(items),
+            'Items': self.add_block_items(items),
             'Total': i,
             'TotalPages': int(math.ceil(i / float(max_lines)))
         }
@@ -963,6 +450,19 @@ class PyConc (manatee.Concordance):
         hist.append(conc.size() - sum(hist))
         cnt, maxid = max(zip(freqs, ids))
         return maxid, (cnt / float(conc.size())), hist
+
+
+def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
+    ctxs = [{'n': _('%iL') % -c, 'ctx': '%i<0' % c} for c in range(-
+                                                                   max_ctx, 0)]
+    if max_hitlen == 1:
+        ctxs.append({'n': _('Node'), 'ctx': '0~0>0'})
+    else:
+        ctxs.extend([{'n': 'Node %i' % c, 'ctx': '%i<0' % c}
+                    for c in range(1, max_hitlen + 1)])
+    ctxs.extend([{'n': _('%iR') % c, 'ctx': '%i>0' % c}
+                for c in range(1, max_ctx + 1)])
+    return ctxs
 
 
 def load_map(cache_dir):
@@ -1173,7 +673,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     return 0, None
 
 
-def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize):
+def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
     q = tuple(q)
     if q[0][0] == "R":  # online sample
         if fullsize == -1:  # need to compute original conc first
@@ -1263,9 +763,8 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                         os._exit(0)
                     w.write(cachefile + "\n" + pidfile.name)
                     w.close()
-                    conc = compute_conc(
-                        corp, q, cache_dir, subchash, samplesize,
-                                         fullsize)
+                    conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
+                                        fullsize, pid_dir)
                     sleeptime = 0.1
                     time.sleep(sleeptime)
                     conc.save(cachefile, False, True)  # partial
@@ -1310,7 +809,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                 conc = PyConc(corp, 'l', cachefile)
         else:  # synchronous processing
             conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
-                                 fullsize)
+                                fullsize, pid_dir)
             conc.sync()  # wait for the computation to finish
             if save:
                 os.close(0)  # PID file will have fd 1
@@ -1430,41 +929,6 @@ def get_conc_labelmap(infopath):
         pass
     return labels
 
-number_re = re.compile('[0-9]+$')
-
-
-def lngrp_sortcrit(lab, separator='.'):
-    def num2sort(n):
-        if number_re.match(n):
-            return ('n', int(n))
-        else:
-            return ('c', n)
-    if not lab:
-        return [('x', 'x')]
-    return map(num2sort, lab.split(separator, 3))
-
-
-def lngrp_sortstr(lab, separator='.'):
-    f = {'n': 'n%03g', 'c': 'c%s', 'x': '%s'}
-    return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
-
-
-def format_labelmap(labelmap, separator='.'):
-    matrix = {}
-    for n, lab in labelmap.items():
-        if lab:
-            pref = lab.split(separator)[0]
-            matrix.setdefault(pref, []).append((lngrp_sortcrit(lab), lab, n))
-    prefixes = [(lngrp_sortcrit(p), p) for p in matrix.keys()]
-    prefixes.sort()
-    lines = []
-    for s, pref in prefixes:
-        line = matrix[pref]
-        line.sort()
-        lines.append(
-            {'Items': [{'n': n, 'lab': lab} for (s, lab, n) in line]})
-    return lines
-
 
 def get_stored_conc(corp, concname, conc_dir):
     basecorpname = corp.corpname.split(':')[0]
@@ -1495,6 +959,7 @@ def get_detail_context(corp, pos, hitlen=1,
                         detail_left_ctx=40, detail_right_ctx=40,
                         addattrs=[], structs='', detail_ctx_incr=60):
     data = {}
+    corpus_encoding = corp.get_conf('ENCODING')
     wrapdetail = corp.get_conf('WRAPDETAIL')
     if wrapdetail:
         data['wrapdetail'] = '<%s>' % wrapdetail
@@ -1521,7 +986,7 @@ def get_detail_context(corp, pos, hitlen=1,
     region_right = tokens2strclass(cr.region(pos + hitlen,
                                               pos + hitlen + detail_right_ctx))
     for seg in region_left + region_kwic + region_right:
-        seg['str'] = seg['str'].replace('===NONE===', '')
+        seg['str'] = import_string(seg['str'].replace('===NONE===', ''), from_encoding=corpus_encoding)
     for seg in region_kwic:
         if not seg['class']:
             seg['class'] = 'coll'
@@ -1541,86 +1006,26 @@ def get_detail_context(corp, pos, hitlen=1,
     return data
 
 
-def fcs_search(corp, fcs_query, max_rec, start):
-    "aux function for federated content search: operation=searchRetrieve"
-    if not fcs_query:
-        raise Exception(7, '', 'Mandatory parameter not supplied')
-    query = fcs_query.replace('+', ' ') # convert URL spaces
-    exact_match = False # attr=".*value.*"
-    if 'exact' in query.lower() and not '=' in query: # lemma EXACT "dog"
-        pos = query.lower().index('exact') # first occurence of EXACT
-        query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
-        exact_match = True
-    rq = '' # query for manatee
-    try: # parse query
-        if '=' in query: # lemma=word | lemma="word" | lemma="w1 w2" | word=""
-            attr, term = query.split('=')
-            attr = attr.strip()
-            term = term.strip()
-        else: # "w1 w2" | "word" | word
-            attr = 'lemma'
-            term = query.strip()
-        if '"' in attr:
-            raise Exception
-        if '"' in term: # "word" | "word1 word2" | "" | "it is \"good\""
-            if term[0] != '"' or term[-1] != '"': # check q. marks
-                raise Exception
-            term = term[1:-1].strip() # remove quotation marks
-            if ' ' in term: # multi-word term
-                if exact_match:
-                    rq = ' '.join(['[%s="%s"]' % (attr, t)
-                                   for t in term.split()])
-                else:
-                    rq = ' '.join(['[%s=".*%s.*"]' % (attr, t)
-                                   for t in term.split()])
-            elif term.strip() == '': # ""
-                raise Exception # empty term
-            else: # one-word term
-                if exact_match:
-                    rq = '[%s="%s"]' % (attr, term)
-                else:
-                    rq = '[%s=".*%s.*"]' % (attr, term)
-        else: # must be single-word term
-            if ' ' in term:
-                raise Exception
-            if exact_match: # build query
-                rq = '[%s="%s"]' % (attr, term)
-            else:
-                rq = '[%s=".*%s.*"]' % (attr, term)
-    except: # there was a problem when parsing
-        raise Exception(10, query, 'Query syntax error')
-    if not attr in corp.get_conf('ATTRLIST'):
-        raise Exception(16, attr, 'Unsupported index')
-    try: # try to get concordance
-        conc = get_conc(corp, q=['q' + rq])
-    except Exception, e:
-        raise Exception(10, repr(e), 'Query syntax error')
-    page = kwicpage(conc)  # convert concordance
-    if len(page['Lines']) < start:
-        raise Exception(61, '', 'First record position out of range')
-    return [(kwicline['Left'][0]['str'], kwicline['Kwic'][0]['str'],
-             kwicline['Right'][0]['str'], kwicline['ref'])
-            for kwicline in page['Lines']][start:][:max_rec]
-
-
 def fcs_scan(corpname, scan_query, max_ter, start):
-    "aux function for federated content search: operation=scan"
+    """
+    aux function for federated content search: operation=scan
+    """
     if not scan_query:
         raise Exception(7, '', 'Mandatory parameter not supplied')
-    query = scan_query.replace('+', ' ') # convert URL spaces
+    query = scan_query.replace('+', ' ')  # convert URL spaces
     exact_match = False
-    if 'exact' in query.lower() and not '=' in query: # lemma ExacT "dog"
-        pos = query.lower().index('exact') # first occurence of EXACT
-        query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
+    if 'exact' in query.lower() and not '=' in query:  # lemma ExacT "dog"
+        pos = query.lower().index('exact')  # first occurence of EXACT
+        query = query[:pos] + '=' + query[pos+5:]  # 1st exact > =
         exact_match = True
     corp = manatee.Corpus(corpname)
-    attrs = corp.get_conf('ATTRLIST').split(',') # list of available attrs
+    attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
     try:
         if '=' in query:
             attr, value = query.split('=')
             attr = attr.strip()
             value = value.strip()
-        else: # must be in format attr = value
+        else:  # must be in format attr = value
             raise Exception
         if '"' in attr:
             raise Exception

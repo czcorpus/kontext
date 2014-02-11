@@ -145,7 +145,10 @@ class App(object):
         start_response(status, headers)
         return [body]
 
+
+from paste.exceptions.errormiddleware import ErrorMiddleware
 application = App(Actions, StaticDispatcher)
+application = ErrorMiddleware(application, debug=True)
 
 
 if __name__ == '__main__':

@@ -18,7 +18,6 @@ import sys
 import re
 import locale
 import csv
-import time
 
 import conccgi
 from conccgi import ConcCGI, ConcError
@@ -28,6 +27,8 @@ import conclib
 import corplib
 import plugins
 import butils
+from kwiclib import Kwic
+from strings import import_string
 
 try:
     _
@@ -158,22 +159,21 @@ class Actions(ConcCGI):
                 i += 1
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
+        kwic = Kwic(self._corp(), self._humanize_corpname(self.corpname), conc)
         labelmap = {}
 
-        out = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()),
+        out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
-                                 alignlist=[self.cm.get_Corpus(c)
-                                            for c in self.align.split(',') if c],
-                                 copy_icon=self.copy_icon,
-                                 tbl_template=self.tbl_template)
+                                 alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
+                                 copy_icon=self.copy_icon, tbl_template=self.tbl_template)
 
-        out['Sort_idx'] = self.call_function(conclib.get_sort_idx, (conc,),
+        out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.q)
 
         out.update(self.get_conc_sizes(conc))
         if self.viewmode == 'sen':
-            conclib.add_block_items(out['Lines'], block_size=1)
+            Kwic.add_block_items(out['Lines'], block_size=1)
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
                                'label': conclib.manatee.Corpus(w).get_conf(
@@ -941,7 +941,8 @@ class Actions(ConcCGI):
                     icase = ''
                 attr = attr[0]
                 for ii, item in enumerate(block['Items']):
-                    if not item['freq']: continue
+                    if not item['freq']:
+                        continue
                     if not '.' in attr:
                         if attr in self._corp().get_conf('ATTRLIST').split(','):
                             wwords = item['Word'][level]['n'].split('  ')  # two spaces
@@ -1158,8 +1159,10 @@ class Actions(ConcCGI):
             result['lastpage'] = 1
 
         for item in result['Items']:
-            item["pfilter"] = 'q=' + self.urlencode(item["pfilter"])
-            item["nfilter"] = 'q=' + self.urlencode(item["nfilter"])
+            item['pfilter'] = 'q=' + self.urlencode(item['pfilter'])
+            item['nfilter'] = 'q=' + self.urlencode(item['nfilter'])
+            item['str'] = import_string(item['str'], from_encoding=self._corp().get_conf('ENCODING'))
+
         result['cmaxitems'] = 10000
         result['to_line'] = 10000  # TODO
         return result
@@ -2043,6 +2046,7 @@ class Actions(ConcCGI):
 
         try:
             conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
+            kwic = Kwic(self._corp(), self._humanize_corpname(self.corpname), conc)
             conc.switch_aligned(os.path.basename(self.corpname))
             from_line = int(from_line)
             to_line = int(to_line)
@@ -2056,10 +2060,9 @@ class Actions(ConcCGI):
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
-            data = self.call_function(conclib.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()), fromp=fromp,
-                                      pagesize=page_size, line_offset=line_offset, labelmap=labelmap, align=[],
-                                      alignlist=[self.cm.get_Corpus(c)
-                                                 for c in self.align.split(',') if c],
+            data = self.call_function(kwic.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()),
+                                      fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
+                                      align=[], alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._humanize_corpname(self.corpname), suffix)
@@ -2208,126 +2211,6 @@ class Actions(ConcCGI):
 
     ajax_get_tag_variants.return_type = 'json'
 
-    def fcs(self, operation='explain', version='', recordPacking='xml',
-            extraRequestData='', query='', startRecord='', responsePosition='',
-            recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
-        "Federated content search API function (www.clarin.eu/fcs)"
-
-        # default values
-        self._headers['Content-Type'] = 'application/XML'
-        corpname = 'brown'
-        numberOfRecords = 0
-        current_version = 1.2
-        # supported parameters for all operations
-        sup_pars = ['operation', 'stylesheet', 'version', 'extraRequestData']
-        # implicit result sent to template
-        out = {'operation': operation, 'version': current_version,
-               'recordPacking': recordPacking, 'result': [],
-               'numberOfRecords': numberOfRecords,
-               'server_name': self.environ.get('SERVER_NAME', ''),
-               'server_port': self.environ.get('SERVER_PORT', '80'),
-               'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
-        try:
-            # check version
-            if version and current_version < float(version):
-                raise Exception(5, version, 'Unsupported version')
-
-            # check integer parameters
-            if maximumRecords != '':
-                try:
-                    maximumRecords = int(maximumRecords)
-                except:
-                    raise Exception(6, '', 'Unsupported parameter value')
-            else:
-                maximumRecords = 250
-            out['maximumRecords'] = maximumRecords
-            if maximumTerms != '':
-                try:
-                    maximumTerms = int(maximumTerms)
-                except:
-                    raise Exception(6, '', 'Unsupported parameter value')
-            else:
-                maximumTerms = 100
-            out['maximumTerms'] = maximumTerms
-            if startRecord != '':
-                try:
-                    startRecord = int(startRecord)
-                except:
-                    raise Exception(6, '', 'Unsupported parameter value')
-            else:
-                startRecord = 0
-            out['startRecord'] = startRecord
-            if responsePosition != '':
-                try:
-                    responsePosition = int(responsePosition)
-                except:
-                    raise Exception(6, '', 'Unsupported parameter value')
-            else:
-                responsePosition = 0
-            out['responsePosition'] = responsePosition
-
-            # set content-type in HTTP header
-            if recordPacking == 'string':
-                self._headers['Content-Type'] = 'text/plain'
-            elif recordPacking == 'xml':
-                self._headers['Content-Type'] = 'application/XML'
-            else:
-                raise Exception(71, 'Unsupported record packing')
-
-            # provide info about service
-            if operation == 'explain' or not operation:
-                sup_pars.append('recordPacking') # other supported parameters
-                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-                if unsup_pars:
-                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                    #if extraRequestData:
-                #    corpname = extraRequestData
-                corp = conclib.manatee.Corpus(corpname)
-                out['result'] = corp.get_conf('ATTRLIST').split(',')
-                out['numberOfRecords'] = len(out['result'])
-
-            # wordlist for a given attribute
-            elif operation == 'scan':
-            # check supported parameters
-                sup_pars.extend(['scanClause', 'responsePosition',
-                                 'maximumTerms'])
-                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-                if unsup_pars:
-                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                    #if extraRequestData:
-                #    corpname = extraRequestData
-                out['result'] = conclib.fcs_scan(corpname, scanClause,
-                                                 maximumTerms, responsePosition)
-
-            # simple concordancer
-            elif operation == 'searchRetrieve':
-            # check supported parameters
-                sup_pars.extend(['query', 'startRecord', 'maximumRecords',
-                                 'recordPacking', 'recordSchema', 'resultSetTTL'])
-                unsup_pars = list(set(self._url_parameters) - set(sup_pars))
-                if unsup_pars:
-                    raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                cm = corplib.CorpusManager(corplist=[corpname])
-                corp = cm.get_Corpus(corpname)
-                out['result'] = conclib.fcs_search(corp, query,
-                                                   maximumRecords, startRecord)
-                out['numberOfRecords'] = len(out['result'])
-
-            # unsupported operation
-            else:
-                out['operation'] = 'explain'  # show within explain template
-                raise Exception(4, '', 'Unsupported operation')
-            return out
-
-        # catch exception and amend diagnostics in template
-        except Exception as e:
-            out['message'] = ('error', True)   # TODO 'True' is quite a meaningless message
-            try:  # concrete error, catch message from lower levels
-                out['code'], out['details'], out['msg'] = e[0], e[1], e[2]
-            except:  # general error
-                out['code'], out['details'] = 1, repr(e)
-                out['msg'] = 'General system error'
-            return out
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
