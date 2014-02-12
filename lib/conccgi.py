@@ -390,13 +390,8 @@ class ConcCGI(CGIPublisher):
             if fallback:
                 path = [CGIPublisher.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
-                    import hashlib
-                    self._session['__message'] = _('Please <span class="sign-in">sign-in</span> to continue.')
-                    curr_url = self._get_current_url()
-                    curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
-                    self._session[curr_url_key] = curr_url
-                    self._redirect('%sfirst_form?corpname=%s&ua=%s' %
-                                   (settings.get_root_url(), self.corpname, curr_url_key))
+                    self._redirect('%sfirst_form?corpname=%s' %
+                                   (settings.get_root_url(), self.corpname))
                 else:
                     path = ['json_error']
                     named_args['error'] = _('Corpus access denied')
