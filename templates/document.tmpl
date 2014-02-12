@@ -35,18 +35,6 @@ $text
 #end for
 #end filter
 
-<style type="text/css">
-._prepare-state #menu-bar {visibility: hidden; width: 700px;}
-</style>
-<script type="text/javascript">
-(function (d) {
-    var html = d.getElementsByTagName('html');
-    if (html.length === 1) {
-        html[0].setAttribute('class', '_prepare-state');
-    }
-}(document));
-</script>
-
 #if $debug
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}bonito.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
@@ -54,6 +42,9 @@ $text
 #else
 <link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css" />
 #end if
+<noscript>
+    <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
+</noscript>
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
 #if $app_bar_css
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />

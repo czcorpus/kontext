@@ -897,18 +897,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                 $(this).attr('href', '#');
             });
 
-
-            if (document.createStyleSheet) {
-                document.createStyleSheet('../files/css/main-menu.css');
-
-            } else {
-                $(win.document.createElement('link')).attr({
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: '../files/css/main-menu.css'
-                }).appendTo('head');
-            }
-
             $('#menu-level-1 a.trigger').each(function () {
                 $(this).on('mouseover', function (event) {
                     var jqMenuLi = $(event.target).closest('li'),
@@ -1069,8 +1057,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         $('button').button();
         $('input[type="submit"]').button();
         $('input[type="button"]').button();
-
-        $('html').removeClass('_prepare-state');
     };
 
     return lib;
