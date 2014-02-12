@@ -22,6 +22,7 @@ method.
 
 import urllib
 import os
+import urlparse
 
 from auth import AbstractAuth
 
@@ -42,8 +43,24 @@ def create_instance(conf, sessions, db):
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote(get_current_url(conf)))
-    logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote(get_current_url(conf)))
+    curr_url = list(urlparse.urlparse(get_current_url(conf)))
+    params = urlparse.parse_qsl(curr_url[4])
+    login_params = []
+
+    for p in params:
+        if p[0] == 'corpname':
+            login_params.append(('corpname', p[1].split('/')[-1]))
+        else:
+            login_params.append(p)
+    logout_params = login_params[:] + [('reload', '1')]
+
+    curr_url[4] = urllib.urlencode(login_params)
+    login_url_continue = urlparse.urlunparse(curr_url)
+    curr_url[4] = urllib.urlencode(logout_params)
+    logout_url_continue = urlparse.urlunparse(curr_url)
+
+    login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote(login_url_continue))
+    logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote(logout_url_continue))
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
     return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
                        login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
