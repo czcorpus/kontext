@@ -1,24 +1,16 @@
-#menu-level-1 li ul {
-    display: 'none';
+ul.submenu {
+  display: inline;
 }
 
 #menu-level-1 li {
-    padding: 3px 6px;
-}
-
-#menu-level-1 li.separator {
-    padding: 0;
-}
-
-ul.submenu {
-    display: none;
+  padding: 0;
 }
 
 #menu-bar {
-    white-space: nowrap;
-    height: 50px;
+  height: auto;
+  white-space: normal;
 }
 
 #menu-bar a.trigger {
-    color: inherit;
+  color: #E2007A;
 }
