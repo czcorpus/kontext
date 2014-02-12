@@ -257,13 +257,13 @@ a#logo-wrapper {
 }
 
 #menu-bar {
-  font-size: 11pt;
-  display: inline-block;
-  min-width: 680px;
-  width: auto;
-  margin: 0 20px;
-  height: auto;
-  white-space: normal;
+    white-space: nowrap;
+    height: 50px;
+    font-size: 11pt;
+    display: inline-block;
+    min-width: 680px;
+    width: auto;
+    margin: 0 20px;
 }
 
 #menu-bar a:hover, #active-corpus a.corpus-desc:hover {
@@ -275,7 +275,7 @@ a#logo-wrapper {
 }
 
 #menu-bar a.trigger {
-  color: @color-logo-pink;
+    color: inherit;
 }
 
 #menu-bar a.trigger:hover {
@@ -290,14 +290,18 @@ a#logo-wrapper {
 }
 
 #menu-level-1 li {
-  display: inline-block;
-  padding: 0;
-  font-weight: bold;
-  z-index: 100;
-  position: relative;
-  border-width: 1px 1px 0 1px;
-  border-style: solid;
-  border-color: transparent;
+    display: inline-block;
+    padding: 3px 6px;
+    font-weight: bold;
+    z-index: 100;
+    position: relative;
+    border-width: 1px 1px 0 1px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+#menu-level-1 li ul {
+    display: 'none';
 }
 
 #menu-level-1 li.disabled a {
@@ -319,6 +323,14 @@ a#logo-wrapper {
   display: inline-block;
   text-decoration: none;
   color: #000000;
+}
+
+ul.submenu {
+    margin: 0;
+    padding: 0;
+    border-radius: 6px;
+    min-width: 110px;
+    display: none;
 }
 
 #menu-level-1 > li.separator {
@@ -345,9 +357,6 @@ a#logo-wrapper {
   text-shadow: none;
 }
 
-#menu-level-1 li ul {
-}
-
 #menu-level-wrapper-2 {
   display: block;
 }
@@ -364,14 +373,6 @@ a#logo-wrapper {
 #menu-level-2 ul li {
   display: inline-block;
   padding: 1px 5px;
-}
-
-ul.submenu {
-  margin: 0;
-  padding: 0;
-  border-radius: @border-radius-default;
-  min-width: 110px;
-  display: inline;  /* javascript overrides this */
 }
 
 ul.submenu li {
