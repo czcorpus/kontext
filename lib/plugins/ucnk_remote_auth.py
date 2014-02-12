@@ -21,8 +21,20 @@ method.
 """
 
 import urllib
+import os
 
 from auth import AbstractAuth
+
+
+def get_current_url(conf):
+    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in ('80', '443'):
+        port_s = ':%s' % os.getenv('SERVER_PORT')
+    else:
+        port_s = ''
+    return '%(req_scheme)s://%(host)s%(port_s)s%(uri)s' % {'req_scheme': conf.get_uri_scheme_name(),
+                                                           'host': os.environ.get('HTTP_HOST'),
+                                                           'port_s': port_s,
+                                                           'uri': os.environ.get('REQUEST_URI', '')}
 
 
 def create_instance(conf, sessions, db):
@@ -30,8 +42,8 @@ def create_instance(conf, sessions, db):
     Factory function (as required by the application) providing
     an instance of authentication module.
     """
-    login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote('%sfirst_form' % conf.get_root_url()))
-    logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote('%sfirst_form' % conf.get_root_url()))
+    login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote(get_current_url(conf)))
+    logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote(get_current_url(conf)))
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
     return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
                        login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
