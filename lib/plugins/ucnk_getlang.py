@@ -47,8 +47,8 @@ class GetLang(object):
 
 def create_instance(conf):
     cookie_name = conf.get('plugins', 'getlang')['ucnk:cookie']
-    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', '')
-    if fallback_lang is None:  # this is important ('' == default locale while None produces error)
+    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', None)
+    if fallback_lang is None:
         fallback_lang = ''
     return GetLang(cookie_name=cookie_name, fallback_lang=fallback_lang)
 
