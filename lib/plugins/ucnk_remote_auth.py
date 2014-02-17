@@ -44,14 +44,7 @@ def create_instance(conf, sessions, db):
     an instance of authentication module.
     """
     curr_url = list(urlparse.urlparse(get_current_url(conf)))
-    params = urlparse.parse_qsl(curr_url[4])
-    login_params = []
-
-    for p in params:
-        if p[0] == 'corpname':
-            login_params.append(('corpname', p[1].split('/')[-1]))
-        else:
-            login_params.append(p)
+    login_params = urlparse.parse_qsl(curr_url[4])
     logout_params = login_params[:] + [('reload', '1')]
 
     curr_url[4] = urllib.urlencode(login_params)
