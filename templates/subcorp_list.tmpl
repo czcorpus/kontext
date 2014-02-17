@@ -16,8 +16,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
+#from translation import ugettext as _
 #from cmpltmpl.conc import conc
-#from templating.filters import IntegerFormatter
 #extends conc
 
 #def title
@@ -48,7 +48,7 @@ require(['tpl/subcorpList', 'conf', 'domReady!'], function(pageSelf, conf) {
         #for $item in $subcorp_list
         <tr #if $counter % 2 == 1#class="even"#end if#>
             <td><a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">$item.n</a></td>
-            <td class="num">#filter $IntegerFormatter# $item.size #end filter#</td>
+            <td class="num">$format_number($item.size, mask='%d')</td>
             <td>$item.created</td>
             <td>
                 <input type="checkbox" name="selected_subc" value="$item.n" />

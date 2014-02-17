@@ -18,6 +18,7 @@ to the documentation or read the dummy_auth.py module to see the required interf
 import crypt
 
 import ucnk_db
+from translation import ugettext as _
 
 
 def create_salt(length=2):

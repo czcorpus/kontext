@@ -17,7 +17,7 @@
 """
 Custom Cheetah filters for the Bonito 2 interface
 """
-import locale
+from strings import format_number
 from Cheetah.Filters import Filter
 
 
@@ -27,7 +27,7 @@ class IntegerFormatter(Filter):
     """
     def filter(self, val, **kw):
         if val:
-            return locale.format('%d', val, True).decode('UTF-8')
+            return format_number(val)
         return str(val)
 
 
@@ -38,7 +38,7 @@ class FloatFormatter(Filter):
 
     def filter(self, val, **kw):
         if val:
-            return locale.format('%01.2f', val, True).decode('UTF-8')
+            return format_number(val, mask='%01.2f')
         return str(val)
 
 

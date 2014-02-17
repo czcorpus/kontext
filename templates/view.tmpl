@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
-#import locale
+#from translation import ugettext as _
 #from cmpltmpl.conc import conc
 #from templating.filters import *
 #extends conc
@@ -226,11 +226,11 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
                 #set $online_sample = False
             #end if
 
-            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#end filter#</strong>
+            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">$format_number($concsize, mask='%d')</strong>
             #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>#end if#
             <span id="conc-calc-info" title="$concsize">#slurp
             #if $concsize != $fullsize
-                #set $l=$locale.format("%d",$concsize,grouping=True)
+                #set $l=$format_number($concsize, mask='%d')
                 #if not $online_sample
                     $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
                 #else
@@ -244,11 +244,11 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
             </span>
 
             <span class="separ">|</span> <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-            <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+            <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
             $result_relative_freq_rel_to
             #if $result_arf
             <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-            <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+            <strong id="arf">$format_number($result_arf, mask='%01.2f')</strong>
             #end if
 
             #if $contains_within
@@ -279,7 +279,7 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
               $input_hidden
               #end filter
               <input type="text" name="fromp" value="$fromp" size="2" />
-              / <span class="numofpages" title="$numofpages">#filter $IntegerFormatter#$numofpages#end filter#</span>
+              / <span class="numofpages" title="$numofpages">$format_number($numofpages, mask='%d')</span>
             </div>
 
             #if $nextlink

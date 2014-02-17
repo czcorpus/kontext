@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #import urllib
 #import re
 #from templating.filters import *
+#from translation import ugettext as _
 #attr $focus = ""
 #if $format == 'text'
 $text
@@ -357,16 +358,16 @@ $_ca_topbar
                 #end if
 
                 #if $conc_persist
-                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">#filter $IntegerFormatter#$concsize#
-                    #end filter#</strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">$format_number($concsize, mask='%d')
+                    </strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
                     <span class="separ">|</span> #end if
 
                 <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-                <span class="ipm">#filter $FloatFormatter# $result_relative_freq #end filter#</span>
+                <span class="ipm">%format_number($result_relative_freq, mask='%01.2f')</span>
                 $result_relative_freq_rel_to
                 #if $result_arf
                 <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-                <strong id="arf">#filter $IntegerFormatter# $result_arf #end filter#</strong>
+                <strong id="arf">$format_number($result_arf, mask='%01.2f')</strong>
                 #end if
                 <span class="separ">|</span>
                 <span class="notice-shuffled">

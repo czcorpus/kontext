@@ -16,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import locale
 import os.path
 import sys
 import glob
@@ -26,6 +25,7 @@ from datetime import datetime
 
 from strings import import_string
 import manatee
+from translation import ugettext as _
 
 
 class CorpusManager(object):
@@ -125,13 +125,12 @@ class CorpusManager(object):
                 try:
                     corp = manatee.Corpus(c)
                     corp_name = corp.get_conf('NAME') or c
-                    size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
                     corp_info = corp.get_info()
 
                     cl.append({'id': '%s%s' % (id_prefix, c),
                                'name': corp_name,
                                'desc': import_string(corp_info, from_encoding=corp.get_conf('ENCODING')),
-                               'size': size,
+                               'size': corp.size(),
                                'path': path
                     })
                 except Exception, e:
