@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <frequency>
 #if $heading
   <heading>
-    <corpus>$human_corpname</corpus>
+    <corpus>$canonical_corpname</corpus>
     #if $usesubcorp
     <subcorpus>$usesubcorp</subcorpus>
     #end if
@@ -65,7 +65,7 @@ $item#slurp
 ## text
 #if $heading
 \# Frequency list
-\# Corpus: $human_corpname
+\# Corpus: $canonical_corpname
 #if $usesubcorp
 \# Subcorpus: $usesubcorp
 #end if
