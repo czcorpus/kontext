@@ -343,6 +343,21 @@ class CGIPublisher(object):
                                                                'port_s': port_s,
                                                                'uri': self.environ.get('REQUEST_URI', '')}
 
+    def _update_current_url(self, params):
+        import urlparse
+        import urllib
+
+        parsed_url = list(urlparse.urlparse(self._get_current_url()))
+        old_params = urlparse.parse_qsl(parsed_url[4])
+        new_params = []
+        for k, v in old_params:
+            if k in params:
+                new_params.append((k, params[k]))
+            else:
+                new_params.append((k, v))
+        parsed_url[4] = urllib.urlencode(new_params)
+        return urlparse.urlunparse(parsed_url)
+
     def call_method(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
         if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
