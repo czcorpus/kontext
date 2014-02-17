@@ -48,7 +48,6 @@ def activate(lang):
         _current.ugettext = t.ugettext
     else:
         _current.ugettext = lambda s: s
-    logging.getLogger(__name__).info('Failed to load query overview: %s' % _current.ugettext('Failed to load query overview'))
 
 
 def ugettext(s):
