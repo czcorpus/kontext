@@ -1041,7 +1041,7 @@ class Actions(ConcCGI):
             self.make_wl_query()  # multilevel wordlist
 
         result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
@@ -1203,7 +1203,7 @@ class Actions(ConcCGI):
         self.collpage = 1
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.xml"' % saved_filename
@@ -1644,7 +1644,7 @@ class Actions(ConcCGI):
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
@@ -2062,7 +2062,7 @@ class Actions(ConcCGI):
                                                  for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
-            mkfilename = lambda suffix: '%s-concordance.%s' % (self._humanize_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
@@ -2154,7 +2154,7 @@ class Actions(ConcCGI):
         format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
 
         ans = {
-            'corpname': self._humanize_corpname(self._corp().get_conf('NAME')),
+            'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
             'description': self._corp().get_info(),
             'size': format_int(self._corp().size()),
             'attrlist': [],
@@ -2398,7 +2398,7 @@ class Actions(ConcCGI):
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
                                                           to_date=to_date, offset=offset, limit=limit, types=types)
             for row in rows:
-                row['corpname'] = self._humanize_corpname(row['corpname'])
+                row['corpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
         else:
             rows = []

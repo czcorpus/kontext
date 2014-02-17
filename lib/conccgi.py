@@ -669,7 +669,7 @@ class ConcCGI(CGIPublisher):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['root_url'] = settings.get_root_url()
-        result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
+        result['canonical_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
         result['display_closed_conc'] = len(self.q) > 0
 
@@ -791,7 +791,7 @@ class ConcCGI(CGIPublisher):
             ans.update(self._session['forms'])
         return ans
 
-    def _humanize_corpname(self, c):
+    def _canonical_corpname(self, c):
         """
         Internally we sometimes use path-like corpora names to distinguish between
         two access levels (this is achieved by two different registry files).
@@ -801,10 +801,7 @@ class ConcCGI(CGIPublisher):
         they see 'syn2010' in both cases. This method solves the problem by converting
         path-like names to basename ones.
         """
-        t = c.split('/', 1)
-        if len(t) > 1:
-            return t[1]
-        return t[0]
+        return c.rsplit('/', 1)[-1]
 
     def _has_configured_speech(self):
         """
