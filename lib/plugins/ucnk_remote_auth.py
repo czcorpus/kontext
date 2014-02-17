@@ -171,3 +171,11 @@ class CentralAuth(AbstractAuth):
 
     def get_logout_url(self):
         return self.logout_url
+
+    def get_restricted_corp_variant(self, corpus_name):
+        """
+        See the AbstractAuth.get_restricted_corp_variant() for the documentation.
+        """
+        if not corpus_name.startswith('omezeni/'):
+            return 'omezeni/%s' % corpus_name
+        return corpus_name

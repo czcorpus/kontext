@@ -57,6 +57,21 @@ class AbstractAuth(object):
         """
         return False
 
+    def get_restricted_corp_variant(self, corpus_name):
+        """
+        To allow restricted and unrestricted variants of a corpus (manatee requires
+        separate registry files for this), KonText uses specific convention - different
+        variants of the registry file are located in different directories (the
+        filename must be the same). Typically, restricted registry files reside
+        in some subdirectory of a main registry directory. Internal name of a corpus
+        is then composed of a relative path to that main directory and canonical corpus
+        name (e.g. bnc vs. public/bnc, where latter is the restricted variant).
+
+        arguments:
+        corpus_name -- both canonical and restricted variants can be passed
+        """
+        return corpus_name
+
 
 class AuthException(Exception):
     """
