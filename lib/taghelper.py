@@ -21,14 +21,10 @@ import os
 import re
 import json
 import logging
-import locale
 import time
 from lxml import etree
 
-try:
-    _
-except NameError:
-    _ = lambda s: s
+from translation import ugettext as _
 
 
 class TagGeneratorException(Exception):
@@ -135,13 +131,18 @@ class TagVariantLoader(object):
         ('!', r'\!')
     )
 
-    def __init__(self, corp_name, num_tag_pos):
+    def __init__(self, corp_name, num_tag_pos, lang):
         """
+        arguments:
+        corp_name -- name/id of the corpus
+        num_tag_pos -- length of tag string
+        lang -- two-letter language code (cs, en, de,...)
         """
         self.corp_name = corp_name
         self.num_tag_pos = num_tag_pos
         self.tags_file = open(create_tag_variants_file_path(corp_name))
         self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.corp_name)
+        self.lang = lang
 
     def get_variant(self, selected_tags):
         """
@@ -153,7 +154,7 @@ class TagVariantLoader(object):
         Loads all values as needed to initialize tag-builder widget.
         Values are cached forever into a JSON file.
         """
-        path = '%s/initial-values.%s.json' % (self.cache_dir, locale.getlocale()[0])
+        path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         translations, label_table = load_tag_descriptions(settings.conf_path(),
                                                           settings.get('session', 'lang'))

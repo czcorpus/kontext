@@ -15,6 +15,7 @@ A simple authentication module for development, single user and
 testing purposes.
 """
 from auth import AbstractAuth
+from translation import ugettext as _
 
 
 def create_instance(*args, **kwargs):

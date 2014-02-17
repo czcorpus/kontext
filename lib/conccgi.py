@@ -1,4 +1,5 @@
 # Copyright (c) 2003-2009  Pavel Rychly
+# Copyright (c) 2013 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,6 +18,8 @@ import os
 import cgi
 import json
 import time
+from functools import partial
+import logging
 
 import corplib
 import conclib
@@ -25,12 +28,8 @@ from CGIPublisher import CGIPublisher, UserActionException, correct_types
 import plugins
 import settings
 import taghelper
-import logging
-
-try:
-    _
-except NameError:
-    _ = lambda s: s
+from strings import format_number
+from translation import ugettext as _
 
 
 escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
@@ -38,17 +37,6 @@ escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
 
 def escape(s):
     return escape_regexp.sub(r'\\g<0>', s)
-
-
-try:
-    locale.setlocale(locale.LC_NUMERIC, 'en_GB')
-
-    def formatnum(f):
-
-        return locale.format('%.f', f, True)
-except locale.Error:
-    def formatnum(f):
-        return '%.f' % f
 
 
 def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
@@ -59,31 +47,6 @@ def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     if '~' in ctx and '.' in attr:
         ctx = ctx.split('~')[0]
     return attrpart + ctx
-
-
-def validate_range(actual_range, max_range):
-    """
-    Parameters
-    ----------
-    actual_range : 2-tuple
-    max_range : 2-tuple (if second value is None, that validation of the value is omitted
-
-    Returns
-    -------
-    None if everything is OK else UserActionException instance
-    """
-    if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
-            or actual_range[0] > actual_range[1]:
-        if max_range[0] > max_range[1]:
-            msg = _('Invalid range - cannot select rows from an empty list.')
-        elif max_range[1] is not None:
-            msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
-                    % (actual_range + max_range)
-        else:
-            msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal than %s') \
-                    % (actual_range + (max_range[0], ))
-        return UserActionException(msg)
-    return None
 
 
 def choose_selector(args, selector):
@@ -246,8 +209,8 @@ class ConcCGI(CGIPublisher):
 
     add_vars['findx_upload'] = [u'LastSubcorp']
 
-    def __init__(self, environ):
-        super(ConcCGI, self).__init__(environ=environ)
+    def __init__(self, environ, ui_lang):
+        super(ConcCGI, self).__init__(environ=environ, ui_lang=ui_lang)
         self._curr_corpus = None
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
@@ -498,6 +461,7 @@ class ConcCGI(CGIPublisher):
         out : dict
         """
         basecorpname = self.corpname.split(':')[0]
+        # TODO - locale cannot be used here
         subcorp_list = sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
@@ -593,7 +557,7 @@ class ConcCGI(CGIPublisher):
                                     or self.corpname)
 
         result['corp_description'] = corpus.get_info()
-        result['corp_size'] = locale.format('%d', corpus.size(), True).decode('utf-8')
+        result['corp_size'] = format_number(corpus.size(), lang=self.ui_lang)
         corp_conf_info = plugins.corptree.get_corpus_info(corpus.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
@@ -605,7 +569,7 @@ class ConcCGI(CGIPublisher):
         result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
-            result['subcorp_size'] = locale.format('%d', sc.search_size(), True).decode('utf-8')
+            result['subcorp_size'] = format_number(sc.search_size(), lang=self.ui_lang)
         else:
             result['subcorp_size'] = None
         attrlist = corpus.get_conf('ATTRLIST').split(',')
@@ -638,7 +602,7 @@ class ConcCGI(CGIPublisher):
                                            corpus.get_conf('SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
         result['corp_uses_tag'] = 'tag' in corpus.get_conf('ATTRLIST').split(',')
-        if self.annotconc and not result.has_key('GroupNumbers'):
+        if self.annotconc and not 'GroupNumbers' in result.keys():
             labelmap = conclib.get_conc_labelmap(self._storeconc_path()
                                                  + '.info')
             result['GroupNumbers'] = conclib.format_labelmap(labelmap)
@@ -718,6 +682,9 @@ class ConcCGI(CGIPublisher):
             result['avail_languages'] = ()
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
+
+        # util functions
+        result['format_number'] = partial(format_number, lang=self.ui_lang)
 
         # is there a concordance information in session?
         self._restore_conc_results(result)
@@ -847,6 +814,30 @@ class ConcCGI(CGIPublisher):
         segment_str = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
         if segment_str:
             return tuple(segment_str.split('.'))
+        return None
+
+    def _validate_range(self, actual_range, max_range):
+        """
+        Parameters
+        ----------
+        actual_range : 2-tuple
+        max_range : 2-tuple (if second value is None, that validation of the value is omitted
+
+        Returns
+        -------
+        None if everything is OK else UserActionException instance
+        """
+        if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
+                or actual_range[0] > actual_range[1]:
+            if max_range[0] > max_range[1]:
+                msg = _('Invalid range - cannot select rows from an empty list.')
+            elif max_range[1] is not None:
+                msg = _('Range [%s, %s] is invalid. It must be non-empty and within [%s, %s].') \
+                    % (actual_range + max_range)
+            else:
+                msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal '
+                             'than %s' % (actual_range + (max_range[0], )))
+            return UserActionException(msg)
         return None
 
 

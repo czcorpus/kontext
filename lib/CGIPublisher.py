@@ -1,4 +1,5 @@
 # Copyright (c) 2003-2009  Pavel Rychly
+# Copyright (c) 2014  Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,10 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import __builtin__
 import os
 import sys
-import re
 from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
 from inspect import isclass
 import Cookie
@@ -26,13 +25,12 @@ import imp
 from urllib import urlencode, quote_plus, unquote, quote
 import json
 import logging
-import gettext
-import locale
 import StringIO
 
 import plugins
 import settings
 from auth import AuthException
+from translation import ugettext as _
 
 
 def replace_dot_error_handler(err):
@@ -64,7 +62,7 @@ def correct_types(args, defaults, del_nondef=0, selector=0):
             k = full_k
         if k.startswith('_') or type(defaults.get(k, None)) is MethodType:
             del args[full_k]
-        elif defaults.has_key(k):
+        elif k in defaults.keys():
             default_type = type(defaults[k])
             if default_type is not ListType and type(v) is ListType:
                 args[k] = v = v[-1]
@@ -148,7 +146,6 @@ class CGIPublisher(object):
     """
     _keep_blank_values = 0
     _template_dir = u'../cmpltmpl/'
-    _locale_dir = u'../locale/'
     _tmp_dir = u'/tmp'
     _url_parameters = []
     exceptmethod = None
@@ -174,26 +171,20 @@ class CGIPublisher(object):
         500: 'Internal Server Error'
     }
 
-    def __init__(self, environ):
+    def __init__(self, environ, ui_lang):
+        """
+        arguments:
+        environ -- web server's environment variables
+        ui_lang -- language used by user
+        """
         self.environ = environ
+        self.ui_lang = ui_lang
         self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
         self._user = None
         self._session = {}
         self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
-
-        # correct _locale_dir
-        if not os.path.isdir(self._locale_dir):
-            p = os.path.join(os.path.dirname(__file__), self._locale_dir)
-            if os.path.isdir(p):
-                self._locale_dir = p
-            else:
-                import gettext
-                # This will set the system default locale directory as a side-effect:
-                gettext.install(domain='ske', unicode=True)
-                # hereby we retrieve the system default locale directory back:
-                self._locale_dir = gettext.bindtextdomain('ske')
 
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
@@ -275,72 +266,6 @@ class CGIPublisher(object):
             'server': self.environ.get('HTTP_HOST'),
             'script': self.environ.get('SCRIPT_NAME')
         }
-
-    def get_uilang(self, locale_dir):
-        """
-        Returns proper locale directory according to the set language.
-        Method tries to determine the language using three following sources
-        (the order determines the priority:
-
-        1) optional plugin "getlang"
-        2) KonText's ui_settings (stored in the 'settings cookie' as a part of JSON object)
-        3) user agent language
-
-        Arguments:
-        locale_dir -- where locale files are located
-        """
-        if plugins.has_plugin('getlang'):
-            lgs_string = plugins.getlang.fetch_current_language(self._cookies)
-        else:
-            lgs_string = self._ui_settings.get('set_uilang', None)
-        if not lgs_string:
-            lgs_string = self.environ.get('HTTP_ACCEPT_LANGUAGE', '')
-        if lgs_string == '':
-            return ''  # english
-        lgs_string = re.sub(';q=[^,]*', '', lgs_string)
-        lgs = lgs_string.split(',')
-        lgdirs = os.listdir(locale_dir)  # available translations
-        ans = None
-        for lg in lgs:
-            lg = lg.replace('-', '_').lower()
-            if lg.startswith('en'):  # english
-                ans = ''
-                break
-            for lgdir in lgdirs:
-                if lgdir.lower().startswith(lg):
-                    ans = lgdir
-                    break
-        if ans is None and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
-            ans = plugins.getlang.get_fallback_language()
-        return ans
-
-    def init_locale(self):
-        """
-        Sets application's locales according to user preferences.
-        This method also sets global '_' function (via __builtin__.__dict__)
-        """
-        locale_dir = '../locale/'  # TODO
-        if not os.path.isdir(locale_dir):
-            p = os.path.join(os.path.dirname(__file__), locale_dir)
-            if os.path.isdir(p):
-                locale_dir = p
-            else:
-                # This will set the system default locale directory as a side-effect:
-                gettext.install(domain='ske', unicode=True)
-                # hereby we retrieve the system default locale directory back:
-                locale_dir = gettext.bindtextdomain('ske')
-
-        self.environ['LANG'] = self.get_uilang(locale_dir)
-        settings.set('session', 'lang', self.environ['LANG'] if self.environ['LANG'] else 'en')
-        self.environ['LC_ALL'] = self.environ['LANG']
-        formatting_lang = '%s.utf-8' % (self.environ['LANG'] if self.environ['LANG'] else 'en_US')
-        locale.setlocale(locale.LC_ALL, formatting_lang)
-        translat = gettext.translation('ske', locale_dir, fallback=True)
-        try:
-            translat._catalog[''] = ''
-        except AttributeError:
-            pass
-        __builtin__.__dict__['_'] = translat.ugettext
 
     def is_template(self, template):
         """
@@ -504,13 +429,10 @@ class CGIPublisher(object):
         try:
             self._restore_ui_settings()
 
-            # locales initialization
-            self.init_locale()
-
             # plugins setup
             for p in plugins.list_plugins():
                 if hasattr(p, 'setup') and callable(p.setup):
-                    p.setup(lang=self.environ['LANG'])
+                    p.setup(lang=self.ui_lang)
 
             self._init_session()
             path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
@@ -535,8 +457,9 @@ class CGIPublisher(object):
                 named_args['message'] = ('error', u'%s' % e)
             else:
                 named_args['message'] = ('error',
-                                         _('Failed to process your request. Please try again later or contact system support.'))
-            named_args['message_auto_hide_interval'] = 0;
+                                         _('Failed to process your request. '
+                                                'Please try again later or contact system support.'))
+            named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
             plugins.db.recover()
@@ -595,7 +518,8 @@ class CGIPublisher(object):
                 if settings.is_debug_mode() or type(e) is UserActionException:
                     json_msg = str(e).decode('utf-8')
                 else:
-                    json_msg = _('Failed to process your request. Please try again later or contact system support.')
+                    json_msg = _('Failed to process your request. '
+                                      'Please try again later or contact system support.')
                 return (methodname, None,
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname + '_form'):

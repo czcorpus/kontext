@@ -10,10 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-try:
-    _
-except NameError:
-    _ = lambda s: s
+from translation import ugettext as _
 
 
 class AbstractAuth(object):

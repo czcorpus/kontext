@@ -1982,6 +1982,12 @@ msgstr "Pro pokračování se prosím <span class=\"sign-in\">přihlašte</span>
 msgid "keyboard"
 msgstr "klávesnice"
 
+msgid "Application outage"
+msgstr "Odstávka aplikace"
+
+msgid "The application is under maintenance. Sorry for inconvenience."
+msgstr "Právě probíhá údržba aplikace. Omlouváme se za případné obtíže."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

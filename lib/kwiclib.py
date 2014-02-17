@@ -21,11 +21,7 @@ import re
 
 import manatee
 from strings import import_string, export_string
-
-try:
-    _
-except NameError:
-    _ = lambda s: s
+from translation import ugettext as _
 
 
 number_re = re.compile('[0-9]+$')

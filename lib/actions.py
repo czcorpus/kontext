@@ -28,18 +28,14 @@ import corplib
 import plugins
 import butils
 from kwiclib import Kwic
-from strings import import_string
-
-try:
-    _
-except NameError:
-    _ = lambda s: s
+from strings import import_string, format_number
+from translation import ugettext as _
 
 
 class Actions(ConcCGI):
 
-    def __init__(self, environ):
-        super(Actions, self).__init__(environ=environ)
+    def __init__(self, environ, ui_lang):
+        super(Actions, self).__init__(environ=environ, ui_lang=ui_lang)
         self.contains_within = False
         self.disabled_menu_items = ()
 
@@ -1029,7 +1025,7 @@ class Actions(ConcCGI):
         from_line = int(from_line)
         to_line = int(to_line)
 
-        err = conccgi.validate_range((from_line, to_line), (1, None))
+        err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
 
@@ -1199,7 +1195,7 @@ class Actions(ConcCGI):
         else:
             to_line = int(to_line)
         num_lines = to_line - from_line + 1
-        err = conccgi.validate_range((from_line, to_line), (1, None))
+        err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
 
@@ -1743,8 +1739,8 @@ class Actions(ConcCGI):
                 aname = col['name'].split('.')[-1]
                 for val in col['Values']:
                     if format_num:
-                        val['xcnt'] = conccgi.formatnum(compute_norm(
-                            aname, attr, val['v']))
+                        val['xcnt'] = format_number(compute_norm(
+                            aname, attr, val['v']), lang=self.ui_lang)
                     else:
                         val['xcnt'] = compute_norm(aname, attr, val['v'])
         return {'Blocks': tt, 'Normslist': self.get_normslist(basestructname)}
@@ -1884,8 +1880,8 @@ class Actions(ConcCGI):
                 subcname = subc_list[0]['n']
                 subc_list[0]['selected'] = True
                 sc = self.cm.get_Corpus('%s:%s' % (basecorpname, subcname))
-                corp_size = conccgi.formatnum(sc.size())
-                subcorp_size = conccgi.formatnum(sc.search_size())
+                corp_size = format_number(sc.size(), lang=self.ui_lang)
+                subcorp_size = format_number(sc.search_size(), lang=self.ui_lang)
             else:
                 subc_list = []
                 corp_size = 0
@@ -1974,8 +1970,8 @@ class Actions(ConcCGI):
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
         return {'subCorpusName': subcname,
-                'corpusSize': conccgi.formatnum(sc.size()),
-                'subCorpusSize': conccgi.formatnum(sc.search_size())}
+                'corpusSize': format_number(sc.size(), lang=self.ui_lang),
+                'subCorpusSize': format_number(sc.search_size(), lang=self.ui_lang)}
 
     ajax_subcorp_info.access_level = 1
     ajax_subcorp_info.return_type = 'json'

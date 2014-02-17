@@ -16,6 +16,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
+#from translation import ugettext as _
 #from cmpltmpl.conc import conc
 #from templating.filters import *
 #extends conc
@@ -132,7 +133,7 @@ $_("Frequency list")#slurp
             #for $w in $i.Word
             <td class="word">$w.n</td>
             #end for
-            <td align="right" class="frequency">#filter $IntegerFormatter# $i.freq #end filter#</td>
+            <td align="right" class="frequency">$format_number($i.freq, mask='%d')</td>
             #if $i.has_key('rel')
             <td align="right">$i.rel</td>
             #end if

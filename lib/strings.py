@@ -39,3 +39,7 @@ def export_string(s, from_encoding):
         return s.encode(from_encoding)
     else:
         return s.decode('utf-8').encode(from_encoding)
+
+
+def format_number(v, lang, mask=None):
+    return v
