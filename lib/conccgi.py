@@ -291,8 +291,8 @@ class ConcCGI(CGIPublisher):
         return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
 
-    def _is_corpus_free_action(self, action):
-        return action in ('login', 'loginx', 'logoutx')
+    def _requires_corpus_access(self, action):
+        return action not in ('login', 'loginx', 'logoutx')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -385,7 +385,7 @@ class ConcCGI(CGIPublisher):
 
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
-        if not self._is_corpus_free_action(path[0]):
+        if self._requires_corpus_access(path[0]):
             self.corpname, fallback = self._determine_curr_corpus(form, allowed_corpora)
             if fallback:
                 path = [CGIPublisher.NO_OPERATION]
