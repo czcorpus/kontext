@@ -268,7 +268,7 @@ class CGIPublisher(object):
                 if lgdir.lower().startswith(lg):
                     ans = lgdir
                     break
-        if ans is None and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
+        if not ans and plugins.has_plugin('getlang') and hasattr(plugins.getlang, 'get_fallback_language'):
             ans = plugins.getlang.get_fallback_language()
         return ans
 
