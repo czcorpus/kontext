@@ -1739,8 +1739,7 @@ class Actions(ConcCGI):
                 aname = col['name'].split('.')[-1]
                 for val in col['Values']:
                     if format_num:
-                        val['xcnt'] = format_number(compute_norm(
-                            aname, attr, val['v']), lang=self.ui_lang)
+                        val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
                     else:
                         val['xcnt'] = compute_norm(aname, attr, val['v'])
         return {'Blocks': tt, 'Normslist': self.get_normslist(basestructname)}
@@ -1880,8 +1879,8 @@ class Actions(ConcCGI):
                 subcname = subc_list[0]['n']
                 subc_list[0]['selected'] = True
                 sc = self.cm.get_Corpus('%s:%s' % (basecorpname, subcname))
-                corp_size = format_number(sc.size(), lang=self.ui_lang)
-                subcorp_size = format_number(sc.search_size(), lang=self.ui_lang)
+                corp_size = format_number(sc.size())
+                subcorp_size = format_number(sc.search_size())
             else:
                 subc_list = []
                 corp_size = 0
@@ -1970,8 +1969,8 @@ class Actions(ConcCGI):
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
         return {'subCorpusName': subcname,
-                'corpusSize': format_number(sc.size(), lang=self.ui_lang),
-                'subCorpusSize': format_number(sc.search_size(), lang=self.ui_lang)}
+                'corpusSize': format_number(sc.size()),
+                'subCorpusSize': format_number(sc.search_size())}
 
     ajax_subcorp_info.access_level = 1
     ajax_subcorp_info.return_type = 'json'

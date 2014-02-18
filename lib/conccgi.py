@@ -557,7 +557,7 @@ class ConcCGI(CGIPublisher):
                                     or self.corpname)
 
         result['corp_description'] = corpus.get_info()
-        result['corp_size'] = format_number(corpus.size(), lang=self.ui_lang)
+        result['corp_size'] = format_number(corpus.size())
         corp_conf_info = plugins.corptree.get_corpus_info(corpus.get_conf('NAME'))
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
@@ -569,7 +569,7 @@ class ConcCGI(CGIPublisher):
         result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
-            result['subcorp_size'] = format_number(sc.search_size(), lang=self.ui_lang)
+            result['subcorp_size'] = format_number(sc.search_size())
         else:
             result['subcorp_size'] = None
         attrlist = corpus.get_conf('ATTRLIST').split(',')
@@ -684,7 +684,7 @@ class ConcCGI(CGIPublisher):
             result['avail_languages'] = settings.get_full('global', 'translations')
 
         # util functions
-        result['format_number'] = partial(format_number, lang=self.ui_lang)
+        result['format_number'] = partial(format_number)
 
         # is there a concordance information in session?
         self._restore_conc_results(result)

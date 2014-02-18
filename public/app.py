@@ -45,6 +45,7 @@ else:
 import plugins
 import settings
 import translation
+import strings
 
 from CGIPublisher import BonitoCookie
 
@@ -150,6 +151,7 @@ class App(object):
         setup_logger(settings)
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
+        strings.configure(settings.get('global', 'translations'))
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
     def __call__(self, environ, start_response):
@@ -158,6 +160,7 @@ class App(object):
         """
         ui_lang = get_lang(environ)
         translation.activate(ui_lang)
+        strings.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
 
         if environ['PATH_INFO'] in ('/', ''):
