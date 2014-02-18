@@ -107,7 +107,7 @@ $_("Collocations")#slurp
         #else
           #set $hs = ''
         #end if
-        ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>$_($h.n)</a>
+        ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>#if $h.n #$_($h.n)#else# #end if#</a>
         </th>
       #end for
       </tr>
