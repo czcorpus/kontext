@@ -117,6 +117,8 @@ def get_lang(environ):
         lgs_string = plugins.getlang.fetch_current_language(BonitoCookie(environ.get('HTTP_COOKIE', '')))
     if lgs_string is None:
         best_lang = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
+        if best_lang is None:
+            best_lang = 'en_US'
         lgs_string = best_lang.replace('-', '_')
     return lgs_string
 
