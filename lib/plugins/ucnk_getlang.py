@@ -13,7 +13,7 @@
 """
 A custom solution to obtain language settings from a cookie
 """
-
+import os
 import Cookie
 
 
@@ -42,12 +42,23 @@ class GetLang(object):
         returns:
         code of the detected language or an empty string in case no value was found
         """
+        def fetch_translations():
+            ans = {}
+            root_dir = '%s/../../locale' % os.path.dirname(__file__)
+            for item in os.listdir(root_dir):
+                c1, c2 = item.split('_')
+                if not c1 in ans:
+                    ans[c1] = []
+                ans[c1].append(item)
+            return ans
+
         if not isinstance(source, Cookie.BaseCookie):
             raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
         if self.cookie_name in source:
             code = source[self.cookie_name].value
-            if code == 'cs':
-                code = 'cs_CZ'
+            if '_' not in code:
+                avail_trans = fetch_translations()
+                code = avail_trans.get(code, (None,))[0]
             return code
         return None
 
