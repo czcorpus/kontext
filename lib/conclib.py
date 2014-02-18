@@ -210,7 +210,7 @@ class PyConc(manatee.Concordance):
         ans = {}
         for i in range(attr.id_range()):
             value = attr.id2str(i)
-            valid = attr.str2id(unicode(value))
+            valid = attr.str2id(self.import_string(value))
             r = self.pycorp.filter_query(struct.attr_val(attr_name, valid))
             cnt = 0
             while not r.end():
