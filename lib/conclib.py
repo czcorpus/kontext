@@ -74,7 +74,7 @@ class PyConc(manatee.Concordance):
         self.orig_corp = orig_corp or self.pycorp
         self.corpus_encoding = corpus_encoding
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
-        self.export_string = partial(export_string, from_encoding=self.corpus_encoding)
+        self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
         if action == 'q':
             params = self.export_string(params)

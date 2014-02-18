@@ -73,7 +73,7 @@ class Kwic(object):
         self.conc = conc
         self.corpus_encoding = self.corpus.get_conf('ENCODING')  # TODO
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
-        self.export_string = partial(export_string, from_encoding=self.corpus_encoding)
+        self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
     def printkwic(self, froml=0, tol=5, leftctx='15#', rightctx='15#', attrs='word', refs='#', maxcontext=0):
         def strip_tags(tokens):

@@ -98,18 +98,18 @@ def import_string(s, from_encoding):
         return None  # TODO raise an exception
 
 
-def export_string(s, from_encoding):
+def export_string(s, to_encoding):
     """
     Exports a string from KonText to Manatee
 
     arguments:
     s -- converted string
-    from_encoding -- target encoding
+    to_encoding -- target encoding
     """
     if type(s) is unicode:
-        return s.encode(from_encoding)
+        return s.encode(to_encoding)
     else:
-        return s.decode('utf-8').encode(from_encoding)
+        return s.decode('utf-8').encode(to_encoding)
 
 
 def format_number(v, mask=None):
