@@ -363,7 +363,7 @@ $_ca_topbar
                     <span class="separ">|</span> #end if
 
                 <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-                <span class="ipm">%format_number($result_relative_freq, mask='%01.2f')</span>
+                <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
                 $result_relative_freq_rel_to
                 #if $result_arf
                 <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
