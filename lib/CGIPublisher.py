@@ -501,7 +501,11 @@ class CGIPublisher(object):
         # response rendering
         cont = self.output_headers(action_metadata.get('return_type', None))
         if cont:
-            self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None))
+            if self.format == 'json':
+                return_type = self.format
+            else:
+                return_type = action_metadata.get('return_type', None)
+            self.output_result(methodname, tmpl, result, return_type)
 
         # session closing
         if plugins.has_plugin('sessions'):
