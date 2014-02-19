@@ -14,7 +14,6 @@
 import re
 import locale
 from types import ListType
-import os
 import cgi
 import json
 import time
