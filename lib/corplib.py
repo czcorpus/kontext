@@ -30,11 +30,10 @@ from translation import ugettext as _
 
 class CorpusManager(object):
 
-    def __init__(self, corplist=[], subcpath=[], gdexpath=[]):
-        self.corplist = corplist
-        self.subcpath = subcpath
+    def __init__(self, corplist=(), subcpath=(), gdexpath=()):
+        self.corplist = list(corplist)
+        self.subcpath = list(subcpath)
         self.gdexdict = dict(gdexpath)
-        self.encoding = 'iso-8859-2'  # TODO
 
     def default_subcpath(self, corp):
         if type(corp) is not manatee.Corpus:
@@ -83,7 +82,7 @@ class CorpusManager(object):
     def corpconf_pairs(self, corp, label):
         if type(corp) is UnicodeType:
             corp = self.get_Corpus(corp)
-        val = corp.get_conf(label).decode(self.encoding)
+        val = import_string(corp.get_conf(label), from_encoding=corp.get_conf('ENCODING'))
         if len(val) > 2:
             val = val[1:].split(val[0])
         else:
@@ -92,16 +91,10 @@ class CorpusManager(object):
 
     def corplist_with_names(self, paths, use_db_whitelist=True):
         """
-        Parameters
-        ----------
-        paths : list of dicts ('id' -> ?, 'path' -> ?, 'sentence_struct' -> ?)
+        arguments:
+        paths -- list of dicts ('id' -> ?, 'path' -> ?, 'sentence_struct' -> ?)
             data from corpora hierarchy XML
-
-        current_corp_encoding : str
-            text encoding used in currently selected corpus
-
-        use_db_witelist : bool
-            if True then access is limited according to the data (specified per user)
+        use_db_witelist -- if True then access is limited according to the data (specified per user)
             found in the database
         """
         simple_names = []
