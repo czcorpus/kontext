@@ -469,8 +469,14 @@ class CGIPublisher(object):
         # response rendering
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
+
+        if self.format == 'json':
+            return_type = self.format
+        else:
+            return_type = action_metadata.get('return_type', None)
+
         if self._status < 300 or self._status >= 400:
-            self.output_result(methodname, tmpl, result, action_metadata.get('return_type', None), outf=output)
+            self.output_result(methodname, tmpl, result, return_type, outf=output)
         ans_body = output.getvalue()
         output.close()
         self._close_session()
