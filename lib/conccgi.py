@@ -19,6 +19,7 @@ import json
 import time
 from functools import partial
 import logging
+import inspect
 
 import corplib
 import conclib
@@ -248,7 +249,7 @@ class ConcCGI(CGIPublisher):
 
     def _get_persistent_attrs(self):
         """
-        Returns list of object's attributes which (along with their values) will be preserved using cookies.
+        Returns list of object's attributes which (along with their values) will be preserved
         """
         return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
@@ -334,6 +335,8 @@ class ConcCGI(CGIPublisher):
         Runs before main action is processed
         """
         super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
+        param_types = dict(inspect.getmembers(self.__class__, predicate=lambda x: isinstance(x, Parameter)))
+
         if not action_metadata:
             action_metadata = {}
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
@@ -376,7 +379,11 @@ class ConcCGI(CGIPublisher):
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 key = str(k)
-                val = self.recode_input(form.getvalue(k))
+                val = form.getvalue(k)
+                # we have to clean-up the mess with multiple defined values (TODO not a system solution)
+                if key in param_types and not param_types[key].is_array() and type(val) is list:
+                    val = val[0]
+                val = self.recode_input(val)
                 if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
                     val = ''
                 named_args[key] = val
@@ -616,7 +623,7 @@ class ConcCGI(CGIPublisher):
         CGIPublisher._add_globals(self, result)
 
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
-        result['human_corpname'] = self._humanize_corpname(self.corpname) if self.corpname else ''
+        result['human_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (conclib.manatee.version(), version.version)
         result['display_closed_conc'] = len(self.q) > 0
@@ -769,7 +776,7 @@ class ConcCGI(CGIPublisher):
             ans.update(self._session['forms'])
         return ans
 
-    def _humanize_corpname(self, c):
+    def _canonical_corpname(self, c):
         """
         Internally we sometimes use path-like corpora names to distinguish between
         two access levels (this is achieved by two different registry files).
@@ -779,10 +786,7 @@ class ConcCGI(CGIPublisher):
         they see 'syn2010' in both cases. This method solves the problem by converting
         path-like names to basename ones.
         """
-        t = c.split('/', 1)
-        if len(t) > 1:
-            return t[1]
-        return t[0]
+        return c.rsplit('/', 1)[-1]
 
     def _has_configured_speech(self):
         """

@@ -25,6 +25,7 @@ from datetime import datetime
 
 from strings import import_string
 import manatee
+from functools import partial
 from translation import ugettext as _
 
 
@@ -213,41 +214,6 @@ def add_block_items(items, attr='class', val='even', block_size=3):
     return items
 
 
-def ws_wordlist(corp, wlmaxitems=100, wlsort=''):
-    import wmap
-
-    csize = corp.search_size()
-    basewsbase = os.path.basename(corp.get_conf('WSBASE'))
-    freqs_file = subcorp_base_file(corp, basewsbase + '.hfrq')
-    lex_file = subcorp_base_file(corp, basewsbase + '.hlex')
-
-    if not os.path.isfile(freqs_file): # not computed
-        raise MissingSubCorpFreqFile(corp)
-    if os.path.isfile(subcorp_base_file(corp, 'hashws.build')):
-        raise MissingSubCorpFreqFile(corp) # computation in progress
-
-    result_str = wmap.StrVector()
-    wmap.terms_lexicon(freqs_file, lex_file, result_str, wlmaxitems)
-
-    # find out seek and cnt
-
-    ws1 = wmap.WMap(corp.get_conf('WSBASE'), 0, 0, 0, corp.get_conffile())
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2 = item.split('\t')[:3]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2))
-    result = []
-    for id1, id2, id3, w1, gramrel, w2 in sorted(result_parsed):
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: continue
-        freq = ws_subc_freq(ws3, corp)
-        result.append((-freq, w1, gramrel, w2, ws3.tell()))
-    return add_block_items([{'w1': w1, 'gramrel': g, 'w2': w2, 'seek': seek,
-                             'freq': -mfreq, 'str': ' '.join([w1, g, w2])}
-                            for mfreq, w1, g, w2, seek in sorted(result)])
-
-
 def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
              wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
     blacklist = set(blacklist)
@@ -286,6 +252,8 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                 else:
                     items.append((frq, word))
     else:  # word list according to pattern
+        enc_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
@@ -304,9 +272,12 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                     break
             id = gen.next()
             frq = attrfreq[id]
-            if not frq: continue
-            if frq >= wlminfreq and (not words or attr.id2str(id) in words) \
-                and (not blacklist or attr.id2str(id) not in blacklist):
+            if not frq:
+                continue
+
+            id_value = enc_string(attr.id2str(id))
+            if frq >= wlminfreq and (not words or id_value in words) \
+                    and (not blacklist or id_value not in blacklist):
                 if wlnums == 'arf':
                     items.append((round(frq, 1), id))
                 else:
@@ -316,7 +287,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
         del items[:-wlmaxitems]
         items.reverse()
     if not words or wlpat != '.*':
-        items = [(f, attr.id2str(i)) for (f, i) in items]
+        items = [(f, enc_string(attr.id2str(i))) for (f, i) in items]
     return add_block_items([{'str': w, 'freq': f}
                             for f, w in items])
 
