@@ -2312,4 +2312,4 @@ class Actions(ConcCGI):
             self._set_not_found()
             return None
 
-    audio.access_level = 1
+    audio.access_level = 0
