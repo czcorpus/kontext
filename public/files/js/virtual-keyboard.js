@@ -618,8 +618,10 @@ var VKI_attach, VKI_close;
         if ({}.toString.call(triggerElem) != '[object Array]') {
             triggerElem = [triggerElem];
         }
-        triggerElem.forEach(function (trigElm) {
-            trigElm.onclick = function () {
+
+        var i;
+        for (i = 0; i < triggerElem.length; i += 1) {
+            triggerElem[i].onclick = function () {
                 if (!self.VKI_target) {
                     self.VKI_show(elem);
 
@@ -627,7 +629,7 @@ var VKI_attach, VKI_close;
                     self.VKI_close(elem);
                 }
             };
-        });
+        };
 
     } else {
       elem.onfocus = function() {
