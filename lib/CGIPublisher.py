@@ -418,6 +418,8 @@ class CGIPublisher(object):
     def _redirect(self, url, code=303):
         #self._headers.clear() # TODO resolve this
         self._status = code
+        if type(url) is unicode:
+            url = url.encode('utf-8')
         self._headers['Location'] = url
 
     def _set_not_found(self):
@@ -530,7 +532,6 @@ class CGIPublisher(object):
         ans_body = output.getvalue()
         output.close()
         self._close_session()
-
         return self._export_status(), headers, ans_body
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
