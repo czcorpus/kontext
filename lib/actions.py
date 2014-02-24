@@ -28,6 +28,7 @@ import corplib
 import plugins
 import butils
 from kwiclib import Kwic
+import strings
 from strings import import_string, format_number
 from translation import ugettext as _
 
@@ -1947,8 +1948,12 @@ class Actions(ConcCGI):
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
         sort_key, rev = tables.parse_sort_key(sort)
-        cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
-        data = sorted(data, key=lambda x: x[sort_key], reverse=rev, cmp=cmp_functions[sort_key])
+
+        if sort_key in ('size', 'created'):
+            data = sorted(data, key=lambda x: x[sort_key], reverse=rev)
+        else:
+            data = strings.sort(data, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
+
         sort_keys = dict([(x, (x, '')) for x in ('n', 'size', 'created')])
         if not rev:
             sort_keys[sort_key] = ('-%s' % sort_key, '&#8593;')

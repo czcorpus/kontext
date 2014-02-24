@@ -368,14 +368,14 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                             vals.append({'v': int(attr.id2str(i))})
                         except:
                             vals.append({'v': attr.id2str(i)})
-                elif hsep: # hierarchical
+                elif hsep:  # hierarchical
                     vals = [{'v': attr.id2str(i)}
                             for i in range(attr.id_range())
                             if not multisep in attr.id2str(i)]
                 else:
-                    vals = [{'v': attr.id2str(i).decode('iso-8859-2')}
+                    vals = [{'v': import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))}
                             for i in range(attr.id_range())]
-                if hsep: # hierarchical
+                if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
                 else:
@@ -400,7 +400,8 @@ def get_attr_hierarchy(vals, hsep, multisep):
 
 
 def print_attr_hierarchy(layer, level=0, label='', hsep='::'):
-    if not layer: return []
+    if not layer:
+        return []
     result = []
     if level > 0:
         startdiv = True
@@ -597,7 +598,8 @@ def ws_keywords(sc, scref, wlminfreq=10, wlmaxitems=100, simple_n=100):
     result = {}
     for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
         ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: continue
+        if not ws3:
+            continue
         freq = ws_subc_freq(ws3, sc)
         result[(-score, w1, gramrel, w2)] = [freq, float(freq) * 1000000 / size,
                                              ws3.tell()]
@@ -610,9 +612,11 @@ def ws_keywords(sc, scref, wlminfreq=10, wlmaxitems=100, simple_n=100):
         result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
                               ws1.coll2id(w2), w1, gramrel, w2, float(score)))
     for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
-        if not (-score, w1, gramrel, w2) in result: continue
+        if not (-score, w1, gramrel, w2) in result:
+            continue
         ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: result[(-score, w1, gramrel, w2)].extend([0, 0, 0])
+        if not ws3:
+            result[(-score, w1, gramrel, w2)].extend([0, 0, 0])
         freq = ws_subc_freq(ws3, scref)
         result[(-score, w1, gramrel, w2)].extend(
             [freq, float(freq) * 1000000 / size, ws3.tell()])

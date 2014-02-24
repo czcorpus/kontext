@@ -18,6 +18,26 @@
 import os
 import json
 from threading import local
+try:
+    from icu import Locale, Collator
+except ImportError:
+    import locale
+
+    class Locale(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+    class Collator(object):
+        def __init__(self, locale):
+            self.locale = locale
+
+        def compare(self, s1, s2):
+            return locale.strcoll(s1, s2)
+
+        @staticmethod
+        def createInstance(locale):
+            return Collator(locale)
+
 
 _formats = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
@@ -122,3 +142,17 @@ def format_number(v, mask=None):
     mask -- optional formatting string
     """
     return _current.formatter.format_number(v, mask)
+
+
+def sort(iterable, loc, key=None, reverse=False):
+    """
+    Creates new sorted list from passed list (or any iterable data) according to the passed locale.
+
+    arguments:
+    iterable -- iterable object (typically a list or a tuple)
+    loc -- locale identifier (e.g. cs_CZ.UTF-8, en_US,...)
+    key -- access to sorted value
+    reverse -- whether the result should be in reversed order (default is False)
+    """
+    collator = Collator.createInstance(Locale(loc))
+    return sorted(iterable, cmp=collator.compare, key=key, reverse=reverse)
