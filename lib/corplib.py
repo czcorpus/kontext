@@ -23,7 +23,7 @@ from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
 
-from strings import import_string
+from strings import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
@@ -252,16 +252,18 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                 else:
                     items.append((frq, word))
     else:  # word list according to pattern
-        enc_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+        dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+        enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
 
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
             nwre = ''
         try:
-            gen = attr.regexp2ids(wlpat.strip(), 0, nwre)
+            gen = attr.regexp2ids(enc_string(wlpat.strip()), 0, nwre)
         except TypeError:
-            gen = attr.regexp2ids(wlpat.strip(), 0)
+            gen = attr.regexp2ids(enc_string(wlpat.strip()), 0)
+
         while not gen.end():
             if wlsort == 'f':
                 if len(items) > 5 * wlmaxitems:
@@ -275,7 +277,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
             if not frq:
                 continue
 
-            id_value = enc_string(attr.id2str(id))
+            id_value = dec_string(attr.id2str(id))
             if frq >= wlminfreq and (not words or id_value in words) \
                     and (not blacklist or id_value not in blacklist):
                 if wlnums == 'arf':
@@ -287,7 +289,7 @@ def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
         del items[:-wlmaxitems]
         items.reverse()
     if not words or wlpat != '.*':
-        items = [(f, enc_string(attr.id2str(i))) for (f, i) in items]
+        items = [(f, dec_string(attr.id2str(i))) for (f, i) in items]
     return add_block_items([{'str': w, 'freq': f}
                             for f, w in items])
 
