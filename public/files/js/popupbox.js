@@ -99,7 +99,7 @@ define(['win', 'jquery'], function (win, $) {
      *
      * @param {HTMLElement|String|jQuery} elm
      */
-    TooltipBox.prototype.import = function (elm) {
+    TooltipBox.prototype.importElement = function (elm) {
         this.origContentParent = $(elm).parent();
         this.importedElement = $(elm);
         this.importedElement.css('display', 'block'); // TODO
