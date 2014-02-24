@@ -26,6 +26,7 @@ from urllib import urlencode, quote_plus, unquote, quote
 import json
 import logging
 import StringIO
+import inspect
 
 import plugins
 import settings
@@ -54,7 +55,7 @@ def function_defaults(fun):
 
 
 def correct_types(args, defaults, del_nondef=0, selector=0):
-    corr_func = {type(0): int, type(0.0): float, ListType: lambda x: [x]}
+    corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
     for full_k, v in args.items():
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
@@ -64,7 +65,7 @@ def correct_types(args, defaults, del_nondef=0, selector=0):
             del args[full_k]
         elif k in defaults.keys():
             default_type = type(defaults[k])
-            if default_type is not ListType and type(v) is ListType:
+            if default_type is not TupleType and type(v) is TupleType:
                 args[k] = v = v[-1]
             if type(v) is not default_type:
                 try:
@@ -139,25 +140,45 @@ class UserActionException(Exception):
     pass
 
 
+class Parameter(object):
+    """
+    Setting an object of this type as a static property
+    of CGIPublisher causes CGIPublisher to create an object
+    property with wrapped value. This solves the attribute
+    mess in the original Bonito code.
+    """
+    def __init__(self, value):
+        """
+        arguments:
+        value -- wrapped value (primitive types, empty dict, empty list, tuple)
+        """
+        self.value = value
+
+    def unwrap(self):
+        if type(self.value) is list:
+            ans = self.value[:]
+        elif self.value == {}:
+            ans = {}
+        elif type(self.value) is dict:
+            raise TypeError('Cannot define static property as a non-empty dictionary: %s' % (self.value, ))
+        else:
+            ans = self.value
+        return ans
+
+
 class CGIPublisher(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
     """
-    _keep_blank_values = 0
+    _keep_blank_values = Parameter(0)
+    _url_parameters = Parameter([])
+    exceptmethod = Parameter(None)
+    format = Parameter(u'')
+    reload = Parameter(0)
+
     _template_dir = u'../cmpltmpl/'
     _tmp_dir = u'/tmp'
-    _url_parameters = []
-    exceptmethod = None
-    debug = None
-    precompile_template = 1
-    format = u''
-    uilang = u''
-    reload = 0
-    _has_access = 1
-    _anonymous = 0
-    menupos = ''
-    user = None
 
     NO_OPERATION = 'nop'
 
@@ -185,6 +206,11 @@ class CGIPublisher(object):
         self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
+        self._anonymous = None
+        self.user = None
+
+        for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
+            setattr(self, k, v.unwrap())
 
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
@@ -281,12 +307,15 @@ class CGIPublisher(object):
         except ImportError:
             return False
 
-    def _export_status(self, status):
+    def _export_status(self):
         """
-        TODO
+        Exports numerical HTTP status into a HTTP header format
+        (e.g. 200 -> '200 OK'
+
+        TODO: values not found in the STATUS_MAP should be treated in a better way
         """
-        s = CGIPublisher.STATUS_MAP.get(status, '')
-        return '%s  %s' % (status, s)
+        s = CGIPublisher.STATUS_MAP.get(self._status, '')
+        return '%s  %s' % (self._status, s)
 
     def _setup_user_paths(self, user_file_id):
         if not self._anonymous:
@@ -313,6 +342,16 @@ class CGIPublisher(object):
         result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
 
     def _get_template_class(self, name):
+        """
+        Imports a python module corresponding to the passed template name and
+        returns a class representing respective HTML template
+
+        arguments:
+        name -- name of the template/class
+
+        returns:
+        an object representing the class
+        """
         file, pathname, description = imp.find_module(name, [self._template_dir])
         module = imp.load_module(name, file, pathname, description)
         return getattr(module, name)
@@ -451,7 +490,7 @@ class CGIPublisher(object):
             methodname, tmpl, result = self.process_method('message', path, named_args)
             plugins.db.recover()
 
-        except Exception as e: # we assume that this means some kind of a fatal error
+        except Exception as e:  # we assume that this means some kind of a fatal error
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             if settings.is_debug_mode():
                 named_args['message'] = ('error', u'%s' % e)
@@ -481,7 +520,7 @@ class CGIPublisher(object):
         output.close()
         self._close_session()
 
-        return self._export_status(self._status), headers, ans_body
+        return self._export_status(), headers, ans_body
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
@@ -497,6 +536,9 @@ class CGIPublisher(object):
         reload = {'headers': 'wordlist_form'}
         if tpl_data is None:
             tpl_data = {}
+        # reload parameter returns user from a result page
+        # to a respective form preceding the result (by convention,
+        # this is usually encoded as [action] -> [action]_form
         if getattr(self, 'reload', None):
             self.reload = None
             if methodname != 'subcorp':
@@ -561,7 +603,7 @@ class CGIPublisher(object):
         if isinstance(x, DictType):
             d = {}
             for key, value in x.items():
-                if key in ['corp_full_name', 'Corplist']:
+                if key in ('corp_full_name', 'Corplist'):
                     d[key] = value
                 else:
                     d[key] = self.rec_recode(value, enc, utf8_out)
@@ -632,11 +674,6 @@ class CGIPublisher(object):
             self._add_globals(result)
             self._add_undefined(result, methodname)
             result = self.rec_recode(result)
-            custom_attributes = [a for a in CGIPublisher.__dict__.keys() if not a.startswith('__')
-                                 and not a.endswith('__')]
-            for attr in custom_attributes:  # recoding self
-                setattr(self, attr, self.rec_recode(getattr(self, attr)))
-
             if template.endswith('.tmpl'):
                 TemplateClass = self._get_template_class(template[:-5])
                 result = TemplateClass(searchList=[result, self])
