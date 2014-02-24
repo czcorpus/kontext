@@ -682,7 +682,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
                     widgetElement : opt.widgetElement
                 });
 
-                box.import('#tag-builder-modal'); // TODO !!!
+                box.importElement('#tag-builder-modal'); // TODO !!!
 
                 $(opt.insertTagButtonElement).one('click', insertTagClickAction);
                 $(win.document).on('keypress', buttonEnterAction);
