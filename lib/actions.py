@@ -1912,12 +1912,11 @@ class Actions(ConcCGI):
 
     subcorp.access_level = 1
 
-    def subcorp_list(self, selected_subc=[], sort='n'):
+    def subcorp_list(self, selected_subc=(), sort='n'):
         """
         """
         import tables
         import locale
-
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 
@@ -1951,7 +1950,6 @@ class Actions(ConcCGI):
                     })
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
-
         sort_key, rev = tables.parse_sort_key(sort)
         cmp_functions = {'n': locale.strcoll, 'size': None, 'created': None}
         data = sorted(data, key=lambda x: x[sort_key], reverse=rev, cmp=cmp_functions[sort_key])

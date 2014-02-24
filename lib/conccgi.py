@@ -23,7 +23,7 @@ import logging
 import corplib
 import conclib
 import version
-from CGIPublisher import CGIPublisher, UserActionException, correct_types
+from CGIPublisher import CGIPublisher, UserActionException, correct_types, Parameter
 import plugins
 import settings
 import taghelper
@@ -70,143 +70,140 @@ class ConcCGI(CGIPublisher):
                                  'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
                                  'menu-frequency', 'menu-collocations')
 
-    error = u''
-    fc_lemword_window_type = u'both'
-    fc_lemword_type = u'all'
-    fc_lemword_wsize = 5,
-    fc_lemword = u'',
-    fc_pos_window_type = u'both'
-    fc_pos_type = u'all'
-    fc_pos_wsize = 5,
-    fc_pos = [],
-    ml = 0
-    concarf = u''
-    Aligned = []
-    prevlink = u''
-    nextlink = u''
-    concsize = u''
-    samplesize = 0  # orig 1e7
-    Lines = []
-    fromp = u'1'
-    numofpages = u''
-    pnfilter = u'p'
-    filfl = u'f'
-    filfpos = u'-5'
-    filtpos = u'5'
-    sicase = u''
-    sbward = u''
-    ml1icase = u''
-    ml2icase = u''
-    ml3icase = u''
-    ml4icase = u''
-    ml1bward = u''
-    ml2bward = u''
-    ml3bward = u''
-    freq_sort = u''
-    heading = 0
-    saveformat = u'text'
-    wlattr = u''
-    wlpat = u''
-    wlpage = 1
-    wlcache = u''
-    blcache = u''
-    simple_n = 1
-    usearf = 0
-    collpage = 1
-    fpage = 1
-    fmaxitems = 50
-    ftt_include_empty = u''
-    subcsize = 0
-    processing = 0
-    ref_usesubcorp = u''
-    wlsort = u''
-    keywords = u''
-    Keywords = []
-    ref_corpname = u''
-    Items = []
-    format = u''
-    selected = u''
-    pages = 0
-    leftctx = u''
-    rightctx = u''
-    numbering = 0
-    align_kwic = 0
-    stored = u''
+    error = Parameter(u'')
+    fc_lemword_window_type = Parameter(u'both')
+    fc_lemword_type = Parameter(u'all')
+    fc_lemword_wsize = Parameter(5)
+    fc_lemword = Parameter(u'')
+    fc_pos_window_type = Parameter(u'both')
+    fc_pos_type = Parameter(u'all')
+    fc_pos_wsize = Parameter(5)
+    fc_pos = Parameter([])
+    ml = Parameter(0)
+    concarf = Parameter(u'')
+    Aligned = Parameter([])
+    prevlink = Parameter(u'')
+    nextlink = Parameter(u'')
+    concsize = Parameter(u'')
+    samplesize = Parameter(0)  # orig 1e7
+    Lines = Parameter([])
+    fromp = Parameter(u'1')
+    numofpages = Parameter(u'')
+    pnfilter = Parameter(u'p')
+    filfl = Parameter(u'f')
+    filfpos = Parameter(u'-5')
+    filtpos = Parameter(u'5')
+    sicase = Parameter(u'')
+    sbward = Parameter(u'')
+    ml1icase = Parameter(u'')
+    ml2icase = Parameter(u'')
+    ml3icase = Parameter(u'')
+    ml4icase = Parameter(u'')
+    ml1bward = Parameter(u'')
+    ml2bward = Parameter(u'')
+    ml3bward = Parameter(u'')
+    freq_sort = Parameter(u'')
+    heading = Parameter(0)
+    saveformat = Parameter(u'text')
+    wlattr = Parameter(u'')
+    wlpat = Parameter(u'')
+    wlpage = Parameter(1)
+    wlcache = Parameter(u'')
+    blcache = Parameter(u'')
+    simple_n = Parameter(1)
+    usearf = Parameter(0)
+    collpage = Parameter(1)
+    fpage = Parameter(1)
+    fmaxitems = Parameter(50)
+    ftt_include_empty = Parameter(u'')
+    subcsize = Parameter(0)
+    processing = Parameter(0)
+    ref_usesubcorp = Parameter(u'')
+    wlsort = Parameter(u'')
+    keywords = Parameter(u'')
+    Keywords = Parameter([])
+    ref_corpname = Parameter(u'')
+    Items = Parameter([])
+    format = Parameter(u'')
+    selected = Parameter(u'')
+    pages = Parameter(0)
+    leftctx = Parameter(u'')
+    rightctx = Parameter(u'')
+    numbering = Parameter(0)
+    align_kwic = Parameter(0)
+    stored = Parameter(u'')
     # end
 
-    add_vars = {}
-    corpname = ''  # must be an empty string and not None
-    usesubcorp = u''
-    subcname = u''
-    subcpath = []
+    corpname = Parameter('')  # must be an empty string and not None
+    usesubcorp = Parameter(u'')
+    subcname = Parameter(u'')
+    subcpath = Parameter([])
+    css_prefix = Parameter(u'')
+    iquery = Parameter(u'')
+    queryselector = Parameter(u'iqueryrow')
+    lemma = Parameter(u'')
+    lpos = Parameter(u'')
+    phrase = Parameter(u'')
+    char = Parameter(u'')
+    word = Parameter(u'')
+    wpos = Parameter(u'')
+    cql = Parameter(u'')
+    tag = Parameter('')
+    default_attr = Parameter(None)
+    save = Parameter(1)
+    async = Parameter(1)
+    spos = Parameter(3)
+    skey = Parameter(u'rc')
+    qmcase = Parameter(0)
+    rlines = Parameter(u'250')
+    attrs = Parameter(u'word')
+    ctxattrs = Parameter(u'word')
+    attr_allpos = Parameter(u'kw')
+    allpos = Parameter(u'kw')
+    structs = Parameter(u'p,g,err,corr')
+    q = Parameter([])
+    pagesize = Parameter(40)
+    gdexconf = Parameter(u'')
+    gdexpath = Parameter([])  # [('confname', '/path/to/gdex.conf'), ...]
+    gdexcnt = Parameter(100)
+    gdex_enabled = Parameter(0)
+    alt_gdexconf = Parameter(None)
+    copy_icon = Parameter(0)
+    _avail_tbl_templates = Parameter(u'')
+    multiple_copy = Parameter(0)
+    wlsendmail = Parameter(u'')
+    cup_hl = Parameter(u'q')
+
+    sortlevel = Parameter(1)
+    flimit = Parameter(0)
+    freqlevel = Parameter(1)
+    ml1pos = Parameter(1)
+    ml2pos = Parameter(1)
+    ml3pos = Parameter(1)
+    ml4pos = Parameter(1)
+    ml1ctx = Parameter(u'0~0>0')
+    ml2ctx = Parameter(u'0~0>0')
+    ml3ctx = Parameter(u'0~0>0')
+    ml4ctx = Parameter(u'0~0>0')
+    tbl_template = Parameter(u'none')
+    errcodes_link = Parameter(u'')
+    hidenone = Parameter(1)
+
+    can_annotate = Parameter(0)
+    enable_sadd = Parameter(0)
+    annotconc = Parameter(u'')
+
+    empty_attr_value_placeholder = Parameter('')
+    tag_builder_support = Parameter([])
+
+    shuffle = Parameter(0)
+    SubcorpList = Parameter([])
+
     _conc_dir = u''
     _home_url = u'./first_form'
-    files_path = u'../files'
-    css_prefix = u''
-    iquery = u''
-    queryselector = u'iqueryrow'
-    lemma = u''
-    lpos = u''
-    phrase = u''
-    char = u''
-    word = u''
-    wpos = u''
-    cql = u''
-    tag = ''
-    default_attr = None
-    save = 1
-    async = 1
-    spos = 3
-    skey = u'rc'
-    qmcase = 0
-    rlines = u'250'
-    attrs = u'word'
-    ctxattrs = u'word'
-    attr_allpos = u'kw'
-    allpos = u'kw'
-    structs = u'p,g,err,corr'
-    q = []
-    pagesize = 40
-    gdexconf = u''
-    gdexpath = []  # [('confname', '/path/to/gdex.conf'), ...]
-    gdexcnt = 100
-    gdex_enabled = 0
-    alt_gdexconf = None
-    copy_icon = 0
-    _avail_tbl_templates = u''
-    multiple_copy = 0
-    wlsendmail = u''
-    cup_hl = u'q'
+    _files_path = u'../files'
 
-    sortlevel = 1
-    flimit = 0
-    freqlevel = 1
-    ml1pos = 1
-    ml2pos = 1
-    ml3pos = 1
-    ml4pos = 1
-    ml1ctx = u'0~0>0'
-    ml2ctx = u'0~0>0'
-    ml3ctx = u'0~0>0'
-    ml4ctx = u'0~0>0'
-    tbl_template = u'none'
-    errcodes_link = u''
-    hidenone = 1
-
-    can_annotate = 0
-    enable_sadd = 0
-    annotconc = u''
-
-    empty_attr_value_placeholder = ''
-    tag_builder_support = []
-
-    alpha_features = 0
-
-    shuffle = 0
-
-    SubcorpList = []
-
-    add_vars['findx_upload'] = [u'LastSubcorp']
+    add_vars = {'findx_upload': [u'LastSubcorp']}
 
     def __init__(self, environ, ui_lang):
         super(ConcCGI, self).__init__(environ=environ, ui_lang=ui_lang)
@@ -284,16 +281,13 @@ class ConcCGI(CGIPublisher):
                 if len(elms) == 2 and elms[0] != self.corpname:
                     del(options[k])
 
-    def _setup_action_params(self, actions=None):
+    def _apply_user_settings(self, actions=None):
         """
-        Sets-up parameters related to processing of current action.
-        This typically includes concordance-related values (to be able to keep the state),
-        user's options etc.
+        Updates object's attributes according to user settings. Settings
+        are loaded via settings_storage plugin.
 
-        Parameters
-        ----------
-        actions : callable
-            a function taking a single parameter (a dictionary) which can can be used
+        arguments:
+        actions -- a callable taking a single parameter (a dictionary) which can can be used
             to alter some of the parameters
         """
         options = {}
@@ -343,10 +337,9 @@ class ConcCGI(CGIPublisher):
         if not action_metadata:
             action_metadata = {}
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
-                                environ=self.environ, fp=None)
+                                environ=self.environ, fp=self.environ['wsgi.input'])
 
-        self._setup_action_params(self._init_default_settings)
-
+        self._apply_user_settings(self._init_default_settings)
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if not self._is_corpus_free_action(path[0]):
@@ -550,6 +543,7 @@ class ConcCGI(CGIPublisher):
             return EmptyCorpus()
 
     def _add_corpus_related_globals(self, result, corpus):
+        result['files_path'] = self._files_path
         result['struct_ctx'] = corpus.get_conf('STRUCTCTX')
         result['corp_doc'] = corpus.get_conf('DOCUMENTATION')
         result['corp_full_name'] = (corpus.get_conf('NAME')
