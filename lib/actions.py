@@ -2425,7 +2425,6 @@ class Actions(ConcCGI):
         access corpus 'X' then all related audio files are accessible).
         """
         path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.corpname, chunk)
-
         if os.path.exists(path) and not os.path.isdir(path):
             with open(path, 'r') as f:
                 file_size = os.path.getsize(path)
@@ -2440,4 +2439,4 @@ class Actions(ConcCGI):
             self._set_not_found()
             return None
 
-    audio.access_level = 1
+    audio.access_level = 0
