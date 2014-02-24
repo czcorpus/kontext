@@ -155,7 +155,7 @@ class Actions(ConcCGI):
                 i += 1
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
-        kwic = Kwic(self._corp(), self._humanize_corpname(self.corpname), conc)
+        kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
         labelmap = {}
 
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
@@ -1038,7 +1038,7 @@ class Actions(ConcCGI):
             self.make_wl_query()  # multilevel wordlist
 
         result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
@@ -1202,7 +1202,7 @@ class Actions(ConcCGI):
         self.collpage = 1
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.xml"' % saved_filename
@@ -1441,7 +1441,7 @@ class Actions(ConcCGI):
     wltype = 'simple'
     wlnums = 'frq'
 
-    def wordlist(self, wlpat='', wltype='simple', corpname='', usesubcorp='',
+    def wordlist(self, wlpat='', wltype='simple', usesubcorp='',
                  ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
         """
         """
@@ -1502,18 +1502,14 @@ class Actions(ConcCGI):
                 })
                 result_list = result['Keywords']
             else:  # ordinary list
-                if self.wlattr == 'ws_collocations':
-                    result.update({'Items': self.call_function(corplib.ws_wordlist,
-                                                               (self._corp(),))[wlstart:]})
-                else:
-                    if hasattr(self, 'wlfile') and self.wlpat == '.*':
-                        self.wlsort = ''
-                    result.update({'Items': self.call_function(corplib.wordlist,
-                                                               (self._corp(), self.wlwords))[wlstart:]})
-                    if self.wlwords:
-                        result['wlcache'] = self.wlcache
-                    if self.blacklist:
-                        result['blcache'] = self.blcache
+                if hasattr(self, 'wlfile') and self.wlpat == '.*':
+                    self.wlsort = ''
+                result.update({'Items': self.call_function(corplib.wordlist,
+                                                           (self._corp(), self.wlwords))[wlstart:]})
+                if self.wlwords:
+                    result['wlcache'] = self.wlcache
+                if self.blacklist:
+                    result['blcache'] = self.blcache
                 result_list = result['Items']
             if len(result_list) < self.wlmaxitems / wlpage:
                 result['lastpage'] = 1
@@ -1643,7 +1639,7 @@ class Actions(ConcCGI):
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
-        saved_filename = self._humanize_corpname(self.corpname)
+        saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
             self._headers['Content-Type'] = 'application/XML'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
@@ -2039,7 +2035,7 @@ class Actions(ConcCGI):
 
         try:
             conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-            kwic = Kwic(self._corp(), self._humanize_corpname(self.corpname), conc)
+            kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
             conc.switch_aligned(os.path.basename(self.corpname))
             from_line = int(from_line)
             to_line = int(to_line)
@@ -2058,7 +2054,7 @@ class Actions(ConcCGI):
                                       align=[], alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
-            mkfilename = lambda suffix: '%s-concordance.%s' % (self._humanize_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
@@ -2150,7 +2146,7 @@ class Actions(ConcCGI):
         format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
 
         ans = {
-            'corpname': self._humanize_corpname(self._corp().get_conf('NAME')),
+            'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
             'description': self._corp().get_info(),
             'size': format_int(self._corp().size()),
             'attrlist': [],
@@ -2274,7 +2270,7 @@ class Actions(ConcCGI):
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
                                                           to_date=to_date, offset=offset, limit=limit, types=types)
             for row in rows:
-                row['corpname'] = self._humanize_corpname(row['corpname'])
+                row['corpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
         else:
             rows = []
