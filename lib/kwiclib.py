@@ -309,7 +309,7 @@ class Kwic(object):
         fragment_separator = '<%s' % speech_struct_str
         last_fragment = None
         last_speech_id = prev_speech_id
-        create_speech_path = lambda sp_id: urllib.urlencode({'corpname': self.corpus_name, 'chunk': sp_id})
+        create_speech_path = lambda sp_id: urllib.urlencode({'corpname': self.corpus_fullname, 'chunk': sp_id})
 
         for item in line:
             item['str'] = self.import_string(item['str'])

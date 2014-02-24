@@ -28,6 +28,7 @@ from CGIPublisher import CGIPublisher, UserActionException, correct_types, Param
 import plugins
 import settings
 import taghelper
+import strings
 from strings import format_number
 from translation import ugettext as _
 
@@ -461,7 +462,7 @@ class ConcCGI(CGIPublisher):
         """
         basecorpname = self.corpname.split(':')[0]
         # TODO - locale cannot be used here
-        subcorp_list = sorted(self.cm.subcorp_names(basecorpname), key=lambda x: x['n'], cmp=locale.strcoll)
+        subcorp_list = strings.sort(self.cm.subcorp_names(basecorpname), enc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
         out['SubcorpList'] = subcorp_list
