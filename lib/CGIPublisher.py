@@ -525,6 +525,9 @@ class CGIPublisher(object):
         reload = {'headers': 'wordlist_form'}
         if tpl_data is None:
             tpl_data = {}
+        # reload parameter returns user from a result page
+        # to a respective form preceding the result (by convention,
+        # this is usually encoded as [action] -> [action]_form
         if getattr(self, 'reload', None):
             self.reload = None
             if methodname != 'subcorp':
