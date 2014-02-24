@@ -146,13 +146,18 @@ class Parameter(object):
     of CGIPublisher causes CGIPublisher to create an object
     property with wrapped value. This solves the attribute
     mess in the original Bonito code.
+
+    arguments:
+    value -- a default value of the parameter (defines both value and type)
+    persistent -- bool value specifying whether we should save the value to user's settings
     """
-    def __init__(self, value):
+    def __init__(self, value, persistent=False):
         """
         arguments:
         value -- wrapped value (primitive types, empty dict, empty list, tuple)
         """
         self.value = value
+        self.persistent = persistent
 
     def unwrap(self):
         if type(self.value) is list:
@@ -164,6 +169,12 @@ class Parameter(object):
         else:
             ans = self.value
         return ans
+
+    def is_array(self):
+        return type(self.value) is tuple or type(self.value) is list
+
+    def is_persistent(self):
+        return self.persistent
 
 
 class CGIPublisher(object):
