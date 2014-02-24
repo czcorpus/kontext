@@ -744,7 +744,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
                 if ($('#within-structattr').length > 0) {
                     jqWithinModal.css('display', 'block');
-                    box.import(jqWithinModal);
+                    box.importElement(jqWithinModal);
                     $('#within-insert-button').off('click');
                     $('#within-insert-button').one('click', clickAction(box));
                     $(win.document).off('keypress.withinBoxEnter');
@@ -775,7 +775,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
                             html += '</select>';
                             loaderGIF.remove();
 
-                            box.import(jqWithinModal);
+                            box.importElement(jqWithinModal);
                             jqWithinModal.find('.inputs').prepend(html);
                             jqWithinModal.css('display', 'block');
 
