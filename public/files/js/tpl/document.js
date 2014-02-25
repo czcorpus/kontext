@@ -795,7 +795,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             {
                 closeIcon : true,
                 type : 'plain',
-                timeout : null
+                timeout : null,
+                onClose : function () {
+                     $(win.document).off('keypress.withinBoxEnter');
+                }
             }
         );
     };
