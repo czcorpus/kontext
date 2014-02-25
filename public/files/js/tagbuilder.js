@@ -665,13 +665,15 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
                         $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
                     }
                     box.close();
-                    $(win.document).off('keypress', buttonEnterAction);
+                    $(win.document).off('keypress.tagBuilder');
                     $(opt.inputElement).focus();
                 };
 
                 buttonEnterAction = function (event) {
                     if (event.which === 13) {
                         insertTagClickAction(event);
+                        event.stopPropagation();
+                        event.preventDefault();
                     }
                 };
 
@@ -685,7 +687,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
                 box.importElement('#tag-builder-modal'); // TODO !!!
 
                 $(opt.insertTagButtonElement).one('click', insertTagClickAction);
-                $(win.document).on('keypress', buttonEnterAction);
+                $(win.document).on('keypress.tagBuilder', buttonEnterAction);
 
 
                 finalizeCallback();
@@ -693,7 +695,10 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
             {
                 closeIcon : true,
                 type : 'plain',
-                timeout : null
+                timeout : null,
+                onClose : function () {
+                    $(win.document).off('keypress.tagBuilder');
+                }
             }
         );
 
