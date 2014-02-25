@@ -46,13 +46,6 @@ soundManager.setup({
 #end if
 #end def
 
-#def left_submenu_save
-#filter WebSafe
-<li><a title="$_("Save concordance to a text file or xml")" href="saveconc_form?$q;$globals&amp;fromp=$fromp&amp;pagesize=$pagesize&amp;leftctx=$leftctx.replace('#', '')&amp;rightctx=$rightctx.replace('#', '')">$_("Save")</a></li>
-#end filter
-#end def
-
-
 #def bodyonload
 require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
     conf.annotconc = "$annotconc";
