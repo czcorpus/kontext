@@ -107,6 +107,10 @@ define(['jquery', 'tpl/document', 'popupbox'], function ($, layoutModel, popupBo
                 }
             });
         });
+
+        $('.query-history .selectable').on('click', function (event) {
+            layoutModel.selectText(event.target);
+        });
     };
 
     lib.setupQueryOverviewLinks = function () {

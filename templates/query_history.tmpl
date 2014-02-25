@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #block main
 <section>
     <h2>$_('Recent queries')</h2>
-
+    #if $len($data) > 0
     #set $i = 0
     #for $row in $data
     <div border="0" class="query-history">
@@ -50,8 +50,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
             </tr>
             <tr>
-                <td colspan="2" class="query">#if $len($row.params_description) > 0#$row.params_description[0][1]#end if#</td>
+                <td colspan="2" class="query">
+                #if $len($row.params_description) > 0
+                    <div class="selectable">#filter $HtmlEscape#$row.params_description[0][1]['query']#end filter#</div>
+                #end if
+                </td>
             </tr>
+            #if $row.params_description[0][1]
+            <tr>
+                <td colspan="2" class="options">
+                $_('default attribute'):
+                <span class="default-attr">$row.params_description[0][1]['default']</span>
+                </td>
+            </tr>
+            #end if
             <tr>
                 <td colspan="2" class="options">
                 $_('additional actions'):
@@ -67,12 +79,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             </tr>
             <tr>
                 <td colspan="2" class="link">
-                    <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('open')</a>
+                    <a class="open" href="#filter WebSafe#$row.url#end filter#">$_('details')</a>
                 </td>
             </tr>
         </table>
     </div>
     #set $i += 1
     #end for
+    #else
+    <p>[$_('Empty list')]</p>
+    #end if
 </section>
 #end block

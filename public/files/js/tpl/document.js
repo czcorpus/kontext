@@ -169,6 +169,29 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
     };
 
     /**
+     *
+     * @param {HTMLElement|string|jQuery} element
+     */
+    lib.selectText = function (element) {
+        var elm = $(element),
+            range,
+            selection;
+
+        if (win.document.body.createTextRange) {
+            range = win.document.body.createTextRange();
+            range.moveToElementText(elm.get(0));
+            range.select();
+
+        } else if (win.getSelection) {
+            selection = window.getSelection();
+            range = win.document.createRange();
+            range.selectNodeContents(elm.get(0));
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    };
+
+    /**
      * Handles modal box displaying information about current corpus.
      *
      * @type {{}}
