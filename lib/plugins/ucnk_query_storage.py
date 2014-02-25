@@ -12,6 +12,7 @@
 
 from datetime import datetime
 import time
+import re
 
 
 class QueryStorageException(Exception):
@@ -129,11 +130,22 @@ class QueryStorage(object):
         cursor = conn.cursor()
         cursor.execute(sql, tuple(sql_params))
         rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
+
+        def parse_desc(query_desc):
+            q = list(query_desc[0])
+            r = re.match(r'^(([^,]+),)?(\[.+)', q[1])
+            if r:
+                q[1] = {'default': r.group(2), 'query': r.group(3)}
+            else:
+                q[1] = {'default': None, 'query': q[1]}
+            query_desc[0] = tuple(q)
+            return query_desc
+
         for row in rows:
             row['corpname'] = row['corpname'].decode('utf-8')
             row['url'] = row['url'].decode('utf-8')
             row['params'] = json.loads(row['params'])
-            row['params_description'] = conclib.get_conc_desc(q=row['params'])
+            row['params_description'] = parse_desc(conclib.get_conc_desc(q=row['params']))
             row['description'] = self.decode_description(row['description'])
             row['created'] = datetime.fromtimestamp(row['created'])
             row['url'] = '%s&query_id=%s' % (row['url'], row['id'])

@@ -2278,7 +2278,7 @@ class Actions(ConcCGI):
                 row['corpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
         else:
-            rows = []
+            rows = ()
 
         return {
             'data': rows,
