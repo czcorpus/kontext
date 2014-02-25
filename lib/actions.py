@@ -899,7 +899,7 @@ class Actions(ConcCGI):
             'concsize': conc.size(),
             'fmaxitems': self.fmaxitems,
             'quick_from_line': 1,
-            'quick_to_line': 1000
+            'quick_to_line': None
         }
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
@@ -1024,9 +1024,11 @@ class Actions(ConcCGI):
         """
         save a frequency list
         """
-
         from_line = int(from_line)
-        to_line = int(to_line)
+        if not to_line:
+            to_line = sys.maxint
+        else:
+            to_line = int(to_line)
 
         err = conccgi.validate_range((from_line, to_line), (1, None))
         if err is not None:
@@ -1530,7 +1532,7 @@ class Actions(ConcCGI):
             except Exception:
                 result['wlattr_label'] = self.wlattr
 
-            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=1000' \
+            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=' \
                      % (self.wlattr, wlpat)
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
@@ -1634,7 +1636,7 @@ class Actions(ConcCGI):
         save word list
         """
         from_line = int(from_line)
-        to_line = int(to_line)
+        to_line = int(to_line) if to_line else sys.maxint
         line_offset = (from_line - 1)
         self.wlmaxitems = sys.maxint  # TODO
         ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
