@@ -37,18 +37,6 @@ $_("Word list")#slurp
 #end filter
 #end def
 
-#def left_submenu_options
-#filter WebSafe
-  <li><a href="wordlist_form?$curr_settings">$_("Change options")</a></li>
-#end filter
-#end def
-
-#def left_submenu_save
-#filter WebSafe
-<li><a title="$_("Save Word List/Keywords to a text file or XML")" href="savewl_form?$curr_settings">$_("Save")</a></li>
-#end filter
-#end def
-
 #def bodyonload
 require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
     conf.corpnameUrl = "$corpname_url";
