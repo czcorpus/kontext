@@ -845,7 +845,7 @@ class Actions(ConcCGI):
     fcrit = []
 
     @exposed(access_level=1)
-    def freqs(self, fcrit=[], flimit=0, freq_sort='', ml=0, line_offset=0):
+    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
         """
