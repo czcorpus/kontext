@@ -14,6 +14,10 @@
   padding: 5px 20px;
 }
 
+#conc-bottom-bar.minimized {
+  padding: 0px 20px;
+}
+
 #conc-top-bar span.separ {
   font-size: 120%;
   font-weight: normal;
@@ -24,6 +28,7 @@
 
 #conclines-wrapper {
   overflow: auto;
+  background-color: #FFFFFF;
 }
 
 #conclines {
@@ -36,19 +41,6 @@ table#conclines {
   border-spacing: 0px;
   padding-bottom: 20px;
   width: 100%;
-}
-
-#hidden-conc {
-  text-align: center;
-  background-color: #FFFFFF;
-}
-
-#hidden-conc a {
-  display: block;
-}
-
-#hidden-conc a img {
-  padding-top: 5px;
 }
 
 table#conclines tr td {
@@ -378,4 +370,14 @@ table#conclines .concordance-col-heading {
 
 .jump-to select {
   font-size: 80%;
+}
+
+.expand-conc {
+  display: block;
+  text-align: center;
+  padding-top: 3px;
+}
+
+.expand-conc img {
+  display: inline-block;
 }

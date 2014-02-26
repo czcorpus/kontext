@@ -71,6 +71,10 @@ class ConcCGI(CGIPublisher):
                                  'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
                                  'menu-frequency', 'menu-collocations')
 
+    CONC_PERSISTENT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
+                             'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
+                             'nextlink', 'lastlink', 'prevlink', 'firstlink')
+
     error = Parameter(u'')
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
@@ -89,7 +93,7 @@ class ConcCGI(CGIPublisher):
     samplesize = Parameter(0)  # orig 1e7
     Lines = Parameter([])
     fromp = Parameter(u'1')
-    numofpages = Parameter(u'')
+    numofpages = Parameter(0)
     pnfilter = Parameter(u'p')
     filfl = Parameter(u'f')
     filfpos = Parameter(u'-5')
@@ -694,28 +698,26 @@ class ConcCGI(CGIPublisher):
         conc_key = '#'.join(self.q)
         if 'conc' in self._session and conc_key in self._session['conc']:
             tmp = self._session['conc']
+
             storage['conc_persist'] = True
-            storage['sampled_size'] = tmp[conc_key].get('sampled_size', None)
-            storage['fullsize'] = tmp[conc_key].get('fullsize', None)
-            storage['concsize'] = tmp[conc_key].get('concsize', None)
-            storage['result_relative_freq'] = tmp[conc_key].get('result_relative_freq', None)
-            storage['result_relative_freq_rel_to'] = tmp[conc_key].get('result_relative_freq_rel_to', None)
-            storage['result_arf'] = tmp[conc_key].get('result_arf', None)
-            storage['result_shuffled'] = tmp[conc_key].get('result_shuffled', None)
+            for k in ConcCGI.CONC_PERSISTENT_ATTRS:
+                storage[k] = tmp[conc_key].get(k)
         else:
             storage['conc_persist'] = False
 
-    def _store_conc_results(self, data):
+    def _store_conc_results(self, src):
         if not 'conc' in self._session:
             self._session['conc'] = {}
 
         curr_time = int(time.time())
+        # let's clean-up too old records to keep session data reasonably big
         for k in self._session['conc'].keys():
             if '__timestamp__' in self._session['conc'] \
                 or curr_time - self._session['conc'][k]['__timestamp__'] > settings.get_int('global',
                                                                                             'conc_persistence_time'):
                 self._session['conc'].pop(k)
 
+        data = dict([(k, src.get(k)) for k in ConcCGI.CONC_PERSISTENT_ATTRS])
         data['__timestamp__'] = int(curr_time)
         self._session['conc']['#'.join(self.q)] = data
 
