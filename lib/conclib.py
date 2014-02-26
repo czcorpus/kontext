@@ -483,30 +483,41 @@ def load_map(cache_dir):
     return ret
 
 
-def get_cached_conc_sizes(corp, q=[], cache_dir="cache", cachefile=None):
+def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
+    import struct
+
+    ans = {'finished': None, 'concsize': None, 'fullsize': None, 'relconcsize': None}
+
     if not cachefile:  # AJAX call
         q = tuple(q)
-        subchash = getattr(corp, "subchash", None)
+        subchash = getattr(corp, 'subchash', None)
         cache_dir = cache_dir + '/' + corp.corpname + '/'
         saved = load_map(cache_dir)
         cache_val = saved.get((subchash, q))
-        cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
-    import struct
-    cache = open(cachefile, "rb")
-    flck_sh_lock(cache)
-    cache.seek(15)
-    finished = str(ord(cache.read(1)))
-    (fullsize,) = struct.unpack("q", cache.read(8))
-    cache.seek(32)
-    (concsize,) = struct.unpack("i", cache.read(4))
-    flck_unlock(cache)
-    relconcsize = None
-    if fullsize > 0:
-        relconcsize = 1000000.0 * fullsize / corp.search_size()
-    else:
-        relconcsize = 1000000.0 * concsize / corp.search_size()
-    return {'finished': finished, 'concsize': concsize, 'fullsize': fullsize,
-            'relconcsize': relconcsize}
+        if cache_val:
+            cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
+
+    if cachefile:
+        cache = open(cachefile, 'rb')
+        flck_sh_lock(cache)
+        cache.seek(15)
+        finished = str(ord(cache.read(1)))
+        (fullsize,) = struct.unpack('q', cache.read(8))
+        cache.seek(32)
+        (concsize,) = struct.unpack('i', cache.read(4))
+        flck_unlock(cache)
+
+        if fullsize > 0:
+            relconcsize = 1000000.0 * fullsize / corp.search_size()
+        else:
+            relconcsize = 1000000.0 * concsize / corp.search_size()
+
+        ans['finished'] = finished
+        ans['concsize'] = concsize
+        ans['fullsize'] = fullsize
+        ans['relconcsize'] = relconcsize
+
+    return ans
 
 
 def uniqname(key, used):

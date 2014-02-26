@@ -156,3 +156,22 @@ def sort(iterable, loc, key=None, reverse=False):
     """
     collator = Collator.createInstance(Locale(loc))
     return sorted(iterable, cmp=collator.compare, key=key, reverse=reverse)
+
+
+def number_formatting(key=None):
+    """
+    Returns number formatting related configuration defined in respective formats.json file.
+    Both, a single value and all the values can be retrieved.
+
+    arguments:
+    key -- concrete value; if none specified then all the key->value pairs are returned
+
+    returns:
+    a string if a key is specified and the value exists
+    or a dict if no key is provided but the 'numbers' section still exists in formats.json
+    or None if nothing is found
+    """
+    ans = _current.formatter.conf.get('numbers')
+    if key is not None and ans is not None:
+        ans = ans.get(key)
+    return ans

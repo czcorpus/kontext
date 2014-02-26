@@ -12,7 +12,6 @@
 # GNU General Public License for more details.
 
 import re
-import locale
 from types import ListType
 import cgi
 import json
@@ -461,7 +460,6 @@ class ConcCGI(CGIPublisher):
         out : dict
         """
         basecorpname = self.corpname.split(':')[0]
-        # TODO - locale cannot be used here
         subcorp_list = strings.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list

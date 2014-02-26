@@ -28,8 +28,6 @@ import os
 import wsgiref.util
 import logging
 from logging import handlers
-import gettext
-import __builtin__
 from werkzeug.http import parse_accept_header
 import locale
 
@@ -49,7 +47,7 @@ import strings
 
 from CGIPublisher import BonitoCookie
 
-locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
+locale.setlocale(locale.LC_ALL, 'en_US.utf-8')  # we ensure that the application's locale is always the same
 logger = logging.getLogger('')  # root logger
 
 
