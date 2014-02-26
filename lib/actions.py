@@ -376,7 +376,7 @@ class Actions(ConcCGI):
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
 
-    def _set_new_viewattrs(self, setattrs=[], allpos='', setstructs=[], setrefs=[]):
+    def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=()):
         self.attrs = ','.join(setattrs)
         self.structs = ','.join(setstructs)
         self.refs = ','.join(setrefs)
@@ -387,7 +387,7 @@ class Actions(ConcCGI):
             self.ctxattrs = 'word'
 
     @exposed(access_level=1, template='view.tmpl')
-    def viewattrsx(self, setattrs=[], allpos='', setstructs=[], setrefs=[], shuffle=0):
+    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), shuffle=0):
         self._set_new_viewattrs(setattrs=setattrs, allpos=allpos, setstructs=setstructs, setrefs=setrefs)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize'], self.corpname)
         # TODO refs_up ???
@@ -641,7 +641,7 @@ class Actions(ConcCGI):
                          fc_pos_window_type='',
                          fc_pos_wsize=0,
                          fc_pos_type='',
-                         fc_pos=[]):
+                         fc_pos=()):
         """
         first query screen
         """
@@ -739,7 +739,7 @@ class Actions(ConcCGI):
               fc_pos_window_type='',
               fc_pos_wsize=0,
               fc_pos_type='',
-              fc_pos=[]):
+              fc_pos=()):
 
         self._set_first_query(fc_lemword_window_type,
                               fc_lemword_wsize,
@@ -985,7 +985,7 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['savefreq_form'] = ['concsize']
 
     @exposed(access_level=1)
-    def savefreq_form(self, fcrit=[], flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
+    def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
         """
         Displays a form to set-up the 'save frequencies' operation
         """
@@ -1006,7 +1006,7 @@ class Actions(ConcCGI):
         }
 
     @exposed(access_level=1)
-    def savefreq(self, fcrit=[], flimit=0, freq_sort='', ml=0,
+    def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0):
         """
         save a frequency list
@@ -1080,7 +1080,7 @@ class Actions(ConcCGI):
         return result
 
     @exposed(access_level=1, template='freqs.tmpl')
-    def freqtt(self, flimit=0, fttattr=[]):
+    def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
             self.exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
@@ -1950,7 +1950,7 @@ class Actions(ConcCGI):
                 'subcorplist_size': min(len(subc), 20)}
 
     @exposed(template='subcorp_form')
-    def delsubc(self, subc=[]):
+    def delsubc(self, subc=()):
         base = self.subcpath[-1]
         for subcorp in subc:
             cn, sn = subcorp.split(':', 1)
@@ -2021,7 +2021,7 @@ class Actions(ConcCGI):
             labelmap = {}
             data = self.call_function(kwic.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()),
                                       fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
-                                      align=[], alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
+                                      align=(), alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
@@ -2215,7 +2215,7 @@ class Actions(ConcCGI):
         }
 
     @exposed(access_level=1)
-    def query_history(self, offset=0, limit=100, from_date='', to_date='', types=[]):
+    def query_history(self, offset=0, limit=100, from_date='', to_date='', types=()):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-view')
