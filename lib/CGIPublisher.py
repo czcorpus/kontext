@@ -40,6 +40,22 @@ def replace_dot_error_handler(err):
 codecs.register_error('replacedot', replace_dot_error_handler)
 
 
+def exposed(**kwargs):
+    """
+    This decorator allows more convenient way how to
+    set methods' attributes. Please note that there is
+    always an implicit property '__exposed__' set to True.
+
+    arguments:
+    **kwargs -- all the keyword args will be converted into a dict
+    """
+    def wrapper(func):
+        func.__dict__.update(kwargs)
+        func.__dict__['__exposed__'] = True
+        return func
+    return wrapper
+
+
 def function_defaults(fun):
     defs = {}
     if isclass(fun):
