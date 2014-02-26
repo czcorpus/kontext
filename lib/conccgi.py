@@ -741,7 +741,7 @@ class ConcCGI(CGIPublisher):
                                                     translate=translate)]
 
         if 'TextTypeSel' in names:
-            result['TextTypeSel'] = self.texttypes_with_norms(ret_nums=False)
+            result['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in names:
             result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
