@@ -16,7 +16,6 @@ import math
 import os
 import sys
 import re
-import locale
 import csv
 
 import conccgi
@@ -237,14 +236,13 @@ class Actions(ConcCGI):
     def get_cached_conc_sizes(self):
         self._headers['Content-Type'] = 'text/plain'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
-
         return {
-            'finished': int(cs["finished"]),
+            'finished': cs["finished"],
             'concsize': cs["concsize"],
             'relconcsize': cs["relconcsize"],
             'fullsize': cs["fullsize"],
-            'thousandsSeparator': u'%s' % locale.localeconv()['thousands_sep'].decode('utf-8'),
-            'radixSeparator': u'%s' % locale.localeconv()['decimal_point'].decode('utf-8')
+            'thousandsSeparator': u'%s' % strings.number_formatting('thousandSeparator'),
+            'decimalSeparator': u'%s' % strings.number_formatting('decimalSeparator')
         }
 
     get_cached_conc_sizes.return_type = 'json'
@@ -1912,7 +1910,6 @@ class Actions(ConcCGI):
         """
         """
         import tables
-        import locale
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 
@@ -2144,28 +2141,26 @@ class Actions(ConcCGI):
         """
         """
         corp_conf_info = plugins.corptree.get_corpus_info(self._corp().corpname)
-        TemplateClass = self._get_template_class('corpus_detail')
-        template = unicode(TemplateClass(searchList=[]))
-
-        format_int = lambda x: locale.format('%d', x, True).decode('UTF-8')
+        template_class = self._get_template_class('corpus_detail')
+        template = unicode(template_class(searchList=[]))
 
         ans = {
             'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
             'description': self._corp().get_info(),
-            'size': format_int(self._corp().size()),
+            'size': strings.format_number(int(self._corp().size())),
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'template': template
         }
         try:
-            ans['attrlist'] = [{'name': item, 'size': format_int(self._corp().get_attr(item).id_range())} for item in
-                               self._corp().get_conf('ATTRLIST').split(',')]
+            ans['attrlist'] = [{'name': item, 'size': strings.format_number(int(self._corp().get_attr(item).id_range()))}
+                               for item in self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = [{'message': ('error', _('Failed to load'))}]
-        ans['structlist'] = [{'name': item, 'size': format_int(self._corp().get_struct(item).size())} for item in
-                             self._corp().get_conf('STRUCTLIST').split(',')]
+        ans['structlist'] = [{'name': item, 'size': strings.format_number(int(self._corp().get_struct(item).size()))}
+                             for item in self._corp().get_conf('STRUCTLIST').split(',')]
 
         return ans
 

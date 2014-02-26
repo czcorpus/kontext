@@ -143,7 +143,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
                         num2Str;
 
                     num2Str = function (n) {
-                        return layoutModel.formatNum(n, data.thousandsSeparator, data.radixSeparator);
+                        return layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
                     };
 
                     if (data.end) {
