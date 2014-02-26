@@ -16,12 +16,14 @@ Features
   * miscellaneous bug fixes
   * code-level changes
 
-    * partially refactored Python code
+    * improved Python code and software architecture
     * completely refactored/rewritten JavaScript code (based on the RequireJS library)
-    * improved logging and error processing
+    * improved logging, error processing and debugging support
 
   * general changes
-    - based on WSGI interface (original version runs as a CGI script)
+
+    - rewritten as a WSGI application (original version runs as a CGI script)
+    - installation-specific functions (authentication, sessions,...) written as dynamic plugins
     - authentication/sessions/query history/user settings implemented as custom modules
     - support for spoken corpora
     - simplified installation and configuration
@@ -44,12 +46,12 @@ Requirements
 
   * Apache 2.x web server
 
-    - WSGI module
+    - WSGI module (e.g. `mod_wsgi <https://code.google.com/p/modwsgi/>`_)
 
   * Python *2.6* or *2.7*
 
-    - lxml module
+    - `lxml <http://lxml.de/>`_ library
+    - `werkzeug <http://werkzeug.pocoo.org/>`_ library (provides WSGI middleware)
     - docutils module (optional)
-    - werkzeug.debug middleware (required in case the 'debug' mode is on)
 
   * `Manatee corpus search engine <http://nlp.fi.muni.cz/trac/noske>`_, version *2.83* and up
