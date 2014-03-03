@@ -136,22 +136,22 @@ class ConcCGI(CGIPublisher):
     skey = Parameter(u'rc')
     qmcase = Parameter(0)
     rlines = Parameter(u'250')
-    attrs = Parameter(u'word')
-    ctxattrs = Parameter(u'word')
+    attrs = Parameter(u'word', persistent=True)
+    ctxattrs = Parameter(u'word', persistent=True)
     attr_allpos = Parameter(u'kw')
     allpos = Parameter(u'kw')
-    structs = Parameter(u'p,g,err,corr')
+    structs = Parameter(u'p,g,err,corr', persistent=True)
     q = Parameter([])
-    pagesize = Parameter(40)
+    pagesize = Parameter(40, persistent=True)
     gdexconf = Parameter(u'')
-    gdexcnt = Parameter(100)
-    gdex_enabled = Parameter(0)
-    alt_gdexconf = Parameter(None)
-    copy_icon = Parameter(0)
+    gdexcnt = Parameter(100, persistent=True)
+    gdex_enabled = Parameter(0, persistent=True)
+    alt_gdexconf = Parameter(None, persistent=True)
+    copy_icon = Parameter(0, persistent=True)
     _avail_tbl_templates = Parameter(u'')
-    multiple_copy = Parameter(0)
+    multiple_copy = Parameter(0, persistent=True)
     wlsendmail = Parameter(u'')
-    cup_hl = Parameter(u'q')
+    cup_hl = Parameter(u'q', persistent=True)
 
     sortlevel = Parameter(1)
     flimit = Parameter(0)
@@ -169,15 +169,15 @@ class ConcCGI(CGIPublisher):
     hidenone = Parameter(1)
 
 
-    kwicleftctx = Parameter('-10')
-    kwicrightctx = Parameter('10')
+    kwicleftctx = Parameter('-10', persistent=True)
+    kwicrightctx = Parameter('10', persistent=True)
     senleftctx_tpl = Parameter('-1:%s')
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
     align = Parameter('')
     sel_aligned = Parameter([])
     maincorp = Parameter('')
-    refs_up = Parameter(0)
+    refs_up = Parameter(0, persistent=True)
 
     can_annotate = Parameter(0)
     enable_sadd = Parameter(0)
@@ -186,7 +186,7 @@ class ConcCGI(CGIPublisher):
     empty_attr_value_placeholder = Parameter('')
     tag_builder_support = Parameter([])
 
-    shuffle = Parameter(0)
+    shuffle = Parameter(0, persistent=True)
     SubcorpList = Parameter([])
 
     _conc_dir = u''
@@ -239,8 +239,8 @@ class ConcCGI(CGIPublisher):
         """
         Returns list of object's attributes which (along with their values) will be preserved
         """
-        return ('attrs', 'ctxattrs', 'structs', 'pagesize', 'copy_icon', 'multiple_copy', 'gdex_enabled', 'gdexcnt',
-                'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
+        attrs = inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter) and m.is_persistent())
+        return tuple([x[0] for x in attrs])
 
     def _is_corpus_free_action(self, action):
         return action in ('login', 'loginx', 'logoutx')
