@@ -17,6 +17,7 @@
 
 import os
 import json
+import re
 from threading import local
 try:
     from icu import Locale, Collator
@@ -175,3 +176,10 @@ def number_formatting(key=None):
     if key is not None and ans is not None:
         ans = ans.get(key)
     return ans
+
+
+def escape(s):
+    """
+    Escapes a CQL attribute value to protect it against RegExp evaluation
+    """
+    return re.compile(r'[][.*+{}?()|\\"$^]').sub(r'\\g<0>', s)

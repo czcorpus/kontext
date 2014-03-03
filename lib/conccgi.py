@@ -32,13 +32,6 @@ from strings import format_number
 from translation import ugettext as _
 
 
-escape_regexp = re.compile(r'[][.*+{}?()|\\"$^]')
-
-
-def escape(s):
-    return escape_regexp.sub(r'\\g<0>', s)
-
-
 def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
     fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
     attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)

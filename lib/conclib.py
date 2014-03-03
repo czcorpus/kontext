@@ -25,7 +25,7 @@ from functools import partial
 import manatee
 import settings
 from butils import *
-from strings import import_string, export_string
+from strings import import_string, export_string, escape
 from kwiclib import tokens2strclass, lngrp_sortstr
 from translation import ugettext as _
 

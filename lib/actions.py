@@ -20,7 +20,7 @@ import csv
 
 import conccgi
 from conccgi import ConcCGI, ConcError
-from CGIPublisher import JsonEncodedData, UserActionException, exposed
+from CGIPublisher import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
 import conclib
 import corplib
@@ -33,6 +33,37 @@ from translation import ugettext as _
 
 
 class Actions(ConcCGI):
+    """
+    KonText actions are specified here
+    """
+
+    cattr = Parameter('word')
+    csortfn = Parameter('d')
+    cbgrfns = Parameter('mtd')
+    cfromw = Parameter(-5)
+    ctow = Parameter(5)
+    cminfreq = Parameter(5)
+    cminbgr = Parameter(3)
+    citemsperpage = Parameter(50)
+
+    wlminfreq = Parameter(5)
+    wlmaxitems = Parameter(100)
+    wlicase = Parameter(0)
+    wlwords = Parameter([])
+    blacklist = Parameter([])
+
+    include_nonwords = Parameter(0)
+    wltype = Parameter('simple')
+    wlnums = Parameter('frq')
+
+    wlstruct_attr1 = Parameter('')
+    wlstruct_attr2 = Parameter('')
+    wlstruct_attr3 = Parameter('')
+
+    subcnorm = Parameter('tokens')
+
+    maxsavelines = Parameter(1000)
+
     """
     This class specifies all the actions KonText offers to a user via HTTP
     """
@@ -506,7 +537,7 @@ class Actions(ConcCGI):
                 else:
                     qitem = '[word="(?i)%(q)s"]'
             if '--' not in iquery:
-                return ''.join([qitem % {'q': conccgi.escape(q)}
+                return ''.join([qitem % {'q': strings.escape(q)}
                                 for q in iquery.split()])
             else:
                 def split_tridash(word, qitem):
@@ -518,7 +549,7 @@ class Actions(ConcCGI):
                                                     qitem % {'q': w2},
                                                     qitem % {'q': w1 + '-' + w2})
 
-                return ''.join([split_tridash(conccgi.escape(q), qitem)
+                return ''.join([split_tridash(strings.escape(q), qitem)
                                 for q in iquery.split()])
 
         if queryselector == 'lemmarow':
@@ -927,7 +958,7 @@ class Actions(ConcCGI):
                             wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, conccgi.escape(w)) for w in wwords])
+                                               % (attr, icase, strings.escape(w)) for w in wwords])
                         else:  # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
@@ -937,7 +968,7 @@ class Actions(ConcCGI):
                             block['unprecise'] = True
                         fquery = '0 0 1 [] within <%s %s="%s" />' \
                                  % (structname, attrname,
-                                    conccgi.escape(item['Word'][0]['n']))
+                                    strings.escape(item['Word'][0]['n']))
                     if not item['freq']: continue
                     efquery = self.urlencode(fquery)
                     item['pfilter'] += ';q=p%s' % efquery
@@ -1077,15 +1108,6 @@ class Actions(ConcCGI):
             self.exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
-
-    cattr = 'word'
-    csortfn = 'd'
-    cbgrfns = 'mtd'
-    cfromw = -5
-    ctow = 5
-    cminfreq = 5
-    cminbgr = 3
-    citemsperpage = 50
 
     @exposed(access_level=1)
     def coll(self):
@@ -1335,12 +1357,6 @@ class Actions(ConcCGI):
                                         'id': id})
         return out
 
-    wlminfreq = 5
-    wlmaxitems = 100
-    wlicase = 0
-    wlwords = []
-    blacklist = []
-
     @exposed(access_level=1)
     def wordlist_form(self, ref_corpname=''):
         """
@@ -1400,10 +1416,6 @@ class Actions(ConcCGI):
             wlwords = [w.strip() for w in cache_file]
             cache_file.close()
         return wlwords, os.path.basename(filename)
-
-    include_nonwords = 0
-    wltype = 'simple'
-    wlnums = 'frq'
 
     @exposed(access_level=1)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='',
@@ -1518,10 +1530,6 @@ class Actions(ConcCGI):
             result.update({'processing': processing == '100' and '99' or processing})
             return result
 
-    wlstruct_attr1 = ''
-    wlstruct_attr2 = ''
-    wlstruct_attr3 = ''
-
     def _make_wl_query(self):
         qparts = []
         if self.wlpat:
@@ -1634,8 +1642,6 @@ class Actions(ConcCGI):
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
         return corplib.build_arf_db_status(self._corp(), attrname)[1]
-
-    subcnorm = 'tokens'
 
     def _texttypes_with_norms(self, subcorpattrs='', list_all=False,
                              format_num=True, ret_nums=True):
@@ -1780,10 +1786,10 @@ class Actions(ConcCGI):
                 v = v.split('|')
             s, a = sa.split('.')
             if type(v) is type([]):
-                query = '(%s)' % ' | '.join(['%s="%s"' % (a, conccgi.escape(v1))
+                query = '(%s)' % ' | '.join(['%s="%s"' % (a, strings.escape(v1))
                                              for v1 in v])
             else:
-                query = '%s="%s"' % (a, conccgi.escape(v))
+                query = '%s="%s"' % (a, strings.escape(v))
             if structs.has_key(s):
                 structs[s].append(query)
             else:
@@ -1951,8 +1957,6 @@ class Actions(ConcCGI):
             except:
                 pass
         return 'Done'
-
-    maxsavelines = 1000
 
     @exposed(access_level=1)
     def saveconc_form(self, from_line=1, to_line=''):
