@@ -61,8 +61,8 @@ class Actions(ConcCGI):
     wlstruct_attr3 = Parameter('')
 
     subcnorm = Parameter('tokens')
-
     maxsavelines = Parameter(1000)
+    fcrit = Parameter([])
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -140,7 +140,7 @@ class Actions(ConcCGI):
             'message': ('info', _('You have been logged out'))
         }
 
-    @exposed()
+    @exposed(vars=('orig_query', ))
     def view(self, view_params={}):
         """
         kwic view
@@ -227,9 +227,7 @@ class Actions(ConcCGI):
         self._save_query()
         return out
 
-    ConcCGI.add_vars['view'] = ['orig_query']
-
-    @exposed()
+    @exposed(vars=('TextTypeSel', 'LastSubcorp'))
     def first_form(self):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
@@ -256,8 +254,6 @@ class Actions(ConcCGI):
         self.last_corpname = self.corpname
         self._save_options(['last_corpname'])
         return out
-
-    ConcCGI.add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
     @exposed(return_type='json')
     def get_cached_conc_sizes(self):
@@ -334,7 +330,7 @@ class Actions(ConcCGI):
     def concdesc_json(self, query_id=''):
         return self.concdesc(query_id)
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize', ))
     def viewattrs(self):
         """
         attrs, refs, structs form
@@ -382,8 +378,6 @@ class Actions(ConcCGI):
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
         out['tbl_labels'] = tbl_labels
         return out
-
-    ConcCGI.add_vars['viewattrs'] = ['concsize']
 
     def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', ctxunit=''):
         self.gdexcnt = gdexcnt
@@ -436,7 +430,7 @@ class Actions(ConcCGI):
                             'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
         return self.view()
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize', ))
     def sort(self):
         """
         sort concordance form
@@ -444,9 +438,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
-    ConcCGI.add_vars['sort'] = ['concsize']
-
-    @exposed(access_level=1, template = 'view.tmpl')
+    @exposed(access_level=1, template='view.tmpl')
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -475,13 +467,13 @@ class Actions(ConcCGI):
         multiple level sort concordance
         """
 
-        crit = conccgi.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
+        crit = ConcCGI.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
                                     ml1icase, ml1bward)
         if sortlevel > 1:
-            crit += conccgi.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
+            crit += ConcCGI.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
                                          ml2icase, ml2bward)
             if sortlevel > 2:
-                crit += conccgi.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
+                crit += ConcCGI.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
                                              ml3icase, ml3bward)
         self.q.append(crit)
         return self.view()
@@ -754,7 +746,7 @@ class Actions(ConcCGI):
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
 
-    @exposed(template='view.tmpl')
+    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'))
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
               fc_lemword_type='',
@@ -779,9 +771,7 @@ class Actions(ConcCGI):
         self._store_query_selector_types()
         return self.view()
 
-    ConcCGI.add_vars['first'] = ['TextTypeSel', 'LastSubcorp']
-
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'))
     def filter_form(self, within=0):
         self.disabled_menu_items = ('menu-save',)
 
@@ -793,9 +783,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         return out
 
-    ConcCGI.add_vars['filter_form'] = ['TextTypeSel', 'LastSubcorp', 'concsize']
-
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ))
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
                inclkwic=False, within=0):
         """
@@ -833,8 +821,6 @@ class Actions(ConcCGI):
                 del self.q[-1]
             raise
 
-    ConcCGI.add_vars['filter'] = ['orig_query']
-
     @exposed()
     def reduce_form(self):
         """
@@ -842,7 +828,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {}
 
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', vars=('concsize',))
     def reduce(self, rlines='250'):
         """
         random sample
@@ -850,9 +836,7 @@ class Actions(ConcCGI):
         self.q.append('r' + rlines)
         return self.view()
 
-    ConcCGI.add_vars['reduce'] = ['concsize']
-
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize',))
     def freq(self):
         """
         frequency list form
@@ -863,9 +847,6 @@ class Actions(ConcCGI):
             'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1),
             'last_num_levels': self._session_get('last_freq_level')
         }
-
-    ConcCGI.add_vars['freq'] = ['concsize']
-    fcrit = []
 
     @exposed(access_level=1)
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
@@ -1005,9 +986,7 @@ class Actions(ConcCGI):
                  'norel': 1, 'fbar': 0})
         return result
 
-    ConcCGI.add_vars['savefreq_form'] = ['concsize']
-
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize',))
     def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
         """
         Displays a form to set-up the 'save frequencies' operation
@@ -1028,7 +1007,7 @@ class Actions(ConcCGI):
             'is_multiblock': is_multiblock
         }
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('Desc',))
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0):
         """
@@ -1086,14 +1065,12 @@ class Actions(ConcCGI):
             }
         return tpl_data
 
-    ConcCGI.add_vars['savefreq'] = ['Desc']
-
     @exposed(access_level=1, template='freqs.tmpl', accept_kwargs=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
         """
-        fcrit = ' '.join([conccgi.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
+        fcrit = ' '.join([ConcCGI.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
                                                kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
                                                kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
@@ -1109,7 +1086,7 @@ class Actions(ConcCGI):
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize',))
     def coll(self):
         """
         collocations form
@@ -1126,9 +1103,7 @@ class Actions(ConcCGI):
                'Pos_ctxs': conclib.pos_ctxs(1, 1)}
         return out
 
-    ConcCGI.add_vars['coll'] = ['concsize']
-
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('concsize',))
     def collx(self, csortfn='d', cbgrfns=('t', 'm', 'd'), line_offset=0, num_lines=None):
         """
         list collocations
@@ -1161,8 +1136,6 @@ class Actions(ConcCGI):
         result['to_line'] = 10000  # TODO
         return result
 
-    ConcCGI.add_vars['collx'] = ['concsize']
-
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                       heading=0):
         """
@@ -1179,7 +1152,7 @@ class Actions(ConcCGI):
             'saveformat': saveformat
         }
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('Desc', 'concsize',))
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                  heading=0, colheaders=0):
         """
@@ -1230,8 +1203,6 @@ class Actions(ConcCGI):
                 'bom_prefix': BOM_UTF8.decode('utf-8')
             }
         return tpl_data
-
-    ConcCGI.add_vars['savecoll'] = ['Desc', 'concsize']
 
     @exposed(access_level=1, template='widectx.tmpl')
     def structctx(self, pos=0, struct='doc'):
@@ -1311,7 +1282,7 @@ class Actions(ConcCGI):
             out = ('', '')
         return ':'.join(map(str.strip, out))
 
-    @exposed(template='findx_upload_form.tmpl')
+    @exposed(template='findx_upload_form.tmpl', vars=('LastSubcorp',))
     def kill_histogram_processing(self):
         import glob
 
@@ -1330,8 +1301,6 @@ class Actions(ConcCGI):
         for name in glob.glob(tmp_glob):
             os.rename(name, name[:-8])
         return self.wordlist_form()
-
-    ConcCGI.add_vars['kill_histogram_processing'] = ['LastSubcorp']
 
     @exposed()
     def findx_form(self):
@@ -1357,7 +1326,7 @@ class Actions(ConcCGI):
                                         'id': id})
         return out
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('LastSubcorp',))
     def wordlist_form(self, ref_corpname=''):
         """
         Word List Form
@@ -1379,8 +1348,6 @@ class Actions(ConcCGI):
         out['ref_corpname'] = ref_corpname
         self._enable_subcorpora_list(out)
         return out
-
-    ConcCGI.add_vars['wordlist_form'] = ['LastSubcorp']
 
     @exposed()
     def findx_upload_form(self):
@@ -1969,7 +1936,7 @@ class Actions(ConcCGI):
             # TODO Save menu should be active here
         return {'from_line': from_line, 'to_line': to_line}
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, vars=('Desc', 'concsize'))
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
                  rightctx='40'):
 
@@ -2073,15 +2040,13 @@ class Actions(ConcCGI):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    ConcCGI.add_vars['saveconc'] = ['Desc', 'concsize']
-
     def _storeconc_path(self, annotconc=None):
         #stderr.write ('storedconc_path: dir: %s, corp: %s, annot: %s\n' %
         #              (self._conc_dir, self.corpname.split, self.annotconc))
         return os.path.join(self._conc_dir, self.corpname.split(':')[0],
                             annotconc or self.annotconc)
 
-    @exposed(access_level=1, template='saveconc_form.tmpl')
+    @exposed(access_level=1, template='saveconc_form.tmpl', vars=('Desc',))
     def storeconc(self, storeconcname=''):
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         self.annotconc = storeconcname
@@ -2097,8 +2062,6 @@ class Actions(ConcCGI):
         open(cpath + '.info', 'w').write(labels)
         os.umask(um)
         return {'stored': storeconcname, 'conc_size': conc.size()}
-
-    ConcCGI.add_vars['storeconc'] = ['Desc']
 
     @exposed(return_type='json')
     def ajax_get_corp_details(self):

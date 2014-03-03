@@ -353,7 +353,7 @@ class CGIPublisher(object):
     def self_encoding(self):
         return 'iso-8859-1'
 
-    def _add_undefined(self, result, methodname):
+    def _add_undefined(self, result, methodname, vars):
         pass
 
     def _add_globals(self, result):
@@ -411,10 +411,19 @@ class CGIPublisher(object):
                 na[a] = getattr(self, a)
         return na
 
-    def _get_method_metadata(self, method_name, data_name):
-        if hasattr(self, method_name) and hasattr(getattr(self, method_name), data_name):
-            return getattr(getattr(self, method_name), data_name)
-        return None
+    def _get_method_metadata(self, method_name, data_name=None):
+        method_obj = getattr(self, method_name, None)
+        if data_name is not None:
+            ans = None
+            if method_obj is not None and hasattr(method_obj, data_name):
+                ans = getattr(method_obj, data_name)
+        else:
+            ans = {}
+            if method_obj is not None:
+                ans.update(method_obj.__dict__)
+            if 'return_type' not in ans or not ans['return_type']:
+                ans['return_type'] = 'html'
+        return ans
 
     def import_req_path(self):
         """
@@ -486,13 +495,7 @@ class CGIPublisher(object):
         headers = []
 
         # user action processing
-        action_metadata = {
-            'return_type': self._get_method_metadata(path[0], 'return_type'),
-            'template': self._get_method_metadata(path[0], 'template')
-        }
-        if not action_metadata['return_type']:
-            action_metadata['return_type'] = 'html'
-        # TODO default values, decomposition
+        action_metadata = self._get_method_metadata(path[0])
 
         try:
             self._restore_ui_settings()
@@ -544,7 +547,7 @@ class CGIPublisher(object):
             return_type = action_metadata.get('return_type', None)
 
         if self._status < 300 or self._status >= 400:
-            self.output_result(methodname, tmpl, result, return_type, outf=output)
+            self.output_result(methodname, tmpl, result, action_metadata, outf=output)
         ans_body = output.getvalue()
         output.close()
         self._close_session()
@@ -684,14 +687,14 @@ class CGIPublisher(object):
             ans.extend([('Set-Cookie', v.OutputString()) for v in self._cookies.values()])   # cookies
         return ans
 
-    def output_result(self, methodname, template, result, return_type, outf,
+    def output_result(self, methodname, template, result, action_metadata, outf,
                       return_template=False):
         """
         Renders response body
         """
         from Cheetah.Template import Template
         # JSON
-        if return_type == 'json':
+        if action_metadata.get('return_type') == 'json':
             if type(result) != JsonEncodedData:
                 json.dump(self.rec_recode(result, utf8_out=True), outf)
             else:
@@ -700,7 +703,7 @@ class CGIPublisher(object):
         # Template
         elif type(result) is DictType:
             self._add_globals(result)
-            self._add_undefined(result, methodname)
+            self._add_undefined(result, methodname, action_metadata.get('vars', ()))
             result = self.rec_recode(result)
             if template.endswith('.tmpl'):
                 TemplateClass = self._get_template_class(template[:-5])
@@ -722,7 +725,7 @@ class CGIPublisher(object):
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
-        is requested soon, some method must be set.
+        is requested soon, some operation still must be set.
         """
         return None
 

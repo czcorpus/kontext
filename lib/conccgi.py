@@ -11,7 +11,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import re
 from types import ListType
 import cgi
 import json
@@ -30,23 +29,6 @@ import taghelper
 import strings
 from strings import format_number
 from translation import ugettext as _
-
-
-def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
-    fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
-    attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
-    if not ctx:
-        ctx = '%i%s' % (pos, fromcode.get(fcode, '0'))
-    if '~' in ctx and '.' in attr:
-        ctx = ctx.split('~')[0]
-    return attrpart + ctx
-
-
-def choose_selector(args, selector):
-    selector += ':'
-    s = len(selector)
-    for n, v in [(n[s:], v) for n, v in args.items() if n.startswith(selector)]:
-        args[n] = v
 
 
 class ConcError(Exception):
@@ -210,8 +192,6 @@ class ConcCGI(CGIPublisher):
     _conc_dir = u''
     _home_url = u'./first_form'
     _files_path = u'../files'
-
-    add_vars = {'findx_upload': [u'LastSubcorp']}
 
     def __init__(self, environ, ui_lang):
         super(ConcCGI, self).__init__(environ=environ, ui_lang=ui_lang)
@@ -379,6 +359,11 @@ class ConcCGI(CGIPublisher):
         """
         Runs before main action is processed
         """
+        def choose_selector(args, selector):
+            selector += ':'
+            s = len(selector)
+            args.update(dict([(n[s:], v) for n, v in args.items() if n.startswith(selector)]))
+
         super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
         param_types = dict(inspect.getmembers(self.__class__, predicate=lambda x: isinstance(x, Parameter)))
 
@@ -757,14 +742,12 @@ class ConcCGI(CGIPublisher):
         data['__timestamp__'] = int(curr_time)
         self._session['conc']['#'.join(self.q)] = data
 
-    def _add_undefined(self, result, methodname):
+    def _add_undefined(self, result, methodname, vars):
         result['methodname'] = methodname
-        if methodname in self.add_vars:
-            names = self.add_vars[methodname]
-        else:
+        if len(vars) == 0:
             return
 
-        if 'Desc' in names:
+        if 'Desc' in vars:
             if methodname in ('savecoll', 'savewl', 'savefreq', 'saveconc'):
                 translate = False
             else:
@@ -778,13 +761,13 @@ class ConcCGI(CGIPublisher):
                                                     subchash=getattr(self._corp(), "subchash", None),
                                                     translate=translate)]
 
-        if 'TextTypeSel' in names:
+        if 'TextTypeSel' in vars:
             result['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
-        if 'LastSubcorp' in names:
+        if 'LastSubcorp' in vars:
             result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
 
-        if 'orig_query' in names:
+        if 'orig_query' in vars:
             conc_desc = conclib.get_conc_desc(self.q,
                                               corpname=self.corpname,
                                               cache_dir=self.cache_dir,
@@ -873,3 +856,13 @@ class ConcCGI(CGIPublisher):
                              'than %s' % (actual_range + (max_range[0], )))
             return UserActionException(msg)
         return None
+
+    @staticmethod
+    def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
+        fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
+        attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
+        if not ctx:
+            ctx = '%i%s' % (pos, fromcode.get(fcode, '0'))
+        if '~' in ctx and '.' in attr:
+            ctx = ctx.split('~')[0]
+        return attrpart + ctx
