@@ -642,7 +642,6 @@ class PyConc (manatee.Concordance):
             conf = args[1]
         else:
             conf = ''
-        conf = self.pycorp.cm.gdexdict.get(conf, '')
         cnt = int(args[0]) or 100
         best = gdex.GDEX(self.pycorp, conf)
         best.entryConc(self)
