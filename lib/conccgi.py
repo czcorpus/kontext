@@ -206,7 +206,6 @@ class ConcCGI(CGIPublisher):
     q = []
     pagesize = 40
     gdexconf = u''
-    gdexpath = []  # [('confname', '/path/to/gdex.conf'), ...]
     gdexcnt = 100
     gdex_enabled = 0
     alt_gdexconf = None
@@ -423,8 +422,7 @@ class ConcCGI(CGIPublisher):
         correct_types(na, self.clone_self())
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath,
-                                        self.gdexpath)
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath)
         if not 'refs' in self.__dict__:
             self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
