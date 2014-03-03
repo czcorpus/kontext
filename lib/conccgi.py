@@ -193,6 +193,17 @@ class ConcCGI(CGIPublisher):
     errcodes_link = Parameter(u'')
     hidenone = Parameter(1)
 
+
+    kwicleftctx = Parameter('-10')
+    kwicrightctx = Parameter('10')
+    senleftctx_tpl = Parameter('-1:%s')
+    senrightctx_tpl = Parameter('1:%s')
+    viewmode = Parameter('kwic')
+    align = Parameter('')
+    sel_aligned = Parameter([])
+    maincorp = Parameter('')
+    refs_up = Parameter(0)
+
     can_annotate = Parameter(0)
     enable_sadd = Parameter(0)
     annotconc = Parameter(u'')
@@ -218,6 +229,7 @@ class ConcCGI(CGIPublisher):
         self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
         self.ua = None
+        self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
 
@@ -333,6 +345,43 @@ class ConcCGI(CGIPublisher):
         else:
             pass  # TODO save to the session
 
+    def _setup_corpus_access(self, path, action_metadata, form_data):
+        """
+        Updates controller based on current user's right to the selected corpus
+        and action.
+        Please note that the method has many side effects (it modifies several controller's attributes)
+
+        arguments:
+        path -- a list containing path elements (in fact, only 1 element is present - an action name)
+        action_metadata -- a dictionary containing additional data related to invoked action (e.g. access rights)
+        form_data -- a data from submitted HTML form (see cgi.FieldStorage)
+        """
+        allowed_corpora = plugins.auth.get_corplist(self._user)
+        ret_path = path
+        named_args = {}
+
+        if not self._is_corpus_free_action(path[0]):
+            self.corpname, fallback = self._determine_curr_corpus(form_data, allowed_corpora)
+            if fallback:
+                ret_path = [CGIPublisher.NO_OPERATION]
+                if action_metadata.get('return_type', None) != 'json':
+                    import hashlib
+                    self._session['__message'] = _('Please <span class="sign-in">sign-in</span> to continue.')
+                    curr_url = self._get_current_url()
+                    curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
+                    self._session[curr_url_key] = curr_url
+                    self._redirect('%sfirst_form?corpname=%s&ua=%s' %
+                                   (self.get_root_url(), self.corpname, curr_url_key))
+                else:
+                    ret_path = ['json_error']
+                    named_args['error'] = _('Corpus access denied')
+                    named_args['reset'] = True
+        elif len(allowed_corpora) > 0:
+            self.corpname = allowed_corpora[0]
+        else:
+            self.corpname = ''
+        return ret_path, named_args
+
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -346,28 +395,11 @@ class ConcCGI(CGIPublisher):
                                 environ=self.environ, fp=self.environ['wsgi.input'])
 
         self._apply_user_settings(self._init_default_settings)
-        # corpus access check
-        allowed_corpora = plugins.auth.get_corplist(self._user)
-        if not self._is_corpus_free_action(path[0]):
-            self.corpname, fallback = self._determine_curr_corpus(form, allowed_corpora)
-            if fallback:
-                path = [CGIPublisher.NO_OPERATION]
-                if action_metadata.get('return_type', None) != 'json':
-                    import hashlib
-                    self._session['__message'] = _('Please <span class="sign-in">sign-in</span> to continue.')
-                    curr_url = self._get_current_url()
-                    curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
-                    self._session[curr_url_key] = curr_url
-                    self._redirect('%sfirst_form?corpname=%s&ua=%s' %
-                                   (self.get_root_url(), self.corpname, curr_url_key))
-                else:
-                    path = ['json_error']
-                    named_args['error'] = _('Corpus access denied')
-                    named_args['reset'] = True
-        elif len(allowed_corpora) > 0:
-            self.corpname = allowed_corpora[0]
-        else:
-            self.corpname = ''
+
+        # corpus access check and setup
+        path, new_args = self._setup_corpus_access(path, action_metadata, form)
+        named_args.update(new_args)
+
         # Once we know the current corpus we can remove
         # settings related to other corpora. It is quite
         # a dumb solution but currently there is no other way
@@ -693,6 +725,13 @@ class ConcCGI(CGIPublisher):
         return result
 
     def _restore_conc_results(self, storage):
+        """
+        Restores current concordance's parameters from session and stores
+        them into a passed dict.
+
+        arguments:
+        storage: a dict or a dict-like object
+        """
         conc_key = '#'.join(self.q)
         if 'conc' in self._session and conc_key in self._session['conc']:
             tmp = self._session['conc']
@@ -704,6 +743,12 @@ class ConcCGI(CGIPublisher):
             storage['conc_persist'] = False
 
     def _store_conc_results(self, src):
+        """
+        Stores passed data as current concordance parameters
+
+        arguments:
+        src -- a dict or a dict-like object
+        """
         if not 'conc' in self._session:
             self._session['conc'] = {}
 
@@ -835,14 +880,3 @@ class ConcCGI(CGIPublisher):
                              'than %s' % (actual_range + (max_range[0], )))
             return UserActionException(msg)
         return None
-
-
-    kwicleftctx = '-10'
-    kwicrightctx = '10'
-    senleftctx_tpl = '-1:%s'
-    senrightctx_tpl = '1:%s'
-    viewmode = 'kwic'
-    align = ''
-    sel_aligned = []
-    maincorp = ''
-    refs_up = 0
