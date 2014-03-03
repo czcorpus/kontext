@@ -455,7 +455,7 @@ class CGIPublisher(object):
         return self.environ.get('REQUEST_METHOD', '')
 
     def _get_persistent_attrs(self):
-        return []
+        return ()
 
     def _get_persistent_items(self):
         ans = {}
