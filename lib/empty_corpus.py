@@ -13,9 +13,10 @@
 
 class EmptyCorpus(object):
     """
-    EmptyCorpus serves as kind of a fake corpus to keep Bonito operational
+    EmptyCorpus serves as kind of a fake corpus to keep KonText operational
     in some special cases (= cases where we do not need any corpus to be
-    instantiated).
+    instantiated which is a situation original Bonito code probably never
+    count with).
     """
 
     def __init__(self):
@@ -44,9 +45,7 @@ class EmptyCorpus(object):
         pass
 
     def get_conf(self, param):
-        if param == 'ENCODING':
-            return 'UTF-8'
-        return ''
+        return {'ENCODING': 'UTF-8'}.get(param, '')
 
     def get_conffile(self, *args, **kwargs):
         pass
