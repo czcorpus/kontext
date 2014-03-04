@@ -57,6 +57,9 @@ def exposed(**kwargs):
 
 
 def function_defaults(fun):
+    """
+
+    """
     defs = {}
     if isclass(fun):
         fun = fun.__init__
@@ -70,7 +73,11 @@ def function_defaults(fun):
     return defs
 
 
-def correct_types(args, defaults, del_nondef=0, selector=0):
+def convert_types(args, defaults, del_nondef=0, selector=0):
+    """
+    Converts string values as received from GET/POST data into types
+    defined by actions' parameters and global Parameter instances.
+    """
     corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
     for full_k, v in args.items():
         if selector:
@@ -94,13 +101,7 @@ def correct_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
-def q_help(page, lang):  # html code for context help
-    return "<a onclick=\"window.open('http://www.sketchengine.co.uk/help.cgi?page=" \
-           + page + ";lang=" + lang \
-           + "','help','width=500,height=300,scrollbars=yes')\" class=\"help\">[?]</a>"
-
-
-class BonitoCookie(Cookie.BaseCookie):
+class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
     as URI components.
@@ -227,7 +228,7 @@ class CGIPublisher(object):
         """
         self.environ = environ
         self.ui_lang = ui_lang
-        self._cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
         self._user = None
         self._session = {}
         self._ui_settings = {}
@@ -392,7 +393,7 @@ class CGIPublisher(object):
             del_nondef = 0
         else:
             del_nondef = 1
-        correct_types(na, function_defaults(method), del_nondef=del_nondef)
+        convert_types(na, function_defaults(method), del_nondef=del_nondef)
         ans = apply(method, args[1:], na)
         if type(ans) == dict and tpl_data is not None:
             ans.update(tpl_data)
@@ -401,7 +402,7 @@ class CGIPublisher(object):
     def call_function(self, func, args, **named_args):
         na = self.clone_self()
         na.update(named_args)
-        correct_types(na, function_defaults(func), 1)
+        convert_types(na, function_defaults(func), 1)
         return apply(func, args, na)
 
     def clone_self(self):
