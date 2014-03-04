@@ -12,7 +12,7 @@
 
 import os
 
-from CGIPublisher import BonitoCookie
+from CGIPublisher import KonTextCookie
 import plugins
 from translation import ugettext as _
 
@@ -22,7 +22,7 @@ class MaintenanceController(object):
     def __init__(self, environ, ui_lang):
         self.environ = environ
         self.ui_lang = ui_lang
-        self.cookies = BonitoCookie(self.environ.get('HTTP_COOKIE', ''))
+        self.cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
 
     def load_topbar(self):
         if plugins.has_plugin('application_bar'):

@@ -22,7 +22,7 @@ import inspect
 import corplib
 import conclib
 import version
-from CGIPublisher import CGIPublisher, UserActionException, correct_types, Parameter
+from CGIPublisher import CGIPublisher, UserActionException, convert_types, Parameter
 import plugins
 import settings
 import taghelper
@@ -285,7 +285,7 @@ class ConcCGI(CGIPublisher):
         else:
             user_file_id = 'anonymous'
         plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        correct_types(options, self.clone_self(), selector=1)
+        convert_types(options, self.clone_self(), selector=1)
         if callable(actions):
             actions(options)
         self._setup_user_paths(user_file_id)
@@ -402,7 +402,7 @@ class ConcCGI(CGIPublisher):
                 named_args[key] = val
         na = named_args.copy()
 
-        correct_types(na, self.clone_self())
+        convert_types(na, self.clone_self())
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath)

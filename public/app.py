@@ -31,21 +31,16 @@ from logging import handlers
 from werkzeug.http import parse_accept_header
 import locale
 
-if __name__ == '__main__':
-    sys.path.insert(0, '.')
-    sys.path.insert(0, './lib')  # to be able to import application libraries
-    CONF_PATH = '../config.xml'
-else:
-    sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # to be able to import application libraries
-    sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # to be able to import compiled template modules
-    CONF_PATH = '%s/../config.xml' % os.path.dirname(__file__)
+
+sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # to be able to import application libraries
+sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # to be able to import compiled template modules
+CONF_PATH = '%s/../config.xml' % os.path.dirname(__file__)
 
 import plugins
 import settings
 import translation
 import strings
-
-from CGIPublisher import BonitoCookie
+from CGIPublisher import KonTextCookie
 
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')  # we ensure that the application's locale is always the same
 logger = logging.getLogger('')  # root logger
@@ -112,7 +107,7 @@ def setup_plugins():
 
 def get_lang(environ):
     if plugins.has_plugin('getlang'):
-        lgs_string = plugins.getlang.fetch_current_language(BonitoCookie(environ.get('HTTP_COOKIE', '')))
+        lgs_string = plugins.getlang.fetch_current_language(KonTextCookie(environ.get('HTTP_COOKIE', '')))
     if lgs_string is None:
         best_lang = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
         if best_lang is None:
@@ -121,32 +116,16 @@ def get_lang(environ):
     return lgs_string
 
 
-class StaticDispatcher(object):
-    """
-    A simple static file dispatcher for standalone mode
-    """
-    def __init__(self, environ):
-        self.environ = environ
-
-    def run(self):
-        path = './public%s' % self.environ.get('PATH_INFO')
-        if os.path.exists(path):
-            return '200 OK', [('Content-Length', str(os.path.getsize(path)))], open(path).read()
-        else:
-            return '404 Not Found', (), ''
-
-
 class App(object):
     """
     WSGI application
     """
 
-    def __init__(self, controller_class, static_dispatcher_class=None):
+    def __init__(self, controller_class):
         """
         Initializes the application and persistent objects/modules (settings, plugins,...)
         """
         self.controller_class = controller_class
-        self.static_dispatcher_class = static_dispatcher_class
 
         setup_logger(settings)
         setup_plugins()
@@ -174,9 +153,6 @@ class App(object):
             status = '301 Moved Permanently'
             headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
             body = ''
-        elif self.static_dispatcher_class and environ['PATH_INFO'].startswith('/files'):
-            app = self.static_dispatcher_class(environ=environ, ui_lang=ui_lang)
-            status, headers, body = app.run()
         else:
             app = self.controller_class(environ=environ, ui_lang=ui_lang)
             status, headers, body = app.run()
@@ -193,13 +169,28 @@ else:
     from maintenance import MaintenanceController
     controller_class = MaintenanceController
 
-application = App(controller_class, StaticDispatcher)
+application = App(controller_class)
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
     application = DebuggedApplication(application)
 
 
 if __name__ == '__main__':
-    from wsgiref.simple_server import make_server
-    httpd = make_server('localhost', 8088, application)
-    httpd.serve_forever()
+    from werkzeug.serving import run_simple
+    from werkzeug.wsgi import SharedDataMiddleware
+    import argparse
+
+    DEFAULT_PORT = 5000
+    DEFAULT_ADDR = '127.0.0.1'
+
+    parser = argparse.ArgumentParser(description='Starts a local development server')
+    parser.add_argument('--port', dest='port_num', action=None, default=DEFAULT_PORT,
+                        help='a port the server listens on (default is %s)' % DEFAULT_PORT)
+    parser.add_argument('--address', dest='address', action=None, default=DEFAULT_ADDR,
+                        help='an address the server listens on (default is %s)' % DEFAULT_ADDR)
+    args = parser.parse_args()
+
+    application = SharedDataMiddleware(application, {
+        '/files':  os.path.join(os.path.dirname(__file__), 'files')
+    })
+    run_simple(args.address, args.port_num, application, use_debugger=True, use_reloader=True)
