@@ -20,7 +20,7 @@ from translation import ugettext as _
 
 def create_instance(*args, **kwargs):
     """
-    This function must be always implemented. Bonito uses it to create an instance of your
+    This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
     return DummyAuthHandler()

@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-Custom Cheetah filters for the Bonito 2 interface
+Custom Cheetah filters for the KonText interface
 """
 from strings import format_number
 from Cheetah.Filters import Filter

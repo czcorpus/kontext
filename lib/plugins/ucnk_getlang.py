@@ -40,7 +40,8 @@ class GetLang(object):
         source -- any Cookie.BaseCookie compatible implementation
 
         returns:
-        code of the detected language or an empty string in case no value was found
+        underscore-separated ISO 639 language code and ISO 3166 country code
+        of the detected language or an empty string in case no value was found
         """
         def fetch_translations():
             ans = {}
@@ -68,7 +69,7 @@ class GetLang(object):
         a plugin implements this method).
 
         This specific implementation requires you to specify either an empty value
-        or four-letter specification (language & country, e.g. en_US, cs_CZ etc.)
+        or underscore-separated ISO 639 language code and ISO 3166 country code
         """
         return self.fallback_lang
 

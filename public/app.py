@@ -19,8 +19,9 @@ This module is an entry point of a WSGI application.
 It replaces run.cgi from the previous versions of bonito2
 and KonText which were CGI-based.
 
-It can be run as a standalone application (using wsgiref.simple_server) or
-within a WSGI-enabled server (Apache etc.).
+It can be run in two modes:
+ 1) as a standalone application (useful for development/testing purposes)
+ 2) within a WSGI-enabled web server (Apache + mod_wsgi etc.).
 """
 
 import sys
@@ -47,6 +48,10 @@ logger = logging.getLogger('')  # root logger
 
 
 def setup_logger(conf):
+    """
+    Sets up file-based rotating logger. Maximum file size (2^23 bytes) and
+    number of backed-up files (50) are hardcoded here.
+    """
     handler = handlers.RotatingFileHandler(conf.get('global', 'log_path'), maxBytes=(1 << 23), backupCount=50)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
@@ -56,7 +61,8 @@ def setup_logger(conf):
 def setup_plugins():
     """
     Sets-up all the plugins. Please note that they are expected
-    to be run as persistent and shared between requests (i.e. they should be stateless).
+    to be accessed concurrently by multiple requests which means any stateful
+    properties should be considered carefully.
     """
     db_module = plugins.load_plugin(settings.get('plugins', 'db')['module'])
     plugins.db = db_module.create_instance(settings.get('plugins', 'db'))
@@ -106,6 +112,15 @@ def setup_plugins():
 
 
 def get_lang(environ):
+    """
+    Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
+
+    arguments:
+    environ -- WSGI environment variable
+
+    returns:
+    underscore-separated ISO 639 language code and ISO 3166 country code
+    """
     if plugins.has_plugin('getlang'):
         lgs_string = plugins.getlang.fetch_current_language(KonTextCookie(environ.get('HTTP_COOKIE', '')))
     if lgs_string is None:
