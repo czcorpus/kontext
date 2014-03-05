@@ -88,8 +88,8 @@ class KwicPageData(FixedDict):
     result_arf = None
     result_relative_freq = None
     result_relative_freq_rel_to = None
-    CollCorps = None
-    Par_conc_corpnames = None
+    CollCorps = ()
+    Par_conc_corpnames = ()
 
 
 class Kwic(object):

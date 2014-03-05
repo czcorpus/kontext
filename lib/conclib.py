@@ -26,7 +26,7 @@ import manatee
 import settings
 from butils import *
 from strings import import_string, export_string, escape
-from kwiclib import tokens2strclass, lngrp_sortstr
+from kwiclib import tokens2strclass, lngrp_sortcrit
 from translation import ugettext as _
 
 try:
@@ -58,10 +58,11 @@ else:
     def flck_unlock(file):
         fcntl.lockf(file, fcntl.LOCK_UN, 1, 0, 0)
 
-try:
-    _
-except NameError:
-    _ = lambda s: s
+
+def lngrp_sortstr(lab, separator='.'):
+    # TODO: purpose not analyzed (command_g?)
+    f = {'n': 'n%03g', 'c': 'c%s', 'x': '%s'}
+    return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
 
 
 class PyConc(manatee.Concordance):
@@ -99,7 +100,9 @@ class PyConc(manatee.Concordance):
             raise RuntimeError(_('Unknown action: %s') % action)
 
     def command_g(self, options):
-        # sort according to linegroups
+        """
+        sort according to linegroups
+        """
         annot = get_stored_conc(self.pycorp, options, self.pycorp._conc_dir)
         self.set_linegroup_from_conc(annot)
         lmap = annot.labelmap
