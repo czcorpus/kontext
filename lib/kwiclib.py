@@ -23,6 +23,7 @@ import itertools
 import manatee
 from strings import import_string, export_string
 from translation import ugettext as _
+from butils import FixedDict
 
 
 def lngrp_sortcrit(lab, separator='.'):
@@ -70,6 +71,27 @@ def tokens2strclass(tokens):
             for i in range(0, len(tokens), 2)]
 
 
+class KwicPageData(FixedDict):
+    """
+    Defines data required to render a KWIC page
+    """
+    Lines = None
+    GroupNumbers = None
+    prevlink = None
+    firstlink = None
+    fromp = None
+    numofpages = None
+    Page = None
+    nextlink = None
+    lastlink = None
+    concsize = None
+    result_arf = None
+    result_relative_freq = None
+    result_relative_freq_rel_to = None
+    CollCorps = None
+    Par_conc_corpnames = None
+
+
 class Kwic(object):
     """
     KWIC related data preparation utilities
@@ -82,60 +104,32 @@ class Kwic(object):
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
-    def printkwic(self, froml=0, tol=5, leftctx='15#', rightctx='15#', attrs='word', refs='#', maxcontext=0):
-        def strip_tags(tokens):
-            return ''.join([tokens[i] for i in range(0, len(tokens), 2)])
-        kl = manatee.KWICLines(self.conc, leftctx, rightctx, attrs, 'word', 'p', refs, maxcontext)
-        for line in range(froml, tol):
-            kl.nextline(line)
-            print '%s %s <%s> %s' % (kl.get_refs(), strip_tags(kl.get_left()),
-                                     strip_tags(kl.get_kwic()),
-                                     strip_tags(kl.get_right()))
-
     def kwicpage(self, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
         ctxattrs='word', refs='#', structs='p', pagesize=40, labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
             tbl_template='none', hidenone=0):
         """
         Generates template data for page displaying provided concordance
 
-        Parameters
-        ----------
-        speech_attr : 2-tuple
-          sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
-        fromp : int
-          page number (starts from 1)
-        line_offset : int
-          first line of the listing (starts from 0)
-        leftctx : str, optional (default is '-5')
-          how many characters/positions/whatever_struct_attrs display on the left side
-        rightctx : str, optional (default is '5')
-          how many characters/positions/whatever_struct_attrs display on the right side
-        attrs : str, optional (default is 'word')
-          TODO
-        ctxattrs : str, optional (default is 'word')
-          TODO
-        refs : str, optional (default is '#')
-          TODO
-        structs : str, optional (default is 'p')
-          TODO
-        pagesize : int, optional (default is 40)
-          number of lines per page
-        labelmap : dict, optional (default is {})
-          TODO
-        righttoleft : bool, optional (default is False)
-          TODO
-        alignlist : list, optional (default is [])
-          TODO
-        copy_icon : int, optional (default is 0)
-          TODO
-        tbl_template : str, optional (default is 'none')
-          TODO
-        hidenone : int (0 or 1)
-          TODO
+        arguments:
+        speech_attr -- 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
+        fromp -- page number (starts from 1)
+        line_offset -- first line of the listing (starts from 0)
+        leftctx -- str, optional (default is '-5'), how many characters/positions/whatever_struct_attrs display on the left side
+        rightctx -- str, optional (default is '5'), how many characters/positions/whatever_struct_attrs display on the right side
+        attrs -- str, optional (default is 'word'), attributes to be displayed
+        ctxattrs -- str, optional (default is 'word')
+        refs -- str, optional (default is '#'), references to be displayed
+        structs -- str, optional (default is 'p')
+        pagesize -- int, optional (default is 40), number of lines per page
+        labelmap -- dict, optional (default is {}) ???
+        righttoleft -- bool, optional (default is False), whether text flows from right to left
+        alignlist -- list, optional (default is [])
+        copy_icon -- int, optional (default is 0)
+        tbl_template -- str, optional (default is 'none')
+        hidenone -- int (0 or 1), whether display ===EMPTY=== or '' in case a value is empty
 
-        Returns
-        -------
-        custom dict containing data as required by related HTML template
+        returns:
+        KwicPageData converted into a dict
         """
         refs = refs.replace('.MAP_OUP', '')  # to be removed ...
         try:
@@ -144,9 +138,12 @@ class Kwic(object):
                 fromp = 1
         except:
             fromp = 1
-        out = {'Lines':
-               self.kwiclines(speech_attr, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-               leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)}
+
+        out = KwicPageData()
+        out.Lines = self.kwiclines(speech_attr, (fromp - 1) * pagesize + line_offset,
+                                   fromp * pagesize + line_offset, leftctx, rightctx, attrs, ctxattrs,
+                                   refs, structs, labelmap, righttoleft, alignlist)
+
         self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                    leftctx, rightctx, attrs, ctxattrs, refs, structs,
                    labelmap, righttoleft, alignlist)
@@ -165,50 +162,58 @@ class Kwic(object):
         if labelmap:
             out['GroupNumbers'] = format_labelmap(labelmap)
         if fromp > 1:
-            out['prevlink'] = 'fromp=%i' % (fromp - 1)
-            out['firstlink'] = 'fromp=1'
+            out.prevlink = 'fromp=%i' % (fromp - 1)
+            out.firstlink = 'fromp=1'
         if self.conc.size() > pagesize:
-            out['fromp'] = fromp
-            out['numofpages'] = numofpages = (self.conc.size() - 1) / pagesize + 1
+            out.fromp = fromp
+            out.numofpages = numofpages = (self.conc.size() - 1) / pagesize + 1
             if numofpages < 30:
-                out['Page'] = [{'page': x} for x in range(1, numofpages + 1)]
+                out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
-                out['nextlink'] = 'fromp=%i' % (fromp + 1)
-                out['lastlink'] = 'fromp=%i' % numofpages
-        out['concsize'] = self.conc.size()
+                out.nextlink = 'fromp=%i' % (fromp + 1)
+                out.lastlink = 'fromp=%i' % numofpages
+        out.concsize = self.conc.size()
 
         if type(self.corpus) == manatee.SubCorpus:
-            out['result_arf'] = ''
+            out.result_arf = ''
         else:
-            out['result_arf'] = round(self.conc.compute_ARF(), 2)
+            out.result_arf = round(self.conc.compute_ARF(), 2)
 
         if type(self.corpus) is manatee.SubCorpus:
             corpsize = self.corpus.search_size(
             )  # TODO this is unverified solution trying to bypass possible manatee bug
         else:
             corpsize = self.corpus.size()
-        out['result_relative_freq'] = round(
+        out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
 
-        out['result_relative_freq_rel_to'] = _('related to the whole %s') % self.corpus.get_conf('NAME')
+        out.result_relative_freq_rel_to = _('related to the whole %s') % self.corpus.get_conf('NAME')
         if hasattr(self.corpus, 'subcname'):
-            out['result_relative_freq_rel_to'] += ':%s' % getattr(self.corpus, 'subcname', '')
-        out['result_relative_freq_rel_to'] = '(%s)' % out['result_relative_freq_rel_to']
+            out.result_relative_freq_rel_to += ':%s' % getattr(self.corpus, 'subcname', '')
+        out.result_relative_freq_rel_to = '(%s)' % out.result_relative_freq_rel_to
         if hidenone:
-            for line, part in itertools.product(out['Lines'], ('Kwic', 'Left', 'Right')):
+            for line, part in itertools.product(out.Lines, ('Kwic', 'Left', 'Right')):
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
-        return out
+        return dict(out)
 
     def add_aligns(self, result, fromline, toline, leftctx='40#', rightctx='40#',
-                   attrs='word', ctxattrs='word', refs='#', structs='p', labelmap={}, righttoleft=False, alignlist=[]):
+                   attrs='word', ctxattrs='word', refs='#', structs='p', labelmap={}, righttoleft=False,
+                   alignlist=[]):
+        """
+        Adds lines from aligned corpora. Method modifies passed KwicPageData instance by setting
+        respective attributes.
+
+        arguments:
+        result -- KwicPageData type is required
+        """
         if not alignlist:
             return
         al_lines = []
         corps_with_colls = manatee.StrVector()
         self.conc.get_aligned(corps_with_colls)
-        result['CollCorps'] = corps_with_colls
-        result['Par_conc_corpnames'] = [{'n': c.get_conffile(),
+        result.CollCorps = corps_with_colls
+        result.Par_conc_corpnames = [{'n': c.get_conffile(),
                                          'label': c.get_conf('NAME')
                                          or c.get_conffile()}
                                         for c in [self.conc.orig_corp] + alignlist]
@@ -227,7 +232,7 @@ class Kwic(object):
                 al_lines.append(
                     self.kwiclines(None, fromline, toline, '0', '0', 'word', '', refs, structs, labelmap, righttoleft))
         aligns = zip(*al_lines)
-        for i, line in enumerate(result['Lines']):
+        for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
 
     @staticmethod
@@ -238,19 +243,12 @@ class Kwic(object):
         having configuration directive "speech_segment == seg.speechfile" the function
         returns "<seg foo=bar time=1234>lorem ipsum</seg>"
 
-        Parameters
-        ----------
-        speech_segment: 2-tupe
-            (struct_name, attr_name)
-        text : str
-          string to be processed
+        arguments:
+        speech_segment -- 2-tuple (struct_name, attr_name)
+        text -- a string to be processed
 
-        Returns
-        -------
-        str
-          modified string
-        str
-          structural attribute value
+        returns:
+        2-tuple (modified string, structural attribute value)
         """
         import re
 
@@ -265,14 +263,12 @@ class Kwic(object):
     @staticmethod
     def remove_tag_from_line(line, tag_name):
         """
-        Parameters
-        ----------
-        line : list of dicts containing at least the key 'str'
+        arguments:
+        line -- list of dicts containing at least the key 'str'
           line as used in postproc_kwicline
-        tag_name : str
+        tag_name -- str
 
-        Returns
-        -------
+        returns:
         the same object as the 'line' parameter
         """
         import re
@@ -391,19 +387,12 @@ class Kwic(object):
         the provided Concordance object and additional parameters (like
         page number, width of the left and right context etc.).
 
-        Parameters
-        ----------
-        corpus_fullname : str
-        conc : manatee.Concordance
-          concordance we are working with
-        speech_attr : str
-          if empty then no speech structure is present else a full attribute name
-          (i.e. including a structure name - e.g. "seg.speech") is expected
-        TODO
+        arguments:
+        speech_segment -- 2-tuple
+        ...
 
-        Returns
-        -------
-        TODO
+        returns:
+        a dictionary containing all the required line data (left context, kwic, right context,...)
         """
 
         # structs represent which structures are requested by user
@@ -490,6 +479,18 @@ class Kwic(object):
         return lines
 
     def get_sort_idx(self, q=[], pagesize=20):
+        """
+        In case sorting is active this method generates shortcuts to pages where new
+        first letter of sorted keys (it can be left, kwic, right) starts.
+
+        arguments:
+        q -- a query (as a list)
+        pagesize -- number of items per page
+
+        returns:
+        a list of dicts with following structure (example):
+            [{'page': 1, 'label': u'a'}, {'page': 1, 'label': u'A'}, {'page': 2, 'label': u'b'},...]
+        """
         crit = ''
         for qq in q:
             if qq.startswith('s') and not qq.startswith('s*'):
