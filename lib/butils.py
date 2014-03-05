@@ -2,6 +2,7 @@ import re
 import csv
 import codecs
 import cStringIO
+import inspect
 
 try:
     import fcntl
@@ -154,3 +155,20 @@ class CQLDetectWithin(object):
             result.extend(x)
         result = [x for x in result if x != '']
         return result
+
+
+class FixedDict(object):
+    """
+    This class allows creating objects with predefined attributes
+    (defined via static properties). Any attempt to set attribute
+    not present as a static property raises AttributeError.
+    """
+    def __setattr__(self, key, value):
+        if not key in dict(inspect.getmembers(self.__class__)):
+            raise AttributeError('No such attribute: %s' % key)
+        else:
+            self.__dict__[key] = value
+
+    def __iter__(self):
+        for k, v in self.__dict__.items():
+            yield k, v
