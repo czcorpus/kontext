@@ -6,7 +6,23 @@ Installation instructions
 Web server configuration
 ------------------------
 
-Please note that currently only Apache 2.x web server is supported. Support for other web servers is being considered.
+KonText can be run in two modes:
+
+Standalone server application
+=============================
+
+In this case a web-server functionality is provided by KonText itself. Such solution is best suited for
+testing/development purposes and for low-load deployments. This mode can be activated by a following command::
+
+  python public/app.py --address [IP address] --port [TCP port]
+
+(*--address* and *--port* parameters are optional; default serving address is 127.0.0.1:5000)
+
+WSGI application within a web-server
+====================================
+
+KonText can be run in a WSGI-enabled web server (e.g. Apache 2.x + mod_wsgi). This is recommended for
+production deployments.
 
 Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
 
