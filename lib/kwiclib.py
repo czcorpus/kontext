@@ -18,18 +18,17 @@
 
 from functools import partial
 import re
+import itertools
 
 import manatee
 from strings import import_string, export_string
 from translation import ugettext as _
 
 
-number_re = re.compile('[0-9]+$')
-
-
 def lngrp_sortcrit(lab, separator='.'):
+    # TODO
     def num2sort(n):
-        if number_re.match(n):
+        if re.compile('[0-9]+$').match(n):
             return 'n', int(n)
         else:
             return 'c', n
@@ -38,12 +37,8 @@ def lngrp_sortcrit(lab, separator='.'):
     return map(num2sort, lab.split(separator, 3))
 
 
-def lngrp_sortstr(lab, separator='.'):
-    f = {'n': 'n%03g', 'c': 'c%s', 'x': '%s'}
-    return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
-
-
 def format_labelmap(labelmap, separator='.'):
+    # TODO analyze purpose of this function (it seems to be not used)
     matrix = {}
     for n, lab in labelmap.items():
         if lab:
@@ -61,12 +56,24 @@ def format_labelmap(labelmap, separator='.'):
 
 
 def tokens2strclass(tokens):
+    """
+    Converts internal data structure produced by KwicLine and CorpRegion containing tokens and
+    respective HTML classes into a more suitable form.
+
+    arguments:
+    tokens -- a tuple of the following format: ('a token', '{class1 class2}', 'another token', '{class3}',...)
+
+    returns:
+    a list of dicts {'str': '[token]', 'class': '[classes]'}
+    """
     return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
             for i in range(0, len(tokens), 2)]
 
 
 class Kwic(object):
-
+    """
+    KWIC related data preparation utilities
+    """
     def __init__(self, corpus, corpus_fullname, conc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
@@ -187,12 +194,10 @@ class Kwic(object):
         if hasattr(self.corpus, 'subcname'):
             out['result_relative_freq_rel_to'] += ':%s' % getattr(self.corpus, 'subcname', '')
         out['result_relative_freq_rel_to'] = '(%s)' % out['result_relative_freq_rel_to']
-
         if hidenone:
-            for line in out['Lines']:
-                for part in ('Kwic', 'Left', 'Right'):
-                    for item in line[part]:
-                        item['str'] = item['str'].replace('===NONE===', '')
+            for line, part in itertools.product(out['Lines'], ('Kwic', 'Left', 'Right')):
+                for item in line[part]:
+                    item['str'] = item['str'].replace('===NONE===', '')
         return out
 
     def add_aligns(self, result, fromline, toline, leftctx='40#', rightctx='40#',
@@ -341,6 +346,43 @@ class Kwic(object):
             self.remove_tag_from_line(newline, speech_struct_str)
         return newline, last_speech_id
 
+    @staticmethod
+    def non1hitlen(hitlen):
+        return '' if hitlen == 1 else ';hitlen=%i' % hitlen
+
+    @staticmethod
+    def isengword(strclass):
+        # return bidirectional(word[0]) in ('L', 'LRE', 'LRO')
+        return 'ltr' in strclass['class'].split()
+
+    @staticmethod
+    def update_right_to_left(leftwords, rightwords):
+        """
+        change order for "English" context of "English" keywords
+        """
+        # preceding words
+        nprev = len(leftwords) - 1
+        while nprev >= 0 and Kwic.isengword(leftwords[nprev]):
+            nprev -= 1
+        if nprev == -1:
+            # move whole context
+            moveleft = leftwords
+            leftwords = []
+        else:
+            moveleft = leftwords[nprev + 1:]
+            del leftwords[nprev + 1:]
+
+        # following words
+        nfollow = 0
+        while (nfollow < len(rightwords)
+               and Kwic.isengword(rightwords[nfollow])):
+            nfollow += 1
+        moveright = rightwords[:nfollow]
+        del rightwords[:nfollow]
+        leftwords = leftwords + moveright
+        rightwords = moveleft + rightwords
+        return leftwords, rightwords
+
     def kwiclines(self, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
                   attrs='word', ctxattrs='word', refs='#', user_structs='p', labelmap={}, righttoleft=False,
                   alignlist=[], align_attrname='align', aattrs='word', astructs=''):
@@ -363,11 +405,6 @@ class Kwic(object):
         -------
         TODO
         """
-        def non1hitlen(hitlen):
-            if hitlen == 1:
-                return ''
-            else:
-                return ';hitlen=%i' % hitlen
 
         # structs represent which structures are requested by user
         # all_structs contain also internal structures needed to render
@@ -381,17 +418,16 @@ class Kwic(object):
         else:
             speech_struct_attr_name = None
             speech_struct_attr = None
+
         lines = []
+
         if righttoleft:
             rightlabel, leftlabel = 'Left', 'Right'
             user_structs += ',ltr'
             # from unicodedata import bidirectional
-
-            def isengword(strclass):
-                # return bidirectional(word[0]) in ('L', 'LRE', 'LRO')
-                return 'ltr' in strclass['class'].split()
         else:
             leftlabel, rightlabel = 'Left', 'Right'
+
         kl = manatee.KWICLines(self.corpus, self.conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
                                all_structs, refs)
 
@@ -421,31 +457,8 @@ class Kwic(object):
             rightwords = self.postproc_kwicline_part(speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                      filter_out_speech_tag, last_left_speech_id)[0]
 
-            if righttoleft:
-                # change order for "English" context of "English" keywords
-                if isengword(kwicwords[0]):
-                    # preceding words
-                    nprev = len(leftwords) - 1
-                    while nprev >= 0 and isengword(leftwords[nprev]):
-                        nprev -= 1
-                    if nprev == -1:
-                        # move whole context
-                        moveleft = leftwords
-                        leftwords = []
-                    else:
-                        moveleft = leftwords[nprev + 1:]
-                        del leftwords[nprev + 1:]
-
-                    # following words
-                    nfollow = 0
-                    while (nfollow < len(rightwords)
-                           and isengword(rightwords[nfollow])):
-                        nfollow += 1
-                    moveright = rightwords[:nfollow]
-                    del rightwords[:nfollow]
-
-                    leftwords = leftwords + moveright
-                    rightwords = moveleft + rightwords
+            if righttoleft and Kwic.isengword(kwicwords[0]):
+                leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
 
             leftsize = 0
             for w in leftwords:
@@ -461,20 +474,19 @@ class Kwic(object):
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
 
-            lines.append({'toknum': kl.get_pos(),
-                          'hitlen': non1hitlen(kl.get_kwiclen()),
-                          'ref': import_string(kl.get_refs(), 'iso-8859-2'),
-                          'Tbl_refs': list(kl.get_ref_list()),
-                          leftlabel: leftwords,
-                          'Kwic': kwicwords,
-                          rightlabel: rightwords,
-                          'linegroup': linegroup,
-                          'leftsize': leftsize,
-                          'rightsize': rightsize,
-                          })
-        for l in lines:
-            l['leftspace'] = ' ' * (maxleftsize - l['leftsize'])
-            l['rightspace'] = ' ' * (maxrightsize - l['rightsize'])
+            line_data = dict(toknum=kl.get_pos(),
+                             hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
+                             ref=self.import_string(kl.get_refs()),
+                             Tbl_refs=list(kl.get_ref_list()),
+                             Kwic=kwicwords,
+                             linegroup=linegroup,
+                             leftsize=leftsize,
+                             rightsize=rightsize)
+            line_data[leftlabel] = leftwords
+            line_data[rightlabel] = rightwords
+            line_data['leftspace'] = ' ' * (maxleftsize - line_data['leftsize'])
+            line_data['rightspace'] = ' ' * (maxrightsize - line_data['rightsize'])
+            lines.append(line_data)
         return lines
 
     def get_sort_idx(self, q=[], pagesize=20):
