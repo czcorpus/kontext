@@ -393,9 +393,17 @@ class ConcCGI(CGIPublisher):
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 key = str(k)
                 val = form.getvalue(k)
-                # we have to clean-up the mess with multiple defined values (TODO not a system solution)
-                if key in param_types and not param_types[key].is_array() and type(val) is list:
-                    val = val[0]
+
+                if key in param_types:
+                    if not param_types[key].is_array() and type(val) is list:
+                        # Parameter (see static Parameter instances) is defined as a scalar
+                        # but web framework returns a list. This shouldn't happen but
+                        # original Bonito code sometimes defines redundant HTML form parameters...
+                        val = val[0]
+                    elif param_types[key].is_array() and not type(val) is list:
+                        # Parameter (see static Parameter instances) is expected to be a list but
+                        # web framework returns a scalar value
+                        val = [val]
                 val = self.recode_input(val)
                 if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
                     val = ''
