@@ -202,7 +202,7 @@ class Actions(ConcCGI):
 
         out.update(self.get_conc_sizes(conc))
         if self.viewmode == 'sen':
-            Kwic.add_block_items(out['Lines'], block_size=1)
+            conclib.PyConc.add_block_items(out['Lines'], block_size=1)
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
                                'label': conclib.manatee.Corpus(w).get_conf(
