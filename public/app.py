@@ -121,13 +121,18 @@ def get_lang(environ):
     returns:
     underscore-separated ISO 639 language code and ISO 3166 country code
     """
+    installed = dict([(x.split('_')[0], x) for x in os.listdir('%s/../locale' % os.path.dirname(__file__))])
+
     if plugins.has_plugin('getlang'):
         lgs_string = plugins.getlang.fetch_current_language(KonTextCookie(environ.get('HTTP_COOKIE', '')))
-    if lgs_string is None:
-        best_lang = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
-        if best_lang is None:
-            best_lang = 'en_US'
-        lgs_string = best_lang.replace('-', '_')
+    else:
+        lgs_string = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
+        if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
+            lgs_string = installed.get(lgs_string)
+        else:
+            lgs_string = lgs_string.replace('-', '_')
+        if lgs_string is None:
+            lgs_string = 'en_US'
     return lgs_string
 
 
