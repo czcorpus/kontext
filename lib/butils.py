@@ -169,6 +169,11 @@ class FixedDict(object):
         else:
             self.__dict__[key] = value
 
+    def __init__(self):
+        for item in inspect.getmembers(self.__class__):
+            if not item[0].startswith('__'):
+                self.__dict__[item[0]] = item[1]
+
     def __iter__(self):
         for k, v in self.__dict__.items():
             yield k, v

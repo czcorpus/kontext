@@ -308,7 +308,11 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
     ## concordance lines
     #set $basecorpname = $corpname.split('/')[-1]
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
-    #set $KWICCorps = list($getVar('CollCorps', [$basecorpname]))
+    #if $len($CollCorps) == 0:
+        #set $KWICCorps = list([$basecorpname])
+    #else
+        #set $KWICCorps = list($CollCorps)
+    #end if
     <div id="conclines-wrapper">
         #if $len($Lines) > 0
         <table id="conclines">
