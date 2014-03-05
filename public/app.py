@@ -131,8 +131,8 @@ def get_lang(environ):
             lgs_string = installed.get(lgs_string)
         else:
             lgs_string = lgs_string.replace('-', '_')
-        if lgs_string is None:
-            lgs_string = 'en_US'
+    if lgs_string is None:
+        lgs_string = 'en_US'
     return lgs_string
 
 
