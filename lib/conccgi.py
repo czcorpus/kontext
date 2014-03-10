@@ -646,7 +646,8 @@ class ConcCGI(CGIPublisher):
         result['human_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (conclib.manatee.version(), version.version)
-        result['display_closed_conc'] = len(self.q) > 0
+        # TODO testing app state by looking at the message type may not be the best way
+        result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
         result['q'] = self.urlencode([('q', q) for q in self.q])
         result['Q'] = [{'q': q} for q in self.q]
