@@ -76,8 +76,10 @@ def function_defaults(fun):
 def convert_types(args, defaults, del_nondef=0, selector=0):
     """
     Converts string values as received from GET/POST data into types
-    defined by actions' parameters and global Parameter instances.
+    defined by actions' parameters (type is inferred from function's default
+    argument values).
     """
+    # TODO - there is a potential conflict between global Parameter types and function defaults
     corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
     for full_k, v in args.items():
         if selector:
@@ -90,11 +92,10 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
             default_type = type(defaults[k])
             if default_type is not TupleType and type(v) is TupleType:
                 args[k] = v = v[-1]
+            elif default_type is TupleType and type(v) is ListType:
+                v = tuple(v)
             if type(v) is not default_type:
-                try:
-                    args[full_k] = corr_func[default_type](v)
-                except:
-                    pass
+                args[full_k] = corr_func.get(default_type, lambda x: x)(v)
         else:
             if del_nondef:
                 del args[full_k]
