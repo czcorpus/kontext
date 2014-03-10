@@ -52,6 +52,7 @@ Requirements
 
     - `lxml <http://lxml.de/>`_ library
     - `werkzeug <http://werkzeug.pocoo.org/>`_ library (provides WSGI middleware)
+    - `PyICU <http://pyicu.osafoundation.org/>`_ library (optional but preferred)
     - docutils module (optional)
 
   * `Manatee corpus search engine <http://nlp.fi.muni.cz/trac/noske>`_, version *2.83* and up
