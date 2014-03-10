@@ -1549,8 +1549,9 @@ class Actions(ConcCGI):
             else:
                 corp = self._corp()
                 try:
-                    doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
-                except:
+                    corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
+                except Exception as e:
+                    logging.getLogger(__name__).warning('DOCSTRUCTURE not set correctly: %r' % e)
                     raise ConcError('DOCSTRUCTURE not set correctly')
                 out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
