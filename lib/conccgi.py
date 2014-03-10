@@ -684,7 +684,7 @@ class ConcCGI(CGIPublisher):
         result['root_url'] = settings.get_root_url()
         result['canonical_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
-        result['display_closed_conc'] = len(self.q) > 0
+        result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
         if self._session_get('__message'):
             result['message'] = ('info', self._session_get('__message'))
