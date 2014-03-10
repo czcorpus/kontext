@@ -388,7 +388,7 @@ class CGIPublisher(object):
     def _get_current_url(self):
         return self.environ.get('REQUEST_URI')
 
-    def call_method(self, method, args, named_args, tpl_data=None):
+    def _invoke_action(self, method, args, named_args, tpl_data=None):
         na = named_args.copy()
         if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
             del_nondef = 0
@@ -590,7 +590,7 @@ class CGIPublisher(object):
         try:
             return (methodname,
                     getattr(method, 'template', methodname + '.tmpl'),
-                    self.call_method(method, pos_args, named_args, tpl_data))
+                    self._invoke_action(method, pos_args, named_args, tpl_data))
         except Exception as e:
             logging.getLogger(__name__).error(''.join(self.get_traceback()))
 
