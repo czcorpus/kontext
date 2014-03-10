@@ -2111,8 +2111,9 @@ class Actions(ConcCGI):
 
         try:
             tag_loader = taghelper.TagVariantLoader(self.corpname,
-                                                    plugins.corptree.get_corpus_info(self.corpname)['num_tag_pos'])
-        except IOError as e:
+                                                    plugins.corptree.get_corpus_info(self.corpname)['num_tag_pos'],
+                                                    self.ui_lang)
+        except IOError:
             raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
 
         if len(pattern) > 0:
