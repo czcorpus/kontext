@@ -21,7 +21,6 @@ import inspect
 
 import corplib
 import conclib
-import version
 from CGIPublisher import CGIPublisher, UserActionException, convert_types, Parameter
 import plugins
 import settings
@@ -645,7 +644,7 @@ class ConcCGI(CGIPublisher):
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['human_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
         result['debug'] = settings.is_debug_mode()
-        result['_version'] = (conclib.manatee.version(), version.version)
+        result['_version'] = (conclib.manatee.version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
