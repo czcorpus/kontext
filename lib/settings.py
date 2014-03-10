@@ -22,6 +22,7 @@ methods.
 import sys
 import os
 from lxml import etree
+import json
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 _conf_path = None
@@ -52,7 +53,7 @@ def get(section, key=None, default=None):
     Gets a configuration value. This function never throws an exception in
     case it cannot find the required value.
 
-    Parameters
+    Parameters.
     ----------
     section : str
               name of the section (global, database,...)
@@ -133,7 +134,7 @@ def parse_general_tree(section):
             if node_processor is not None:
                 getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
             else:
-                pass  # we ignore items with None processor deliberately
+                pass  # we ign.ore items with None processor deliberately
         else:
             item_id = '%s%s' % (custom_prefix(item), item.tag)
             if len(item.getchildren()) == 0:
@@ -198,6 +199,7 @@ def load(conf_path):
 
     _conf_path = conf_path
     parse_config(_conf_path)
+    _load_version()
 
 
 def conf_path():
@@ -246,3 +248,9 @@ def supports_password_change():
         if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
             return False
     return True
+
+
+def _load_version():
+    with open('%s/../package.json' % os.path.dirname(__file__)) as f:
+        d = json.load(f)
+        set('global', '__version__', d.get('version', '??'))
