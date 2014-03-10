@@ -178,6 +178,7 @@ class ConcCGI(CGIPublisher):
     sel_aligned = Parameter([])
     maincorp = Parameter('')
     refs_up = Parameter(0, persistent=True)
+    refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
     can_annotate = Parameter(0)
     enable_sadd = Parameter(0)
@@ -393,7 +394,6 @@ class ConcCGI(CGIPublisher):
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 key = str(k)
                 val = form.getvalue(k)
-
                 if key in param_types:
                     if not param_types[key].is_array() and type(val) is list:
                         # Parameter (see static Parameter instances) is defined as a scalar
@@ -401,9 +401,10 @@ class ConcCGI(CGIPublisher):
                         # original Bonito code sometimes defines redundant HTML form parameters...
                         val = val[0]
                     elif param_types[key].is_array() and not type(val) is list:
-                        # Parameter (see static Parameter instances) is expected to be a list but
+                        # A Parameter object is expected to be a list but
                         # web framework returns a scalar value
                         val = [val]
+
                 val = self.recode_input(val)
                 if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
                     val = ''
@@ -414,7 +415,7 @@ class ConcCGI(CGIPublisher):
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath)
-        if not 'refs' in self.__dict__:
+        if getattr(self, 'refs') is None:
             self.refs = self._corp().get_conf('SHORTREF')
         self.__dict__.update(na)
 
@@ -486,7 +487,7 @@ class ConcCGI(CGIPublisher):
         out['SubcorpList'] = subcorp_list
 
     def _get_save_excluded_attributes(self):
-        return ('corpname', )
+        return 'corpname',
 
     def _save_query(self):
         if plugins.has_plugin('query_storage'):
