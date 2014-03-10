@@ -151,8 +151,9 @@ tr.active .ref {
 }
 
 table.full-ref {
-  border-collapse: collapse;
+  border-spacing: 0;
   border: 1px solid @color-default-green;
+  border-radius: @border-radius-default;
   margin: 0 auto;
   background-color: #FFFFFF;
 }
@@ -163,8 +164,18 @@ table.full-ref th {
   text-align: left;
 }
 
+table.full-ref th {
+  padding-left: 1em;
+}
+
 table.full-ref td.data {
-  padding-right: 2em;
+  padding-right: 1.5em;
+}
+
+table.full-ref td.data:not(:last-child) {
+  border-color: @color-light-frame;
+  border-style: solid;
+  border-width: 0 1px 0 0;
 }
 
 table.full-ref tr:nth-child(odd) {

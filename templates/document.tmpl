@@ -635,7 +635,7 @@ $corp_full_name</b><br>
           #for $v in $l['Values']
             #if 'v' in $v
               <tr  #if $i % 2 == 0 #class="even"#end if#>
-                <td class="separ">
+                <td>
                     #set $checked = ''
                     #if $varExists('checked_sca')
                         #set $item_value = $v['v']
