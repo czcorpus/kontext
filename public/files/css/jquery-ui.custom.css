@@ -829,3 +829,22 @@ button.ui-button::-moz-focus-inner {
 	filter: Alpha(Opacity=30);
 	border-radius: 8px;
 }
+
+.ui-autocomplete {
+	position: absolute;
+    z-index: 1000000;
+	top: 0;
+	left: 0;
+	cursor: default;
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.ui-autocomplete .ui-menu-item {
+}
+
+.ui-autocomplete .ui-menu-item a {
+    display: inline-block;
+    padding: 2px 5px;
+}
