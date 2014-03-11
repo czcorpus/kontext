@@ -133,8 +133,8 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.bindStaticElements();
-        treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'), {clickableText: true},
-            updForm);
+        treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'),
+            layoutModel.conf.messages, {clickableText: true}, updForm);
     };
 
     return lib;
