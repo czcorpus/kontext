@@ -26,6 +26,24 @@ define(['jquery', 'win'], function ($, win) {
     var lib = {};
 
     /**
+     * Returns object's all own property names
+     *
+     * @param {{}} obj
+     * @returns {Array}
+     */
+    function getObjectKeys(obj) {
+        var ans = [],
+            k;
+
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                ans.push(k);
+            }
+        }
+        return ans;
+    }
+
+    /**
      * This object parses <SELECT> and <OPTION> elements expecting additional path
      * information stored in OPTIONs' 'data-path' attributes. These values are then transformed into a
      * UL+LI tree.
@@ -38,13 +56,17 @@ define(['jquery', 'win'], function ($, win) {
         this.hiddenInput = null;
         this.button = button;
         this.customCallback = customCallback;
+        this.leafValues = {}; // leaf item value => leaf item link (A)
     }
 
     /**
-     * @param {Array} pathItems
+     * Creates a subtree in passed tree (represented by the 'rootElm' argument)
+     * according to the provided path (represented by the 'pathItems' argument).
+     *
+     * @param {array} pathItems
      * @param {string} itemTitle
      * @param {string} itemDesc
-     * @param {HTMLElement} rootElm where to start the search
+     * @param {HTMLElement} rootElm root element of an existing tree
      */
     NestedTree.prototype.findUlPath = function (pathItems, itemTitle, itemDesc, rootElm) {
         var currPathItem = pathItems.shift(),
@@ -54,6 +76,7 @@ define(['jquery', 'win'], function ($, win) {
             jqNewLink,
             self = this;
 
+        // is the currPathItem a child of rootElm?
         $(rootElm).children().each(function () {
             if ($(this).data('path') === currPathItem) {
                 foundElm = this;
@@ -61,18 +84,18 @@ define(['jquery', 'win'], function ($, win) {
             }
         });
 
-        if (foundElm === null) {
+        if (foundElm === null) { // currPathItem not found in children => we have to create it
             newLi = win.document.createElement('li');
             $(newLi).data('path', currPathItem);
             $(rootElm).append(newLi);
 
-            if (pathItems.length > 0) {
+            if (pathItems.length > 0) { // are there any path parts to be processed yet?
                 newUl = win.document.createElement('ul');
                 $(newLi).append(currPathItem);
                 $(newLi).append(newUl);
                 this.findUlPath(pathItems, itemTitle, itemDesc, newUl);
 
-            } else {
+            } else { // whole path is ready => we will create a leaf node
                 jqNewLink = $(win.document.createElement('a'));
                 jqNewLink.attr('href', '#');
                 jqNewLink.data('id', currPathItem);
@@ -80,6 +103,7 @@ define(['jquery', 'win'], function ($, win) {
                     jqNewLink.attr('title', itemDesc);
                 }
                 jqNewLink.append(itemTitle);
+
                 jqNewLink.on('click', function (event) {
                     $(self.hiddenInput).val(currPathItem);
                     $(self.button).empty().append(itemTitle);
@@ -90,9 +114,11 @@ define(['jquery', 'win'], function ($, win) {
                     event.stopPropagation();
                 });
                 $(newLi).append(jqNewLink);
+
+                self.leafValues[itemTitle] = jqNewLink.get(0);
             }
 
-        } else {
+        } else { // currPathItem already present => let's search another path item
             this.findUlPath(pathItems, itemTitle, itemDesc, $(foundElm).children().get(0));
         }
     };
@@ -126,7 +152,6 @@ define(['jquery', 'win'], function ($, win) {
             splitPath.push($(this).attr('value'));
             self.findUlPath(splitPath, $(this).text(), $(this).attr('title'), rootUl);
         });
-        $(rootUl).attr('class', 'tree-component');
         return rootUl;
     };
 
@@ -134,14 +159,25 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      * @constructor
-     * @param {{clickableText: Boolean, title: String}} [options]
+     * @param {{clickableText: boolean, title: String, searchable: boolean}} [options]
+     * @param {*} [messages]
      */
-    function TreeComponent(options) {
+    function TreeComponent(options, messages) {
         this.rootUl = null;
+        this.treeWrapper = null;
         this.jqWrapper = null;
         this.menuWidth = 200;
         this.nestedTree = null;
         this.options = options || {};
+
+        if (typeof messages === 'object') {
+            this.messages = messages;
+
+        } else {
+            this.messages = {
+                search_by_name : 'search by name...'
+            };
+        };
     }
 
     /**
@@ -189,7 +225,7 @@ define(['jquery', 'win'], function ($, win) {
      */
     TreeComponent.prototype.switchComponentVisibility = function (state) {
         var leftPos = 0,
-            jqElm = $(this.rootUl);
+            jqElm = $(this.treeWrapper);
 
         if (jqElm.css('display') === 'block' || state === 'hide') {
             jqElm.css({ display: 'none', position: 'relative'});
@@ -206,12 +242,10 @@ define(['jquery', 'win'], function ($, win) {
             jqElm.css({
                 display: 'block',
                 position: 'absolute',
-                'z-index': 1000000,
+                'z-index': 900000,
                 left: leftPos + 'px',
                 margin: '0',
-                width: this.menuWidth + 'px',
-                padding: '4px 5px 8px 5px',
-                'text-align': 'left'
+                width: this.menuWidth + 'px'
             });
         }
     };
@@ -384,6 +418,36 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
+     *
+     */
+    TreeComponent.prototype.attachSearchField = function () {
+        var self = this,
+            srchField;
+
+        srchField = win.document.createElement('input');
+        $(srchField)
+            .attr('type', 'text')
+            .css('width', (this.menuWidth - 40) + 'px')
+            .addClass('srch-field')
+            .addClass('initial')
+            .on('focus.searchInit', function (event) {
+                $(event.target).val('')
+                    .off('focus.searchInit')
+                    .removeClass('initial');
+            })
+            .val(self.messages.search_by_name);
+        this.treeWrapper.append(srchField);
+
+        $(srchField).autocomplete({
+            source: getObjectKeys(self.nestedTree.leafValues),
+            select: function (event, ui) {
+                $(self.nestedTree.hiddenInput).val(ui.item.value);
+                $(self.nestedTree.leafValues[ui.item.value]).click();
+            }
+        });
+    };
+
+    /**
      * Builds actual tree component by transforming UL+LI (of arbitrary nesting) tree so that
      * it becomes a single level list expandable to the original multi-level list by mouse clicking.
      *
@@ -416,9 +480,15 @@ define(['jquery', 'win'], function ($, win) {
 
         this.nestedTree = new NestedTree(button, customCallback);
         this.rootUl = this.nestedTree.buildFromSelectElm(selectElm);
+        $(this.rootUl).addClass('root-list');
+        this.treeWrapper = $(win.document.createElement('DIV'));
+        this.treeWrapper.attr('class', 'tree-component');
         $(this.rootUl).attr('id', jqSelectBoxItem.attr('id'));
-        this.jqWrapper.append(this.rootUl);
-
+        this.jqWrapper.append(this.treeWrapper);
+        if (this.options.searchable) {
+            this.attachSearchField();
+        }
+        this.treeWrapper.append(this.rootUl);
         this.attachLinks();
 
         $(this.rootUl.parentNode).append(this.nestedTree.hiddenInput);
@@ -436,13 +506,14 @@ define(['jquery', 'win'], function ($, win) {
      * Transforms form select box into a tree-rendered selector
      *
      * @param {jQuery} selResult HTML SELECT element to be transformed into an expandable tree
+     * @param {*} messages translations for the library (if nothing is provided then english messages are used)
      * @param {{clickableText: Boolean, title: String}} [options]
      * @param {Function} [customCallback] custom code to be executed when an item is selected.
      * The function is expected to have ignature func(event, selectedItemValue);
      */
-    lib.createTreeComponent = function (selResult, options, customCallback) {
+    lib.createTreeComponent = function (selResult, messages, options, customCallback) {
         $(selResult).each(function () {
-            var component = new TreeComponent(options);
+            var component = new TreeComponent(options, messages);
             component.build(this, customCallback);
         });
     };

@@ -152,8 +152,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             return target;
         };
 
-        treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'),
-            {clickableText: true}, layoutModel.updForm);
+        treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), layoutModel.conf.messages,
+            {clickableText: true, searchable: true}, layoutModel.updForm);
         // initial query selector setting (just like when user changes it manually)
         hideElem.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
 
