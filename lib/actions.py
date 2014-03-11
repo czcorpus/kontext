@@ -1481,16 +1481,7 @@ class Actions(ConcCGI):
 
         except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
-            if self.wlattr == 'ws_collocations':
-                out = corplib.build_arf_db(e.args[0], 'hashws')
-            else:
-                corp = self._corp()
-                try:
-                    corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
-                except Exception as e:
-                    logging.getLogger(__name__).warning('DOCSTRUCTURE not set correctly: %r' % e)
-                    raise ConcError('DOCSTRUCTURE not set correctly')
-                out = corplib.build_arf_db(e.args[0], self.wlattr)
+            out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
