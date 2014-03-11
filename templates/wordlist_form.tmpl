@@ -100,7 +100,23 @@ require(['jquery', 'tpl/wordlistForm', 'conf', 'domReady!'], function (\$, wordl
         </tr><tr><td colspan="3">
         #set $checked = $int($include_nonwords) and 'checked' or ''
         <label><input type="checkbox" name="include_nonwords" value="1" $checked />$_("Include non-words")</label>
-        </td></tr></table>
+        </td></tr>
+        </table>
+    </fieldset>
+    <fieldset>
+        <legend>$_('Output options')</legend>
+        <table>
+            <tr>
+                <td>$_('Frequency figures'):</td>
+                <td>
+                <ul class="freq-figures">
+                    <li><input type="radio" checked="checked" value="frq" name="wlnums" id="wlnums_freq"><label for="wlnums_freq">$_('Word counts')</label></li>
+                    <li><input type="radio" checked="" value="docf" name="wlnums" id="wlnums_docf"><label for="wlnums_docf">$_('Document counts')</label></li>
+                    <li><input type="radio" checked="" value="arf" name="wlnums" id="wlnums_arf"><label for="wlnums_arf">$_('ARF')</label></li>
+                </ul>
+                </td>
+            </tr>
+        </table>
     </fieldset>
 
     <div class="buttons">
