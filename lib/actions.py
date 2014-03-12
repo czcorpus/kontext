@@ -37,6 +37,8 @@ class Actions(ConcCGI):
     KonText actions are specified here
     """
 
+    FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
+
     cattr = Parameter('word')
     csortfn = Parameter('d')
     cbgrfns = Parameter('mtd')
@@ -1346,6 +1348,7 @@ class Actions(ConcCGI):
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
+        out['freq_figures'] = self.FREQ_FIGURES
         self._enable_subcorpora_list(out)
         return out
 
@@ -1468,6 +1471,8 @@ class Actions(ConcCGI):
                     self.wlattr + '.LABEL') or self.wlattr
             except Exception:
                 result['wlattr_label'] = self.wlattr
+
+            result['freq_figure'] = _(self.FREQ_FIGURES.get(self.wlnums, '?'))
 
             params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=' \
                      % (self.wlattr, wlpat)
