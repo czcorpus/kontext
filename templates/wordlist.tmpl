@@ -85,9 +85,9 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
       #if $wlpage > 1
         <div class="bonito-pagination-left">
         #set $firstlink_sett = $url_sub($curr_settings, 'wlpage', 1)
-        <a href="wordlist?$firstlink_sett">$_("<< First")</a> |
+        <a href="wordlist?$firstlink_sett"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
         #set $prevlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) - 1)
-        <a href="wordlist?$prevlink_sett">$_("< Previous")</a>
+        <a href="wordlist?$prevlink_sett"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
         </div>
       #end if
 
@@ -109,7 +109,6 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
         <input type="hidden" name="include_nonwords" value='$include_nonwords' />
         <input type="hidden" name="blcache" value='$blcache' />
 
-      $_("Page")
       <input type="text" name="wlpage" value="$wlpage" size="4" />
       <input type="submit" value="$_("Go")" />
     </div>
@@ -117,7 +116,7 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
       #if not $lastpage
       <div class="bonito-pagination-right">
         #set $nextlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) + 1)
-      <a href="wordlist?$nextlink_sett" id="$navid">$_("Next >")</a>
+      <a href="wordlist?$nextlink_sett" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
       </div>
       #else
       <a id="$navid"></a>
@@ -127,7 +126,7 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
     #end if
     #end block
 
-    <table class="result numtab">
+    <table class="data word-list">
     #if $Items
 
       #set $attrsort_sett = $url_sub($curr_settings, 'wlsort', '')
@@ -138,13 +137,13 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
       </tr></thead>
 
       #for $i in $Items
-        <tr class="$i.get('class')" >
+        <tr>
         #if $wlattr == 'ws_collocations'
           <td class="left">$i.w1 <sub><span class="note">$i.gramrel</span></sub> $i.w2</td>
           <td><a href="view?q=w$i.seek;$corpname_url;usesubcorp=$url_usesubcorp">$i.freq</a></td>
         #else
           #set $url_str = $urlquote($i.str.replace('\\', '\\\\').replace('"', '\\"'))
-          <td class="left">$i.str</td><td>
+          <td class="left">$i.str</td><td class="num">
           #if '.' in $wlattr
             $i.freq
           #else
