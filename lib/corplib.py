@@ -606,80 +606,6 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     return items[:wlmaxitems]
 
 
-def ws_keywords(sc, scref, wlminfreq=10, wlmaxitems=100, simple_n=100):
-    import wmap
-
-    basewsbase = os.path.basename(sc.get_conf('WSBASE'))
-    ref_basewsbase = os.path.basename(scref.get_conf('WSBASE'))
-    freqs_file = subcorp_base_file(sc, basewsbase + '.hfrq')
-    lex_file = subcorp_base_file(sc, basewsbase + '.hlex')
-    ref_freqs_file = subcorp_base_file(scref, ref_basewsbase + '.hfrq')
-
-    if not os.path.isfile(freqs_file): # not computed
-        raise MissingSubCorpFreqFile(sc)
-    if not os.path.isfile(ref_freqs_file):
-        raise MissingSubCorpFreqFile(scref)
-    if os.path.isfile(subcorp_base_file(sc, 'hashws.build')):
-        raise MissingSubCorpFreqFile(sc) # computation in progress
-    if os.path.isfile(subcorp_base_file(scref, 'hashws.build')):
-        raise MissingSubCorpFreqFile(scref)
-
-    result_str = wmap.StrVector()
-    wmap.extrms(freqs_file, ref_freqs_file, lex_file, result_str, wlmaxitems,
-                simple_n)
-
-    # find out seek and cnt -- firstly for sc ...
-    ws1 = wmap.WMap(sc.get_conf('WSBASE'), 0, 0, 0, sc.get_conffile())
-    size = sc.search_size()
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2, score = item.strip().split('\t')[:4]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2, float(score)))
-    result = {}
-    for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: continue
-        freq = ws_subc_freq(ws3, sc)
-        result[(-score, w1, gramrel, w2)] = [freq, float(freq) * 1000000 / size,
-                                             ws3.tell()]
-        # ... and then for scref
-    ws1 = wmap.WMap(scref.get_conf('WSBASE'), 0, 0, 0, scref.get_conffile())
-    size = scref.search_size()
-    result_parsed = []
-    for item in result_str:
-        w1, gramrel, w2, score = item.strip().split('\t')[:4]
-        result_parsed.append((ws1.coll2id(w1), ws1.str2id(gramrel),
-                              ws1.coll2id(w2), w1, gramrel, w2, float(score)))
-    for id1, id2, id3, w1, gramrel, w2, score in sorted(result_parsed):
-        if not (-score, w1, gramrel, w2) in result: continue
-        ws3 = ws_find_triple(ws1, id1, id2, id3)
-        if not ws3: result[(-score, w1, gramrel, w2)].extend([0, 0, 0])
-        freq = ws_subc_freq(ws3, scref)
-        result[(-score, w1, gramrel, w2)].extend(
-            [freq, float(freq) * 1000000 / size, ws3.tell()])
-    return [(-k[0], v[1], v[4], v[0], v[3], '%s\t%s\t%s\t%d' % (k[1], k[2],
-                                                                k[3], v[2]))
-            for k, v in sorted(result.items())]
-
-
-def create_ws_db(corp, logfilename):
-    import subprocess
-
-    basewsbase = os.path.basename(corp.get_conf('WSBASE'))
-    freqs_file = subcorp_base_file(corp, basewsbase + '.hfrq')
-    lex_file = subcorp_base_file(corp, basewsbase + '.hlex')
-    logfile = open(logfilename, 'w')
-    hashws_args = ['hashws', corp.get_conffile(), freqs_file, lex_file]
-    if hasattr(corp, 'spath'):
-        hashws_args.append(corp.spath)
-    ret = subprocess.call(hashws_args, stdout=logfile)
-    if ret:
-        open(logfilename + '.error', 'w').write(str(ret))
-    logfile.close()
-    os.rename(logfilename, logfilename + '.old')
-
-
 def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     outfilename = subcorp_base_file(corp, attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename
@@ -705,7 +631,11 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     outdocf = array.array('i')
     frqsize = {'i': "", 'l': "64"}
     attr = corp.get_attr(attrname)
-    doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
+    try:
+        doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
+    except:
+        doc = None
+
     if logfile:
         toprocessids = float(attr.id_range())
         nextidslog = logstep * toprocessids
@@ -715,14 +645,23 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
         rs = corp.filter_query(doc.whole())
         freq = corp.count_rest(attr.id2poss(i))
         arf = corp.count_ARF(attr.id2poss(i), freq)
-        docf = corp.compute_docf(attr.id2poss(i), rs)
+
+        # docf
+        if doc is not None:
+            rs = corp.filter_query(doc.whole())
+            docf = corp.compute_docf(attr.id2poss(i), rs)
+            outdocf.append(docf)
+
+        # word freq
         try:
             outfrq.append(freq)
         except OverflowError:
             outfrq = array.array('l', outfrq)
             outfrq.append(freq)
+
+        # arf
         outarf.append(arf)
-        outdocf.append(docf)
+
         if logfile:
             if i >= nextidslog:
                 open(logfile, 'a').write('\n%s%%' %
@@ -730,13 +669,19 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
                 nextidslog += logstep * toprocessids
     if logfile:
         open(logfile, 'a').write('\n100%')
+
+
     outarf.tofile(open(outfilename + '.arf.tmp', 'wb'))
-    outfrq.tofile(open(outfilename + '.frq.tmp', 'wb'))
-    outdocf.tofile(open(outfilename + '.docf.tmp', 'wb'))
     os.rename(outfilename + '.arf.tmp', outfilename + '.arf')
+
+    outfrq.tofile(open(outfilename + '.frq.tmp', 'wb'))
     os.rename(outfilename + '.frq.tmp', outfilename + '.frq' +
                                         frqsize[outfrq.typecode])
-    os.rename(outfilename + '.docf.tmp', outfilename + '.docf')
+
+    if doc is not None:
+        outdocf.tofile(open(outfilename + '.docf.tmp', 'wb'))
+        os.rename(outfilename + '.docf.tmp', outfilename + '.docf')
+
     if logfile:
         open(logfile, 'a').write('\nfreq:%s\narf:%s\ndocf:%s' %
                                  (sum(outfrq), sum(outarf), sum(outdocf)))
@@ -759,9 +704,6 @@ def build_arf_db(corp, attrname):
         daemonize.createDaemon(maxfd=3)
         if hasattr(os, 'nice'):
             os.nice(10)
-        if attrname == 'hashws':
-            create_ws_db(corp, logfilename)
-        else:
             create_arf_db(corp, attrname, logfilename)
         os._exit(0)
     else:
