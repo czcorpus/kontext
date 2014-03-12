@@ -1991,6 +1991,9 @@ msgstr "Právě probíhá údržba aplikace. Omlouváme se za případné obtí�
 msgid "Search by name"
 msgstr "Hledat podle názvu"
 
+msgid "Frequency figures"
+msgstr "Frekvenční údaje"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

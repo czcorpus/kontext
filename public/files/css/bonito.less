@@ -20,6 +20,7 @@
 #content > section {
   margin-top: 10px;
   margin-right: 15px;
+  min-width: 360px;
 }
 
 #content > section.exclusive {
@@ -750,7 +751,9 @@ pre {
 }
 
 table.data {
-  border-collapse: collapse;
+  background-color: #FFFFFF;
+  border-collapse: separate;
+  border-spacing: 0;
   border: 1px solid @color-light-frame;
   border-radius: @border-radius-default;
 
@@ -758,13 +761,17 @@ table.data {
 
 table.data td,
 table.data th {
-  padding: 3px 5px;
+  text-align: left;
+  padding: 3px 8px 3px 8px;
 }
 
 table.data th {
-  background-color: #FFFFFF;
   color: @color-logo-pink;
   font-weight: 700;
+}
+
+table.data td.num {
+  text-align: right;
 }
 
 table.data th a {
@@ -775,7 +782,7 @@ table.data th.super {
   text-align: center;
 }
 
-table.data tr.datarow:nth-child(even) {
+table.data tbody tr:nth-child(odd) {
   background-color: @color-light-green;
 }
 
