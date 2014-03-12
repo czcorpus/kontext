@@ -127,30 +127,16 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
     #end if
     #end block
 
-        <h3>$corp_full_name</h3>
-        #if $usesubcorp
-        <br/>$_("Subcorpus"): <b>$usesubcorp</b>
-        #end if
-        #if $Keywords
-        <br/>
-        <br/>$_("Reference corpus"):  <b>$ref_corp_full_name</b>
-        #if $ref_usesubcorp
-            <br/>$_("Reference subcorpus"): <b>$ref_usesubcorp</b>
-        #end if
-        #end if
-
     <table class="result numtab">
     #if $Items
-        #if $wlattr != 'ws_collocations'
-          #set $attrsort_sett = $url_sub($curr_settings, 'wlsort', '')
-          #set $freqsort_sett = $url_sub($curr_settings, 'wlsort', 'f')
-          <thead><tr>
-          <th><a href="wordlist?$attrsort_sett">$wlattr_label</a></th>
-          <th><a href="wordlist?$freqsort_sett">$_("Freq")</a></th>
-          </tr></thead>
-        #else
-          <thead><tr><th>$wlattr</th><th>$_("Freq")</th></tr></thead>
-        #end if
+
+      #set $attrsort_sett = $url_sub($curr_settings, 'wlsort', '')
+      #set $freqsort_sett = $url_sub($curr_settings, 'wlsort', 'f')
+      <thead><tr>
+      <th><a href="wordlist?$attrsort_sett">$wlattr_label</a></th>
+      <th><a href="wordlist?$freqsort_sett">$freq_figure</a></th>
+      </tr></thead>
+
       #for $i in $Items
         <tr class="$i.get('class')" >
         #if $wlattr == 'ws_collocations'

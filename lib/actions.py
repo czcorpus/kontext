@@ -37,6 +37,8 @@ except NameError:
 
 class Actions(ConcCGI):
 
+    FREQ_FIGURES = {'docf': _('Document counts'), 'frq': _('Word counts'), 'arf': _('ARF')}
+
     def __init__(self, environ):
         super(Actions, self).__init__(environ=environ)
         self.contains_within = False
@@ -1401,6 +1403,7 @@ class Actions(ConcCGI):
             refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
+        out['freq_figures'] = self.FREQ_FIGURES
         self._enable_subcorpora_list(out)
         return out
 
@@ -1532,6 +1535,8 @@ class Actions(ConcCGI):
             except Exception:
                 result['wlattr_label'] = self.wlattr
 
+            result['freq_figure'] = self.FREQ_FIGURES.get(self.wlnums, '?')
+
             params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=' \
                      % (self.wlattr, wlpat)
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
@@ -1540,20 +1545,12 @@ class Actions(ConcCGI):
             # custom save is solved in templates because of compatibility issues
             self.last_corpname = self.corpname
             self._save_options(['last_corpname'])
+
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
-            if self.wlattr == 'ws_collocations':
-                out = corplib.build_arf_db(e.args[0], 'hashws')
-            else:
-                corp = self._corp()
-                try:
-                    corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
-                except Exception as e:
-                    logging.getLogger(__name__).warning('DOCSTRUCTURE not set correctly: %r' % e)
-                    raise ConcError('DOCSTRUCTURE not set correctly')
-                out = corplib.build_arf_db(e.args[0], self.wlattr)
+            out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
