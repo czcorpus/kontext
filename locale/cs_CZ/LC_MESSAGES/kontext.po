@@ -1994,6 +1994,9 @@ msgstr "Hledat podle názvu"
 msgid "Frequency figures"
 msgstr "Frekvenční údaje"
 
+msgid "required file format"
+msgstr "požadovaný formát souborů"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
