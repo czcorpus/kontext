@@ -18,7 +18,19 @@
         </translations>
         <conc_persistence_time>1800</conc_persistence_time>
     </global>
-
+    <external_links>
+        <general>
+            <link key="ipm">https://wiki.korpus.cz/doku.php/pojmy:ipm</link>
+            <link key="arf">https://wiki.korpus.cz/doku.php/pojmy:arf</link>
+        </general>
+        <corpora_related>
+            <link key="opus.txtype_group">https://wiki.korpus.cz/doku.php/pojmy:txtype_group</link>
+            <link key="opus.genre">https://wiki.korpus.cz/doku.php/seznamy:genre</link>
+            <link key="opus.srclang">https://wiki.korpus.cz/doku.php/seznamy:srclang</link>
+            <link key="opus.txtype">https://wiki.korpus.cz/doku.php/seznamy:txtype</link>
+            <link key="opus.med">https://wiki.korpus.cz/doku.php/seznamy:med</link>
+        </corpora_related>
+    </external_links>
     <plugins>
         <db>
             <module>ucnk_db</module>
