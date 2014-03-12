@@ -1607,6 +1607,14 @@ class Actions(ConcCGI):
         self._headers['Content-Type'] = 'text/plain'
         return corplib.build_arf_db_status(self._corp(), attrname)[1]
 
+    def _add_text_type_hints(self, tt):
+        if settings.contains('external_links', 'corpora_related'):
+            hints = dict([(x[1]['key'], x[0]) for x in settings.get_full('external_links', 'corpora_related')])
+            for line in tt:
+                for item in line.get('Line', ()):
+                    if 'label' in item and item['label'] in hints:
+                        item['label_hint'] = hints[item['label']]
+
     def _texttypes_with_norms(self, subcorpattrs='', list_all=False,
                              format_num=True, ret_nums=True):
         corp = self._corp()
@@ -1615,11 +1623,13 @@ class Actions(ConcCGI):
                 or corp.get_conf('FULLREF')
         if not subcorpattrs or subcorpattrs == '#':
             return {'message': ('error', _('No meta-information to create a subcorpus.')),
-                    'Normslist': [], 'Blocks': [],
-            }
+                    'Normslist': [], 'Blocks': []}
+
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_all)
-        if not ret_nums: return {'Blocks': tt, 'Normslist': []}
+        self._add_text_type_hints(tt)
+        if not ret_nums:
+            return {'Blocks': tt, 'Normslist': []}
         basestructname = subcorpattrs.split('.')[0]
         struct = corp.get_struct(basestructname)
         normvals = {}

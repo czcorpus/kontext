@@ -589,7 +589,7 @@ $corp_full_name</b><br>
       <thead class="fixed">
         <tr>
         <th>$_($l['label'])
-        <a href="#">link</a>
+        #if 'label_hint' in $l#<a href="${l['label_hint']}"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>#end if#
         </th>
       #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical')
         <th></th>
@@ -677,7 +677,6 @@ $corp_full_name</b><br>
     </tbody>
     </table>
     #end for
-    <div style="clear: both; height: 20px;">  </div>
   #end for
   </div>
 #end def
