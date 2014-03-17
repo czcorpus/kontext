@@ -1997,6 +1997,9 @@ msgstr "Frekvenční údaje"
 msgid "required file format"
 msgstr "požadovaný formát souborů"
 
+msgid "More information at"
+msgstr "Více informací na"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
