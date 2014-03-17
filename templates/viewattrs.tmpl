@@ -56,7 +56,7 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
             #set $navid = ''
             #end for
 
-            <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
+            <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
         </div>
 
         <div class="rgt-block">
@@ -79,7 +79,7 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
             #set $i = $i + 1
         #end for
 
-        <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
+        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
     </fieldset>
     #end if
 
@@ -94,7 +94,7 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
             <label for="ref-item-$i">$a.label</label><br />
             #set $i = $i + 1
         #end for
-        <button class="select-all" type="button" data-alt-label="$_('Deselect all')">$_('Select all')</button>
+        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
     </fieldset>
 
     <div class="buttons">
