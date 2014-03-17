@@ -29,19 +29,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib = {};
 
     /**
-     * @param {HTMLElement} buttonElm
+     * @param {HTMLElement} selectAllElm
      * @param {String} [forceStatus]
      */
-    toggleSelectAllLabel = function (buttonElm, forceStatus) {
-        var tmpLabel,
-            currValue,
+    toggleSelectAllLabel = function (selectAllElm, forceStatus) {
+        var currValue,
             newValue;
 
-        if (!$(buttonElm).attr('data-status')) {
-            $(buttonElm).attr('data-status', '1');
+        if (!$(selectAllElm).attr('data-status')) {
+            $(selectAllElm).attr('data-status', '1');
         }
-        currValue = $(buttonElm).attr('data-status');
-
+        currValue = $(selectAllElm).attr('data-status');
         if (forceStatus) {
             newValue = forceStatus;
 
@@ -53,17 +51,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         }
 
         if (currValue !== newValue) {
-            if ($(buttonElm).get(0).nodeName === 'INPUT') {
-                tmpLabel = $(buttonElm).attr('value');
-                $(buttonElm).attr('value', $(buttonElm).attr('data-alt-label'));
-                $(buttonElm).attr('data-alt-label', tmpLabel);
-
-            } else if ($(buttonElm).get(0).nodeName === 'BUTTON') {
-                tmpLabel = $(buttonElm).button('option', 'label');
-                $(buttonElm).button('option', 'label', $(buttonElm).attr('data-alt-label'));
-                $(buttonElm).attr('data-alt-label', tmpLabel);
+            $(selectAllElm).attr('data-status', newValue);
+            if (newValue === '1') {
+                selectAllElm.checked = false;
             }
-            $(buttonElm).attr('data-status', newValue);
         }
     };
 
@@ -604,7 +595,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             updateButtonStatus;
 
         if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
-            jqCheckboxes = jqContext.find('input[type="checkbox"]');
+            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all)');
 
         } else {
             jqCheckboxes = jqContext;
@@ -627,9 +618,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         jqElm.bind('click', function (event) {
             var evtTarget = event.target;
 
-            if (evtTarget.nodeName !== 'BUTTON' && evtTarget.nodeName != 'INPUT') { // <= Safari issue
-                evtTarget = $(evtTarget).closest('button').get(0);
-            }
             if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
@@ -678,7 +666,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
             });
 
         // 'Select all' buttons for structural attribute lists
-        $('input[class="select-all"]').each(function () {
+        $('table.envelope input[class="select-all"]').each(function () {
             lib.applySelectAll(this, $(this).closest('table.envelope'));
         });
 

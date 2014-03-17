@@ -816,8 +816,15 @@ table.envelope td input[type="checkbox"] {
 }
 
 table.envelope td label {
-  margin: inherit;
-  padding: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+table.envelope td label.select-all,
+fieldset label.select-all {
+  display: inline-block;
+  padding-top: 10px;
+  color: @color-logo-blue;
 }
 
 table.envelope td, table.envelope th {
