@@ -555,14 +555,16 @@ $corp_full_name</b><br>
 #end def
 
 
-#def input_hidden
+#def input_hidden($exclude=())
 ## Global form parameters
 
 #for $qq in $Q
   <input type="hidden" name="q" value="${qq['q'], also='"'}" />
 #end for
 #for $g in $Globals
+  #if not $g.name in $exclude
   <input type="hidden" name="$g.name" value="$g.value" />
+  #end if
 #end for
 #end def
 
