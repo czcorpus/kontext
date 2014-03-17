@@ -96,6 +96,7 @@ $_("Frequency list")#slurp
     <table class="data">
         #for $b in $Blocks
         #set $rowNum = 1
+        <thead>
         #if 'Total' in $b
         <tr>
             <td colspan="$($len($b.Head) + 2)"><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</td>
@@ -112,6 +113,8 @@ $_("Frequency list")#slurp
             </th>
             #end for
         </tr>
+        </thead>
+        <tbody>
         #for $i in $b.get('Items', [])
         #if len($i.Word[0]['n']) == 0:
         #continue
@@ -144,6 +147,7 @@ $_("Frequency list")#slurp
             #end if
         </tr>
         #end for
+        </tbody>
     #end for
     </table>
 
