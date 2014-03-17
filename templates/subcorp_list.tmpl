@@ -38,15 +38,17 @@ require(['tpl/subcorpList', 'conf', 'domReady!'], function(pageSelf, conf) {
     <form id="mainform" action="subcorp_list" method="POST">
 
     <table class="data" border="0">
-        <tr>
-            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
-            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
-            <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
-            <th></th>
-        </tr>
-        #set $counter = 1
+        <thead>
+            <tr>
+                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
+                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
+                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
         #for $item in $subcorp_list
-        <tr #if $counter % 2 == 1#class="even"#end if#>
+        <tr>
             <td><a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">$item.n</a></td>
             <td class="num">$format_number($item.size, mask='%d')</td>
             <td>$item.created</td>
@@ -54,8 +56,8 @@ require(['tpl/subcorpList', 'conf', 'domReady!'], function(pageSelf, conf) {
                 <input type="checkbox" name="selected_subc" value="$item.n" />
             </td>
         </tr>
-        #set $counter = $counter + 1
         #end for
+        </tbody>
     </table>
     <p>
         <button type="submit" name="action" value="delete">$_('Delete selected')</button>
