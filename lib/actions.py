@@ -1422,8 +1422,9 @@ class Actions(ConcCGI):
         self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
         result = {
             'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
-                           + '&include_nonwords=%s&wlsort=f') % (self.wlattr, self.corpname, self.usesubcorp,
-                                                                 self.wlpat, self.wlminfreq, self.include_nonwords)
+                           '&include_nonwords=%s&wlsort=f&wlnums=%s') % (self.wlattr, self.corpname, self.usesubcorp,
+                                                                         self.wlpat, self.wlminfreq,
+                                                                         self.include_nonwords, self.wlnums)
         }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
