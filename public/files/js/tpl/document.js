@@ -1025,6 +1025,18 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
     /**
      *
+     */
+    lib.externalHelpLinks = function () {
+        $('a.external-help').each(function () {
+            console.log(this);
+            var href = $(this).attr('href'),
+                message = lib.conf.messages.more_information_at + ' <a href="' + href + '" target="_blank">' + href + '</a>';
+            popupbox.bind(this, message, {});
+        });
+    };
+
+    /**
+     *
      * @param {object} conf
      */
     lib.init = function (conf) {
@@ -1067,6 +1079,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.mouseOverImages();
         lib.enhanceMessages();
         lib.onLoadVirtualKeyboardInit();
+        lib.externalHelpLinks();
 
         $('button').button();
         $('input[type="submit"]').button();
