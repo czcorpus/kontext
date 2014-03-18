@@ -1242,3 +1242,31 @@ hr {
   height: 1px;
   border: none;
 }
+
+#ajax-loading-msg {
+    position: fixed;
+    animation-duration: 1.2s;
+    animation-name: blink;
+    animation-iteration-count: infinite;
+    background-color: #000000;
+    font-size: 20pt;
+    width: 150px;
+    height: 60px;
+    line-height: 60px;
+    box-shadow: @portal-box-shadow;
+    border-radius: @border-radius-default;
+    background-color: @color-bg-light-blue;
+    text-align: center;
+}
+
+@keyframes blink {
+  0% {
+    color: @color-logo-pink;
+  }
+  50% {
+    color: @color-bg-light-blue;
+  }
+  100% {
+    color: @color-logo-pink;
+  }
+}

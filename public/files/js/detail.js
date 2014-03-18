@@ -20,13 +20,13 @@
 define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox) {
     'use strict';
 
-    var lib = {},
-        renderDetailFunc;
+    var lib = {};
 
 
     lib.currentDetail = null;
 
-    renderDetailFunc = function (data) {
+
+    function renderDetailFunc(data) {
         return function (tooltipBox, finalize) {
             var i = 0,
                 j,
@@ -80,7 +80,30 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
             $(parentElm).html(html);
             finalize();
         };
-    };
+    }
+
+    /**
+     * @return {jQuery} ajax notification box
+     */
+    function enableAjaxLoadingNotification() {
+        var jqAjaxLoader = $('<div id="ajax-loading-msg"><span>loading...</span></div>');
+
+        jqAjaxLoader.css({
+            'bottom' : '50px',
+            'left' : ($(window).width() / 2 - 50) + 'px'
+        });
+
+        $('body').append(jqAjaxLoader);
+        return jqAjaxLoader;
+    }
+
+    /**
+     *
+     * @param {HTMLElement|jQuery} elm
+     */
+    function disableAjaxLoadingNotification(elm) {
+        $(elm).remove();
+    }
 
     /**
      *
@@ -89,6 +112,8 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
      * @param {Function} errorCallback
      */
     lib.showRefDetail = function (url, params, errorCallback) {
+        var anim = enableAjaxLoadingNotification();
+
         $.ajax({
             url : url,
             type : 'GET',
@@ -98,6 +123,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 var render = renderDetailFunc(data),
                     leftPos;
 
+                disableAjaxLoadingNotification(anim);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -116,7 +142,10 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 lib.currentDetail.setCss('left', leftPos + 'px');
             },
 
-            error : errorCallback
+            error : function (jqXHR, textStatus, errorThrown) {
+                disableAjaxLoadingNotification(anim);
+                errorCallback(jqXHR, textStatus, errorThrown);
+            }
         });
     };
 
@@ -128,6 +157,8 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
      * @param {Function} [callback] function called after the ajax's complete event is triggered
      */
     lib.showDetail = function (url, params, errorCallback, callback) {
+        var anim = enableAjaxLoadingNotification();
+
         $.ajax({
             url : url,
             type : 'GET',
@@ -135,6 +166,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
             success: function (data) {
                 var leftPos;
 
+                disableAjaxLoadingNotification(anim);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -159,7 +191,10 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                 }
             },
 
-            error : errorCallback
+            error : function (jqXHR, textStatus, errorThrown) {
+                disableAjaxLoadingNotification(anim);
+                errorCallback(jqXHR, textStatus, errorThrown);
+            }
         });
     };
 
