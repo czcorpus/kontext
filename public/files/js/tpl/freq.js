@@ -71,7 +71,7 @@ define(['tpl/document', 'win', 'popupbox', 'jquery', 'kwicAlignUtils'], function
             newLine = $('#multilevel-freq-first-level').clone(),
             newLevelNum = numLevels + 1;
 
-        $('#multilevel-freq-params tr.last-line').before(newLine);
+        $('#multilevel-freq-params tr.add-level').before(newLine);
         newLine.attr('id', null);
         newLine.find('td:first').text(newLevelNum + '.');
         newLine.find('td:nth-child(2) select').attr('name', 'ml' + newLevelNum + 'attr');
