@@ -1582,8 +1582,8 @@ msgid "version"
 msgstr "verze"
 
 #: cmpltmpl/viewattrs.py:158
-msgid "Concordance view options - attributes, structures and references"
-msgstr " Atributy, struktury a metainformace"
+msgid "Attributes, structures and references"
+msgstr "Atributy, struktury a metainformace"
 
 #: cmpltmpl/viewattrs.py:166
 #, python-format
