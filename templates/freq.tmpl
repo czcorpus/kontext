@@ -92,12 +92,12 @@ require(['tpl/freq', 'conf', 'domReady!'], function (pageSelf, conf) {
                     -
                 </td>
             </tr>
-            <tr class="last-line">
-                <td>
-                    <button id="add-freq-level-button" type="button">$_('Add level')</button>
-                </td>
-                <td colspan="5">
-
+            <tr class="add-level">
+                <td colspan="6">
+                    <a id="add-freq-level-button">
+                        $_('Add level')
+                        <img class="over-img" src="$files_path/img/arrow_down.png" data-alt-img="$files_path/img/arrow_down_s.png" />
+                    </a>
                 </td>
             </tr>
         </table>
