@@ -1581,10 +1581,6 @@ msgstr "jazyky uživatelského rozhraní"
 msgid "version"
 msgstr "verze"
 
-#: cmpltmpl/viewattrs.py:158
-msgid "Attributes, structures and references"
-msgstr "Atributy, struktury a metainformace"
-
 #: cmpltmpl/viewattrs.py:166
 #, python-format
 msgid "Following settings apply only for the <em>%s</em> corpus."
