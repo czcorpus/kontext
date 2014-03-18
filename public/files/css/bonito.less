@@ -663,9 +663,14 @@ fieldset {
   margin: 0px;
   padding: 10px;
   border-style: solid;
-  border-color: #DBE2D9;
+  border-color: @color-frame-fieldset;
   border-width: 1px;
   border-radius: @border-radius-default;
+}
+
+fieldset .select-all {
+  display: inline-block;
+  padding-top: 10px;
 }
 
 #subcorp-selector {
@@ -1097,14 +1102,6 @@ table#multilevel-freq-params td.level {
   margin: 20px 0;
 }
 
-div.lft-block {
-  float: left;
-}
-
-div.rgt-block {
-  float: right;
-}
-
 .struct em {
   text-decoration: none;
   color: #999999;
@@ -1237,4 +1234,11 @@ form .freq-figures {
   list-style-type: none;
   padding-left: 0;
   margin-left: 0;
+}
+
+hr {
+  color: @color-frame-fieldset;
+  background-color: @color-frame-fieldset;
+  height: 1px;
+  border: none;
 }
