@@ -48,23 +48,19 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
     <fieldset>
         <legend>$_("Attributes")</legend>
 
-        <div class="lft-block">
-            #set $navid = 'id="firstattr"'
-            #for $a in $AttrList
-            #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
-            <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
-            #set $navid = ''
-            #end for
+        #set $navid = 'id="firstattr"'
+        #for $a in $AttrList
+        #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
+        <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
+        #set $navid = ''
+        #end for
+        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
 
-            <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
-        </div>
-
-        <div class="rgt-block">
-            <label><input type='radio' name='allpos' value='all'
-            #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
-            <label><input type='radio' name='allpos' value='kw'
-            #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
-        </div>
+        <hr />
+        <label><input type='radio' name='allpos' value='all'
+        #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
+        <label><input type='radio' name='allpos' value='kw'
+        #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
     </fieldset>
 
     #if $Availstructs
