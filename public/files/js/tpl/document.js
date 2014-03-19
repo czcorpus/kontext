@@ -1037,6 +1037,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
     /**
      *
+     */
+    lib.reload = function () {
+        win.document.location.reload();
+    };
+
+    /**
+     *
      * @param {object} conf
      */
     lib.init = function (conf) {
