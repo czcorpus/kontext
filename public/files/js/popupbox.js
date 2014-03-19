@@ -49,10 +49,15 @@ define(['win', 'jquery'], function (win, $) {
      * @constructor
      * @param {{}} anchorPosition object with 'left', 'top' and 'height' attributes specifying
      * height and anchorPosition of an element the pop-up box will be (visually) bound to
+     * @param {*} [beforeOpenVal]
      */
-    function TooltipBox(anchorPosition) {
+    function TooltipBox(anchorPosition, beforeOpenVal) {
 
         this.anchorPosition = anchorPosition;
+
+        this.beforeOpenVal = beforeOpenVal; // optional value returned by user's beforeOpen() callback
+
+        this.onShowVal = null; // optional value returned by user's onShow() callback
 
         this.timer = null;
 
@@ -61,6 +66,8 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = 25000;
 
         this.onClose = null;
+
+        this.onShow = null;
 
         this.jqCloseIcon = null;
 
@@ -133,7 +140,7 @@ define(['win', 'jquery'], function (win, $) {
             }
         }
         if (typeof this.onClose === 'function') {
-            this.onClose.call(this);
+            this.onClose.call(this, this.onShowVal);
         }
     };
 
@@ -200,8 +207,9 @@ define(['win', 'jquery'], function (win, $) {
      * following signature is expected: function(TooltipBox, finalizeCallback) where first argument is a TooltipBox
      * instance and second argument is a finalization callback which is expected to be called by a user once he
      * finishes content generation.
-     * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain,
-     * onClose), domId, htmlClass, calculatePosition (true, false), messages (= a dictionary with translations)
+     * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain),
+     * onClose, beforeOpen, onShow, domId, htmlClass, calculatePosition (true, false),
+     * messages (= a dictionary with translations)
      *
      */
     TooltipBox.prototype.open = function (whereElement, contents, options) {
@@ -219,6 +227,7 @@ define(['win', 'jquery'], function (win, $) {
 
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
+        this.onShow = fetchOption('onShow', null);
 
         if (options.hasOwnProperty('messages')) {
             this.importMessages(fetchOption('messages', {}));
@@ -248,6 +257,9 @@ define(['win', 'jquery'], function (win, $) {
                     self.calcPosition(opts);
                 }
                 $(self.newElem).show();
+                if (typeof self.onShow === 'function') {
+                    self.onShowVal = self.onShow.call(self, self.beforeOpenVal);
+                }
             });
 
         } else {
@@ -255,9 +267,11 @@ define(['win', 'jquery'], function (win, $) {
             if (this.jqCloseIcon) {
                 $(this.newElem).prepend(this.jqCloseIcon);
             }
-
             if (calculatePosition) {
                 this.calcPosition(opts);
+            }
+            if (typeof this.onShow === 'function') {
+                this.onShowVal = this.onShow.call(this, this.beforeOpenVal);
             }
             $(self.newElem).show();
         }
@@ -354,7 +368,10 @@ define(['win', 'jquery'], function (win, $) {
      */
     lib.bind = function (elm, contents, options) {
         var box,
-            whereElm;
+            whereElm,
+            beforeOpen = fetchOptionFunc(options)('beforeOpen', null),
+            beforeOpenValue = null,
+            self = this;
 
         options = options || {};
         whereElm = $('body');
@@ -362,6 +379,10 @@ define(['win', 'jquery'], function (win, $) {
         $(elm).on('click', function (event) {
             var windowClickHandler,
                 elmOffset;
+
+            if (typeof beforeOpen === 'function') {
+                beforeOpenValue = beforeOpen.call(self);
+            }
 
             if ($(elm).data('popupBox')) {
                 box = $(elm).data('popupBox');
@@ -374,7 +395,7 @@ define(['win', 'jquery'], function (win, $) {
                     left: elmOffset.left,
                     top: elmOffset.top,
                     height: $(event.target).height()
-                });
+                }, beforeOpenValue);
                 $(elm).data('popupBox', box);
                 box.open(whereElm, contents, options);
 
