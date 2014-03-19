@@ -633,6 +633,32 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         });
     };
 
+    lib.bindCorpusDescAction = function () {
+        var jqDescLink = $('#corpus-desc-link');
+
+        popupbox.bind(jqDescLink,
+            function (box, finalize) {
+                lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
+            },
+            {
+                width: 'auto',
+                closeIcon: true,
+                messages: lib.conf.messages,
+                beforeOpen: function () {
+                    var ajaxLoader = lib.createAjaxLoader();
+
+                    $(win.document.body).append(ajaxLoader);
+                    ajaxLoader.css({
+                        'left': (jqDescLink.offset().left - 20) + 'px',
+                        'top': (jqDescLink.offset().top + 30) + 'px'
+                    });
+                    return ajaxLoader;
+                },
+                onShow: function (loader) { loader.remove(); }
+            }
+        );
+    }
+
     /**
      *
      */
@@ -641,10 +667,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         popupbox.bind($('#positions-help-link'), lib.conf.messages.msg1,
             {messages: lib.conf.messages, width: '30%'});
-
-        popupbox.bind('#corpus-desc-link', function (box, finalize) {
-            lib.corpusInfoBox.createCorpusInfoBox(box, finalize);
-        }, {width: 'auto', closeIcon: true, messages: lib.conf.messages});
 
         popupbox.bind('#corpus-citation-link a',
             function(box, finalizeCallback) {
@@ -1028,7 +1050,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      */
     lib.externalHelpLinks = function () {
         $('a.external-help').each(function () {
-            console.log(this);
             var href = $(this).attr('href'),
                 message = lib.conf.messages.more_information_at + ' <a href="' + href + '" target="_blank">' + href + '</a>';
             popupbox.bind(this, message, {});
@@ -1040,6 +1061,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      */
     lib.reload = function () {
         win.document.location.reload();
+    };
+
+    /**
+     * Creates unbound HTML tree containing message 'loading...'
+     *
+     * @returns {jQuery}
+     */
+    lib.createAjaxLoader = function () {
+        return $('<div class="ajax-loading-msg"><span>' + this.conf.messages.loading + '</span></div>');
     };
 
     /**
@@ -1080,6 +1110,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         };
         lib.misc();
         lib.bindStaticElements();
+        lib.bindCorpusDescAction();
         lib.queryOverview();
         lib.mainMenu.init();
         lib.timeoutMessages();

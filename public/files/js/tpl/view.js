@@ -40,7 +40,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                         function (jqXHR, textStatus, errorThrown) {
                             layoutModel.showMessage('error', errorThrown);
                         },
-                        callback);
+                        callback,
+                        layoutModel.createAjaxLoader());
                     event.preventDefault();
                 });
             });
@@ -65,7 +66,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                 function () {
                     layoutModel.showMessage('error', arguments[2]);
                 },
-                callback
+                callback,
+                layoutModel.createAjaxLoader()
             );
             event.stopPropagation();
         });
@@ -78,7 +80,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
                     layoutModel.showMessage('error', errorThrown);
-                }
+                },
+                layoutModel.createAjaxLoader()
             );
             event.stopPropagation();
         });
