@@ -548,7 +548,10 @@ class CGIPublisher(object):
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
         ans_body = output.getvalue()
         output.close()
-        self._close_session()
+        try:
+            self._close_session()
+        except:
+            pass
         return self._export_status(), headers, ans_body
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
