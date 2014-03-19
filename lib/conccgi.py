@@ -773,7 +773,11 @@ class ConcCGI(CGIPublisher):
         if 'TextTypeSel' in vars:
             result['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in vars:
-            result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
+            if self.cm:
+                result['LastSubcorp'] = self.cm.subcorp_names(self.corpname)
+            else:
+                # this should apply only in case of an error
+                result['LastSubcorp'] = ''
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
 
         if 'orig_query' in vars:
