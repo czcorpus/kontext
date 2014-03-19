@@ -85,16 +85,13 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     /**
      * @return {jQuery} ajax notification box
      */
-    function enableAjaxLoadingNotification() {
-        var jqAjaxLoader = $('<div id="ajax-loading-msg"><span>loading...</span></div>');
-
+    function enableAjaxLoadingNotification(jqAjaxLoader) {
         jqAjaxLoader.css({
             'bottom' : '50px',
+            'position' : 'fixed',
             'left' : ($(win).width() / 2 - 50) + 'px'
         });
-
         $('body').append(jqAjaxLoader);
-        return jqAjaxLoader;
     }
 
     /**
@@ -106,13 +103,13 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     }
 
     /**
-     *
      * @param {String} url
      * @param {{}} params
      * @param {Function} errorCallback
+     * @param {jQuery} ajaxLoaderNotification
      */
-    lib.showRefDetail = function (url, params, errorCallback) {
-        var anim = enableAjaxLoadingNotification();
+    lib.showRefDetail = function (url, params, errorCallback, ajaxLoaderNotification) {
+        enableAjaxLoadingNotification(ajaxLoaderNotification);
 
         $.ajax({
             url : url,
@@ -123,7 +120,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 var render = renderDetailFunc(data),
                     leftPos;
 
-                disableAjaxLoadingNotification(anim);
+                disableAjaxLoadingNotification(ajaxLoaderNotification);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -143,7 +140,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(anim);
+                disableAjaxLoadingNotification(ajaxLoaderNotification);
                 errorCallback(jqXHR, textStatus, errorThrown);
             }
         });
@@ -155,9 +152,10 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
      * @param {{}} params
      * @param {Function} errorCallback
      * @param {Function} [callback] function called after the ajax's complete event is triggered
+     * @param {jQuery} [ajaxLoaderNotification]
      */
-    lib.showDetail = function (url, params, errorCallback, callback) {
-        var anim = enableAjaxLoadingNotification();
+    lib.showDetail = function (url, params, errorCallback, callback, ajaxLoaderNotification) {
+        enableAjaxLoadingNotification(ajaxLoaderNotification);
 
         $.ajax({
             url : url,
@@ -166,7 +164,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             success: function (data) {
                 var leftPos;
 
-                disableAjaxLoadingNotification(anim);
+                disableAjaxLoadingNotification(ajaxLoaderNotification);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -192,7 +190,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(anim);
+                disableAjaxLoadingNotification(ajaxLoaderNotification);
                 errorCallback(jqXHR, textStatus, errorThrown);
             }
         });
