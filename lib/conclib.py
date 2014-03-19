@@ -69,11 +69,11 @@ class PyConc(manatee.Concordance):
     selected_grps = []
 
     def __init__(self, corp, action, params, sample_size=0, full_size=-1,
-                 orig_corp=None, corpus_encoding='iso-8859-2'):
+                 orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
-        self.corpus_encoding = corpus_encoding
+        self.corpus_encoding = corp.get_conf('ENCODING')
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
