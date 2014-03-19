@@ -103,12 +103,13 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     }
 
     /**
+     * @param {HTMLElement|jQuery|string} eventTarget
      * @param {String} url
      * @param {{}} params
      * @param {Function} errorCallback
      * @param {jQuery} ajaxLoaderNotification
      */
-    lib.showRefDetail = function (url, params, errorCallback, ajaxLoaderNotification) {
+    lib.showRefDetail = function (eventTarget, url, params, errorCallback, ajaxLoaderNotification) {
         enableAjaxLoadingNotification(ajaxLoaderNotification);
 
         $.ajax({
@@ -124,6 +125,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
+                $(eventTarget).closest('tr').addClass('active');
                 lib.currentDetail = popupBox.open(render, null, {
                     type : 'plain',
                     domId : 'detail-frame',
@@ -147,14 +149,14 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     };
 
     /**
-     *
+     * @param {HTMLElement|jQuery|string} eventTarget
      * @param {String} url
      * @param {{}} params
      * @param {Function} errorCallback
      * @param {Function} [callback] function called after the ajax's complete event is triggered
      * @param {jQuery} [ajaxLoaderNotification]
      */
-    lib.showDetail = function (url, params, errorCallback, callback, ajaxLoaderNotification) {
+    lib.showDetail = function (eventTarget, url, params, errorCallback, callback, ajaxLoaderNotification) {
         enableAjaxLoadingNotification(ajaxLoaderNotification);
 
         $.ajax({
@@ -168,6 +170,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
+
+                $(eventTarget).closest('tr').addClass('active');
 
                 lib.currentDetail = popupBox.open(data, null, {
                     type : 'plain',
