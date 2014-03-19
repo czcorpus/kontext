@@ -36,7 +36,10 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
         callback = function (boxInst) {
             $('a.expand-link').each(function () {
                 $(this).bind('click', function (event) {
-                    detail.showDetail($(this).data('url'), $(this).data('params'),
+                    detail.showDetail(
+                        event.target,
+                        $(this).data('url'),
+                        $(this).data('params'),
                         function (jqXHR, textStatus, errorThrown) {
                             layoutModel.showMessage('error', errorThrown);
                         },
@@ -51,8 +54,6 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
             var jqRealTarget = null;
 
-            $('#conclines tr.active').removeClass('active');
-            $(event.target).closest('tr').addClass('active');
             if ($(event.target).data('url')) {
                 jqRealTarget = $(event.target);
 
@@ -61,6 +62,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
             }
 
             detail.showDetail(
+                event.target,
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
                 function () {
@@ -73,9 +75,9 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
         });
 
         $('td.ref').bind('click', function (event) {
-            $('#conclines tr.active').removeClass('active');
             $(event.target).closest('tr').addClass('active');
             detail.showRefDetail(
+                event.target,
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
