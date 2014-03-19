@@ -114,7 +114,9 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
      *
      */
     lib.bindStaticElements = function () {
-        popupbox.bind($('#show-help-format-link'), layoutModel.conf.messages.whiteLists, {});
+        popupbox.bind($('#show-help-format-link'), layoutModel.conf.messages.whiteLists, {
+            width: '300px'
+        });
         $('#select-output-type-simple').on('click', function () {
             selectOutputType('simple');
         });
