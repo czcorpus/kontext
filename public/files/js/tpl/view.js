@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane',
-        'popupbox'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, popupBox) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'jscrollpane'
+        ], function (win, $, jqueryPeriodic, layoutModel, detail, popupBox) {
     'use strict';
 
     var lib = {};
@@ -62,8 +62,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             detail.showDetail(
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
-                function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showMessage('error', errorThrown);
+                function () {
+                    layoutModel.showMessage('error', arguments[2]);
                 },
                 callback
             );
@@ -222,7 +222,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
 
         box = popupBox.open(layoutModel.conf.messages.anonymous_user_warning,
             {top: 0, left: 0}, {type: 'warning'});
-        left = $(window).width() / 2 - box.getPosition().width / 2;
+        left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
         box.setCss('left', left + 'px');
         box.setCss('top', top + 'px');

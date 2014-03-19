@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['tpl/document', 'hideelem'], function (layoutModel, hideElem) {
+define(['tpl/document'], function (layoutModel) {
     'use strict';
 
     var lib = {};
