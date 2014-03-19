@@ -132,12 +132,12 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
   #end for
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td><td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
-             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
+             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname">
   #else
     #if not $l.Kwic
     <i class="note">$_('<--not translated-->')</i>
     #end if
-    <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')">
+    <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname">
   #end if
   #for $k in $l.Kwic
 
@@ -197,7 +197,7 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
 #def oneclick_line($l, $i, $longcorpname)
   #if $copy_icon
     <td>
-        <div class="copy_div"><a id="$i" class="copy-button" data-url="widectx_raw" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname" data-loadtext="$_('Loading...')"></a></div>
+        <div class="copy_div"><a id="$i" class="copy-button" data-url="widectx_raw" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname"></a></div>
     </td>
   #end if
 #end def
@@ -323,7 +323,7 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
 
             #for $i, $l in $enumerate($Lines)
             <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-                <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" data-loadtext="$_('Loading...')">
+                <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname">
                     $l.ref
                 </td>
                 #filter None
@@ -352,7 +352,7 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
                 #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
                   #set $bcname = $Par_conc_corpnames[$ii+1].n
                   #if $ll.ref
-                    <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n" data-loadtext="$_('Loading...')">$ll.ref</td>
+                    <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
                   #else
                     <td></td>
                   #end if
