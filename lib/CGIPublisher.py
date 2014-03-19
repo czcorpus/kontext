@@ -525,6 +525,7 @@ class CGIPublisher(object):
             plugins.db.recover()
 
         except Exception as e:  # we assume that this means some kind of a fatal error
+            self._status = 500
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
             if settings.is_debug_mode():
                 named_args['message'] = ('error', u'%s' % e)
@@ -542,11 +543,6 @@ class CGIPublisher(object):
         # response rendering
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
-
-        if self.format == 'json':
-            return_type = self.format
-        else:
-            return_type = action_metadata.get('return_type', None)
 
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
