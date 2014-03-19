@@ -18,7 +18,7 @@
  */
 
 
-define(['tpl/document', 'win', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, win, popupbox, $, kwicAlignUtils) {
+define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupbox, $, kwicAlignUtils) {
 
     'use strict';
 

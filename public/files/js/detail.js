@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox) {
+define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, popupBox, win) {
     'use strict';
 
     var lib = {};
@@ -90,7 +90,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
 
         jqAjaxLoader.css({
             'bottom' : '50px',
-            'left' : ($(window).width() / 2 - 50) + 'px'
+            'left' : ($(win).width() / 2 - 50) + 'px'
         });
 
         $('body').append(jqAjaxLoader);
@@ -138,7 +138,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                         lib.currentDetail = null;
                     }
                 });
-                leftPos = $(window).width() / 2 - lib.currentDetail.getPosition().width / 2;
+                leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
             },
 
@@ -183,7 +183,7 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
                     }
                 });
                 lib.currentDetail.setCss('width', '700px');
-                leftPos = $(window).width() / 2 - lib.currentDetail.getPosition().width / 2;
+                leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
 
                 if (typeof callback === 'function') {
