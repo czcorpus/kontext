@@ -25,14 +25,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #def bodyonload
-require(['tpl/document', 'conf'], function (page, conf) {
+require(['jquery', 'tpl/document', 'conf', 'domReady!'], function ($, page, conf) {
     page.init(conf);
+    \$('a.reload').on('click', page.reload);
 });
 #end def
 
 #def main
 <section class="exclusive">
 <h2>&nbsp;</h2>
-<p class="continue-url"><a href="$next_url">$_('Continue')</a></p>
+<p class="continue-url">
+    <a class="reload">$_('Reload the page')</a><br />
+    $_('or')<br />
+    <a href="$next_url">$_('go to the homepage').</a>
+</p>
 </section>
 #end def
