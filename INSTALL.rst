@@ -390,6 +390,33 @@ language your version of KonText does not support.::
         pass
 
 
+The "live_attributes" plugin
+============================
+
+*[currently in development]*
+
+This is an optional plugin allowing to obtain all the attribute values according to some attribute subset selection.
+
+Let's say you have the following structural element defined in your corpus::
+
+    <doc translated="[true|false]" author="[name of the author]" type="[poetry|fiction]">
+
+Let's also assume you have no translated fiction works in your corpus and you pass a query::
+
+    {"doc.type": "fiction"}
+
+The plugin should return valid values of all other attributes as found in structural elements
+where *doc.type == 'fiction'* (your passed values should be included too). Your answer may look like the
+following example::
+
+    {
+        "doc.type": ["fiction"],
+        "doc.translated": ["false"],
+        "doc.author": ["Isaac Asimov", ..., "Émile Zola"]
+    }
+
+This allows user to select desired attributes when creating a query or a subcorpus in a more convenient way.
+
 ----------------------
 Deployment and running
 ----------------------
