@@ -110,6 +110,15 @@ def setup_plugins():
         except ImportError:
             pass
 
+    ##### attributes plugin #####
+    if settings.contains('plugins', 'live_attributes') and settings.get('plugins', 'live_attributes').get('module', None):
+        try:
+            attributes_module = plugins.load_plugin(settings.get('plugins', 'live_attributes')['module'])
+            if attributes_module:
+                plugins.live_attributes = attributes_module.create_instance(settings)
+        except ImportError:
+            pass
+
 
 def get_lang(environ):
     """
