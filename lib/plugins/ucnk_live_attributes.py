@@ -178,6 +178,12 @@ class LiveAttributes(object):
             ans[k] = tuple(sorted(ans[k]))
         return ans
 
+    def get_js_module(self):
+        """
+        Path must be relative to the files/js/plugins directory
+        """
+        return 'ucnkLiveAttributes'
+
 
 def create_instance(settings):
     """

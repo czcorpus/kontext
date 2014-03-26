@@ -74,7 +74,8 @@ requirejs.config({
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
         'jqueryui' :  './jquery-ui.custom.min',
-        'jscrollpane' : './jscrollpane.min'
+        'jscrollpane' : './jscrollpane.min',
+        'liveAttributes' : #if $live_attributes_js#'$live_attributes_js'#else#'plugins/dummyLiveAttributes'#end if#
     },
     shim : {
         'jqueryui' : {
@@ -656,7 +657,7 @@ $corp_full_name</b><br>
                                     #set $checked = 'checked="checked"'
                                     #end if ## -5
                                     #end if ## -4
-                                        <input id="sca.$i.$l['name']" type="checkbox" name="sca_$l['name']" value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#" $checked />
+                                        <input id="sca.$i.$l['name']" class="attr-selector" type="checkbox" name="sca_$l['name']" value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#" $checked />
                                         <label for="sca.$i.$l['name']">#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#</label>
                                     </td>
                                     #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical') ## 4
@@ -701,6 +702,11 @@ $corp_full_name</b><br>
         #end for ## -f2
         #end for ## -f1
     </div>
+
+    #if $live_attributes_js
+       <button id="live-attrs-update" type="button">$_('update option list')</button>
+       <button id="live-attrs-reset" type="button">$_('reset selection')</button>
+    #end if
 #end def
 
 #def query_node($suff='',$filter=False)

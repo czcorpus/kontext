@@ -697,6 +697,11 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
 
+        if plugins.has_plugin('live_attributes'):
+            result['live_attributes_js'] = 'plugins/%s' % plugins.live_attributes.get_js_module()
+        else:
+            result['live_attributes_js'] = False
+
         # avalilable languages
         if plugins.has_plugin('getlang'):
             result['avail_languages'] = ()

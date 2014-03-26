@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.cookie',
-    'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util) {
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie',
+    'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
     var toggleSelectAllLabel,
@@ -151,6 +151,13 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         };
 
         options.success = succWrapper;
+
+        if (!options.error) {
+            options.error = function (jqXHR, textStatus, errorThrown) {
+                lib.showMessage('error', errorThrown);
+            }
+        }
+
         if (arguments.length === 1) {
             $.ajax(options);
 
@@ -1128,6 +1135,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         lib.enhanceMessages();
         lib.onLoadVirtualKeyboardInit();
         lib.externalHelpLinks();
+        liveAttributes.init(lib.ajax, '#live-attrs-update', '#live-attrs-reset', '.text-type-params');
 
         $('button').button();
         $('input[type="submit"]').button();
