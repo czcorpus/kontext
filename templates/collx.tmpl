@@ -88,14 +88,9 @@ $_("Collocations")#slurp
     #end if
     #end block
 
-    <table class='result numtab'>
+    <p><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</p>
+    <table class="data">
     #set $rowNum = 1
-        <tr>
-            <td colspan="2"><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</td>
-            #for $h in $Head
-            <td></td>
-            #end for
-        </tr>
       <tr><th></th><th></th>
       #for $h in $Head
         <th
@@ -112,11 +107,7 @@ $_("Collocations")#slurp
       #end for
       </tr>
       #for $i in $Items
-        <tr
-        #if $i.has_key('class')
-          class='$i.class'
-        #end if
-        >
+        <tr>
             <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
         #set $rowNum += 1
           <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
