@@ -90,7 +90,9 @@ class AttrArgs(object):
 
 class LiveAttributes(object):
 
-    ATTRS = ('corpus_id', 'doc_id', 'doc_txtype', 'txtype', 'original', 'srclang', 'transsex', 'authsex', 'doc_pubyear', 'pubyear')
+    # TODO fill in all the attributes (see the db schema)
+    ATTRS = ('corpus_id', 'doc_id', 'doc.group', 'doc_txtype', 'txtype', 'original', 'srclang', 'transsex', 'authsex',
+             'doc_pubyear', 'pubyear')
 
     def __init__(self, db_path):
         self.db_path = db_path
