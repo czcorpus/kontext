@@ -77,13 +77,13 @@ define(['win', 'jquery'], function (win, $) {
             var id = stripPrefix($(this).attr('name')),
                 label = $('label[for="' + $(this).attr('id') + '"]');
 
-            if ($.inArray(id, data[id]) < 0) {
-                label.css('text-decoration', 'none');
-                $(this).attr('disabled', null);
-
-            } else {
+            if ($.inArray($(this).val(), data[id]) < 0) {
                 label.css('text-decoration', 'line-through');
                 $(this).attr('disabled', 'disabled');
+
+            } else {
+                label.css('text-decoration', 'none');
+                $(this).attr('disabled', null);
             }
         });
     }
