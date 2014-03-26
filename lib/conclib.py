@@ -17,11 +17,10 @@
 # 02110-1301, USA.
 
 import os
-import re
+import sys
 from sys import stderr
 import time
 import math
-import logging
 
 import manatee
 import settings
@@ -1504,6 +1503,10 @@ def get_detail_context(corp, pos, hitlen=1,
         data['wrapdetail'] = ''
     try:
         maxdetail = int(corp.get_conf('MAXDETAIL'))
+        if maxdetail == 0:
+            maxdetail = int(corp.get_conf('MAXCONTEXT'))
+            if maxdetail == 0:
+                maxdetail = sys.maxint
     except:
         maxdetail = 0
     if maxdetail:
