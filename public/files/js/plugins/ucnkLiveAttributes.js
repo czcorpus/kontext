@@ -21,21 +21,25 @@ define(['win', 'jquery'], function (win, $) {
 
     /**
      *
+     * @param s
+     * @returns {*}
+     */
+    function stripPrefix(s) {
+        var x = /^sca_(.+)$/,
+            ans;
+
+        ans = x.exec(s);
+        if (ans) {
+            return ans[1];
+        }
+        return null;
+    }
+
+    /**
+     *
      */
     function exportAttrStatus() {
-        var ans = {},
-            stripPrefix;
-
-        stripPrefix = function (s) {
-            var x = /^sca_(.+)$/,
-                ans;
-
-            ans = x.exec(s);
-            if (ans) {
-                return ans[1];
-            }
-            return null;
-        };
+        var ans = {};
 
         $('.text-type-params .attr-selector:checked').each(function () {
             var key = stripPrefix($(this).attr('name'));
@@ -69,7 +73,19 @@ define(['win', 'jquery'], function (win, $) {
     }
 
     function updateCheckboxes(data) {
-       // TODO
+        lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
+            var id = stripPrefix($(this).attr('name')),
+                label = $('label[for="' + $(this).attr('id') + '"]');
+
+            if ($.inArray(id, data[id]) < 0) {
+                label.css('text-decoration', 'none');
+                $(this).attr('disabled', null);
+
+            } else {
+                label.css('text-decoration', 'line-through');
+                $(this).attr('disabled', 'disabled');
+            }
+        });
     }
 
     /**
