@@ -147,6 +147,8 @@ define(['win', 'jquery'], function (win, $) {
 
         lib.resetButton.on('click', function () {
             lib.attrFieldsetWrapper.find('.attr-selector:checked').each(function () {
+                $('label[for="' + $(this).attr('id') + '"]').css('text-decoration', 'none'); // fix label
+                $(this).attr('disabled', null); // re-enable checkbox
                 this.checked = false;
             });
         });
