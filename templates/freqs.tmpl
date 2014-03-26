@@ -112,13 +112,11 @@ $_("Frequency list")#slurp
                 $_($h.n)</a>
             </th>
             #end for
+            <th></th>
         </tr>
         </thead>
         <tbody>
         #for $i in $b.get('Items', [])
-        #if len($i.Word[0]['n']) == 0:
-        #continue
-        #end if
         <tr>
             <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
             #set $rowNum += 1
