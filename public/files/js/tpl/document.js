@@ -1135,7 +1135,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         lib.enhanceMessages();
         lib.onLoadVirtualKeyboardInit();
         lib.externalHelpLinks();
-        liveAttributes.init(lib.ajax, '#live-attrs-update', '#live-attrs-reset', '.text-type-params');
+        liveAttributes.init(lib.conf, lib.ajax, lib.createAjaxLoader, '#live-attrs-update', '#live-attrs-reset',
+            '.text-type-params');
 
         $('button').button();
         $('input[type="submit"]').button();
