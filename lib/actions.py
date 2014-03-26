@@ -2235,3 +2235,15 @@ class Actions(ConcCGI):
         else:
             self._set_not_found()
             return None
+
+    @exposed(return_type='json')
+    def filter_attributes(self, attrs=None):
+        import json
+
+        if attrs is None:
+            attrs = {}
+        if plugins.has_plugin('live_attributes'):
+            ans = plugins.live_attributes.get_attr_values(json.loads(attrs))
+            return ans
+        else:
+            return {}
