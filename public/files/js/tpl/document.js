@@ -313,7 +313,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
      */
     lib.showMessage = function (type, message, callback) {
         var innerHTML,
-            parentElem,
+            messageListElm,
+            messageElm,
             timeout,
             typeIconMap;
 
@@ -326,24 +327,33 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
         innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[type] + '">'
                   + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
 
-        parentElem = win.document.createElement('div');
-        $(parentElem).addClass('message').addClass(type);
-        $(parentElem).html(innerHTML);
-        $('#content').prepend(parentElem);
+        if ($('#content .messages').length === 0) {
+            messageListElm = win.document.createElement('div');
+            $(messageListElm).addClass('messages');
+            $('#content').prepend(messageListElm);
 
-        $(parentElem).find('a.close-icon').bind('click', function () {
-            $(parentElem).hide('slide', {}, 500);
+        } else {
+            messageListElm = $('#content .messages').get(0);
+        }
+        messageElm = win.document.createElement('div');
+        $(messageElm).addClass('message').addClass(type);
+        $(messageElm).html(innerHTML);
+        $(messageListElm).append(messageElm);
+
+
+        $(messageElm).find('a.close-icon').bind('click', function () {
+            $(messageElm).hide('slide', {}, 500);
         });
 
         if (lib.conf.messageAutoHideInterval) {
             timeout = win.setTimeout(function () {
-                $(parentElem).hide('slide', {}, 500);
+                $(messageElm).hide('slide', {}, 500);
                 win.clearTimeout(timeout);
             }, lib.conf.messageAutoHideInterval);
         }
 
         if (typeof callback === 'function') {
-            callback(parentElem);
+            callback(messageElm);
         }
     };
 
