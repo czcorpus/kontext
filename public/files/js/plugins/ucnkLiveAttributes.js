@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery'], function ($) {
+define(['win', 'jquery'], function (win, $) {
     var lib = {};
 
     /**
@@ -73,22 +73,25 @@ define(['jquery'], function ($) {
     }
 
     /**
-     * @param {function} [ajax]
+     * @param {{}} conf
+     * @param {function} ajaxFunc
+     * @param {function} ajaxAnimFunc
      * @param {HTMLElement|jQuery|string} updateButton update button element
      * @param {HTMLElement|jQuery|string} resetButton reset button element
      * @param {HTMLElement|jQuery|string} attrFieldsetWrapper element containing attribute checkboxes
      */
-    lib.init = function (ajaxFunc, updateButton, resetButton, attrFieldsetWrapper) {
-
+    lib.init = function (conf, ajaxFunc, ajaxAnimFunc, updateButton, resetButton, attrFieldsetWrapper) {
         if (ajaxFunc) {
             lib.ajax = ajaxFunc;
 
         } else {
             lib.ajax = $.ajax;
         }
+        lib.conf = conf;
         lib.updateButton = $(updateButton);
         lib.resetButton = $(resetButton);
         lib.attrFieldsetWrapper = $(attrFieldsetWrapper);
+        lib.ajaxAnimFunc = ajaxAnimFunc;
 
 
         lib.attrFieldsetWrapper.find('.attr-selector').on('click', function () {
@@ -102,16 +105,26 @@ define(['jquery'], function ($) {
         });
 
         lib.updateButton.on('click', function () {
-            var selectedAttrs = exportAttrStatus();
+            var selectedAttrs = exportAttrStatus(),
+                ajaxAnimElm;
+
+            ajaxAnimElm = lib.ajaxAnimFunc();
+            $(ajaxAnimElm).css({
+                'position' : 'absolute',
+                'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
+                'top' : ($(win).height() / 2) + 'px'
+            });
+            $('#content').append(ajaxAnimElm);
 
             lib.ajax('filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
                 dataType : 'json',
                 success : function (data) {
                     updateAlignedCorpora(data);
                     updateCheckboxes(data);
+                    $(ajaxAnimElm).remove();
                 },
                 error : function () {
-                    console.log('error');
+                    $(ajaxAnimElm).remove();
                 }
             });
         });
