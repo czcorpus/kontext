@@ -57,10 +57,13 @@ define(['jquery'], function ($) {
         var corpList = data.corpus_id || [];
 
         $('#add-searched-lang-widget select option').each(function () {
-            console.log($(this).val());
+
             if ($.inArray($(this).val(), corpList) < 0) {
-                console.log('not there');
+                $(this).addClass('dynamic');
                 $(this).attr('disabled', 'disabled');
+
+            } else if ($(this).hasClass('dynamic')) {
+                $(this).attr('disabled', null);
             }
         });
     }
@@ -101,7 +104,7 @@ define(['jquery'], function ($) {
         lib.updateButton.on('click', function () {
             var selectedAttrs = exportAttrStatus();
 
-            lib.ajax('/filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
+            lib.ajax('filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
                 dataType : 'json',
                 success : function (data) {
                     updateAlignedCorpora(data);
