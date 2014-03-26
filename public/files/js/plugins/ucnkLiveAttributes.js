@@ -79,11 +79,9 @@ define(['win', 'jquery'], function (win, $) {
 
             if ($.inArray($(this).val(), data[id]) < 0) {
                 label.css('text-decoration', 'line-through');
-                $(this).attr('disabled', 'disabled');
 
             } else {
                 label.css('text-decoration', 'none');
-                $(this).attr('disabled', null);
             }
         });
     }
@@ -165,6 +163,10 @@ define(['win', 'jquery'], function (win, $) {
         $(win).on('unload', function () {
             resetCheckboxes();
             resetCorpList();
+        });
+
+        lib.attrFieldsetWrapper.find('.attr-selector').on('click', function (event) {
+            var label = $('label[for="' + $(event.target).attr('id') + '"]').css('text-decoration', 'none');
         });
     };
 
