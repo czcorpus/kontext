@@ -139,6 +139,24 @@ class LiveAttributes(object):
         cursor.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
         self.db().commit()
 
+    @staticmethod
+    def export_key(k):
+        if k == 'corpus_id':
+            return k
+        elif k.startswith('doc'):
+            return k.replace('_', '.')
+        else:
+            return 'div.%s' % k.replace('_', '.')
+
+    @staticmethod
+    def import_key(k):
+        if k == 'corpus_id':
+            return k
+        else:
+            ans = k.replace('div.', '', 1)
+            ans.replace('_', '.')
+            return ans
+
     @cached
     def get_attr_values(self, attr_map):
         """
@@ -174,9 +192,10 @@ class LiveAttributes(object):
                 if v is not None and v != '':
                     ans[attr].add(item[srch_attr_map[attr]])
 
+        exported = {}
         for k in ans.keys():
-            ans[k] = tuple(sorted(ans[k]))
-        return ans
+            exported[self.export_key(k)] = tuple(sorted(ans[k]))
+        return exported
 
     def get_js_module(self):
         """
