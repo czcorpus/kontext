@@ -88,6 +88,18 @@ define(['win', 'jquery'], function (win, $) {
         });
     }
 
+    function resetCheckboxes() {
+        lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
+            $('label[for="' + $(this).attr('id') + '"]').css('text-decoration', 'none'); // fix label
+            $(this).attr('disabled', null); // re-enable checkbox
+            this.checked = false;
+        });
+    }
+
+    function resetCorpList() {
+        // TODO
+    }
+
     /**
      * @param {{}} conf
      * @param {function} ajaxFunc
@@ -146,11 +158,13 @@ define(['win', 'jquery'], function (win, $) {
         });
 
         lib.resetButton.on('click', function () {
-            lib.attrFieldsetWrapper.find('.attr-selector:checked').each(function () {
-                $('label[for="' + $(this).attr('id') + '"]').css('text-decoration', 'none'); // fix label
-                $(this).attr('disabled', null); // re-enable checkbox
-                this.checked = false;
-            });
+            resetCheckboxes();
+            resetCorpList();
+        });
+
+        $(win).on('unload', function () {
+            resetCheckboxes();
+            resetCorpList();
         });
     };
 
