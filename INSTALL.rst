@@ -73,6 +73,12 @@ operational. In such cases, the plugin can implement a method *setup*: ::
         pass
 
 
+A note for developers
+=====================
+
+When implementing an optional plugin please note that there is no guaranteed order in which optional plugins
+are initialized. It means no optional plugin should be dependent on any other optional plugin.
+
 -----------------------------------
 List of currently supported plugins
 -----------------------------------
@@ -84,7 +90,7 @@ Following plugins are mandatory:
 +==================+==============================================================================+
 | auth             | user authentication                                                          |
 +------------------+------------------------------------------------------------------------------+
-| corptree         | loads a hierarchy of corpora from an XML file                                |
+| db               | provides a connection to a database (if required by other plugins)           |
 +------------------+------------------------------------------------------------------------------+
 | query_storage    | stores recent queries entered by users and allows their reopening            |
 +------------------+------------------------------------------------------------------------------+
@@ -98,12 +104,19 @@ Following plugins are optional:
 +------------------+------------------------------------------------------------------------------+
 | id               | description                                                                  |
 +==================+==============================================================================+
-| appbar           | loads a between-app-shared page element (e.g. a bar at the top of the page)  |
+| application_bar  | loads a between-app-shared page element (e.g. a bar at the top of the page)  |
 +------------------+------------------------------------------------------------------------------+
-| db               | provides a connection to a database (if required by other plugins)           |
+| corptree         | loads a hierarchy of corpora from an XML file                                |
 +------------------+------------------------------------------------------------------------------+
 | getlang          | if you want to read current UI language in a non-KonText way                 |
 +------------------+------------------------------------------------------------------------------+
+| live_attributes  | When filtering searched positions by attribute value(s), this provides       |
+|                  | a knowledge which values of currently unused (within the selection)          |
+|                  | attributes are still applicable.                                             |
++------------------+------------------------------------------------------------------------------+
+| query_storage    | KonText may store users' queries for further review/reuse                    |
++------------------+------------------------------------------------------------------------------+
+
 
 The "db" plugin
 ===============
@@ -460,8 +473,7 @@ KonText configuration
 
 KonText is configured via an XML configuration file located in the root directory of the application
 (do not confuse this with the root directory of the respective web application).
-By default KonText loads its configuration from the path *../config.xml*. This can be overridden by setting an environment
-variable *KONTEXT_CONF_PATH* (in case of Apache this is done by the *SetEnv* directive).
+KonText loads its configuration from path *../config.xml*.
 
 The configuration XML file is expected to be partially customizable according to the needs of 3rd party plugins.
 Generally it has two-level structure: *sections* and *key->value items* (where value can be also a list of items (see
@@ -507,7 +519,7 @@ then you must use following call to obtain for example the value *value1*::
 
     settings.get('acme:my_section', 'key1')
 
-Please note that items of your custom section are accessed without any prefix (because whole section is custom).
+Please note that items of your custom section are accessed without any prefix (because the whole section is custom).
 
 You can also add a custom item to a KonText-fixed section ::
 
