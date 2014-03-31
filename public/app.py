@@ -80,7 +80,6 @@ def init_plugin(name, dependencies):
     """
     try:
         plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
-        print(dir(plugin_module))
         if plugin_module:
             setattr(plugins, name, apply(plugin_module.create_instance, dependencies))
     except ImportError as e:
