@@ -232,3 +232,12 @@ class QueryStorage(object):
             html = html.decode('utf-8')
 
         return html
+
+
+def create_instance(settings, db):
+    """
+    arguments:
+    settings -- the settings.py module
+    db -- a 'db' plugin implementation
+    """
+    return QueryStorage(settings, db)
