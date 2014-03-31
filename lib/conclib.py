@@ -18,6 +18,7 @@
 
 import os
 from sys import stderr
+import sys
 import time
 import math
 from functools import partial
@@ -984,6 +985,10 @@ def get_detail_context(corp, pos, hitlen=1,
         data['wrapdetail'] = ''
     try:
         maxdetail = int(corp.get_conf('MAXDETAIL'))
+        if maxdetail == 0:
+            maxdetail = int(corp.get_conf('MAXCONTEXT'))
+            if maxdetail == 0:
+                maxdetail = sys.maxint
     except:
         maxdetail = 0
     if maxdetail:
