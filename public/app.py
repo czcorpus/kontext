@@ -58,66 +58,62 @@ def setup_logger(conf):
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
+def has_configured_plugin(name):
+    """
+    Tests whether there is a properly configured plugin of a specified name. Only
+    config.xml is tested (i.e. no actual python modules are involved).
+
+    arguments:
+    name -- name of the plugin
+    """
+    return settings.contains('plugins', name) and settings.get('plugins', name).get('module', None)
+
+
+def init_plugin(name, dependencies):
+    """
+    Loads plugin module, creates respective plugin object and creates a [plugin name] attribute
+    in the 'plugins' package.
+
+    arguments:
+    name -- name of the plugin
+    dependencies -- list/tuple containing arguments needed to initialize the plugin
+    """
+    try:
+        plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
+        print(dir(plugin_module))
+        if plugin_module:
+            setattr(plugins, name, apply(plugin_module.create_instance, dependencies))
+    except ImportError as e:
+        logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
+                                         % (settings.get('plugins', 'getlang')['module'], e))
+
+
 def setup_plugins():
     """
     Sets-up all the plugins. Please note that they are expected
     to be accessed concurrently by multiple requests which means any stateful
     properties should be considered carefully.
     """
-    db_module = plugins.load_plugin(settings.get('plugins', 'db')['module'])
-    plugins.db = db_module.create_instance(settings.get('plugins', 'db'))
 
-    ##### (required) sessions plugin provides storage for web sessions data #####
-    session_module = plugins.load_plugin(settings.get('plugins', 'sessions')['module'])
-    plugins.sessions = session_module.create_instance(settings, plugins.db)
+    # required plugins
+    init_plugin('db', (settings.get('plugins', 'db'),))
+    init_plugin('sessions', (settings, plugins.db))
+    init_plugin('settings_storage', (settings, plugins.db))
+    init_plugin('auth', (settings, plugins.sessions, plugins.db))
 
-    ##### (required) settings storage plugin makes user's settings persistent #####
-    settings_storage_module = plugins.load_plugin(settings.get('plugins', 'settings_storage')['module'])
-    plugins.settings_storage = settings_storage_module.create_instance(settings, plugins.db)
+    # optional plugins (note: do not rely on any order of their initialization)
+    optional_plugins = {
+        'getlang': (settings,),
+        'corptree': (settings,),
+        'query_storage': (settings, plugins.db),
+        'application_bar': (settings, plugins.auth),
+        'live_attributes': (settings,),
+        'query_mod': (settings,)
+    }
 
-    ##### (required) auth plugin is expected to handle user's authentication #####
-    auth_module = plugins.load_plugin(settings.get('plugins', 'auth')['module'])
-    plugins.auth = auth_module.create_instance(settings, plugins.sessions, plugins.db)
-
-    ##### getlang plugin fetches information about user's language settings ####
-    if settings.contains('plugins', 'getlang') and settings.get('plugins', 'getlang').get('module', None):
-        try:
-            getlang_module = plugins.load_plugin(settings.get('plugins', 'getlang')['module'])
-            if getlang_module:
-                plugins.getlang = getlang_module.create_instance(settings)
-        except ImportError as e:
-            logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
-                                             % (settings.get('plugins', 'getlang')['module'], e))
-    ##### corptree plugin loads a corpora hierarchy from a respective XML configuration file #####
-    if not hasattr(plugins, 'corptree'):
-        corptree_module = plugins.load_plugin(settings.get('plugins', 'corptree')['module'])
-        plugins.corptree = corptree_module.create_instance(settings)
-
-    ##### query storage plugin creates/accesses a history of users' queries #####
-    try:
-        query_storage_module = plugins.load_plugin(settings.get('plugins', 'query_storage')['module'])
-        if query_storage_module:
-            plugins.query_storage = query_storage_module.QueryStorage(settings, plugins.db)
-    except ImportError:
-        pass
-
-    ##### appbar plugin may provide some remote-generated page widget #####
-    if settings.get('plugins', 'appbar').get('module', None):
-        try:
-            appbar_module = plugins.load_plugin(settings.get('plugins', 'appbar')['module'])
-            if appbar_module:
-                plugins.application_bar = appbar_module.create_instance(settings, plugins.auth)
-        except ImportError:
-            pass
-
-    ##### attributes plugin #####
-    if settings.contains('plugins', 'live_attributes') and settings.get('plugins', 'live_attributes').get('module', None):
-        try:
-            attributes_module = plugins.load_plugin(settings.get('plugins', 'live_attributes')['module'])
-            if attributes_module:
-                plugins.live_attributes = attributes_module.create_instance(settings)
-        except ImportError:
-            pass
+    for plugin, dependencies in optional_plugins.items():
+        if has_configured_plugin(plugin):
+            init_plugin(plugin, dependencies)
 
 
 def get_lang(environ):
