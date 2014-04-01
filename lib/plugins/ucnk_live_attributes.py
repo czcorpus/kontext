@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import re
 import sqlite3
 import json
 from functools import wraps
@@ -33,12 +34,12 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, attr_map):
+    def wrapper(self, corpus, attr_map):
         if len(attr_map) < 2:
             ans = self.from_cache(attr_map)
             if ans:
                 return json.loads(ans)
-        ans = f(self, attr_map)
+        ans = f(self, corpus, attr_map)
         if len(attr_map) < 2:
             self.to_cache(attr_map, ans)
         return ans
@@ -73,9 +74,7 @@ class AttrArgs(object):
         ans = []
         sql_values = []
         for key, values in self.data.items():
-            if key.startswith('div.'):
-                key = key.replace('div.', '', 1)
-            key = key.replace('.', '_')  # TODO does this work in general?
+            key = key.replace('.', '_')
             cnf_item = []
             if type(values) is list or type(values) is tuple:
                 for value in values:
@@ -89,10 +88,6 @@ class AttrArgs(object):
 
 
 class LiveAttributes(object):
-
-    # TODO fill in all the attributes (see the db schema)
-    ATTRS = ('corpus_id', 'doc_id', 'doc_group', 'doc_txtype', 'txtype', 'original', 'srclang', 'transsex', 'authsex',
-             'doc_pubyear', 'pubyear')
 
     def __init__(self, db_path):
         self.db_path = db_path
@@ -145,33 +140,34 @@ class LiveAttributes(object):
     def export_key(k):
         if k == 'corpus_id':
             return k
-        elif k.startswith('doc'):
-            return k.replace('_', '.')
-        else:
-            return 'div.%s' % k.replace('_', '.')
+        return k.replace('_', '.')
 
     @staticmethod
     def import_key(k):
         if k == 'corpus_id':
             return k
         else:
-            ans = k.replace('div.', '', 1)
-            ans.replace('_', '.')
-            return ans
+            return k.replace('_', '.')
+
+    @staticmethod
+    def _get_subcorp_attrs(corpus):
+        return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
     @cached
-    def get_attr_values(self, attr_map):
+    def get_attr_values(self, corpus, attr_map):
         """
         Finds all the available values of remaining attributes
 
         arguments:
+        corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
 
         returns:
         a dictionary containing matching attributes and values
         """
+        attrs = self._get_subcorp_attrs(corpus)
         cursor = self.db().cursor()
-        srch_attrs = set(LiveAttributes.ATTRS) - set(attr_map.keys())
+        srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
         attr_items = AttrArgs(attr_map)
         where_sql, where_values = attr_items.export_sql()

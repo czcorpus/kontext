@@ -2243,7 +2243,7 @@ class Actions(ConcCGI):
         if attrs is None:
             attrs = {}
         if plugins.has_plugin('live_attributes'):
-            ans = plugins.live_attributes.get_attr_values(json.loads(attrs))
+            ans = plugins.live_attributes.get_attr_values(self._corp(), json.loads(attrs))
             return ans
         else:
             return {}

@@ -99,25 +99,15 @@ define(['win', 'jquery'], function (win, $) {
     }
 
     /**
-     * @param {{}} conf
-     * @param {function} ajaxFunc
-     * @param {function} ajaxAnimFunc
+     * @param {{}} pluginApi
      * @param {HTMLElement|jQuery|string} updateButton update button element
      * @param {HTMLElement|jQuery|string} resetButton reset button element
      * @param {HTMLElement|jQuery|string} attrFieldsetWrapper element containing attribute checkboxes
      */
-    lib.init = function (conf, ajaxFunc, ajaxAnimFunc, updateButton, resetButton, attrFieldsetWrapper) {
-        if (ajaxFunc) {
-            lib.ajax = ajaxFunc;
-
-        } else {
-            lib.ajax = $.ajax;
-        }
-        lib.conf = conf;
+    lib.init = function (pluginApi, updateButton, resetButton, attrFieldsetWrapper) {
         lib.updateButton = $(updateButton);
         lib.resetButton = $(resetButton);
         lib.attrFieldsetWrapper = $(attrFieldsetWrapper);
-        lib.ajaxAnimFunc = ajaxAnimFunc;
 
 
         lib.attrFieldsetWrapper.find('.attr-selector').on('click', function () {
@@ -134,7 +124,7 @@ define(['win', 'jquery'], function (win, $) {
             var selectedAttrs = exportAttrStatus(),
                 ajaxAnimElm;
 
-            ajaxAnimElm = lib.ajaxAnimFunc();
+            ajaxAnimElm = pluginApi.ajaxAnim();
             $(ajaxAnimElm).css({
                 'position' : 'absolute',
                 'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
@@ -142,15 +132,17 @@ define(['win', 'jquery'], function (win, $) {
             });
             $('#content').append(ajaxAnimElm);
 
-            lib.ajax('filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
+            pluginApi.ajax('filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
                 dataType : 'json',
                 success : function (data) {
                     updateAlignedCorpora(data);
                     updateCheckboxes(data);
                     $(ajaxAnimElm).remove();
                 },
-                error : function () {
+                error : function (jqXHR, textStatus, errorThrown) {
                     $(ajaxAnimElm).remove();
+                    pluginApi.showMessage('error', errorThrown);
+
                 }
             });
         });
