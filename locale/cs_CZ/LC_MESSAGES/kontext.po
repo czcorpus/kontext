@@ -1100,8 +1100,8 @@ msgid "Make Word List"
 msgstr "Vytvořit seznam slov"
 
 #: cmpltmpl/viewopts.py:88 cmpltmpl/document.py:2367 cmpltmpl/viewattrs.py:88
-msgid "View options"
-msgstr "Možn. zobrazení"
+msgid "View"
+msgstr "Zobrazení"
 
 #: cmpltmpl/viewopts.py:158 cmpltmpl/document.py:2475
 msgid "General concordance view options"
@@ -1447,7 +1447,7 @@ msgstr "Negativní"
 
 #: cmpltmpl/document.py:2225
 msgid "Frequency"
-msgstr "Frekv. distribuce"
+msgstr "Frekvence"
 
 #: cmpltmpl/document.py:2234
 msgid "Show frequencies of Node tags"
