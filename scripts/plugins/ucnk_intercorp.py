@@ -26,6 +26,8 @@ import os
 import re
 import sqlite3
 
+import vertparser as vp
+
 CORPORA = ('intercorp_ar', 'intercorp_be', 'intercorp_bg', 'intercorp_ca', 'intercorp_cs', 'intercorp_da',
            'intercorp_de', 'intercorp_el', 'intercorp_en', 'intercorp_es', 'intercorp_et', 'intercorp_fi',
            'intercorp_fr', 'intercorp_hi', 'intercorp_hr', 'intercorp_hu', 'intercorp_it', 'intercorp_lt',
@@ -45,40 +47,43 @@ SCHEMA = (
 
     """create table div (
     id integer PRIMARY KEY AUTOINCREMENT,
-    div_id string,
     corpus_id string,
+    div_id string,
     doc_id string,
     doc_group string,
+    div_group string,
     doc_lang string,
     doc_version string,
     doc_txtype string,
     doc_pubyear integer,
     doc_wordcount integer,
-    author string,
-    title string,
-    publisher string,
-    pubplace string,
-    pubyear integer,
-    pubmonth integer,
-    origyear integer,
-    isbn string,
-    txtype string,
-    comment string,
-    original string,
-    srclang string,
-    translator string,
-    transsex string,
-    authsex string,
-    transcomment string,
-    collectionauthor string,
-    collectiontitle string,
-    volume string,
-    pages integer,
-    wordcount integer,
+    div_author string,
+    div_title string,
+    div_publisher string,
+    div_pubplace string,
+    div_pubyear integer,
+    div_pubmonth integer,
+    div_origyear integer,
+    div_isbn string,
+    div_txtype string,
+    div_comment string,
+    div_original string,
+    div_srclang string,
+    div_translator string,
+    div_transsex string,
+    div_authsex string,
+    div_transcomment string,
+    div_collectionauthor string,
+    div_collectiontitle string,
+    div_volume string,
+    div_pages integer,
+    div_wordcount integer,
     FOREIGN KEY(corpus_id) REFERENCES corpus(id)
     );""",
 
-    "CREATE INDEX doc_id_idx ON div(doc_id);"
+    "CREATE INDEX doc_id_idx ON div(doc_id)",
+    "CREATE INDEX div_group_idx ON div(div_group)",
+    "CREATE INDEX div_txtype_idx ON div(div_txtype)"
 )
 
 
@@ -142,9 +147,10 @@ def insert_record(db, corpus_id, rec):
     doc = rec['__doc__']
     cursor = db.cursor()
     cursor.execute("INSERT INTO div (div_id, corpus_id, doc_id, doc_group, doc_lang, doc_version, doc_txtype, "
-                   "doc_pubyear, doc_wordcount, author, title, publisher, pubplace, pubyear, pubmonth, origyear, isbn, "
-                   "txtype, comment, original, srclang, translator, transsex, authsex, transcomment, "
-                   "collectionauthor, collectiontitle, volume, pages, wordcount) "
+                   "doc_pubyear, doc_wordcount, div_author, div_title, div_publisher, div_pubplace, div_pubyear, "
+                   "div_pubmonth, div_origyear, div_isbn, div_txtype, div_comment, div_original, div_srclang, "
+                   "div_translator, div_transsex, div_authsex, div_transcomment, div_collectionauthor, "
+                   "div_collectiontitle, div_volume, div_pages, div_wordcount) "
                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   (rec.get('id'), corpus_id,
                    doc.get('id'), doc.get('group'), doc.get('lang'), doc.get('version'), doc.get('txtype', ''),
@@ -157,42 +163,6 @@ def insert_record(db, corpus_id, rec):
                    rec.get('volume', ''), rec.get('pages', ''), rec.get('wordcount', ''),))
 
 
-def parse_tag(s):
-    """
-    Parses SGML tag's attributes.
-
-    arguments:
-    s -- tag string representation
-
-    returns:
-    a dictionary attribute_name => attribute_value
-    """
-    return dict([(x, y.decode('utf-8')) for x, y in re.findall(r'(\w+)="([^"]+)"', s)])
-
-
-def parse_line(s):
-    """
-    Parses a line from a corpus vertical file
-
-    arguments:
-    s -- a string representing line content
-
-    returns:
-    2-tuple (tag_name, attr_dict)
-    """
-    s = s.strip()
-    if s.startswith('<doc'):
-        ans = parse_tag(s)
-        name = 'doc'
-    elif s.startswith('<div'):
-        ans = parse_tag(s)
-        name = 'div'
-    else:
-        ans = None
-        name = None
-    return name, ans
-
-
 def parse_file(f):
     """
     Parses a corpus vertical file (or its stripped version containing only tags)
@@ -203,15 +173,32 @@ def parse_file(f):
     returns:
     a tuple containing parsed div tags
     """
-    curr_doc = None
+    curr_doc = {}
     div_list = []
+    metadata = {}
+
+    pos_count = 0
+
     for line in f:
-        tag, data = parse_line(line)
-        if tag == 'doc':
-            curr_doc = data
-        elif tag == 'div':
-            data['__doc__'] = curr_doc
-            div_list.append(data)
+        tag, start, attrs = vp.parse_line(line)
+
+        if start is True:
+            if tag == 'doc':
+                curr_doc.update(attrs)
+            elif tag == 'div':
+                attrs['__doc__'] = curr_doc
+                attrs['div_group'] = curr_doc.get('group')
+                attrs['div_id'] = curr_doc['id']
+                metadata.update(attrs)
+        elif start is False:
+            if tag == 'div':
+                div_list.append(metadata)
+                metadata = {}
+                pos_count = 0
+            elif tag == 'doc':
+                curr_doc = {}
+        else:
+            pos_count += 1
     return tuple(div_list)
 
 
