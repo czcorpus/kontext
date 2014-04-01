@@ -131,8 +131,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         if (arguments.length === 1) {
             options = url;
         }
-        origSucc = options.success;
 
+        if (!options.error) {
+            options.error = function (jqXHR, textStatus, errorThrown) {
+                lib.showMessage('error', errorThrown);
+            }
+        }
+
+        origSucc = options.success;
         succWrapper = function (data, textStatus, jqXHR) {
             var error;
 
@@ -141,22 +147,16 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
 
                 if (error.reset === true) {
                     win.location = lib.conf.rootURL + 'first_form';
-                }
 
-                lib.showMessage('error', error.message || 'error');
+                } else {
+                    options.error(null, null, error.message || 'error');
+                }
 
             } else {
                 origSucc(data, textStatus, jqXHR);
             }
         };
-
         options.success = succWrapper;
-
-        if (!options.error) {
-            options.error = function (jqXHR, textStatus, errorThrown) {
-                lib.showMessage('error', errorThrown);
-            }
-        }
 
         if (arguments.length === 1) {
             $.ajax(options);
