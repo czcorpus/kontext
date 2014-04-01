@@ -35,13 +35,14 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, corpus, attr_map):
+        db = self.db(corpus.get_conf('NAME'))
         if len(attr_map) < 2:
-            ans = self.from_cache(attr_map)
+            ans = self.from_cache(db, attr_map)
             if ans:
                 return json.loads(ans)
         ans = f(self, corpus, attr_map)
         if len(attr_map) < 2:
-            self.to_cache(attr_map, ans)
+            self.to_cache(db, attr_map, ans)
         return ans
     return wrapper
 
@@ -89,18 +90,25 @@ class AttrArgs(object):
 
 class LiveAttributes(object):
 
-    def __init__(self, db_path):
-        self.db_path = db_path
+    def __init__(self, corptree):
+        self.corptree = corptree
 
-    def db(self):
+    def db(self, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
         """
         if not hasattr(local_inst, 'db'):
-            local_inst.db = sqlite3.connect(self.db_path)
-        return local_inst.db
+            local_inst.db = {}
+        if not corpname in local_inst.db:
+            db_path = self.corptree.get_corpus_info(corpname).get('metadata', None)
+            if db_path:
+                local_inst.db[corpname] = sqlite3.connect(db_path)
+            else:
+                local_inst.db[corpname] = None
+        return local_inst.db[corpname]
 
-    def from_cache(self, attr_map):
+    @staticmethod
+    def from_cache(db, attr_map):
         """
         Loads a value from cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -113,14 +121,15 @@ class LiveAttributes(object):
         a stored value matching provided argument or None if nothing is found
         """
         key = json.dumps(attr_map)
-        cursor = self.db().cursor()
+        cursor = db.cursor()
         cursor.execute("SELECT value FROM cache WHERE key = ?", (key,))
         ans = cursor.fetchone()
         if ans:
             return ans[0]
         return None
 
-    def to_cache(self, attr_map, values):
+    @staticmethod
+    def to_cache(db, attr_map, values):
         """
         Stores a data object "values" into the cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -132,22 +141,15 @@ class LiveAttributes(object):
         """
         key = json.dumps(attr_map)
         value = json.dumps(values)
-        cursor = self.db().cursor()
+        cursor = db.cursor()
         cursor.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
-        self.db().commit()
+        db.commit()
 
     @staticmethod
     def export_key(k):
         if k == 'corpus_id':
             return k
-        return k.replace('_', '.')
-
-    @staticmethod
-    def import_key(k):
-        if k == 'corpus_id':
-            return k
-        else:
-            return k.replace('_', '.')
+        return k.replace('_', '.', 1)
 
     @staticmethod
     def _get_subcorp_attrs(corpus):
@@ -166,16 +168,16 @@ class LiveAttributes(object):
         a dictionary containing matching attributes and values
         """
         attrs = self._get_subcorp_attrs(corpus)
-        cursor = self.db().cursor()
+        cursor = self.db(corpus.get_conf('NAME')).cursor()
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
         attr_items = AttrArgs(attr_map)
         where_sql, where_values = attr_items.export_sql()
 
         if len(attr_items) > 0:
-            sql_template = "SELECT DISTINCT %s FROM div WHERE %s" % (', '.join(srch_attrs), where_sql)
+            sql_template = "SELECT DISTINCT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
         else:
-            sql_template = "SELECT DISTINCT %s FROM div" % (', '.join(srch_attrs),)
+            sql_template = "SELECT DISTINCT %s FROM item" % (', '.join(srch_attrs),)
 
         ans = {}
         ans.update(attr_map)
@@ -202,8 +204,11 @@ class LiveAttributes(object):
         return 'ucnkLiveAttributes'
 
 
-def create_instance(settings):
+def create_instance(corptree):
     """
     creates an instance of the plugin
+
+    arguments:
+    corptree -- corptree plugin
     """
-    return LiveAttributes(settings.get('plugins', 'live_attributes')['ucnk:db_path'])
+    return LiveAttributes(corptree)
