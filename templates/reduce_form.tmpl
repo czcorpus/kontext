@@ -1,0 +1,53 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from translation import ugettext as _
+#from cmpltmpl.conc import conc
+#extends conc
+
+#def title
+$_("Sample form")#slurp
+#end def
+
+#attr $focus = "'#number'"
+
+#def sampleblock
+#end def
+
+#def main
+<section>
+    #filter WebSafe
+    <h2>$_("Random sample")</h2>
+
+    <form action="reduce">
+        #filter None
+        $input_hidden
+        #end filter
+          $_("Make a random sample from the concordance").
+          <br/>
+          $_("Number of lines in the sample"): <input type="text" name="rlines"
+          value="$rlines" size="7" id="number" /><br/>
+
+        <div class="buttons">
+          <input type="submit" value="$_("Create Sample")" />
+        </div>
+    </form>
+
+    #end filter
+</section>
+#end def
