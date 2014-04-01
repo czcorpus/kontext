@@ -1086,7 +1086,33 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
      * @returns {jQuery}
      */
     lib.createAjaxLoader = function () {
-        return $('<div class="ajax-loading-msg"><span>' + this.conf.messages.loading + '</span></div>');
+        return $('<div class="ajax-loading-msg"><span>' + lib.conf.messages.loading + '</span></div>');
+    };
+
+    /**
+     * Generates an API object which provides essential functionality for client-side plugin code.
+     *
+     * @returns {{conf: ({}|*), ajax: ajax, ajaxAnim: ajaxAnim, showMessage: showMessage}}
+     */
+    lib.pluginApi = function () {
+        var self = this;
+
+        return {
+            conf : self.conf,
+
+            ajax : function () {
+                return self.ajax.apply(self, arguments);
+            },
+
+            ajaxAnim : function () {
+                return self.createAjaxLoader.apply(self, arguments);
+            },
+
+            showMessage : function () {
+                console.log(arguments);
+                return self.showMessage.apply(self, arguments);
+            }
+        };
     };
 
     /**
@@ -1135,7 +1161,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         lib.enhanceMessages();
         lib.onLoadVirtualKeyboardInit();
         lib.externalHelpLinks();
-        liveAttributes.init(lib.conf, lib.ajax, lib.createAjaxLoader, '#live-attrs-update', '#live-attrs-reset',
+        liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
             '.text-type-params');
 
         $('button').button();
