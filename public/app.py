@@ -81,7 +81,13 @@ def init_plugin(name, dependencies):
     try:
         plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
         if plugin_module:
-            setattr(plugins, name, apply(plugin_module.create_instance, dependencies))
+            resolved_deps = []
+            for d in dependencies:
+                if type(d) is str:
+                    resolved_deps.append(getattr(plugins, d))
+                else:
+                    resolved_deps.append(d)
+            setattr(plugins, name, apply(plugin_module.create_instance, tuple(resolved_deps)))
     except ImportError as e:
         logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                          % (settings.get('plugins', 'getlang')['module'], e))
@@ -100,17 +106,17 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.sessions, plugins.db))
 
-    # optional plugins (note: do not rely on any order of their initialization)
-    optional_plugins = {
-        'getlang': (settings,),
-        'corptree': (settings,),
-        'query_storage': (settings, plugins.db),
-        'application_bar': (settings, plugins.auth),
-        'live_attributes': (settings,),
-        'query_mod': (settings,)
-    }
+    # optional plugins
+    optional_plugins = (
+        ('getlang', (settings,)),
+        ('corptree', (settings,)),
+        ('query_storage', (settings, plugins.db)),
+        ('application_bar', (settings, plugins.auth)),
+        ('live_attributes', ('corptree',)),
+        ('query_mod', (settings,))
+    )
 
-    for plugin, dependencies in optional_plugins.items():
+    for plugin, dependencies in optional_plugins:
         if has_configured_plugin(plugin):
             init_plugin(plugin, dependencies)
 

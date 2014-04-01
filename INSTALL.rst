@@ -76,8 +76,10 @@ operational. In such cases, the plugin can implement a method *setup*: ::
 A note for developers
 =====================
 
-When implementing an optional plugin please note that there is no guaranteed order in which optional plugins
-are initialized. It means no optional plugin should be dependent on any other optional plugin.
+When implementing an optional plugin you can make it dependent on both default and optional plugins. The only thing
+to be aware of is that optional plugin dependencies in *app.py* must be specified using strings (i.e. you cannot
+directly use the package *plugins*) because when Python interpreter reads optional plugins configuration no optional
+plugin is instantiated yet.
 
 -----------------------------------
 List of currently supported plugins
