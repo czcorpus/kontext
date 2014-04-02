@@ -109,6 +109,12 @@ class LiveAttributes(object):
                 local_inst.db[corpname] = None
         return local_inst.db[corpname]
 
+    def is_enabled_for(self, corpname):
+        """
+        Returns True if live attributes are enabled for selected corpus else returns False
+        """
+        return self.db(corpname) is not None
+
     @staticmethod
     def format_data_types(data):
         for k in data.keys():
