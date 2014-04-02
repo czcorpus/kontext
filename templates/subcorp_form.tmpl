@@ -41,9 +41,6 @@ require(['tpl/subcorpForm', 'conf', 'domReady!'], function(pageSelf, conf) {
 
 #def main
 #filter WebSafe
-#if $_anonymous
-<br /><br />$_("Sorry, creating user subcorpora is not available in the open version")
-#else
 
 <section>
 <h2>$_('New subcorpus')</h2>
@@ -90,6 +87,5 @@ require(['tpl/subcorpForm', 'conf', 'domReady!'], function(pageSelf, conf) {
     </form>
 </section>
 
-#end if
 #end filter
 #end def
