@@ -177,7 +177,7 @@ define(['win', 'jquery'], function (win, $) {
             boxTop = 0;
 
         $(this.newElem).css({
-            width: boxWidth,
+            width: boxWidth !== 'nice' ? boxWidth : pageWidth * (1 -  1 / 1.618),
             height: boxHeight
         });
         if (options.top === 'attached-bottom') {
