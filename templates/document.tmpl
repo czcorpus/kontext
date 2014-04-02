@@ -117,6 +117,7 @@ define('conf', [], function () {
     conf.messages.search_by_name = "$_('Search by name')";
     conf.messages.more_information_at = "$_('More information at')";
     conf.messages.loading = "$_('Loading...')";
+    conf.messages['number of matching positions'] = "$_('number of matching positions')";
 
     #if $focus
     conf.focus = $focus;
@@ -705,7 +706,8 @@ $corp_full_name</b><br>
 
         #if $live_attributes_js
         <div class="live-attributes">
-            <a id="live-attrs-update" class="util-button">$_('show selection properties')</a>
+            <p class="summary"></p>
+            <a id="live-attrs-update" class="util-button">$_('highlight selection structure')</a>
             <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
         </div>
         #end if

@@ -1996,6 +1996,9 @@ msgstr "požadovaný formát souborů"
 msgid "More information at"
 msgstr "Více informací na"
 
+msgid "number of matching positions"
+msgstr "počet odpovídajících pozic"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

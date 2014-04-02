@@ -78,20 +78,29 @@ define(['win', 'jquery'], function (win, $) {
                 label = $('label[for="' + $(this).attr('id') + '"]');
 
             if ($.inArray($(this).val(), data[id]) < 0) {
-                label.css('text-decoration', 'line-through');
+                label.addClass('excluded');
 
             } else {
-                label.css('text-decoration', 'none');
+                label.removeClass('excluded');
             }
         });
     }
 
     function resetCheckboxes() {
         lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
-            $('label[for="' + $(this).attr('id') + '"]').css('text-decoration', 'none'); // fix label
+            $('label[for="' + $(this).attr('id') + '"]').removeClass('excluded');
             $(this).attr('disabled', null); // re-enable checkbox
             this.checked = false;
         });
+    }
+
+    function updateSummary(pluginApi, data) {
+        $('.live-attributes .summary').empty().append(pluginApi.translate('number of matching positions')
+            + ': <strong>' + data.poscount + '</strong>');
+    }
+
+    function resetSummary() {
+        $('.live-attributes .summary').empty();
     }
 
     function resetCorpList() {
@@ -137,9 +146,11 @@ define(['win', 'jquery'], function (win, $) {
                 success : function (data) {
                     updateAlignedCorpora(data);
                     updateCheckboxes(data);
+                    updateSummary(pluginApi, data);
                     $(ajaxAnimElm).remove();
                 },
                 error : function (jqXHR, textStatus, errorThrown) {
+                    resetSummary();
                     $(ajaxAnimElm).remove();
                     pluginApi.showMessage('error', errorThrown);
 
@@ -150,11 +161,13 @@ define(['win', 'jquery'], function (win, $) {
         lib.resetButton.on('click', function () {
             resetCheckboxes();
             resetCorpList();
+            resetSummary();
         });
 
         $(win).on('unload', function () {
             resetCheckboxes();
             resetCorpList();
+            resetSummary();
         });
 
         lib.attrFieldsetWrapper.find('.attr-selector').on('click', function (event) {
