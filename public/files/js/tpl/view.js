@@ -99,7 +99,13 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
             });
         });
 
-        popupBox.bind($('.calc-warning'), layoutModel.conf.messages.calc_warning, {type: 'warning'});
+        popupBox.bind(
+            $('.calc-warning'),
+            layoutModel.conf.messages.calc_warning,
+            {
+                type: 'warning',
+                width: 'nice'
+            });
     };
 
     /**
