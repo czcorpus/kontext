@@ -21,6 +21,8 @@ import json
 from functools import wraps
 import threading
 
+import strings
+
 # thread local instance stores a database connection to
 # allow operating in a multi-threaded environment
 local_inst = threading.local()
@@ -39,11 +41,11 @@ def cached(f):
         if len(attr_map) < 2:
             ans = self.from_cache(db, attr_map)
             if ans:
-                return json.loads(ans)
+                return ans
         ans = f(self, corpus, attr_map)
         if len(attr_map) < 2:
             self.to_cache(db, attr_map, ans)
-        return ans
+        return self.format_data_types(ans)
     return wrapper
 
 
@@ -108,6 +110,13 @@ class LiveAttributes(object):
         return local_inst.db[corpname]
 
     @staticmethod
+    def format_data_types(data):
+        for k in data.keys():
+            if type(data[k]) is int or type(data[k]) is float or (type(data[k]) is str and data[k].isdigit()):
+                data[k] = strings.format_number(data[k])
+        return data
+
+    @staticmethod
     def from_cache(db, attr_map):
         """
         Loads a value from cache. The key is whole attribute_map as selected
@@ -125,7 +134,7 @@ class LiveAttributes(object):
         cursor.execute("SELECT value FROM cache WHERE key = ?", (key,))
         ans = cursor.fetchone()
         if ans:
-            return ans[0]
+            return LiveAttributes.format_data_types(json.loads(ans[0]))
         return None
 
     @staticmethod
@@ -170,31 +179,41 @@ class LiveAttributes(object):
         attrs = self._get_subcorp_attrs(corpus)
         cursor = self.db(corpus.get_conf('NAME')).cursor()
         srch_attrs = set(attrs) - set(attr_map.keys())
+        srch_attrs.add('poscount')
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
         attr_items = AttrArgs(attr_map)
         where_sql, where_values = attr_items.export_sql()
 
         if len(attr_items) > 0:
-            sql_template = "SELECT DISTINCT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
+            sql_template = "SELECT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
         else:
-            sql_template = "SELECT DISTINCT %s FROM item" % (', '.join(srch_attrs),)
+            sql_template = "SELECT %s FROM item" % (', '.join(srch_attrs),)
 
         ans = {}
         ans.update(attr_map)
         cursor.execute(sql_template, where_values)
 
         for attr in srch_attrs:
-            ans[attr] = set()
+            if attr in ('poscount',):
+                ans[attr] = 0
+            else:
+                ans[attr] = set()
 
         for item in cursor.fetchall():
             for attr in srch_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and v != '':
-                    ans[attr].add(item[srch_attr_map[attr]])
+                    if type(ans[attr]) is set:
+                        ans[attr].add(item[srch_attr_map[attr]])
+                    elif type(ans[attr]) is int:
+                        ans[attr] += int(item[srch_attr_map[attr]])
 
         exported = {}
         for k in ans.keys():
-            exported[self.export_key(k)] = tuple(sorted(ans[k]))
+            if type(ans[k]) is set:
+                exported[self.export_key(k)] = tuple(sorted(ans[k]))
+            else:
+                exported[self.export_key(k)] = ans[k]
         return exported
 
     def get_js_module(self):

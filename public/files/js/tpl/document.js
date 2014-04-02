@@ -1092,7 +1092,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
     /**
      * Generates an API object which provides essential functionality for client-side plugin code.
      *
-     * @returns {{conf: ({}|*), ajax: ajax, ajaxAnim: ajaxAnim, showMessage: showMessage}}
      */
     lib.pluginApi = function () {
         var self = this;
@@ -1109,8 +1108,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             },
 
             showMessage : function () {
-                console.log(arguments);
                 return self.showMessage.apply(self, arguments);
+            },
+
+            translate : function (msg) {
+                return self.conf.messages[msg];
             }
         };
     };
