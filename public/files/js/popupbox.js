@@ -28,6 +28,7 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {Function}
      */
     fetchOptionFunc = function (opts) {
+        opts = opts || {};
         /**
          * @param {String} name
          * @param {String} [defaultVal]
