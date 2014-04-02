@@ -52,6 +52,8 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
         #except
           #set $gdexcnt = ''
         #end try
+        <input type="hidden" name="gdex_enabled" value="0" />
+
         <table  class="results-range-and-paging">
             <tr>
                 <th>$_("Page size (number of lines)"):</th>
@@ -61,13 +63,6 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
                 <th>$_("KWIC Context size (positions)"):</th>
                 <td><input type="text" name="newctxsize" value='$newctxsize' size="4" />
                     <input type="hidden" name="ctxunit" value="@pos" />
-                </td>
-            </tr>
-            <tr>
-                <th><label for="gdex-enabled-checkbox">$_("Sort concordance according to good dictionary examples"):</label></th>
-                <td>
-                    <input type="hidden" name="gdex_enabled" value="0" />
-                    <input id="gdex-enabled-checkbox" type="checkbox" name="gdex_enabled" value="1" #if $gdex_enabled#checked="checked"#end if# />
                 </td>
             </tr>
             <tr>
