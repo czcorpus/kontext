@@ -124,7 +124,10 @@ define(['jquery', 'tpl/document', 'popupbox'], function ($, layoutModel, popupBo
                         success: function (data) {
                             layoutModel.renderOverview(data, box);
                             finalize();
-                            box.setCss('left', '0');
+                            box.setCss({
+                                'left': 0,
+                                'margin-left': 0
+                            });
                         }
                     });
                 },
