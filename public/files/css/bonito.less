@@ -13,7 +13,7 @@
   vertical-align: top;
   margin: 0;
   padding: 0;
-  background-color: #F3FBED;
+  background-color: @color-section-bg;
   box-shadow: @portal-box-shadow;
 }
 
@@ -669,8 +669,12 @@ fieldset {
   border-radius: @border-radius-default;
 }
 
-fieldset .select-all {
+fieldset .select-all,
+table.envelope .select-all {
   display: inline-block;
+}
+
+fieldset .select-all {
   padding-top: 10px;
 }
 
@@ -1244,6 +1248,20 @@ hr {
   background-color: @color-frame-fieldset;
   height: 1px;
   border: none;
+}
+
+a.util-button {
+  display: inline-block;
+  border: 1px solid #C7E7B2;
+  border-radius: @input-border-radius;
+  background-color: @color-section-bg;
+  text-decoration: none;
+  padding: 3px 8px;
+  color: @color-logo-blue;
+}
+
+a.util-button:hover {
+  background-color: @color-data-table-footer;
 }
 
 .ajax-loading-msg {

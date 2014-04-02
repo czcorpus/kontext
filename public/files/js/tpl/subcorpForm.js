@@ -66,7 +66,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
         } else if (value === 'gui') {
             $('#subc-within-row').css({ display: 'none' });
             $('.text-type-params')
-                .css('display', 'block')
+                .css('display', 'inherit')
                 .find('input[type="checkbox"]').attr('disabled', null);
         }
     };

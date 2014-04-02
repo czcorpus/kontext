@@ -580,11 +580,11 @@ $corp_full_name</b><br>
         <div class="text-type-top-bar">
             #for $nn in $TextTypeSel['Normslist']
             #if $nn.n == $subcnorm
-            <b>
+            | <strong>
             #end if
                 <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
             #if $nn.n == $subcnorm
-            </b>
+            </strong>
             #end if
             #end for
         </div>
@@ -687,7 +687,7 @@ $corp_full_name</b><br>
                 </td>
             </tr>
             <tr class="last-line">
-                <td colspan="2">
+                <td>
                     #if $l.has_key('Values') ## 1
                     <label class="select-all"><input class="select-all" type="checkbox" data-status="1" />$_('Select all')</label>
                     #end if
@@ -702,12 +702,15 @@ $corp_full_name</b><br>
         #end if
         #end for ## -f2
         #end for ## -f1
-    </div>
 
-    #if $live_attributes_js
-       <button id="live-attrs-update" type="button">$_('update option list')</button>
-       <button id="live-attrs-reset" type="button">$_('reset selection')</button>
-    #end if
+        #if $live_attributes_js
+        <div class="live-attributes">
+            <a id="live-attrs-update" class="util-button">$_('show selection properties')</a>
+            <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
+        </div>
+        #end if
+
+    </div>
 #end def
 
 #def query_node($suff='',$filter=False)
