@@ -36,16 +36,12 @@ CORPORA = ('intercorp_ar', 'intercorp_be', 'intercorp_bg', 'intercorp_ca', 'inte
            'intercorp_sv', 'intercorp_sy', 'intercorp_uk')
 
 SCHEMA = (
-    """CREATE TABLE corpus (
-    id string PRIMARY KEY
-    )""",
-
     """CREATE TABLE cache (
     key string PRIMARY KEY,
     value string
     )""",
 
-    """create table div (
+    """create table item (
     id integer PRIMARY KEY AUTOINCREMENT,
     corpus_id string,
     div_id string,
@@ -77,13 +73,13 @@ SCHEMA = (
     div_collectiontitle string,
     div_volume string,
     div_pages integer,
-    div_wordcount integer,
-    FOREIGN KEY(corpus_id) REFERENCES corpus(id)
+    wordcount integer,
+    poscount integer
     );""",
 
-    "CREATE INDEX doc_id_idx ON div(doc_id)",
-    "CREATE INDEX div_group_idx ON div(div_group)",
-    "CREATE INDEX div_txtype_idx ON div(div_txtype)"
+    "CREATE INDEX doc_id_idx ON item(doc_id)",
+    "CREATE INDEX div_group_idx ON item(div_group)",
+    "CREATE INDEX div_txtype_idx ON item(div_txtype)"
 )
 
 
@@ -113,8 +109,6 @@ def create_schema(db):
     cursor = db.cursor()
     for sql in SCHEMA:
         cursor.execute(sql)
-    for corp in CORPORA:
-        cursor.execute("INSERT INTO corpus (id) VALUES (?)", (corp,))
 
 
 def parse_corpname(filename):
@@ -146,12 +140,12 @@ def insert_record(db, corpus_id, rec):
     """
     doc = rec['__doc__']
     cursor = db.cursor()
-    cursor.execute("INSERT INTO div (div_id, corpus_id, doc_id, doc_group, doc_lang, doc_version, doc_txtype, "
+    cursor.execute("INSERT INTO item (div_id, corpus_id, doc_id, doc_group, doc_lang, doc_version, doc_txtype, "
                    "doc_pubyear, doc_wordcount, div_author, div_title, div_publisher, div_pubplace, div_pubyear, "
                    "div_pubmonth, div_origyear, div_isbn, div_txtype, div_comment, div_original, div_srclang, "
                    "div_translator, div_transsex, div_authsex, div_transcomment, div_collectionauthor, "
-                   "div_collectiontitle, div_volume, div_pages, div_wordcount) "
-                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   "div_collectiontitle, div_volume, div_pages, wordcount, poscount) "
+                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   (rec.get('id'), corpus_id,
                    doc.get('id'), doc.get('group'), doc.get('lang'), doc.get('version'), doc.get('txtype', ''),
                    doc.get('pubyear', ''), doc.get('wordcount'),
@@ -160,7 +154,7 @@ def insert_record(db, corpus_id, rec):
                    rec.get('txtype', ''), rec.get('comment', ''), rec.get('original', ''), rec.get('srclang', ''),
                    rec.get('translator', ''), rec.get('transsex', ''), rec.get('authsex', ''),
                    rec.get('transcomment', ''), rec.get('collectionauthor', ''), rec.get('collectiontitle', ''),
-                   rec.get('volume', ''), rec.get('pages', ''), rec.get('wordcount', ''),))
+                   rec.get('volume', ''), rec.get('pages', ''), rec.get('div_wordcount', 0), rec.get('poscount', 0)))
 
 
 def parse_file(f):
@@ -192,6 +186,7 @@ def parse_file(f):
                 metadata.update(attrs)
         elif start is False:
             if tag == 'div':
+                metadata['poscount'] = pos_count
                 div_list.append(metadata)
                 metadata = {}
                 pos_count = 0
@@ -206,14 +201,18 @@ def find_files(root_path):
     """
     arguments:
     root_path -- path to a directory where corpora vertical files (or their stripped versions) are located
+                 or a path to a specific vertical file
 
     returns:
     a tuple containing list of found files
     """
     ans = []
-    for item in os.listdir(root_path):
-        if item.startswith('intercorp_'):
-            ans.append('%s/%s' % (root_path, item))
+    if os.path.isfile(root_path):
+        ans.append(root_path)
+    elif os.path.isdir(root_path):
+        for item in os.listdir(root_path):
+            if re.match(r'^intercorp_[a-z]{2}$', item):
+                ans.append('%s/%s' % (root_path, item))
     return tuple(ans)
 
 

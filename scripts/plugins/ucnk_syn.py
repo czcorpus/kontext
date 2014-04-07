@@ -36,7 +36,7 @@ SCHEMA = (
     value string
     )""",
 
-    """create table opus (
+    """create table item (
         id integer PRIMARY KEY AUTOINCREMENT,
         opus_id TEXT,
         opus_autor TEXT,
