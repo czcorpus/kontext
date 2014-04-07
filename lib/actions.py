@@ -2237,19 +2237,14 @@ class Actions(ConcCGI):
             return None
 
     @exposed(return_type='json')
-    def filter_attributes(self, attrs=None, raw_input_attrs=None):
+    def filter_attributes(self, attrs=None):
         import json
 
         if plugins.has_plugin('live_attributes'):
             if attrs is None:
                 attrs = {}
-            if raw_input_attrs is None:
-                raw_input_attrs = []
-            raw_input_attrs = json.loads(raw_input_attrs)
-            raw_input_attrs = [re.sub(r'^sca_', '', x) for x in raw_input_attrs]
-            
-            ans = plugins.live_attributes.get_attr_values(self._corp(), json.loads(attrs),
-                                                          raw_input_attrs)
+
+            ans = plugins.live_attributes.get_attr_values(self._corp(), json.loads(attrs))
             return ans
         else:
             return {}

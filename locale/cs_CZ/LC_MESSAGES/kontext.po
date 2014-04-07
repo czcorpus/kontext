@@ -1999,6 +1999,9 @@ msgstr "Více informací na"
 msgid "number of matching positions"
 msgstr "počet odpovídajících pozic"
 
+msgid "number of matching structures"
+msgstr "počet odpovídajících struktur"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
