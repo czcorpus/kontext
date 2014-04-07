@@ -35,6 +35,14 @@ define(['win', 'jquery'], function (win, $) {
         return null;
     }
 
+    function isArray(obj) {
+        return Object.prototype.toString.call(obj) === '[object Array]';
+    }
+
+    function isObject(obj) {
+        return Object.prototype.toString.call(obj) === '[object Object]';
+    }
+
     /**
      *
      */
@@ -77,6 +85,10 @@ define(['win', 'jquery'], function (win, $) {
             var id = stripPrefix($(this).attr('name')),
                 label = $('label[for="' + $(this).attr('id') + '"]');
 
+            if (label.length === 0) {
+                label = $(this).closest('label');
+            }
+
             if ($.inArray($(this).val(), data[id]) < 0) {
                 label.addClass('excluded');
 
@@ -84,6 +96,50 @@ define(['win', 'jquery'], function (win, $) {
                 label.removeClass('excluded');
             }
         });
+    }
+
+    function updateRawInputs(api, data) {
+
+        lib.attrFieldsetWrapper.find('.raw-selection').each(function () {
+            var ident = stripPrefix($(this).attr('name')),
+                dataItem = data[ident],
+                inputElm = this,
+                attrTable = $(this).closest('table.envelope');
+
+
+            attrTable.find('table.dynamic').remove();
+            attrTable.find('.select-all').css('display', 'none');
+            $(inputElm).show();
+
+            if (isArray(dataItem)) {
+                var table = win.document.createElement('table');
+
+                attrTable.find('.metadata').empty();
+                $(table).addClass('dynamic');
+                $(inputElm).after(table);
+                $.each(dataItem, function (i, v) {
+                    $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                        + ident + '" value="' + v + '" /> ' + v + '</label></td></tr>');
+                });
+
+                $(inputElm).hide();
+
+                attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
+                api.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'), $(this).closest('table.envelope'));
+
+
+            } else if (isObject(dataItem)) {
+                var msg = api.translate('number of matching structures');
+                attrTable.find('.metadata').html(msg + ': ' + dataItem.length);
+            }
+        });
+    }
+
+    function resetRawInputs() {
+        lib.attrFieldsetWrapper.find('table.dynamic').remove();
+        lib.attrFieldsetWrapper.find('.metadata').empty();
+        lib.attrFieldsetWrapper.find('input.raw-selection').show();
+        lib.attrFieldsetWrapper.find('label.select-all.dynamic').hide().removeClass('dynamic');
     }
 
     function resetCheckboxes() {
@@ -151,14 +207,14 @@ define(['win', 'jquery'], function (win, $) {
             });
             $('#content').append(ajaxAnimElm);
 
-            requestURL = 'filter_attributes?attrs=' + JSON.stringify(selectedAttrs) + '&raw_input_attrs='
-                + JSON.stringify(getRawSelectionAttributes());
+            requestURL = 'filter_attributes?attrs=' + JSON.stringify(selectedAttrs);
             pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
                     updateAlignedCorpora(data);
                     updateCheckboxes(data);
                     updateSummary(pluginApi, data);
+                    updateRawInputs(pluginApi, data);
                     $(ajaxAnimElm).remove();
                 },
                 error : function (jqXHR, textStatus, errorThrown) {
@@ -174,12 +230,14 @@ define(['win', 'jquery'], function (win, $) {
             resetCheckboxes();
             resetCorpList();
             resetSummary();
+            resetRawInputs();
         });
 
         $(win).on('unload', function () {
             resetCheckboxes();
             resetCorpList();
             resetSummary();
+            resetRawInputs();
         });
 
         lib.attrFieldsetWrapper.find('.attr-selector').on('click', function (event) {

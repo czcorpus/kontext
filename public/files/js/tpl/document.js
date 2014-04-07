@@ -25,14 +25,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
     'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
-    var toggleSelectAllLabel,
-        lib = {};
+    var lib = {};
+
+    lib.conf = {};
 
     /**
      * @param {HTMLElement} selectAllElm
      * @param {String} [forceStatus]
      */
-    toggleSelectAllLabel = function (selectAllElm, forceStatus) {
+    function toggleSelectAllTrigger(selectAllElm, forceStatus) {
         var currValue,
             newValue;
 
@@ -56,9 +57,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                 selectAllElm.checked = false;
             }
         }
-    };
-
-    lib.conf = {};
+    }
 
     /**
      * Escapes general string containing HTML elements and entities
@@ -622,30 +621,31 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             var numChecked = jqCheckboxes.filter(':checked').length;
 
             if (jqCheckboxes.length > numChecked) {
-                toggleSelectAllLabel(elm, '1');
+                toggleSelectAllTrigger(elm, '1');
 
             } else {
-                toggleSelectAllLabel(elm, '2');
+                toggleSelectAllTrigger(elm, '2');
             }
         };
 
         jqCheckboxes.on('click', updateButtonStatus);
         updateButtonStatus();
 
-        jqElm.bind('click', function (event) {
+        jqElm.off('click');
+        jqElm.on('click', function (event) {
             var evtTarget = event.target;
 
             if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
                 });
-                toggleSelectAllLabel(evtTarget);
+                toggleSelectAllTrigger(evtTarget);
 
             } else if ($(evtTarget).attr('data-status') === '2') {
                 jqCheckboxes.each(function () {
                     this.checked = false;
                 });
-                toggleSelectAllLabel(evtTarget);
+                toggleSelectAllTrigger(evtTarget);
             }
         });
     };
@@ -1113,6 +1113,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
 
             translate : function (msg) {
                 return self.conf.messages[msg];
+            },
+
+            applySelectAll : function (elm, context) {
+                return self.applySelectAll.call(self, elm, context);
             }
         };
     };

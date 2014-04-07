@@ -20,12 +20,17 @@ import sqlite3
 import json
 from functools import wraps
 import threading
+from hashlib import md5
 
 import strings
 
 # thread local instance stores a database connection to
 # allow operating in a multi-threaded environment
 local_inst = threading.local()
+
+
+def create_cache_key(attr_map, max_attr_list_size):
+    return md5('%r %r' % (attr_map, max_attr_list_size)).hexdigest()
 
 
 def cached(f):
@@ -39,12 +44,14 @@ def cached(f):
     def wrapper(self, corpus, attr_map):
         db = self.db(corpus.get_conf('NAME'))
         if len(attr_map) < 2:
-            ans = self.from_cache(db, attr_map)
+            key = create_cache_key(attr_map, self.max_attr_list_size)
+            ans = self.from_cache(db, key)
             if ans:
                 return ans
         ans = f(self, corpus, attr_map)
         if len(attr_map) < 2:
-            self.to_cache(db, attr_map, ans)
+            key = create_cache_key(attr_map, self.max_attr_list_size)
+            self.to_cache(db, key, ans)
         return self.format_data_types(ans)
     return wrapper
 
@@ -57,15 +64,22 @@ class AttrArgs(object):
     leads to the following SQL "component": (key1 = ? OR key1 = ?) AND (key2 = ?)
     and attached values: ('value1_1', 'value1_2', 'value2_1') as used by cursor.execute()
     """
-    def __init__(self, data):
+    def __init__(self, data, empty_val_placeholder):
         """
         arguments:
         data -- a dictionary where values are either lists or single values
+        empty_val_placeholder -- value used instead of an empty value
         """
         self.data = data
+        self.empty_val_placeholder = empty_val_placeholder
 
     def __len__(self):
         return len(self.data)
+
+    def import_value(self, value):
+        if value == self.empty_val_placeholder:
+            return ''  # important! - cannot use None here as it is converted to NULL within database
+        return value
 
     def export_sql(self):
         """
@@ -82,18 +96,20 @@ class AttrArgs(object):
             if type(values) is list or type(values) is tuple:
                 for value in values:
                     cnf_item.append('%s = ?' % key)
-                    sql_values.append(value)
+                    sql_values.append(self.import_value(value))
             else:
                 cnf_item.append('%s = ?' % key)
-                sql_values.append(values)
+                sql_values.append(self.import_value(values))
             ans.append('(%s)' % ' OR '.join(cnf_item))
         return ' AND '.join(ans), tuple(sql_values)
 
 
 class LiveAttributes(object):
 
-    def __init__(self, corptree):
+    def __init__(self, corptree, max_attr_list_size, empty_val_placeholder):
         self.corptree = corptree
+        self.max_attr_list_size = max_attr_list_size
+        self.empty_val_placeholder = empty_val_placeholder
 
     def db(self, corpname):
         """
@@ -123,19 +139,18 @@ class LiveAttributes(object):
         return data
 
     @staticmethod
-    def from_cache(db, attr_map):
+    def from_cache(db, key):
         """
         Loads a value from cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
         used as a key.
 
         arguments:
-        attr_map -- a dictionary of attributes and values
+        key -- a cache key
 
         returns:
         a stored value matching provided argument or None if nothing is found
         """
-        key = json.dumps(attr_map)
         cursor = db.cursor()
         cursor.execute("SELECT value FROM cache WHERE key = ?", (key,))
         ans = cursor.fetchone()
@@ -144,17 +159,16 @@ class LiveAttributes(object):
         return None
 
     @staticmethod
-    def to_cache(db, attr_map, values):
+    def to_cache(db, key, values):
         """
         Stores a data object "values" into the cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
         used as a key.
 
         arguments:
-        attr_map -- a dictionary of attributes and values
+        key -- a cache key
         values -- a dictionary with arbitrary nesting level
         """
-        key = json.dumps(attr_map)
         value = json.dumps(values)
         cursor = db.cursor()
         cursor.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
@@ -171,14 +185,13 @@ class LiveAttributes(object):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
     @cached
-    def get_attr_values(self, corpus, attr_map, raw_input_attr_map):
+    def get_attr_values(self, corpus, attr_map):
         """
         Finds all the available values of remaining attributes
 
         arguments:
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
-        raw_input_attr_map -- a list of attributes with simple raw input
 
         returns:
         a dictionary containing matching attributes and values
@@ -188,7 +201,7 @@ class LiveAttributes(object):
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
-        attr_items = AttrArgs(attr_map)
+        attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
         where_sql, where_values = attr_items.export_sql()
 
         if len(attr_items) > 0:
@@ -218,7 +231,11 @@ class LiveAttributes(object):
         exported = {}
         for k in ans.keys():
             if type(ans[k]) is set:
-                exported[self.export_key(k)] = tuple(sorted(ans[k]))
+                if len(ans[k]) <= self.max_attr_list_size:
+                    exported[self.export_key(k)] = tuple(sorted(ans[k]))
+                else:
+                    exported[self.export_key(k)] = {'length': len(ans[k])}
+
             else:
                 exported[self.export_key(k)] = ans[k]
         return exported
@@ -230,11 +247,13 @@ class LiveAttributes(object):
         return 'ucnkLiveAttributes'
 
 
-def create_instance(corptree):
+def create_instance(corptree, settings):
     """
     creates an instance of the plugin
 
     arguments:
     corptree -- corptree plugin
     """
-    return LiveAttributes(corptree)
+    return LiveAttributes(corptree,
+                          settings.get_int('global', 'max_attr_list_size'),
+                          settings.get('corpora', 'empty_attr_value_placeholder'))

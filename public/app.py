@@ -112,7 +112,7 @@ def setup_plugins():
         ('corptree', (settings,)),
         ('query_storage', (settings, plugins.db)),
         ('application_bar', (settings, plugins.auth)),
-        ('live_attributes', ('corptree',)),
+        ('live_attributes', ('corptree', settings)),
         ('query_mod', (settings,))
     )
 
