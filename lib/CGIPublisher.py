@@ -386,16 +386,28 @@ class CGIPublisher(object):
         return getattr(module, name)
 
     def _get_current_url(self):
+        """
+        Returns an URL representing current application state
+        """
         return self.environ.get('REQUEST_URI')
 
-    def _invoke_action(self, method, args, named_args, tpl_data=None):
+    def _invoke_action(self, action, args, named_args, tpl_data=None):
+        """
+        Calls an action method mapped to a specific action
+
+        arguments:
+        action -- name of the action
+        args -- positional arguments of the action (tuple/list)
+        named_args -- a dictionary of named args and their defined default values
+        tpl_data -- a dictionary with additional page/response data
+        """
         na = named_args.copy()
-        if hasattr(method, 'accept_kwargs') and getattr(method, 'accept_kwargs') is True:
+        if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
             del_nondef = 0
         else:
             del_nondef = 1
-        convert_types(na, function_defaults(method), del_nondef=del_nondef)
-        ans = apply(method, args[1:], na)
+        convert_types(na, function_defaults(action), del_nondef=del_nondef)
+        ans = apply(action, args[1:], na)
         if type(ans) == dict and tpl_data is not None:
             ans.update(tpl_data)
         return ans
@@ -651,7 +663,7 @@ class CGIPublisher(object):
         Recodes values of key-value pairs and encodes them (by urllib.urlencode)
         """
         enc = self.self_encoding()
-        if type(key_val_pairs) is UnicodeType: # urllib.quote does not support unicode
+        if type(key_val_pairs) is UnicodeType:  # urllib.quote does not support unicode
             key_val_pairs = key_val_pairs.encode("utf-8")
         if type(key_val_pairs) is StringType:
             # mapping strings
