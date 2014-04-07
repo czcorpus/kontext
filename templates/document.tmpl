@@ -673,10 +673,10 @@ $corp_full_name</b><br>
                                 #end for ## -f3
                                 #end if ## -2
 
-                                #else ## ~1
+                                #else ## ~1 (no values => just place a text input field)
                                     <tr>
                                         <td>
-                                            <input id="scaid_$l['name']" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+                                            <input id="scaid_$l['name']" class="raw-selection" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
                                         </td>
                                     </tr>
                                 #end if  ## -1 (Values)
