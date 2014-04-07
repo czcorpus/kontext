@@ -107,6 +107,15 @@ define(['win', 'jquery'], function (win, $) {
         // TODO
     }
 
+    function getRawSelectionAttributes() {
+        var ans = [];
+
+        lib.attrFieldsetWrapper.find('.raw-selection').each(function () {
+            ans.push($(this).attr('name'));
+        });
+        return ans;
+    }
+
     /**
      * @param {{}} pluginApi
      * @param {HTMLElement|jQuery|string} updateButton update button element
@@ -131,7 +140,8 @@ define(['win', 'jquery'], function (win, $) {
 
         lib.updateButton.on('click', function () {
             var selectedAttrs = exportAttrStatus(),
-                ajaxAnimElm;
+                ajaxAnimElm,
+                requestURL;
 
             ajaxAnimElm = pluginApi.ajaxAnim();
             $(ajaxAnimElm).css({
@@ -141,7 +151,9 @@ define(['win', 'jquery'], function (win, $) {
             });
             $('#content').append(ajaxAnimElm);
 
-            pluginApi.ajax('filter_attributes?attrs=' + JSON.stringify(selectedAttrs), {
+            requestURL = 'filter_attributes?attrs=' + JSON.stringify(selectedAttrs) + '&raw_input_attrs='
+                + JSON.stringify(getRawSelectionAttributes());
+            pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
                     updateAlignedCorpora(data);

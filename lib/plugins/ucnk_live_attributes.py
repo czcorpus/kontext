@@ -171,13 +171,14 @@ class LiveAttributes(object):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
     @cached
-    def get_attr_values(self, corpus, attr_map):
+    def get_attr_values(self, corpus, attr_map, raw_input_attr_map):
         """
         Finds all the available values of remaining attributes
 
         arguments:
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
+        raw_input_attr_map -- a list of attributes with simple raw input
 
         returns:
         a dictionary containing matching attributes and values
