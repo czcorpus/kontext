@@ -20,85 +20,27 @@ define(['win', 'jquery'], function (win, $) {
     var lib = {};
 
     /**
+     * Handles transforming of raw input attribute value selectors (i.e. the ones with too long lists
+     * to display) to lists of checkboxes and back.
      *
-     * @param s
-     * @returns {*}
+     * @param pluginApi a plugin api object produced by document.js
+     * @param attrFieldsetWrapper parent element of all the attribute selectors
+     * @constructor
      */
-    function stripPrefix(s) {
-        var x = /^sca_(.+)$/,
-            ans;
-
-        ans = x.exec(s);
-        if (ans) {
-            return ans[1];
-        }
-        return null;
-    }
-
-    function isArray(obj) {
-        return Object.prototype.toString.call(obj) === '[object Array]';
-    }
-
-    function isObject(obj) {
-        return Object.prototype.toString.call(obj) === '[object Object]';
+    function RawInputs(pluginApi, attrFieldsetWrapper) {
+        this.pluginApi = pluginApi;
+        this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
 
     /**
-     *
-     */
-    function exportAttrStatus() {
-        var ans = {};
-
-        $('.text-type-params .attr-selector:checked').each(function () {
-            var key = stripPrefix($(this).attr('name'));
-
-            if (!ans.hasOwnProperty(key)) {
-                ans[key] = [];
-            }
-            ans[key].push($(this).val());
-        });
-        return ans;
-    }
-
-    /**
-     * Disables all the corpora not present in data.corpus_id
+     * Updates current state according to the 'data' argument
      *
      * @param data
      */
-    function updateAlignedCorpora(data) {
-        var corpList = data.corpus_id || [];
+    RawInputs.prototype.update = function (data) {
+        var self = this;
 
-        $('#add-searched-lang-widget select option').each(function () {
-
-            if ($.inArray($(this).val(), corpList) < 0) {
-                $(this).addClass('dynamic');
-                $(this).attr('disabled', 'disabled');
-
-            } else if ($(this).hasClass('dynamic')) {
-                $(this).attr('disabled', null);
-            }
-        });
-    }
-
-    function updateCheckboxes(data) {
-        lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
-            var id = stripPrefix($(this).attr('name')),
-                trElm = $(this).closest('tr'),
-                inputVal = $(this).val() != '--' ? $(this).val() : '';
-
-            //console.log('testing ' + $(this).val() + ' vs ' + data[id]);
-            if ($.inArray(inputVal, data[id]) < 0) {
-                trElm.addClass('excluded');
-
-            } else {
-                trElm.removeClass('excluded');
-            }
-        });
-    }
-
-    function updateRawInputs(api, data) {
-
-        lib.attrFieldsetWrapper.find('.raw-selection').each(function () {
+        self.attrFieldsetWrapper.find('.raw-selection').each(function () {
             var ident = stripPrefix($(this).attr('name')),
                 dataItem = data[ident],
                 inputElm = this,
@@ -123,78 +65,244 @@ define(['win', 'jquery'], function (win, $) {
                 $(inputElm).hide();
 
                 attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
-                api.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'), $(this).closest('table.envelope'));
+                self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'), $(this).closest('table.envelope'));
 
 
             } else if (isObject(dataItem)) {
-                var msg = api.translate('number of matching structures');
+                var msg = self.pluginApi.translate('number of matching structures');
                 attrTable.find('.metadata').html(msg + ': ' + dataItem.length);
             }
         });
+    };
+
+    /**
+     * Resets the state back to its initial form (as loaded from server)
+     */
+    RawInputs.prototype.reset = function () {
+        this.attrFieldsetWrapper.find('table.dynamic').remove();
+        this.attrFieldsetWrapper.find('.metadata').empty();
+        this.attrFieldsetWrapper.find('input.raw-selection').show();
+        this.attrFieldsetWrapper.find('label.select-all.dynamic').hide().removeClass('dynamic');
+    };
+
+    /**
+     * Handles state of checkboxes for selecting specific attribute values (i.e. hides the ones
+     * representing values leading to an empty selection).
+     *
+     * @param attrFieldsetWrapper parent element of all the attribute selectors
+     * @constructor
+     */
+    function Checkboxes(attrFieldsetWrapper) {
+        this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
 
-    function resetRawInputs() {
-        lib.attrFieldsetWrapper.find('table.dynamic').remove();
-        lib.attrFieldsetWrapper.find('.metadata').empty();
-        lib.attrFieldsetWrapper.find('input.raw-selection').show();
-        lib.attrFieldsetWrapper.find('label.select-all.dynamic').hide().removeClass('dynamic');
-    }
+    /**
+     * Updates the checkboxes according to provided 'data' argument
+     *
+     * @param data
+     */
+    Checkboxes.prototype.update = function (data) {
+        this.attrFieldsetWrapper.find('.attr-selector').each(function () {
+            var id = stripPrefix($(this).attr('name')),
+                trElm = $(this).closest('tr'),
+                inputVal = $(this).val() != '--' ? $(this).val() : '';
 
-    function resetCheckboxes() {
-        lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
+            if ($.inArray(inputVal, data[id]) < 0) {
+                trElm.addClass('excluded');
+
+            } else {
+                trElm.removeClass('excluded');
+            }
+        });
+    };
+
+    /**
+     *
+     */
+    Checkboxes.prototype.reset = function () {
+        this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             $(this).closest('tr').removeClass('excluded');
             this.checked = false;
         });
+    };
+
+
+    /**
+     *
+     * @param s
+     * @returns {*}
+     */
+    function stripPrefix(s) {
+        var x = /^sca_(.+)$/,
+            ans;
+
+        ans = x.exec(s);
+        if (ans) {
+            return ans[1];
+        }
+        return null;
     }
 
-    function updateSummary(pluginApi, data) {
-        $('.live-attributes .summary').empty().append(pluginApi.translate('number of matching positions')
-            + ': <strong>' + data.poscount + '</strong>');
+    /**
+     *
+     * @param obj
+     * @returns {boolean}
+     */
+    function isArray(obj) {
+        return Object.prototype.toString.call(obj) === '[object Array]';
     }
 
-    function resetSummary() {
-        $('.live-attributes .summary').empty();
+    /**
+     *
+     * @param obj
+     * @returns {boolean}
+     */
+    function isObject(obj) {
+        return Object.prototype.toString.call(obj) === '[object Object]';
     }
 
-    function resetCorpList() {
-        // TODO
-    }
+    /**
+     *
+     */
+    function exportAttrStatus() {
+        var ans = {};
 
-    function getRawSelectionAttributes() {
-        var ans = [];
+        $('.text-type-params .attr-selector:checked').each(function () {
+            var key = stripPrefix($(this).attr('name'));
 
-        lib.attrFieldsetWrapper.find('.raw-selection').each(function () {
-            ans.push($(this).attr('name'));
+            if (!ans.hasOwnProperty(key)) {
+                ans[key] = [];
+            }
+            ans[key].push($(this).val());
         });
         return ans;
     }
 
+    function AlignedCorpora() {
+
+    }
+
     /**
-     * @param {{}} pluginApi
-     * @param {HTMLElement|jQuery|string} updateButton update button element
-     * @param {HTMLElement|jQuery|string} resetButton reset button element
-     * @param {HTMLElement|jQuery|string} attrFieldsetWrapper element containing attribute checkboxes
+     * Disables all the corpora not present in data.corpus_id
+     *
+     * @param data
      */
-    lib.init = function (pluginApi, updateButton, resetButton, attrFieldsetWrapper) {
-        lib.updateButton = $(updateButton);
-        lib.resetButton = $(resetButton);
-        lib.attrFieldsetWrapper = $(attrFieldsetWrapper);
+    AlignedCorpora.prototype.update = function (data) {
+        var corpList = data.corpus_id || [];
 
+        $('#add-searched-lang-widget select option').each(function () {
 
-        lib.attrFieldsetWrapper.find('.attr-selector').on('click', function () {
-            if ($(this).is(':checked')) {
-                $(this).addClass('user-selected');
+            if ($.inArray($(this).val(), corpList) < 0) {
+                $(this).addClass('dynamic');
+                $(this).attr('disabled', 'disabled');
 
-            } else {
-                $(this).removeClass('user-selected');
+            } else if ($(this).hasClass('dynamic')) {
+                $(this).attr('disabled', null);
             }
-
         });
+    };
 
-        lib.updateButton.on('click', function () {
+    /**
+     *
+     */
+    AlignedCorpora.prototype.reset = function () {
+        // TODO
+    };
+
+    /**
+     *
+     * @param pluginApi
+     * @constructor
+     */
+    function SelectionSteps(pluginApi) {
+        this.pluginApi = pluginApi;
+    }
+
+    /**
+     *
+     * @param data
+     * @param selectedAttrs
+     */
+    SelectionSteps.prototype.update = function (data, selectedAttrs) {
+        var jqSteps = $('.live-attributes div.steps'),
+            table;
+
+        if (jqSteps.data('num-steps') === undefined) {
+            jqSteps.data('num-steps', 0);
+        }
+        jqSteps.data('num-steps', jqSteps.data('num-steps') + 1);
+
+        if (jqSteps.data('used-attrs') === undefined) {
+            jqSteps.data('used-attrs', []);
+        }
+
+        if (jqSteps.data('num-steps') > 1) {
+            jqSteps.append('<span class="arrow">&#10142;</span>');
+        }
+        table = this.createStepTable(jqSteps, data, selectedAttrs);
+        jqSteps.append(table);
+    };
+
+    /**
+     *
+     */
+    SelectionSteps.prototype.reset = function () {
+        $('.live-attributes div.steps').empty().data('num-steps', 0);
+    };
+
+    /**
+     *
+     * @param jqSteps
+     * @param data
+     * @param selectedAttrs
+     * @returns {string}
+     */
+    SelectionSteps.prototype.createStepTable = function (jqSteps, data, selectedAttrs) {
+        var html,
+            usedAttrs = jqSteps.data('used-attrs');
+
+        function expandAttributes() {
+            var p,
+                ans = [];
+
+            for (p in selectedAttrs) {
+                if (selectedAttrs.hasOwnProperty(p) && $.inArray(p, usedAttrs) < 0) {
+                    usedAttrs.push(p);
+                    ans.push('<strong>' + p + '</strong> &#8712; {' + selectedAttrs[p].join(', ') + '}');
+                }
+            }
+            return ans.join('<br />');
+        }
+
+        html = '<table class="step"><tr><td class="num">' + jqSteps.data('num-steps') + '</td> '
+            + '<td class="data">' + expandAttributes() + '<br />'
+            + this.pluginApi.translate('number of matching positions') + ': ' + data.poscount + '</td></tr></table>'
+
+        return html;
+    };
+
+    /**
+     *
+     * @param pluginApi
+     * @param updateButton
+     * @param successAction
+     */
+    function bindSelectionUpdateEvent(pluginApi, updateButton, successAction) {
+        updateButton.on('click', function () {
             var selectedAttrs = exportAttrStatus(),
                 ajaxAnimElm,
                 requestURL;
+
+            /*
+            The following json response structure is expected:
+            {
+                "poscount": "49 738 011", <- formatted number representing number of avail. positions in this selection
+                "structure1.attribute1": ["a value", ...],
+                "structure2.attribute1": ["a value", ...],
+                ...
+                "structureN.attributeM": {"length": 827} <- a structure with too many items to display reports only its size
+            }
+            */
 
             ajaxAnimElm = pluginApi.ajaxAnim();
             $(ajaxAnimElm).css({
@@ -209,38 +317,62 @@ define(['win', 'jquery'], function (win, $) {
             pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
-                    updateAlignedCorpora(data);
-                    updateCheckboxes(data);
-                    updateSummary(pluginApi, data);
-                    updateRawInputs(pluginApi, data);
+                    successAction(data, selectedAttrs),
                     $(ajaxAnimElm).remove();
                 },
                 error : function (jqXHR, textStatus, errorThrown) {
-                    resetSummary();
                     $(ajaxAnimElm).remove();
                     pluginApi.showMessage('error', errorThrown);
 
                 }
             });
         });
+    }
 
-        lib.resetButton.on('click', function () {
-            resetCheckboxes();
-            resetCorpList();
-            resetSummary();
-            resetRawInputs();
+    /**
+     * @param {{}} pluginApi
+     * @param {HTMLElement|jQuery|string} updateButton update button element
+     * @param {HTMLElement|jQuery|string} resetButton reset button element
+     * @param {HTMLElement|jQuery|string} attrFieldsetWrapper element containing attribute checkboxes
+     */
+    lib.init = function (pluginApi, updateButton, resetButton, attrFieldsetWrapper) {
+
+        var attrFieldsetWrapper = $(attrFieldsetWrapper),
+            resetButton = $(resetButton),
+            rawInputs = new RawInputs(pluginApi, attrFieldsetWrapper),
+            selectionSteps = new SelectionSteps(pluginApi),
+            checkboxes = new Checkboxes(attrFieldsetWrapper),
+            selectionSteps = new SelectionSteps(pluginApi),
+            alignedCorpora = new AlignedCorpora(),
+            resetAll;
+
+
+        attrFieldsetWrapper.find('.attr-selector').on('click', function () {
+            if ($(this).is(':checked')) {
+                $(this).addClass('user-selected');
+
+            } else {
+                $(this).removeClass('user-selected');
+            }
         });
 
-        $(win).on('unload', function () {
-            resetCheckboxes();
-            resetCorpList();
-            resetSummary();
-            resetRawInputs();
+        bindSelectionUpdateEvent(pluginApi, $(updateButton), function (data, selectedAttrs) {
+            alignedCorpora.update(data);
+            checkboxes.update(data);
+            rawInputs.update(data);
+            selectionSteps.update(data, selectedAttrs);
         });
 
-        lib.attrFieldsetWrapper.find('.attr-selector').on('click', function (event) {
-            var label = $('label[for="' + $(event.target).attr('id') + '"]').css('text-decoration', 'none');
-        });
+        resetAll = function () {
+            checkboxes.reset();
+            alignedCorpora.reset();
+            rawInputs.reset();
+            selectionSteps.reset();
+        };
+
+        resetButton.on('click', resetAll);
+        $(win).on('unload', resetAll);
+
     };
 
     return lib;

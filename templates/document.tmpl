@@ -120,6 +120,7 @@ define('conf', [], function () {
     conf.messages.loading = "$_('Loading...')";
     conf.messages['number of matching positions'] = "$_('number of matching positions')";
     conf.messages['number of matching structures'] = "$_('number of matching structures')";
+    conf.messages['%s positions'] = "$_('%s positions')";
 
     #if $focus
     conf.focus = $focus;
@@ -705,7 +706,9 @@ $corp_full_name</b><br>
 
         #if $live_attributes_js
         <div class="live-attributes">
-            <p class="summary"></p>
+            <div class="steps">
+
+            </div>
             <a id="live-attrs-update" class="util-button">$_('highlight selection structure')</a>
             <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
         </div>
