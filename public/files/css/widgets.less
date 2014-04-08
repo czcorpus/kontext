@@ -34,7 +34,7 @@ ul.multiselect a.switch-link:hover {
 }
 
 ul.multiselect a.used {
-    background-color: #F76B0B;
+    background-color: @color-widget-orange;
     color: #ffffff;
 }
 
@@ -211,4 +211,38 @@ button#insert-tag-button, button#reset-tag-button {
 
 button#reset-tag-button {
   color: #FFB7B4;
+}
+
+// --------------------- live attributes ----------
+
+
+.live-attributes div.steps > * {
+  vertical-align: middle;
+}
+
+.live-attributes div.steps {
+  margin: 10px;
+  text-align: center;
+}
+
+.live-attributes div.steps span.arrow {
+  color: @color-widget-orange;
+}
+
+.live-attributes div.steps .step {
+  border-spacing: 0;
+  border: 1px solid @color-widget-orange;
+  border-radius: @border-radius-default;
+  display: inline-block;
+  background-color: #FFFFFF;
+}
+
+.live-attributes div.steps table.step .num {
+  background-color: @color-widget-orange;
+  color: #FFFFFF;
+  padding: 8px;
+}
+
+.live-attributes div.steps table.step .data {
+  padding: 4px 8px;
 }
