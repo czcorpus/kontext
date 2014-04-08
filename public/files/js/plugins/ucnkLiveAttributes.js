@@ -83,17 +83,13 @@ define(['win', 'jquery'], function (win, $) {
     function updateCheckboxes(data) {
         lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
             var id = stripPrefix($(this).attr('name')),
-                label = $('label[for="' + $(this).attr('id') + '"]');
-
-            if (label.length === 0) {
-                label = $(this).closest('label');
-            }
+                trElm = $(this).closest('tr');
 
             if ($.inArray($(this).val(), data[id]) < 0) {
-                label.addClass('excluded');
+                trElm.addClass('excluded');
 
             } else {
-                label.removeClass('excluded');
+                trElm.removeClass('excluded');
             }
         });
     }
@@ -144,8 +140,7 @@ define(['win', 'jquery'], function (win, $) {
 
     function resetCheckboxes() {
         lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
-            $('label[for="' + $(this).attr('id') + '"]').removeClass('excluded');
-            $(this).attr('disabled', null); // re-enable checkbox
+            $(this).closest('tr').removeClass('excluded');
             this.checked = false;
         });
     }
