@@ -222,7 +222,7 @@ class LiveAttributes(object):
         for item in cursor.fetchall():
             for attr in srch_attrs:
                 v = item[srch_attr_map[attr]]
-                if v is not None and v != '':
+                if v is not None:
                     if type(ans[attr]) is set:
                         ans[attr].add(item[srch_attr_map[attr]])
                     elif type(ans[attr]) is int:
