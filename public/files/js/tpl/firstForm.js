@@ -175,15 +175,15 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
                 jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').attr('src', '../files/img/arrow_up.png')
-                    .attr('data-alt-img', '../files/img/arrow_up_s.png')
+                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
+                    .attr('data-alt-img', '../files/img/collapse_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_hide);
                 jqLink.attr('title', layoutModel.conf.messages.click_to_hide);
 
             } else {
                 jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/arrow_down.png')
-                    .attr('data-alt-img', '../files/img/arrow_down_s.png')
+                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
+                    .attr('data-alt-img', '../files/img/expand_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_expand);
                 jqLink.attr('title', layoutModel.conf.messages.click_to_expand);
             }
@@ -202,16 +202,16 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             jqFieldset.toggleClass('inactive');
             if (jqFieldset.hasClass('inactive')) {
                 jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/arrow_down.png')
-                    .attr('data-alt-img', '../files/img/arrow_down_s.png')
+                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
+                    .attr('data-alt-img', '../files/img/expand_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_expand);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
                 jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').attr('src', '../files/img/arrow_up.png')
-                    .attr('data-alt-img', '../files/img/arrow_up_s.png')
+                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
+                    .attr('data-alt-img', '../files/img/collapse_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_hide);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
