@@ -175,21 +175,8 @@ define(['win', 'jquery'], function (win, $) {
 
     /**
      *
+     * @constructor
      */
-    function exportAttrStatus() {
-        var ans = {};
-
-        $('.text-type-params .attr-selector:checked').each(function () {
-            var key = stripPrefix($(this).attr('name'));
-
-            if (!ans.hasOwnProperty(key)) {
-                ans[key] = [];
-            }
-            ans[key].push($(this).val());
-        });
-        return ans;
-    }
-
     function AlignedCorpora() {
 
     }
@@ -296,12 +283,20 @@ define(['win', 'jquery'], function (win, $) {
 
         function expandAttributes() {
             var p,
-                ans = [];
+                ans = [],
+                values;
 
             for (p in selectedAttrs) {
                 if (selectedAttrs.hasOwnProperty(p) && $.inArray(p, usedAttrs) < 0) {
                     usedAttrs.push(p);
-                    ans.push('<strong>' + p + '</strong> &#8712; {' + selectedAttrs[p].join(', ') + '}');
+                    values = selectedAttrs[p];
+
+                    if (values.length > 5) {
+                        values = selectedAttrs[p].slice(0, 2);
+                        values.push('...');
+                        values = values.concat(selectedAttrs[p].slice(selectedAttrs[p].length - 3, selectedAttrs[p].length - 1));
+                    }
+                    ans.push('<strong>' + p + '</strong> &#8712; {' + values.join(', ') + '}');
                 }
             }
             return ans.join('<br />');
@@ -325,6 +320,21 @@ define(['win', 'jquery'], function (win, $) {
      * @param successAction
      */
     function bindSelectionUpdateEvent(pluginApi, updateButton, successAction) {
+
+        function exportAttrStatus() {
+            var ans = {};
+
+            $('.text-type-params .attr-selector:checked').each(function () {
+                var key = stripPrefix($(this).attr('name'));
+
+                if (!ans.hasOwnProperty(key)) {
+                    ans[key] = [];
+                }
+                ans[key].push($(this).val());
+            });
+            return ans;
+        }
+
         updateButton.on('click', function () {
             var selectedAttrs = exportAttrStatus(),
                 ajaxAnimElm,
