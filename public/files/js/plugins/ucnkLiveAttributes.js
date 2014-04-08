@@ -122,7 +122,6 @@ define(['win', 'jquery'], function (win, $) {
     Checkboxes.prototype.reset = function () {
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             $(this).closest('tr').removeClass('excluded');
-            this.checked = false;
         });
     };
 
@@ -216,7 +215,33 @@ define(['win', 'jquery'], function (win, $) {
      */
     function SelectionSteps(pluginApi) {
         this.pluginApi = pluginApi;
+        this.jqSteps = $('.live-attributes div.steps');
     }
+
+    SelectionSteps.prototype.numSteps = function (v) {
+        if (this.jqSteps.data('num-steps') === undefined) {
+            this.jqSteps.data('num-steps', 0);
+        }
+        if (v === undefined) {
+            return this.jqSteps.data('num-steps');
+
+        } else {
+            this.jqSteps.data('num-steps', v);
+        }
+    };
+
+    SelectionSteps.prototype.usedAttributes = function (v) {
+        if (this.jqSteps.data('used-attrs') === undefined) {
+            this.jqSteps.data('used-attrs', []);
+        }
+
+        if (v === undefined) {
+            return this.jqSteps.data('used-attrs');
+
+        } else {
+            this.jqSteps.data('used-attrs', v);
+        }
+    };
 
     /**
      *
@@ -224,30 +249,24 @@ define(['win', 'jquery'], function (win, $) {
      * @param selectedAttrs
      */
     SelectionSteps.prototype.update = function (data, selectedAttrs) {
-        var jqSteps = $('.live-attributes div.steps'),
-            table;
+        var table;
 
-        if (jqSteps.data('num-steps') === undefined) {
-            jqSteps.data('num-steps', 0);
-        }
-        jqSteps.data('num-steps', jqSteps.data('num-steps') + 1);
+        this.numSteps(this.numSteps() + 1);
 
-        if (jqSteps.data('used-attrs') === undefined) {
-            jqSteps.data('used-attrs', []);
+        if (this.numSteps() > 1) {
+            this.jqSteps.append('<span class="arrow">&#10142;</span>');
         }
-
-        if (jqSteps.data('num-steps') > 1) {
-            jqSteps.append('<span class="arrow">&#10142;</span>');
-        }
-        table = this.createStepTable(jqSteps, data, selectedAttrs);
-        jqSteps.append(table);
+        table = this.createStepTable(this.jqSteps, data, selectedAttrs);
+        this.jqSteps.append(table);
     };
 
     /**
      *
      */
     SelectionSteps.prototype.reset = function () {
-        $('.live-attributes div.steps').empty().data('num-steps', 0);
+        this.numSteps(0);
+        this.usedAttributes([]);
+        this.jqSteps.empty();
     };
 
     /**
@@ -259,7 +278,8 @@ define(['win', 'jquery'], function (win, $) {
      */
     SelectionSteps.prototype.createStepTable = function (jqSteps, data, selectedAttrs) {
         var html,
-            usedAttrs = jqSteps.data('used-attrs');
+            usedAttrs = this.usedAttributes(),
+            positionInfo = '';
 
         function expandAttributes() {
             var p,
@@ -274,9 +294,13 @@ define(['win', 'jquery'], function (win, $) {
             return ans.join('<br />');
         }
 
-        html = '<table class="step"><tr><td class="num">' + jqSteps.data('num-steps') + '</td> '
+        if (data.poscount !== undefined) {
+            positionInfo = this.pluginApi.translate('%s positions').replace('%s', data.poscount);
+        }
+
+        html = '<table class="step"><tr><td class="num">' + this.numSteps() + '</td> '
             + '<td class="data">' + expandAttributes() + '<br />'
-            + this.pluginApi.translate('number of matching positions') + ': ' + data.poscount + '</td></tr></table>'
+            + positionInfo + '</td></tr></table>'
 
         return html;
     };
