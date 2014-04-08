@@ -207,7 +207,8 @@ define(['win', 'jquery'], function (win, $) {
             });
             $('#content').append(ajaxAnimElm);
 
-            requestURL = 'filter_attributes?attrs=' + JSON.stringify(selectedAttrs);
+            requestURL = 'filter_attributes?corpname=' + pluginApi.conf.corpname
+                + '&attrs=' + JSON.stringify(selectedAttrs);
             pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
