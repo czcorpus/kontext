@@ -112,6 +112,11 @@ define(['win', 'jquery'], function (win, $) {
 
             } else {
                 trElm.removeClass('excluded');
+                if (this.checked) {
+                    $(this).attr('disabled', 'disabled');
+                    $(this).after('<input class="checkbox-substitute" type="hidden" '
+                    + 'name="' + $(this).attr('name') + '" value="' + $(this).attr('value') + '" />');
+                }
             }
         });
     };
@@ -125,7 +130,12 @@ define(['win', 'jquery'], function (win, $) {
             if (this.checked !== undefined) {
                 this.checked = false;
             }
+            if ($(this).attr('disabled')) {
+                $(this).attr('disabled', null);
+            }
         });
+
+        this.attrFieldsetWrapper.find('input.checkbox-substitute').remove();
     };
 
 
