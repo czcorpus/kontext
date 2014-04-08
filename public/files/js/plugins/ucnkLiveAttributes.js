@@ -122,6 +122,9 @@ define(['win', 'jquery'], function (win, $) {
     Checkboxes.prototype.reset = function () {
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             $(this).closest('tr').removeClass('excluded');
+            if (this.checked !== undefined) {
+                this.checked = false;
+            }
         });
     };
 
