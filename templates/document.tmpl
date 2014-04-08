@@ -100,6 +100,7 @@ define('conf', [], function () {
     conf.numTagPos = $getVar('num_tag_pos', 'null');
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
+    conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
 
     conf.messages = {};
     #if $_anonymous

@@ -83,9 +83,11 @@ define(['win', 'jquery'], function (win, $) {
     function updateCheckboxes(data) {
         lib.attrFieldsetWrapper.find('.attr-selector').each(function () {
             var id = stripPrefix($(this).attr('name')),
-                trElm = $(this).closest('tr');
+                trElm = $(this).closest('tr'),
+                inputVal = $(this).val() != '--' ? $(this).val() : '';
 
-            if ($.inArray($(this).val(), data[id]) < 0) {
+            //console.log('testing ' + $(this).val() + ' vs ' + data[id]);
+            if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
 
             } else {
