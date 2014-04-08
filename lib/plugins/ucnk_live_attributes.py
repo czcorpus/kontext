@@ -205,9 +205,9 @@ class LiveAttributes(object):
         where_sql, where_values = attr_items.export_sql()
 
         if len(attr_items) > 0:
-            sql_template = "SELECT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
+            sql_template = "SELECT DISTINCT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
         else:
-            sql_template = "SELECT %s FROM item" % (', '.join(srch_attrs),)
+            sql_template = "SELECT DISTINCT %s FROM item" % (', '.join(srch_attrs),)
 
         ans = {}
         ans.update(attr_map)
