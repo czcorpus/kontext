@@ -209,6 +209,24 @@ define(['win', 'jquery'], function (win, $) {
     };
 
     /**
+     * Searches for currently selected aligned corpora
+     *
+     * @returns {Array}
+     */
+    AlignedCorpora.prototype.findSelected = function () {
+        var ans = [];
+
+        $('.parallel-corp-lang:visible input[name="sel_aligned"]').each(function () {
+            var val = $(this).val();
+
+            if (val) {
+                ans.push(val);
+            }
+        });
+        return ans;
+    };
+
+    /**
      *
      * @param pluginApi
      * @constructor
@@ -247,16 +265,26 @@ define(['win', 'jquery'], function (win, $) {
      *
      * @param data
      * @param selectedAttrs
+     * @param {AlignedCorpora} alignedCorpora
      */
-    SelectionSteps.prototype.update = function (data, selectedAttrs) {
-        var table;
+    SelectionSteps.prototype.update = function (data, selectedAttrs, alignedCorpora) {
+        var table,
+            alignedCorpnames = alignedCorpora.findSelected(),
+            innerHTML;
+
+        if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
+            innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
+                + alignedCorpnames.join('<br />&amp;');
+            this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
+            this.jqSteps.append('<span class="arrow">&#10142;</span>');
+        }
 
         this.numSteps(this.numSteps() + 1);
 
         if (this.numSteps() > 1) {
             this.jqSteps.append('<span class="arrow">&#10142;</span>');
         }
-        table = this.createStepTable(this.jqSteps, data, selectedAttrs);
+        table = this.createStepTable(data, selectedAttrs);
         this.jqSteps.append(table);
     };
 
@@ -272,19 +300,33 @@ define(['win', 'jquery'], function (win, $) {
     /**
      *
      * @param jqSteps
+     * @param numStep
+     * @param innerHTML
+     * @returns {string}
+     */
+    SelectionSteps.prototype.rawCreateStepTable = function (numStep, innerHTML) {
+        return '<table class="step"><tr><td class="num">' + numStep + '</td> '
+            + '<td class="data">' + innerHTML + '</td></tr></table>';
+    };
+
+    /**
+     *
+     * @param jqSteps
      * @param data
      * @param selectedAttrs
      * @returns {string}
      */
-    SelectionSteps.prototype.createStepTable = function (jqSteps, data, selectedAttrs) {
+    SelectionSteps.prototype.createStepTable = function (data, selectedAttrs) {
         var html,
             usedAttrs = this.usedAttributes(),
-            positionInfo = '';
+            positionInfo = '',
+            self = this;
 
         function expandAttributes() {
             var p,
                 ans = [],
-                values;
+                values,
+                html;
 
             for (p in selectedAttrs) {
                 if (selectedAttrs.hasOwnProperty(p) && $.inArray(p, usedAttrs) < 0) {
@@ -296,7 +338,11 @@ define(['win', 'jquery'], function (win, $) {
                         values.push('...');
                         values = values.concat(selectedAttrs[p].slice(selectedAttrs[p].length - 3, selectedAttrs[p].length - 1));
                     }
-                    ans.push('<strong>' + p + '</strong> &#8712; {' + values.join(', ') + '}');
+                    html = '<strong>' + p + '</strong> &#8712; {' + values.join(', ') + '}';
+                    if (self.numSteps() > 1) {
+                        html = '... &amp; ' + html;
+                    }
+                    ans.push(html);
                 }
             }
             return ans.join('<br />');
@@ -305,21 +351,18 @@ define(['win', 'jquery'], function (win, $) {
         if (data.poscount !== undefined) {
             positionInfo = this.pluginApi.translate('%s positions').replace('%s', data.poscount);
         }
-
-        html = '<table class="step"><tr><td class="num">' + this.numSteps() + '</td> '
-            + '<td class="data">' + expandAttributes() + '<br />'
-            + positionInfo + '</td></tr></table>'
-
+        html = this.rawCreateStepTable(this.numSteps(), expandAttributes() + '<br />' + positionInfo);
         return html;
     };
 
     /**
      *
      * @param pluginApi
+     * @param {AlignedCorpora} alignedCorpora
      * @param updateButton
      * @param successAction
      */
-    function bindSelectionUpdateEvent(pluginApi, updateButton, successAction) {
+    function bindSelectionUpdateEvent(pluginApi, alignedCorpora, updateButton, successAction) {
 
         function exportAttrStatus() {
             var ans = {};
@@ -338,7 +381,8 @@ define(['win', 'jquery'], function (win, $) {
         updateButton.on('click', function () {
             var selectedAttrs = exportAttrStatus(),
                 ajaxAnimElm,
-                requestURL;
+                requestURL,
+                alignedCorpnames;
 
             /*
             The following json response structure is expected:
@@ -361,6 +405,12 @@ define(['win', 'jquery'], function (win, $) {
 
             requestURL = 'filter_attributes?corpname=' + pluginApi.conf.corpname
                 + '&attrs=' + JSON.stringify(selectedAttrs);
+
+            alignedCorpnames = alignedCorpora.findSelected();
+            if (alignedCorpnames) {
+                requestURL += '&aligned=' + JSON.stringify(alignedCorpnames);
+            }
+
             pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
@@ -403,12 +453,14 @@ define(['win', 'jquery'], function (win, $) {
             }
         });
 
-        bindSelectionUpdateEvent(pluginApi, $(updateButton), function (data, selectedAttrs) {
-            alignedCorpora.update(data);
-            checkboxes.update(data);
-            rawInputs.update(data);
-            selectionSteps.update(data, selectedAttrs);
-        });
+        bindSelectionUpdateEvent(pluginApi, alignedCorpora, $(updateButton),
+            function (data, selectedAttrs) {
+                alignedCorpora.update(data);
+                checkboxes.update(data);
+                rawInputs.update(data);
+                selectionSteps.update(data, selectedAttrs, alignedCorpora);
+            }
+        );
 
         resetAll = function () {
             checkboxes.reset();
