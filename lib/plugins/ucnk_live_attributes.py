@@ -29,8 +29,8 @@ import strings
 local_inst = threading.local()
 
 
-def create_cache_key(attr_map, max_attr_list_size):
-    return md5('%r %r' % (attr_map, max_attr_list_size)).hexdigest()
+def create_cache_key(attr_map, max_attr_list_size, aligned_corpora):
+    return md5('%r %r %r' % (attr_map, max_attr_list_size, aligned_corpora)).hexdigest()
 
 
 def cached(f):
@@ -41,16 +41,16 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, corpus, attr_map):
+    def wrapper(self, corpus, attr_map, aligned_corpora=None):
         db = self.db(corpus.get_conf('NAME'))
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size)
+            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
-        ans = f(self, corpus, attr_map)
+        ans = f(self, corpus, attr_map, aligned_corpora)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size)
+            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora)
             self.to_cache(db, key, ans)
         return self.format_data_types(ans)
     return wrapper
@@ -81,7 +81,7 @@ class AttrArgs(object):
             return ''  # important! - cannot use None here as it is converted to NULL within database
         return value
 
-    def export_sql(self):
+    def export_sql(self, item_prefix):
         """
         Exports data into a SQL WHERE expression
 
@@ -95,13 +95,13 @@ class AttrArgs(object):
             cnf_item = []
             if type(values) is list or type(values) is tuple:
                 for value in values:
-                    cnf_item.append('%s = ?' % key)
+                    cnf_item.append('%s.%s = ?' % (item_prefix, key))
                     sql_values.append(self.import_value(value))
             else:
-                cnf_item.append('%s = ?' % key)
+                cnf_item.append('%s.%s = ?' % (item_prefix, key))
                 sql_values.append(self.import_value(values))
             ans.append('(%s)' % ' OR '.join(cnf_item))
-        return ' AND '.join(ans), tuple(sql_values)
+        return ' AND '.join(ans), sql_values
 
 
 class LiveAttributes(object):
@@ -130,6 +130,10 @@ class LiveAttributes(object):
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         return self.db(corpname) is not None
+
+    @staticmethod
+    def apply_prefix(values, prefix):
+        return ['%s.%s' % (prefix, v) for v in values]
 
     @staticmethod
     def format_data_types(data):
@@ -185,13 +189,15 @@ class LiveAttributes(object):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
     @cached
-    def get_attr_values(self, corpus, attr_map):
+    def get_attr_values(self, corpus, attr_map, aligned_corpora=None):
         """
-        Finds all the available values of remaining attributes
+        Finds all the available values of remaining attributes according to the
+        provided attr_map and aligned_corpora
 
         arguments:
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
+        aligned_corpora - a list/tuple of corpora names aligned to base one (the 'corpus' argument)
 
         returns:
         a dictionary containing matching attributes and values
@@ -202,12 +208,24 @@ class LiveAttributes(object):
         srch_attrs.add('poscount')
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
-        where_sql, where_values = attr_items.export_sql()
+        where_sql, where_values = attr_items.export_sql('t1')
+        where_sql += ' AND t1.corpus_id = ?'
+        where_values.append(corpus.get_conf('NAME'))
 
-        if len(attr_items) > 0:
-            sql_template = "SELECT DISTINCT %s FROM item WHERE %s" % (', '.join(srch_attrs), where_sql)
+        join_sql = []
+        i = 2
+        for item in aligned_corpora:
+            join_sql.append('JOIN item AS t%d ON t1.item_id = t%d.item_id' % (i, i))
+            where_sql += ' AND t%d.corpus_id = ?' % i
+            where_values.append(item)
+            i += 1
+
+        if len(where_sql) > 0:
+            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s WHERE %s" \
+                           % (', '.join(self.apply_prefix(srch_attrs, 't1')), ' '.join(join_sql), where_sql)
         else:
-            sql_template = "SELECT DISTINCT %s FROM item" % (', '.join(srch_attrs),)
+            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s " \
+                           % (', '.join(self.apply_prefix(srch_attrs, 't1')), ' '.join(join_sql))
 
         ans = {}
         ans.update(attr_map)

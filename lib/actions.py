@@ -2237,14 +2237,21 @@ class Actions(ConcCGI):
             return None
 
     @exposed(return_type='json')
-    def filter_attributes(self, attrs=None):
+    def filter_attributes(self, attrs=None, aligned=None):
         import json
 
         if plugins.has_plugin('live_attributes'):
             if attrs is None:
                 attrs = {}
+            else:
+                attrs = json.loads(attrs)
 
-            ans = plugins.live_attributes.get_attr_values(self._corp(), json.loads(attrs))
+            if aligned is None:
+                aligned = []
+            else:
+                aligned = json.loads(aligned)
+
+            ans = plugins.live_attributes.get_attr_values(self._corp(), attrs, aligned)
             return ans
         else:
             return {}
