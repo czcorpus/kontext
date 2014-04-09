@@ -157,6 +157,10 @@ def insert_record(db, corpus_id, rec):
                    rec.get('volume', ''), rec.get('pages', ''), rec.get('div_wordcount', 0), rec.get('poscount', 0)))
 
 
+def normalize_div_id(id):
+    return ':'.join(id.split(':')[1:-1])
+
+
 def parse_file(f):
     """
     Parses a corpus vertical file (or its stripped version containing only tags)
@@ -181,8 +185,8 @@ def parse_file(f):
                 curr_doc.update(attrs)
             elif tag == 'div':
                 attrs['__doc__'] = curr_doc
-                attrs['div_group'] = curr_doc.get('group')
-                attrs['div_id'] = curr_doc['id']
+                attrs['group'] = curr_doc.get('group')
+                attrs['id'] = normalize_div_id(attrs['id'])
                 metadata.update(attrs)
         elif start is False:
             if tag == 'div':
