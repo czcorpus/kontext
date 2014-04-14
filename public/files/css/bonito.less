@@ -128,7 +128,7 @@ section h2 {
 }
 
 .message.info {
-  color: #000;
+  color: @color-default-text;
 }
 
 .message a.close-icon {
@@ -208,14 +208,14 @@ a#logo-wrapper {
 
 #add-searched-lang-widget {
   text-align: center;
-  margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 #mainform .parallel-corp-lang .heading h3 {
   background-color: @color-light-frame;
   padding: 3px 10px;
   border-radius: @border-radius-default;
-  margin: 5px 20px;
+  margin: 5px;
   font-weight: normal;
   border: 1px solid #C7E7B2;
 }
@@ -905,6 +905,10 @@ table.form th {
 
 table.form tr.required th {
   font-weight: 700;
+}
+
+.parallel-corp-lang table.form {
+  margin: 5px 10px;
 }
 
 table.query {
