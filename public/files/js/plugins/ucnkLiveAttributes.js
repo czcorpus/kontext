@@ -89,10 +89,12 @@ define(['win', 'jquery'], function (win, $) {
      * Handles state of checkboxes for selecting specific attribute values (i.e. hides the ones
      * representing values leading to an empty selection).
      *
+     * @param pluginApi
      * @param attrFieldsetWrapper parent element of all the attribute selectors
      * @constructor
      */
-    function Checkboxes(attrFieldsetWrapper) {
+    function Checkboxes(pluginApi, attrFieldsetWrapper) {
+        this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
 
@@ -105,7 +107,7 @@ define(['win', 'jquery'], function (win, $) {
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             var id = stripPrefix($(this).attr('name')),
                 trElm = $(this).closest('tr'),
-                inputVal = $(this).val() != '--' ? $(this).val() : '';
+                inputVal = $(this).val() != this.pluginApi.conf.emptyAttrValuePlaceholder ? $(this).val() : '';
 
             if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
@@ -438,7 +440,7 @@ define(['win', 'jquery'], function (win, $) {
             resetButton = $(resetButton),
             rawInputs = new RawInputs(pluginApi, attrFieldsetWrapper),
             selectionSteps = new SelectionSteps(pluginApi),
-            checkboxes = new Checkboxes(attrFieldsetWrapper),
+            checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
             selectionSteps = new SelectionSteps(pluginApi),
             alignedCorpora = new AlignedCorpora(),
             resetAll;
