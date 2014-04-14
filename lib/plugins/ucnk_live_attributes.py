@@ -256,6 +256,7 @@ class LiveAttributes(object):
 
             else:
                 exported[self.export_key(k)] = ans[k]
+        exported['aligned'] = aligned_corpora
         return exported
 
     def get_js_module(self):

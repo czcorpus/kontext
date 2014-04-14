@@ -191,11 +191,10 @@ define(['win', 'jquery'], function (win, $) {
      * @param data
      */
     AlignedCorpora.prototype.update = function (data) {
-        var corpList = data.corpus_id || [];
+        var corpList = data.aligned || [];
 
         $('#add-searched-lang-widget select option').each(function () {
-
-            if ($.inArray($(this).val(), corpList) < 0) {
+            if ($.inArray($(this).val(), corpList) >= 0) {
                 $(this).addClass('dynamic');
                 $(this).attr('disabled', 'disabled');
 
@@ -209,7 +208,9 @@ define(['win', 'jquery'], function (win, $) {
      *
      */
     AlignedCorpora.prototype.reset = function () {
-        // TODO
+        $('#add-searched-lang-widget select option.dynamic').each(function () {
+            $(this).removeClass('dynamic').attr('disabled', null);
+        });
     };
 
     /**
