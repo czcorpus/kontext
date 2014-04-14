@@ -104,10 +104,12 @@ define(['win', 'jquery'], function (win, $) {
      * @param data
      */
     Checkboxes.prototype.update = function (data) {
+        var self = this;
+
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             var id = stripPrefix($(this).attr('name')),
                 trElm = $(this).closest('tr'),
-                inputVal = $(this).val() != this.pluginApi.conf.emptyAttrValuePlaceholder ? $(this).val() : '';
+                inputVal = $(this).val() != self.pluginApi.conf.emptyAttrValuePlaceholder ? $(this).val() : '';
 
             if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
