@@ -338,15 +338,15 @@ define(['win', 'jquery'], function (win, $) {
             alignedCorpnames = alignedCorpora.findSelected(),
             innerHTML;
 
+        if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
+            innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
+                + alignedCorpnames.join('<br />&amp;');
+            this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
+            this.numSteps(this.numSteps() + 1);
+        }
+
         table = this.createStepTable(data, selectedAttrs);
         if (table) {
-            if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-                innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
-                    + alignedCorpnames.join('<br />&amp;');
-                this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
-                this.jqSteps.append('<span class="arrow">&#10142;</span>');
-            }
-
             this.numSteps(this.numSteps() + 1);
 
             if (this.numSteps() > 1) {
@@ -374,7 +374,7 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {string}
      */
     SelectionSteps.prototype.rawCreateStepTable = function (numStep, innerHTML) {
-        return '<table class="step"><tr><td class="num">' + numStep + '</td> '
+        return '<table class="step"><tr><td class="num">' + (numStep + 1) + '</td> '
             + '<td class="data">' + innerHTML + '</td></tr></table>';
     };
 
@@ -409,7 +409,7 @@ define(['win', 'jquery'], function (win, $) {
                         values = values.concat(selectedAttrs[p].slice(selectedAttrs[p].length - 3, selectedAttrs[p].length - 1));
                     }
                     html = '<strong>' + p + '</strong> &#8712; {' + values.join(', ') + '}';
-                    if (self.numSteps() > 1) {
+                    if (self.numSteps() > 0) {
                         html = '... &amp; ' + html;
                     }
                     ans.push(html);
