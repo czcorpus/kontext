@@ -80,6 +80,37 @@ require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
       <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
     #end if
 
+    #filter None
+    #if $Aligned
+    <fieldset class="parallel">
+        <legend>$_('Aligned corpora')</legend>
+
+        #set $sel_aln = $align.split(',')
+        #for $a in $Aligned
+        <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
+            <div class="heading">
+                <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img
+                        class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png"
+                        alt="close icon" /></a></h3>
+            </div>
+            <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
+            <table class="form">$query_node('_'+$a.n)</table>
+        </div>
+        #end for
+
+        <div id="add-searched-lang-widget">
+            <button type="button">$_('Add')</button>
+            $_('corpus') <select>
+            #for $a in $Aligned
+            <option value="$a.n">$a.label</option>
+            #end for
+        </select>
+        </div>
+
+    </fieldset>
+    #end if
+    #end filter
+
     <fieldset class="inactive">
         <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="context-box">$_("Specify context")
         <img class="status over-img" src="../files/img/expand.png" /></a></legend>
@@ -189,34 +220,6 @@ require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
           </table>
       </div>
     </fieldset>
-
-    #filter None
-    #if $Aligned
-    <fieldset class="parallel">
-        <legend>$_('Aligned corpora')</legend>
-        <div id="add-searched-lang-widget">
-            <button type="button">$_('Add')</button>
-            $_('corpus') <select>
-            #for $a in $Aligned
-            <option value="$a.n">$a.label</option>
-            #end for
-        </select>
-        </div>
-        #set $sel_aln = $align.split(',')
-        #for $a in $Aligned
-        <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
-            <div class="heading">
-                <h3>$a.label ($a.n)<a class="close-button" title="$_('Remove the language')"><img
-                    class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png"
-                    alt="close icon" /></a></h3>
-            </div>
-            <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
-            <table class="form">$query_node('_'+$a.n)</table>
-        </div>
-        #end for
-    </fieldset>
-    #end if
-    #end filter
 
     <div class="buttons">
     <input id="make-concordance-button" class="submit" type="submit" value="$_("Search")" />
