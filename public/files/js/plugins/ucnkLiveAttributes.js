@@ -44,8 +44,12 @@ define(['win', 'jquery'], function (win, $) {
             var ident = stripPrefix($(this).attr('name')),
                 dataItem = data[ident],
                 inputElm = this,
-                attrTable = $(this).closest('table.envelope');
+                attrTable = $(this).closest('table.envelope'),
+                checkedItems = [];
 
+            attrTable.find('table.dynamic .attr-selector:checked').each(function () {
+                checkedItems.push($(this).val());
+            });
 
             attrTable.find('table.dynamic').remove();
             attrTable.find('.select-all').css('display', 'none');
@@ -58,8 +62,18 @@ define(['win', 'jquery'], function (win, $) {
                 $(table).addClass('dynamic');
                 $(inputElm).after(table);
                 $.each(dataItem, function (i, v) {
-                    $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                        + ident + '" value="' + v + '" /> ' + v + '</label></td></tr>');
+                    var checked = $.inArray(v, checkedItems) > -1;
+
+                    if (checked) {
+                        $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                            + ident + '" value="' + v + '" checked="checked" disabled="disabled" /> '
+                            + '<input type="hidden" name="sca_' + ident + '" value="' + v + '" /> '
+                            + v + '</label></td></tr>');
+
+                    } else {
+                        $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                            + ident + '" value="' + v + '" /> ' + v + '</label></td></tr>');
+                    }
                 });
 
                 $(inputElm).hide();
@@ -109,17 +123,24 @@ define(['win', 'jquery'], function (win, $) {
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
             var id = stripPrefix($(this).attr('name')),
                 trElm = $(this).closest('tr'),
+                labelElm = $(this).closest('label'),
                 inputVal = $(this).val() != self.pluginApi.conf.emptyAttrValuePlaceholder ? $(this).val() : '';
 
             if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
+                labelElm.removeClass('locked');
+
 
             } else {
                 trElm.removeClass('excluded');
                 if (this.checked) {
+                    labelElm.addClass('locked');
                     $(this).attr('disabled', 'disabled');
                     $(this).after('<input class="checkbox-substitute" type="hidden" '
                     + 'name="' + $(this).attr('name') + '" value="' + $(this).attr('value') + '" />');
+
+                } else {
+                    labelElm.removeClass('locked');
                 }
             }
         });
@@ -140,8 +161,48 @@ define(['win', 'jquery'], function (win, $) {
         });
 
         this.attrFieldsetWrapper.find('input.checkbox-substitute').remove();
+
+        this.attrFieldsetWrapper.find('.select-all').each(function () {
+            if (this.checked) {
+                this.checked = false;
+            }
+        });
     };
 
+
+    /**
+     * @param {jQuery} attrFieldsetWrapper
+     * @param {SelectionSteps} selectionSteps
+     * @constructor
+     */
+    function StructTables(attrFieldsetWrapper, selectionSteps) {
+        this.attrFieldsetWrapper = attrFieldsetWrapper;
+        this.selectionSteps = selectionSteps;
+    }
+
+    /**
+     *
+     */
+    StructTables.prototype.update = function () {
+        var self = this;
+
+        $.each(this.selectionSteps.usedAttributes(), function (i, v) {
+            self.attrFieldsetWrapper.find('table[data-attr="' + v + '"]').each(function () {
+                $(this).addClass('locked');
+                $(this).find('tr.last-line label').hide();
+            });
+        });
+    };
+
+    /**
+     *
+     */
+    StructTables.prototype.reset = function () {
+        this.attrFieldsetWrapper.find('table.envelope').each(function () {
+            $(this).removeClass('locked');
+            $(this).find('tr.last-line label').show();
+        });
+    };
 
     /**
      *
@@ -277,20 +338,23 @@ define(['win', 'jquery'], function (win, $) {
             alignedCorpnames = alignedCorpora.findSelected(),
             innerHTML;
 
-        if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-            innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
-                + alignedCorpnames.join('<br />&amp;');
-            this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
-            this.jqSteps.append('<span class="arrow">&#10142;</span>');
-        }
-
-        this.numSteps(this.numSteps() + 1);
-
-        if (this.numSteps() > 1) {
-            this.jqSteps.append('<span class="arrow">&#10142;</span>');
-        }
         table = this.createStepTable(data, selectedAttrs);
-        this.jqSteps.append(table);
+        if (table) {
+            if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
+                innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
+                    + alignedCorpnames.join('<br />&amp;');
+                this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
+                this.jqSteps.append('<span class="arrow">&#10142;</span>');
+            }
+
+            this.numSteps(this.numSteps() + 1);
+
+            if (this.numSteps() > 1) {
+                this.jqSteps.append('<span class="arrow">&#10142;</span>');
+            }
+
+            this.jqSteps.append(table);
+        }
     };
 
     /**
@@ -322,10 +386,11 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {string}
      */
     SelectionSteps.prototype.createStepTable = function (data, selectedAttrs) {
-        var html,
+        var html = null,
             usedAttrs = this.usedAttributes(),
             positionInfo = '',
-            self = this;
+            self = this,
+            newAttrs;
 
         function expandAttributes() {
             var p,
@@ -350,13 +415,16 @@ define(['win', 'jquery'], function (win, $) {
                     ans.push(html);
                 }
             }
-            return ans.join('<br />');
+            return ans;
         }
 
-        if (data.poscount !== undefined) {
-            positionInfo = this.pluginApi.translate('%s positions').replace('%s', data.poscount);
+        newAttrs = expandAttributes();
+        if (newAttrs.length > 0) {
+            if (data.poscount !== undefined) {
+                positionInfo = this.pluginApi.translate('%s positions').replace('%s', data.poscount);
+            }
+            html = this.rawCreateStepTable(this.numSteps(), newAttrs + '<br />' + positionInfo);
         }
-        html = this.rawCreateStepTable(this.numSteps(), expandAttributes() + '<br />' + positionInfo);
         return html;
     };
 
@@ -446,6 +514,7 @@ define(['win', 'jquery'], function (win, $) {
             checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
             selectionSteps = new SelectionSteps(pluginApi),
             alignedCorpora = new AlignedCorpora(),
+            structTables = new StructTables(attrFieldsetWrapper, selectionSteps),
             resetAll;
 
 
@@ -464,6 +533,7 @@ define(['win', 'jquery'], function (win, $) {
                 checkboxes.update(data);
                 rawInputs.update(data);
                 selectionSteps.update(data, selectedAttrs, alignedCorpora);
+                structTables.update();
             }
         );
 
@@ -472,6 +542,7 @@ define(['win', 'jquery'], function (win, $) {
             alignedCorpora.reset();
             rawInputs.reset();
             selectionSteps.reset();
+            structTables.reset();
         };
 
         resetButton.on('click', resetAll);

@@ -886,6 +886,18 @@ table.envelope tr.excluded {
   display: none;
 }
 
+table.envelope.locked {
+  border: 1px solid @locked-attrs-bgcolor;
+}
+
+table.envelope.locked th {
+  background-color: @locked-attrs-bgcolor;
+}
+
+table.envelope.locked tr.last-line td {
+  background-color: @locked-attrs-bgcolor;
+}
+
 table.envelope .metadata {
   font-size: 80%;
   text-align: center;
