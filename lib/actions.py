@@ -1389,7 +1389,7 @@ class Actions(ConcCGI):
 
     @exposed(access_level=1)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='',
-                 ref_corpname='', ref_usesubcorp='', wlpage=1, line_offset=0):
+                 ref_corpname='', ref_usesubcorp='', line_offset=0):
         """
         """
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
@@ -1409,17 +1409,15 @@ class Actions(ConcCGI):
                 self.wlnums = 'docf'
 
         lastpage = 0
-        if self._anonymous and wlpage >= 10:  # limit paged lists
-            wlpage = 10
+        if self._anonymous and self.wlpage >= 10:  # limit paged lists
             self.wlpage = 10
             lastpage = 1
         elif self._anonymous and self.wlmaxitems > 1000:  # limit saved lists
-            wlpage = 1
             self.wlpage = 1
             self.wlmaxitems = 1000
-        wlstart = (wlpage - 1) * self.wlmaxitems + line_offset
+        wlstart = (self.wlpage - 1) * self.wlmaxitems + line_offset
 
-        self.wlmaxitems = self.wlmaxitems * wlpage + 1  # +1 = end detection
+        self.wlmaxitems = self.wlmaxitems * self.wlpage + 1  # +1 = end detection
         result = {
             'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
                            '&include_nonwords=%s&wlsort=f&wlnums=%s') % (self.wlattr, self.corpname, self.usesubcorp,
@@ -1459,7 +1457,7 @@ class Actions(ConcCGI):
                 if self.blacklist:
                     result['blcache'] = self.blcache
                 result_list = result['Items']
-            if len(result_list) < self.wlmaxitems / wlpage:
+            if len(result_list) < self.wlmaxitems / self.wlpage:
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
@@ -1475,8 +1473,9 @@ class Actions(ConcCGI):
 
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.wlnums, '?'))
 
-            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=' \
-                     % (self.wlattr, wlpat)
+            params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
+            'from_line=1&to_line=&wlsort=%(wlsort)s') % {'wlattr': self.wlattr, 'wlpat': wlpat, 'wlsort': self.wlsort}
+            logging.getLogger(__name__).debug(params)
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
@@ -1567,9 +1566,10 @@ class Actions(ConcCGI):
         to_line = int(to_line) if to_line else sys.maxint
         line_offset = (from_line - 1)
         self.wlmaxitems = sys.maxint  # TODO
-        ans = self.wordlist(wlpat, wltype, self.corpname, usesubcorp,
-                            ref_corpname, ref_usesubcorp, wlpage=1, line_offset=line_offset)
-        err = conccgi.validate_range((from_line, to_line), (1, None))
+        self.wlpage = 1
+        ans = self.wordlist(wlpat=wlpat, wltype=wltype, usesubcorp=usesubcorp,
+                            ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp, line_offset=line_offset)
+        err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
