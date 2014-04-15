@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['win', 'jquery'], function (win, $) {
+define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     var lib = {};
 
     /**
@@ -62,18 +62,57 @@ define(['win', 'jquery'], function (win, $) {
                 $(table).addClass('dynamic');
                 $(inputElm).after(table);
                 $.each(dataItem, function (i, v) {
-                    var checked = $.inArray(v, checkedItems) > -1;
+                    var checked = $.inArray(v, checkedItems) > -1,
+                        bibLink;
+
+                    if (self.pluginApi.conf.bibAttr === ident) {
+                        bibLink = '<a class="bib-info" data-bib-id="' + v + '">i</a>';
+
+                    } else {
+                        bibLink = '';
+                    }
 
                     if (checked) {
                         $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
                             + ident + '" value="' + v + '" checked="checked" disabled="disabled" /> '
                             + '<input type="hidden" name="sca_' + ident + '" value="' + v + '" /> '
-                            + v + '</label></td></tr>');
+                            + v + '</label></td><td>' + bibLink + '</td></tr>');
 
                     } else {
                         $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                            + ident + '" value="' + v + '" /> ' + v + '</label></td></tr>');
+                            + ident + '" value="' + v + '" /> ' + v + '</label></td><td>' + bibLink + '</td></tr>');
                     }
+                });
+
+                $(table).find('.bib-info').each(function () {
+                    var bibLink = this;
+
+                    popupBox.bind($(this),
+                        function(tooltipBox, finalizeCallback) {
+                            var ajaxAnimElm = self.pluginApi.ajaxAnim();
+                            $(ajaxAnimElm).css({
+                                'position' : 'absolute',
+                                'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
+                                'top' : ($(win).height() / 2) + 'px'
+                            });
+                            $('#content').append(ajaxAnimElm);
+
+                            self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf.corpname
+                                + '&id=' + $(bibLink).attr('data-bib-id'),
+                                {
+                                    dataType : 'json',
+                                    success : function (data) {
+                                        $(ajaxAnimElm).remove();
+                                        tooltipBox.importElement('<div>' + JSON.stringify(data) + '</div>');
+                                        finalizeCallback();
+                                    },
+                                    error : function (jqXHR, textStatus, errorThrown) {
+                                        $(ajaxAnimElm).remove();
+                                        self.pluginApi.showMessage('error', errorThrown);
+                                    }
+                                });
+                        }
+                    );
                 });
 
                 $(inputElm).hide();
@@ -487,7 +526,7 @@ define(['win', 'jquery'], function (win, $) {
             pluginApi.ajax(requestURL, {
                 dataType : 'json',
                 success : function (data) {
-                    successAction(data, selectedAttrs),
+                    successAction(data, selectedAttrs);
                     $(ajaxAnimElm).remove();
                 },
                 error : function (jqXHR, textStatus, errorThrown) {

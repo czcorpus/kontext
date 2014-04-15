@@ -36,7 +36,7 @@ SCHEMA = (
     value string
     )""",
 
-    """create table item (
+    """CREATE TABLE item (
         id integer PRIMARY KEY AUTOINCREMENT,
         opus_id TEXT,
         opus_autor TEXT,
@@ -56,7 +56,10 @@ SCHEMA = (
     )""",
     "CREATE INDEX opus_txtype_group_idx ON opus(opus_txtype_group)",
     "CREATE INDEX opus_txtype_idx ON opus(opus_txtype)",
-    "CREATE INDEX opus_med_idx ON opus(opus_med)"
+    "CREATE INDEX opus_med_idx ON opus(opus_med)",
+    """CREATE VIEW bibliography AS
+        SELECT opus_nazev AS id, opus_autor, opus_nazev, opus_nakladatel, opus_mistovyd, opus_rokvyd, opus_isbnissn, opus_srclang
+        FROM item"""
 )
 
 

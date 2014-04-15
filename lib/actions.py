@@ -2255,3 +2255,8 @@ class Actions(ConcCGI):
             return ans
         else:
             return {}
+
+    @exposed(return_type='json')
+    def bibliography(self, id=''):
+        ans = plugins.live_attributes.get_bibliography(self._corp(), item_id=id);
+        return ans
