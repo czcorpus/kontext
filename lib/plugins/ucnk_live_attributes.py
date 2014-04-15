@@ -259,12 +259,6 @@ class LiveAttributes(object):
         exported['aligned'] = aligned_corpora
         return exported
 
-    def get_js_module(self):
-        """
-        Path must be relative to the files/js/plugins directory
-        """
-        return 'ucnkLiveAttributes'
-
 
 def create_instance(corptree, settings):
     """
