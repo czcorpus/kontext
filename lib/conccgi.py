@@ -702,6 +702,8 @@ class ConcCGI(CGIPublisher):
         else:
             result['live_attributes_js'] = False
 
+        result['bib_attr'] = plugins.corptree.get_corpus_info(self.corpname).get('bib_attr')
+
         # avalilable languages
         if plugins.has_plugin('getlang'):
             result['avail_languages'] = ()

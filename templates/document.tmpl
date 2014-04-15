@@ -670,6 +670,11 @@ $corp_full_name</b><br>
                                     #else
                                     <td></td>
                                     #end if ## -4
+                                    <td>
+                                        #if $l['label'] == $bib_attr
+                                            <a class="bib-info" data-bib-id="$v.get('v', '')">i</a>
+                                        #end if
+                                    </td>
                                 </tr>
                                 #end if ## -3
                                 #set $i = $i + 1
