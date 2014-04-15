@@ -698,7 +698,7 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css_ie'] = None
 
         if plugins.has_plugin('live_attributes') and plugins.live_attributes.is_enabled_for(self.corpname):
-            result['live_attributes_js'] = 'plugins/%s' % plugins.live_attributes.get_js_module()
+            result['live_attributes_js'] = 'plugins/%s' % settings.get('plugins', 'live_attributes', {}).get('js_module')
         else:
             result['live_attributes_js'] = False
 

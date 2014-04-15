@@ -73,6 +73,10 @@
             <file>../config.xml</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
         </corptree>
+        <live_attributes>
+            <module>acme_live_attributes</module>
+            <js_module>acmeLiveAttributes</js_module>
+        </live_attributes>
     </plugins>
     <cache>
         <clear_interval>3600</clear_interval>
