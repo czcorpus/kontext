@@ -42,9 +42,10 @@ class DbConnection(object):
         return self.db_conn.open
 
     def try_close(self):
-        status = self.db_conn.stat().lower()
-        if self.open_status() >= 1 and 'gone away' not in status:
+        try:
             self.db_conn.close()
+        except Exception as e:
+            logging.getLogger(__name__).warning(e)
 
 
 class DbConnectionProvider(object):
@@ -67,14 +68,13 @@ class DbConnectionProvider(object):
             _local.connection = self._open_connection()
         return _local.connection.db_conn
 
-    def recover(self):
+    def close(self):
         """
-        This is expected to be called in case some fatal error occurs, when the application cannot finish
-        current action but there is a chance that
+        Forces closing of current (thread local) connection.
         """
-        logging.getLogger(__name__).warning('Recovering lost database connection.')
+        logging.getLogger(__name__).warning('Closing broken database connection.')
         _local.connection.try_close()
-        self.get(force_reconnect=True)
+        del _local.connection
 
     def _open_connection(self):
         conn = MySQLdb.connect(host=self.conf['ucnk:host'], user=self.conf['ucnk:username'],
