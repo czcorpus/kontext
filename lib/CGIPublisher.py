@@ -691,10 +691,10 @@ class CGIPublisher(object):
             self._headers['Content-Type'] = 'text/x-json'
 
         ans = []
-
-        for k in sorted(self._headers.keys()):
-            if self._headers[k]:
-                ans.append((k, self._headers[k]))
+        for k, v in sorted(filter(lambda x: bool(x[1]), self._headers.items()), key=lambda x: x[0]):
+            if type(v) is unicode:
+                v = v.encode('utf-8')
+            ans.append((k, v))
         # Cookies
         if self._cookies:
             ans.extend([('Set-Cookie', v.OutputString()) for v in self._cookies.values()])   # cookies
