@@ -101,6 +101,7 @@ define('conf', [], function () {
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
+    conf.bibAttr = #if $varExists('bib_attr') and $bib_attr#"${bib_attr}"#else#null#end if#;
 
     conf.messages = {};
     #if $_anonymous
