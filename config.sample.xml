@@ -105,7 +105,8 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16" metadata="/var/local/corpora/orwell.db" />
+		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16"
+                metadata="/var/local/corpora/orwell.db" bib_attr="opus.title" />
 	    </corplist>
             <corplist title="Foreign corpora">
                 <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
