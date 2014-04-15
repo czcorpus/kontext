@@ -29,7 +29,9 @@ $_("Word list")#slurp
 #set global $new_maxitems = $wlmaxitems / $wlpage
 #set global $url_wlpat = $urlquote($wlpat)
 #set global $url_usesubcorp = $urlquote($usesubcorp)
-#set global $curr_settings = '%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s;wlpage=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache, $wlpage)
+
+#set global $curr_settings = '%(corpname_url)s;usesubcorp=%(url_usesubcorp)s;wlattr=%(wlattr)s;wlminfreq=%(wlminfreq)s;wlpat=%(url_wlpat)s;wlicase=%(wlicase)s;wlmaxitems=%(wlmaxitems)s;wlsort=%(wlsort)s;ref_corpname=%(ref_corpname)s;ref_usesubcorp=%(ref_usesubcorp)s;wlcache=%(wlcache)s;simple_n=%(simple_n)s;wltype=%(wltype)s;wlnums=%(wlnums)s;include_nonwords=%(include_nonwords)s;blcache=%(blcache)s;wlpage=%(wlpage)s' % {'corpname_url': $corpname_url, 'url_usesubcorp': $url_usesubcorp, 'wlattr': $wlattr, 'wlminfreq': $wlminfreq, 'url_wlpat': $url_wlpat, 'wlicase': $wlicase, 'wlmaxitems': $wlmaxitems, 'wlsort': $wlsort, 'ref_corpname': $ref_corpname, 'ref_usesubcorp': $ref_usesubcorp, 'wlcache': $wlcache, 'simple_n': $simple_n, 'wltype': $wltype, 'wlnums': $wlnums, 'include_nonwords': $include_nonwords, 'blcache': $blcache, 'wlpage': $wlpage}
+
 
  #if $processing
    <meta http-equiv="refresh" content="3;wordlist?$curr_settings">
