@@ -259,6 +259,14 @@ class LiveAttributes(object):
         exported['aligned'] = aligned_corpora
         return exported
 
+    def get_bibliography(self, corpus, item_id):
+        cursor = self.db(corpus.get_conf('NAME')).cursor()
+        cursor.execute('SELECT * FROM bibliography WHERE id = ?', (item_id,))
+        ans = cursor.fetchone()
+        if ans:
+            return ans
+        return {}
+
 
 def create_instance(corptree, settings):
     """
