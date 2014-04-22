@@ -27,6 +27,7 @@ from strings import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
+import settings
 
 
 class CorpusManager(object):
@@ -467,17 +468,30 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
     return candidates
 
 
-def subcorp_base_file(corp, attrname):
+def corp_freqs_cache_path(corp, attrname):
     """
-    Returns
-    -------
-    path : str
-        subcorpus path as a 8-bit string (i.e. unicode paths are encoded)
+    Generates an absolute path to an 'attribute' directory/file. The path
+    consists of two parts: 1) absolute path to corpus indexed data
+    2) filename given by the 'attrname' argument. It is also dependent
+    on whether you pass a subcorpus (files are created in user's assigned directory)
+    or a regular corpus (files are created in the 'cache' directory).
+
+    arguments:
+    corp -- manatee corpus instance
+    attrname -- name of an attribute
+
+    returns:
+    a path encoded as an 8-bit string (i.e. unicode paths are encoded)
     """
     if hasattr(corp, 'spath'):
         ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
-        ans = corp.get_conf('PATH') + attrname
+        cache_dir = os.path.abspath(settings.get('corpora', 'cache_dir'))
+        for d in (corp.get_conf('NAME'), 'freqs'):
+            cache_dir = '%s/%s' % (cache_dir, d)
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
+        ans = '%s/%s' % (cache_dir, attrname)
     return ans.encode('utf-8')
 
 
@@ -488,7 +502,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq'):
     import array
 
-    filename = (subcorp_base_file(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
+    filename = (corp_freqs_cache_path(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
     if nums == 'arf':
         frq = array.array('f')
         try:
@@ -566,7 +580,17 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
 
 
 def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
-    outfilename = subcorp_base_file(corp, attrname)
+    """
+    Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
+    is quite computationally demanding the function is typically called in background by KonText.
+
+    arguments:
+    corp -- a corpus instance
+    attrname -- name of a positional or structure's attribute
+    logfile -- an optional file where current calculation status is written
+    logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
+    """
+    outfilename = corp_freqs_cache_path(corp, attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return
     if hasattr(corp, 'spath'):
@@ -647,7 +671,11 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
 
 
 def build_arf_db(corp, attrname):
-    logfilename = subcorp_base_file(corp, attrname) + '.build'
+    """
+    Provides a higher level wrapper to create_arf_db(). Function creates
+    a background process where create_arf_db() is run.
+    """
+    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
@@ -669,7 +697,7 @@ def build_arf_db(corp, attrname):
 
 
 def build_arf_db_status(corp, attrname):
-    logfilename = subcorp_base_file(corp, attrname) + '.build'
+    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
