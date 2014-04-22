@@ -33,9 +33,7 @@ $_("Word list")#slurp
 #set global $curr_settings = '%(corpname_url)s;usesubcorp=%(url_usesubcorp)s;wlattr=%(wlattr)s;wlminfreq=%(wlminfreq)s;wlpat=%(url_wlpat)s;wlicase=%(wlicase)s;wlmaxitems=%(wlmaxitems)s;wlsort=%(wlsort)s;ref_corpname=%(ref_corpname)s;ref_usesubcorp=%(ref_usesubcorp)s;wlcache=%(wlcache)s;simple_n=%(simple_n)s;wltype=%(wltype)s;wlnums=%(wlnums)s;include_nonwords=%(include_nonwords)s;blcache=%(blcache)s;wlpage=%(wlpage)s' % {'corpname_url': $corpname_url, 'url_usesubcorp': $url_usesubcorp, 'wlattr': $wlattr, 'wlminfreq': $wlminfreq, 'url_wlpat': $url_wlpat, 'wlicase': $wlicase, 'wlmaxitems': $wlmaxitems, 'wlsort': $wlsort, 'ref_corpname': $ref_corpname, 'ref_usesubcorp': $ref_usesubcorp, 'wlcache': $wlcache, 'simple_n': $simple_n, 'wltype': $wltype, 'wlnums': $wlnums, 'include_nonwords': $include_nonwords, 'blcache': $blcache, 'wlpage': $wlpage}
 
 
- #if $processing
-   <meta http-equiv="refresh" content="3;wordlist?$curr_settings">
- #end if
+
 #end filter
 #end def
 
@@ -45,6 +43,9 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
     conf.subcName = "$usesubcorp";
     conf.attrName = "$wlattr";
     conf.reloadUrl = "$reload_url";
+    conf.messages.calculating_info = "$_("Some operations need more preprocessing. It will take a while, please wait.") "
+                     + "$_("Once the list has been computed, it will be stored, so will be immediately available next time.")"
+                     + "$_("You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation.")";
     pageSelf.init(conf);
     #if $processing
     pageSelf.startWatching();
@@ -63,13 +64,12 @@ require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
 
     #if $processing
         <div id="progress_message">
-           $_("Subcorpora operations need more preprocessing. It will take a while, please wait.")
-           <p>$_("Once the list has been computed, it will be stored, so will be immediately available next time.")</p>
-           <p>$_("You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation.")</p>
-           <img src="../files/img/ajax-loader.gif" alt="$_('calculating ...')" title="$_('calculating ...')" style="width: 24px; height: 24px; margin-right: 40px" />
-           <div id="progress_scale">
-                <div id="processbar" style="width:$processing%;"></div>
-           </div>
+           <div class="progress-info">
+                <div>$_('calculating ...')
+                    <a class="context-help" href="#"><img data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png" class="over-img"></a>
+                </div>
+                <div id="progress_scale"><div id="processbar" style="width:$processing%;"></div></div>
+            </div>
         </div>
     #end if
 

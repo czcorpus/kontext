@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the wordlist.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document'], function (win, $, jqueryPeriodic, layoutModel) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'popupbox'], function (win, $, jqueryPeriodic, layoutModel, popupBox) {
     'use strict';
 
     var lib = {};
@@ -51,10 +51,18 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document'], function (win, $, j
 
     /**
      *
+     */
+    lib.setupContextHelp = function (message) {
+        popupBox.bind($('#progress_message a.context-help'), message, {width: 'nice'});
+    };
+
+    /**
+     *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
+        lib.setupContextHelp(conf.messages.calculating_info);
         lib.startWatching = function () {
             lib.updateProcessBar(layoutModel.conf.corpnameUrl, layoutModel.conf.subcName,
                 layoutModel.conf.attrName, layoutModel.conf.reloadUrl);

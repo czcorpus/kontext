@@ -716,10 +716,10 @@ msgstr "Referenční subkorpus"
 
 #: cmpltmpl/wordlist.py:574
 msgid ""
-"Subcorpora operations need more preprocessing. It will take a while, please "
+"Some operations need more preprocessing. It will take a while, please "
 "wait."
 msgstr ""
-"Operace se subkorpusy vyžadují rozsáhlejší přípravu. Prosím, vyčkejte, "
+"Některé operace vyžadují rozsáhlejší přípravu. Prosím, vyčkejte, "
 "chvíli to potrvá."
 
 #: cmpltmpl/wordlist.py:580
