@@ -612,7 +612,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
         resetButton.on('click', resetAll);
         $(win).on('unload', resetAll);
-
+        pluginApi.registerReset(resetAll);
     };
 
     return lib;

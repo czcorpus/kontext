@@ -26,11 +26,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     'use strict';
 
     var lib = {},
-        addActiveParallelCorpus,
-        removeActiveParallelCorpus,
-        getActiveParallelCorpora,
-        callOnParallelCorporaList,
-        createAddLanguageClickHandler,
         activeParallelCorporaSettingKey = 'active_parallel_corpora';
 
     lib.maxEncodedParamsLength = 1500;
@@ -40,7 +35,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
      * @param {function} callback
      * @return returns what callback returns
      */
-    callOnParallelCorporaList = function (callback) {
+    function callOnParallelCorporaList(callback) {
         var itemList = layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
 
         if (typeof itemList !== 'object') {
@@ -52,7 +47,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     /**
      *
      */
-    getActiveParallelCorpora = function () {
+    function getActiveParallelCorpora() {
         return callOnParallelCorporaList(function (itemList) {
             return itemList;
         });
@@ -61,7 +56,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     /**
      * @param {string} corpusName
      */
-    addActiveParallelCorpus = function (corpusName) {
+    function addActiveParallelCorpus(corpusName) {
         callOnParallelCorporaList(function (itemList) {
             if (corpusName && $.inArray(corpusName, itemList) === -1) {
                 itemList.push(corpusName);
@@ -77,7 +72,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     /**
      * @param {string} corpusName
      */
-    removeActiveParallelCorpus = function (corpusName) {
+    function removeActiveParallelCorpus(corpusName) {
         callOnParallelCorporaList(function (itemList) {
             if ($.inArray(corpusName, itemList) >= 0) {
                 itemList.splice($.inArray(corpusName, itemList), 1);
@@ -98,7 +93,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
      * in case you want to call the handler manually.
      * @return {function} handler function
      */
-    createAddLanguageClickHandler = function (forcedCorpusId) {
+    function createAddLanguageClickHandler(forcedCorpusId) {
         return function () {
             var corpusId,
                 jqHiddenStatus,
@@ -123,6 +118,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                         jqHiddenStatus.val('');
                         removeActiveParallelCorpus(corpusId);
                         $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                        layoutModel.resetPlugins();
                     });
 
                     hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
@@ -132,6 +128,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                         $('#content').css('overflow', 'visible').css('overflow', 'auto');
                     }
                 }
+                layoutModel.resetPlugins();
             }
         };
     };

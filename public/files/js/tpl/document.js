@@ -28,6 +28,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
     var lib = {};
 
     lib.conf = {};
+    lib.pluginResets = [];
 
     /**
      * @param {HTMLElement} selectAllElm
@@ -1090,6 +1091,17 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
     };
 
     /**
+     *
+     */
+    lib.resetPlugins = function () {
+        var i;
+
+        for (i = 0; i < this.pluginResets.length; i += 1) {
+            this.pluginResets[i]();
+        }
+    };
+
+    /**
      * Generates an API object which provides essential functionality for client-side plugin code.
      *
      */
@@ -1117,6 +1129,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
 
             applySelectAll : function (elm, context) {
                 return self.applySelectAll.call(self, elm, context);
+            },
+
+            registerReset : function (fn) {
+                self.pluginResets.push(fn);
             }
         };
     };

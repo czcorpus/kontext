@@ -119,7 +119,7 @@ class LiveAttributes(object):
         if not hasattr(local_inst, 'db'):
             local_inst.db = {}
         if not corpname in local_inst.db:
-            db_path = self.corptree.get_corpus_info(corpname)['metadata']['database']
+            db_path = self.corptree.get_corpus_info(corpname).get('metadata', {}).get('database')
             if db_path:
                 local_inst.db[corpname] = sqlite3.connect(db_path)
             else:
