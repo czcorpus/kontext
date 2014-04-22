@@ -1257,7 +1257,7 @@ class Actions(ConcCGI):
     def build_arf_db(self, corpname='', attrname=''):
         if not corpname:
             corpname = self.corpname
-        if os.path.isfile(corplib.subcorp_base_file(self._corp(), attrname) + '.arf'):
+        if os.path.isfile(corplib.corp_freqs_cache_path(self._corp(), attrname) + '.arf'):
             return 'Finished'
         out = corplib.build_arf_db(self._corp(), attrname)
         if out:

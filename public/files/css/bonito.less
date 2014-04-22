@@ -239,21 +239,35 @@ a#logo-wrapper {
 }
 
 #processbar {
-  background-color: #8f8;
-  border: 1px solid #8f8;
-  height: 10px;
+  background-color: @color-logo-blue-opaque;
+  height: 100%;
 }
 
 #progress_message {
-  background-color: #cfc;
-  border: 1px solid green;
+  background-color: transparent;
   padding: 1em;
 }
 
-#progress_scale {
-  background-color: #999;
-  border: 1px solid #000;
-  height: 12px;
+#progress_message .ajax-loader {
+  display: inline-block;
+}
+
+.progress-info {
+  text-align: center;
+}
+
+
+#progress_message #progress_scale {
+  background: linear-gradient(-45deg, @color-light-green 0%, @color-default-green 50%, @color-light-green 100%) repeat;
+  background-size: 50% 100%;
+  animation-name: bg-blink;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  display: inline-block;
+  border: 1px solid @color-light-frame;
+  border-radius: @input-border-radius;
+  height: 20px;
   margin: .5em;
   padding: 1px;
   width: 30%;
@@ -1321,6 +1335,16 @@ a.util-button:hover {
   }
   100% {
     color: @color-logo-pink;
+  }
+}
+
+@keyframes bg-blink {
+  0% {
+    background-position: left bottom;
+  }
+
+  100% {
+    background-position: right bottom;
   }
 }
 
