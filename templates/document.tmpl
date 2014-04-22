@@ -101,7 +101,7 @@ define('conf', [], function () {
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
-    conf.bibAttr = #if $varExists('bib_attr') and $bib_attr#"${bib_attr}"#else#null#end if#;
+    conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
 
     conf.messages = {};
     #if $_anonymous
@@ -124,7 +124,7 @@ define('conf', [], function () {
     conf.messages['%s positions'] = "$_('%s positions')";
 
     #if $focus
-    conf.focus = $focus;
+    conf.focus = $focus;                                               bibAttr
     #end if
 
     conf.queryTypesHints = {
@@ -672,7 +672,7 @@ $corp_full_name</b><br>
                                     <td></td>
                                     #end if ## -4
                                     <td>
-                                        #if $l['label'] == $bib_attr
+                                        #if $l['label'] == $bib_conf.label_attr
                                             <a class="bib-info" data-bib-id="$v.get('v', '')">i</a>
                                         #end if
                                     </td>

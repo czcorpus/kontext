@@ -94,10 +94,10 @@ class CorpTree(object):
                     'web': web_url,
                     'sentence_struct': sentence_struct,
                     'num_tag_pos': num_tag_pos,
-                    'metadata': item.attrib.get('metadata', None),
                     'speech_segment': item.attrib.get('speech_segment', None),
-                    'bib_attr': item.attrib.get('bib_attr', None),
-                    'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None}
+                    'bib_struct': item.attrib.get('bib_struct', None),
+                    'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
+                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None}
                 }
 
                 ref_elm = item.find('reference')
@@ -109,6 +109,13 @@ class CorpTree(object):
                     ans['citation_info']['other_bibliography'] = self._translate_markup(
                         getattr(ref_elm.find('other_bibliography'),
                                 'text', None))
+
+                meta_elm = item.find('metadata')
+                if meta_elm is not None:
+                    ans['metadata']['database'] = getattr(meta_elm.find('database'), 'text', None)
+                    ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
+                    ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
+
                 data.append(ans)
 
     def get_corpus_info(self, corp_name):
