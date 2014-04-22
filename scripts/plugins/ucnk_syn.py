@@ -38,6 +38,7 @@ SCHEMA = (
 
     """CREATE TABLE item (
         id integer PRIMARY KEY AUTOINCREMENT,
+        corpus_id TEXT,
         opus_id TEXT,
         opus_autor TEXT,
         opus_nazev TEXT,
@@ -51,15 +52,15 @@ SCHEMA = (
         opus_txtype TEXT,
         opus_genre TEXT,
         opus_med TEXT,
-        opus_poscount INTEGER,
-        opus_wordcount INTEGER
+        poscount INTEGER,
+        wordcount INTEGER
     )""",
-    "CREATE INDEX opus_txtype_group_idx ON opus(opus_txtype_group)",
-    "CREATE INDEX opus_txtype_idx ON opus(opus_txtype)",
-    "CREATE INDEX opus_med_idx ON opus(opus_med)",
+    "CREATE INDEX opus_txtype_group_idx ON item(opus_txtype_group)",
+    "CREATE INDEX opus_txtype_idx ON item(opus_txtype)",
+    "CREATE INDEX opus_med_idx ON item(opus_med)",
     """CREATE VIEW bibliography AS
-        SELECT opus_nazev AS id, opus_autor, opus_nazev, opus_nakladatel, opus_mistovyd, opus_rokvyd, opus_isbnissn, opus_srclang
-        FROM item"""
+       SELECT opus_id AS id, opus_autor, opus_nazev, opus_nakladatel, opus_mistovyd, opus_rokvyd, opus_isbnissn, opus_srclang
+       FROM item"""
 )
 
 
@@ -102,11 +103,11 @@ def insert_record(db, rec):
     rec -- a dictionary containing record data
     """
     cursor = db.cursor()
-    cursor.execute("INSERT INTO opus "
-                   "(opus_id, opus_autor, opus_nazev, opus_nakladatel, opus_mistovyd, opus_rokvyd, opus_isbnissn, "
-                   "opus_preklad, opus_srclang, opus_txtype_group, opus_txtype, opus_genre, opus_med, opus_wordcount,"
-                   "opus_poscount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                   (rec.get('id'), rec.get('author'), rec.get('nazev'), rec.get('nakladatel'), rec.get('mistovyd'),
+    cursor.execute("INSERT INTO item "
+                   "(corpus_id, opus_id, opus_autor, opus_nazev, opus_nakladatel, opus_mistovyd, opus_rokvyd, opus_isbnissn, "
+                   "opus_preklad, opus_srclang, opus_txtype_group, opus_txtype, opus_genre, opus_med, wordcount,"
+                   "poscount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   ('syn2010', rec.get('id'), rec.get('autor'), rec.get('nazev'), rec.get('nakladatel'), rec.get('mistovyd'),
                    rec.get('rokvyd', ''), rec.get('isbnissn', ''), rec.get('preklad'),
                    rec.get('srclang', ''), rec.get('txtype_group', ''), rec.get('txtype', ''), rec.get('genre', ''),
                    rec.get('med', ''), rec.get('wordcount', ''), rec.get('poscount', '')))

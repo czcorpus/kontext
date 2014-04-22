@@ -53,6 +53,7 @@ SCHEMA = (
     doc_txtype string,
     doc_pubyear integer,
     doc_wordcount integer,
+    div_id string,
     div_author string,
     div_title string,
     div_publisher string,
@@ -72,7 +73,7 @@ SCHEMA = (
     div_collectionauthor string,
     div_collectiontitle string,
     div_volume string,
-    div_pages integer,div_id
+    div_pages integer,
     wordcount integer,
     poscount integer
     );""",
@@ -80,6 +81,13 @@ SCHEMA = (
     "CREATE INDEX item_id_idx ON item(item_id)",
     "CREATE INDEX div_group_idx ON item(div_group)",
     "CREATE INDEX div_txtype_idx ON item(div_txtype)"
+    "CREATE INDEX div_id_idx ON item(div_id)",
+
+    """
+    CREATE view bibliography AS SELECT div_id AS id, div_title, div_author, div_publisher, div_pubplace, div_pubyear,
+    div_origyear, div_isbn, div_comment, div_original, div_srclang, div_translator, div_transsex, div_authsex,
+    div_transcomment, div_pages FROM item
+    """
 )
 
 
