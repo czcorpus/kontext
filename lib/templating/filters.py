@@ -19,6 +19,7 @@ Custom Cheetah filters for the KonText interface
 """
 from strings import format_number
 from Cheetah.Filters import Filter
+import json
 
 
 class IntegerFormatter(Filter):
@@ -66,3 +67,9 @@ class Shortener(Filter):
         else:
             suff = ''
         return '%s%s' % (val[:length], suff)
+
+
+class Jsonize(Filter):
+
+    def filter(self, val, **kw):
+        return json.dumps(val)
