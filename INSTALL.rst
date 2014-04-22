@@ -54,10 +54,29 @@ predefined interface.
 
 For example, if you have an existing user database or if you do not want to bother with user authentication at all
 you can easily implement your own version of the *auth* plugin. If you for example want to store user session data to
-files instead to a database, all you have to do is to rewrite the *sessions* plugin.
+files instead of a database, all you have to do is to rewrite the *sessions* plugin appropriately.
 
 You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
 *ucnk_* prefix.
+
+
+Client-side implementation notes
+================================
+
+Specifications of some plugins include also a client-side functionality. In such cases you have to implement or
+configure some existing solution. Plu-in must be defined as an `AMD <https://github.com/amdjs/amdjs-api> `_ compatible
+module. A minimal implementation may look like in this sample::
+
+    define([], function () {
+    var lib = {};
+
+        lib.init = function () {};
+        return lib;
+    });
+
+
+Server-side implementation notes
+================================
 
 In general, a plugin is a Python object defined in a Python module. the module must implement factory function
 *create_instance* ::
@@ -87,37 +106,37 @@ List of currently supported plugins
 
 Following plugins are mandatory:
 
-+------------------+------------------------------------------------------------------------------+
-| id               | description                                                                  |
-+==================+==============================================================================+
-| auth             | user authentication                                                          |
-+------------------+------------------------------------------------------------------------------+
-| db               | provides a connection to a database (if required by other plugins)           |
-+------------------+------------------------------------------------------------------------------+
-| query_storage    | stores recent queries entered by users and allows their reopening            |
-+------------------+------------------------------------------------------------------------------+
-| sessions         | handles user sessions (i.e. between-requests persistence)                    |
-+------------------+------------------------------------------------------------------------------+
-| settings_storage | stores users' settings to a persistent storage                               |
-+------------------+------------------------------------------------------------------------------+
++------------------+------------------------------------------------------------------------------+------------------+
+| id               | description                                                                  | client-side code |
++==================+==============================================================================+------------------+
+| auth             | user authentication                                                          | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| db               | provides a connection to a database (if required by other plugins)           | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| query_storage    | stores recent queries entered by users and allows their reopening            | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| sessions         | handles user sessions (i.e. between-requests persistence)                    | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| settings_storage | stores users' settings to a persistent storage                               | No               |
++------------------+------------------------------------------------------------------------------+------------------+
 
 Following plugins are optional:
 
-+------------------+------------------------------------------------------------------------------+
-| id               | description                                                                  |
-+==================+==============================================================================+
-| application_bar  | loads a between-app-shared page element (e.g. a bar at the top of the page)  |
-+------------------+------------------------------------------------------------------------------+
-| corptree         | loads a hierarchy of corpora from an XML file                                |
-+------------------+------------------------------------------------------------------------------+
-| getlang          | if you want to read current UI language in a non-KonText way                 |
-+------------------+------------------------------------------------------------------------------+
-| live_attributes  | When filtering searched positions by attribute value(s), this provides       |
-|                  | a knowledge which values of currently unused (within the selection)          |
-|                  | attributes are still applicable.                                             |
-+------------------+------------------------------------------------------------------------------+
-| query_storage    | KonText may store users' queries for further review/reuse                    |
-+------------------+------------------------------------------------------------------------------+
++------------------+------------------------------------------------------------------------------+------------------+
+| id               | description                                                                  | client-side code |
++==================+==============================================================================+------------------+
+| application_bar  | loads a between-app-shared page element (e.g. a bar at the top of the page)  | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| corptree         | loads a hierarchy of corpora from an XML file                                | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| getlang          | if you want to read current UI language in a non-KonText way                 | No               |
++------------------+------------------------------------------------------------------------------+------------------+
+| live_attributes  | When filtering searched positions by attribute value(s), this provides       | Yes              |
+|                  | a knowledge which values of currently unused (within the selection)          |                  |
+|                  | attributes are still applicable.                                             |                  |
++------------------+------------------------------------------------------------------------------+------------------+
+| query_storage    | KonText may store users' queries for further review/reuse                    | No               |
++------------------+------------------------------------------------------------------------------+------------------+
 
 
 The "db" plugin
