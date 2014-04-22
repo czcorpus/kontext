@@ -88,7 +88,7 @@ class AttrArgs(object):
         returns:
         a SQL WHERE expression in conjunctive normal form
         """
-        ans = []
+        where = []
         sql_values = []
         for key, values in self.data.items():
             key = key.replace('.', '_')
@@ -100,8 +100,9 @@ class AttrArgs(object):
             else:
                 cnf_item.append('%s.%s = ?' % (item_prefix, key))
                 sql_values.append(self.import_value(values))
-            ans.append('(%s)' % ' OR '.join(cnf_item))
-        return ' AND '.join(ans), sql_values
+            where.append('(%s)' % ' OR '.join(cnf_item))
+
+        return ' AND '.join(where), sql_values
 
 
 class LiveAttributes(object):
@@ -118,7 +119,7 @@ class LiveAttributes(object):
         if not hasattr(local_inst, 'db'):
             local_inst.db = {}
         if not corpname in local_inst.db:
-            db_path = self.corptree.get_corpus_info(corpname).get('metadata', None)
+            db_path = self.corptree.get_corpus_info(corpname)['metadata']['database']
             if db_path:
                 local_inst.db[corpname] = sqlite3.connect(db_path)
             else:
@@ -185,6 +186,10 @@ class LiveAttributes(object):
         return k.replace('_', '.', 1)
 
     @staticmethod
+    def import_key(k):
+        return k.replace('.', '_', 1)
+
+    @staticmethod
     def _get_subcorp_attrs(corpus):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
@@ -206,7 +211,15 @@ class LiveAttributes(object):
         cursor = self.db(corpus.get_conf('NAME')).cursor()
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
-        srch_attr_map = dict([(x[1], x[0]) for x in enumerate(srch_attrs)])
+        bib_label = LiveAttributes.import_key(self.corptree.get_corpus_info(corpus.get_conf('NAME'))['metadata']['label_attr'])
+        bib_id = LiveAttributes.import_key(self.corptree.get_corpus_info(corpus.get_conf('NAME'))['metadata']['id_attr'])
+        hidden_attrs = set()
+
+        if bib_id not in srch_attrs:
+            hidden_attrs.add(bib_id)
+
+        selected_attrs = tuple(srch_attrs.union(hidden_attrs))
+        srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
         where_sql, where_values = attr_items.export_sql('t1')
         where_sql += ' AND t1.corpus_id = ?'
@@ -222,10 +235,10 @@ class LiveAttributes(object):
 
         if len(where_sql) > 0:
             sql_template = "SELECT DISTINCT %s FROM item AS t1 %s WHERE %s" \
-                           % (', '.join(self.apply_prefix(srch_attrs, 't1')), ' '.join(join_sql), where_sql)
+                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
         else:
             sql_template = "SELECT DISTINCT %s FROM item AS t1 %s " \
-                           % (', '.join(self.apply_prefix(srch_attrs, 't1')), ' '.join(join_sql))
+                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
 
         ans = {}
         ans.update(attr_map)
@@ -238,13 +251,16 @@ class LiveAttributes(object):
                 ans[attr] = set()
 
         for item in cursor.fetchall():
-            for attr in srch_attrs:
+            for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
-                if v is not None:
-                    if type(ans[attr]) is set:
+                if v is not None and attr not in hidden_attrs:
+                    if attr == bib_label:
+                        ans[attr].add((item[srch_attr_map[attr]], item[srch_attr_map[bib_id]]))
+                    elif type(ans[attr]) is set:
                         ans[attr].add(item[srch_attr_map[attr]])
                     elif type(ans[attr]) is int:
                         ans[attr] += int(item[srch_attr_map[attr]])
+
 
         exported = {}
         for k in ans.keys():
@@ -261,11 +277,11 @@ class LiveAttributes(object):
 
     def get_bibliography(self, corpus, item_id):
         cursor = self.db(corpus.get_conf('NAME')).cursor()
+        cursor.execute('PRAGMA table_info(\'bibliography\')')
+        col_map = dict([(x[1], x[0]) for x in cursor.fetchall()])
         cursor.execute('SELECT * FROM bibliography WHERE id = ?', (item_id,))
         ans = cursor.fetchone()
-        if ans:
-            return ans
-        return {}
+        return dict([(k, ans[i]) for k, i in col_map.items()])
 
 
 def create_instance(corptree, settings):

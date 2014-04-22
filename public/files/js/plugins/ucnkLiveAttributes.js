@@ -33,6 +33,23 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     }
 
     /**
+     *
+     * @param {{}} data
+     * @param {HTMLElement|jQuery}
+     */
+    RawInputs.prototype.renderBibliography = function (data, rootElm) {
+        var p;
+
+        rootElm = $(rootElm);
+
+        for (p in data) {
+            if (data.hasOwnProperty(p) && data[p]) {
+                rootElm.append('<strong>' + p + '</strong>: ' + data[p] + '<br />');
+            }
+        }
+    };
+
+    /**
      * Updates current state according to the 'data' argument
      *
      * @param data
@@ -63,24 +80,27 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 $(inputElm).after(table);
                 $.each(dataItem, function (i, v) {
                     var checked = $.inArray(v, checkedItems) > -1,
-                        bibLink;
+                        bibLink,
+                        itemValue;
 
-                    if (self.pluginApi.conf.bibAttr === ident) {
-                        bibLink = '<a class="bib-info" data-bib-id="' + v + '">i</a>';
+                    if (isArray(v)) {
+                        itemValue = v[0];
+                        bibLink = '<a class="bib-info" data-bib-id="' + v[1] + '">i</a>';
 
                     } else {
+                        itemValue = v;
                         bibLink = '';
                     }
 
                     if (checked) {
                         $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
                             + ident + '" value="' + v + '" checked="checked" disabled="disabled" /> '
-                            + '<input type="hidden" name="sca_' + ident + '" value="' + v + '" /> '
-                            + v + '</label></td><td>' + bibLink + '</td></tr>');
+                            + '<input type="hidden" name="sca_' + ident + '" value="' + itemValue + '" /> '
+                            + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
 
                     } else {
                         $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                            + ident + '" value="' + v + '" /> ' + v + '</label></td><td>' + bibLink + '</td></tr>');
+                            + ident + '" value="' + itemValue + '" /> ' + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
                     }
                 });
 
@@ -102,8 +122,11 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                                 {
                                     dataType : 'json',
                                     success : function (data) {
+                                        var bibHtml = $('<div></div>');
+
                                         $(ajaxAnimElm).remove();
-                                        tooltipBox.importElement('<div>' + JSON.stringify(data) + '</div>');
+                                        self.renderBibliography(data, bibHtml);
+                                        tooltipBox.importElement(bibHtml);
                                         finalizeCallback();
                                     },
                                     error : function (jqXHR, textStatus, errorThrown) {
@@ -111,6 +134,9 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                                         self.pluginApi.showMessage('error', errorThrown);
                                     }
                                 });
+                        },
+                        {
+                            type : 'plain'
                         }
                     );
                 });
