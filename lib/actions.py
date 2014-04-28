@@ -1765,7 +1765,8 @@ class Actions(ConcCGI):
                                              for v1 in v])
             else:
                 query = '%s="%s"' % (a, strings.escape(v))
-            if structs.has_key(s):
+            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
+            if s in structs:
                 structs[s].append(query)
             else:
                 structs[s] = [query]
@@ -1803,6 +1804,8 @@ class Actions(ConcCGI):
                 if os.path.isfile((base + e).encode('utf-8')):
                     os.unlink((base + e).encode('utf-8'))
         if within_condition and within_struct:
+            within_struct = export_string(within_struct, to_encoding=self._corp().get_conf('ENCODING'))
+            within_condition = export_string(within_condition, to_encoding=self._corp().get_conf('ENCODING'))
             tt_query = [(within_struct, within_condition)]
         else:
             tt_query = self._texttype_query()
