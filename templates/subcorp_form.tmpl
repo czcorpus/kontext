@@ -68,7 +68,7 @@ require(['tpl/subcorpForm', 'conf', 'domReady!'], function(pageSelf, conf) {
                     #for key, value in $structs_and_attrs.items()
                     <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
                     #end for
-                </select>&nbsp;<sup><a id="struct-hint">?</a></sup>
+                </select><a id="struct-hint"><img data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png" class="over-img"></a>
                 <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
                 <strong>/&gt;</strong>
             </td>

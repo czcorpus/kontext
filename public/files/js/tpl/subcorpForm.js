@@ -99,7 +99,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
             $(tooltipBox.getRootElement()).append('<strong>' + layoutModel.conf.messages.available_attributes + '</strong>: ');
             $(tooltipBox.getRootElement()).append(v);
             finalize();
-        });
+        }, {width : 'nice'});
 
         lib.subcCreateVariantSwitch($('input[name="method"]:checked').val());
     };
