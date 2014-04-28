@@ -74,29 +74,35 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             $.each(rows, function (i, row) {
                 var checked = $.inArray(row, checkedItems) > -1,
                     bibLink,
-                    itemValue;
+                    itemLabel;
 
-                if (isArray(row)) {
-                    itemValue = row[0];
+                if (isArray(row)) { // => value and label differ
+                    itemLabel = row[0];
                     rowIdentValue = row[1];
+
+                } else {
+                    itemLabel = row;
+                    rowIdentValue = row;
+                }
+
+                if (defaultRowIdKey == bibConf.label_attr) { // => special column representing a list of bib. entries
+                    rowIdentKey = bibConf.id_attr;
                     bibLink = '<a class="bib-info" data-bib-id="' + rowIdentValue + '">i</a>';
 
                 } else {
-                    itemValue = row;
-                    rowIdentValue = row;
+                    rowIdentKey = defaultRowIdKey;
                     bibLink = '';
                 }
-                rowIdentKey = defaultRowIdKey == bibConf.label_attr ? bibConf.id_attr : defaultRowIdKey;
 
                 if (checked) {
                     $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
                         + rowIdentKey + '" value="' + row + '" checked="checked" disabled="disabled" /> '
                         + '<input type="hidden" name="sca_' + rowIdentKey + '" value="' + rowIdentValue + '" /> '
-                        + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
+                        + itemLabel + '</label></td><td>' + bibLink + '</td></tr>');
 
                 } else {
                     $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                        + rowIdentKey + '" value="' + rowIdentValue + '" /> ' + itemValue + '</label></td><td>'
+                        + rowIdentKey + '" value="' + rowIdentValue + '" /> ' + itemLabel + '</label></td><td>'
                         + bibLink + '</td></tr>');
                 }
             });
