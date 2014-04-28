@@ -57,12 +57,100 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     RawInputs.prototype.update = function (data) {
         var self = this;
 
+        /**
+         *
+         * @param {{}} rows
+         * @param {string} defaultRowIdKey
+         * @params {{'id_attr': '...', 'label_attr': '...'}} bibConf
+         * @param checkedItems
+         * @returns {*|HTMLElement} created data table
+         */
+        function createDataTable(rows, defaultRowIdKey, bibConf, checkedItems) {
+            var table = win.document.createElement('table'),
+                rowIdentKey,   // specifies data key which uniquely identifies data rows
+                rowIdentValue; // specifies unique value which identifies respective data row
+
+            $(table).addClass('dynamic');
+            $.each(rows, function (i, row) {
+                var checked = $.inArray(row, checkedItems) > -1,
+                    bibLink,
+                    itemValue;
+
+                if (isArray(row)) {
+                    itemValue = row[0];
+                    rowIdentValue = row[1];
+                    bibLink = '<a class="bib-info" data-bib-id="' + rowIdentValue + '">i</a>';
+
+                } else {
+                    itemValue = row;
+                    rowIdentValue = row;
+                    bibLink = '';
+                }
+                rowIdentKey = defaultRowIdKey == bibConf.label_attr ? bibConf.id_attr : defaultRowIdKey;
+
+                if (checked) {
+                    $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                        + rowIdentKey + '" value="' + row + '" checked="checked" disabled="disabled" /> '
+                        + '<input type="hidden" name="sca_' + rowIdentKey + '" value="' + rowIdentValue + '" /> '
+                        + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
+
+                } else {
+                    $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                        + rowIdentKey + '" value="' + rowIdentValue + '" /> ' + itemValue + '</label></td><td>'
+                        + bibLink + '</td></tr>');
+                }
+            });
+            return table;
+        }
+
+        /**
+         * Note: the target element must contain a 'data-bib-id' attribute
+         *
+         * @param {HTMLElement|string|jQuery} target
+         */
+        function bindBibLink(target) {
+            popupBox.bind($(target),
+                function(tooltipBox, finalizeCallback) {
+                    var ajaxAnimElm = self.pluginApi.ajaxAnim();
+
+                    $(ajaxAnimElm).css({
+                        'position' : 'absolute',
+                        'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
+                        'top' : ($(win).height() / 2) + 'px'
+                    });
+                    $('#content').append(ajaxAnimElm);
+
+                    self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf.corpname
+                        + '&id=' + $(target).attr('data-bib-id'),
+                        {
+                            dataType : 'json',
+                            success : function (data) {
+                                var bibHtml = $('<div></div>');
+
+                                $(ajaxAnimElm).remove();
+                                self.renderBibliography(data, bibHtml);
+                                tooltipBox.importElement(bibHtml);
+                                finalizeCallback();
+                            },
+                            error : function (jqXHR, textStatus, errorThrown) {
+                                $(ajaxAnimElm).remove();
+                                self.pluginApi.showMessage('error', errorThrown);
+                            }
+                        });
+                },
+                {
+                    type : 'plain'
+                }
+            );
+        }
+
         self.attrFieldsetWrapper.find('.raw-selection').each(function () {
             var ident = stripPrefix($(this).attr('name')),
                 dataItem = data[ident],
                 inputElm = this,
                 attrTable = $(this).closest('table.envelope'),
-                checkedItems = [];
+                checkedItems = [],
+                dataTable;
 
             attrTable.find('table.dynamic .attr-selector:checked').each(function () {
                 checkedItems.push($(this).val());
@@ -73,78 +161,18 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             $(inputElm).show();
 
             if (isArray(dataItem)) {
-                var table = win.document.createElement('table');
-
                 attrTable.find('.metadata').empty();
-                $(table).addClass('dynamic');
-                $(inputElm).after(table);
-                $.each(dataItem, function (i, v) {
-                    var checked = $.inArray(v, checkedItems) > -1,
-                        bibLink,
-                        itemValue;
-
-                    if (isArray(v)) {
-                        itemValue = v[0];
-                        bibLink = '<a class="bib-info" data-bib-id="' + v[1] + '">i</a>';
-
-                    } else {
-                        itemValue = v;
-                        bibLink = '';
-                    }
-
-                    if (checked) {
-                        $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                            + ident + '" value="' + v + '" checked="checked" disabled="disabled" /> '
-                            + '<input type="hidden" name="sca_' + ident + '" value="' + itemValue + '" /> '
-                            + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
-
-                    } else {
-                        $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                            + ident + '" value="' + itemValue + '" /> ' + itemValue + '</label></td><td>' + bibLink + '</td></tr>');
-                    }
-                });
-
-                $(table).find('.bib-info').each(function () {
-                    var bibLink = this;
-
-                    popupBox.bind($(this),
-                        function(tooltipBox, finalizeCallback) {
-                            var ajaxAnimElm = self.pluginApi.ajaxAnim();
-                            $(ajaxAnimElm).css({
-                                'position' : 'absolute',
-                                'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
-                                'top' : ($(win).height() / 2) + 'px'
-                            });
-                            $('#content').append(ajaxAnimElm);
-
-                            self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf.corpname
-                                + '&id=' + $(bibLink).attr('data-bib-id'),
-                                {
-                                    dataType : 'json',
-                                    success : function (data) {
-                                        var bibHtml = $('<div></div>');
-
-                                        $(ajaxAnimElm).remove();
-                                        self.renderBibliography(data, bibHtml);
-                                        tooltipBox.importElement(bibHtml);
-                                        finalizeCallback();
-                                    },
-                                    error : function (jqXHR, textStatus, errorThrown) {
-                                        $(ajaxAnimElm).remove();
-                                        self.pluginApi.showMessage('error', errorThrown);
-                                    }
-                                });
-                        },
-                        {
-                            type : 'plain'
-                        }
-                    );
+                dataTable = createDataTable(dataItem, ident, self.pluginApi.conf.bibConf, checkedItems);
+                $(inputElm).after(dataTable);
+                $(dataTable).find('.bib-info').each(function () {
+                    bindBibLink(this);
                 });
 
                 $(inputElm).hide();
 
                 attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
-                self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'), $(this).closest('table.envelope'));
+                self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'),
+                    $(this).closest('table.envelope'));
 
 
             } else if (isObject(dataItem)) {
@@ -264,12 +292,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      */
     StructTables.prototype.reset = function () {
         this.attrFieldsetWrapper.find('table.envelope').each(function () {
+            $(this).filter('.locked').find('tr.last-line label').show();
             $(this).removeClass('locked');
-            $(this).find('tr.last-line label').each(function () {
-                if ($(this).find('.raw-selection').length > 0) {
-                    $(this).show();
-                }
-            });
         });
     };
 
