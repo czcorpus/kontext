@@ -28,7 +28,7 @@ import plugins
 import butils
 from kwiclib import Kwic
 import strings
-from strings import import_string, format_number
+from strings import import_string, export_string, format_number
 from translation import ugettext as _
 
 
@@ -1657,7 +1657,7 @@ class Actions(ConcCGI):
                              for i in range(struct.size())])
 
         def compute_norm(attrname, attr, val):
-            valid = attr.str2id(unicode(val))
+            valid = attr.str2id(export_string(unicode(val), to_encoding=self._corp().get_conf('ENCODING')))
             r = corp.filter_query(struct.attr_val(attrname, valid))
             cnt = 0
             while not r.end():
