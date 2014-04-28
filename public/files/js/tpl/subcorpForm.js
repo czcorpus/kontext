@@ -57,7 +57,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
     /**
      *
      */
-    lib.subcCreateVariantSwitch = function (value) {
+    lib.subcCreationVariantSwitch = function (value) {
         if (value === 'raw') {
             $('#subc-within-row').css({ display: 'table-row' });
             $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
@@ -71,10 +71,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
         }
     };
 
-    /**
-     *
-     */
-    lib.misc = function () {
+    lib.initTreeComponent = function () {
         var updateForm = function () {
             // in case user only changes current corpus, the form is submitted using GET method
             // which causes server not to create any subcorpus yet
@@ -82,16 +79,9 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
         };
         treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'),
             layoutModel.conf.messages, {clickableText: true}, updateForm);
+    };
 
-        $('subc-within-row').css({ display : 'none' });
-
-        $('input.method-select').each(function (i, item) {
-            $(item).bind('click', function (event) {
-                lib.subcCreateVariantSwitch($(event.target).val());
-            });
-        });
-
-        // attributes hint
+    lib.initAttributeHints = function () {
         popupBox.bind($('#struct-hint'), function (tooltipBox, finalize) {
             var v;
 
@@ -100,8 +90,18 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
             $(tooltipBox.getRootElement()).append(v);
             finalize();
         }, {width : 'nice'});
+    };
 
-        lib.subcCreateVariantSwitch($('input[name="method"]:checked').val());
+    lib.initSubcCreationVariantSwitch = function () {
+        $('subc-within-row').css({ display : 'none' });
+
+        $('input.method-select').each(function (i, item) {
+            $(item).bind('click', function (event) {
+                lib.subcCreationVariantSwitch($(event.target).val());
+            });
+        });
+
+        lib.subcCreationVariantSwitch($('input[name="method"]:checked').val());
     };
 
     /**
@@ -125,7 +125,9 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        lib.misc();
+        lib.initTreeComponent();
+        lib.initSubcCreationVariantSwitch();
+        lib.initAttributeHints();
         lib.sizeUnitsSafeSwitch();
     };
 
