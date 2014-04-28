@@ -340,7 +340,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
         ...
     ]}
     """
-    if subcorpattrs == '#': return []
+    if subcorpattrs == '#':
+        return []
     attrlines = []
     for subcorpline in subcorpattrs.split(','):
         attrvals = []
@@ -361,7 +362,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                      or attr.id_range() > maxlistsize):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
                                             or 24)
-            else: # list of values
+            else:  # list of values
                 if corp.get_conf(n + '.NUMERIC'):
                     vals = []
                     for i in range(attr.id_range()):
