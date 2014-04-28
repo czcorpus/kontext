@@ -27,7 +27,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      * @param attrFieldsetWrapper parent element of all the attribute selectors
      * @constructor
      */
-    function RawInputs(pluginApi, attrFieldsetWrapper) {
+    function LiveData(pluginApi, attrFieldsetWrapper) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
@@ -37,7 +37,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      * @param {{}} data
      * @param {HTMLElement|jQuery}
      */
-    RawInputs.prototype.renderBibliography = function (data, rootElm) {
+    LiveData.prototype.renderBibliography = function (data, rootElm) {
         var p;
 
         rootElm = $(rootElm);
@@ -54,7 +54,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      *
      * @param data
      */
-    RawInputs.prototype.update = function (data) {
+    LiveData.prototype.update = function (data) {
         var self = this;
 
         /**
@@ -185,7 +185,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     /**
      * Resets the state back to its initial form (as loaded from server)
      */
-    RawInputs.prototype.reset = function () {
+    LiveData.prototype.reset = function () {
         this.attrFieldsetWrapper.find('table.dynamic').remove();
         this.attrFieldsetWrapper.find('.metadata').empty();
         this.attrFieldsetWrapper.find('input.raw-selection').show();
@@ -602,7 +602,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
         var attrFieldsetWrapper = $(attrFieldsetWrapper),
             resetButton = $(resetButton),
-            rawInputs = new RawInputs(pluginApi, attrFieldsetWrapper),
+            rawInputs = new LiveData(pluginApi, attrFieldsetWrapper),
             selectionSteps = new SelectionSteps(pluginApi),
             checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
             selectionSteps = new SelectionSteps(pluginApi),
