@@ -710,12 +710,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             lib.applySelectAll(this, $(this).closest('table.envelope'));
         });
 
-        $('a#top-level-help-link').bind('click', function (event) {
-            hideElem.cmdHelp('https://trac.sketchengine.co.uk/');
-            event.stopPropagation();
-            return false;
-        });
-
         // Click which removes the 'error box'
         $('.message a.close-icon').bind('click', function (event) {
             var nextUrl,
