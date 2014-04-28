@@ -265,7 +265,11 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     StructTables.prototype.reset = function () {
         this.attrFieldsetWrapper.find('table.envelope').each(function () {
             $(this).removeClass('locked');
-            $(this).find('tr.last-line label').show();
+            $(this).find('tr.last-line label').each(function () {
+                if ($(this).find('.raw-selection').length > 0) {
+                    $(this).show();
+                }
+            });
         });
     };
 
