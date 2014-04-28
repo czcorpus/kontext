@@ -105,12 +105,28 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
     };
 
     /**
+     * When user changes size from tokens to document counts (or other way around) he loses
+     * current unsaved checkbox selection. This forces a dialog box to prevent unwanted action.
+     */
+    lib.sizeUnitsSafeSwitch = function () {
+        $('.text-type-top-bar a').on('click', function (event) {
+            var ans = confirm(layoutModel.conf.messages['this_action_resets_current_selection']);
+
+            if (!ans) {
+                event.preventDefault();
+                event.stopPropagation(); // in case some other actions are bound
+            }
+        });
+    };
+
+    /**
      *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.misc();
+        lib.sizeUnitsSafeSwitch();
     };
 
 

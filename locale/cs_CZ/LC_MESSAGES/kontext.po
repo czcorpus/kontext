@@ -2002,6 +2002,9 @@ msgstr "počet odpovídajících pozic"
 msgid "number of matching structures"
 msgstr "počet odpovídajících struktur"
 
+msgid "This action will reset you current unsaved subcorpus"
+msgstr "Tato akce zruší váš aktuální neuložený subkorpus"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
