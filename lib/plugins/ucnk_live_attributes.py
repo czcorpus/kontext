@@ -81,9 +81,13 @@ class AttrArgs(object):
             return ''  # important! - cannot use None here as it is converted to NULL within database
         return value
 
-    def export_sql(self, item_prefix):
+    def export_sql(self, item_prefix, corpus_id):
         """
         Exports data into a SQL WHERE expression
+
+        arguments:
+        item_prefix -- prefix used to identify attach columns properly in case multiple tables (e.g. via JOIN) is used
+        corpus_name -- identifer of the corpus
 
         returns:
         a SQL WHERE expression in conjunctive normal form
@@ -101,6 +105,9 @@ class AttrArgs(object):
                 cnf_item.append('%s.%s = ?' % (item_prefix, key))
                 sql_values.append(self.import_value(values))
             where.append('(%s)' % ' OR '.join(cnf_item))
+
+        where.append('corpus_id = ?')
+        sql_values.append(corpus_id)
 
         return ' AND '.join(where), sql_values
 
@@ -221,9 +228,7 @@ class LiveAttributes(object):
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
-        where_sql, where_values = attr_items.export_sql('t1')
-        where_sql += ' AND t1.corpus_id = ?'
-        where_values.append(corpus.get_conf('NAME'))
+        where_sql, where_values = attr_items.export_sql('t1', corpus.get_conf('NAME'))
 
         join_sql = []
         i = 2
@@ -241,6 +246,8 @@ class LiveAttributes(object):
                            % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
 
         ans = {}
+        import logging
+        logging.getLogger(__name__).debug('SQL: %s' % sql_template)
         ans.update(attr_map)
         cursor.execute(sql_template, where_values)
 
