@@ -135,8 +135,14 @@ class UCNKAuth(object):
         if len(self.corplist) == 0:
             conn = self.db_conn
             cursor = conn.cursor()
-            cursor.execute("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
-                           " WHERE un.user = %s",  (user, ))
+            cursor.execute("""SELECT corpora.name FROM (
+SELECT ucr.corpus_id AS corpus_id
+FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
+UNION
+SELECT r2.corpora AS corpus_id
+FROM user AS u2
+JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
+JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
             rows = cursor.fetchall()
             if len(rows) > 0:
                 cursor.close()
