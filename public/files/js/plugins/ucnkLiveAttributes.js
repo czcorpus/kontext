@@ -156,7 +156,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 inputElm = this,
                 attrTable = $(this).closest('table.envelope'),
                 checkedItems = [],
-                dataTable;
+                dataTable,
+                msg = self.pluginApi.translate('number of matching items');
 
             attrTable.find('table.dynamic .attr-selector:checked').each(function () {
                 checkedItems.push($(this).val());
@@ -179,12 +180,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
                 self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'),
                     $(this).closest('table.envelope'));
-
-
-            } else if (isObject(dataItem)) {
-                var msg = self.pluginApi.translate('number of matching structures');
-                attrTable.find('.metadata').html(msg + ': ' + dataItem.length);
             }
+            attrTable.find('.metadata').html(msg + ': ' + dataItem.length);
         });
     };
 

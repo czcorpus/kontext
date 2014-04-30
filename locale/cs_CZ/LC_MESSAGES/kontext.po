@@ -1999,8 +1999,8 @@ msgstr "Více informací na"
 msgid "number of matching positions"
 msgstr "počet odpovídajících pozic"
 
-msgid "number of matching structures"
-msgstr "počet odpovídajících struktur"
+msgid "number of matching items"
+msgstr "počet odpovídajících položek"
 
 msgid "This action will reset you current unsaved subcorpus"
 msgstr "Tato akce zruší váš aktuální neuložený subkorpus"
