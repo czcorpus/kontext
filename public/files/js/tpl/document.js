@@ -306,6 +306,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                     doneCallback();
                 },
                 error: function () {
+                    if (typeof tooltipBox.onError === 'function') {
+                        tooltipBox.onError();
+                    }
                     tooltipBox.close();
                     lib.showMessage('error', lib.conf.messages.failed_to_load_corpus_info);
                 }
@@ -672,7 +675,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                     });
                     return ajaxLoader;
                 },
-                onShow: function (loader) { loader.remove(); }
+                onShow: function (loader) { loader.remove(); },
+                onError: function (loader) { loader.remove(); }
             }
         );
     }
