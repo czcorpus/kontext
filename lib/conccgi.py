@@ -577,7 +577,7 @@ class ConcCGI(CGIPublisher):
 
         result['corp_description'] = corpus.get_info()
         result['corp_size'] = format_number(corpus.size())
-        corp_conf_info = plugins.corptree.get_corpus_info(corpus.get_conf('NAME'))
+        corp_conf_info = plugins.corptree.get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
