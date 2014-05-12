@@ -70,6 +70,8 @@ define(['win', 'jquery'], function (win, $) {
 
         this.onShow = null;
 
+        this.onError = null;
+
         this.jqCloseIcon = null;
 
         this.origContentParent = null;
@@ -209,7 +211,7 @@ define(['win', 'jquery'], function (win, $) {
      * instance and second argument is a finalization callback which is expected to be called by a user once he
      * finishes content generation.
      * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain),
-     * onClose, beforeOpen, onShow, domId, htmlClass, calculatePosition (true, false),
+     * onClose, beforeOpen, onShow, onError, domId, htmlClass, calculatePosition (true, false),
      * messages (= a dictionary with translations)
      *
      */
@@ -229,6 +231,13 @@ define(['win', 'jquery'], function (win, $) {
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
         this.onShow = fetchOption('onShow', null);
+        this.onError = function () {
+            var customErrorHandler = fetchOption('onError', null);
+
+            if (typeof customErrorHandler === 'function') {
+                customErrorHandler(this.beforeOpenVal, this.onShowVal);
+            }
+        };
 
         if (options.hasOwnProperty('messages')) {
             this.importMessages(fetchOption('messages', {}));
