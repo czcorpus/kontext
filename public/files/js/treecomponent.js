@@ -166,7 +166,6 @@ define(['jquery', 'win'], function ($, win) {
         this.rootUl = null;
         this.treeWrapper = null;
         this.jqWrapper = null;
-        this.menuWidth = 200;
         this.nestedTree = null;
         this.options = options || {};
 
@@ -195,6 +194,14 @@ define(['jquery', 'win'], function ($, win) {
             }
         }
         return null;
+    };
+
+    /**
+     *
+     * @returns {number} real width of the widget in pixels
+     */
+    TreeComponent.prototype.widgetWidth = function () {
+        return $(this.treeWrapper).width();
     };
 
     /**
@@ -231,21 +238,21 @@ define(['jquery', 'win'], function ($, win) {
             jqElm.css({ display: 'none', position: 'relative'});
 
         } else if (jqElm.css('display') === 'none' || state === 'show') {
-            if (this.jqWrapper.css('position') !== 'absolute') {
-                leftPos = this.jqWrapper.position().left;
-            }
-            if (this.jqWrapper.position().left + this.menuWidth > $(win.document).width()) {
-                leftPos = this.jqWrapper.position().left + Math.min(0, $(win.document).width()
-                    - this.jqWrapper.position().left - $(this.rootUl).width());
-            }
-
             jqElm.css({
                 display: 'block',
                 position: 'absolute',
                 'z-index': 900000,
-                left: leftPos + 'px',
-                margin: '0',
-                width: this.menuWidth + 'px'
+                margin: '0'
+            });
+            if (this.jqWrapper.css('position') !== 'absolute') {
+                leftPos = this.jqWrapper.position().left;
+            }
+            if (this.jqWrapper.position().left + this.widgetWidth() > $(win.document).width()) {
+                leftPos = this.jqWrapper.position().left + Math.min(0, $(win.document).width()
+                    - this.jqWrapper.position().left - $(this.rootUl).width());
+            }
+            jqElm.css({
+                left: leftPos + 'px'
             });
         }
     };
@@ -427,7 +434,7 @@ define(['jquery', 'win'], function ($, win) {
         srchField = win.document.createElement('input');
         $(srchField)
             .attr('type', 'text')
-            .css('width', (this.menuWidth - 40) + 'px')
+            .css('width', (this.widgetWidth() - 40) + 'px')
             .addClass('srch-field')
             .addClass('initial')
             .on('focus.searchInit', function (event) {
