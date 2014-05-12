@@ -626,7 +626,7 @@ class ConcCGI(CGIPublisher):
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = locale.format('%d', thecorp.size(), True).decode('utf-8')
         result['user_info'] = self._session['user']
-        corp_conf_info = plugins.corptree.get_corpus_info(thecorp.get_conf('NAME'))
+        corp_conf_info = plugins.corptree.get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:

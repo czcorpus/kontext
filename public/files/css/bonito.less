@@ -781,8 +781,10 @@ table.data tbody tr:nth-child(odd) {
 
 table.envelope {
   border: solid 1px @color-light-frame;
-  border-collapse: collapse;
-  float: left;
+  border-radius: @border-radius-default;
+  border-spacing: 0;
+  display: inline-block;
+  vertical-align: top;
   margin-right: 5px;
   table-layout: fixed;
 }
@@ -832,9 +834,7 @@ table.envelope tr.even {
 }
 
 table.envelope tr.last-line td {
-  border-color: #000;
-  border-style: solid;
-  border-width: 1px 0 0;
+  padding-top: 10px;
 }
 
 table.form {
@@ -943,24 +943,31 @@ table.colloc-metrics th {
   padding: 3px 5px;
 }
 
+table.colloc-metrics th {
+  color: @color-logo-pink;
+}
+
 table.colloc-metrics label {
   display: block;
 }
 
 table#multilevel-freq-params {
-  border-collapse: collapse;
+  border-spacing: 0;
+  border: 1px solid @color-light-frame;
+  border-radius: @border-radius-default;
 }
 
 table#multilevel-freq-params td,
 table#multilevel-freq-params th {
   padding: 4px 8px;
-  border-style: solid;
-  border-color: @color-light-frame;
-  border-width: 0 1px 0 1px;
 }
 
 table#multilevel-freq-params th {
-  border-width: 1px 1px;
+  color: @color-logo-pink;
+}
+
+table#multilevel-freq-params tr:nth-child(odd):not(:first-child):not(:last-child) {
+  background-color: @color-light-green;
 }
 
 table#multilevel-freq-params tr.last-line td {
@@ -1003,6 +1010,7 @@ table#multilevel-freq-params td.level {
   font-size: 80%;
   padding: 5px 20px;
   color: @color-logo-blue;
+  line-height: 1.5em;
 }
 
 .query-history .options span.query-action {
@@ -1026,6 +1034,21 @@ table#multilevel-freq-params td.level {
   text-align: right;
 }
 
+.query-history .selectable {
+  display: inline-block;
+  border: @input-border-style;
+  border-radius: @input-border-radius;
+  background-color: #FFFFFF;
+  padding: 3px 5px;
+}
+
+.query-history .default-attr {
+  border: 1px solid @color-logo-blue;
+  color: @color-logo-blue;
+  border-radius: 3px;
+  padding: 1px 4px;
+  white-space: nowrap;
+}
 
 
 .query-export-url {
