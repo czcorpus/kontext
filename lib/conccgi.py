@@ -352,7 +352,7 @@ class ConcCGI(UserCGI):
 
         result['corp_description'] = thecorp.get_info()
         result['corp_size'] = _('%s positions') % locale.format('%d', thecorp.size(), True).decode('utf-8')
-        corp_conf_info = self.corptree.get_corpus_info(thecorp.get_conf('NAME'))
+        corp_conf_info = self.corptree.get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', '')
         else:
