@@ -512,7 +512,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      * Transforms form select box into a tree-rendered selector
      *
-     * @param {jQuery} selResult HTML SELECT element to be transformed into an expandable tree
+     * @param {HTMLElement|jQuery|string} selResult HTML SELECT element to be transformed into an expandable tree
      * @param {*} messages translations for the library (if nothing is provided then english messages are used)
      * @param {{clickableText: Boolean, title: String}} [options]
      * @param {Function} [customCallback] custom code to be executed when an item is selected.
