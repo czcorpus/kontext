@@ -139,7 +139,6 @@ define(['jquery', 'win'], function ($, win) {
     function TreeComponent(options) {
         this.rootUl = null;
         this.jqWrapper = null;
-        this.menuWidth = 200;
         this.nestedTree = null;
         this.options = options || {};
     }
@@ -159,6 +158,14 @@ define(['jquery', 'win'], function ($, win) {
             }
         }
         return null;
+    };
+
+    /**
+     *
+     * @returns {number} real width of the widget in pixels
+     */
+    TreeComponent.prototype.widgetWidth = function () {
+        return $(this.jqWrapper).width();
     };
 
     /**
@@ -195,24 +202,22 @@ define(['jquery', 'win'], function ($, win) {
             jqElm.css({ display: 'none', position: 'relative'});
 
         } else if (jqElm.css('display') === 'none' || state === 'show') {
-            if (this.jqWrapper.css('position') !== 'absolute') {
-                leftPos = this.jqWrapper.position().left;
-            }
-            if (this.jqWrapper.position().left + this.menuWidth > $(win.document).width()) {
-                leftPos = this.jqWrapper.position().left + Math.min(0, $(win.document).width()
-                    - this.jqWrapper.position().left - $(this.rootUl).width());
-            }
-
             jqElm.css({
                 display: 'block',
                 position: 'absolute',
                 'z-index': 1000000,
-                left: leftPos + 'px',
                 margin: '0',
-                width: this.menuWidth + 'px',
                 padding: '4px 5px 8px 5px',
                 'text-align': 'left'
             });
+            if (this.jqWrapper.css('position') !== 'absolute') {
+                leftPos = this.jqWrapper.position().left;
+            }
+            if (this.jqWrapper.position().left + this.widgetWidth() > $(win.document).width()) {
+                leftPos = this.jqWrapper.position().left + Math.min(0, $(win.document).width()
+                    - this.jqWrapper.position().left - $(this.rootUl).width());
+            }
+            jqElm.css('left', leftPos + 'px');
         }
     };
 
