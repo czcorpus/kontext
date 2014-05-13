@@ -17,6 +17,7 @@
             <language label="slovensky">sk</language>
         </translations>
         <conc_persistence_time>1800</conc_persistence_time>
+        <error_report_url>http://acmecorpora.org/support</error_report_url>
     </global>
     <external_links>
         <general>
