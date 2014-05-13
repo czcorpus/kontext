@@ -2005,6 +2005,9 @@ msgstr "počet odpovídajících položek"
 msgid "This action will reset you current unsaved subcorpus"
 msgstr "Tato akce zruší váš aktuální neuložený subkorpus"
 
+msgid "Report an error"
+msgstr "Ohlásit chybu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

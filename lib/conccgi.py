@@ -713,6 +713,8 @@ class ConcCGI(CGIPublisher):
         # util functions
         result['format_number'] = partial(format_number)
 
+        result['error_report_url'] = settings.get('global', 'error_report_url', None)
+
         # is there a concordance information in session?
         self._restore_conc_results(result)
 
