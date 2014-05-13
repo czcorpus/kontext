@@ -642,7 +642,7 @@ class ConcCGI(CGIPublisher):
         CGIPublisher._add_globals(self, result)
 
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
-        result['human_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
+        result['human_corpname'] = self._human_readable_corpname()
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (conclib.manatee.version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
@@ -829,6 +829,19 @@ class ConcCGI(CGIPublisher):
         path-like names to basename ones.
         """
         return c.rsplit('/', 1)[-1]
+
+    def _human_readable_corpname(self):
+        """
+        Returns an user-readable name of the current corpus (i.e. it cannot be used
+        to identify the corpus in KonText's code as it is only intended to be printed
+        somewhere on a page).
+        """
+        if self._corp().get_conf('NAME'):
+            return self._corp().get_conf('NAME')
+        elif self.corpname:
+            return self._canonical_corpname(self.corpname)
+        else:
+            return ''
 
     def _has_configured_speech(self):
         """

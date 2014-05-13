@@ -111,9 +111,15 @@
 	    </corplist>
             <corplist title="Foreign corpora">
                 <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
-		<corpus id="BNC" sentence_struct="s" />
+		        <corpus id="BNC" sentence_struct="s">
+                    <reference>
+                        <default>main bib. entry...</default>
+                        <article>secondary bib. entry (e.g. a paper)</article>
+                        <other_bibliography>other bib. info</other_bibliography>
+                    </reference>
+                </corpus>
             </corplist>
-        <corpus id="spoken_stuff" sentence_struct="p" num_tag_pos="16" speech_segment="seg.soundfile" />
+            <corpus id="spoken_stuff" sentence_struct="p" num_tag_pos="16" speech_segment="seg.soundfile" />
         </corplist>
 
         <tagsets>
