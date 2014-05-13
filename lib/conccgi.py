@@ -682,7 +682,13 @@ class ConcCGI(CGIPublisher):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['root_url'] = settings.get_root_url()
-        result['canonical_corpname'] = self._canonical_corpname(self.corpname) if self.corpname else ''
+
+        if self._corp().get_conf('NAME'):
+            result['canonical_corpname'] = self._corp().get_conf('NAME')
+        elif self.corpname:
+            result['canonical_corpname'] = self._canonical_corpname(self.corpname)
+        else:
+            result['canonical_corpname'] = ''
         result['debug'] = settings.is_debug_mode()
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
