@@ -1982,6 +1982,9 @@ msgstr "Pro pokračování se prosím <span class=\"sign-in\">přihlašte</span>
 msgid "keyboard"
 msgstr "klávesnice"
 
+msgid "Report an error"
+msgstr "Ohlásit chybu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

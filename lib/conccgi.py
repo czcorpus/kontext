@@ -714,6 +714,8 @@ class ConcCGI(CGIPublisher):
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
 
+        result['error_report_url'] = settings.get('global', 'error_report_url', None)
+
         # is there a concordance information in session?
         self._restore_conc_results(result)
 
