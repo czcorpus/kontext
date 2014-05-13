@@ -414,6 +414,8 @@ $_ca_topbar
         <div class="debug-warning">
         $_('debugging mode')
         </div>
+        #elif $error_report_url
+        <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
         #end if
     </div>
 </footer>
