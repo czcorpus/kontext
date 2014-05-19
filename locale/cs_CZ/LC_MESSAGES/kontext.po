@@ -2008,6 +2008,9 @@ msgstr "Tato akce zruší váš aktuální neuložený subkorpus"
 msgid "Report an error"
 msgstr "Ohlásit chybu"
 
+msgid "make corpus primary"
+msgstr "nastavit korpus jako primární"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
