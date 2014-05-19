@@ -88,7 +88,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
      * Creates function (i.e. you must call it first to be able to use it)
      * to handle the "add language" action.
      *
-     * @param {string} forcedCorpusId optional parameter to force corpus to be added (otherwise
+     * @param {string} [forcedCorpusId] optional parameter to force corpus to be added (otherwise
      * it is chosen based on "#add-searched-lang-widget select" select box value). It is useful
      * in case you want to call the handler manually.
      * @return {function} handler function
@@ -308,6 +308,29 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         }
     };
 
+    lib.makePrimaryButtons = function () {
+        $('#mainform .make-primary').on('click', function (evt) {
+            var linkElm,
+                jqCurrPrimaryCorpInput = $('#mainform input[type="hidden"][name="corpname"]'),
+                newPrimary;
+
+            if ($(evt.target).is('a.make-primary')) {
+                linkElm = evt.target;
+
+            } else {
+                linkElm = $(evt.target).closest('a').get(0);
+            }
+
+            newPrimary = $(linkElm).attr('data-corpus-id');
+
+            removeActiveParallelCorpus(newPrimary);
+            addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
+            $('#mainform input[type="hidden"][name="corpname"]').val(newPrimary);
+            $('#mainform input[type="hidden"][name="reload"]').val(1);
+            $('#make-concordance-button').click();
+        });
+    };
+
     /**
      *
      * @param {object} conf
@@ -318,6 +341,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
+        lib.makePrimaryButtons();
     };
 
     return lib;

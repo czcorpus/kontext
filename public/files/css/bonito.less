@@ -211,13 +211,31 @@ a#logo-wrapper {
   margin-top: 20px;
 }
 
-#mainform .parallel-corp-lang .heading h3 {
+#mainform .parallel-corp-lang {
+
+}
+
+#mainform .parallel-corp-lang .heading {
+  border: 1px solid #C7E7B2;
   background-color: @color-light-frame;
   padding: 3px 10px;
   border-radius: @border-radius-default;
-  margin: 5px;
+  margin: 10px 0 0 0;
+  text-align: center;
+}
+
+#mainform .parallel-corp-lang .heading .make-primary {
+  float: left;
+}
+
+#mainform .parallel-corp-lang .heading > * {
+  margin-top: 2px;
+}
+
+#mainform .parallel-corp-lang .heading h3 {
+  display: inline-block;
   font-weight: normal;
-  border: 1px solid #C7E7B2;
+  margin: 0;
 }
 
 #mainform .parallel-corp-lang .close-button {
@@ -231,11 +249,6 @@ a#logo-wrapper {
   margin-top: -4px;
   display: inline-block;
   vertical-align: middle;
-}
-
-#mainform .parallel-corp-lang .heading {
-  margin: 10px 0 0 0;
-  text-align: center;
 }
 
 #processbar {
