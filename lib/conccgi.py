@@ -536,9 +536,8 @@ class ConcCGI(CGIPublisher):
         # let's fetch required corpus name from html form or from URL params
         if not cn and 'corpname' in form:
             cn = form.getvalue('corpname')
-        if cn:
-            if isinstance(cn, ListType):
-                cn = cn[-1]
+        if isinstance(cn, ListType) and len(cn) > 0:
+            cn = cn[-1]
 
         # if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured
@@ -557,6 +556,7 @@ class ConcCGI(CGIPublisher):
         # according to user rights
         if cn == self._canonical_corpname(cn) and cn not in corp_list \
                 and plugins.auth.get_restricted_corp_variant(cn) in corp_list:
+            # user wants a canonical variant, has no access to it and restricted variant exists
             cn = plugins.auth.get_restricted_corp_variant(cn)
             fallback = self._update_current_url({'corpname': cn})
         elif cn != self._canonical_corpname(cn) and cn not in corp_list:
