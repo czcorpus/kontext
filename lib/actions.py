@@ -313,18 +313,24 @@ class Actions(ConcCGI):
 
         conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname, cache_dir=self.cache_dir,
                                           subchash=getattr(self._corp(), "subchash", None))
-        out.update({'Desc': [{'op': o,
-                              'arg': a,
-                              'churl': self.urlencode(u1),
-                              'tourl': self.urlencode(u2),
-                              'size': s} for o, a, u1, u2, s in conc_desc
-        ],
-                    'supports_query_save': plugins.has_plugin('query_storage'),
-                    'query_desc': query_desc,
-                    'query_desc_raw': query_desc_raw,
-                    'query_id': query_id,
-                    'export_url': '%sto?q=%s' % (self.get_root_url(), query_id),
-                    'is_public': is_public
+
+        out['Desc'] = []
+        for o, a, u1, u2, s in conc_desc:
+            u2.append(('corpname', self.corpname))
+            out['Desc'].append({
+                'op': o,
+                'arg': a,
+                'churl': self.urlencode(u1),
+                'tourl': self.urlencode(u2),
+                'size': s})
+
+        out.update({
+            'supports_query_save': plugins.has_plugin('query_storage'),
+            'query_desc': query_desc,
+            'query_desc_raw': query_desc_raw,
+            'query_id': query_id,
+            'export_url': '%sto?q=%s' % (self.get_root_url(), query_id),
+            'is_public': is_public
         })
         return out
 
