@@ -572,9 +572,9 @@ $corp_full_name</b><br>
 #for $qq in $Q
   <input type="hidden" name="q" value="${qq['q'], also='"'}" />
 #end for
-#for $g in $Globals
-  #if not $g.name in $exclude
-  <input type="hidden" name="$g.name" value="$g.value" />
+#for $g_name, $g_value in $Globals.items()
+  #if not $g_name in $exclude
+  <input type="hidden" name="$g_name" value="$g_value" />
   #end if
 #end for
 #end def

@@ -18,6 +18,7 @@ import time
 from functools import partial
 import logging
 import inspect
+import urllib
 
 import corplib
 import conclib
@@ -33,6 +34,36 @@ from translation import ugettext as _
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
+
+
+class StateGlobals(object):
+    """
+    A simple wrapper for $Globals template variable. Unfortunately,
+    current code (which comes from Bonito 2) operates with $globals
+    (see the difference: g vs. G) which is escaped, hard to update
+    string.
+
+    This object should replace $globals in the future because it
+    allows easier updates: $Globals.update('corpname', 'bar').to_s()
+    """
+    def __init__(self, data):
+        self._data = data if type(data) is dict else dict(data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def items(self):
+        return self._data.items()
+
+    def to_s(self):
+        return urllib.urlencode(self._data)
+
+    def update(self, *args):
+        if type(args[0]) is dict:
+            self._data.update(args[0])
+        elif len(args) == 2:
+            self._data[args[0]] = args[1]
+        return self
 
 
 class ConcCGI(CGIPublisher):
@@ -657,7 +688,7 @@ class ConcCGI(CGIPublisher):
                           if getattr(self.__class__, n, None) is not val]
 
         result['globals'] = self.urlencode(global_var_val)
-        result['Globals'] = [{'name': n, 'value': v} for n, v in global_var_val]
+        result['Globals'] = StateGlobals(global_var_val)
 
         if self.maincorp:
             thecorp = conclib.manatee.Corpus(self.maincorp)

@@ -87,7 +87,7 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
     #if not $refs_up# <td></td> #end if#
     <td class="concordance-col-heading" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
     #if $c.n in $KWICCorps
-    <a class="select-primary-lang" href="view?$q;$globals;q=x-$c.n;maincorp=$c.n" title="$_('Click to make the language primary')"><b>$c.label</b></a>
+    <a class="select-primary-lang" href="view?$q;${Globals.update('maincorp', $c.n).to_s()};q=x-$c.n" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #else
     <a class="select-primary-lang" href="filter_form?$q;$globals;maincorp=$c.n;within=1" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #end if
