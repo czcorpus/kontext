@@ -273,8 +273,8 @@ class ConcCGI(CGIPublisher):
         attrs = inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter) and m.is_persistent())
         return tuple([x[0] for x in attrs])
 
-    def _is_corpus_free_action(self, action):
-        return action in ('login', 'loginx', 'logoutx')
+    def _requires_corpus_access(self, action):
+        return action not in ('login', 'loginx', 'logoutx')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -349,43 +349,6 @@ class ConcCGI(CGIPublisher):
         else:
             pass  # TODO save to the session
 
-    def _setup_corpus_access(self, path, action_metadata, form_data):
-        """
-        Updates controller based on current user's right to the selected corpus
-        and action.
-        Please note that the method has many side effects (it modifies several controller's attributes)
-
-        arguments:
-        path -- a list containing path elements (in fact, only 1 element is present - an action name)
-        action_metadata -- a dictionary containing additional data related to invoked action (e.g. access rights)
-        form_data -- a data from submitted HTML form (see cgi.FieldStorage)
-        """
-        allowed_corpora = plugins.auth.get_corplist(self._user)
-        ret_path = path
-        named_args = {}
-
-        if not self._is_corpus_free_action(path[0]):
-            self.corpname, fallback = self._determine_curr_corpus(form_data, allowed_corpora)
-            if fallback:
-                ret_path = [CGIPublisher.NO_OPERATION]
-                if action_metadata.get('return_type', None) != 'json':
-                    import hashlib
-                    self._session['__message'] = _('Please <span class="sign-in">sign-in</span> to continue.')
-                    curr_url = self._get_current_url()
-                    curr_url_key = '__%s' % hashlib.md5(curr_url).hexdigest()[:8]
-                    self._session[curr_url_key] = curr_url
-                    self._redirect('%sfirst_form?corpname=%s&ua=%s' %
-                                   (self.get_root_url(), self.corpname, curr_url_key))
-                else:
-                    ret_path = ['json_error']
-                    named_args['error'] = _('Corpus access denied')
-                    named_args['reset'] = True
-        elif len(allowed_corpora) > 0:
-            self.corpname = allowed_corpora[0]
-        else:
-            self.corpname = ''
-        return ret_path, named_args
-
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -405,10 +368,22 @@ class ConcCGI(CGIPublisher):
 
         self._apply_user_settings(self._init_default_settings)
 
-        # corpus access check and setup
-        path, new_args = self._setup_corpus_access(path, action_metadata, form)
-        named_args.update(new_args)
-
+        # corpus access check
+        allowed_corpora = plugins.auth.get_corplist(self._user)
+        if self._requires_corpus_access(path[0]):
+            self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
+            if fallback_url:
+                path = [CGIPublisher.NO_OPERATION]
+                if action_metadata.get('return_type', None) != 'json':
+                    self._redirect(fallback_url)
+                else:
+                    path = ['json_error']
+                    named_args['error'] = _('Corpus access denied')
+                    named_args['reset'] = True
+        elif len(allowed_corpora) > 0:
+            self.corpname = allowed_corpora[0]
+        else:
+            self.corpname = ''
         # Once we know the current corpus we can remove
         # settings related to other corpora. It is quite
         # a dumb solution but currently there is no other way
