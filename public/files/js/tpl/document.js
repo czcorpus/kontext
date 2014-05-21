@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie'], function (
-    win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie'], function (win,
+    $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -102,9 +102,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
      * @return
      */
     lib.appendLoader = function (elm, options) {
-        var jImage = $('<img />'),
-            options = options || {};
+        var jImage = $('<img />');
 
+        options = options || {};
         jImage.attr('src', '../files/img/ajax-loader.gif');
         if (options.domId) {
             jImage.addClass(options.domId);
@@ -135,7 +135,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         if (!options.error) {
             options.error = function (jqXHR, textStatus, errorThrown) {
                 lib.showMessage('error', errorThrown);
-            }
+            };
         }
 
         origSucc = options.success;
@@ -335,7 +335,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         };
 
         innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[type] + '">'
-                  + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
+            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
 
         if ($('#content .messages').length === 0) {
             messageListElm = win.document.createElement('div');
@@ -677,9 +677,8 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                 },
                 onShow: function (loader) { loader.remove(); },
                 onError: function (loader) { loader.remove(); }
-            }
-        );
-    }
+            });
+    };
 
     /**
      *
@@ -691,7 +690,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             {messages: lib.conf.messages, width: '30%'});
 
         popupbox.bind('#corpus-citation-link a',
-            function(box, finalizeCallback) {
+            function (box, finalizeCallback) {
                 $(box.getRootElement()).html(citationHtml).find('a').attr('target', '_blank');
                 $('#corpus-citation-box').empty();
                 finalizeCallback();
@@ -846,10 +845,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                 type : 'plain',
                 timeout : null,
                 onClose : function () {
-                     $(win.document).off('keypress.withinBoxEnter');
+                    $(win.document).off('keypress.withinBoxEnter');
                 }
-            }
-        );
+            });
     };
 
     /**
@@ -1126,7 +1124,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             },
 
             applySelectAll : function (elm, context) {
-                return self.applySelectAll.call(self, elm, context);
+                return self.applySelectAll(elm, context);
             },
 
             registerReset : function (fn) {
