@@ -41,7 +41,7 @@ class Actions(ConcCGI):
 
     cattr = Parameter('word')
     csortfn = Parameter('d')
-    cbgrfns = Parameter('mtd')
+    cbgrfns = Parameter(['m', 't', 'td'])
     cfromw = Parameter(-5)
     ctow = Parameter(5)
     cminfreq = Parameter(5)
