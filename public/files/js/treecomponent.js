@@ -17,7 +17,7 @@
  */
 
 
-define(['jquery', 'win'], function ($, win) {
+define(['jquery', 'win', 'typeahead'], function ($, win) {
     'use strict';
 
     /**
@@ -429,12 +429,13 @@ define(['jquery', 'win'], function ($, win) {
      */
     TreeComponent.prototype.attachSearchField = function () {
         var self = this,
-            srchField;
+            srchField,
+            substringMatcher;
 
         srchField = win.document.createElement('input');
         $(srchField)
             .attr('type', 'text')
-            .css('width', (this.widgetWidth() - 40) + 'px')
+            .css('margin-right', '0')
             .addClass('srch-field')
             .addClass('initial')
             .on('focus.searchInit', function (event) {
@@ -445,12 +446,46 @@ define(['jquery', 'win'], function ($, win) {
             .val(self.messages.search_by_name);
         this.treeWrapper.append(srchField);
 
-        $(srchField).autocomplete({
-            source: getObjectKeys(self.nestedTree.leafValues),
-            select: function (event, ui) {
-                $(self.nestedTree.hiddenInput).val(ui.item.value);
-                $(self.nestedTree.leafValues[ui.item.value]).click();
+        substringMatcher = function(strs) {
+            return function findMatches(q, cb) {
+                var matches,
+                    substrRegex,
+                    matches = [];
+
+                    substrRegex = new RegExp(q, 'i');
+                    $.each(strs, function(i, str) {
+                    if (substrRegex.test(str)) {
+                        matches.push({ value: str });
+                    }
+                });
+                cb(matches);
+            };
+        };
+
+        $(srchField).typeahead(
+            {
+                hint: true,
+                highlight: true,
+                minLength: 2
+            },
+            {
+                name: 'corplist',
+                source: substringMatcher(getObjectKeys(self.nestedTree.leafValues))
             }
+        );
+
+        $(win).on('typeahead:opened', function () {
+            $(self.rootUl).hide();
+            $('.tt-dropdown-menu').css('display', 'inherit');
+        });
+
+        $(win).on('typeahead:closed', function () {
+            $(self.rootUl).show();
+        });
+
+        $(win).on('typeahead:selected', function (jQuery, suggestion, dataset) {
+            console.log(dataset);
+            $(self.nestedTree.leafValues[suggestion.value]).click();
         });
     };
 

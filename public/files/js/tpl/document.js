@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie',
-    'jqueryui'], function (win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie'], function (
+    win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -1183,10 +1183,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         lib.externalHelpLinks();
         liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
             '.text-type-params');
-
-        $('button').button();
-        $('input[type="submit"]').button();
-        $('input[type="button"]').button();
     };
 
     return lib;
