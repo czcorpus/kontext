@@ -131,7 +131,7 @@ $_("Frequency list")#slurp
                 #end if
                 #end if
             #for $w in $i.Word
-            <td class="word">$w.n</td>
+            <td class="word monospace">$w.n</td>
             #end for
             <td align="right" class="frequency">$format_number($i.freq, mask='%d')</td>
             #if $i.has_key('rel')

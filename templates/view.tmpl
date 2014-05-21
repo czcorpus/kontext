@@ -131,8 +131,9 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
 
   #end for
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
-    </td><td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
-             data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname">
+    </td>
+    <td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
+        data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname">
   #else
     #if not $l.Kwic
     <i class="note">$_('<--not translated-->')</i>
@@ -164,7 +165,8 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
 
   #end for
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
-    </td><td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
+    </td>
+    <td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
     #if $annotconc
       <span class="groupbox" data-pos="$l.toknum">$l.linegroup</span>
     #end if

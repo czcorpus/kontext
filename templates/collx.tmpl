@@ -105,9 +105,9 @@ $_("Collocations")#slurp
             <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
         #set $rowNum += 1
           <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
-          <td class='left'>$i.str</td><td> $i.freq</td>
+          <td class='left monospace'>$i.str</td><td class="num"> $i.freq</td>
           #for $s in $i.Stats
-            <td> $s.s</td>
+            <td class="num"> $s.s</td>
           #end for
         </tr>
       #end for
