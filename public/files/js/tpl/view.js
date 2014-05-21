@@ -197,7 +197,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
     };
 
     /**
-     * This function is taken from jQueryUI demo page
+     * This function is taken from jscrollpane demo page
      */
     lib.initConcViewScrollbar = function () {
         var elm = $('#conclines-wrapper'),

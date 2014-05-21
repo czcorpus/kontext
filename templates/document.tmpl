@@ -46,7 +46,6 @@ $text
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
 #if $app_bar_css
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
 #end if
@@ -73,15 +72,14 @@ requirejs.config({
     paths: {
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
-        'jqueryui' :  './jquery-ui.custom.min',
         'jscrollpane' : './jscrollpane.min',
         'liveAttributes' : #if $live_attributes_js#'$live_attributes_js'#else#'plugins/dummyLiveAttributes'#end if#
     },
     shim : {
-        'jqueryui' : {
+        'jscrollpane' : {
             deps: ['jquery']
         },
-        'jscrollpane' : {
+        'typeahead' : {
             deps: ['jquery']
         }
     }
