@@ -47,7 +47,13 @@ class StateGlobals(object):
     allows easier updates: $Globals.update('corpname', 'bar').to_s()
     """
     def __init__(self, data):
-        self._data = data if type(data) is dict else dict(data)
+        self._data = {}
+        if type(data) is dict:
+            data = data.items()
+        for k, v in data:
+            if type(v) is unicode:
+                v = v.encode('utf-8')
+            self._data[k] = v
 
     def __iter__(self):
         return iter(self._data)
