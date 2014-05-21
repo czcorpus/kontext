@@ -176,7 +176,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             this.messages = {
                 search_by_name : 'search by name...'
             };
-        };
+        }
     }
 
     /**
@@ -292,7 +292,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
                             originalText,
                             jqTextLink;
 
-                        originalTextNode = $(element).contents().filter(function () {return this.nodeType === 3;});
+                        originalTextNode = $(element).contents().filter(function () {return this.nodeType === 3; });
                         originalText = $(originalTextNode).text();
                         originalTextNode.remove();
                         jqTextLink = $(win.document.createElement('a'));
@@ -446,14 +446,13 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             .val(self.messages.search_by_name);
         this.treeWrapper.append(srchField);
 
-        substringMatcher = function(strs) {
+        substringMatcher = function (strs) {
             return function findMatches(q, cb) {
-                var matches,
-                    substrRegex,
+                var substrRegex,
                     matches = [];
 
-                    substrRegex = new RegExp(q, 'i');
-                    $.each(strs, function(i, str) {
+                substrRegex = new RegExp(q, 'i');
+                $.each(strs, function (i, str) {
                     if (substrRegex.test(str)) {
                         matches.push({ value: str });
                     }
@@ -484,7 +483,6 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
         });
 
         $(win).on('typeahead:selected', function (jQuery, suggestion, dataset) {
-            console.log(dataset);
             $(self.nestedTree.leafValues[suggestion.value]).click();
         });
     };

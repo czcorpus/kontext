@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'jscrollpane'
-        ], function (win, $, jqueryPeriodic, layoutModel, detail, popupBox) {
+define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'jscrollpane'], function (win,
+    $, jqueryPeriodic, layoutModel, detail, popupBox) {
     'use strict';
 
     var lib = {};
@@ -44,7 +44,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                             layoutModel.showMessage('error', errorThrown);
                         },
                         callback,
-                        layoutModel.createAjaxLoader());
+                        layoutModel.createAjaxLoader()
+                    );
                     event.preventDefault();
                 });
             });
@@ -65,8 +66,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                 event.target,
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
-                function () {
-                    layoutModel.showMessage('error', arguments[2]);
+                function (jqXHR, textStatus, error) {
+                    layoutModel.showMessage('error', error);
                 },
                 callback,
                 layoutModel.createAjaxLoader()
@@ -105,7 +106,8 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
             {
                 type: 'warning',
                 width: 'nice'
-            });
+            }
+        );
     };
 
     /**
