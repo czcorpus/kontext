@@ -401,15 +401,16 @@ class ConcCGI(CGIPublisher):
                 val = form.getvalue(k)
                 if key in param_types:
                     if not param_types[key].is_array() and type(val) is list:
-                        # Parameter (see static Parameter instances) is defined as a scalar
-                        # but web framework returns a list. This shouldn't happen but
-                        # original Bonito code sometimes defines redundant HTML form parameters...
-                        val = val[0]
+                        # If a parameter (see static Parameter instances) is defined as a scalar
+                        # but the web framework returns a list (e.g. an HTML form contains a key with
+                        # multiple occurrences) then a possible conflict emerges. Although this should not happen,
+                        # original Bonito2 code contains such inconsistencies. In such cases we use only last value
+                        # as we expect that the last value overwrites previous ones with the same key.
+                        val = val[-1]
                     elif param_types[key].is_array() and not type(val) is list:
                         # A Parameter object is expected to be a list but
                         # web framework returns a scalar value
                         val = [val]
-
                 val = self.recode_input(val)
                 if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
                     val = ''
