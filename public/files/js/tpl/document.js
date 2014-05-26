@@ -442,8 +442,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'jquery.c
 
         hideElem.loadHideElementStoreSimple();
 
-        $('select.qselector').bind('change', function (event) {
-            hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
+        $('select.qselector').each(function () {
+            $(this).on('change', function (event) {
+                hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
+            });
+
+            // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
+            if ($(this).val() !== 'iqueryrow') {
+                hideElem.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints, lib.userSettings);
+            }
         });
 
         // remove empty and unused parameters from URL before mainform submit
