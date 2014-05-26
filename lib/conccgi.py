@@ -188,6 +188,7 @@ class ConcCGI(CGIPublisher):
     multiple_copy = Parameter(0, persistent=True)
     wlsendmail = Parameter(u'')
     cup_hl = Parameter(u'q', persistent=True)
+    structattrs = Parameter([], persistent=True)
 
     sortlevel = Parameter(1)
     flimit = Parameter(0)
@@ -307,6 +308,12 @@ class ConcCGI(CGIPublisher):
                 if len(elms) == 2 and elms[0] != self.corpname:
                     del(options[k])
 
+    def _setup_user_paths(self, user_file_id):
+        if not self._anonymous:
+            self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
+        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
+        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
+
     def _apply_user_settings(self, actions=None):
         """
         Updates object's attributes according to user settings. Settings
@@ -321,8 +328,12 @@ class ConcCGI(CGIPublisher):
             user_file_id = self._user
         else:
             user_file_id = 'anonymous'
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
+
+        for k, v in plugins.settings_storage.load(self._session_get('user', 'id')).items():
+            if k.find(self.corpname) == 0:
+                options[k.split(':', 1)[-1]] = v
         convert_types(options, self.clone_self(), selector=1)
+
         if callable(actions):
             actions(options)
         self._setup_user_paths(user_file_id)
