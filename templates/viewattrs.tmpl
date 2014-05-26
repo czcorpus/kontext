@@ -73,6 +73,16 @@ require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttr
             <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' #if $a.sel#checked#end if# />
             <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
             #set $i = $i + 1
+            <ul class="struct-attrs" data-struct-id="$a.n">
+            #for $sa in $structattrs[$a.n]
+            #set $sa_id = $a.n + '.' + $sa
+            <li>
+                <label>
+                    <input class="structattr-checkbox" data-struct-id="$a.n" type="checkbox" name="structattrs" value="$sa_id" #if $sa_id in $curr_structattrs#checked="checked"#end if# /> $sa
+                </label>
+            </li>
+            #end for
+            </ul>
         #end for
 
         <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>

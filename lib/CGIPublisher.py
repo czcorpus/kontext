@@ -346,12 +346,6 @@ class CGIPublisher(object):
         s = CGIPublisher.STATUS_MAP.get(self._status, '')
         return '%s  %s' % (self._status, s)
 
-    def _setup_user_paths(self, user_file_id):
-        if not self._anonymous:
-            self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
-        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
-        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
-
     def self_encoding(self):
         return 'iso-8859-1'
 
@@ -469,7 +463,7 @@ class CGIPublisher(object):
         return self.environ.get('REQUEST_METHOD', '')
 
     def _get_persistent_attrs(self):
-        return ()
+        raise NotImplementedError()
 
     def _get_persistent_items(self):
         ans = {}

@@ -193,10 +193,15 @@ class Actions(ConcCGI):
         kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
         labelmap = {}
 
+        # we merge structs (e.g. 'doc', 'p') with structural attributes (e.g. 'doc.id', 'p.version')
+        # because manatee accepts both together
+        structs = self.structs + ','.join(self.structattrs)
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                 copy_icon=self.copy_icon, tbl_template=self.tbl_template)
+                                 copy_icon=self.copy_icon,
+                                 tbl_template=self.tbl_template,
+                                 structs=structs)
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
@@ -344,6 +349,7 @@ class Actions(ConcCGI):
         attrs, refs, structs form
         """
         from tbl_settings import tbl_labels
+        from collections import defaultdict
 
         self.disabled_menu_items = ('menu-save',)
         out = {}
@@ -363,9 +369,18 @@ class Actions(ConcCGI):
                                for n in availstruct if n and n != '#']
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
+        structattrs = defaultdict(list)
         reflist = self.refs.split(',')
+
+        for item in availref:
+            k, v = item.split('.', 1)
+            structattrs[k].append(v)
+            if not k in reflist:
+                reflist.append(k)
+
         ref_is_allowed = lambda r: r and r not in (
             '#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
+
         out['Availrefs'] = [{
                             'n': '#',
                             'label': _('Token number'),
@@ -384,6 +399,8 @@ class Actions(ConcCGI):
                                         'sel': (doc in reflist and 'selected' or '')})
         out['newctxsize'] = self.kwicleftctx[1:]
         out['Availgdexconfs'] = self.cm.gdexdict.keys()
+        out['structattrs'] = structattrs
+        out['curr_structattrs'] = self.structattrs
         out['tbl_labels'] = tbl_labels
         return out
 
@@ -401,7 +418,7 @@ class Actions(ConcCGI):
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
 
-    def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=()):
+    def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self.attrs = ','.join(setattrs)
         self.structs = ','.join(setstructs)
         self.refs = ','.join(setrefs)
@@ -410,11 +427,16 @@ class Actions(ConcCGI):
             self.ctxattrs = self.attrs
         else:
             self.ctxattrs = 'word'
+        self.structattrs = structattrs
 
     @exposed(access_level=1, template='view.tmpl')
-    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), shuffle=0):
-        self._set_new_viewattrs(setattrs=setattrs, allpos=allpos, setstructs=setstructs, setrefs=setrefs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize'], self.corpname)
+    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
+        self._set_new_viewattrs(setattrs=setattrs,
+                                allpos=allpos,
+                                setstructs=setstructs,
+                                setrefs=setrefs,
+                                structattrs=structattrs)
+        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize', 'structattrs'], self.corpname)
         # TODO refs_up ???
         return self.view()
 

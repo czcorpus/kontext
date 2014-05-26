@@ -26,6 +26,38 @@ define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, layoutMo
 
     /**
      *
+     * @param parentElm
+     * @returns {boolean}
+     */
+    function uncheckChecked(parentElm) {
+        $(parentElm).find('input[type="checkbox"]:checked').each(function () {
+            $(this).prop('checked', false);
+        });
+    }
+
+    /**
+     *
+     */
+    lib.setupStructattrCheckboxes = function () {
+        $('.structattr-checkbox').on('click', function (event) {
+            var triggerElm = $(event.target),
+                structId = triggerElm.attr('data-struct-id'),
+                parentCheckbox;
+
+            parentCheckbox = triggerElm.closest('fieldset').find('input[name="setstructs"][value="' + structId + '"]');
+
+            if (triggerElm.is(':checked') && !parentCheckbox.is(':checked')) {
+                parentCheckbox.prop('checked', true);
+            }
+        });
+
+        $('input[type="checkbox"][name="setstructs"]').on('click', function (event) {
+            uncheckChecked($(event.target).closest('fieldset').find('ul[data-struct-id="' + $(event.target).val() + '"]'));
+        });
+    };
+
+    /**
+     *
      * @param conf
      */
     lib.init = function (conf) {
@@ -34,6 +66,8 @@ define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, layoutMo
         $('#mainform input.select-all').each(function () {
             layoutModel.applySelectAll(this, $(this).closest('fieldset'));
         });
+
+        lib.setupStructattrCheckboxes();
     };
 
     return lib;
