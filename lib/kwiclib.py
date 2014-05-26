@@ -19,6 +19,7 @@
 from functools import partial
 import re
 import itertools
+import logging
 
 import manatee
 from strings import import_string, export_string
@@ -95,12 +96,17 @@ class KwicPageData(FixedDict):
 class Kwic(object):
     """
     KWIC related data preparation utilities
+
+    arguments:
+    corpus -- a manatee.Corpus instance
+    corpus_fullname -- full (internal) name of the corpus (e.g. with path prefix if used)
+    conc -- a manatee.Concordance instance
     """
     def __init__(self, corpus, corpus_fullname, conc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
         self.conc = conc
-        self.corpus_encoding = self.corpus.get_conf('ENCODING')  # TODO
+        self.corpus_encoding = self.corpus.get_conf('ENCODING')
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
@@ -417,9 +423,10 @@ class Kwic(object):
         else:
             leftlabel, rightlabel = 'Left', 'Right'
 
-        kl = manatee.KWICLines(self.corpus, self.conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
+        # self.conc.corp() must be used here instead of self.corpus
+        # because in case of parallel corpora these two are different and only the latter one is correct
+        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
                                all_structs, refs)
-
         labelmap = labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
