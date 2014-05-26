@@ -620,21 +620,20 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
     };
 
     /**
-     *
-     * @param opt {Object} an object containing keys:
-     *     inputElement - text input element to be enriched by this function
-     *     widgetElement - wrapper element for whole widget
-     *     modalWindowElement - modal box element (where widgetElement is inserted)
-     *     insertTagButtonElement - button to insert tag string into the inputElement
-     *     tagDisplayElement - element where tag value is written
-     *     resetButtonElement - element representing the RESET function
-     *     activateLink
-     * @param multiSelectOpts {Object}
      * @param corpusName {string}
+     * @param triggerElement
+     * @param opt {Object}
+     * @param opt.inputElement - text input element to be enriched by this function
+     * @param opt.widgetElement - wrapper element for whole widget
+     * @param opt.modalWindowElement - modal box element (where widgetElement is inserted)
+     * @param opt.insertTagButtonElement - button to insert tag string into the inputElement
+     * @param opt.tagDisplayElement - element where tag value is written
+     * @param opt.resetButtonElement - element representing the RESET function
+     * @param multiSelectOpts {Object}
      * @param numTagPos {Number}
      * @param {function} errorCallback
      */
-    lib.bindTextInputHelper = function (corpusName, numTagPos, opt, multiSelectOpts, errorCallback) {
+    lib.bindTextInputHelper = function (corpusName, triggerElement, numTagPos, opt, multiSelectOpts, errorCallback) {
         var prop;
 
         for (prop in opt) {
@@ -646,7 +645,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
             }
         }
 
-        popupbox.bind($('.insert-tag a'),
+        popupbox.bind($(triggerElement),
             function (box, finalizeCallback) {
                 var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts),
                     insertTagClickAction,
