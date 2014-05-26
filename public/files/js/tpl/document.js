@@ -458,10 +458,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         if (lib.conf.focus) {
             hideElem.focusEx(hideElem.focus);
         }
-
-        $('#cqlrow .query-toolbox').each(function () {
+        $('input.cql-input').each(function () {
             var corpName,
-                cqlInputId = $(this).closest('td').find("input.cql-input").attr('id');
+                cqlInputId = $(this).attr('id'),
+                blockWrapper = $(this).closest('td');
 
             if (cqlInputId === 'cql') {
                 corpName = lib.conf.corpname;
@@ -469,28 +469,9 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             } else {
                 corpName = cqlInputId.substring(4);
             }
-            tagbuilder.bindTextInputHelper(
-                corpName,
-                lib.conf.numTagPos,
-                {
-                    inputElement: $('#' + $($(this).find('li.insert-tag a').get(0)).data('bound-input')),
-                    widgetElement: 'tag-widget',
-                    modalWindowElement: 'tag-builder-modal',
-                    insertTagButtonElement: 'insert-tag-button',
-                    tagDisplayElement: 'tag-display',
-                    resetButtonElement: 'reset-tag-button'
-                },
-                {
-                    width: '556px',
-                    useNamedCheckboxes: false,
-                    allowMultipleOpenedBoxes: false
-                },
-                function (message) {
-                    lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);
-                }
-            );
 
-            lib.bindWithinHelper($(this).find('li.within a'), lib.conf.corpname, lib.conf.messages);
+            lib.bindTagHelper(corpName, $(this), blockWrapper.find('.insert-tag a'));
+            lib.bindWithinHelper(blockWrapper.find('li.within a'), corpName, lib.conf.messages);
         });
 
         hideElem.loadHideElementStoreSimple();
@@ -742,6 +723,36 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
                 win.location.reload();
             });
         });
+    };
+
+    /**
+     *
+     * @param {String} corpName
+     * @param {jQuery|HTMLElement|String} inputElm
+     * @param {jQuery|HTMLElement|String} triggerElm
+     */
+    lib.bindTagHelper = function (corpName, inputElm, triggerElm) {
+        tagbuilder.bindTextInputHelper(
+            corpName,
+            triggerElm,
+            lib.conf.numTagPos,
+            {
+                inputElement: $(inputElm),
+                widgetElement: 'tag-widget',
+                modalWindowElement: 'tag-builder-modal',
+                insertTagButtonElement: 'insert-tag-button',
+                tagDisplayElement: 'tag-display',
+                resetButtonElement: 'reset-tag-button'
+            },
+            {
+                width: '556px',
+                useNamedCheckboxes: false,
+                allowMultipleOpenedBoxes: false
+            },
+            function (message) {
+                lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);
+            }
+        );
     };
 
     /**
