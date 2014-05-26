@@ -372,14 +372,15 @@ class Actions(ConcCGI):
         structattrs = defaultdict(list)
         reflist = self.refs.split(',')
 
-        for item in availref:
-            k, v = item.split('.', 1)
-            structattrs[k].append(v)
-            if not k in reflist:
-                reflist.append(k)
-
         ref_is_allowed = lambda r: r and r not in (
             '#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
+
+        for item in availref:
+            if ref_is_allowed(item):
+                k, v = item.split('.', 1)
+                structattrs[k].append(v)
+                if not k in reflist:
+                    reflist.append(k)
 
         out['Availrefs'] = [{
                             'n': '#',
