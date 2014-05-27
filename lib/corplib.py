@@ -402,7 +402,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                      or attr.id_range() > maxlistsize):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
                                             or 24)
-            else: # list of values
+            else:  # list of values
                 if corp.get_conf(n + '.NUMERIC'):
                     vals = []
                     for i in range(attr.id_range()):
@@ -410,13 +410,19 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                             vals.append({'v': int(attr.id2str(i))})
                         except:
                             vals.append({'v': attr.id2str(i)})
-                elif hsep: # hierarchical
+                elif hsep:  # hierarchical
                     vals = [{'v': attr.id2str(i)}
                             for i in range(attr.id_range())
                             if not multisep in attr.id2str(i)]
                 else:
-                    vals = [{'v': attr.id2str(i)}
-                            for i in range(attr.id_range())]
+                    if multisep:
+                        raw_vals = [attr.id2str(i).split(multisep) for i in range(attr.id_range())]
+                        vals = [{'v': x} for x in sorted(set([s for subl in raw_vals for s in subl]))]
+
+                    else:
+                        vals = [{'v': attr.id2str(i)}
+                                for i in range(attr.id_range())]
+
                 if hsep: # hierarchical
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
