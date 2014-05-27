@@ -385,6 +385,34 @@ class CGIPublisher(object):
         """
         return self.environ.get('REQUEST_URI')
 
+    def _update_current_url(self, params):
+        """
+        Devel. note: the method must preserve non-unique 'keys'
+        (because of current app's architecture derived from Bonito2).
+        This means parameter list [(k1, v1), (k2, v2),...] cannot be
+        converted into a dictionary and then worked on because some
+        data could be lost in such case.
+        """
+        import urlparse
+        import urllib
+
+        parsed_url = list(urlparse.urlparse(self._get_current_url()))
+        old_params = urlparse.parse_qsl(parsed_url[4])
+        new_params = []
+        for k, v in old_params:
+            if k in params:
+                new_params.append((k, params[k]))
+            else:
+                new_params.append((k, v))
+
+        old_params = dict(old_params)
+        for k, v in params.items():
+            if k not in old_params:
+                new_params.append((k, v))
+
+        parsed_url[4] = urllib.urlencode(new_params)
+        return urlparse.urlunparse(parsed_url)
+
     def _invoke_action(self, action, args, named_args, tpl_data=None):
         """
         Calls an action method mapped to a specific action
