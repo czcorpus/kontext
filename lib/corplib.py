@@ -375,8 +375,15 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
                             for i in range(attr.id_range())
                             if not multisep in attr.id2str(i)]
                 else:
-                    vals = [{'v': import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))}
-                            for i in range(attr.id_range())]
+                    if multisep:
+                        raw_vals = [import_string(attr.id2str(i),  from_encoding=corp.get_conf('ENCODING'))
+                                    .split(multisep) for i in range(attr.id_range())]
+                        vals = [{'v': x} for x in sorted(set([s for subl in raw_vals for s in subl]))]
+
+                    else:
+                        vals = [{'v': attr.id2str(i)}
+                                for i in range(attr.id_range())]
+
                 if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
