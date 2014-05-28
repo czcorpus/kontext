@@ -480,6 +480,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
 
         $(win).on('typeahead:closed', function () {
             $(self.rootUl).show();
+            $(srchField).typeahead('val', '');
         });
 
         $(win).on('typeahead:selected', function (jQuery, suggestion, dataset) {
