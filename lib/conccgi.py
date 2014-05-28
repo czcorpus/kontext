@@ -562,7 +562,7 @@ class ConcCGI(CGIPublisher):
                 cn = self.last_corpname
             else:
                 cn = settings.get_default_corpus(corp_list)
-                fallback = '%sfirst_form?corpname=%s' % (settings.get_root_url(), cn)
+                fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
 
         # in this phase we should have some non-empty corpus selected
         # but we do not know whether user has access to it
