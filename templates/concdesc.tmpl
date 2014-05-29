@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end def
 
 #def bodyonload
-require(['tpl/concDesc', 'conf', 'domReady!'], function(pageSelf, conf) {
+require(['tpl/concDesc', 'conf'], function(pageSelf, conf) {
     conf.queryId = "$query_id";
     conf.messages.failed_to_save_the_query = "$_('Failed to save the query')";
     pageSelf.init(conf);

@@ -38,7 +38,7 @@ $_("Word list")#slurp
 #end def
 
 #def bodyonload
-require(['tpl/wordlist', 'conf', 'domReady!'], function(pageSelf, conf) {
+require(['tpl/wordlist', 'conf'], function(pageSelf, conf) {
     conf.corpnameUrl = "$corpname_url";
     conf.subcName = "$usesubcorp";
     conf.attrName = "$wlattr";

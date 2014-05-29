@@ -70,7 +70,6 @@ $ca_headers
 requirejs.config({
     baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
     paths: {
-        'domReady' : './domReady.min',
         'jquery': './jquery.min',
         'jscrollpane' : './jscrollpane.min',
         'liveAttributes' : #if $live_attributes_js#'$live_attributes_js'#else#'plugins/dummyLiveAttributes'#end if#
@@ -133,12 +132,6 @@ define('conf', [], function () {
 
     return conf;
 });
-
-#block bodyonload
-require(['tpl/document', 'conf', 'domReady!'], function (pageself, conf) {
-    pageself.init(conf);
-});
-#end block
 
 #if $getVar('ga_identifier', '')
 // google analytics stuff
@@ -480,10 +473,15 @@ $_ca_topbar
         #end if
     </div>
 </footer>
-
 #end filter
-## end of left menu
 
+<script type="text/javascript">
+#block bodyonload
+require(['tpl/document', 'conf'], function (pageself, conf) {
+pageself.init(conf);
+});
+#end block
+</script>
 
 </body>
 </html>

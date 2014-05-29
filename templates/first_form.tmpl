@@ -26,7 +26,7 @@ $_("Concordance - First query form")#slurp
 #end def
 
 #def bodyonload
-require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
+require(['tpl/firstForm', 'conf'], function (firstForm, conf) {
     conf.labelStdQuery = '$_("Std. Query")';
     conf.labelErrorQuery = '$_("Error Query")';
     conf.messages.too_long_condition = '$_('The selection condition you have specified is too long. Please create a subcorpus instead.')';
