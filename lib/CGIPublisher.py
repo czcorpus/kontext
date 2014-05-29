@@ -102,6 +102,16 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
+def get_traceback():
+    """
+    Returns python-generated traceback information
+    """
+    import traceback
+
+    err_type, err_value, err_trace = sys.exc_info()
+    return traceback.format_exception(err_type, err_value, err_trace)
+
+
 class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -354,7 +364,9 @@ class CGIPublisher(object):
 
     def _add_globals(self, result):
         """
-        This is called after an action is processed but before any output starts
+        This method is expected to fill-in global values needed by output template
+        (e.g. each page contains user name or current corpus).
+        It is called after an action is processed but before any output starts.
         """
         ppath = self.environ.get('REQUEST_URI', '/')
         try:
@@ -387,11 +399,19 @@ class CGIPublisher(object):
 
     def _update_current_url(self, params):
         """
-        Devel. note: the method must preserve non-unique 'keys'
+        Modifies current URL using passed parameters.
+
+        Devel. note: the method must preserve existing non-unique 'keys'
         (because of current app's architecture derived from Bonito2).
         This means parameter list [(k1, v1), (k2, v2),...] cannot be
         converted into a dictionary and then worked on because some
         data could be lost in such case.
+
+        arguments:
+        params -- a dictionary containing parameter names and values
+
+        returns:
+        updated URL
         """
         import urlparse
         import urllib
@@ -415,7 +435,8 @@ class CGIPublisher(object):
 
     def _invoke_action(self, action, args, named_args, tpl_data=None):
         """
-        Calls an action method mapped to a specific action
+        Calls an action method (= method with the @exposed annotation)
+        mapped to a specific action.
 
         arguments:
         action -- name of the action
@@ -435,12 +456,31 @@ class CGIPublisher(object):
         return ans
 
     def call_function(self, func, args, **named_args):
+        """
+        Calls a function with passed arguments but also with arguments
+        from self. Actually the order is following:
+        1) get self arguments
+        2) update by **named_args
+
+        !!! For the sake of sanity, this should be avoided as much as possible
+        because it completely hides what is actually passed to the function.
+
+        arguments:
+        func -- a callable to be called
+        args -- positional arguments
+        **named_args -- named arguments of the callable
+        """
         na = self.clone_self()
         na.update(named_args)
         convert_types(na, function_defaults(func), 1)
         return apply(func, args, na)
 
     def clone_self(self):
+        """
+        Creates a dictionary based on self arguments and respective values.
+        Callable and '_'-prefixed arguments are omitted.
+        Please note that the copy is shallow.
+        """
         na = {}
         for a in dir(self) + dir(self.__class__):
             if not a.startswith('_') and not callable(getattr(self, a)):
@@ -448,6 +488,17 @@ class CGIPublisher(object):
         return na
 
     def _get_method_metadata(self, method_name, data_name=None):
+        """
+        Returns metadata attached to method's __dict__ object. This
+        is typically written on a higher level via @exposed annotation.
+
+        arguments:
+        method_name -- name of a method
+        data_name -- optional data item key; if omitted then all the metadata is retuned
+
+        returns:
+        a dictionary of all metadata or a specific metadata item (which could be anything)
+        """
         method_obj = getattr(self, method_name, None)
         if data_name is not None:
             ans = None
@@ -477,6 +528,17 @@ class CGIPublisher(object):
         return path
 
     def _redirect(self, url, code=303):
+        """
+        Sets CGIPublisher to output HTTP redirection headers.
+        Please note that the header output is not immediate -
+        an action still must be set and performed. In case there is
+        no need to process anything a NOP action (which does nothing)
+        can be used.
+
+        arguments:
+        url -- a target URL
+        code -- an optional integer HTTP response code (default is 303)
+        """
         #self._headers.clear() # TODO resolve this
         self._status = code
         if type(url) is unicode:
@@ -484,6 +546,9 @@ class CGIPublisher(object):
         self._headers['Location'] = url
 
     def _set_not_found(self):
+        """
+        Sets CGIPublisher to output HTTP 404 Not Found response
+        """
         self._headers.clear()
         self._status = 404
 
@@ -523,8 +588,7 @@ class CGIPublisher(object):
 
     def run(self, path=None, selectorname=None):
         """
-        This method wraps run_unprotected by try-except clause and presents
-        only brief error messages to the user.
+        This method wraps all the processing of an HTTP request.
         """
         path = path if path is not None else self.import_req_path()
         named_args = {}
@@ -560,7 +624,7 @@ class CGIPublisher(object):
 
         except Exception as e:  # we assume that this means some kind of a fatal error
             self._status = 500
-            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(self.get_traceback())))
+            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(get_traceback())))
             if settings.is_debug_mode():
                 named_args['message'] = ('error', u'%s' % e)
             else:
@@ -625,7 +689,7 @@ class CGIPublisher(object):
                     getattr(method, 'template', methodname + '.tmpl'),
                     self._invoke_action(method, pos_args, named_args, tpl_data))
         except Exception as e:
-            logging.getLogger(__name__).error(''.join(self.get_traceback()))
+            logging.getLogger(__name__).error(''.join(get_traceback()))
 
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
@@ -660,6 +724,21 @@ class CGIPublisher(object):
         return x
 
     def rec_recode(self, x, enc='', utf8_out=False):
+        """
+        Converts recursively an input object's string elements character
+        encoding.
+
+        Devel. note: this method should be avoided in future code as
+        it is not very clear whether it is able to handle any input
+        in a correct way. An explicit string conversion is preferable
+        over this.
+
+        arguments:
+        x -- an object to be converted
+        enc -- object's strings encoding (if none provided then self._encoding() is used)
+        utf8_out -- sets whether encoding to UTF-8 should be performed
+        (default False which causes the method to do nothing)
+        """
         if not utf8_out:
             return x
         if not enc:
@@ -748,7 +827,6 @@ class CGIPublisher(object):
             if return_template:
                 return result
             result.respond(CheetahResponseFile(outf))
-
         # Other (string)
         else:
             outf.write(str(result))
@@ -760,27 +838,17 @@ class CGIPublisher(object):
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
-        is requested soon, some operation still must be set.
+        is requested soon, an operation still must be set (even if it does nothing).
         """
         return None
 
+    @exposed(accept_kwargs=True)
     def message(self, *args, **kwargs):
         return kwargs
 
-    message.accept_kwargs = True
-
+    @exposed(return_type='json')
     def json_error(self, error='', reset=False):
         """
         Error page
         """
         return {'error': {'message': error, 'reset': reset}}
-    json_error.return_type = 'json'
-
-    def get_traceback(self):
-        """
-        Returns python-generated traceback information
-        """
-        import traceback
-
-        err_type, err_value, err_trace = sys.exc_info()
-        return traceback.format_exception(err_type, err_value, err_trace)
