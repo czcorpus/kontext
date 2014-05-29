@@ -27,7 +27,7 @@ $_("View")#slurp
 #attr $focus = "'#firstattr'"
 
 #def bodyonload
-require(['jquery', 'tpl/viewattrs', 'conf', 'domReady!'], function (\$, viewAttrs, conf) {
+require(['jquery', 'tpl/viewattrs', 'conf'], function (\$, viewAttrs, conf) {
     viewAttrs.init(conf);
 });
 #end def
