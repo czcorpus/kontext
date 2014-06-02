@@ -146,20 +146,22 @@ class CentralAuth(AbstractAuth):
         if len(self.corplist) == 0:
             conn = self.db_conn
             cursor = conn.cursor()
-            cursor.execute("""SELECT corpora.name FROM (
-SELECT ucr.corpus_id AS corpus_id
+            cursor.execute("""SELECT corpora.name, limited FROM (
+SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
 FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
 UNION
-SELECT r2.corpora AS corpus_id
+SELECT r2.corpora AS corpus_id, r2.limited AS limited
 FROM user AS u2
 JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
 JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
             rows = cursor.fetchall()
-            if len(rows) > 0:
-                cursor.close()
-                corpora = [row[0] for row in rows]
-            else:
-                corpora = []
+            corpora = []
+            for row in rows:
+                if row[1]:
+                    corpora.append('omezeni/%s' % row[0])
+                else:
+                    corpora.append(row[0])
+            cursor.close()
             if not 'susanne' in corpora:
                 corpora.append('susanne')
             corpora.sort()
