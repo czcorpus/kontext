@@ -33,8 +33,8 @@ from werkzeug.http import parse_accept_header
 import locale
 
 
-sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # to be able to import application libraries
-sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # to be able to import compiled template modules
+sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
+sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template modules
 CONF_PATH = '%s/../config.xml' % os.path.dirname(__file__)
 
 import plugins
