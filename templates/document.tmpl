@@ -50,6 +50,9 @@ $text
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
 #end if
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
+#if $qunit_test
+<link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
+#end if
 <!--[if lte IE 7]>
 <link rel="stylesheet" type="text/css" href="$app_bar_css_ie" media="all">
 <![endif]-->
@@ -73,6 +76,7 @@ requirejs.config({
         'jquery': './jquery.min',
         'jscrollpane' : './jscrollpane.min',
         'liveAttributes' : #if $live_attributes_js#'$live_attributes_js'#else#'plugins/dummyLiveAttributes'#end if#
+        #if $qunit_test#,'QUnit' : './qunit'#end if#
     },
     shim : {
         'jscrollpane' : {
@@ -81,6 +85,16 @@ requirejs.config({
         'typeahead' : {
             deps: ['jquery']
         }
+        #if $qunit_test
+        , 'QUnit' : {
+            exports : 'QUnit',
+            init: function() {
+                QUnit.config.autoload = false;
+                QUnit.config.autostart = false;
+            }
+
+        }
+        #end if
     }
 });
 
@@ -149,6 +163,12 @@ _gaq.push(['_trackPageview']);
 #end if
 </head>
 <body>
+
+#if $qunit_test
+<div id="qunit"></div>
+<div id="qunit-fixture">
+#end if
+
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else
@@ -474,6 +494,10 @@ $_ca_topbar
     </div>
 </footer>
 #end filter
+
+#if $qunit_test
+</div>
+#end if
 
 <script type="text/javascript">
 #block bodyonload
