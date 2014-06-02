@@ -159,7 +159,12 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
     /**
      *
      * @constructor
-     * @param {{clickableText: boolean, title: String, searchable: boolean}} [options]
+     * @param {{}} [options]
+     * @param {boolean} options.clickableText
+     * @param {String} options.title
+     * @param {boolean} options.searchable
+     * @param {Function} options.onSwitchVisibility a callback function(status, treeComponent) called whenever
+     * visibility status is changed
      * @param {*} [messages]
      */
     function TreeComponent(options, messages) {
@@ -254,6 +259,10 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             jqElm.css({
                 left: leftPos + 'px'
             });
+        }
+
+        if (typeof this.options.onSwitchVisibility === 'function') {
+            this.options.onSwitchVisibility(state, this);
         }
     };
 
@@ -551,12 +560,18 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
      * @param {{clickableText: Boolean, title: String}} [options]
      * @param {Function} [customCallback] custom code to be executed when an item is selected.
      * The function is expected to have ignature func(event, selectedItemValue);
+     * @return {Array} list of created components
      */
     lib.createTreeComponent = function (selResult, messages, options, customCallback) {
+        var ans = [];
+
         $(selResult).each(function () {
             var component = new TreeComponent(options, messages);
+
             component.build(this, customCallback);
+            ans.push(component);
         });
+        return ans;
     };
 
     return lib;
