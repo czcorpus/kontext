@@ -227,6 +227,8 @@ class ConcCGI(CGIPublisher):
     shuffle = Parameter(0, persistent=True)
     SubcorpList = Parameter([])
 
+    qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
+
     _conc_dir = u''
     _home_url = u'./first_form'
     _files_path = u'../files'
@@ -753,6 +755,12 @@ class ConcCGI(CGIPublisher):
         result['format_number'] = partial(format_number)
 
         result['error_report_url'] = settings.get('global', 'error_report_url', None)
+
+        result['qunit_test'] = self.qunit
+        if self.qunit:
+            result['client_model_dir'] = 'tests'
+        else:
+            result['client_model_dir'] = 'tpl'
 
         # is there a concordance information in session?
         self._restore_conc_results(result)
