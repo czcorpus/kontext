@@ -29,7 +29,7 @@ $_("Create Subcorpus")#slurp
 
 #def bodyonload
 
-require(['tpl/subcorpForm', 'conf'], function(pageSelf, conf) {
+require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.inputMethod = "$method";
     conf.messages['available_attributes'] = "$_('available attributes')";
     conf.messages['and'] = "$_('and')";

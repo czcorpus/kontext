@@ -26,7 +26,7 @@ $_("Subcorpus Info")#slurp
 
 
 #def bodyonload
-require(['tpl/stats', 'conf'], function(pageSelf, conf) {
+require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     pageSelf.init(conf);
 });
 #end def
