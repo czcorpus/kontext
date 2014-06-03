@@ -29,6 +29,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         activeParallelCorporaSettingKey = 'active_parallel_corpora';
 
     lib.maxEncodedParamsLength = 1500;
+    lib.treeComponent = null;
 
     /**
      *
@@ -137,6 +138,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
      * @todo rename/refactor this stuff
      */
     lib.misc = function () {
+        var tc;
+
         // let's override the focus
         layoutModel.conf.focus = function () {
             var target = null;
@@ -149,8 +152,10 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             return target;
         };
 
-        treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), layoutModel.conf.messages,
+        tc = treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), layoutModel.conf.messages,
             {clickableText: true, searchable: true}, layoutModel.updForm);
+        lib.treeComponent = tc[0]; // only one tree component is created for the page
+
         // initial query selector setting (just like when user changes it manually)
         hideElem.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
 
