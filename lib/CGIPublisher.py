@@ -362,7 +362,7 @@ class CGIPublisher(object):
     def _add_undefined(self, result, methodname, vars):
         pass
 
-    def _add_globals(self, result):
+    def _add_globals(self, result, methodname, action_metadata):
         """
         This method is expected to fill-in global values needed by output template
         (e.g. each page contains user name or current corpus).
@@ -816,7 +816,7 @@ class CGIPublisher(object):
                 print >> outf, result  # this is obsolete
         # Template
         elif type(result) is DictType:
-            self._add_globals(result)
+            self._add_globals(result, methodname, action_metadata)
             self._add_undefined(result, methodname, action_metadata.get('vars', ()))
             result = self.rec_recode(result)
             if template.endswith('.tmpl'):
