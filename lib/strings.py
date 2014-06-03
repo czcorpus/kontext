@@ -183,3 +183,12 @@ def escape(s):
     Escapes a CQL attribute value to protect it against RegExp evaluation
     """
     return re.compile(r'[][.*+{}?()|\\"$^]').sub(r'\\g<0>', s)
+
+
+def camelize(s):
+    """
+    Converts underscore-separated identifier into a camel-case one
+    (e.g. foo_and_bar will become fooAndBar)
+    """
+    a = [x for x in s.split('_') if len(x) > 0]
+    return a[0] + ''.join([x[0].upper() + x[1:] for x in a[1:]])

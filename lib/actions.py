@@ -430,7 +430,7 @@ class Actions(ConcCGI):
             self.ctxattrs = 'word'
         self.structattrs = structattrs
 
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', page_model='viewattrs')
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
@@ -469,7 +469,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', page_model='sort')
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -668,7 +668,7 @@ class Actions(ConcCGI):
         else:  # highlight both
             return fullstruct
 
-    @exposed(template='view.tmpl')
+    @exposed(template='view.tmpl', page_model='view')
     def query(self, qtype='cql'):
         """
         perform query
@@ -777,7 +777,7 @@ class Actions(ConcCGI):
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
 
-    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'))
+    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view')
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
               fc_lemword_type='',
@@ -814,7 +814,7 @@ class Actions(ConcCGI):
         self._attach_tag_builder(out)
         return out
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ))
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
                inclkwic=False, within=0):
         """
@@ -1167,6 +1167,7 @@ class Actions(ConcCGI):
         result['to_line'] = 10000  # TODO
         return result
 
+    @exposed(access_level=1)
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                       heading=0):
         """
@@ -2234,16 +2235,6 @@ class Actions(ConcCGI):
             'to_date': to_date,
             'types': types
         }
-
-    @exposed()
-    def to(self, q=''):
-        """
-        TODO - this was just a concept - delete it or improve it
-        """
-        row = plugins.query_storage.get_user_query(self._session_get('user', 'id'), q)
-        if row:
-            self._redirect('%s&query_id=%s' % (row['url'], row['id']))
-        return {}
 
     @exposed(access_level=0)
     def audio(self, chunk=''):

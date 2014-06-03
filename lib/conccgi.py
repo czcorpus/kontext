@@ -710,13 +710,13 @@ class ConcCGI(CGIPublisher):
         result['num_tag_pos'] = corp_conf_info.get('num_tag_pos', 0)
         result['citation_info'] = corp_conf_info.get('citation_info', '')
 
-    def _add_globals(self, result):
+    def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        CGIPublisher._add_globals(self, result)
+        CGIPublisher._add_globals(self, result, methodname, action_metadata)
 
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['human_corpname'] = self._human_readable_corpname()
@@ -795,8 +795,10 @@ class ConcCGI(CGIPublisher):
         result['qunit_test'] = self.qunit
         if self.qunit:
             result['client_model_dir'] = 'tests'
+            result['page_model'] = self.qunit
         else:
             result['client_model_dir'] = 'tpl'
+            result['page_model'] = action_metadata.get('page_model', strings.camelize(methodname))
 
         # is there a concordance information in session?
         self._restore_conc_results(result)
