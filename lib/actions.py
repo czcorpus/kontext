@@ -720,9 +720,9 @@ class Actions(ConcCGI):
             qbase = 'q'
         texttypes = self._texttype_query()
         if texttypes:
-            ttquery = ' '.join(['within <%s %s />' % nq for nq in texttypes])
+            ttquery = (' '.join(['within <%s %s />' % nq for nq in texttypes])).decode('utf-8')
         else:
-            ttquery = ''
+            ttquery = u''
         par_query = ''
         nopq = []
         for al_corpname in self.sel_aligned:
