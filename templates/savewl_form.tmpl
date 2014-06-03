@@ -34,7 +34,7 @@ $_("Save Word List")#slurp
 </title>
 
 #def bodyonload
-require(['jquery', 'tpl/savewlForm', 'conf'], function (\$, savewlForm, conf) {
+require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, savewlForm, conf) {
     conf.files_path = '${files_path}';
     savewlForm.init(conf);
 });

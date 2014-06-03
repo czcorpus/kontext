@@ -33,7 +33,7 @@ $_("Concordance: Filter form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', 'tpl/filterForm', 'conf'], function (\$, filterForm, conf) {
+require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, filterForm, conf) {
     filterForm.init(conf);
 });
 
