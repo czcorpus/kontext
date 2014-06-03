@@ -106,7 +106,7 @@ class AttrArgs(object):
                 sql_values.append(self.import_value(values))
             where.append('(%s)' % ' OR '.join(cnf_item))
 
-        where.append('corpus_id = ?')
+        where.append('%s.corpus_id = ?' % item_prefix)
         sql_values.append(corpus_id)
 
         return ' AND '.join(where), sql_values
@@ -246,8 +246,6 @@ class LiveAttributes(object):
                            % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
 
         ans = {}
-        import logging
-        logging.getLogger(__name__).debug('SQL: %s' % sql_template)
         ans.update(attr_map)
         cursor.execute(sql_template, where_values)
 
