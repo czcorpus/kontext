@@ -316,32 +316,57 @@ class ConcCGI(CGIPublisher):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
-    def _apply_user_settings(self, actions=None):
+    def _load_user_settings(self):
         """
-        Updates object's attributes according to user settings. Settings
-        are loaded via settings_storage plugin.
+        Loads user settings via settings_storage plugin. The settings are divided
+        into two groups:
+        1. corpus independent (e.g. last_corpname, pagesize)
+        2. corpus dependent (e.g. selected attributes to be presented on concordance page)
 
-        Devel. note: self.corpname and self._session must be ready when calling this
-        (TODO: maybe this should be solved by declaring these dependencies explicitly via parameters)
-
-        arguments:
-        actions -- a callable taking a single parameter (a dictionary) which can can be used
-            to alter some of the parameters
+        returns:
+        2-tuple of dicts ([general settings], [corpus dependent settings])
         """
         options = {}
-        if self._user:
-            user_file_id = self._user
-        else:
-            user_file_id = 'anonymous'
+        corp_options = {}
 
         for k, v in plugins.settings_storage.load(self._session_get('user', 'id')).items():
-            if k.find(self.corpname) == 0:
-                options[k.split(':', 1)[-1]] = v
-        convert_types(options, self.clone_self(), selector=1)
+            if ':' not in k:
+                options[k] = v
+            else:
+                corp_options[k] = v
+        return options, corp_options
 
+    def _apply_general_user_settings(self, options, actions=None):
+        """
+        Applies general user settings (see self._load_user_settings()) to
+        the controller's attributes. This produces a default configuration
+        which can (and often is) be overwritten by URL parameters.
+
+        arguments:
+        options -- a dictionary containing user settings
+        actions -- a custom action to be applied to options (default is None)
+        """
+        convert_types(options, self.clone_self(), selector=1)
         if callable(actions):
             actions(options)
-        self._setup_user_paths(user_file_id)
+        self._setup_user_paths(self._user if self._user else 'anonymous')
+        self.__dict__.update(options)
+
+    def _apply_corpus_user_settings(self, options, corpname):
+        """
+        Applies corpus-dependent settings in the similar way
+        to self._apply_general_user_settings. But in this case,
+        a corpus name must be provided to be able to filter out
+        settings of other corpora.
+        """
+        if len(corpname) == 0:
+            raise ValueError('corpname must be non-empty')
+        ans = {}
+        for k, v in options.items():
+            if k.find(corpname) == 0:
+                ans[k.split(':', 1)[-1]] = v
+
+        convert_types(options, self.clone_self(), selector=1)
         self.__dict__.update(options)
 
     def _get_save_excluded_attributes(self):
@@ -388,6 +413,11 @@ class ConcCGI(CGIPublisher):
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=self.environ['wsgi.input'])
 
+        options, corp_options = self._load_user_settings()
+        # only general setting can be applied now because
+        # we do not know final corpus name yet
+        self._apply_general_user_settings(options, self._init_default_settings)
+
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if self._requires_corpus_access(path[0]):
@@ -405,7 +435,9 @@ class ConcCGI(CGIPublisher):
         else:
             self.corpname = ''
 
-        self._apply_user_settings(self._init_default_settings)
+        # now we can apply also corpus-dependent settings
+        # because the corpus name is already known
+        self._apply_corpus_user_settings(corp_options, self.corpname)
 
         # Once we know the current corpus we can remove
         # settings related to other corpora. It is quite
