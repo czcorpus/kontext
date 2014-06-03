@@ -321,6 +321,9 @@ class ConcCGI(CGIPublisher):
         Updates object's attributes according to user settings. Settings
         are loaded via settings_storage plugin.
 
+        Devel. note: self.corpname and self._session must be ready when calling this
+        (TODO: maybe this should be solved by declaring these dependencies explicitly via parameters)
+
         arguments:
         actions -- a callable taking a single parameter (a dictionary) which can can be used
             to alter some of the parameters
@@ -385,8 +388,6 @@ class ConcCGI(CGIPublisher):
         form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                 environ=self.environ, fp=self.environ['wsgi.input'])
 
-        self._apply_user_settings(self._init_default_settings)
-
         # corpus access check
         allowed_corpora = plugins.auth.get_corplist(self._user)
         if self._requires_corpus_access(path[0]):
@@ -403,6 +404,9 @@ class ConcCGI(CGIPublisher):
             self.corpname = allowed_corpora[0]
         else:
             self.corpname = ''
+
+        self._apply_user_settings(self._init_default_settings)
+
         # Once we know the current corpus we can remove
         # settings related to other corpora. It is quite
         # a dumb solution but currently there is no other way
