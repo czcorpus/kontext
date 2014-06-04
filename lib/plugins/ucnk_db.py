@@ -41,6 +41,15 @@ class DbConnection(object):
     def open_status(self):
         return self.db_conn.open
 
+    def is_usable(self):
+        try:
+            logging.getLogger(__name__).debug('Pinging the database.')
+            self.db_conn.ping()
+        except MySQLdb.Error:
+            return False
+        else:
+            return True
+
     def try_close(self):
         try:
             self.db_conn.close()
@@ -65,6 +74,7 @@ class DbConnectionProvider(object):
         """
         if not hasattr(_local, 'connection') or _local.connection.open_status < 1 or _local.connection.is_old() \
                 or force_reconnect:
+            logging.getLogger(__name__).debug('Opening new database connection.')
             _local.connection = self._open_connection()
         return _local.connection.db_conn
 
@@ -72,9 +82,15 @@ class DbConnectionProvider(object):
         """
         Forces closing of current (thread local) connection.
         """
-        logging.getLogger(__name__).warning('Closing broken database connection.')
+        logging.getLogger(__name__).debug('Closing database connection.')
         _local.connection.try_close()
         del _local.connection
+
+    def refresh(self):
+        logging.getLogger(__name__).debug('Refreshing database connection.')
+        if not _local.connection.is_usable():
+            self.close()
+            self.get()
 
     def _open_connection(self):
         conn = MySQLdb.connect(host=self.conf['ucnk:host'], user=self.conf['ucnk:username'],
