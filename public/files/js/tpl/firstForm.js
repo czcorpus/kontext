@@ -152,8 +152,14 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             return target;
         };
 
-        tc = treeComponent.createTreeComponent($('form[action="first"] select[name="corpname"]'), layoutModel.conf.messages,
-            {clickableText: true, searchable: true}, layoutModel.updForm);
+        tc = treeComponent.createTreeComponent(
+            $('form[action="first"] select[name="corpname"]'),
+            layoutModel.conf.messages,
+            {
+                clickableText : true,
+                searchable : true
+            },
+            layoutModel.formChangeCorpus);
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
