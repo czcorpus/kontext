@@ -793,7 +793,7 @@ class ConcCGI(CGIPublisher):
         result['error_report_url'] = settings.get('global', 'error_report_url', None)
 
         result['qunit_test'] = self.qunit
-        if self.qunit:
+        if self.qunit and settings.is_debug_mode():
             result['client_model_dir'] = 'tests'
             result['page_model'] = self.qunit
         else:
