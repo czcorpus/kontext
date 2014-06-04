@@ -74,7 +74,6 @@ class DbConnectionProvider(object):
         """
         if hasattr(_local, 'connection') and _local.connection.open_status() == 1 and _local.connection.is_old():
             self.close()
-            del _local.connection
 
         if not hasattr(_local, 'connection'):
             logging.getLogger(__name__).debug('Opening new database connection.')
