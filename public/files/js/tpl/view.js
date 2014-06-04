@@ -26,31 +26,33 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
 
     var lib = {};
 
+    lib.viewDetailDoneCallback = function (boxInst) {
+        $('a.expand-link').each(function () {
+            $(this).bind('click', function (event) {
+                detail.showDetail(
+                    event.target,
+                    $(this).data('url'),
+                    $(this).data('params'),
+                    function (jqXHR, textStatus, errorThrown) {
+                        layoutModel.showMessage('error', errorThrown);
+                    },
+                    // Expand link, when clicked, must bind the same event handler
+                    // for the new expand link. That's why this 'callback recursion' is present.
+                    lib.viewDetailDoneCallback,
+                    layoutModel.createAjaxLoader()
+                );
+                event.preventDefault();
+            });
+        });
+        layoutModel.mouseOverImages(boxInst.getRootElement());
+    };
+
     lib.misc = function () {
         var callback;
 
         $('#groupmenu').attr('corpname', layoutModel.conf.corpname);
         $('#groupmenu').attr('queryparams', layoutModel.conf.q);
         $('#groupmenu').mouseleave(lib.close_menu);
-
-        callback = function (boxInst) {
-            $('a.expand-link').each(function () {
-                $(this).bind('click', function (event) {
-                    detail.showDetail(
-                        event.target,
-                        $(this).data('url'),
-                        $(this).data('params'),
-                        function (jqXHR, textStatus, errorThrown) {
-                            layoutModel.showMessage('error', errorThrown);
-                        },
-                        callback,
-                        layoutModel.createAjaxLoader()
-                    );
-                    event.preventDefault();
-                });
-            });
-            layoutModel.mouseOverImages(boxInst.getRootElement());
-        };
 
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
             var jqRealTarget = null;
@@ -69,7 +71,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
                 function (jqXHR, textStatus, error) {
                     layoutModel.showMessage('error', error);
                 },
-                callback,
+                lib.viewDetailDoneCallback,
                 layoutModel.createAjaxLoader()
             );
             event.stopPropagation();
