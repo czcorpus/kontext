@@ -619,7 +619,7 @@ class ConcCGI(CGIPublisher):
         # last resort solution (this shouldn't happen in properly configured production installation)
         if not cn in corp_list:
             cn = 'susanne'
-            fallback = '%sfirst_form?corpname=%s' % (settings.get_root_url(), cn)
+            fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
         return cn, fallback
 
     def self_encoding(self):
