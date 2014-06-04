@@ -66,14 +66,17 @@ class DbConnectionProvider(object):
         """
         self.conf = conf
 
-    def get(self, force_reconnect=False):
+    def get(self):
         """
         Gets the connection. If retrieved for the first time or closed before then or
         the connection_timeout has been exceeded then new one is created.
         Please note that this method does not monitor connection's state.
         """
-        if not hasattr(_local, 'connection') or _local.connection.open_status < 1 or _local.connection.is_old() \
-                or force_reconnect:
+        if hasattr(_local, 'connection') and _local.connection.open_status() == 1 and _local.connection.is_old():
+            self.close()
+            del _local.connection
+
+        if not hasattr(_local, 'connection'):
             logging.getLogger(__name__).debug('Opening new database connection.')
             _local.connection = self._open_connection()
         return _local.connection.db_conn
@@ -88,9 +91,7 @@ class DbConnectionProvider(object):
 
     def refresh(self):
         logging.getLogger(__name__).debug('Refreshing database connection.')
-        if not _local.connection.is_usable():
-            self.close()
-            self.get()
+        self.get()
 
     def _open_connection(self):
         conn = MySQLdb.connect(host=self.conf['ucnk:host'], user=self.conf['ucnk:username'],
