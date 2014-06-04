@@ -368,17 +368,22 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
     };
 
     /**
+     * Modifies form (actually, it is always the #mainform)
+     * in a way that only current corpus is changed. Under
+     * normal circumstances, the form submints to the concordance
+     * view page via POST method.
      *
      * @param {Event} event
      */
-    lib.updForm = function (event) {
-        var jqActiveElm = $(event.target);
+    lib.formChangeCorpus = function (event) {
+        var jqFormElm = $(event.target).closest('form');
 
-        $('input[name="reload"]').val('1');
-        if (jqActiveElm.closest('form').attr('usesubcorp')) {
-            jqActiveElm.closest('form').attr('usesubcorp', '');
+        jqFormElm.attr('action', 'first_form');
+        jqFormElm.attr('method', 'GET');
+        if (jqFormElm.attr('usesubcorp')) {
+            jqFormElm.attr('usesubcorp', null);
         }
-        jqActiveElm.closest('form').submit();
+        jqFormElm.submit();
     };
 
     /**

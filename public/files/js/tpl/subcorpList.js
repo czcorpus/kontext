@@ -31,7 +31,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
     lib.misc = function () {
         var preSubmit = function (event) {
             $('#mainform').attr('method', 'GET');
-            layoutModel.updForm(event);
+            layoutModel.formChangeCorpus(event);
         };
         treeComponent.createTreeComponent($('form#mainform select[name="corpname"]'), layoutModel.conf.messages,
             {clickableText: true}, preSubmit);

@@ -54,7 +54,7 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
         }
         $('#subcname').on('change', lib.showSubcorpInfo);
         treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'), layoutModel.conf.messages,
-            {clickableText: true}, layoutModel.updForm);
+            {clickableText: true}, layoutModel.formChangeCorpus);
     };
 
     return lib;

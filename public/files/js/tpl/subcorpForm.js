@@ -29,7 +29,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
      *
      * @param item
      */
-    lib.updForm = function (item) {
+    lib.formChangeCorpus = function (item) {
         var formAncestor,
             i,
             srch,
