@@ -28,7 +28,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
 
     lib.viewDetailDoneCallback = function (boxInst) {
         $('a.expand-link').each(function () {
-            $(this).bind('click', function (event) {
+            $(this).one('click', function (event) {
                 detail.showDetail(
                     event.target,
                     $(this).data('url'),
