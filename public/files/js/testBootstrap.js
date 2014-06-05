@@ -48,8 +48,14 @@ define(['QUnit', 'win'], function (QUnit, win) {
 
         msg +=  '\nTotal: ' + info.total + ' Failed: ' + info.failed + ' Passed: ' + info.passed
             + '\nDuration: ' + info.runtime + 'ms\n';
-        console.log(msg);
+
         win.testFinished = true;  // set the global flag to 'finished'
+        if (win.parent) { // running in an iframe => test suite
+            win.parent.postMessage(info, '*');
+
+        } else {
+            console.log(msg);
+        }
     });
 
     return QUnit;
