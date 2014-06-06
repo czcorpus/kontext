@@ -283,7 +283,8 @@ class ConcCGI(CGIPublisher):
         return tuple([x[0] for x in attrs])
 
     def _requires_corpus_access(self, action):
-        return action not in ('login', 'loginx', 'logoutx')
+        # TODO this is a flawed solution - method metadata (access_level should be used instead)
+        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -775,7 +776,7 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css_ie'] = None
 
         if plugins.has_plugin('live_attributes') and plugins.live_attributes.is_enabled_for(self.corpname):
-            result['live_attributes_js'] = 'plugins/%s' % settings.get('plugins', 'live_attributes', {}).get('js_module')
+            result['live_attributes_js'] = '%s' % settings.get('plugins', 'live_attributes', {}).get('js_module')
         else:
             result['live_attributes_js'] = False
 

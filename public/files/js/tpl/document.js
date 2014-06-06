@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttributes', 'jquery.cookie'], function (win,
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes', 'jquery.cookie'], function (win,
     $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
@@ -29,6 +29,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
 
     lib.conf = {};
     lib.pluginResets = [];
+    lib.initCallbacks = [];
 
     /**
      * @param {HTMLElement} selectAllElm
@@ -59,6 +60,14 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
             }
         }
     }
+
+    /**
+     *
+     * @param fn
+     */
+    lib.registerInitCallback = function (fn) {
+        this.initCallbacks.push(fn);
+    };
 
     /**
      * Escapes general string containing HTML elements and entities
@@ -1204,6 +1213,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'liveAttr
         lib.externalHelpLinks();
         liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
             '.text-type-params');
+
+        $.each(this.initCallbacks, function (i, fn) {
+            fn();
+        });
     };
 
     return lib;

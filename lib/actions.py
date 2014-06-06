@@ -2281,5 +2281,15 @@ class Actions(ConcCGI):
 
     @exposed(return_type='json')
     def bibliography(self, id=''):
-        ans = plugins.live_attributes.get_bibliography(self._corp(), item_id=id);
+        ans = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
         return ans
+
+    @exposed(return_type='html', template='empty.tmpl')
+    def ajax_get_toolbar(self):
+        html = plugins.application_bar.get_contents(cookies=self._cookies,
+                                                    curr_lang=self.ui_lang,
+                                                    return_url=self.return_url,
+                                                    use_fallback=False,
+                                                    timeout=20)
+
+        return {'html': html}
