@@ -73,9 +73,10 @@ $ca_headers
 requirejs.config({
     baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
     paths: {
-        'jquery': './jquery.min',
+        'jquery' : './jquery.min',
         'jscrollpane' : './jscrollpane.min',
-        'liveAttributes' : #if $live_attributes_js#'$live_attributes_js'#else#'plugins/dummyLiveAttributes'#end if#
+        'plugins' : './plugins',
+        'plugins/liveAttributes' : #if $live_attributes_js#'./plugins/$live_attributes_js'#else#'./plugins/dummyLiveAttributes'#end if#
         #if $qunit_test#,'QUnit' : './qunit'#end if#
     },
     shim : {
