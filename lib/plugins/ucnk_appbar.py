@@ -24,14 +24,23 @@ class ApplicationBar(object):
         self.css_url_ie = css_url_ie
         self.connection = None
 
-    def get_contents(self, cookies, curr_lang, return_url):
+    def get_fallback_content(self):
+        return """<div class="appbar-loading-msg"><span>loading toolbar...</span></div>
+        <script type="text/javascript">
+        require(['plugins/ucnkAppBar', 'tpl/document'], function (appBar, document) {
+            document.registerInitCallback(appBar.toolbarReloader);
+        });
+        </script>"""
+
+    def get_contents(self, cookies, curr_lang, return_url, use_fallback=True, timeout=2):
+        html = None
         if not curr_lang:
             curr_lang = 'en'
         curr_lang = curr_lang.split('_')[0]
         if hasattr(self.ticket_id_provider, 'get_ticket'):
             ticket_id = self.ticket_id_provider.get_ticket(cookies)
             try:
-                self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=3)
+                self.connection = httplib.HTTPConnection(self.server, port=self.port, timeout=timeout)
                 self.connection.request('GET', self.path % {
                     'id': ticket_id,
                     'lang': curr_lang,
@@ -40,10 +49,12 @@ class ApplicationBar(object):
                 response = self.connection.getresponse()
                 
                 if response and response.status == 200:
-                    return response.read().decode('utf-8')
+                    html = response.read().decode('utf-8')
                 else:
+                    html = self.get_fallback_content() if use_fallback else None
                     logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server (%s %s). ticket: %s'
                                                         % (response.status, response.reason, ticket_id))
             except Exception as e:
                 logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server: %s' % (e, ))
-        return None
+                html = self.get_fallback_content() if use_fallback else None
+        return html
