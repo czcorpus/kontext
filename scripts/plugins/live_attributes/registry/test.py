@@ -1,8 +1,11 @@
 import sys
-from parser import reg_grammarParser
+
+from scripts.plugins.live_attributes.registry import confparsing
+
+from scripts.plugins.live_attributes.registry.parser import reg_grammarParser
+
 
 if __name__ == '__main__':
-    import confparsing
 
     if len(sys.argv) < 3:
         print('A registry file and character encoding must be specified')
