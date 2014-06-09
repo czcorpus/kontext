@@ -113,12 +113,13 @@ def create_tables(attrs, db, reset_existing=False):
     return attrs_mod
 
 
-def insert_record(record, db):
+def insert_record(record, corpus_id, db):
     """
     Inserts a single item into the database.
 
     arguments:
     record -- a dictionary column_name -> column_value
+    corpus_id -- id of the corpus (as used in the respective registry file)
     db -- a sqlite3 database connection
     """
     cursor = db.cursor()
@@ -126,7 +127,7 @@ def insert_record(record, db):
     names = ', '.join([v[0] for v in tmp])
     values_p = ', '.join(len(tmp) * ['?'])
     values = tuple([v[1] for v in tmp])
-    sql = "INSERT INTO item (%s) VALUES (%s)" % (names, values_p)
+    sql = "INSERT INTO item (%s, corpus_id) VALUES (%s, %s)" % (names, values_p, corpus_id)
     cursor.execute(sql, values)
 
 
@@ -206,6 +207,6 @@ if __name__ == '__main__':
             data = parse_vert_file(f, conf['encoding'], conf['itemUnit'])
             for row in data:
                 row = apply_struct_prefix(row, conf['itemUnit'], separ='_')
-                insert_record(row, db)
+                insert_record(row, corpus_id=conf['id'], db=db)
         db.commit()
         db.close()
