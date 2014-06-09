@@ -124,10 +124,10 @@ def insert_record(record, corpus_id, db):
     """
     cursor = db.cursor()
     tmp = record.items()
-    names = ', '.join([v[0] for v in tmp])
+    names = ', '.join([v[0] for v in tmp] + ['corpus_id'])
     values_p = ', '.join(len(tmp) * ['?'])
-    values = tuple([v[1] for v in tmp])
-    sql = "INSERT INTO item (%s, corpus_id) VALUES (%s, %s)" % (names, values_p, corpus_id)
+    sql = "INSERT INTO item (%s) VALUES (%s, ?)" % (names, values_p)
+    values = tuple([v[1] for v in tmp] + [corpus_id])
     cursor.execute(sql, values)
 
 
