@@ -133,7 +133,7 @@ def insert_record(record, db):
 def apply_struct_prefix(attrs, prefix, separ='.'):
     """
     Applies a common prefix to provided record keys. If an item has a special name
-    (wordcount, poscount, id. corpus_id) then it is omitted.
+    (wordcount, poscount, corpus_id) then it is omitted.
 
     arguments:
     attrs -- a dictionary of the form attribute_name -> attribute_value
@@ -143,7 +143,7 @@ def apply_struct_prefix(attrs, prefix, separ='.'):
     returns:
     a modified dictionary where keys have the form: [prefix][separ][attribute name]
     """
-    spec_values = ('wordcount', 'poscount', 'id', 'corpus_id')
+    spec_values = ('wordcount', 'poscount', 'corpus_id')
     return dict([('%s%s%s' % (prefix, separ, k), v) for k, v in attrs.items() if k not in spec_values])
 
 
