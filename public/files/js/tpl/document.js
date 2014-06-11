@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes', 'jquery.cookie'], function (win,
-    $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes',
+    'jquery.cookie'], function (win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -657,12 +657,11 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
     };
 
     /**
-     *
-     * @param {{}} [options]
-     * @param {function} options.onShow a custom callback invoked when component pops-up
+     * @returns {$.Deferred.Promise}
      */
-    lib.bindCorpusDescAction = function (options) {
-        var jqDescLink = $('#corpus-desc-link');
+    lib.bindCorpusDescAction = function () {
+        var jqDescLink = $('#corpus-desc-link'),
+            defer = $.Deferred();
 
         popupbox.bind(jqDescLink,
             function (box, finalize) {
@@ -684,14 +683,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
                 },
                 onShow: function (loader) {
                     loader.remove();
-                    if (typeof options.onShow === 'function') {
-                        options.show.apply();
-                    }
+                    defer.resolve();
                 },
                 onError: function (loader) {
                     loader.remove();
+                    defer.resolve();
                 }
             });
+
+        return defer.promise();
     };
 
     /**
@@ -1178,12 +1178,74 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
     };
 
     /**
+     * A key-value storage with some convenient functions.
+     * @constructor
+     */
+    function Map() {
+        this.prom = {};
+    }
+
+    /**
+     * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
+     * Returns self.
+     *
+     * @param arg0
+     * @param arg1
+     * @returns {Map} the called object
+     */
+    Map.prototype.add = function (arg0, arg1) {
+        var prop;
+
+        if (typeof arg0 === 'object' && arg1 === undefined) {
+            for (prop in arg0) {
+                if (arg0.hasOwnProperty(prop)) {
+                    this.add(prop, arg0[prop]);
+                }
+            }
+
+        } else if (typeof arg0 === 'string' && arg1) {
+            if (this.prom.hasOwnProperty(arg0)) {
+                throw new Error('promise ' + arg0 + ' already present');
+            }
+            this.prom[arg0] = arg1;
+        }
+        return this;
+    };
+
+    /**
+     * Tests whether there is a promise with the 'key'
+     *
+     * @param key
+     * @returns {boolean}
+     */
+    Map.prototype.contains = function (key) {
+        return this.prom.hasOwnProperty(key);
+    };
+
+    /**
+     * Gets a promise of the specified name. In case
+     * no such promise exists, error is thrown.
+     *
+     * @param key
+     * @returns {*}
+     */
+    Map.prototype.get = function (key) {
+        if (this.prom[key]) {
+            return this.prom[key];
+
+        } else {
+            throw new Error('No such promise: ' + key);
+        }
+    };
+
+    /**
      *
      * @param {{}} conf
-     * @param {{}} [callbacks]
+     * @return {Map}
      */
-    lib.init = function (conf, callbacks) {
-        var settingsObj;
+    lib.init = function (conf) {
+        var settingsObj,
+            promises = new Map();
 
         try {
             settingsObj = JSON.parse($.cookie('ui_settings'));
@@ -1192,6 +1254,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
             settingsObj = {};
         }
 
+        lib.promises = {};
         lib.conf = conf;
         lib.userSettings = {
             data: settingsObj,
@@ -1215,24 +1278,26 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
             }
         };
 
-        callbacks = callbacks || {};
-
-        lib.misc();
-        lib.bindStaticElements();
-        lib.bindCorpusDescAction(callbacks.hasOwnProperty('bindCorpusDescAction') ? callbacks['bindCorpusDescAction'] : undefined);
-        lib.queryOverview();
-        lib.mainMenu.init();
-        lib.timeoutMessages();
-        lib.mouseOverImages();
-        lib.enhanceMessages();
-        lib.onLoadVirtualKeyboardInit();
-        lib.externalHelpLinks();
-        liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
-            '.text-type-params');
+        promises.add({
+            misc : lib.misc(),
+            bindStaticElements : lib.bindStaticElements(),
+            bindCorpusDescAction : lib.bindCorpusDescAction(),
+            queryOverview : lib.queryOverview(),
+            mainMenuInit : lib.mainMenu.init(),
+            timeoutMessages : lib.timeoutMessages(),
+            mouseOverImages : lib.mouseOverImages(),
+            enhanceMessages : lib.enhanceMessages(),
+            onLoadVirtualKeyboardInit : lib.onLoadVirtualKeyboardInit(),
+            externalHelpLinks : lib.externalHelpLinks(),
+            liveAttributesInit : liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
+                '.text-type-params')
+        });
 
         $.each(this.initCallbacks, function (i, fn) {
             fn();
         });
+
+        return promises;
     };
 
     return lib;
