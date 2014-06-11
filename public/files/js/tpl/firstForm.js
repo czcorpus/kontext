@@ -345,14 +345,20 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     /**
      *
      * @param {object} conf
+     * @return {{}} a simple object containing promises returned
+     * by some of
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
-        lib.misc();
-        lib.bindStaticElements();
-        lib.bindParallelCorporaCheckBoxes();
-        lib.updateFieldsets();
-        lib.makePrimaryButtons();
+        var promises;
+
+        promises = layoutModel.init(conf).add({
+            misc : lib.misc(),
+            bindStaticElements : lib.bindStaticElements(),
+            bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
+            updateFieldsets : lib.updateFieldsets(),
+            makePrimaryButtons : lib.makePrimaryButtons()
+        });
+        return promises;
     };
 
     return lib;
