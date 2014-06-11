@@ -656,7 +656,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
         });
     };
 
-    lib.bindCorpusDescAction = function () {
+    /**
+     *
+     * @param {{}} [options]
+     * @param {function} options.onShow a custom callback invoked when component pops-up
+     */
+    lib.bindCorpusDescAction = function (options) {
         var jqDescLink = $('#corpus-desc-link');
 
         popupbox.bind(jqDescLink,
@@ -677,8 +682,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
                     });
                     return ajaxLoader;
                 },
-                onShow: function (loader) { loader.remove(); },
-                onError: function (loader) { loader.remove(); }
+                onShow: function (loader) {
+                    loader.remove();
+                    if (typeof options.onShow === 'function') {
+                        options.show.apply();
+                    }
+                },
+                onError: function (loader) {
+                    loader.remove();
+                }
             });
     };
 
@@ -1167,9 +1179,10 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
 
     /**
      *
-     * @param {object} conf
+     * @param {{}} conf
+     * @param {{}} [callbacks]
      */
-    lib.init = function (conf) {
+    lib.init = function (conf, callbacks) {
         var settingsObj;
 
         try {
@@ -1201,9 +1214,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
                 $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
             }
         };
+
+        callbacks = callbacks || {};
+
         lib.misc();
         lib.bindStaticElements();
-        lib.bindCorpusDescAction();
+        lib.bindCorpusDescAction(callbacks.hasOwnProperty('bindCorpusDescAction') ? callbacks['bindCorpusDescAction'] : undefined);
         lib.queryOverview();
         lib.mainMenu.init();
         lib.timeoutMessages();
