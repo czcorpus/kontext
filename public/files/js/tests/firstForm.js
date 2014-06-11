@@ -26,6 +26,7 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
 
     lib.init = function (conf) {
         lib.conf = conf;
+        $.cookie('ui_settings', {});
         QUnit.start();
     };
 
@@ -33,6 +34,10 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
         lib.pagePromises = page.init(lib.conf);
     });
 
+    // TODO - this is installation dependent
+    QUnit.test('A proper corpus is selected', function () {
+        QUnit.equal(lib.conf.corpname, 'omezeni/syn2010'); // !!!
+    });
 
     QUnit.test('There is a #mainform present', function () {
         var jqMainForm = $('#content section form#mainform');
@@ -78,6 +83,8 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
         QUnit.equal(switches.length, 2);
 
         lib.pagePromises.get('updateFieldsets').then(function () {
+            console.log('promise then');
+            console.log('switches num', switches.length);
             switches.each(function () {
                 var parentFieldset = $(this).closest('fieldset');
 
