@@ -415,6 +415,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
         $(button).on('click', function (event) {
             self.switchComponentVisibility('show', event.target);
             event.preventDefault();
+            event.stopPropagation();
         });
 
         return button;
