@@ -50,7 +50,8 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
      *
      * @constructor
      * @param {HTMLElement} button
-     * @param {function} customCallback function with signature func(event, selectedItemValue);
+     * @param {function(event, string)} [customCallback] a custom function called whenever user clicks a leaf node;
+     * the second argument contains item's value
      */
     function NestedTree(button, customCallback) {
         this.hiddenInput = null;
@@ -164,7 +165,8 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
      * @param {String} options.title
      * @param {boolean} options.searchable
      * @param {Function} options.onSwitchVisibility a callback function(status, treeComponent) called whenever
-     * visibility status is changed
+     * visibility status is changed. But only if triggered manually (via a clickable element), i.e. automatic
+     * component initalization does NOT cause this callback to be called.
      * @param {*} [messages]
      */
     function TreeComponent(options, messages) {
@@ -172,6 +174,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
         this.treeWrapper = null;
         this.jqWrapper = null;
         this.nestedTree = null;
+        this.button = null; // button for switching component on and off
         this.options = options || {};
 
         if (typeof messages === 'object') {
@@ -183,6 +186,14 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             };
         }
     }
+
+    /**
+     *
+     * @returns {null|*}
+     */
+    TreeComponent.prototype.getSwitchButton = function () {
+        return this.button;
+    };
 
     /**
      * Searches for an UL subtree starting with elm
@@ -232,10 +243,10 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
 
     /**
      *
-     * @param elm element to be switched
-     * @param state one of {"show", "hide"}; if not provided then any state is changed to the other one
+     * @param {string} state one of {"show", "hide"}; if not provided then any state is changed to the other one
+     * @param {HTMLElement} [triggerElm] element which caused the change
      */
-    TreeComponent.prototype.switchComponentVisibility = function (state) {
+    TreeComponent.prototype.switchComponentVisibility = function (state, triggerElm) {
         var leftPos = 0,
             jqElm = $(this.treeWrapper);
 
@@ -260,8 +271,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
                 left: leftPos + 'px'
             });
         }
-
-        if (typeof this.options.onSwitchVisibility === 'function') {
+        if (triggerElm && typeof this.options.onSwitchVisibility === 'function') {
             this.options.onSwitchVisibility(state, this);
         }
     };
@@ -402,9 +412,9 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             self = this;
 
         $(button).empty().append(title);
-        $(button).bind('click', function (event) {
-            self.switchComponentVisibility('show');
-            event.stopPropagation();
+        $(button).on('click', function (event) {
+            self.switchComponentVisibility('show', event.target);
+            event.preventDefault();
         });
 
         return button;
@@ -492,7 +502,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
             $(srchField).typeahead('val', '');
         });
 
-        $(win).on('typeahead:selected', function (jQuery, suggestion, dataset) {
+        $(win).on('typeahead:selected', function (jQuery, suggestion) {
             $(self.nestedTree.leafValues[suggestion.value]).click();
         });
     };
@@ -502,11 +512,10 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
      * it becomes a single level list expandable to the original multi-level list by mouse clicking.
      *
      * @param {HTMLElement} selectElm
-     * @param {function} customCallback
+     * @param {function(HTMLElement, string)} leafNodeClickCallback
      */
-    TreeComponent.prototype.build = function (selectElm, customCallback) {
-        var button,
-            wrapper,
+    TreeComponent.prototype.build = function (selectElm, leafNodeClickCallback) {
+        var wrapper,
             jqSelectBoxItem = $(selectElm),
             self = this;
 
@@ -525,10 +534,10 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
         });
         jqSelectBoxItem.replaceWith(wrapper);
 
-        button = this.createActivationButton(this.options.title || this.getTitleOfSelectedItem(selectElm));
-        this.jqWrapper.append(button);
+        this.button = this.createActivationButton(this.options.title || this.getTitleOfSelectedItem(selectElm));
+        this.jqWrapper.append(this.button);
 
-        this.nestedTree = new NestedTree(button, customCallback);
+        this.nestedTree = new NestedTree(this.button, leafNodeClickCallback);
         this.rootUl = this.nestedTree.buildFromSelectElm(selectElm);
         $(this.rootUl).addClass('root-list');
         this.treeWrapper = $(win.document.createElement('DIV'));
@@ -558,8 +567,7 @@ define(['jquery', 'win', 'typeahead'], function ($, win) {
      * @param {HTMLElement|jQuery|string} selResult HTML SELECT element to be transformed into an expandable tree
      * @param {*} messages translations for the library (if nothing is provided then english messages are used)
      * @param {{clickableText: Boolean, title: String}} [options]
-     * @param {Function} [customCallback] custom code to be executed when an item is selected.
-     * The function is expected to have ignature func(event, selectedItemValue);
+     * @param {function(Event, string} [customCallback] custom code to be executed when an item is selected.
      * @return {Array} list of created components
      */
     lib.createTreeComponent = function (selResult, messages, options, customCallback) {
