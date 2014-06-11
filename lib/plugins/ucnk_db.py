@@ -72,12 +72,15 @@ class DbConnectionProvider(object):
         the connection_timeout has been exceeded then new one is created.
         Please note that this method does not monitor connection's state.
         """
-        if hasattr(_local, 'connection') and _local.connection.open_status() == 1 and _local.connection.is_old():
+        if hasattr(_local, 'connection') and _local.connection.is_old():
+            logging.getLogger(__name__).debug('Detected old db connection.')
             self.close()
-
         if not hasattr(_local, 'connection'):
             logging.getLogger(__name__).debug('Opening new database connection.')
             _local.connection = self._open_connection()
+
+        logging.getLogger(__name__).debug('db.get(), age: %01.3fs, old_flag: %s'
+                                              % ((time.time() - _local.connection.conn_time), _local.connection.is_old()))
         return _local.connection.db_conn
 
     def close(self):
