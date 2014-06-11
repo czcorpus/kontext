@@ -48,7 +48,6 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox'
     };
 
     lib.misc = function () {
-        var callback;
 
         $('#groupmenu').attr('corpname', layoutModel.conf.corpname);
         $('#groupmenu').attr('queryparams', layoutModel.conf.q);
