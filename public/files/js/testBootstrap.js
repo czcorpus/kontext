@@ -28,8 +28,6 @@ define(['QUnit', 'win'], function (QUnit, win) {
 
     var textSeparator = '\n----------------------------------------';
 
-    win.testFinished = false; // set global flag (this is watched by PhantomJS)
-
     QUnit.testDone(function(details) {
         var msg = textSeparator + '\nTEST: ';
 
@@ -49,7 +47,6 @@ define(['QUnit', 'win'], function (QUnit, win) {
         msg +=  '\nTotal: ' + info.total + ' Failed: ' + info.failed + ' Passed: ' + info.passed
             + '\nDuration: ' + info.runtime + 'ms\n';
 
-        win.testFinished = true;  // set the global flag to 'finished'
         if (win.parent) { // running in an iframe => test suite
             win.parent.postMessage(info, '*');
 
