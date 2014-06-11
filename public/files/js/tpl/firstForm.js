@@ -171,10 +171,15 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         });
     };
 
+    /**
+     *
+     * @returns {$.Deferred.Promise} a promise object
+     */
     lib.updateFieldsets = function () {
         var jqLink = $('a.form-extension-switch'),
             jqFieldset,
-            elmStatus;
+            elmStatus,
+            defer = $.Deferred(); // currently, this is synchronous
 
         jqLink.each(function () {
             jqFieldset = $(this).closest('fieldset');
@@ -197,6 +202,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             }
         });
         layoutModel.mouseOverImages();
+        defer.resolve();
+        return defer.promise();
     };
 
     /**
