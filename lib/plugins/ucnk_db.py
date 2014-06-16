@@ -73,10 +73,10 @@ class DbConnectionProvider(object):
         Please note that this method does not monitor connection's state.
         """
         if hasattr(_local, 'connection'):
-            logging.getLogger(__name__).debug('db.get(), thread: %s, age: %01.3fs, old_flag: %s'
+            logging.getLogger(__name__).debug('db.get(), thread: %s, age: %01.3fs, old_flag: %s, conn#; %s'
                                               % (threading.current_thread().ident,
                                                  (time.time() - _local.connection.conn_time),
-                                                 _local.connection.is_old()))
+                                                 _local.connection.is_old(), hash(_local.connection)))
         else:
             logging.getLogger(__name__).debug('db.get(), thread: %s, ---- no connection ----'
                                               % (threading.current_thread().ident, ))
