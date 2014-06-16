@@ -455,7 +455,7 @@ ul.submenu li.separ {
 #corpus-details-box table.structs-and-attrs {
   clear: both;
   border-collapse: separate;
-  border: 1px solid #ECF3EA;
+  border: 1px solid @color-light-green;
   border-radius: @border-radius-default;
   margin-top: 20px;
 }
@@ -848,11 +848,13 @@ table.envelope table {
   border-spacing: 0;
 }
 
-table.envelope table td {
-  padding: 3px 23px 3px 8px;
+table.envelope table td,
+table.envelope table th {
+  padding: 5px 8px 5px 12px;
 }
 
-table.envelope td div.scrollable {
+
+table.envelope td > div.scrollable {
   display: block;
   overflow-x: hidden;
   overflow-y: auto;
@@ -860,41 +862,43 @@ table.envelope td div.scrollable {
   max-height: 300px;
 }
 
-table.envelope td input[type="checkbox"] {
+table.envelope > tbody > tr > td input[type="checkbox"] {
   display: inline;
   margin: 0 5px 0 0;
   padding: 0;
   vertical-align: bottom;
 }
 
-table.envelope td label {
+table.envelope > tbody > tr > td label {
   margin: 0;
   padding: 0;
 }
 
-table.envelope td label.select-all {
+table.envelope > tbody > tr > td label.select-all {
   padding-left: 8px;
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-table.envelope td label.select-all,
+table.envelope > tbody > tr > td label.select-all,
 fieldset label.select-all {
   color: @color-logo-blue;
 }
 
-table.envelope td, table.envelope th {
+table.envelope > tbody > tr > td,
+table.envelope > tbody > tr > th {
   margin: 0;
+  padding: 5px 0;
   white-space: nowrap;
 }
 
-table.envelope td.separ {
+table.envelope > tbody > tr > td.separ {
   border-color: @color-light-frame;
   border-style: solid;
   border-width: 0 1px 0 0;
 }
 
-table.envelope th {
+table.envelope > tbody > tr > th {
   color: @color-default-text;
   background-color: @color-data-table-footer;
   padding-top: 10px;
@@ -905,7 +909,7 @@ table.envelope table.dynamic tr:nth-child(odd) {
   background-color: @color-light-green;
 }
 
-table.envelope tr.last-line td {
+table.envelope > tbody > tr.last-line td {
   background-color: @color-data-table-footer;
 }
 
@@ -917,11 +921,11 @@ table.envelope.locked {
   border: 1px solid @locked-attrs-bgcolor;
 }
 
-table.envelope.locked th {
+table.envelope.locked > tbody > tr > th {
   background-color: @locked-attrs-bgcolor;
 }
 
-table.envelope.locked tr.last-line td {
+table.envelope.locked > tbody > tr.last-line td {
   background-color: @locked-attrs-bgcolor;
 }
 
@@ -929,7 +933,6 @@ table.envelope .metadata {
   font-size: 80%;
   color: @color-light-text;
   text-align: center;
-  padding-top: 10px;
 }
 
 table.form {
