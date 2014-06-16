@@ -721,7 +721,9 @@ $corp_full_name</b><br>
             </tr>
             <tr class="last-line">
                 <td>
+                    #if $len($l.pop('Values', ())) > 0
                     <label class="select-all" #if not $l.has_key('Values')#style="display: none" #end if#><input class="select-all" type="checkbox" data-status="1" />$_('Select all')</label>
+                    #end if
                 </td>
             </tr>
         </table>
