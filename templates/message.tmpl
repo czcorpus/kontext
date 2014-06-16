@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function ($, page, conf) {
+require(['jquery', '${client_model_dir}/document', 'conf'], function ($, page, conf) {
     page.init(conf);
     \$('a.reload').on('click', page.reload);
 });
