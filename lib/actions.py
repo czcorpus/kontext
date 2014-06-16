@@ -1505,7 +1505,7 @@ class Actions(ConcCGI):
 
             params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
             'from_line=1&to_line=&wlsort=%(wlsort)s') % {'wlattr': self.wlattr, 'wlpat': wlpat, 'wlsort': self.wlsort}
-            logging.getLogger(__name__).debug(params)
+
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
@@ -2016,14 +2016,14 @@ class Actions(ConcCGI):
 
             tpl_data = {'from_line': from_line, 'to_line': to_line}
 
-            err = conccgi.validate_range((from_line, to_line), (1, conc.size()))
+            err = self._validate_range((from_line, to_line), (1, conc.size()))
             if err is not None:
                 raise err
             page_size = to_line - (from_line - 1)
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
-            data = self.call_function(kwic.kwicpage, ((self._corp(), self.corpname), conc, self._get_speech_segment()),
+            data = self.call_function(kwic.kwicpage, (self._get_speech_segment(),),
                                       fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
                                       align=(), alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
                                       leftctx=leftctx, rightctx=rightctx)
