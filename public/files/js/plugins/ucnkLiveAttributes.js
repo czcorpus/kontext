@@ -181,7 +181,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'),
                     $(this).closest('table.envelope'));
             }
-            attrTable.find('.metadata').html(msg + ': ' + dataItem.length);
+            attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
         });
     };
 
