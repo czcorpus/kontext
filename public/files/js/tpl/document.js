@@ -361,12 +361,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
 
 
         $(messageElm).find('a.close-icon').bind('click', function () {
-            $(messageElm).hide('slide', {}, 500);
+            $(messageElm).fadeOuts(200);
         });
 
         if (lib.conf.messageAutoHideInterval) {
             timeout = win.setTimeout(function () {
-                $(messageElm).hide('slide', {}, 500);
+                $(messageElm).fadeOut(200);
                 win.clearTimeout(timeout);
             }, lib.conf.messageAutoHideInterval);
         }
@@ -735,7 +735,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
             parentElm = $(event.target).closest('.message').get(0);
             nextUrl = $(parentElm).data('next-url');
 
-            $(parentElm).hide('slide', {}, 500, function () {
+            $(parentElm).fadeOut(200, function () {
                 if (nextUrl) {
                     win.location = nextUrl;
                 }
@@ -1041,7 +1041,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
 
         if (jqMessage.length > 0 && lib.conf.messageAutoHideInterval) {
             timeout = win.setTimeout(function () {
-                jqMessage.hide('slide', {}, 500);
+                jqMessage.fadeOut(200);
                 win.clearTimeout(timeout);
                 if (jqMessage.data('next-url')) {
                     win.location = jqMessage.data('next-url');
