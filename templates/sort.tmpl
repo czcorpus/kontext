@@ -105,173 +105,78 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
             #filter None
             $input_hidden
             #end filter
-            <table rules="cols" cellpadding="5"><tr><td>
-              <table class="form slim">
-              <tr>
-                <td colspan="2">
-              <label><input type="radio" name="sortlevel" value="1"
-              #if $sortlevel == 1
-                checked="checked"
-              #end if
-              /> $_("first level (Sort by ...)")</label>
-                </td>
-              </tr>
-              <tr>
-                <th>$_("Attribute"):</th>
-                <td><select name="ml1attr">
-              #for $a in $AttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              #for $a in $StructAttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              </select></td>
-              </tr>
-              <tr>
-              <td colspan="2"><label>$_("Ignore case")
-              <input type="checkbox" name="ml1icase" value="i"
-              #if $ml1icase
-                checked="checked"
-              #end if
-              /></label>
-              <label> $_("Backward") <input type="checkbox" name="ml1bward" value="r"
-              #if $ml1bward
-                checked="checked"
-              #end if
-              /></label></td>
-              </tr>
-              <tr>
-              <th class="tall">$_("Position"):</th>
-              <td><select name="ml1ctx" size="5">
-              #for $p in $Pos_ctxs
-                <option value="$p.ctx"
-                #if $p.ctx == $ml1ctx
-                  selected="selected"
-                #end if
-                >$p.n</option>
-              #end for
-              </select></td>
-              </tr>
-            </table>
-            </td><td>
-            <table class="form slim">
-            <tr>
-              <td colspan="2"><label><input type="radio" name="sortlevel" value="2"
-              #if $sortlevel == 2
-                checked="checked"
-              #end if
-              /> $_("second level (... then sort by ...)")</label>
-              </td>
-            </tr>
-            <tr>
-              <th>$_("Attribute"):</th>
-              <td><select name="ml2attr">
-              #for $a in $AttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              #for $a in $StructAttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              </select></td>
-            </tr>
-            <tr>
-              <td colspan="2">
-              <label>$_("Ignore case") <input type="checkbox" name="ml2icase" value="i"
-              #if $ml2icase
-                checked="checked"
-              #end if
-              /></label>
-              <label> $_("Backward") <input type="checkbox" name="ml2bward" value="r"
-              #if $ml2bward
-                checked="checked"
-              #end if
-              /></label></td>
-            </tr>
-            <tr>
-              <th class="tall">$_("Position"):</th>
-              <td><select name="ml2ctx" size="5">
-              #for $p in $Pos_ctxs
-                <option value="$p.ctx"
-                #if $p.ctx == $ml2ctx
-                  selected="selected"
-                #end if
-                >$p.n</option>
-              #end for
-              </select></td>
-            </tr>
-            </table>
-            </td><td>
-            <table class="form slim">
-            <tr>
-            <td colspan="2">
-            <label><input type="radio" name="sortlevel" value="3"
-              #if $sortlevel == 3
-                checked="checked"
-              #end if
-              /> $_("third level (... finally sort by)")</label></td>
-            </tr>
-            <tr>
-              <th>$_("Attribute"):</th>
-              <td><select name="ml3attr">
-              #for $a in $AttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              #for $a in $StructAttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              </select></td>
-            </tr>
-            <tr>
-            <td colspan="2">
-              <label>$_("Ignore case") <input type="checkbox" name="ml3icase" value="i"
-              #if $ml3icase
-                checked="checked"
-              #end if
-              /></label>
-              <label> $_("Backward") <input type="checkbox" name="ml3bward" value="r"
-              #if $ml3bward
-                checked="checked"
-              #end if
-              /></label></td>
-            </tr>
-            <tr>
-              <th class="tall">$_("Position"):</th>
-              <td><select name="ml3ctx" size="5">
-              #for $p in $Pos_ctxs
-                <option value="$p.ctx"
-                #if $p.ctx == $ml3ctx
-                  selected="selected"
-                #end if
-                >$p.n</option>
-              #end for
-              </select></td>
-              </tr>
-            </table>
-            </td>
-                </tr>
-                <tr class="kwic-alignment-box" style="display: none">
-                    <td>
-                        $_("(Node) start at") <a class="kwic-alignment-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:<br />
-                        <select class="kwic-alignment" id="kwic-alignment-1">
-                            <option value="left">$_("leftmost KWIC word")</option>
-                            <option value="right">$_("rightmost KWIC word")</option>
-                        </select>
-                    </td>
-                    <td>
-                        $_("(Node) start at") <a class="kwic-alignment-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:<br />
-                        <select class="kwic-alignment" id="kwic-alignment-2">
-                            <option value="left">$_("leftmost KWIC word")</option>
-                            <option value="right">$_("rightmost KWIC word")</option>
-                        </select>
-                    </td>
-                    <td>
-                        $_("(Node) start at") <a class="kwic-alignment-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:<br />
-                        <select class="kwic-alignment" id="kwic-alignment-3">
-                            <option value="left">$_("leftmost KWIC word")</option>
-                            <option value="right">$_("rightmost KWIC word")</option>
-                        </select>
-                    </td>
-                </tr>
+            <table class="multi-level-blocks">
+                <tbody>
+                    <tr>
+                        <td colspan="3">
+                            $_('use levels'):
+                            <select name="sortlevel" class="sortlevel">
+                                <option value="1" #if $sortlevel == 1#selected="selected"#end if#>1</option>
+                                <option value="2" #if $sortlevel == 2#selected="selected"#end if#>2</option>
+                                <option value="3" #if $sortlevel == 3#selected="selected"#end if#>3</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        #for $i in $range(1, 4)
+                        <td>
+                            <table class="sort-level" data-level="$i">
+                                <tbody>
+                                    <tr>
+                                        <th colspan="2" class="level">
+                                            ${i}.
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>$_("Attribute"):</th>
+                                        <td>
+                                            <select name="ml${i}attr">
+                                                #for $a in $AttrList
+                                                <option value="$a.n">$a.label</option>
+                                                #end for
+                                                #for $a in $StructAttrList
+                                                <option value="$a.n">$a.label</option>
+                                                #end for
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th></th>
+                                        <td>
+                                            <label>$_("Ignore case")
+                                            <input type="checkbox" name="ml${i}icase" value="i" /></label>
+                                            <br />
+                                            <label> $_("Backward") <input type="checkbox" name="ml${i}bward" value="r" /></label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="tall">$_("Position"):</th>
+                                        <td>
+                                            <select name="ml${i}ctx" size="5">
+                                                #for $p in $Pos_ctxs
+                                                <option value="$p.ctx">$p.n</option>
+                                                #end for
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            $_("(Node) start at")
+                                            <a class="kwic-alignment-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:
+                                        </th>
+                                        <td>
+                                            <select class="kwic-alignment" id="kwic-alignment-${i}">
+                                                <option value="left">$_("leftmost KWIC word")</option>
+                                                <option value="right">$_("rightmost KWIC word")</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        #end for
+                    </tr>
+                </tbody>
             </table>
 
             <div class="buttons">
