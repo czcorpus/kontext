@@ -126,6 +126,13 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                     });
                     $('#content').append(ajaxAnimElm);
 
+                    // close all the other bib-info boxes
+                    $('.bib-info').each(function () {
+                        if ($(this).data('popupBox') && !$(this).is($(target))) {
+                            $(this).data('popupBox').close();
+                        }
+                    });
+
                     self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf.corpname
                         + '&id=' + $(target).attr('data-bib-id'),
                         {
