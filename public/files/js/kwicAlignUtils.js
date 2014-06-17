@@ -20,25 +20,23 @@
 define(['win', 'jquery'], function (win, $) {
     'use strict';
 
-    var getColumnId,
-        switchAlignment,
-        lib = {};
+    var lib = {};
 
     /**
      *
      * @param element
      * @returns {string}
      */
-    getColumnId = function (element) {
+    function getColumnId(element) {
         return $(element).attr('id').substr($(element).attr('id').length - 1, 1);
-    };
+    }
 
     /**
      *
      * @param state one of {left, right}
      * @param columnIdx column to update (indexing from 1 to 3)
      */
-    switchAlignment = function (state, columnIdx) {
+    function switchAlignment(state, columnIdx) {
         var srch, repl, select;
 
         if (state === 'left') {
@@ -62,8 +60,7 @@ define(['win', 'jquery'], function (win, $) {
                 }
             });
         }
-    };
-
+    }
 
     /**
      * This function fixes some flaws of original bonito2 application without massive rewriting of
@@ -83,7 +80,6 @@ define(['win', 'jquery'], function (win, $) {
             srch = $(searchContext);
         }
 
-        $('.kwic-alignment-box').css({ display: 'table-row' });
         srch.find('select.kwic-alignment').each(function () {
             switchAlignment($(this).val(), getColumnId(this));
         });
