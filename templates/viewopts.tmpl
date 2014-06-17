@@ -28,7 +28,7 @@ $_("View")#slurp
 #attr $focus = "'#firstattr'"
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, viewAttrs, conf) {
+require(['jquery', '${client_model_dir}/document', 'conf'], function (\$, viewAttrs, conf) {
     viewAttrs.init(conf);
 });
 #end def
