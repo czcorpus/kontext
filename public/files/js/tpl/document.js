@@ -1142,6 +1142,15 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
     };
 
     /**
+     *
+     * @param msg
+     * @returns {*}
+     */
+    lib.translate = function (msg) {
+        return lib.conf.messages[msg] ? lib.conf.messages[msg] : msg;
+    };
+
+    /**
      * Generates an API object which provides essential functionality for client-side plugin code.
      *
      */
@@ -1164,7 +1173,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
             },
 
             translate : function (msg) {
-                return self.conf.messages[msg];
+                return self.translate.apply(msg);
             },
 
             applySelectAll : function (elm, context) {
