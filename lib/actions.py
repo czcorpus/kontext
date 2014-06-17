@@ -18,7 +18,6 @@ import sys
 import re
 import csv
 
-import conccgi
 from conccgi import ConcCGI, ConcError
 from CGIPublisher import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
@@ -713,14 +712,15 @@ class Actions(ConcCGI):
             lemmaattr = 'word'
         wposlist = dict(self.cm.corpconf_pairs(self._corp(), 'WPOSLIST'))
         if self.queryselector == 'phraserow':
-            self.default_attr = 'word' # XXX to be removed with new first form
+            self.default_attr = 'word'  # XXX to be removed with new first form
         if self.default_attr:
             qbase = 'a%s,' % self.default_attr
         else:
             qbase = 'q'
         texttypes = self._texttype_query()
         if texttypes:
-            ttquery = (' '.join(['within <%s %s />' % nq for nq in texttypes])).decode('utf-8')
+            ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
+                                    from_encoding=self._corp().get_conf('ENCODING'))
         else:
             ttquery = u''
         par_query = ''
