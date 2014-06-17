@@ -488,7 +488,7 @@ class Actions(ConcCGI):
         self.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', page_model='view')
     def mlsortx(self,
                 ml1attr='word', ml1pos=1, ml1icase='', ml1bward='', ml1fcode='rc',
                 ml2attr='word', ml2pos=1, ml2icase='', ml2bward='', ml2fcode='rc',
