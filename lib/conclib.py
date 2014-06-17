@@ -213,13 +213,13 @@ class PyConc(manatee.Concordance):
         ans = {}
         for i in range(attr.id_range()):
             value = attr.id2str(i)
-            valid = attr.str2id(self.import_string(value))
+            valid = attr.str2id(value)
             r = self.pycorp.filter_query(struct.attr_val(attr_name, valid))
             cnt = 0
             while not r.end():
                 cnt += normvals[r.peek_beg()]
                 r.next()
-            ans[value] = cnt
+            ans[self.import_string(value)] = cnt
         return ans
 
     def xfreq_dist(self, crit, limit=1, sortkey='f', normwidth=300, ml='',
@@ -265,6 +265,7 @@ class PyConc(manatee.Concordance):
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
+        words = [self.import_string(w) for w in words]
         if not len(freqs):
             return {}
         # now we intentionally rewrite norms as filled in by freq_dist()

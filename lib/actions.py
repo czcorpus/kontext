@@ -884,7 +884,6 @@ class Actions(ConcCGI):
         """
         display a frequency list
         """
-
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
             for i, item in enumerate(fcrit.split()):
@@ -923,6 +922,7 @@ class Actions(ConcCGI):
             'quick_from_line': 1,
             'quick_to_line': None
         }
+
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
             return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0, 'quick_from_line': None,
@@ -981,7 +981,8 @@ class Actions(ConcCGI):
                         fquery = '0 0 1 [] within <%s %s="%s" />' \
                                  % (structname, attrname,
                                     strings.escape(item['Word'][0]['n']))
-                    if not item['freq']: continue
+                    if not item['freq']:
+                        continue
                     efquery = self.urlencode(fquery)
                     item['pfilter'] += ';q=p%s' % efquery
                     if len(attrs) == 1 and item['freq'] <= conc.size():
