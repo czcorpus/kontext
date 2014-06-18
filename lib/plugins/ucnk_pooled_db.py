@@ -32,9 +32,9 @@ class DbConnectionProvider(object):
                                                                             'hostname': self.conf['ucnk:host'],
                                                                             'dbname': self.conf['ucnk:name']}
         self.engine = create_engine(conn_url,
-                                    pool_size=10,
-                                    max_overflow=20,
-                                    pool_recycle=int(self.conf['ucnk:connection_timeout']),
+                                    pool_size=int(self.conf['ucnk:pool_size']),
+                                    max_overflow=int(self.conf['ucnk:max_overflow']),
+                                    pool_recycle=int(self.conf['ucnk:pool_recycle']),
                                     encoding='utf-8'
                                     )
 
