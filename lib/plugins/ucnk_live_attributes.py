@@ -16,17 +16,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
-import sqlite3
+from sqlalchemy import create_engine
 import json
 from functools import wraps
-import threading
 from hashlib import md5
 
 import strings
-
-# thread local instance stores a database connection to
-# allow operating in a multi-threaded environment
-local_inst = threading.local()
 
 
 def create_cache_key(attr_map, max_attr_list_size, aligned_corpora):
@@ -62,7 +57,7 @@ class AttrArgs(object):
     to SQL WHERE expression as used by the plugin.
     E.g.: attributes = { 'key1' : ['value1_1', 'value1_2'], 'key2' : ['value2_1'] }
     leads to the following SQL "component": (key1 = ? OR key1 = ?) AND (key2 = ?)
-    and attached values: ('value1_1', 'value1_2', 'value2_1') as used by cursor.execute()
+    and attached values: ('value1_1', 'value1_2', 'value2_1')
     """
     def __init__(self, data, empty_val_placeholder):
         """
@@ -118,20 +113,19 @@ class LiveAttributes(object):
         self.corptree = corptree
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
+        self.databases = {}
 
     def db(self, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
         """
-        if not hasattr(local_inst, 'db'):
-            local_inst.db = {}
-        if not corpname in local_inst.db:
+        if not corpname in self.databases:
             db_path = self.corptree.get_corpus_info(corpname).get('metadata', {}).get('database')
             if db_path:
-                local_inst.db[corpname] = sqlite3.connect(db_path)
+                self.databases[corpname] = create_engine('sqlite:///%s' % db_path)
             else:
-                local_inst.db[corpname] = None
-        return local_inst.db[corpname]
+                self.databases[corpname] = None
+        return self.databases[corpname]
 
     def is_enabled_for(self, corpname):
         """
@@ -163,9 +157,7 @@ class LiveAttributes(object):
         returns:
         a stored value matching provided argument or None if nothing is found
         """
-        cursor = db.cursor()
-        cursor.execute("SELECT value FROM cache WHERE key = ?", (key,))
-        ans = cursor.fetchone()
+        ans = db.execute("SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
         if ans:
             return LiveAttributes.format_data_types(json.loads(ans[0]))
         return None
@@ -182,9 +174,7 @@ class LiveAttributes(object):
         values -- a dictionary with arbitrary nesting level
         """
         value = json.dumps(values)
-        cursor = db.cursor()
-        cursor.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
-        db.commit()
+        db.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
 
     @staticmethod
     def export_key(k):
@@ -215,7 +205,7 @@ class LiveAttributes(object):
         a dictionary containing matching attributes and values
         """
         attrs = self._get_subcorp_attrs(corpus)
-        cursor = self.db(corpus.get_conf('NAME')).cursor()
+        db = self.db(corpus.get_conf('NAME'))
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
         bib_label = LiveAttributes.import_key(self.corptree.get_corpus_info(corpus.get_conf('NAME'))['metadata']['label_attr'])
@@ -247,7 +237,6 @@ class LiveAttributes(object):
 
         ans = {}
         ans.update(attr_map)
-        cursor.execute(sql_template, where_values)
 
         for attr in srch_attrs:
             if attr in ('poscount',):
@@ -255,7 +244,7 @@ class LiveAttributes(object):
             else:
                 ans[attr] = set()
 
-        for item in cursor.fetchall():
+        for item in db.execute(sql_template, where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
@@ -281,11 +270,10 @@ class LiveAttributes(object):
         return exported
 
     def get_bibliography(self, corpus, item_id):
-        cursor = self.db(corpus.get_conf('NAME')).cursor()
-        cursor.execute('PRAGMA table_info(\'bibliography\')')
-        col_map = dict([(x[1], x[0]) for x in cursor.fetchall()])
-        cursor.execute('SELECT * FROM bibliography WHERE id = ?', (item_id,))
-        ans = cursor.fetchone()
+        db = self.db(corpus.get_conf('NAME'))
+        col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
+        col_map = dict([(x[1], x[0]) for x in col_map])
+        ans = db.execute('SELECT * FROM bibliography WHERE id = ?', (item_id,)).fetchone()
         return dict([(k, ans[i]) for k, i in col_map.items()])
 
 
