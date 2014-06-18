@@ -57,7 +57,7 @@ def get_attrs_from_conf(conf):
     conf -- a dictionary containing single vertical parsing configuration (i.e. a single array item from conf. json file)
 
     returns:
-    a list of strings of the following form: "struct.attribute"
+    a list of 2-tuples (structure, attribute)
     """
     if 'attrList' in conf:
         return [tuple(x.split('.')) for x in conf['attrList']]
@@ -79,12 +79,13 @@ def open_db(db_path):
     return sqlite3.connect(db_path)
 
 
-def create_tables(attrs, db, reset_existing=False):
+def create_tables(attrs, uniq_attr, db, reset_existing=False):
     """
     Creates all the required tables for metadata database.
 
     arguments:
     attrs -- a list of 2-tuples (structure, attribute)
+    uniq_attr -- an attribute (and it structure via struct.attr notation) uniquely identifying a bib. record
     db -- a sqlite3 database connection
     reset_existing -- if True then all the needed existing tables will be removed first
 
@@ -100,7 +101,8 @@ def create_tables(attrs, db, reset_existing=False):
     attrs_sql += ['poscount INTEGER', 'wordcount INTEGER']
     table_sql = """CREATE TABLE item (%s)""" % ', '.join(attrs_sql)
 
-    view_sql = "CREATE VIEW bibliography AS SELECT %s FROM item" % (', '.join(attrs_mod), )
+    view_sql = "CREATE VIEW bibliography AS SELECT %s FROM item" % \
+               (', '.join(['%s AS id' % uniq_attr.replace('.', '_', 1)] + attrs_mod), )
 
     cursor = db.cursor()
     if reset_existing:
@@ -202,7 +204,7 @@ if __name__ == '__main__':
             attrs = get_registry_attrs(conf['registryFile'], conf['encoding'])
 
         db = open_db(conf['dbFile'])
-        create_tables(attrs, db, reset_existing=args.reset_existing)
+        create_tables(attrs, conf['uniqAttr'], db, reset_existing=args.reset_existing)
         with open(conf['verticalFile'], 'r') as f:
             data = parse_vert_file(f, conf['encoding'], conf['itemUnit'])
             for row in data:

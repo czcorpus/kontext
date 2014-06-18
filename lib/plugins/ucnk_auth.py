@@ -46,18 +46,18 @@ class UCNKAuth(object):
 
     MIN_PASSWORD_LENGTH = 5
 
-    def __init__(self, db_conn, sessions, admins):
+    def __init__(self, db_provider, sessions, admins):
         """
         Parameters
         ----------
-        db_conn : object
+        db_provider : object
             database connection
         sessions : objet
             a session handler
         admins : tuple|list
             list of usernames with administrator privileges
         """
-        self.db_conn = db_conn
+        self.db_provider = db_provider
         self.sessions = sessions
         self.corplist = []
         self.admins = admins
@@ -83,14 +83,13 @@ class UCNKAuth(object):
         str : session ID on success else None
         """
         cols = ('id', 'user', 'pass', 'firstName', 'surname')
-        cursor = self.db_conn.cursor()
-        cursor.execute("SELECT %s FROM user WHERE user = %%s" % ','.join(cols), (username, ))
-        row = cursor.fetchone()
+        db = self.db_provider()
+        row = db.execute("SELECT %s FROM user WHERE user = %%s" % ','.join(cols), (username, )).fetchone()
         if row and crypt.crypt(password, row[2]) == row[2]:
             row = dict(zip(cols, row))
         else:
             row = {}
-        cursor.close()
+        db.close()
         if 'id' in row:
             return {
                 'id': row['id'],
@@ -115,11 +114,9 @@ class UCNKAuth(object):
         import crypt
 
         hashed_pass = crypt.crypt(password, create_salt())
-        cursor = self.db_conn.cursor()
-        ans = cursor.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, self.user,))
-        cursor.close()
-        self.db_conn.commit()
-        return ans
+        db = self.db_provider()
+        db.execute("UPDATE user SET pass = %s WHERE user = %s", (hashed_pass, self.user,))
+        db.close()
 
     def get_corplist(self, user):
         """
@@ -133,19 +130,16 @@ class UCNKAuth(object):
         global _corplist
 
         if len(self.corplist) == 0:
-            conn = self.db_conn
-            cursor = conn.cursor()
-            cursor.execute("""SELECT corpora.name FROM (
+            db = self.db_provider()
+            rows = db.execute("""SELECT corpora.name FROM (
 SELECT ucr.corpus_id AS corpus_id
 FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
 UNION
 SELECT r2.corpora AS corpus_id
 FROM user AS u2
 JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
-JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
-            rows = cursor.fetchall()
+JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user)).fetchall()
             if len(rows) > 0:
-                cursor.close()
                 corpora = [row[0] for row in rows]
             else:
                 corpora = []
@@ -153,6 +147,7 @@ JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user
                 corpora.append('susanne')
             corpora.sort()
             _corplist = corpora
+            db.close()
         return _corplist
 
     def validate_password(self, password):

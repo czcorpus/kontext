@@ -23,22 +23,21 @@ class QueryStorage(object):
 
     cols = ('id', 'user_id', 'corpname', 'url', 'params', 'description', 'created', 'updated', 'public', 'tmp')
 
-    def __init__(self, conf, db):
+    def __init__(self, conf, db_provider):
         """
-        Parameters
-        ----------
-
-        conf : the 'settings' module (or some compatible object)
+        arguments:
+        db_provider -- a callable providing a database proxy
+        conf -- the 'settings' module (or some compatible object)
         """
-        self.db = db
+        self.db_provider = db_provider
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
     def _users_last_record_url(self, user_id):
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute('SELECT url FROM noske_saved_queries WHERE user_id = %s ORDER BY created DESC LIMIT 1', (user_id,))
-        ans = cursor.fetchone()
+        db = self.db_provider()
+        ans = db.execute('SELECT url FROM noske_saved_queries WHERE user_id = %s ORDER BY created DESC LIMIT 1',
+                         (user_id,)).fetchone()
+        db.close()
         if ans:
             return ans[0]
         return None
@@ -53,28 +52,27 @@ class QueryStorage(object):
         """
         last_url = self._users_last_record_url(user_id)
         if url != last_url:
-            conn = self.db.get()
-            cursor = conn.cursor()
-            if not query_id:
-                created = int(time.mktime(datetime.now().timetuple()))
-                cursor.execute(u"INSERT INTO noske_saved_queries "
+            db = self.db_provider()
+            with db.begin() as transaction:
+                if not query_id:
+                    created = int(time.mktime(datetime.now().timetuple()))
+                    db.execute(u"INSERT INTO noske_saved_queries "
                                u"(user_id, corpname, url, params, description, created, public, tmp) "
                                u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                              (user_id, corpname, url, params, description, created, public, tmp))
-                cursor.execute('SELECT LAST_INSERT_ID()')
-                ans = cursor.fetchone()
-                if ans:
-                    query_id = ans[0]
+                               (user_id, corpname, url, params, description, created, public, tmp))
+                    ans = db.execute('SELECT LAST_INSERT_ID()').fetchone()
+                    if ans:
+                        query_id = ans[0]
+                    else:
+                        raise QueryStorageException('Failed to create record')
                 else:
-                    raise QueryStorageException('Failed to create record')
-            else:
-                updated = int(time.mktime(datetime.now().timetuple()))
-                # 'params' attribute is omitted deliberately
-                cursor.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
+                    updated = int(time.mktime(datetime.now().timetuple()))
+                    # 'params' attribute is omitted deliberately
+                    db.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
                                u"tmp = %s WHERE user_id = %s AND id = %s", (description, updated, public, tmp, user_id, query_id))
 
-            self.delete_old_records(cursor, user_id)
-            conn.commit()
+                self.delete_old_records(db, user_id)
+            db.close()
             return query_id
         else:
             # if latest action equals to user's previous action then nothing is done
@@ -126,10 +124,10 @@ class QueryStorage(object):
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
 
         sql_params.insert(0, user_id)
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute(sql, tuple(sql_params))
-        rows = [dict(zip(QueryStorage.cols, x)) for x in cursor.fetchall()]
+        db = self.db_provider()
+        ans = db.execute(sql, tuple(sql_params))
+        rows = [dict(zip(QueryStorage.cols, x)) for x in ans.fetchall()]
+        db.close()
 
         def parse_desc(query_desc):
             q = list(query_desc[0])
@@ -151,49 +149,44 @@ class QueryStorage(object):
             row['url'] = '%s&query_id=%s' % (row['url'], row['id'])
         return rows
 
-    def delete_old_records(self, cursor, user_id):
+    def delete_old_records(self, db, user_id):
         """
 
         """
         # Current solution is not very effective but makes MySQL to complain less
         # in case of active replication and multiple engines used.
         # Typically this will delete just one old record which should be ok.
-        cursor.execute("SELECT id FROM noske_saved_queries WHERE user_id = %s "
-                       "AND deleted IS NULL AND tmp = 1 ORDER BY created DESC LIMIT %s, 100",
-                       (user_id, self.num_kept_records))
-        rows = cursor.fetchall()
-        if rows:
-            for row in rows:
-                cursor.execute("DELETE FROM noske_saved_queries WHERE user_id = %s AND deleted IS NULL AND tmp = 1 "
-                               " AND id = %s", (user_id, row[0]))
+        rows = db.execute("SELECT id FROM noske_saved_queries WHERE user_id = %s "
+                          "AND deleted IS NULL AND tmp = 1 ORDER BY created DESC LIMIT %s, 100",
+                          (user_id, self.num_kept_records)).fetchall()
+        for row in rows:
+            db.execute("DELETE FROM noske_saved_queries WHERE user_id = %s AND deleted IS NULL AND tmp = 1 "
+                       " AND id = %s", (user_id, row[0]))
 
     def get_user_query(self, user_id, id):
         """
         Returns concrete query specified by its ID.
         In case the query is not public also user identifier has to match (else None is returned.
         """
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute("SELECT %s FROM noske_saved_queries WHERE id = %%s" % ','.join(QueryStorage.cols), (id, ))
-        row = cursor.fetchone()
+        db = self.db_provider()
+        row = db.execute("SELECT %s FROM noske_saved_queries WHERE id = %%s" % ','.join(QueryStorage.cols), (id, )).fetchone()
         if row:
             row = dict(zip(QueryStorage.cols, row))
             if not row['public'] and row['user_id'] != user_id:
                 row = None
+        db.close()
         return row
 
     def delete_user_query(self, user_id, id):
-        conn = self.db.get()
-        cursor = conn.cursor()
+        db = self.db_provider()
         deleted = int(time.mktime(datetime.now().timetuple()))
-        cursor.execute("UPDATE noske_saved_queries SET deleted = %s WHERE user_id = %s AND id = %s", (deleted, user_id, id))
-        conn.commit()
+        db.execute("UPDATE noske_saved_queries SET deleted = %s WHERE user_id = %s AND id = %s", (deleted, user_id, id))
+        db.close()
 
     def undelete_user_query(self, user_id, id):
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE noske_saved_queries SET deleted = NULL WHERE user_id = %s AND id = %s", (user_id, id))
-        conn.commit()
+        db = self.db_provider()
+        db.execute("UPDATE noske_saved_queries SET deleted = NULL WHERE user_id = %s AND id = %s", (user_id, id))
+        db.close()
 
     def make_query_hash(self, user_id, url):
         """
