@@ -1147,6 +1147,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
      * @returns {*}
      */
     lib.translate = function (msg) {
+        msg = msg || '';
         return lib.conf.messages[msg] ? lib.conf.messages[msg] : msg;
     };
 
