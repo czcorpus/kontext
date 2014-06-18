@@ -619,7 +619,6 @@ class CGIPublisher(object):
             named_args['message'] = ('error', u'%s' % e)
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
-            plugins.db.refresh()
 
         except Exception as e:  # we assume that this means some kind of a fatal error
             self._status = 500
@@ -633,7 +632,6 @@ class CGIPublisher(object):
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
-            plugins.db.refresh()
 
         self._post_dispatch(methodname, tmpl, result)
 
