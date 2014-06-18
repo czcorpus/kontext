@@ -1174,7 +1174,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
             },
 
             translate : function (msg) {
-                return self.translate.apply(msg);
+                return self.translate(msg);
             },
 
             applySelectAll : function (elm, context) {
