@@ -15,21 +15,20 @@ import json
 
 class SettingsStorage(object):
 
-    def __init__(self, conf, db):
+    def __init__(self, conf, db_provider):
         """
         Parameters
         ----------
 
         conf : the 'settings' module (or some compatible object)
         """
-        self.db = db
+        self.db_provider = db_provider
 
     def save(self, user_id, data):
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
-                       (json.dumps(data), user_id))
-        conn.commit()
+        db = self.db_provider()
+        db.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
+                   (json.dumps(data), user_id))
+        db.close()
 
     def load(self, user_id, current_settings=None):
         """
@@ -48,12 +47,11 @@ class SettingsStorage(object):
         """
         if current_settings is None:
             current_settings = {}
-        conn = self.db.get()
-        cursor = conn.cursor()
-        cursor.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,))
-        row = cursor.fetchone()
+        db = self.db_provider()
+        row = db.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,)).fetchone()
         if row:
             current_settings.update(json.loads(row[0]))
+        db.close()
         return current_settings
 
 

@@ -25,7 +25,7 @@ import urllib
 from auth import AbstractAuth
 
 
-def create_instance(conf, sessions, db):
+def create_instance(conf, sessions, db_provider):
     """
     Factory function (as required by the application) providing
     an instance of authentication module.
@@ -33,7 +33,7 @@ def create_instance(conf, sessions, db):
     login_url = conf.get('plugins', 'auth')['login_url']
     logout_url = conf.get('plugins', 'auth')['logout_url']
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
-    return CentralAuth(db=db, sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
+    return CentralAuth(db_provider=db_provider, sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
                        login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
 
 
@@ -42,11 +42,11 @@ class CentralAuth(AbstractAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db, sessions, admins, login_url, logout_url, cookie_name):
+    def __init__(self, db_provider, sessions, admins, login_url, logout_url, cookie_name):
         """
         Parameters
         ----------
-        db : object
+        db_provider : object
             database connection wrapper
         sessions : objet
             a session handler
@@ -59,7 +59,7 @@ class CentralAuth(AbstractAuth):
         cookie_name : str
             name of the cookie used to store authentication ticket
         """
-        self.db = db
+        self.db_provider = db_provider
         self.sessions = sessions
         self.corplist = []
         self.admins = admins
@@ -90,15 +90,14 @@ class CentralAuth(AbstractAuth):
         """
         ticket_id = self.get_ticket(cookies)
         cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
-        cursor = self.db.get().cursor()
-        cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
-                       % ','.join(cols), (ticket_id, ))
-        row = cursor.fetchone()
+        db = self.db_provider()
+        row = db.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
+                         % ','.join(cols), (ticket_id, )).fetchone()
         if row:
             row = dict(zip(cols, row))
         else:
             row = {}
-        cursor.close()
+        db.close()
         if not 'user' in session:
             session['user'] = {}
         if 'u.id' in row:
@@ -124,24 +123,22 @@ class CentralAuth(AbstractAuth):
         global _corplist
 
         if len(self.corplist) == 0:
-            conn = self.db.get()
-            cursor = conn.cursor()
-            cursor.execute("""SELECT corpora.name, limited FROM (
+            db = self.db_provider()
+            rows = db.execute("""SELECT corpora.name, limited FROM (
 SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
 FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
 UNION
 SELECT r2.corpora AS corpus_id, r2.limited AS limited
 FROM user AS u2
 JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
-JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
-            rows = cursor.fetchall()
+JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user)).fetchall()
             corpora = []
             for row in rows:
                 if row[1]:
                     corpora.append('omezeni/%s' % row[0])
                 else:
                     corpora.append(row[0])
-            cursor.close()
+            db.close()
             if not 'susanne' in corpora:
                 corpora.append('susanne')
             corpora.sort()
