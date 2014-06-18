@@ -429,7 +429,7 @@ class Actions(ConcCGI):
             self.ctxattrs = 'word'
         self.structattrs = structattrs
 
-    @exposed(access_level=1, template='view.tmpl', page_model='viewattrs')
+    @exposed(access_level=1, template='view.tmpl', page_model='view')
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
@@ -451,7 +451,7 @@ class Actions(ConcCGI):
         }
         return out
 
-    @exposed(access_level=1, template='view.tmpl')
+    @exposed(access_level=1, template='view.tmpl', page_model='view')
     def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
@@ -468,7 +468,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
-    @exposed(access_level=1, template='view.tmpl', page_model='sort')
+    @exposed(access_level=1, template='view.tmpl', page_model='view')
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
