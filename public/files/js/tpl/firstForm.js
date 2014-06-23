@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function (win, $, treeComponent, layoutModel,
-                                                                                 hideElem) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'history'], function (win,
+        $, treeComponent, layoutModel, hideElem, history) {
     'use strict';
 
     var lib = {},
@@ -43,7 +43,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             itemList = itemList.split(',');
         }
         return callback(itemList);
-    };
+    }
 
     /**
      *
@@ -52,7 +52,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         return callOnParallelCorporaList(function (itemList) {
             return itemList;
         });
-    };
+    }
 
     /**
      * @param {string} corpusName
@@ -68,7 +68,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
             }
         });
-    };
+    }
 
     /**
      * @param {string} corpusName
@@ -83,7 +83,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                 $('#default-view-mode').remove();
             }
         });
-    };
+    }
 
     /**
      * Creates function (i.e. you must call it first to be able to use it)
@@ -132,7 +132,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                 layoutModel.resetPlugins();
             }
         };
-    };
+    }
 
     /**
      * @todo rename/refactor this stuff
@@ -159,7 +159,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                 clickableText : true,
                 searchable : true
             },
-            layoutModel.formChangeCorpus);
+            layoutModel.formChangeCorpus
+        );
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
@@ -285,7 +286,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             });
 
             if (cleanData.length > lib.maxEncodedParamsLength) {
-                dialogAns = window.confirm(layoutModel.conf.messages.too_long_condition);
+                dialogAns = win.confirm(layoutModel.conf.messages.too_long_condition);
                 if (dialogAns) {
                     $(win).unload(function () {
                         $('#mainform').attr('method', 'GET').attr('action', 'first');
@@ -311,6 +312,15 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
                 $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
             }
         });
+    };
+
+    lib.bindHistoryWidget = function () {
+        console.log(layoutModel.conf.anonymousUser);
+        if (!layoutModel.conf.anonymousUser) {
+            $('input.history').each(function () {
+                history.bind(this);
+            });
+        }
     };
 
     /**
@@ -363,7 +373,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
             bindStaticElements : lib.bindStaticElements(),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateFieldsets : lib.updateFieldsets(),
-            makePrimaryButtons : lib.makePrimaryButtons()
+            makePrimaryButtons : lib.makePrimaryButtons(),
+            bindHistoryWidget : lib.bindHistoryWidget()
         });
         return promises;
     };
