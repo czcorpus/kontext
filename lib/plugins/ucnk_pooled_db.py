@@ -11,7 +11,24 @@
 # GNU General Public License for more details.
 
 """
-A custom database wrapper
+A custom database wrapper of sqlalchemy's connection pool
+
+3rd party dependencies:
+
+* sqlalchemy
+
+Required config.xml/plugins entries:
+<db>
+    <module>ucnk_pooled_db</module>
+    <name extension-by="ucnk"></name>
+    <host extension-by="ucnk"></host>
+    <password extension-by="ucnk"></password>
+    <username extension-by="ucnk"></username>
+    <pool_size extension-by="ucnk">[how many connections are there in the pool]</pool_size>
+    <max_overflow extension-by="ucnk">[how many connections to open in addition in case of a peak]</max_overflow>
+    <pool_recycle extension-by="ucnk">[lifetime of a connection in seconds]</pool_recycle>
+</db>
+
 """
 from sqlalchemy import create_engine
 
@@ -40,7 +57,10 @@ class DbConnectionProvider(object):
 
     def __call__(self):
         """
-        Gets a connection from the pool
+        Gets a connection from the pool. Please note that it is up to the caller
+        to close the connection. It is perfectly OK to get and close the connection
+        quite often because the wrapped database connection is typically just returned
+        to the pool (and not effectively closed).
         """
         return self.engine.connect()
 

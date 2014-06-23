@@ -1,8 +1,36 @@
+# Copyright (c) 2013 Institute of the Czech National Corpus
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 import uuid
 import json
 from datetime import datetime
 import time
 import random
+
+
+"""
+
+External requirements:
+
+* requiers a working database plugin
+
+Required config.xml/plugins entries:
+
+<sessions>
+    <module>ucnk_sessions</module>
+    <ttl>[time to live for a session record; in seconds]</ttl>
+    <cleanup_probability>[a probability that KonText checks for old records; values from 0 to 1]</cleanup_probability>
+</sessions>
+"""
 
 
 class Sessions(object):

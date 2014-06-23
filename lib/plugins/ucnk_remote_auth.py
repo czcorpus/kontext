@@ -18,6 +18,17 @@ way when compared to ucnk_auth.py as it expects some external
 login/logout functions and set a cookie with authentication
 ticket. User status is then checked by calling the 'revalidate()'
 method.
+
+Required config.xml/plugins entries:
+
+<auth>
+    <module>devel_remote_auth</module>
+    <auth_cookie_name>[name of a cookie used to store KonText's internal auth ID]</auth_cookie_name>
+    <login_url>[URL where KonText redirects user to log her in; placeholders can be used]</login_url>
+    <logout_url>[URL where KonText redirects user to log her out; placeholders can be used]</logout_url>
+    <central_auth_cookie_name extension-by="ucnk">[name of a cookie used by a central-authentication service]</central_auth_cookie_name>
+</auth>
+
 """
 
 import urllib

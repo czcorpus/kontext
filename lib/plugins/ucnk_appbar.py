@@ -1,6 +1,34 @@
+# Copyright (c) 2014 Institute of the Czech National Corpus
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 import httplib
 import urllib
 import logging
+
+"""
+A plugin which loads an HTML code from an external server. Such HTML typically contains an
+information about current user, links to other applications etc.
+
+Required config.xml/plugin entries:
+
+<application_bar>
+    <module>ucnk_appbar</module>
+    <server>[service address (without path part)]</server>
+    <path>[path part of the service; placeholders are supported]</path>
+    <port>[TCP port used by the external service]</port>
+    <css_url>[URL of an external CSS file specifying imported HTML visuals]</css_url>
+    <css_url_ie>[IE specific CSS]</css_url_ie>
+</application_bar>
+"""
 
 
 def create_instance(settings, ticket_id_provider):
