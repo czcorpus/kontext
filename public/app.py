@@ -223,4 +223,4 @@ if __name__ == '__main__':
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
     })
-    run_simple(args.address, args.port_num, application, use_debugger=True, use_reloader=True)
+    run_simple(args.address, int(args.port_num), application, use_debugger=True, use_reloader=True)
