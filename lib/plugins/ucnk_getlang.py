@@ -11,7 +11,14 @@
 # GNU General Public License for more details.
 
 """
-A custom solution to obtain language settings from a cookie
+A custom solution to obtain language settings from a cookie.
+
+Required config.xml/plugins entries:
+
+<getlang>
+    <module>ucnk_setlang</module>
+    <cookie extension-by="ucnk">[name of the cookie]</cookie>
+</getlang>
 """
 import os
 import Cookie

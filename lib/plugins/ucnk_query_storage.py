@@ -14,6 +14,18 @@ from datetime import datetime
 import time
 import re
 
+"""
+A plugin providing a storage for user's queries for services such as 'query history'.
+
+Required config.xml/plugins entries:
+
+<query_storage>
+    <module>ucnk_query_storage</module>
+    <db_path extension-by="ucnk">[path to a sqlite3-compatible database file]</db_path>
+    <num_kept_records extension-by="ucnk">[how many records to keep stored per user]</num_kept_records>
+</query_storage>
+"""
+
 
 class QueryStorageException(Exception):
     pass

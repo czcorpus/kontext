@@ -21,6 +21,16 @@ except ImportError:
         return source
 from lxml import etree
 
+"""
+Required config.xml/plugins entries:
+
+<corptree>
+    <module>corptree</module>
+    <file>[a path to a configuration XML file]</file>
+    <root_elm_path>[an XPath query leading to a root element where configuration can be found]</root_elm_path>
+</corptree>
+"""
+
 
 class CorpTree(object):
     """
