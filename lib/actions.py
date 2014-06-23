@@ -2237,6 +2237,23 @@ class Actions(ConcCGI):
             'types': types
         }
 
+    @exposed(access_level=1, return_type='json')
+    def ajax_query_history(self):
+        if plugins.has_plugin('query_storage'):
+            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=None,
+                                                          to_date=None, offset=0, limit=20, types=())
+            for row in rows:
+                row['corpname'] = self._canonical_corpname(row['corpname'])
+                row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
+        else:
+            rows = ()
+        return {
+            'data': rows,
+            'from_date': None,
+            'to_date': None,
+            'types': ()
+        }
+
     @exposed(access_level=0)
     def audio(self, chunk=''):
         """
