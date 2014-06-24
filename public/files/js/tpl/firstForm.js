@@ -315,7 +315,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'history']
     };
 
     lib.bindHistoryWidget = function () {
-        console.log(layoutModel.conf.anonymousUser);
         if (!layoutModel.conf.anonymousUser) {
             $('input.history').each(function () {
                 history.bind(this);
