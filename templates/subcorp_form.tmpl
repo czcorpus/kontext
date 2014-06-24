@@ -1,0 +1,92 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from translation import ugettext as _
+#from cmpltmpl.document import document
+#extends document
+#from templating.filters import *
+
+#def title
+$_("Create Subcorpus")#slurp
+#end def
+
+#attr focus = "'#subcname'"
+
+#def bodyonload
+
+require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
+    conf.inputMethod = "$method";
+    conf.messages['available_attributes'] = "$_('available attributes')";
+    conf.messages['and'] = "$_('and')";
+    conf.messages['close'] = "$_('close')";
+    conf.messages['this_action_resets_current_selection'] = "$_('This action will reset you current unsaved subcorpus')";
+    pageSelf.init(conf);
+});
+
+#end def
+
+#def main
+#filter WebSafe
+
+<section>
+<h2>$_('New subcorpus')</h2>
+    <form action="subcorp" method="POST">
+        <table class="form">
+        #filter None
+        $corp_sel_node
+        #end filter
+        <tbody>
+        <tr class="required">
+        <th style="width: 20%">$_("New subcorpus name"):</th>
+        <td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>
+        </tr>
+        <tr>
+            <th>$_('Specify subcorpus using'):</th>
+            <td>
+                <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
+                <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
+            </td>
+        </tr>
+        <tr id="subc-within-row">
+            <th>$_('Condition within'):</th>
+            <td>
+                <strong>&lt;</strong><select id="within-struct-selector" name="within_struct">
+                    #for key, value in $structs_and_attrs.items()
+                    <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
+                    #end for
+                </select><a id="struct-hint"><img data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png" class="over-img"></a>
+                <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
+                <strong>/&gt;</strong>
+            </td>
+        </tr>
+        </tbody>
+        </table>
+        <input type="hidden" name="create" value="True" />
+
+        #filter None
+        $tt_sel
+        #end filter
+
+        <div class="buttons">
+        <input class="default-button" type="submit" value="$_("Create Subcorpus")" />
+        </div>
+    </form>
+</section>
+
+#end filter
+#end def
