@@ -65,7 +65,7 @@ Client-side implementation notes
 
 Specifications of some plugins include also a client-side functionality. In such cases you have to implement or
 configure some existing solution. Plu-in must be defined as an `AMD <https://github.com/amdjs/amdjs-api> `_ compatible
-module. A minimal implementation may look like in this sample::
+module. A minimal implementation may look like in the following sample::
 
     define([], function () {
     var lib = {};
@@ -99,6 +99,11 @@ When implementing an optional plugin you can make it dependent on both default a
 to be aware of is that optional plugin dependencies in *app.py* must be specified using strings (i.e. you cannot
 directly use the package *plugins*) because when Python interpreter reads optional plugins configuration no optional
 plugin is instantiated yet.
+
+It is also recommended to add at least following information to a plugin's module docstring:
+
+  * 3rd party libraries needed to run the plugin
+  * required config.xml entries to properly configure the plugin
 
 -----------------------------------
 List of currently supported plugins
