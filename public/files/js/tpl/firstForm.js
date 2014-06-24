@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'history'], function (win,
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'plugins/queryStorage'], function (win,
         $, treeComponent, layoutModel, hideElem, history) {
     'use strict';
 
@@ -314,8 +314,12 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'history']
         });
     };
 
+    /**
+     *
+     */
     lib.bindHistoryWidget = function () {
         if (!layoutModel.conf.anonymousUser) {
+            history.init(layoutModel.pluginApi());
             $('input.history').each(function () {
                 history.bind(this);
             });
@@ -348,7 +352,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'history']
                 linkElm = $(evt.target).closest('a').get(0);
             }
 
-            newPrimary = $(linkElm).attr('data-corpus-id');
+            newPrimary = $(linkElm).attr('data-cinitQueryStoragePluginorpus-id');
 
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
