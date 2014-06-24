@@ -24,6 +24,22 @@ Required config.xml/plugins entries:
     <db_path extension-by="ucnk">[path to a sqlite3-compatible database file]</db_path>
     <num_kept_records extension-by="ucnk">[how many records to keep stored per user]</num_kept_records>
 </query_storage>
+
+Required SQL table:
+
+CREATE TABLE kontext_saved_queries (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
+  corpname varchar(255) NOT NULL,
+  query TEXT NOT NULL,
+  query_type VARCHAR(31) NOT NULL,
+  params text,
+  created int(11) NOT NULL,
+  PRIMARY KEY (id),
+  KEY user_id (user_id),
+  FOREIGN KEY (user_id) REFERENCES user (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 """
 
 
@@ -33,7 +49,7 @@ class QueryStorageException(Exception):
 
 class QueryStorage(object):
 
-    cols = ('id', 'user_id', 'corpname', 'url', 'params', 'description', 'created', 'updated', 'public', 'tmp')
+    cols = ('id', 'user_id', 'corpname', 'query', 'query_type', 'params', 'created')
 
     def __init__(self, conf, db_provider):
         """
@@ -45,16 +61,7 @@ class QueryStorage(object):
         self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
 
-    def _users_last_record_url(self, user_id):
-        db = self.db_provider()
-        ans = db.execute('SELECT url FROM noske_saved_queries WHERE user_id = %s ORDER BY created DESC LIMIT 1',
-                         (user_id,)).fetchone()
-        db.close()
-        if ans:
-            return ans[0]
-        return None
-
-    def write(self, user_id, corpname, url, public, tmp, params=None, description=None,  query_id=None):
+    def write(self, user_id, corpname, query, query_type, params=None):
         """
         Writes data as a new saved query
 
@@ -62,40 +69,20 @@ class QueryStorage(object):
         -------
         str : id of the query (either new or existing)
         """
-        last_url = self._users_last_record_url(user_id)
-        if url != last_url:
-            db = self.db_provider()
-            with db.begin() as transaction:
-                if not query_id:
-                    created = int(time.mktime(datetime.now().timetuple()))
-                    db.execute(u"INSERT INTO noske_saved_queries "
-                               u"(user_id, corpname, url, params, description, created, public, tmp) "
-                               u"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                               (user_id, corpname, url, params, description, created, public, tmp))
-                    ans = db.execute('SELECT LAST_INSERT_ID()').fetchone()
-                    if ans:
-                        query_id = ans[0]
-                    else:
-                        raise QueryStorageException('Failed to create record')
-                else:
-                    updated = int(time.mktime(datetime.now().timetuple()))
-                    # 'params' attribute is omitted deliberately
-                    db.execute(u"UPDATE noske_saved_queries SET description = %s, updated = %s, public = %s, "
-                               u"tmp = %s WHERE user_id = %s AND id = %s", (description, updated, public, tmp, user_id, query_id))
+        db = self.db_provider()
+        with db.begin() as transaction:
+            created = int(time.mktime(datetime.now().timetuple()))
+            db.execute(u"INSERT INTO kontext_saved_queries " +
+                       u"(%s) " % ', '.join(QueryStorage.cols[1:]) +
+                       (u"VALUES (%s)" % ', '.join(['%s'] * (len(QueryStorage.cols) - 1))),
+                      (user_id, corpname, query, query_type, params, created))
+            self.delete_old_records(db, user_id)  # TODO make this probability based
+        db.close()
 
-                self.delete_old_records(db, user_id)
-            db.close()
-            return query_id
-        else:
-            # if latest action equals to user's previous action then nothing is done
-            return None
-
-    def get_user_queries(self, user_id, from_date=None, to_date=None, offset=0, limit=None, types=None):
+    def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
         """
-        import json
-        import conclib
 
         sql_params = []
         opt_sql = []
@@ -112,12 +99,13 @@ class QueryStorage(object):
             opt_sql.append('created <= %s')
             sql_params.append(to_date)
 
-        if types is None:
-            types = []
+        if query_type is not None:
+            opt_sql.append('query_type = %s')
+            sql_params.append(query_type)
 
-        tmp = ' OR '.join(['tmp = %s' % {'auto-saved': 1, 'manually-saved': 0}[x] for x in types])
-        if tmp:
-            opt_sql.append('(%s)' % tmp)
+        if corpname is not None:
+            opt_sql.append('corpname = %s')
+            sql_params.append(corpname)
 
         if limit:
             limit_sql = "LIMIT %s OFFSET %s"
@@ -129,36 +117,17 @@ class QueryStorage(object):
         if len(opt_sql) > 0:
             opt_sql.insert(0, '')
 
-        sql = ("SELECT %s FROM noske_saved_queries"
-               " WHERE user_id = %%s AND deleted IS NULL"
+        sql = ("SELECT %s FROM kontext_saved_queries"
+               " WHERE user_id = %%s "
                " %s "
-               " ORDER BY created DESC, updated DESC "
+               " ORDER BY created DESC "
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
 
         sql_params.insert(0, user_id)
         db = self.db_provider()
         ans = db.execute(sql, tuple(sql_params))
-        rows = [dict(zip(QueryStorage.cols, x)) for x in ans.fetchall()]
+        rows = [dict(x) for x in ans]
         db.close()
-
-        def parse_desc(query_desc):
-            q = list(query_desc[0])
-            r = re.match(r'^(([^,]+),)?(\[.+)', q[1])
-            if r:
-                q[1] = {'default': r.group(2), 'query': r.group(3)}
-            else:
-                q[1] = {'default': None, 'query': q[1]}
-            query_desc[0] = tuple(q)
-            return query_desc
-
-        for row in rows:
-            row['corpname'] = row['corpname'].decode('utf-8')
-            row['url'] = row['url'].decode('utf-8')
-            row['params'] = json.loads(row['params'])
-            row['params_description'] = parse_desc(conclib.get_conc_desc(q=row['params']))
-            row['description'] = self.decode_description(row['description'])
-            row['created'] = datetime.fromtimestamp(row['created'])
-            row['url'] = '%s&query_id=%s' % (row['url'], row['id'])
         return rows
 
     def delete_old_records(self, db, user_id):
@@ -168,75 +137,12 @@ class QueryStorage(object):
         # Current solution is not very effective but makes MySQL to complain less
         # in case of active replication and multiple engines used.
         # Typically this will delete just one old record which should be ok.
-        rows = db.execute("SELECT id FROM noske_saved_queries WHERE user_id = %s "
-                          "AND deleted IS NULL AND tmp = 1 ORDER BY created DESC LIMIT %s, 100",
+        rows = db.execute("SELECT id FROM kontext_saved_queries WHERE user_id = %s "
+                          " ORDER BY created DESC LIMIT %s, 100",
                           (user_id, self.num_kept_records)).fetchall()
         for row in rows:
-            db.execute("DELETE FROM noske_saved_queries WHERE user_id = %s AND deleted IS NULL AND tmp = 1 "
+            db.execute("DELETE FROM kontext_saved_queries WHERE user_id = %s "
                        " AND id = %s", (user_id, row[0]))
-
-    def get_user_query(self, user_id, id):
-        """
-        Returns concrete query specified by its ID.
-        In case the query is not public also user identifier has to match (else None is returned.
-        """
-        db = self.db_provider()
-        row = db.execute("SELECT %s FROM noske_saved_queries WHERE id = %%s" % ','.join(QueryStorage.cols), (id, )).fetchone()
-        if row:
-            row = dict(zip(QueryStorage.cols, row))
-            if not row['public'] and row['user_id'] != user_id:
-                row = None
-        db.close()
-        return row
-
-    def delete_user_query(self, user_id, id):
-        db = self.db_provider()
-        deleted = int(time.mktime(datetime.now().timetuple()))
-        db.execute("UPDATE noske_saved_queries SET deleted = %s WHERE user_id = %s AND id = %s", (deleted, user_id, id))
-        db.close()
-
-    def undelete_user_query(self, user_id, id):
-        db = self.db_provider()
-        db.execute("UPDATE noske_saved_queries SET deleted = NULL WHERE user_id = %s AND id = %s", (user_id, id))
-        db.close()
-
-    def make_query_hash(self, user_id, url):
-        """
-        Generates random-like identifier based on user, url and current time
-        """
-        from hashlib import md5
-
-        chars = (
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-        )
-        created = time.mktime(datetime.now().timetuple())
-        x = long('0x' + md5('%s-%s-%s' % (created, user_id, url)).hexdigest(), 16)
-        ans = []
-        while x > 0:
-            p = x % len(chars)
-            ans.append(chars[p])
-            x /= len(chars)
-        return ''.join([str(x) for x in ans])
-
-    def decode_description(self, s):
-        """
-        Converts a restructuredText-formatted string into HTML
-        """
-        from docutils.core import publish_string
-
-        if s in ('', None):
-            return ''
-        is_unicode = type(s) is unicode
-        html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-                                 writer_name='html')
-        html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        if not is_unicode and type(html) is str:
-            html = html.decode('utf-8')
-
-        return html
 
 
 def create_instance(settings, db):

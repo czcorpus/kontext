@@ -57,8 +57,20 @@ define(['jquery', 'win'], function ($, win) {
         };
     };
 
+    /**
+     *
+     * @returns {Number}
+     */
     Box.prototype.numRows = function () {
         return this.data ? this.data.length : 0;
+    };
+
+    /**
+     *
+     * @param val
+     */
+    Box.prototype.setInputVal = function (val) {
+        this.inputElm.val(val);
     };
 
     /**
@@ -82,8 +94,9 @@ define(['jquery', 'win'], function ($, win) {
         var self = this;
 
         $(win).on('keyup.histOff', function (event) {
-            if (event.keyCode === 27) {
-                $(win).off('keyup.histOff');
+            if (event.keyCode === 13 || event.keyCode === 27) { // ENTER or ESC key
+                event.preventDefault();
+                event.stopPropagation();
                 self.close();
             }
         });
@@ -96,25 +109,44 @@ define(['jquery', 'win'], function ($, win) {
                 self.highlightNextRow();
             }
         });
+
+        // we have to block main form Enter key event to prevent submission
+        $('#make-concordance-button').attr('disabled', 'disabled');
     };
 
+    /**
+     *
+     */
     Box.prototype.cleanRowSelection = function () {
         this.boxElm.find('ul.rows li').removeClass('selected');
     };
 
+    /**
+     *
+     */
+    Box.prototype.highlightCurrentRow = function () {
+        this.cleanRowSelection();
+        this.boxElm.find('ul.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
+        this.setInputVal(this.data[this.highlightedRow].query);
+    };
+
+    /**
+     *
+     */
     Box.prototype.highlightNextRow = function () {
-        if (this.highlightedRow < this.numRows()) {
-            this.cleanRowSelection();
+        if (this.highlightedRow < this.numRows() - 1) {
             this.highlightedRow += 1;
-            this.boxElm.find('ul.rows li:nth-child(' + this.highlightedRow + ')').addClass('selected');
+            this.highlightCurrentRow();
         }
     };
 
+    /**
+     *
+     */
     Box.prototype.highlightPrevRow = function () {
         if (this.highlightedRow > 0) {
-            this.cleanRowSelection();
             this.highlightedRow -= 1;
-            this.boxElm.find('ul.rows li:nth-child(' + this.highlightedRow + ')').addClass('selected');
+            this.highlightCurrentRow();
         }
     };
 
@@ -123,20 +155,39 @@ define(['jquery', 'win'], function ($, win) {
      */
     Box.prototype.init = function () {
         var self = this,
-            prom = $.ajax('ajax_query_history', {
+            prom;
+
+        this.data = [];
+        if (this.inputElm.val()) {
+            this.data.push({
+                query : this.inputElm.val(),
+                query_type : $('#queryselector').val(),
+                corpname : lib.pluginApi.conf.corpname
+            });
+        }
+        this.setInputVal(null); // if omitted then Firefox restores initial value after hitting the ESC
+
+        prom = $.ajax('ajax_query_history', {
                 dataType : 'json'
             }).promise();
 
         prom.then(
             function (data) {
-                if (!this.boxElm) {
-                    self.render();
+                if (data.hasOwnProperty('error')) {
+                    lib.pluginApi.showMessage('error', '.... ERROR.....'); // TODO
+                    // TODO
+
+                } else {
+                    if (!this.boxElm) {
+                        self.render();
+                    }
+                    self.appendData(data.data);
                 }
-                self.appendData(data.data);
             },
             function (err) {
                 // TODO
                 console.log(err);
+                lib.pluginApi.showMessage('error', '.... ERROR.....'); // TODO
             }
         );
     };
@@ -169,25 +220,49 @@ define(['jquery', 'win'], function ($, win) {
      * @param {string} data.corpname
      */
     Box.prototype.appendData = function (data) {
-        var tbl = this.boxElm.find('ul.rows');
+        var tbl = this.boxElm.find('ul.rows'),
+            listItem,
+            link,
+            self = this;
 
-        this.data = data;
+        this.data = this.data.concat(data);
         tbl.empty();
         $.each(this.data, function (i, v) {
-            tbl.append('<li><strong>' + v.corpname + '</strong>: <a href="'+ v.url + '">' + v.params + '</a></li>');
+            listItem = $(win.document.createElement('li'));
+
+            link = $(win.document.createElement('a'));
+            link.attr('data-rownum', i);
+            link.attr('href', v.url);
+            link.append('<strong>' + v.corpname + '</strong>:&nbsp;');
+            link.append(v.query);
+            listItem.on('click', function (event) {
+                self.highlightedRow = parseInt($(event.target).attr('data-rownum'));
+                self.highlightCurrentRow();
+                self.setInputVal(self.data[self.highlightedRow].query);
+                event.preventDefault();
+                event.stopPropagation();
+                self.close();
+            });
+
+            tbl.append(listItem);
+            listItem.append(link);
         });
+        this.highlightCurrentRow();
+
     };
 
     /**
      * Closes history widget.
      */
     Box.prototype.close = function () {
-        this.data = null; // TODO maybe we can cache the data here
+        //this.data = null; // TODO maybe we can cache the data here
         this.highlightedRow = 0;
         this.boxElm.remove();
         this.boxElm = null;
-        this.bindActivationEvent();
         this.inputElm.off('keyup.moveSelection');
+        $(win).off('keyup.histOff');
+        $('#make-concordance-button').attr('disabled', null);
+        this.bindActivationEvent();
     };
 
     /**
