@@ -76,7 +76,7 @@ requirejs.config({
         'jquery' : './jquery.min',
         'jscrollpane' : './jscrollpane.min',
         'plugins' : './plugins',
-        'plugins/liveAttributes' : #if $live_attributes_js#'./plugins/$live_attributes_js'#else#'./plugins/dummyLiveAttributes'#end if#
+        'plugins/liveAttributes' : #if $live_attributes_js#'./plugins/$live_attributes_js'#else#'./plugins/dummyPlugin'#end if#
         #if $qunit_test#,'QUnit' : './qunit'#end if#
     },
     shim : {
