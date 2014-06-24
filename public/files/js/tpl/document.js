@@ -1152,8 +1152,20 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
     };
 
     /**
+     * @typedef {Object} pluginApi
+     * @property {{}} conf
+     * @property {function} ajax
+     * @property {function} ajaxAnim
+     * @property {function} showMessage
+     * @property {function} translate
+     * @property {function} applySelectAll
+     * @property {function} registerReset
+     */
+
+    /**
      * Generates an API object which provides essential functionality for client-side plugin code.
      *
+     * @return {pluginApi}
      */
     lib.pluginApi = function () {
         var self = this;
