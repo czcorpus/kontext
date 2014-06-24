@@ -780,6 +780,11 @@ class ConcCGI(CGIPublisher):
         else:
             result['live_attributes_js'] = False
 
+        if plugins.has_plugin('query_storage'):
+            result['query_storage_js'] = '%s' % settings.get('plugins', 'query_storage', {}).get('js_module')
+        else:
+            result['query_storage_js'] = False
+
         result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).get('metadata', {})
 
         # avalilable languages

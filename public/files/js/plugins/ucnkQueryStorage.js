@@ -24,6 +24,8 @@ define(['jquery', 'win'], function ($, win) {
 
     var lib = {};
 
+    lib.pluginApi = null; // this must be initialized via lib.init(plugInApi)
+
     /**
      *
      * @param inputElm
@@ -195,7 +197,18 @@ define(['jquery', 'win'], function ($, win) {
      * @returns {Box}
      */
     lib.bind = function (elm) {
+        if ({}.toString.call(lib.pluginApi) !== '[object Object]') {
+            throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
+        }
        return new Box(elm, $(elm).parent());
+    };
+
+    /**
+     *
+     * @param pluginApi
+     */
+    lib.init = function (pluginApi) {
+        lib.pluginApi = pluginApi;
     };
 
     return lib;
