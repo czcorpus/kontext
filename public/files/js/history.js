@@ -36,6 +36,8 @@ define(['jquery', 'win'], function ($, win) {
         this.boxElm = null;
         this.inputElm.attr('autocomplete', 'off');
         this.bindActivationEvent();
+        this.highlightedRow = 0;
+        this.data = null; // currently appended data
     }
 
     /**
@@ -51,6 +53,10 @@ define(['jquery', 'win'], function ($, win) {
             top : jqRef.position().top,
             left : jqRef.position().left
         };
+    };
+
+    Box.prototype.numRows = function () {
+        return this.data ? this.data.length : 0;
     };
 
     /**
@@ -79,21 +85,52 @@ define(['jquery', 'win'], function ($, win) {
                 self.close();
             }
         });
+
+        this.inputElm.on('keyup.moveSelection', function (event) {
+            if (event.keyCode === 38) { // UP arrow
+                self.highlightPrevRow();
+
+            } else if (event.keyCode === 40) { // DOWN arrow
+                self.highlightNextRow();
+            }
+        });
     };
 
+    Box.prototype.cleanRowSelection = function () {
+        this.boxElm.find('ul.rows li').removeClass('selected');
+    };
+
+    Box.prototype.highlightNextRow = function () {
+        if (this.highlightedRow < this.numRows()) {
+            this.cleanRowSelection();
+            this.highlightedRow += 1;
+            this.boxElm.find('ul.rows li:nth-child(' + this.highlightedRow + ')').addClass('selected');
+        }
+    };
+
+    Box.prototype.highlightPrevRow = function () {
+        if (this.highlightedRow > 0) {
+            this.cleanRowSelection();
+            this.highlightedRow -= 1;
+            this.boxElm.find('ul.rows li:nth-child(' + this.highlightedRow + ')').addClass('selected');
+        }
+    };
+
+    /**
+     *
+     */
     Box.prototype.init = function () {
         var self = this,
             prom = $.ajax('ajax_query_history', {
                 dataType : 'json'
-            });
+            }).promise();
 
-        prom.promise().then(
+        prom.then(
             function (data) {
-                console.log(data);
                 if (!this.boxElm) {
                     self.render();
                 }
-                self.appendData(data);
+                self.appendData(data.data);
             },
             function (err) {
                 // TODO
@@ -118,7 +155,7 @@ define(['jquery', 'win'], function ($, win) {
             width : frame.width,
             height: '300px'
         });
-        this.boxElm.html('<table class="rows"><tbody></tbody></table>');
+        this.boxElm.html('<ul class="rows"></ul>');
         this.bindEvents();
     };
 
@@ -127,14 +164,15 @@ define(['jquery', 'win'], function ($, win) {
      * as obtained in parameter data.
      *
      * @param {{}} data
-     * @param {{}} data.data
+     * @param {string} data.corpname
      */
     Box.prototype.appendData = function (data) {
-        var tbl = this.boxElm.find('table.rows tbody');
+        var tbl = this.boxElm.find('ul.rows');
 
+        this.data = data;
         tbl.empty();
-        $.each(data.data, function (i, v) {
-            tbl.append('<tr><td><a href="'+ v.url + '">' + v.params + '</a></td></tr>');
+        $.each(this.data, function (i, v) {
+            tbl.append('<li><strong>' + v.corpname + '</strong>: <a href="'+ v.url + '">' + v.params + '</a></li>');
         });
     };
 
@@ -142,8 +180,12 @@ define(['jquery', 'win'], function ($, win) {
      * Closes history widget.
      */
     Box.prototype.close = function () {
+        this.data = null; // TODO maybe we can cache the data here
+        this.highlightedRow = 0;
         this.boxElm.remove();
+        this.boxElm = null;
         this.bindActivationEvent();
+        this.inputElm.off('keyup.moveSelection');
     };
 
     /**

@@ -299,4 +299,20 @@ button#reset-tag-button {
 .history-widget {
   border: 1px solid @color-light-frame;
   background-color: #FFFFFF;
+  box-shadow: @portal-box-shadow;
+}
+
+.history-widget ul {
+  margin: 5px;
+  padding: 0;
+  list-style-type: none;
+}
+
+.history-widget li {
+  padding: 5px 8px;
+  border-radius: @border-radius-default;
+}
+
+.history-widget li.selected {
+  background-color: @color-light-green;
 }
