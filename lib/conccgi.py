@@ -551,19 +551,14 @@ class ConcCGI(CGIPublisher):
     def _get_save_excluded_attributes(self):
         return 'corpname',
 
-    def _save_query(self):
+    def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
-            q_encoded = self.urlencode([('q', q) for q in self.q])
-            url = '%sconcdesc?corpname=%s;usesubcorp=%s;%s' % (self.get_root_url(), self.corpname,
-                                                               self.usesubcorp, q_encoded)
-
-            description = ''  # "%s::\n\n\t%s\n" % (_('Notes'), ','.join(add_q))
             if not self.usesubcorp:
                 corpname = self.corpname
             else:
                 corpname = '%s:%s' % (self.corpname, self.usesubcorp)
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=corpname,
-                                        url=url, params=json.dumps(self.q), tmp=1, description=description, query_id=None, public=0)
+                                        query=query, query_type=query_type)
 
     def _determine_curr_corpus(self, form, corp_list):
         """

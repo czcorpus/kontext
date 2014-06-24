@@ -230,7 +230,6 @@ class Actions(ConcCGI):
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
 
         self._store_conc_results(out)
-        self._save_query()
         return out
 
     @exposed(vars=('TextTypeSel', 'LastSubcorp'))
@@ -525,6 +524,7 @@ class Actions(ConcCGI):
         wpos = getattr(self, 'wpos' + suff, '')
         char = getattr(self, 'char' + suff, '')
         cql = getattr(self, 'cql' + suff, '')
+
         queries = {
             'cql': '%(cql)s',
             'lemma': '[lempos="%(lemma)s%(lpos)s"]',
@@ -545,7 +545,9 @@ class Actions(ConcCGI):
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict(self.cm.corpconf_pairs(thecorp, 'WPOSLIST'))
         lposlist = dict(self.cm.corpconf_pairs(thecorp, 'LPOSLIST'))
+
         if queryselector == 'iqueryrow':
+            self._save_query(iquery, queryselector)
             if 'lc' in attrlist:
                 if 'lemma_lc' in attrlist:
                     qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
@@ -558,6 +560,7 @@ class Actions(ConcCGI):
                     qitem = '[word="(?i)%(q)s"|lemma="(?i)%(q)s"]'
                 else:
                     qitem = '[word="(?i)%(q)s"]'
+
             if '--' not in iquery:
                 return ''.join([qitem % {'q': strings.escape(q)}
                                 for q in iquery.split()])
@@ -574,17 +577,18 @@ class Actions(ConcCGI):
                 return ''.join([split_tridash(strings.escape(q), qitem)
                                 for q in iquery.split()])
 
-        if queryselector == 'lemmarow':
+        elif queryselector == 'lemmarow':
+            self._save_query(lemma, queryselector)
             if not lpos:
                 return '[lemma="%s"]' % lemma
-            if 'lempos' in attrlist:
+            elif 'lempos' in attrlist:
                 try:
                     if not lpos in lposlist.values():
                         lpos = lposlist[lpos]
                 except KeyError:
                     raise ConcError(_('Undefined lemma PoS') + ' "%s"' % lpos)
                 return '[lempos="%s%s"]' % (lemma, lpos)
-            else: # XXX
+            else:  # XXX WTF?
                 try:
                     if lpos in wposlist.values():
                         wpos = lpos
@@ -594,9 +598,11 @@ class Actions(ConcCGI):
                     raise ConcError(_('Undefined word form PoS')
                                     + ' "%s"' % lpos)
                 return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
-        if queryselector == 'phraserow':
+        elif queryselector == 'phraserow':
+            self._save_query(phrase, queryselector)
             return '"' + '" "'.join(phrase.split()) + '"'
-        if queryselector == 'wordrow':
+        elif queryselector == 'wordrow':
+            self._save_query(word, queryselector)
             if qmcase:
                 wordattr = 'word="%s"' % word
             else:
@@ -612,13 +618,17 @@ class Actions(ConcCGI):
             except KeyError:
                 raise ConcError(_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
-        if queryselector == 'charrow':
+        elif queryselector == 'charrow':
+            self._save_query(char, queryselector)
             if not char:
                 raise ConcError(_('No char entered'))
             return '[word=".*%s.*"]' % char
         elif queryselector == 'tagrow':
+            self._save_query(self.tag, queryselector)
             return '[tag="%s"]' % self.tag
-        return cql
+        else:
+            self._save_query(cql, queryselector)
+            return cql
 
     def _compile_query(self, qtype=None, cname=''):
         if not self._is_err_corpus():
@@ -786,7 +796,6 @@ class Actions(ConcCGI):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=()):
-
         self._set_first_query(fc_lemword_window_type,
                               fc_lemword_wsize,
                               fc_lemword_type,
@@ -2186,45 +2195,16 @@ class Actions(ConcCGI):
             out = {'message': ('error', _('You don\'t have enough privileges to see this page.'))}
         return out
 
-    @exposed(access_level=1, return_type='json')
-    def ajax_save_query(self, description='', url='', query_id='', public='', tmp=1):
-        html = plugins.query_storage.decode_description(description)
-        query_id = plugins.query_storage.write(user=self._session_get('user', 'id'), corpname=self.corpname, url=url,
-                                               tmp=0, description=description, query_id=query_id, public=int(public))
-        return {'rawHtml': html, 'queryId': query_id}
-
-    @exposed(access_level=1, return_type='json')
-    def ajax_delete_query(self, query_id=''):
-        plugins.query_storage.delete_user_query(self._session_get('user', 'id'), query_id)
-        return {}
-
-    @exposed(access_level=1, return_type='json')
-    def ajax_undelete_query(self, query_id=''):
-        from datetime import datetime
-
-        plugins.query_storage.undelete_user_query(self._session_get('user', 'id'), query_id)
-        query = plugins.query_storage.get_user_query(self._session_get('user', 'id'), query_id)
-        desc = plugins.query_storage.decode_description(query['description'])
-        autosaved_class = ' autosaved' if query['tmp'] else ''
-        notification_autosaved = "| %s" % _('autosaved') if query['tmp'] else ''
-
-        html = """<div class="query-history-item%s" data-query-id="%s">
-                <h4>%s | <a class="open" href="%s">%s</a> | <a class="delete" href="#">%s</a>%s</h4>
-                %s""" % (autosaved_class, query_id, datetime.fromtimestamp(query['created']), query['url'], _('open'),
-                         _('delete'), notification_autosaved, desc)
-        return {
-            'html': html
-        }
-
     @exposed(access_level=1)
-    def query_history(self, offset=0, limit=100, from_date='', to_date='', types=()):
+    def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', corpus_id=''):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-view')
         self._reset_session_conc()
         if plugins.has_plugin('query_storage'):
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
-                                                          to_date=to_date, offset=offset, limit=limit, types=types)
+                                                          query_type=query_type, corpname=corpus_id,
+                                                          to_date=to_date, offset=offset, limit=limit)
             for row in rows:
                 row['corpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
@@ -2233,25 +2213,26 @@ class Actions(ConcCGI):
         return {
             'data': rows,
             'from_date': from_date,
-            'to_date': to_date,
-            'types': types
+            'to_date': to_date
         }
 
     @exposed(access_level=1, return_type='json')
     def ajax_query_history(self):
+        from datetime import datetime
+
         if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=None,
-                                                          to_date=None, offset=0, limit=20, types=())
+            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), offset=0, limit=20,
+                                                          query_type='cqlrow', corpname=self.corpname)
             for row in rows:
+                created_dt = datetime.fromtimestamp(row['created'])
                 row['corpname'] = self._canonical_corpname(row['corpname'])
-                row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
+                row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
         else:
             rows = ()
         return {
             'data': rows,
             'from_date': None,
-            'to_date': None,
-            'types': ()
+            'to_date': None
         }
 
     @exposed(access_level=0)
