@@ -524,10 +524,8 @@ class CGIPublisher(object):
 
     def get_mapping_url_prefix(self):
         """
-        Each action controller must specify a path prefix where
-        Additionally, it is expected that simultaneously used action controllers
-        do not collide in terms of their prefixes (i.e. no two or more action controllers
-        should share a path prefix).
+        Each action controller must specify a path prefix of PATH_INFO env. variable
+        which connects the controller exclusively with matching URLs.
 
         A leading and a trailing slashes must be always present. Examples of valid prefixes:
         /
