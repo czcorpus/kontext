@@ -78,6 +78,12 @@ class Actions(ConcCGI):
         self.contains_within = False
         self.disabled_menu_items = ()
 
+    def get_mapping_url_prefix(self):
+        """
+        This is required as it maps the controller to request URLs
+        """
+        return '/'
+
     @exposed(access_level=1, template='user_password_form.tmpl')
     def user_password_form(self):
         if not settings.supports_password_change():
