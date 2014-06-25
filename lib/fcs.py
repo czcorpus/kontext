@@ -16,7 +16,7 @@ from CGIPublisher import exposed
 
 class Actions(ConcCGI):
     """
-    An action controller providing services related to Federated Content Search support
+    An action controller providing services related to the Federated Content Search support
     """
 
     def __init__(self, environ, ui_lang):
@@ -43,5 +43,5 @@ class Actions(ConcCGI):
         return {}
 
     @exposed(return_type='xml')
-    def search_retrieve(self):
+    def search_retrieve(self, query=''):
         return {}
