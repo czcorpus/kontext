@@ -16,7 +16,7 @@ module.exports = function (grunt) {
         },
         exec: {
             compile_html_templates: {
-                cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'cheetah compile --odir cmpltmpl --idir templates "$(basename {})"\' \\;'
+                cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
             }
         },
         "less": {
