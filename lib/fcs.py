@@ -27,6 +27,11 @@ class Actions(ConcCGI):
         """
         super(Actions, self).__init__(environ=environ, ui_lang=ui_lang)
 
+    def _create_common_data(self):
+        return {
+            'version': '1.2'
+        }
+
     def get_mapping_url_prefix(self):
         """
         This is required as it maps the controller to request URLs. In this case,
@@ -36,12 +41,15 @@ class Actions(ConcCGI):
 
     @exposed(return_type='xml')
     def index(self):
-        return {}
+        ans = self._create_common_data()
+        return ans
 
     @exposed(return_type='xml')
     def scan(self):
-        return {}
+        ans = self._create_common_data()
+        return ans
 
     @exposed(return_type='xml')
     def search_retrieve(self, query=''):
-        return {}
+        ans = self._create_common_data()
+        return ans
