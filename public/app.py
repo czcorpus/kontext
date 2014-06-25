@@ -146,17 +146,43 @@ def get_lang(environ):
     return lgs_string
 
 
+def load_controller_class(path_info):
+    """
+    Loads appropriate action controller class according to the provided
+    path info. Classes selection is based on path_info prefix (e.g. / prefix
+    maps to the main action controller actions.py, /fcs maps to a fcs.py
+    controller etc.).
+
+    Please note that currently there is no general automatized loading
+    (i.e. all the path->class mapping is hardcoded here).
+
+    arguments:
+    path_info -- a string as found in environment['PATH_INFO']
+
+    returns:
+    a class matching provided path_info
+    """
+    if settings.get_bool('global', 'maintenance'):
+        from maintenance import MaintenanceController
+        controller_class = MaintenanceController
+    elif path_info.startswith('/fcs'):
+        from fcs import Actions
+        controller_class = Actions
+    else:
+        from actions import Actions
+        controller_class = Actions
+    return controller_class
+
+
 class App(object):
     """
     WSGI application
     """
 
-    def __init__(self, controller_class):
+    def __init__(self):
         """
         Initializes the application and persistent objects/modules (settings, plugins,...)
         """
-        self.controller_class = controller_class
-
         setup_logger(settings)
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
@@ -172,6 +198,8 @@ class App(object):
         strings.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
 
+        controller_class = load_controller_class(environ['PATH_INFO'])
+
         if environ['PATH_INFO'] in ('/', ''):
             url = environ['REQUEST_URI']
             if not url.endswith('/'):
@@ -184,7 +212,7 @@ class App(object):
             headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
             body = ''
         else:
-            app = self.controller_class(environ=environ, ui_lang=ui_lang)
+            app = controller_class(environ=environ, ui_lang=ui_lang)
             status, headers, body = app.run()
         start_response(status, headers)
         return [body]
@@ -192,14 +220,7 @@ class App(object):
 
 settings.load(conf_path=CONF_PATH)
 
-if not settings.get_bool('global', 'maintenance'):
-    from actions import Actions
-    controller_class = Actions
-else:
-    from maintenance import MaintenanceController
-    controller_class = MaintenanceController
-
-application = App(controller_class)
+application = App()
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
     application = DebuggedApplication(application)
