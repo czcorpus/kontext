@@ -379,7 +379,9 @@ class CGIPublisher(object):
     def _get_template_class(self, name):
         """
         Imports a python module corresponding to the passed template name and
-        returns a class representing respective HTML template
+        returns a class representing respective HTML template.
+        A template name may contain also a relative path to the self._template_dir
+        in which case the search for the respective module will be performed there.
 
         arguments:
         name -- name of the template/class
@@ -387,7 +389,15 @@ class CGIPublisher(object):
         returns:
         an object representing the class
         """
-        file, pathname, description = imp.find_module(name, [self._template_dir])
+        name = name.rsplit('/', 1)
+        if len(name) == 2:
+            template_dir = '%s/%s' % (self._template_dir, name[0])
+            name = name[1]
+        else:
+            template_dir = self._template_dir
+            name = name[0]
+
+        file, pathname, description = imp.find_module(name, [template_dir])
         module = imp.load_module(name, file, pathname, description)
         return getattr(module, name)
 
@@ -512,6 +522,20 @@ class CGIPublisher(object):
                 ans['return_type'] = 'html'
         return ans
 
+    def get_mapping_url_prefix(self):
+        """
+        Each action controller must specify a path prefix where
+        Additionally, it is expected that simultaneously used action controllers
+        do not collide in terms of their prefixes (i.e. no two or more action controllers
+        should share a path prefix).
+
+        A leading and a trailing slashes must be always present. Examples of valid prefixes:
+        /
+        /stats/
+        /tools/admin/
+        """
+        raise NotImplementedError('Each action controller must implement method get_module_url_prefix()')
+
     def import_req_path(self):
         """
         Parses PATH_INFO into a list of elements
@@ -520,10 +544,18 @@ class CGIPublisher(object):
         -------
         list of path elements
         """
-        path = self.environ.get('PATH_INFO', '').strip().split('/')[1:]
+        ac_prefix = self.get_mapping_url_prefix()
+        path = self.environ.get('PATH_INFO', '').strip()
+
+        if not path.startswith(ac_prefix):  # this should not happen unless you hack the code here and there
+            raise Exception('URL -> action mapping error')
+        else:
+            path = path[len(ac_prefix):]
+
+        path = path.split('/')
         if len(path) is 0 or path[0] is '':
             path = [CGIPublisher.NO_OPERATION]
-        elif path[0].startswith('_'):
+        elif path[0].startswith('_'):  # TODO  this should be based only on @exposed and access level
             raise Exception('access denied')
         return path
 
@@ -593,7 +625,6 @@ class CGIPublisher(object):
         path = path if path is not None else self.import_req_path()
         named_args = {}
         headers = []
-
         # user action processing
         action_metadata = self._get_method_metadata(path[0])
 
@@ -682,8 +713,9 @@ class CGIPublisher(object):
                                                                   self.__dict__))
         method = getattr(self, methodname)
         try:
+            default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
             return (methodname,
-                    getattr(method, 'template', methodname + '.tmpl'),
+                    getattr(method, 'template', default_tpl_path),
                     self._invoke_action(method, pos_args, named_args, tpl_data))
         except Exception as e:
             logging.getLogger(__name__).error(''.join(get_traceback()))
@@ -787,6 +819,8 @@ class CGIPublisher(object):
 
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
+        elif return_type == 'xml':
+            self._headers['Content-Type'] = 'application/xml'
 
         ans = []
         for k, v in sorted(filter(lambda x: bool(x[1]), self._headers.items()), key=lambda x: x[0]):
