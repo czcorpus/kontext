@@ -165,7 +165,8 @@ define(['jquery', 'win'], function ($, win) {
                 corpname : lib.pluginApi.conf.corpname
             });
         }
-        this.setInputVal(null); // if omitted then Firefox restores initial value after hitting the ESC
+        this.inputElm.blur();  // These two lines prevent Firefox from deleting
+        this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
         prom = $.ajax('ajax_query_history', {
                 dataType : 'json'
