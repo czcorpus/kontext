@@ -1,8 +1,7 @@
 import sys
 
-from scripts.plugins.live_attributes.registry import confparsing
-
-from scripts.plugins.live_attributes.registry.parser import reg_grammarParser
+import confparsing
+from parser import reg_grammarParser
 
 
 if __name__ == '__main__':
