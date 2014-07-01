@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
     for conf in all_conf:
         if args.corpus_id and args.corpus_id != conf['id']:
-            print('\nskipping [%s]' % conf['id'])
+            print('\nskipped [%s]' % conf['id'])
             continue
         attrs = get_attrs_from_conf(conf)
         if len(attrs) == 0:
