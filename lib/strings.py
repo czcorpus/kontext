@@ -52,25 +52,38 @@ class Formatter(object):
         self.conf = conf
 
     def format_number(self, v, mask=None):
-        ans = ''
+        """
+        Formats a number according to the current session locale. By default,
+        two decimal places are displayed in case of float numbers. This can be
+        modified ad-hoc using 'mask' parameter.
 
-        if type(v) is int:
-            n1 = str(v)
-            n2 = ''
-        elif type(v) is float:
-            if mask is None:
-                mask = '%01.2f'
-            n1, n2 = (mask % v).split('.')
+        arguments:
+        v -- value to be converted; None is permitted (in such case, None is returned)
+        mask -- allows e.g. changing number of decimal places passed to the formatter (e.g. '%01.8f'); please note
+        that using some formatting masks may lead to unexpected results
+        """
+        if v is not None:
+            ans = ''
+
+            if type(v) is int:
+                n1 = str(v)
+                n2 = ''
+            elif type(v) is float:
+                if mask is None:
+                    mask = '%01.2f'
+                n1, n2 = (mask % v).split('.')
+            else:
+                raise TypeError('format_number accepts only int and float types')
+
+            for i, v in enumerate(n1[::-1]):
+                if i > 0 and i % self.conf['numbers']['numberGrouping'] == 0:
+                    ans += self.conf['numbers']['thousandSeparator']
+                ans += v
+            ans = ans[::-1]
+            if n2:
+                ans += '%s%s' % (self.conf['numbers']['decimalSeparator'], n2)
         else:
-            raise TypeError('format_number accepts only int and float types')
-
-        for i, v in enumerate(n1[::-1]):
-            if i > 0 and i % self.conf['numbers']['numberGrouping'] == 0:
-                ans += self.conf['numbers']['thousandSeparator']
-            ans += v
-        ans = ans[::-1]
-        if n2:
-            ans += '%s%s' % (self.conf['numbers']['decimalSeparator'], n2)
+            ans = None
         return ans
 
 
