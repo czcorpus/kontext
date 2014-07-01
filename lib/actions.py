@@ -200,7 +200,8 @@ class Actions(ConcCGI):
 
         # we merge structs (e.g. 'doc', 'p') with structural attributes (e.g. 'doc.id', 'p.version')
         # because manatee accepts both together
-        structs = self.structs + ','.join(self.structattrs)
+        # important note: "self.structs" is a string of comma-separated values while "self.structattrs" is a list
+        structs = '%s,%s' % (self.structs, ','.join(self.structattrs))
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
