@@ -42,7 +42,7 @@ class reg_grammarParser(Parser):
 
     @rule_def
     def _id_(self):
-        self._pattern(r'[a-z_]+')
+        self._pattern(r'[a-zA-Z_]+')
 
     @rule_def
     def _lbracket_(self):
