@@ -95,7 +95,6 @@ def create_tables(attrs, uniq_attr, db, reset_existing=False):
     attrs_mod = ['_'.join(x) for x in attrs]
 
     cache_sql = """CREATE TABLE cache (key string PRIMARY KEY, value string)"""
-
     attrs_sql = ['id integer PRIMARY KEY AUTOINCREMENT', 'corpus_id TEXT']
     attrs_sql += ['%s TEXT' % attr for attr in attrs_mod]
     attrs_sql += ['poscount INTEGER', 'wordcount INTEGER']
@@ -126,10 +125,11 @@ def insert_record(record, corpus_id, db):
     """
     cursor = db.cursor()
     tmp = record.items()
-    names = ', '.join([v[0] for v in tmp] + ['corpus_id'])
-    values_p = ', '.join(len(tmp) * ['?'])
-    sql = "INSERT INTO item (%s) VALUES (%s, ?)" % (names, values_p)
-    values = tuple([v[1] for v in tmp] + [corpus_id])
+    spec_fields = ['corpus_id', 'poscount', 'wordcount']
+    names = ', '.join([v[0] for v in tmp] + spec_fields)
+    values_p = ', '.join((len(tmp) + len(spec_fields)) * ['?'])
+    sql = "INSERT INTO item (%s) VALUES (%s)" % (names, values_p)
+    values = tuple([v[1] for v in tmp] + [corpus_id, record['poscount'], record['wordcount']])
     cursor.execute(sql, values)
 
 
@@ -147,8 +147,13 @@ def apply_struct_prefix(attrs, prefix, separ='.'):
     a modified dictionary where keys have the form: [prefix][separ][attribute name]
     """
     spec_values = ('wordcount', 'poscount', 'corpus_id')
-    return dict([('%s%s%s' % (prefix, separ, k), v) for k, v in attrs.items() if k not in spec_values])
-
+    ans = {}
+    for k, v in attrs.items():
+        if k not in spec_values:
+            ans['%s%s%s' % (prefix, separ, k)] = v
+        else:
+            ans[k] = v
+    return ans
 
 def parse_vert_file(f, encoding, bib_struct):
     """
