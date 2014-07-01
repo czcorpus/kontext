@@ -2011,6 +2011,9 @@ msgstr "Ohlásit chybu"
 msgid "make corpus primary"
 msgstr "nastavit korpus jako primární"
 
+msgid "Unknown action [%s]"
+msgstr "Neznámá akce [%s]"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
