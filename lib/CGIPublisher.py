@@ -125,21 +125,6 @@ class KonTextCookie(Cookie.BaseCookie):
         return strval, quote(strval)
 
 
-class RequestProcessingException(Exception):
-    """
-    General error in user's request processing
-    """
-    def __init__(self, message, **data):
-        Exception.__init__(self, message)
-        self.data = data
-
-    def __getitem__(self, key):
-        return self.data[key]
-
-    def __setitem__(self, key, value):
-        self.data[key] = value
-
-
 class CheetahResponseFile(object):
     def __init__(self, outfile):
         self.outfile = codecs.getwriter("utf-8")(outfile)
@@ -165,7 +150,20 @@ class UserActionException(Exception):
     """
     This exception should cover general errors occurring in CGIPublisher's action methods'
     """
-    pass
+    def __init__(self, message, code=200):
+        self.message = message
+        self.code = code
+
+
+class NotFoundException(UserActionException):
+    """
+    Raised in case user requests non-exposed/non-existing action
+    """
+    def __init__(self, message):
+        super(NotFoundException, self).__init__(message, 404)
+
+    def __str__(self):
+        return self.message
 
 
 class Parameter(object):
@@ -227,6 +225,7 @@ class CGIPublisher(object):
         303: 'See Other',
         304: 'Not Modified',
         401: 'Unauthorized',
+        403: 'Forbidden',
         404: 'Not Found',
         500: 'Internal Server Error'
     }
@@ -553,8 +552,6 @@ class CGIPublisher(object):
         path = path.split('/')
         if len(path) is 0 or path[0] is '':
             path = [CGIPublisher.NO_OPERATION]
-        elif path[0].startswith('_'):  # TODO  this should be based only on @exposed and access level
-            raise Exception('access denied')
         return path
 
     def _redirect(self, url, code=303):
@@ -616,6 +613,9 @@ class CGIPublisher(object):
                 logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
                 self._ui_settings = {}
 
+    def _method_is_exposed(self, metadata):
+        return '__exposed__' in metadata
+
     def run(self, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
@@ -635,8 +635,12 @@ class CGIPublisher(object):
                     p.setup(lang=self.ui_lang)
 
             self._init_session()
-            path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
-            methodname, tmpl, result = self.process_method(path[0], path, named_args)
+
+            if self._method_is_exposed(action_metadata):
+                path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
+                methodname, tmpl, result = self.process_method(path[0], path, named_args)
+            else:
+                raise NotFoundException(_('Unknown action [%s]') % path[0])
 
         except AuthException as e:
             self._status = 401
@@ -645,6 +649,8 @@ class CGIPublisher(object):
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as e:
+            if hasattr(e, 'code'):
+                self._status = e.code
             named_args['message'] = ('error', u'%s' % e)
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
@@ -674,13 +680,14 @@ class CGIPublisher(object):
         output.close()
         try:
             self._close_session()
-        except:
+        finally:
             pass
         return self._export_status(), headers, ans_body
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
-        This method handles mapping between HTTP actions and CGIPublisher's methods
+        This method handles mapping between HTTP actions and CGIPublisher's methods.
+        The method expects 'methodname' argument to be a valid @exposed method.
 
         Returns
         -------
@@ -702,10 +709,6 @@ class CGIPublisher(object):
                 if self.is_template(reload_template):
                     return self.process_method(reload_template,
                                                pos_args, named_args)
-
-        if not hasattr(self, methodname):
-            raise Exception('unknown method: "%s" dict:%s' % (methodname, self.__dict__))
-
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
@@ -728,7 +731,7 @@ class CGIPublisher(object):
                 tpl_data['message'] = ('error', e.message if type(e.message) == unicode else e.message.decode('utf-8'))
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
-                   raise e
+                raise e
 
             self.error = e.message if type(e.message) == unicode else e.message.decode('utf-8')
             em, self.exceptmethod = self.exceptmethod, None
