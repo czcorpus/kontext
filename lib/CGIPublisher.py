@@ -702,13 +702,10 @@ class CGIPublisher(object):
                 if self.is_template(reload_template):
                     return self.process_method(reload_template,
                                                pos_args, named_args)
+
         if not hasattr(self, methodname):
-            if methodname.endswith('_form'):
-                tpl_data = {}
-                return methodname[:-5], methodname + '.tmpl', tpl_data
-            else:
-                raise Exception('unknown method: "%s" dict:%s' % (methodname,
-                                                                  self.__dict__))
+            raise Exception('unknown method: "%s" dict:%s' % (methodname, self.__dict__))
+
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
