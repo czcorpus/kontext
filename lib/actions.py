@@ -194,7 +194,8 @@ class Actions(ConcCGI):
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
-        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', '')
+        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
+                                                                                                     self.rightctx))
 
         self._store_conc_results({
             'sampled_size': out.get('sampled_size', None),
@@ -2009,8 +2010,6 @@ class Actions(ConcCGI):
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = ('menu-save', )
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-        self.leftctx = self.kwicleftctx
-        self.rightctx = self.kwicrightctx
         if not to_line:
             to_line = conc.size()
             # TODO Save menu should be active here
