@@ -21,10 +21,170 @@
 /**
  *
  */
-define(['jquery', 'win', 'jquery.cookie', 'popupbox'], function ($, win, cookies, popupBox) {
+define(['jquery', 'win', 'jquery.cookie', 'popupbox', 'conf', 'tagbuilder'], function ($, win, cookies, popupBox, conf, tagbuilder) {
     'use strict';
 
     var lib = {};
+
+    /**
+     *
+     * @param {String} corpName
+     * @param {jQuery|HTMLElement|String} inputElm
+     * @param {jQuery|HTMLElement|String} triggerElm
+     * @param {pluginApi} pluginApi
+     */
+    function bindTagHelper(corpName, inputElm, triggerElm, pluginApi) {
+        tagbuilder.bindTextInputHelper(
+            corpName,
+            triggerElm,
+            conf.numTagPos,
+            {
+                inputElement: $(inputElm),
+                widgetElement: 'tag-widget',
+                modalWindowElement: 'tag-builder-modal',
+                insertTagButtonElement: 'insert-tag-button',
+                tagDisplayElement: 'tag-display',
+                resetButtonElement: 'reset-tag-button'
+            },
+            {
+                width: '556px',
+                useNamedCheckboxes: false,
+                allowMultipleOpenedBoxes: false
+            },
+            function (message) {
+                pluginApi.showMessage('error', message || conf.messages.failed_to_contact_server);
+            }
+        );
+    }
+
+    /**
+     *
+     * @param {jQuery} jqLinkElement
+     * @param {string} corpusName
+     * @param {pluginApi} pluginApi
+     */
+    function bindWithinHelper(jqLinkElement, corpusName, pluginApi) {
+        var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
+            clickAction,
+            buttonEnterAction;
+
+        clickAction = function (box) {
+            return function () {
+                var structAttr,
+                    within,
+                    bef,
+                    aft,
+                    caretPos = util.getCaretPosition(jqInputElement);
+
+                structAttr = $('#within-structattr').val().split('.');
+                within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
+                bef = jqInputElement.val().substring(0, caretPos);
+                aft = jqInputElement.val().substring(caretPos);
+
+                jqInputElement.val(bef + within + aft);
+                jqInputElement.focus();
+                $(win.document).off('keypress.withinBoxEnter', buttonEnterAction);
+                box.close();
+            };
+        };
+
+        buttonEnterAction = function (box) {
+            return function (event) {
+                if (event.which === 13) {
+                    clickAction(box)(event);
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            };
+        };
+
+        popupBox.bind(jqLinkElement,
+            function (box, finalize) {
+                var loaderGIF,
+                    jqWithinModal = $('#within-builder-modal');
+
+                if ($('#within-structattr').length > 0) {
+                    jqWithinModal.css('display', 'block');
+                    box.importElement(jqWithinModal);
+                    $('#within-insert-button').off('click');
+                    $('#within-insert-button').one('click', clickAction(box));
+                    $(win.document).off('keypress.withinBoxEnter');
+                    $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+                    finalize();
+
+                } else {
+                    loaderGIF = pluginApi.appendLoader(box.getRootElement());
+
+                    pluginApi.ajax({
+                        url: 'ajax_get_structs_details?corpname=' + corpusName,
+                        data: {},
+                        method: 'get',
+                        dataType: 'json',
+                        success: function (data) {
+                            var prop,
+                                html,
+                                i;
+
+                            html = '<select id="within-structattr">';
+                            for (prop in data) {
+                                if (data.hasOwnProperty(prop)) {
+                                    for (i = 0; i < data[prop].length; i += 1) {
+                                        html += '<option>' + prop + '.' + data[prop][i] + '</option>';
+                                    }
+                                }
+                            }
+                            html += '</select>';
+                            loaderGIF.remove();
+
+                            box.importElement(jqWithinModal);
+                            jqWithinModal.find('.inputs').prepend(html);
+                            jqWithinModal.css('display', 'block');
+
+                            $('#within-insert-button').one('click', clickAction(box));
+                            $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+
+                            finalize();
+                        },
+                        error: function () {
+                            box.close();
+                            pluginApi.showMessage('error', conf.failed_to_contact_server);
+                            finalize();
+                        }
+                    });
+                }
+            },
+            {
+                closeIcon : true,
+                type : 'plain',
+                timeout : null,
+                onClose : function () {
+                    $(win.document).off('keypress.withinBoxEnter');
+                }
+            });
+    }
+
+    /**
+     *
+     */
+    lib.bindQueryHelpers = function (pluginApi) {
+        $('input.cql-input').each(function () {
+            var corpName,
+                cqlInputId = $(this).attr('id'),
+                blockWrapper = $(this).closest('td');
+
+            if (cqlInputId === 'cql') {
+                corpName = conf.corpname;
+
+            } else {
+                corpName = cqlInputId.substring(4);
+            }
+
+            bindTagHelper(corpName, $(this), blockWrapper.find('.insert-tag a'), pluginApi);
+            bindWithinHelper(blockWrapper.find('li.within a'), corpName, pluginApi);
+        });
+
+        lib.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
+    };
 
 
     /**
