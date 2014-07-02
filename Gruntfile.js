@@ -17,6 +17,9 @@ module.exports = function (grunt) {
         exec: {
             compile_html_templates: {
                 cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
+            },
+            update_app: {
+                cmd: 'touch public/app.py'
             }
         },
         "less": {
@@ -47,10 +50,10 @@ module.exports = function (grunt) {
                     {expand: true, cwd: 'public/files/js', src: '**/*.min.js', dest: 'public/files/js/min'}
                 ]
             }
-        }
+        },
 
     });
 
 
-    grunt.registerTask('default', ['clean', 'exec', 'less', 'uglify', 'copy']);
+    grunt.registerTask('default', ['clean', 'less', 'uglify', 'copy', 'exec']);
 };
