@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes',
-    'jquery.cookie'], function (win, $, queryInput, tagbuilder, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttributes',
+    'jquery.cookie'], function (win, $, queryInput, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -60,172 +60,6 @@ define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugin
             }
         }
     }
-
-    /**
-     *
-     * @param {String} corpName
-     * @param {jQuery|HTMLElement|String} inputElm
-     * @param {jQuery|HTMLElement|String} triggerElm
-     */
-    function bindTagHelper(corpName, inputElm, triggerElm) {
-        tagbuilder.bindTextInputHelper(
-            corpName,
-            triggerElm,
-            lib.conf.numTagPos,
-            {
-                inputElement: $(inputElm),
-                widgetElement: 'tag-widget',
-                modalWindowElement: 'tag-builder-modal',
-                insertTagButtonElement: 'insert-tag-button',
-                tagDisplayElement: 'tag-display',
-                resetButtonElement: 'reset-tag-button'
-            },
-            {
-                width: '556px',
-                useNamedCheckboxes: false,
-                allowMultipleOpenedBoxes: false
-            },
-            function (message) {
-                lib.showMessage('error', message || lib.conf.messages.failed_to_contact_server);
-            }
-        );
-    }
-
-    /**
-     *
-     * @param {jQuery} jqLinkElement
-     * @param {string} corpusName
-     * @param {object} translatMessages
-     */
-    function bindWithinHelper(jqLinkElement, corpusName, translatMessages) {
-        var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
-            clickAction,
-            buttonEnterAction;
-
-        clickAction = function (box) {
-            return function () {
-                var structAttr,
-                    within,
-                    bef,
-                    aft,
-                    caretPos = util.getCaretPosition(jqInputElement);
-
-                structAttr = $('#within-structattr').val().split('.');
-                within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
-                bef = jqInputElement.val().substring(0, caretPos);
-                aft = jqInputElement.val().substring(caretPos);
-
-                jqInputElement.val(bef + within + aft);
-                jqInputElement.focus();
-                $(win.document).off('keypress.withinBoxEnter', buttonEnterAction);
-                box.close();
-            };
-        };
-
-        buttonEnterAction = function (box) {
-            return function (event) {
-                if (event.which === 13) {
-                    clickAction(box)(event);
-                    event.stopPropagation();
-                    event.preventDefault();
-                }
-            };
-        };
-
-        popupbox.bind(jqLinkElement,
-            function (box, finalize) {
-                var loaderGIF,
-                    jqWithinModal = $('#within-builder-modal');
-
-                if ($('#within-structattr').length > 0) {
-                    jqWithinModal.css('display', 'block');
-                    box.importElement(jqWithinModal);
-                    $('#within-insert-button').off('click');
-                    $('#within-insert-button').one('click', clickAction(box));
-                    $(win.document).off('keypress.withinBoxEnter');
-                    $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
-                    finalize();
-
-                } else {
-                    loaderGIF = lib.appendLoader(box.getRootElement());
-
-                    lib.ajax({
-                        url: 'ajax_get_structs_details?corpname=' + corpusName,
-                        data: {},
-                        method: 'get',
-                        dataType: 'json',
-                        success: function (data) {
-                            var prop,
-                                html,
-                                i;
-
-                            html = '<select id="within-structattr">';
-                            for (prop in data) {
-                                if (data.hasOwnProperty(prop)) {
-                                    for (i = 0; i < data[prop].length; i += 1) {
-                                        html += '<option>' + prop + '.' + data[prop][i] + '</option>';
-                                    }
-                                }
-                            }
-                            html += '</select>';
-                            loaderGIF.remove();
-
-                            box.importElement(jqWithinModal);
-                            jqWithinModal.find('.inputs').prepend(html);
-                            jqWithinModal.css('display', 'block');
-
-                            $('#within-insert-button').one('click', clickAction(box));
-                            $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
-
-                            finalize();
-                        },
-                        error: function () {
-                            box.close();
-                            lib.showMessage('error', translatMessages.failed_to_contact_server);
-                            finalize();
-                        }
-                    });
-                }
-            },
-            {
-                closeIcon : true,
-                type : 'plain',
-                timeout : null,
-                onClose : function () {
-                    $(win.document).off('keypress.withinBoxEnter');
-                }
-            });
-    }
-
-    /**
-     * @todo the jQuery selector can become unusable in case HTML design/structure is changed
-     */
-    function onLoadVirtualKeyboardInit() {
-        queryInput.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
-    }
-
-    /**
-     *
-     */
-    lib.bindQueryHelpers = function () {
-        $('input.cql-input').each(function () {
-            var corpName,
-                cqlInputId = $(this).attr('id'),
-                blockWrapper = $(this).closest('td');
-
-            if (cqlInputId === 'cql') {
-                corpName = lib.conf.corpname;
-
-            } else {
-                corpName = cqlInputId.substring(4);
-            }
-
-            bindTagHelper(corpName, $(this), blockWrapper.find('.insert-tag a'));
-            bindWithinHelper(blockWrapper.find('li.within a'), corpName, lib.conf.messages);
-        });
-
-        onLoadVirtualKeyboardInit();
-    };
 
 
     /**
@@ -637,12 +471,12 @@ define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugin
     lib.misc = function () {
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
-                queryInput.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
+                queryInput.cmdSwitchQuery(event.target, lib.conf.queryTypesHints);
             });
 
             // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
             if ($(this).val() !== 'iqueryrow') {
-                queryInput.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints, lib.userSettings);
+                queryInput.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints);
             }
         });
 
@@ -1176,6 +1010,10 @@ define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugin
                 return self.createAjaxLoader.apply(self, arguments);
             },
 
+            appendLoader : function () {
+                return self.appendLoader.apply(self, arguments);
+            },
+
             showMessage : function () {
                 return self.showMessage.apply(self, arguments);
             },
@@ -1297,7 +1135,7 @@ define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugin
 
         promises.add({
             misc : lib.misc(),
-            bindQueryHelpers : lib.bindQueryHelpers(),
+            bindQueryHelpers : queryInput.bindQueryHelpers(lib.pluginApi()),
             bindStaticElements : lib.bindStaticElements(),
             bindCorpusDescAction : lib.bindCorpusDescAction(),
             queryOverview : lib.queryOverview(),
