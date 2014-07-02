@@ -2014,6 +2014,9 @@ msgstr "nastavit korpus jako primární"
 msgid "Unknown action [%s]"
 msgstr "Neznámá akce [%s]"
 
+msgid "current corpus only"
+msgstr "pouze tento korpus"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
