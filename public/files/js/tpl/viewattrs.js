@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'tpl/document', 'hideelem'], function (win, $, layoutModel, hideElem) {
+define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
     'use strict';
 
     var lib = {};

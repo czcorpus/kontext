@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'plugins/queryStorage'], function (win,
-        $, treeComponent, layoutModel, hideElem, history) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage'], function (win,
+        $, treeComponent, layoutModel, queryInput, history) {
     'use strict';
 
     var lib = {},
@@ -122,7 +122,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'plugins/q
                         layoutModel.resetPlugins();
                     });
 
-                    hideElem.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
+                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
 
                     if (!$.support.cssFloat) {
                         // refresh content in IE < 9
@@ -164,7 +164,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem', 'plugins/q
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
-        hideElem.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
+        queryInput.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
