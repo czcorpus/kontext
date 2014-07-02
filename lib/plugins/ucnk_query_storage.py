@@ -58,8 +58,8 @@ class QueryStorage(object):
         conf -- the 'settings' module (or some compatible object)
         """
         self.db_provider = db_provider
-        self.num_kept_records = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
-        self.num_kept_records = int(self.num_kept_records) if self.num_kept_records else 10
+        tmp = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
+        self.num_kept_records = int(tmp) if tmp else 10
 
     def write(self, user_id, corpname, query, query_type, params=None):
         """
@@ -132,7 +132,6 @@ class QueryStorage(object):
 
     def delete_old_records(self, db, user_id):
         """
-
         """
         # Current solution is not very effective but makes MySQL to complain less
         # in case of active replication and multiple engines used.

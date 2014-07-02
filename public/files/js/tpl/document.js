@@ -635,13 +635,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
      *
      */
     lib.misc = function () {
-        hideElem.targetedLinks();
-        if (lib.conf.focus) {
-            hideElem.focusEx(hideElem.focus);
-        }
-
-        hideElem.loadHideElementStoreSimple();
-
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
                 hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
@@ -891,13 +884,6 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
                 if (nextUrl) {
                     win.location = nextUrl;
                 }
-            });
-        });
-
-        $('img.plus-minus').each(function () {
-            $(this).bind('click', function () {
-                hideElem.cmdHideElementStore($(this).data('elementid'), $(this).data('storeval'), $(this).data('path'),
-                    lib.userSettings);
             });
         });
 
