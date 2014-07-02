@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the saveconc_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'hideelem'], function ($, layoutModel, hideElem) {
+define(['jquery', 'tpl/document'], function ($, layoutModel) {
     'use strict';
 
     var lib = {};
@@ -65,7 +65,6 @@ define(['jquery', 'tpl/document', 'hideelem'], function ($, layoutModel, hideEle
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        hideElem.loadHideElementStore(layoutModel.conf.files_path, layoutModel.userSettings);
 
         $('input[type="submit"]').focus();
         if (layoutModel.userSettings.get('concdesc_view') === 'show') {

@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes',
-    'jquery.cookie'], function (win, $, hideElem, tagbuilder, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'queryInput', 'tagbuilder', 'popupbox', 'util', 'plugins/liveAttributes',
+    'jquery.cookie'], function (win, $, queryInput, tagbuilder, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -201,7 +201,7 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
      * @todo the jQuery selector can become unusable in case HTML design/structure is changed
      */
     function onLoadVirtualKeyboardInit() {
-        hideElem.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
+        queryInput.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
     }
 
     /**
@@ -637,12 +637,12 @@ define(['win', 'jquery', 'hideelem', 'tagbuilder', 'popupbox', 'util', 'plugins/
     lib.misc = function () {
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
-                hideElem.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
+                queryInput.cmdSwitchQuery(event.target, lib.conf.queryTypesHints, lib.userSettings);
             });
 
             // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
             if ($(this).val() !== 'iqueryrow') {
-                hideElem.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints, lib.userSettings);
+                queryInput.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints, lib.userSettings);
             }
         });
 
