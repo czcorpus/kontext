@@ -300,6 +300,7 @@ button#reset-tag-button {
   border: 1px solid @color-light-frame;
   background-color: #FFFFFF;
   box-shadow: @portal-box-shadow;
+  padding: 0;
 }
 
 .history-widget ul {
@@ -318,5 +319,18 @@ button#reset-tag-button {
 }
 
 .history-widget li.selected {
+  background-color: #fff9ed;
+}
+
+.history-widget .footer {
   background-color: @color-light-green;
+  text-align: right;
+  padding: 3px 0;
+}
+
+.history-widget .filter-current {
+}
+
+.history-widget .filter-current > * {
+  vertical-align: middle;
 }

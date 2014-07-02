@@ -162,7 +162,8 @@ define(['jquery', 'win'], function ($, win) {
             this.data.push({
                 query : this.inputElm.val(),
                 query_type : $('#queryselector').val(),
-                corpname : lib.pluginApi.conf.corpname
+                corpname : lib.pluginApi.conf.corpname,
+                humanCorpname : lib.pluginApi.conf.humanCorpname
             });
         }
         this.inputElm.blur();  // These two lines prevent Firefox from deleting
@@ -175,7 +176,7 @@ define(['jquery', 'win'], function ($, win) {
         prom.then(
             function (data) {
                 if (data.hasOwnProperty('error')) {
-                    lib.pluginApi.showMessage('error', '.... ERROR.....'); // TODO
+                    lib.pluginApi.showMessage('error', data.error);
                     // TODO
 
                 } else {
@@ -186,9 +187,7 @@ define(['jquery', 'win'], function ($, win) {
                 }
             },
             function (err) {
-                // TODO
-                console.log(err);
-                lib.pluginApi.showMessage('error', '.... ERROR.....'); // TODO
+                lib.pluginApi.showMessage('error', err.statusText);
             }
         );
     };
@@ -197,7 +196,15 @@ define(['jquery', 'win'], function ($, win) {
      *
      */
     Box.prototype.render = function () {
-        var frame = this.calcSizeAndPosition(this.inputElm);
+        var frame = this.calcSizeAndPosition(this.inputElm),
+            html;
+
+        html = '<ul class="rows"></ul>'
+             + '<div class="footer">'
+             + '<label class="filter-current">'
+             + lib.pluginApi.translate('current corpus only')
+             + '<input class="filter-checkbox" type="checkbox" checked="checked" disabled="disabled" /></label>'
+             + '</div>';
 
         this.boxElm = $('<div>');
         this.boxElm.addClass('history-widget');
@@ -206,10 +213,9 @@ define(['jquery', 'win'], function ($, win) {
             position : 'absolute',
             left : frame.left,
             top : frame.top + frame.height,
-            width : frame.width,
-            height: '300px'
+            width : frame.width
         });
-        this.boxElm.html('<ul class="rows"></ul>');
+        this.boxElm.html(html);
         this.bindEvents();
     };
 
@@ -218,6 +224,7 @@ define(['jquery', 'win'], function ($, win) {
      * as obtained in parameter data.
      *
      * @param {{}} data
+     * @param {string} data.humanCorpname
      * @param {string} data.corpname
      */
     Box.prototype.appendData = function (data) {
@@ -234,7 +241,7 @@ define(['jquery', 'win'], function ($, win) {
             link = $(win.document.createElement('a'));
             link.attr('data-rownum', i);
             link.attr('href', v.url);
-            link.append('<strong>' + v.corpname + '</strong>:&nbsp;');
+            link.append('<strong>' + v.humanCorpname + '</strong>:&nbsp;');
             link.append(v.query);
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(event.target).attr('data-rownum'));
