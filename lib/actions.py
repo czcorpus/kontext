@@ -2231,7 +2231,8 @@ class Actions(ConcCGI):
                                                           query_type='cqlrow', corpname=self.corpname)
             for row in rows:
                 created_dt = datetime.fromtimestamp(row['created'])
-                row['corpname'] = self._canonical_corpname(row['corpname'])
+                row['humanCorpname'] = self._human_readable_corpname()
+                row['corpname'] = row['corpname']
                 row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
         else:
             rows = ()
