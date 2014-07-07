@@ -76,13 +76,22 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
+    Plugin.prototype.popup = function () {
+        if (!this.isActive()) {
+            this.inputElm.off('keyup.histOn');
+            this.init();
+        }
+    };
+
+    /**
+     *
+     */
     Plugin.prototype.bindActivationEvent = function () {
         var self = this;
 
         this.inputElm.on('keyup.histOn', function (event) {
             if (event.keyCode === 40) {
-                self.inputElm.off('keyup.histOn');
-                self.init();
+                self.popup();
             }
         });
     };
@@ -286,14 +295,55 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @returns {boolean}
+     */
+    Plugin.prototype.isActive = function () {
+        return this.boxElm !== null;
+    };
+
+    /**
+     *
      * @param name
      */
     Plugin.prototype.updateSubcorpSelector = function (name) {
         $('#subcorp-selector').val(name);
     };
 
+    /**
+     *
+     * @returns {val|*|val}
+     */
     Plugin.prototype.getCurrentSubcorpname = function () {
         return $('#subcorp-selector').val();
+    };
+
+    /**
+     *
+     */
+    lib.addTriggerButton = function () {
+        var liElm,
+            aElm,
+            plugin = $('#cqlrow input.cql-input').data('plugin'),
+            clickAction;
+
+        if (plugin) {
+            liElm = $('<li></li>');
+            aElm = $('<a class="history"></a>');
+            aElm.css('text-transform', 'lowercase');
+            $('#cqlrow .query-toolbox').append(liElm);
+            liElm.append(aElm);
+            aElm.append(lib.pluginApi.translate('Recent queries'));
+
+            clickAction = function () {
+                plugin.popup();
+                aElm.one('click', function () {
+                    plugin.close();
+                    aElm.one('click', clickAction);
+                });
+            };
+
+            aElm.one('click', clickAction);
+        }
     };
 
     /**
@@ -303,10 +353,15 @@ define(['jquery', 'win'], function ($, win) {
      * @returns {Plugin}
      */
     lib.bind = function (elm) {
+        var plugin;
+
         if ({}.toString.call(lib.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
-       return new Plugin(elm, $(elm).parent());
+        plugin = new Plugin(elm, $(elm).parent());
+        $(elm).data('plugin', plugin);
+
+        return plugin;
     };
 
     /**
@@ -319,6 +374,8 @@ define(['jquery', 'win'], function ($, win) {
             $('input.history').each(function () {
                 lib.bind(this);
             });
+
+            lib.addTriggerButton();
         }
     };
 
