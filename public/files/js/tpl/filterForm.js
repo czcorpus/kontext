@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['tpl/document'], function (layoutModel) {
+define(['tpl/document', 'plugins/queryHistory'], function (layoutModel, queryHistory) {
     'use strict';
 
     var lib = {};
@@ -31,7 +31,9 @@ define(['tpl/document'], function (layoutModel) {
      * @param conf page configuration data
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        layoutModel.init(conf).add({
+            queryStorage : queryStorage.init(layoutModel.pluginApi())
+        });
     };
 
     return lib;

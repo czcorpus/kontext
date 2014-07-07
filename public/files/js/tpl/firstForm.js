@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage'], function (win,
-        $, treeComponent, layoutModel, queryInput, history) {
+        $, treeComponent, layoutModel, queryInput, queryStorage) {
     'use strict';
 
     var lib = {},
@@ -305,18 +305,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     /**
      *
      */
-    lib.bindHistoryWidget = function () {
-        if (!layoutModel.conf.anonymousUser) {
-            history.init(layoutModel.pluginApi());
-            $('input.history').each(function () {
-                history.bind(this);
-            });
-        }
-    };
-
-    /**
-     *
-     */
     lib.showCupMenu = function () {
         if (layoutModel.userSettings.get('errstdq') === 'std') {
             $('#cup_err_menu').hide();
@@ -365,7 +353,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateFieldsets : lib.updateFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            bindHistoryWidget : lib.bindHistoryWidget()
+            queryStorage : queryStorage.init(layoutModel.pluginApi())
         });
         return promises;
     };

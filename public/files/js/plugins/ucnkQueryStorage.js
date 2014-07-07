@@ -292,6 +292,11 @@ define(['jquery', 'win'], function ($, win) {
      */
     lib.init = function (pluginApi) {
         lib.pluginApi = pluginApi;
+        if (!lib.pluginApi.conf.anonymousUser) {
+            $('input.history').each(function () {
+                lib.bind(this);
+            });
+        }
     };
 
     return lib;
