@@ -247,7 +247,6 @@ define(['jquery', 'win'], function ($, win) {
             link.attr('data-corpname', v.corpname);
             link.attr('data-subcorpname', v.subcorpname);
             link.attr('href', v.url);
-            link.append('<strong>' + v.humanCorpname + subcorpSuff + '</strong>:&nbsp;');
             link.append(v.query);
             listItem.on('click', function (event) {
                 var triggerElm = $(event.target);
@@ -265,6 +264,7 @@ define(['jquery', 'win'], function ($, win) {
 
             tbl.append(listItem);
             listItem.append(link);
+            listItem.append('&nbsp;<strong>(' + v.humanCorpname + subcorpSuff + ')</strong>');
         });
         this.highlightCurrentRow();
     };
