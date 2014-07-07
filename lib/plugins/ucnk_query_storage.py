@@ -49,7 +49,7 @@ class QueryStorageException(Exception):
 
 class QueryStorage(object):
 
-    cols = ('id', 'user_id', 'corpname', 'query', 'query_type', 'params', 'created')
+    cols = ('id', 'user_id', 'corpname', 'subcorpname', 'query', 'query_type', 'params', 'created')
 
     def __init__(self, conf, db_provider):
         """
@@ -61,7 +61,7 @@ class QueryStorage(object):
         tmp = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(tmp) if tmp else 10
 
-    def write(self, user_id, corpname, query, query_type, params=None):
+    def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
         Writes data as a new saved query
 
@@ -75,7 +75,7 @@ class QueryStorage(object):
             db.execute(u"INSERT INTO kontext_saved_queries " +
                        u"(%s) " % ', '.join(QueryStorage.cols[1:]) +
                        (u"VALUES (%s)" % ', '.join(['%s'] * (len(QueryStorage.cols) - 1))),
-                      (user_id, corpname, query, query_type, params, created))
+                      (user_id, corpname, subcorpname, query, query_type, params, created))
             self.delete_old_records(db, user_id)  # TODO make this probability based
         db.close()
 

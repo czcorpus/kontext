@@ -553,19 +553,16 @@ class ConcCGI(CGIPublisher):
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
-            if not self.usesubcorp:
-                corpname = self.corpname
-            else:
-                corpname = '%s:%s' % (self.corpname, self.usesubcorp)
-            plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=corpname,
-                                        query=query, query_type=query_type)
+            plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
+                                        subcorpname=self.usesubcorp, query=query, query_type=query_type)
 
     def _determine_curr_corpus(self, form, corp_list):
         """
         This method tries to determine which corpus is currently in use.
         If no answer is found or in case there is a conflict between selected
         corpus and user access rights then some fallback alternative is found -
-        in such case the 'fallback' flag is set to True.
+        in such case the returned 'fallback' value is set to a URL leading to the
+        fallback corpus.
 
         Parameters:
         form -- currently processed HTML form (if any)
