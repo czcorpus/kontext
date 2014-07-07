@@ -34,7 +34,7 @@ $_("Word List Form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, wordlistForm, conf) {
+require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, conf) {
     conf.wltype = "$wltype";
     conf.messages.whiteLists = "$_('Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if \'lemma\' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.')";
     wordlistForm.init(conf);

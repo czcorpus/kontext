@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttributes',
-    'jquery.cookie'], function (win, $, queryInput, popupbox, util, liveAttributes) {
+        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox, util, liveAttributes) {
     'use strict';
 
     var lib = {};
