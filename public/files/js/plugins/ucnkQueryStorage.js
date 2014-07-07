@@ -32,7 +32,7 @@ define(['jquery', 'win'], function ($, win) {
      * @param parentElm
      * @constructor
      */
-    function Box(inputElm, parentElm) {
+    function Plugin(inputElm, parentElm) {
         this.inputElm = $(inputElm);
         this.parentElm = $(parentElm);
         this.boxElm = null;
@@ -47,7 +47,7 @@ define(['jquery', 'win'], function ($, win) {
      * @param refElm
      * @returns {{width: number, height: number, top: number, left: number}}
      */
-    Box.prototype.calcSizeAndPosition = function (refElm) {
+    Plugin.prototype.calcSizeAndPosition = function (refElm) {
         var jqRef = $(refElm);
         return {
             width : jqRef.width(),
@@ -61,7 +61,7 @@ define(['jquery', 'win'], function ($, win) {
      *
      * @returns {Number}
      */
-    Box.prototype.numRows = function () {
+    Plugin.prototype.numRows = function () {
         return this.data ? this.data.length : 0;
     };
 
@@ -69,14 +69,14 @@ define(['jquery', 'win'], function ($, win) {
      *
      * @param val
      */
-    Box.prototype.setInputVal = function (val) {
+    Plugin.prototype.setInputVal = function (val) {
         this.inputElm.val(val);
     };
 
     /**
      *
      */
-    Box.prototype.bindActivationEvent = function () {
+    Plugin.prototype.bindActivationEvent = function () {
         var self = this;
 
         this.inputElm.on('keyup.histOn', function (event) {
@@ -90,7 +90,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.bindEvents = function () {
+    Plugin.prototype.bindEvents = function () {
         var self = this;
 
         $(win).on('keyup.histOff', function (event) {
@@ -117,14 +117,14 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.cleanRowSelection = function () {
+    Plugin.prototype.cleanRowSelection = function () {
         this.boxElm.find('ul.rows li').removeClass('selected');
     };
 
     /**
      *
      */
-    Box.prototype.highlightCurrentRow = function () {
+    Plugin.prototype.highlightCurrentRow = function () {
         this.cleanRowSelection();
         this.boxElm.find('ul.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
         this.setInputVal(this.data[this.highlightedRow].query);
@@ -133,7 +133,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.highlightNextRow = function () {
+    Plugin.prototype.highlightNextRow = function () {
         if (this.highlightedRow < this.numRows() - 1) {
             this.highlightedRow += 1;
             this.highlightCurrentRow();
@@ -143,7 +143,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.highlightPrevRow = function () {
+    Plugin.prototype.highlightPrevRow = function () {
         if (this.highlightedRow > 0) {
             this.highlightedRow -= 1;
             this.highlightCurrentRow();
@@ -153,7 +153,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.init = function () {
+    Plugin.prototype.init = function () {
         var self = this,
             prom;
 
@@ -163,6 +163,7 @@ define(['jquery', 'win'], function ($, win) {
                 query : this.inputElm.val(),
                 query_type : $('#queryselector').val(),
                 corpname : lib.pluginApi.conf.corpname,
+                subcorpname : self.getCurrentSubcorpname(),
                 humanCorpname : lib.pluginApi.conf.humanCorpname
             });
         }
@@ -195,7 +196,7 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Box.prototype.render = function () {
+    Plugin.prototype.render = function () {
         var frame = this.calcSizeAndPosition(this.inputElm),
             html;
 
@@ -225,9 +226,10 @@ define(['jquery', 'win'], function ($, win) {
      *
      * @param {{}} data
      * @param {string} data.humanCorpname
+     * @param {string} data.subcorpname
      * @param {string} data.corpname
      */
-    Box.prototype.appendData = function (data) {
+    Plugin.prototype.appendData = function (data) {
         var tbl = this.boxElm.find('ul.rows'),
             listItem,
             link,
@@ -236,17 +238,26 @@ define(['jquery', 'win'], function ($, win) {
         this.data = this.data.concat(data);
         tbl.empty();
         $.each(this.data, function (i, v) {
+            var subcorpSuff = v.subcorpname ? ':' + v.subcorpname : '';
+
             listItem = $(win.document.createElement('li'));
 
             link = $(win.document.createElement('a'));
             link.attr('data-rownum', i);
+            link.attr('data-corpname', v.corpname);
+            link.attr('data-subcorpname', v.subcorpname);
             link.attr('href', v.url);
-            link.append('<strong>' + v.humanCorpname + '</strong>:&nbsp;');
+            link.append('<strong>' + v.humanCorpname + subcorpSuff + '</strong>:&nbsp;');
             link.append(v.query);
             listItem.on('click', function (event) {
-                self.highlightedRow = parseInt($(event.target).attr('data-rownum'));
+                var triggerElm = $(event.target);
+
+                self.highlightedRow = parseInt(triggerElm.attr('data-rownum'));
                 self.highlightCurrentRow();
                 self.setInputVal(self.data[self.highlightedRow].query);
+                if (triggerElm.attr('data-subcorpname')) {
+                    self.updateSubcorpSelector(triggerElm.attr('data-subcorpname'));
+                }
                 event.preventDefault();
                 event.stopPropagation();
                 self.close();
@@ -256,13 +267,12 @@ define(['jquery', 'win'], function ($, win) {
             listItem.append(link);
         });
         this.highlightCurrentRow();
-
     };
 
     /**
      * Closes history widget.
      */
-    Box.prototype.close = function () {
+    Plugin.prototype.close = function () {
         //this.data = null; // TODO maybe we can cache the data here
         this.highlightedRow = 0;
         this.boxElm.remove();
@@ -274,16 +284,28 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
+     *
+     * @param name
+     */
+    Plugin.prototype.updateSubcorpSelector = function (name) {
+        $('#subcorp-selector').val(name);
+    };
+
+    Plugin.prototype.getCurrentSubcorpname = function () {
+        return $('#subcorp-selector').val();
+    };
+
+    /**
      * Binds the query history widget to a passed element (typically, this is an input elm)
      *
      * @param elm
-     * @returns {Box}
+     * @returns {Plugin}
      */
     lib.bind = function (elm) {
         if ({}.toString.call(lib.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
-       return new Box(elm, $(elm).parent());
+       return new Plugin(elm, $(elm).parent());
     };
 
     /**
