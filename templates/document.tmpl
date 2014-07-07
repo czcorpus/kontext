@@ -767,18 +767,3 @@ $corp_full_name</b><br>
     #end if
     #return re.sub('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, ';%s=%s;' % ($option_name, $new_value), $url)
 #end def
-
-#def gdexconf_select($select_name, $gdexconf, $tblex=False)
-    #set $onchange = ($tblex) and 'onchange="this.form.submit();"' or ''
-    <select name="$select_name" id="$select_name" $onchange>
-        #if $tblex
-        <option value=" None " >$_("None")</option>
-        #end if
-        #set $selected = ($gdexconf==" default configuration ") and 'selected="selected"' or ''
-        <option value=" default configuration " $selected>$_("default")</option>
-        #for name in $getVar('Availgdexconfs', {})
-            #set $selected = ($name==$gdexconf) and 'selected="selected"' or ''
-            <option $selected value="$name">$name</option>
-        #end for
-    </select>
-#end def
