@@ -140,18 +140,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     lib.misc = function () {
         var tc;
 
-        // let's override the focus
-        layoutModel.conf.focus = function () {
-            var target = null;
-            $('#mainform tr input[type="text"]').each(function () {
-                if ($(this).css('display') !== 'none') {
-                    target = $(this);
-                    return false;
-                }
-            });
-            return target;
-        };
-
         tc = treeComponent.createTreeComponent(
             $('form[action="first"] select[name="corpname"]'),
             layoutModel.conf.messages,
@@ -164,7 +152,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
-        queryInput.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints, layoutModel.userSettings);
+        queryInput.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -352,7 +340,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
                 linkElm = $(evt.target).closest('a').get(0);
             }
 
-            newPrimary = $(linkElm).attr('data-cinitQueryStoragePluginorpus-id');
+            newPrimary = $(linkElm).attr('data-corpus-id');
 
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
