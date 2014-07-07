@@ -517,248 +517,95 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 ## ******** Common methods definitions ******** ##
 
 #def corp_sel($onchange=True)
-## Select corpus name
+    ## Select corpus name
 
-#if $corplist_size == 1
-$corp_full_name</b><br>
-<input type="hidden" name="corpname" value="$corpname" />
-#else
-<input type="hidden" name="reload" />
+    #if $corplist_size == 1
+    $corp_full_name</b><br>
+    <input type="hidden" name="corpname" value="$corpname" />
+    #else
+    <input type="hidden" name="reload" />
 
-<select name="corpname">
-  #for $c in $Corplist
-    #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-    <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
-  #end for
-</select>
-#if $SubcorpList
-<strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
-    #for $subc in $SubcorpList
-    <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
-    #end for
-</select>
-#end if ## SubcorpList
-#end if
-#end def
+    <select name="corpname">
+      #for $c in $Corplist
+        #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
+        <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
+      #end for
+    </select>
+    #if $SubcorpList
+    <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+        #for $subc in $SubcorpList
+        <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
+        #end for
+    </select>
+    #end if ## SubcorpList
+    #end if
+#end def  ## corp_sel
+
+## ***************************************** ##
 
 #def corp_sel_node
-#filter None
-<tbody>
-    <tr class="required">
-    #if $corplist_size
-        <th>$_("Corpus"):</th>
-        <td colspan="2">
-        #filter None
-        $corp_sel
-        #end filter
-    #else
-        <td colspan="2">
-        <input type="hidden" name="corpname" value="$corpname" />
-    #end if
-    </td>
-    </tr>
-</tbody>
-#end filter
-#end def
+    #filter None
+    <tbody>
+        <tr class="required">
+        #if $corplist_size
+            <th>$_("Corpus"):</th>
+            <td colspan="2">
+            #filter None
+            $corp_sel
+            #end filter
+        #else
+            <td colspan="2">
+            <input type="hidden" name="corpname" value="$corpname" />
+        #end if
+        </td>
+        </tr>
+    </tbody>
+    #end filter
+#end def  ## corp_sel_node
 
+## ***************************************** ##
 
 #def subcorp_sel($nameid='usesubcorp')
-## Select subcorpus
+    ## Select subcorpus
 
-#if $LastSubcorp
-  <select name="$nameid" id="$nameid">
-    <option value="">$_("whole corpus")</option>
-    #for $l in $LastSubcorp
-      <option
-      #if $l.n == $getVar($nameid, '')
-        selected
-      #end if
-      >$l.n</option>
-    #end for
-    </select>
+    #if $LastSubcorp
+      <select name="$nameid" id="$nameid">
+        <option value="">$_("whole corpus")</option>
+        #for $l in $LastSubcorp
+          <option
+          #if $l.n == $getVar($nameid, '')
+            selected
+          #end if
+          >$l.n</option>
+        #end for
+        </select>
+        <i>
+        <a href="subcorp?$corpname_url">$_("info")</a>
+        </i>
+    #end if
     <i>
-    <a href="subcorp?$corpname_url">$_("info")</a>
+    #if not $_anonymous
+      <a href="subcorp_form?$corpname_url">$_("create new")</a>
+    #end if
     </i>
-#end if
-<i>
-#if not $_anonymous
-  <a href="subcorp_form?$corpname_url">$_("create new")</a>
-#end if
-</i>
-#end def
+#end def  ## subcorp_sel
 
+## ***************************************** ##
 
 #def input_hidden($exclude=())
-## Global form parameters
+    ## Global form parameters
 
-#for $qq in $Q
-  <input type="hidden" name="q" value="${qq['q'], also='"'}" />
-#end for
-#for $g_name, $g_value in $Globals.items()
-  #if not $g_name in $exclude
-  <input type="hidden" name="$g_name" value="$g_value" />
-  #end if
-#end for
+    #for $qq in $Q
+      <input type="hidden" name="q" value="${qq['q'], also='"'}" />
+    #end for
+    #for $g_name, $g_value in $Globals.items()
+      #if not $g_name in $exclude
+      <input type="hidden" name="$g_name" value="$g_value" />
+      #end if
+    #end for
 #end def
 
-
-#def tt_sel
-## Text Types
-    #set $showhiddenlist = $getVar("showhidden", '').split(".")
-    <div class="text-type-params">
-        <div class="text-type-top-bar">
-            #for $nn in $TextTypeSel['Normslist']
-            #if $nn.n == $subcnorm
-            | <strong>
-            #end if
-                <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
-            #if $nn.n == $subcnorm
-            </strong>
-            #end if
-            #end for
-        </div>
-        #for $t in $TextTypeSel['Blocks']  ## f1
-        #for $l in $t['Line'] ## f2
-
-        <table class="envelope" data-attr="$_($l['label'])" border="0">
-            <tr>
-                <th>
-                    $_($l['label'])
-                    #if 'label_hint' in $l ## 1
-                    <a class="external-help" href="${l['label_hint']}" target="_blank"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
-                    #end if  ## -1
-                </th>
-            </tr>
-            <tr>
-                <td>
-                    <div class="scrollable">
-                        <table>
-                            <tbody>
-                                #if $l.attr_doc ## 1
-                                <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
-                                #end if ## -1
-                                #if $l.has_key('Values') ## 1
-                                #if $l.has_key('hierarchical') ## 2
-                                <tr>
-                                    <td>
-                                        <ul>
-                                            #set $hsep = $l['hierarchical']
-                                            #for $v in $l['Values'] ## f3
-                                            #if $v['startdiv'] ## 3
-                                            #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
-                                            <ul id="div_$v['key']" $hidden>
-                                            #end if ## -3
-                                                <li>
-                                                    #if $v['display_plus'] ## 3
-                                                    #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
-                                                    <img class="plus-minus" src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")"
-                                                    data-elementid="div_$v['key']$hsep$v['label']" data-storeval="1" data-path="${files_path}" />
-                                                    #else
-                                                    <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
-                                                    #end if ## -3
-                                                    #if $v['v'] ## 3
-                                                    <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
-                                                    <label for="sca_$l['name']">$_($v['label'])</label>
-                                                    #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') ## 4
-                                                    ($v.get('xcnt', ''))
-                                                    #end if ## -4
-                                                    #end if ## -3
-                                                #if not $v['display_plus'] ## 3
-                                                </li>
-                                                #end if ## -3
-                                            #for $i in $range($v['enddiv']) ## f4
-                                            </ul>
-                                            </li>
-                                            #end for ## -f4
-                                            #end for ## -f3
-                                        </ul>
-                                    </td>
-                                </tr>
-                                #else
-                                #set $i = 0
-                                #for $v in $l['Values'] ## f3
-                                #if 'v' in $v ## 3
-                                <tr>
-                                    <td>
-                                    #set $checked = ''
-                                    #if $varExists('checked_sca') ## 4
-                                    #set $item_value = $v['v']
-                                    #if $item_value in $checked_sca ## 5
-                                    #set $checked = 'checked="checked"'
-                                    #end if ## -5
-                                    #end if ## -4
-                                        <label><input id="sca.$i.$l['name']" class="attr-selector" type="checkbox" name="sca_$l['name']" value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#" $checked />
-                                        #if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#</label>
-                                    </td>
-                                    #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical') ## 4
-                                    <td class="num">$v.get('xcnt', '')</td>
-                                    #else
-                                    <td></td>
-                                    #end if ## -4
-                                    <td>
-                                        #if $l['label'] == $bib_conf.label_attr
-                                            <a class="bib-info" data-bib-id="$v.get('v', '')">i</a>
-                                        #end if
-                                    </td>
-                                </tr>
-                                #end if ## -3
-                                #set $i = $i + 1
-                                #end for ## -f3
-                                #end if ## -2
-
-                                #else ## ~1 (no values => just place a text input field)
-                                    <tr>
-                                        <td>
-                                            <input id="scaid_$l['name']" class="raw-selection" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
-                                        </td>
-                                    </tr>
-                                #end if  ## -1 (Values)
-                            </tbody>
-                        </table>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="metadata"></td>
-            </tr>
-            <tr class="last-line">
-                <td>
-                    #if $len($l.pop('Values', ())) > 0
-                    <label class="select-all"><input class="select-all" type="checkbox" data-status="1" />$_('Select all')</label>
-                    #end if
-                </td>
-            </tr>
-        </table>
-
-        #if $l.attr_doc
-        <table>
-            <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
-        </table>
-        #end if
-        #end for ## -f2
-        #end for ## -f1
-
-        #if $live_attributes_js
-        <div class="live-attributes">
-            <div class="steps">
-
-            </div>
-            <a id="live-attrs-update" class="util-button">$_('highlight selection structure')</a>
-            <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
-        </div>
-        #end if
-
-    </div>
-#end def
-
-#def urlquote($word)
-## quoting strings in URLs
-  #if $type('') == $type($word)
-    #return urllib.quote_plus($word)
-  #else
-    #return urllib.quote_plus($word.encode('utf8'))
-  #end if
-#end def
+## ***************************************** ##
 
 #def url_sub($url, $option_name, $new_value)
 ## substituting options in URL to change one particular setting
