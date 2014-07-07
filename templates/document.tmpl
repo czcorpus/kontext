@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #import re
 #from templating.filters import *
 #from translation import ugettext as _
-#attr $focus = ""
+
 #if $format == 'text'
 $text
 #else:
@@ -136,10 +136,6 @@ define('conf', [], function () {
     conf.messages['number of matching positions'] = "$_('number of matching positions')";
     conf.messages['number of matching items'] = "$_('number of matching items')";
     conf.messages['%s positions'] = "$_('%s positions')";
-
-    #if $focus
-    conf.focus = $focus;
-    #end if
 
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
