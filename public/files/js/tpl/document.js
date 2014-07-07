@@ -917,7 +917,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
     };
 
     /**
-     * @todo this is currently Czech National Corpus specific solution
+     * @todo this is currently a Czech National Corpus specific solution
      */
     lib.enhanceMessages = function () {
         $('.message .sign-in').each(function () {
