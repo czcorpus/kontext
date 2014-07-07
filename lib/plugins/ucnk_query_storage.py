@@ -12,7 +12,7 @@
 
 from datetime import datetime
 import time
-import re
+import random
 
 """
 A plugin providing a storage for user's queries for services such as 'query history'.
@@ -51,6 +51,8 @@ class QueryStorage(object):
 
     cols = ('id', 'user_id', 'corpname', 'subcorpname', 'query', 'query_type', 'params', 'created')
 
+    PROB_DELETE_OLD_RECORDS = 0.1
+
     def __init__(self, conf, db_provider):
         """
         arguments:
@@ -76,7 +78,8 @@ class QueryStorage(object):
                        u"(%s) " % ', '.join(QueryStorage.cols[1:]) +
                        (u"VALUES (%s)" % ', '.join(['%s'] * (len(QueryStorage.cols) - 1))),
                       (user_id, corpname, subcorpname, query, query_type, params, created))
-            self.delete_old_records(db, user_id)  # TODO make this probability based
+            if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
+                self.delete_old_records(db, user_id)
         db.close()
 
     def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
