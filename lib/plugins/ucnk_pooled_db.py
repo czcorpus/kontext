@@ -24,6 +24,7 @@ Required config.xml/plugins entries:
     <host extension-by="ucnk"></host>
     <password extension-by="ucnk"></password>
     <username extension-by="ucnk"></username>
+    <charset extension-by="ucnk"></charset>
     <pool_size extension-by="ucnk">[how many connections are there in the pool]</pool_size>
     <max_overflow extension-by="ucnk">[how many connections to open in addition in case of a peak]</max_overflow>
     <pool_recycle extension-by="ucnk">[lifetime of a connection in seconds]</pool_recycle>
@@ -41,13 +42,20 @@ class DbConnectionProvider(object):
     def __init__(self, conf):
         """
         Arguments:
-        conf -- a dictionary containing imported XML configuration of the plugin
+        conf -- a dictionary containing imported XML configuration of the plugin; see the module documentation
+        to become familiar with required/possible keys
         """
         self.conf = conf
-        conn_url = 'mysql://%(user)s:%(passwd)s@%(hostname)s/%(dbname)s' % {'user': self.conf['ucnk:username'],
-                                                                            'passwd': self.conf['ucnk:password'],
-                                                                            'hostname': self.conf['ucnk:host'],
-                                                                            'dbname': self.conf['ucnk:name']}
+        self.conn_params = {}
+
+        if self.conf.get('ucnk:charset', None):
+            self.conn_params['charset'] = self.conf['ucnk:charset']
+
+        conn_url = 'mysql://%(user)s:%(passwd)s@%(hostname)s/%(dbname)s?%(params)s' % {
+            'user': self.conf['ucnk:username'], 'passwd': self.conf['ucnk:password'],
+            'hostname': self.conf['ucnk:host'], 'dbname': self.conf['ucnk:name'],
+            'params': '&'.join(['%s=%s' % (k, v) for k, v in self.conn_params.items()])}
+
         self.engine = create_engine(conn_url,
                                     pool_size=int(self.conf['ucnk:pool_size']),
                                     max_overflow=int(self.conf['ucnk:max_overflow']),
