@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'vendor/jscrollpane'], function (win,
+define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'vendor/jscrollpane'], function (win,
     $, jqueryPeriodic, layoutModel, detail, popupBox) {
     'use strict';
 
