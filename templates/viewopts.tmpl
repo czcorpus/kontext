@@ -71,16 +71,6 @@ require(['jquery', '${client_model_dir}/document', 'conf'], function (\$, viewAt
                     <input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
                 </td>
             </tr>
-            #if $getVar('Availgdexconfs', {})
-            <tr>
-                <th>$_("GDEX configuration for current corpus"):</th>
-                <td>
-                    #filter None
-                    $gdexconf_select('gdexconf', $gdexconf)
-                    #end filter
-                </td>
-            </tr>
-            #end if
         </table>
     </fieldset>
 
