@@ -20,7 +20,7 @@
  * This module contains functionality related directly to the concdesc.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
+define(['jquery', 'tpl/document'], function ($, layoutModel) {
     'use strict';
 
     var lib = {};

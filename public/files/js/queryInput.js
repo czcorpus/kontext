@@ -21,7 +21,7 @@
 /**
  *
  */
-define(['jquery', 'win', 'jquery.cookie', 'popupbox', 'conf', 'tagbuilder'], function ($, win, cookies, popupBox, conf, tagbuilder) {
+define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder'], function ($, win, cookies, popupBox, conf, tagbuilder) {
     'use strict';
 
     var lib = {};

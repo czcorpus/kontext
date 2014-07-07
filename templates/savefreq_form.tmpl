@@ -25,7 +25,7 @@ $_("Save Frequency List")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, savefreqForm, conf) {
+require(['${client_model_dir}/${page_model}', 'conf'], function (savefreqForm, conf) {
     ## conf object is defined within document.tmpl
     conf.files_path = '${files_path}';
     savefreqForm.init(conf);

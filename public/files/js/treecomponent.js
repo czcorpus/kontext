@@ -17,7 +17,7 @@
  */
 
 
-define(['jquery', 'win', 'typeahead'], function ($, win) {
+define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
     'use strict';
 
     /**

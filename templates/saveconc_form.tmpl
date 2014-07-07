@@ -24,7 +24,7 @@ $_("Save Concordance Form")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/${page_model}', 'conf'], function (\$, saveconcForm, conf) {
+require(['${client_model_dir}/${page_model}', 'conf'], function (saveconcForm, conf) {
     conf.files_path = '${files_path}';
     saveconcForm.init(conf);
 });

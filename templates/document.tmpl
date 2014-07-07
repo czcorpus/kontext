@@ -59,11 +59,11 @@ $text
 <!--[if lt IE 9]>
     <script src="$files_path/js/html5shiv.js"></script>
 <![endif]-->
-<script type="text/javascript" src="$files_path/js/virtual-keyboard.js" charset="UTF-8"></script>
+<script type="text/javascript" src="$files_path/js/vendor/virtual-keyboard.js" charset="UTF-8"></script>
 #if $debug
-<script type="text/javascript" src="$files_path/js/less.js" ></script>
+<script type="text/javascript" src="$files_path/js/vendor/less.js" ></script>
 #end if
-<script type="text/javascript" src="$files_path/js/requirejs.min.js"></script>
+<script type="text/javascript" src="$files_path/js/vendor/requirejs.min.js"></script>
 #block headers
 #end block
 #if $getVar('ca_headers', '')
@@ -73,8 +73,8 @@ $ca_headers
 requirejs.config({
     baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
     paths: {
-        'jquery' : './jquery.min',
-        'jscrollpane' : './jscrollpane.min',
+        'jquery' : './vendor/jquery.min',
+        'vendor/jscrollpane' : './vendor/jscrollpane.min',
         'plugins' : './plugins',
         'plugins/liveAttributes' : #if $live_attributes_js#'./plugins/$live_attributes_js'#else#'./plugins/dummyPlugin'#end if#,
         'plugins/queryStorage' : #if $query_storage_js#'./plugins/$query_storage_js'#else#'./plugins/dummyPlugin'#end if#

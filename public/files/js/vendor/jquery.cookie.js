@@ -14,7 +14,6 @@
 		factory(jQuery);
 	}
 }(function ($) {
-
 	var pluses = /\+/g;
 
 	function encode(s) {

@@ -26,7 +26,7 @@ $_("View")#slurp
 #end def
 
 #def bodyonload
-require(['jquery', '${client_model_dir}/document', 'conf'], function (\$, viewAttrs, conf) {
+require(['${client_model_dir}/document', 'conf'], function (viewAttrs, conf) {
     viewAttrs.init(conf);
 });
 #end def
