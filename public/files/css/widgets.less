@@ -312,10 +312,12 @@ button#reset-tag-button {
 .history-widget li {
   padding: 5px 8px;
   border-radius: @border-radius-default;
+  cursor: pointer;
 }
 
-.history-widget li a {
+.history-widget li em {
   display: inline;
+  font-style: normal;
 }
 
 .history-widget li.selected {
@@ -335,6 +337,6 @@ button#reset-tag-button {
   vertical-align: middle;
 }
 
-.history-widget .rows li strong {
+.history-widget .rows li .corpname {
   color: #999999;
 }

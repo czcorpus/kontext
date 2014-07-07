@@ -241,13 +241,14 @@ define(['jquery', 'win'], function ($, win) {
             var subcorpSuff = v.subcorpname ? ':' + v.subcorpname : '';
 
             listItem = $(win.document.createElement('li'));
+            listItem.attr('data-rownum', i);
+            listItem.attr('data-corpname', v.corpname);
+            listItem.attr('data-subcorpname', v.subcorpname);
 
-            link = $(win.document.createElement('a'));
-            link.attr('data-rownum', i);
-            link.attr('data-corpname', v.corpname);
-            link.attr('data-subcorpname', v.subcorpname);
+            link = $(win.document.createElement('em'));
             link.attr('href', v.url);
             link.append(v.query);
+
             listItem.on('click', function (event) {
                 var triggerElm = $(event.target);
 
@@ -264,7 +265,7 @@ define(['jquery', 'win'], function ($, win) {
 
             tbl.append(listItem);
             listItem.append(link);
-            listItem.append('&nbsp;<strong>(' + v.humanCorpname + subcorpSuff + ')</strong>');
+            listItem.append('&nbsp;<span class="corpname">(' + v.humanCorpname + subcorpSuff + ')</span>');
         });
         this.highlightCurrentRow();
     };
