@@ -246,16 +246,15 @@ class ConcCGI(CGIPublisher):
         self.disabled_menu_items = []
         self.save_menu = []
 
-    def _log_request(self, user_settings, action_name):
+    def _log_request(self, user_settings, action_name, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
 
-        Parameters
-        ----------
-        user_settings: dict
-            settings stored in user's cookie
-        action_name: str
-            name of the action
+        arguments:
+        user_settings -- a dict containing user settings
+        action_name -- name of current action
+        proc_time -- float specifying how long the action took;
+        default is None - in such case no information is stored
         """
         import json
         import datetime    
@@ -273,6 +272,8 @@ class ConcCGI(CGIPublisher):
             'params': dict([(k, v) for k, v in params.items() if v]),
             'settings': dict([(k, v) for k, v in user_settings.items() if v])
         }
+        if proc_time is not None:
+            ans['proc_time'] = proc_time
         logging.getLogger('QUERY').info(json.dumps(ans))
 
     def _get_persistent_attrs(self):
@@ -509,7 +510,11 @@ class ConcCGI(CGIPublisher):
                 disabled_set.add(x)
             self.disabled_menu_items = tuple(disabled_set)
         super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
-        self._log_request(self._get_persistent_items(), '%s' % methodname)
+        if '__time__' in result:
+            proc_time = result['__time__']
+        else:
+            proc_time = None
+        self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=proc_time)
 
     def _attach_tag_builder(self, tpl_out):
         """

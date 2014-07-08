@@ -27,6 +27,7 @@ import json
 import logging
 import StringIO
 import inspect
+import time
 
 import plugins
 import settings
@@ -620,6 +621,7 @@ class CGIPublisher(object):
         """
         This method wraps all the processing of an HTTP request.
         """
+        start_time = time.time()
         path = path if path is not None else self.import_req_path()
         named_args = {}
         headers = []
@@ -668,6 +670,7 @@ class CGIPublisher(object):
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
+        result['__time__'] = round(time.time() - start_time, 4)
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
