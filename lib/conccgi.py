@@ -708,6 +708,20 @@ class ConcCGI(CGIPublisher):
         result['num_tag_pos'] = corp_conf_info.get('num_tag_pos', 0)
         result['citation_info'] = corp_conf_info.get('citation_info', '')
 
+    def _setup_optional_plugins_js(self, result):
+        """
+        Updates result dict with JavaScript module paths required to
+        run client-side parts of some optional plugins. Template document.tmpl
+        (i.e. layout template) configures RequireJS module accordingly.
+        """
+        for opt_plugin in ('live_attributes', 'query_storage'):
+            js_file_key = '%s_js' % opt_plugin
+            result[js_file_key] = None
+            if plugins.has_plugin(opt_plugin) and getattr(plugins, opt_plugin).is_enabled_for(self.corpname):
+                js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
+                if js_file:
+                    result[js_file_key] = js_file
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -772,15 +786,8 @@ class ConcCGI(CGIPublisher):
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
 
-        if plugins.has_plugin('live_attributes') and plugins.live_attributes.is_enabled_for(self.corpname):
-            result['live_attributes_js'] = '%s' % settings.get('plugins', 'live_attributes', {}).get('js_module')
-        else:
-            result['live_attributes_js'] = False
-
-        if plugins.has_plugin('query_storage'):
-            result['query_storage_js'] = '%s' % settings.get('plugins', 'query_storage', {}).get('js_module')
-        else:
-            result['query_storage_js'] = False
+        # updates result dict with javascript modules paths required by some of the optional plugins
+        self._setup_optional_plugins_js(result)
 
         result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).get('metadata', {})
 

@@ -63,6 +63,9 @@ class QueryStorage(object):
         tmp = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(tmp) if tmp else 10
 
+    def is_enabled_for(self, corpname):
+        return True
+
     def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
         Writes data as a new saved query
