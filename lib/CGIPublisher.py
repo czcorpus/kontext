@@ -670,7 +670,8 @@ class CGIPublisher(object):
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
-        result['__time__'] = round(time.time() - start_time, 4)
+        if type(result) is dict:
+            result['__time__'] = round(time.time() - start_time, 4)
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
