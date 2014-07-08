@@ -466,10 +466,10 @@ class CGIPublisher(object):
 
     def call_function(self, func, args, **named_args):
         """
-        Calls a function with passed arguments but also with arguments
-        from self. Actually the order is following:
-        1) get self arguments
-        2) update by **named_args
+        Calls a function with passed arguments but also with attributes of
+        'self' used as arguments. Actually the order is following:
+        1) get attributes of 'self'
+        2) update result by **named_args
 
         !!! For the sake of sanity, this should be avoided as much as possible
         because it completely hides what is actually passed to the function.

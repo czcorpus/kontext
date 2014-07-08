@@ -699,7 +699,7 @@ def build_arf_db(corp, attrname):
         if hasattr(os, 'nice'):
             os.nice(10)
             create_arf_db(corp, attrname, logfilename)
-        os._exit(0)
+        os._exit(0)  # os._exit (i.e. no sys.exit()) must be used here because this is a child process
     else:
         return None
 
