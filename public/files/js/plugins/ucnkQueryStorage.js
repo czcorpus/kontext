@@ -333,16 +333,14 @@ define(['jquery', 'win'], function ($, win) {
             $('#cqlrow .query-toolbox').append(liElm);
             liElm.append(aElm);
             aElm.append(lib.pluginApi.translate('Recent queries'));
-
-            clickAction = function () {
-                plugin.popup();
-                aElm.one('click', function () {
+            aElm.on('click', function () {
+                if (plugin.isActive()) {
                     plugin.close();
-                    aElm.one('click', clickAction);
-                });
-            };
 
-            aElm.one('click', clickAction);
+                } else {
+                    plugin.popup();
+                }
+            });
         }
     };
 
