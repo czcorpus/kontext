@@ -714,13 +714,17 @@ class ConcCGI(CGIPublisher):
         run client-side parts of some optional plugins. Template document.tmpl
         (i.e. layout template) configures RequireJS module accordingly.
         """
+        import plugins
+
         for opt_plugin in ('live_attributes', 'query_storage'):
             js_file_key = '%s_js' % opt_plugin
             result[js_file_key] = None
-            if plugins.has_plugin(opt_plugin) and getattr(plugins, opt_plugin).is_enabled_for(self.corpname):
-                js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
-                if js_file:
-                    result[js_file_key] = js_file
+            if plugins.has_plugin(opt_plugin):
+                plugin_obj = getattr(plugins, opt_plugin)
+                if not isinstance(plugin_obj, plugins.CorpusDependentPlugin) or plugin_obj.is_enabled_for(self.corpname):
+                    js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
+                    if js_file:
+                        result[js_file_key] = js_file
 
     def _add_globals(self, result, methodname, action_metadata):
         """

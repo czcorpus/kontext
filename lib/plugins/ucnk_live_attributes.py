@@ -22,6 +22,7 @@ from functools import wraps
 from hashlib import md5
 
 import strings
+from plugins import CorpusDependentPlugin
 
 
 def create_cache_key(attr_map, max_attr_list_size, aligned_corpora):
@@ -107,7 +108,7 @@ class AttrArgs(object):
         return ' AND '.join(where), sql_values
 
 
-class LiveAttributes(object):
+class LiveAttributes(CorpusDependentPlugin):
 
     def __init__(self, corptree, max_attr_list_size, empty_val_placeholder):
         self.corptree = corptree

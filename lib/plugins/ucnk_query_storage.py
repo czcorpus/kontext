@@ -14,6 +14,8 @@ from datetime import datetime
 import time
 import random
 
+from plugins import CorpusDependentPlugin
+
 """
 A plugin providing a storage for user's queries for services such as 'query history'.
 
@@ -31,6 +33,7 @@ CREATE TABLE kontext_saved_queries (
   id int(11) NOT NULL AUTO_INCREMENT,
   user_id int(11) NOT NULL,
   corpname varchar(255) NOT NULL,
+  subcorpname varchar(255),
   query TEXT NOT NULL,
   query_type VARCHAR(31) NOT NULL,
   params text,
@@ -62,9 +65,6 @@ class QueryStorage(object):
         self.db_provider = db_provider
         tmp = conf.get('plugins', 'query_storage').get('ucnk:num_kept_records', None)
         self.num_kept_records = int(tmp) if tmp else 10
-
-    def is_enabled_for(self, corpname):
-        return True
 
     def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
