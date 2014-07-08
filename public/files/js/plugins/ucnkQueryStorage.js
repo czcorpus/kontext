@@ -37,9 +37,9 @@ define(['jquery', 'win'], function ($, win) {
         this.parentElm = $(parentElm);
         this.boxElm = null;
         this.inputElm.attr('autocomplete', 'off');
-        this.bindActivationEvent();
         this.highlightedRow = 0;
         this.data = null; // currently appended data
+        this.bindOnOffEvents();
     }
 
     /**
@@ -78,7 +78,6 @@ define(['jquery', 'win'], function ($, win) {
      */
     Plugin.prototype.popup = function () {
         if (!this.isActive()) {
-            this.inputElm.off('keyup.histOn');
             this.init();
         }
     };
@@ -86,11 +85,16 @@ define(['jquery', 'win'], function ($, win) {
     /**
      *
      */
-    Plugin.prototype.bindActivationEvent = function () {
+    Plugin.prototype.bindOnOffEvents = function () {
         var self = this;
 
-        this.inputElm.on('keyup.histOn', function (event) {
-            if (event.keyCode === 40) {
+        $(win).on('keyup.queryStoragePlugin', function (event) {
+            if (event.keyCode === 13 || (event.keyCode === 27 && self.isActive())) { // ENTER or ESC key
+                event.preventDefault();
+                event.stopPropagation();
+                self.close();
+
+            } else if (event.keyCode === 40 && !self.isActive()) {
                 self.popup();
             }
         });
@@ -102,19 +106,11 @@ define(['jquery', 'win'], function ($, win) {
     Plugin.prototype.bindEvents = function () {
         var self = this;
 
-        $(win).on('keyup.histOff', function (event) {
-            if (event.keyCode === 13 || event.keyCode === 27) { // ENTER or ESC key
-                event.preventDefault();
-                event.stopPropagation();
-                self.close();
-            }
-        });
-
-        this.inputElm.on('keyup.moveSelection', function (event) {
+        this.inputElm.on('keyup.queryStoragePluginMoveSelection', function (event) {
             if (event.keyCode === 38) { // UP arrow
                 self.highlightPrevRow();
 
-            } else if (event.keyCode === 40) { // DOWN arrow
+            } else if (event.keyCode === 40 && self.isActive()) { // DOWN arrow
                 self.highlightNextRow();
             }
         });
@@ -180,8 +176,8 @@ define(['jquery', 'win'], function ($, win) {
         this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
         prom = $.ajax('ajax_query_history', {
-                dataType : 'json'
-            }).promise();
+            dataType : 'json'
+        }).promise();
 
         prom.then(
             function (data) {
@@ -259,9 +255,9 @@ define(['jquery', 'win'], function ($, win) {
             link.append(v.query);
 
             listItem.on('click', function (event) {
-                var triggerElm = $(event.target);
+                var triggerElm = $(this);
 
-                self.highlightedRow = parseInt(triggerElm.attr('data-rownum'));
+                self.highlightedRow = parseInt(triggerElm.attr('data-rownum'), 10);
                 self.highlightCurrentRow();
                 self.setInputVal(self.data[self.highlightedRow].query);
                 if (triggerElm.attr('data-subcorpname')) {
@@ -284,13 +280,11 @@ define(['jquery', 'win'], function ($, win) {
      */
     Plugin.prototype.close = function () {
         //this.data = null; // TODO maybe we can cache the data here
+        this.inputElm.off('keyup.queryStoragePluginMoveSelection');
         this.highlightedRow = 0;
         this.boxElm.remove();
         this.boxElm = null;
-        this.inputElm.off('keyup.moveSelection');
-        $(win).off('keyup.histOff');
         $('#make-concordance-button').attr('disabled', null);
-        this.bindActivationEvent();
     };
 
     /**
@@ -323,8 +317,7 @@ define(['jquery', 'win'], function ($, win) {
     lib.addTriggerButton = function () {
         var liElm,
             aElm,
-            plugin = $('#cqlrow input.cql-input').data('plugin'),
-            clickAction;
+            plugin = $('#cqlrow input.cql-input').data('plugin');
 
         if (plugin) {
             liElm = $('<li></li>');
