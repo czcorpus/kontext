@@ -24,3 +24,12 @@ def list_plugins():
     return [getattr(m, item) for item in dir(m) if not callable(getattr(m, item))
             and not item.startswith('__')
             and not item in sys.builtin_module_names]
+
+
+class CorpusDependentPlugin(object):
+    """
+    This class prescribes methods required by optional plug-ins to
+    run without internal errors
+    """
+    def is_enabled_for(self, corpname):
+        raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(corpname)')
