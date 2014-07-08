@@ -510,7 +510,7 @@ class ConcCGI(CGIPublisher):
                 disabled_set.add(x)
             self.disabled_menu_items = tuple(disabled_set)
         super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
-        if '__time__' in result:
+        if type(result) is dict and '__time__' in result:
             proc_time = result['__time__']
         else:
             proc_time = None
