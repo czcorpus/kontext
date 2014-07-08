@@ -70,16 +70,30 @@ $text
 $ca_headers
 #else
 <script type="text/javascript">
-requirejs.config({
-    baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
-    paths: {
+var missingPlugins = [],
+    paths = {
         'jquery' : './vendor/jquery.min',
         'vendor/jscrollpane' : './vendor/jscrollpane.min',
-        'plugins' : './plugins',
-        'plugins/liveAttributes' : #if $live_attributes_js#'./plugins/$live_attributes_js'#else#'./plugins/dummyPlugin'#end if#,
-        'plugins/queryStorage' : #if $query_storage_js#'./plugins/$query_storage_js'#else#'./plugins/dummyPlugin'#end if#
-        #if $qunit_test#,'QUnit' : './qunit'#end if#
-    },
+        'plugins' : './plugins'
+    };
+
+#if $live_attributes_js
+paths['plugins/liveAttributes'] = './plugins/$live_attributes_js';
+#else
+missingPlugins.push('plugins/liveAttributes');
+#end if
+#if $query_storage_js
+paths['plugins/queryStorage'] = './plugins/$query_storage_js';
+#else
+missingPlugins.push('plugins/queryStorage');
+#end if
+#if $qunit_test
+paths['QUnit'] = './qunit'
+#end if
+
+requirejs.config({
+    baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
+    paths: paths,
     shim : {
         'vendor/jscrollpane' : {
             deps: ['jquery']
@@ -94,11 +108,22 @@ requirejs.config({
                 QUnit.config.autoload = false;
                 QUnit.config.autostart = false;
             }
-
         }
         #end if
     }
 });
+
+(function (names) {
+    var i;
+
+    for (i = 0; i < names.length; i += 1) {
+        define(names[i], [], function () {
+            return {
+                init : function () {}
+            };
+        });
+    }
+}(missingPlugins));
 
 define('win', [], function () { return window; });
 
