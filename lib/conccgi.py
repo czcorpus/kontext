@@ -911,9 +911,14 @@ class ConcCGI(CGIPublisher):
 
     def _restore_query_selector_types(self):
         """
+        Restores query form's queryselector_* values using session data.
+        The 'queryselector' of the primary corpus can be overridden by
+        URL parameter 'queryselector'.
         """
         ans = {}
-        if 'forms' in self._session:
+        if self.queryselector:
+            ans['queryselector'] = self.queryselector
+        elif 'forms' in self._session:
             ans.update(self._session['forms'])
         return ans
 
