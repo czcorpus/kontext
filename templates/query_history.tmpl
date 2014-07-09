@@ -33,6 +33,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         conf.messages.undeleted_query = "$_('Undeleted the query.')";
         conf.messages.failed_to_undelete_the_query = "$_('Failed to undelete the query.')";
         conf.messages.undo = "$_('Undo')";
+        conf.messages.use_query = "$_('use query')";
+
+        conf.page.page_num_records = $page_num_records;
+        conf.page.page_append_records = $page_append_records;
+
         pageSelf.init(conf);
     });
 #end def
@@ -67,10 +72,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <th></th>
     </tr>
     #for $row in $data
-        <tr>
+        <tr class="data-item">
             <td class="query">$row.query</td>
-            <td class="corpname">$row.corpname</td>
-            <td>#if $row.subcorpname #$row.subcorpname#else# - #end if#</td>
+            <td class="corpname">$row.humanCorpname</td>
+            <td class="corpname">#if $row.subcorpname #$row.subcorpname#else# - #end if#</td>
             <td>$row.query_type</td>
             <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
             <td><a href="first_form?corpname=${corpname}&$row.query_type=#filter $URLEncode#$row.query#end filter#&queryselector=${row.query_type}row#if $row.subcorpname#&usesubcorp=${row.subcorpname}#end if#">$_('use query')</a></td>

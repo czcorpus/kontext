@@ -20,135 +20,56 @@
  * This module contains functionality related directly to the query_history.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'popupbox'], function ($, layoutModel, popupBox) {
+define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     'use strict';
 
-    var lib = {},
-        createUndeleteActionSettings;
+    var lib = {};
 
+    function calcCurrNumberRows() {
+        return $('table.query-history tr.data-item').length;
+    }
 
-    /**
-     * This function creates settings for jQuery.ajax() call to undelete query history item.
-     *
-     * @param queryId
-     * @returns {{type: string, dataType: string, data: {query_id: *}, success: Function, error: Function}}
-     */
-    createUndeleteActionSettings = function (queryId) {
-        return {
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                query_id: queryId
-            },
-            success: function (data) {
-                if (!data.error) {
-                    $('#removed-query-history-item').replaceWith(data.html);
-                    lib.bindEvents($('div.query-history-item[data-query-id="' + queryId + '"]'));
-                    layoutModel.showMessage('info', layoutModel.conf.messages.undeleted_query);
+    function appendData(data) {
+        $.each(data.data, function (i, item) {
+            $('table.query-history .expand-line').before('<tr class="data-item">'
+                + '<td class="query">' + item.query + '</td>'
+                + '<td class="corpname">' + item.humanCorpname + '</td>'
+                + '<td class="corpname">' + item.subcorpname + '</td>'
+                + '<td>' + item.query_type + '</td>'
+                + '<td class="date">' + item.created[1] + ' <strong>' + item.created[0] + '</strong></td>'
+                + '<td><a>' + layoutModel.translate('use_query') + '</a></td>'
 
-                } else {
-                    layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_undelete_the_query);
-                }
-            },
-            error: function () {
-                layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_undelete_the_query);
-            }
-        };
-    };
+            );
+        });
+    }
 
-    /**
-     * @param {optional string} selector to specify elements to apply event handlers to
-     */
-    lib.bindEvents = function (selector) {
-        var jqElem;
+    lib.init = function (conf) {
+        layoutModel.init(conf);
 
-        if (selector) {
-            jqElem = $(selector);
+        $('table.query-history').append('<tr class="expand-line"><td colspan="6"><a class="expand-list">' + 'load more' + '</a></td></tr>');
 
-        } else {
-            jqElem = $('.query-history-item .delete');
-        }
-        jqElem.on('click', function (event) {
-            var queryId,
-                undoUrl = '#',
-                infoMessage,
-                bindUndeleteAction;
+        $('table.query-history').find('a.expand-list').on('click', function () {
+            var prom;
 
+            prom = $.ajax('ajax_query_history?offset=' + calcCurrNumberRows() + '&limit=' + conf.page.page_append_records, {
+                dataType : 'json'
+            }).promise();
 
-            queryId = $(event.target).closest('.query-history-item').data('query-id');
-            infoMessage = layoutModel.conf.messages.deleted_query
-                            + ' <a id="undo-delete-query-desc" href="' + undoUrl + '">' + layoutModel.conf.messages.undo + '</a>';
-
-            bindUndeleteAction = function () {
-                $('#undo-delete-query-desc').on('click', function () {
-                    $.ajax('ajax_undelete_query', createUndeleteActionSettings(queryId));
-                });
-            };
-
-            $.ajax('ajax_delete_query', {
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    query_id: queryId
-                },
-                success : function (data) {
-                    if (!data.error) {
-                        layoutModel.showMessage('info', infoMessage, bindUndeleteAction);
-                        $('#removed-query-history-item').remove();
-                        $(event.target).closest('.query-history-item').replaceWith('<div id="removed-query-history-item"></div>');
+            prom.then(
+                function (data) {
+                    if (data.hasOwnProperty('error')) {
+                        lib.pluginApi.showMessage('error', data.error);
+                        // TODO
 
                     } else {
-                        layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_delete_the_query);
+                        appendData(data);
                     }
-
                 },
-                error: function () {
-                    layoutModel.showMessage('error', layoutModel.conf.messages.failed_to_delete_the_query);
-                }
-            });
-        });
-
-        $('.query-history .selectable').on('click', function (event) {
-            layoutModel.selectText(event.target);
-        });
-    };
-
-    lib.setupQueryOverviewLinks = function () {
-        $('.query-history .link a').each(function () {
-            var self = this;
-            $(this).attr('data-json-href', $(this).attr('href').replace('/concdesc?', '/concdesc_json?'));
-
-            popupBox.bind(this,
-                function (box, finalize) {
-                    $.ajax($(self).data('json-href'), {
-                        success: function (data) {
-                            layoutModel.renderOverview(data, box);
-                            finalize();
-                            box.setCss({
-                                'left': 0,
-                                'margin-left': 0
-                            });
-                        }
-                    });
-                },
-                {
-                    type: 'plain',
-                    htmlClass: 'query-overview',
-                    closeIcon: true,
-                    timeout: null
+                function (err) {
+                    lib.pluginApi.showMessage('error', err.statusText);
                 }
             );
         });
-    };
-
-    /**
-     *
-     * @param conf
-     */
-    lib.init = function (conf) {
-        layoutModel.init(conf);
-        lib.bindEvents();
-        lib.setupQueryOverviewLinks();
     };
 
     return lib;
