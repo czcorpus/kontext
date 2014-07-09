@@ -181,7 +181,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
-            <input id="cql$suff" class="history spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+            <input id="cql$suff" class="#unless $suff#history #end unless#spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
 
             #if not $suff
             <span class="no-wrap">
