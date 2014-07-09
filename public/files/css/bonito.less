@@ -1098,21 +1098,6 @@ table#multilevel-freq-params td.level {
   font-weight: bold;
 }
 
-.query-history {
-  border: 1px solid @color-light-frame;
-  border-radius: @border-radius-menu;
-  padding: 10px;
-}
-
-.query-history table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.query-history table th {
-  text-align: left;
-}
-
 .query-history .corpname {
   color: @color-logo-pink;
 }
@@ -1139,16 +1124,16 @@ table#multilevel-freq-params td.level {
   white-space: nowrap;
 }
 
-.query-history table td.date {
+.query-history .date {
   color: #999999;
 }
 
-.query-history table td.date strong {
+.query-history .date strong {
   padding-left: 0.4em;
 }
 
-.query-history table td.link,
-.query-history table td.date {
+.query-history .link,
+.query-history .date {
   text-align: right;
 }
 
@@ -1168,6 +1153,9 @@ table#multilevel-freq-params td.level {
   white-space: nowrap;
 }
 
+.query-history-filter > *:nth-child(n+1) {
+  margin-right: 20px;
+}
 
 .query-export-url {
   margin: 20px 0;

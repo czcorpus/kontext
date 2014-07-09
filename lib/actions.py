@@ -555,7 +555,7 @@ class Actions(ConcCGI):
         lposlist = dict(self.cm.corpconf_pairs(thecorp, 'LPOSLIST'))
 
         if queryselector == 'iqueryrow':
-            self._save_query(iquery, queryselector)
+            self._save_query(iquery, 'iquery')
             if 'lc' in attrlist:
                 if 'lemma_lc' in attrlist:
                     qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
@@ -586,7 +586,7 @@ class Actions(ConcCGI):
                                 for q in iquery.split()])
 
         elif queryselector == 'lemmarow':
-            self._save_query(lemma, queryselector)
+            self._save_query(lemma, 'lemma')
             if not lpos:
                 return '[lemma="%s"]' % lemma
             elif 'lempos' in attrlist:
@@ -607,10 +607,10 @@ class Actions(ConcCGI):
                                     + ' "%s"' % lpos)
                 return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
         elif queryselector == 'phraserow':
-            self._save_query(phrase, queryselector)
+            self._save_query(phrase, 'phrase')
             return '"' + '" "'.join(phrase.split()) + '"'
         elif queryselector == 'wordrow':
-            self._save_query(word, queryselector)
+            self._save_query(word, 'word')
             if qmcase:
                 wordattr = 'word="%s"' % word
             else:
@@ -627,15 +627,15 @@ class Actions(ConcCGI):
                 raise ConcError(_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
         elif queryselector == 'charrow':
-            self._save_query(char, queryselector)
+            self._save_query(char, 'char')
             if not char:
                 raise ConcError(_('No char entered'))
             return '[word=".*%s.*"]' % char
-        elif queryselector == 'tagrow':
+        elif queryselector == 'tag':
             self._save_query(self.tag, queryselector)
             return '[tag="%s"]' % self.tag
         else:
-            self._save_query(cql, queryselector)
+            self._save_query(cql, 'cql')
             return cql
 
     def _compile_query(self, qtype=None, cname=''):
@@ -2201,34 +2201,17 @@ class Actions(ConcCGI):
             out = {'message': ('error', _('You don\'t have enough privileges to see this page.'))}
         return out
 
-    @exposed(access_level=1)
-    def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', corpus_id=''):
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-view')
-        self._reset_session_conc()
-        if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), from_date=from_date,
-                                                          query_type=query_type, corpname=corpus_id,
-                                                          to_date=to_date, offset=offset, limit=limit)
-            for row in rows:
-                row['corpname'] = self._canonical_corpname(row['corpname'])
-                row['created'] = (row['created'].strftime('%X'), row['created'].strftime('%x'))
-        else:
-            rows = ()
-        return {
-            'data': rows,
-            'from_date': from_date,
-            'to_date': to_date
-        }
-
-    @exposed(access_level=1, return_type='json')
-    def ajax_query_history(self):
+    def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
         from datetime import datetime
 
         if plugins.has_plugin('query_storage'):
-            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), offset=0, limit=20,
-                                                          query_type='cqlrow', corpname=self.corpname)
+            if current_corpus:
+                corpname = self.corpname
+            else:
+                corpname = None
+            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), offset=offset, limit=limit,
+                                                          query_type=query_type, corpname=corpname,
+                                                          from_date=from_date, to_date=to_date)
             for row in rows:
                 created_dt = datetime.fromtimestamp(row['created'])
                 row['humanCorpname'] = self._human_readable_corpname()
@@ -2236,6 +2219,28 @@ class Actions(ConcCGI):
                 row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
         else:
             rows = ()
+        return rows
+
+    @exposed(access_level=1)
+    def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''):
+        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
+                                    'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
+                                    'menu-collocations', 'menu-view')
+        self._reset_session_conc()  # TODO in case user returns using back button, this may produce UX problems
+
+        if plugins.has_plugin('query_storage'):
+            rows = self._load_query_history(from_date=from_date, query_type=query_type, current_corpus=current_corpus,
+                                            to_date=to_date, offset=offset, limit=limit)
+        return {
+            'data': rows,
+            'from_date': from_date,
+            'to_date': to_date
+        }
+
+    @exposed(access_level=1, return_type='json')
+    def ajax_query_history(self, current_corpus=True):
+        rows = self._load_query_history(offset=0, limit=20, query_type='cqlrow', current_corpus=current_corpus,
+                                        from_date=None, to_date=None)
         return {
             'data': rows,
             'from_date': None,

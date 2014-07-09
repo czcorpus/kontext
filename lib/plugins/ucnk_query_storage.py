@@ -88,6 +88,15 @@ class QueryStorage(object):
     def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
+
+        arguments:
+        user_id -- database user ID
+        from_date -- YYYY-MM-DD date string
+        to_date -- YYY-MM-DD date string
+        query_type -- one of {iquery, lemma, phrase, word, char, cql}
+        corpus_name -- internal corpus name (i.e. including possible path-like prefix)
+        offset -- where to start the list (starts from zero)
+        limit -- how many rows will be selected
         """
 
         sql_params = []
@@ -105,11 +114,11 @@ class QueryStorage(object):
             opt_sql.append('created <= %s')
             sql_params.append(to_date)
 
-        if query_type is not None:
+        if query_type:
             opt_sql.append('query_type = %s')
             sql_params.append(query_type)
 
-        if corpname is not None:
+        if corpname:
             opt_sql.append('corpname = %s')
             sql_params.append(corpname)
 
