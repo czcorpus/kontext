@@ -2017,6 +2017,24 @@ msgstr "Neznámá akce [%s]"
 msgid "current corpus only"
 msgstr "pouze tento korpus"
 
+msgid "query"
+msgstr "dotaz"
+
+msgid "query type"
+msgstr "typ dotazu"
+
+msgid "date and time"
+msgstr "datum a čas"
+
+msgid "use query"
+msgstr "použít dotaz"
+
+msgid "any type"
+msgstr "libovolný typ"
+
+msgid "Filter list"
+msgstr "Filtrovat seznam"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
