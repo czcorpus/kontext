@@ -2239,7 +2239,7 @@ class Actions(ConcCGI):
 
     @exposed(access_level=1, return_type='json')
     def ajax_query_history(self, current_corpus=True):
-        rows = self._load_query_history(offset=0, limit=20, query_type='cqlrow', current_corpus=current_corpus,
+        rows = self._load_query_history(offset=0, limit=20, query_type='cql', current_corpus=current_corpus,
                                         from_date=None, to_date=None)
         return {
             'data': rows,
