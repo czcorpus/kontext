@@ -17,9 +17,11 @@
 """
 Custom Cheetah filters for the KonText interface
 """
-from strings import format_number
 from Cheetah.Filters import Filter
 import json
+import urllib
+
+from strings import format_number
 
 
 class IntegerFormatter(Filter):
@@ -57,9 +59,6 @@ class HtmlEscape(Filter):
 
 
 class Shortener(Filter):
-    """
-    """
-
     def filter(self, val, **kw):
         length = kw['length'] if 'length' in kw else 8
         if len(val) > length:
@@ -70,6 +69,12 @@ class Shortener(Filter):
 
 
 class Jsonize(Filter):
-
     def filter(self, val, **kw):
         return json.dumps(val)
+
+
+class URLEncode(Filter):
+    def filter(self, val, **kw):
+        if type(val) is unicode:
+            val = val.encode('utf-8')
+        return urllib.quote(val)
