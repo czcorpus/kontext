@@ -131,8 +131,10 @@ define(['jquery', 'win'], function ($, win) {
      */
     Plugin.prototype.highlightCurrentRow = function () {
         this.cleanRowSelection();
-        this.boxElm.find('ul.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
-        this.setInputVal(this.data[this.highlightedRow].query);
+        if (this.data.length > 0) {
+            this.boxElm.find('ul.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
+            this.setInputVal(this.data[this.highlightedRow].query);
+        }
     };
 
     /**
