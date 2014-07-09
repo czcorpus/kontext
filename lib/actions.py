@@ -2227,24 +2227,38 @@ class Actions(ConcCGI):
                                     'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-view')
         self._reset_session_conc()  # TODO in case user returns using back button, this may produce UX problems
+        num_records = int(settings.get('plugins', 'query_storage').get('ucnk:page_num_records', 0))
 
-        if plugins.has_plugin('query_storage'):
-            rows = self._load_query_history(from_date=from_date, query_type=query_type, current_corpus=current_corpus,
-                                            to_date=to_date, offset=offset, limit=limit)
+        if not offset:
+            offset = 0
+        if not limit:
+            limit = 0
+        rows = self._load_query_history(from_date=from_date, query_type=query_type, current_corpus=current_corpus,
+                                        to_date=to_date, offset=offset, limit=num_records)
         return {
             'data': rows,
             'from_date': from_date,
-            'to_date': to_date
+            'to_date': to_date,
+            'offset': offset,
+            'limit': limit,
+            'page_num_records': num_records,
+            'page_append_records': settings.get('plugins', 'query_storage').get('ucnk:page_append_records', 0)
         }
 
     @exposed(access_level=1, return_type='json')
-    def ajax_query_history(self, current_corpus=True):
-        rows = self._load_query_history(offset=0, limit=20, query_type='cql', current_corpus=current_corpus,
-                                        from_date=None, to_date=None)
+    def ajax_query_history(self, current_corpus='', offset=0, limit=20, query_type=''):
+        if not offset:
+            offset = 0
+        if not limit:
+            limit = 0
+        rows = self._load_query_history(offset=offset, limit=limit, query_type=query_type,
+                                        current_corpus=current_corpus, from_date=None, to_date=None)
         return {
             'data': rows,
             'from_date': None,
-            'to_date': None
+            'to_date': None,
+            'offset': offset,
+            'limit': limit
         }
 
     @exposed(access_level=0)

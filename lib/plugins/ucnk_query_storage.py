@@ -25,6 +25,8 @@ Required config.xml/plugins entries:
     <module>ucnk_query_storage</module>
     <db_path extension-by="ucnk">[path to a sqlite3-compatible database file]</db_path>
     <num_kept_records extension-by="ucnk">[how many records to keep stored per user]</num_kept_records>
+    <page_num_records extension-by="ucnk">[how many records to show in 'recent queries' page]</page_num_records>
+    <page_append_records extension-by="ucnk">[how many records to load in case user clicks 'more']</page_append_records>
 </query_storage>
 
 Required SQL table:
@@ -122,7 +124,7 @@ class QueryStorage(object):
             opt_sql.append('corpname = %s')
             sql_params.append(corpname)
 
-        if limit:
+        if limit is not None:
             limit_sql = "LIMIT %s OFFSET %s"
             sql_params.append(limit)
             sql_params.append(offset)
@@ -137,7 +139,6 @@ class QueryStorage(object):
                " %s "
                " ORDER BY created DESC "
                "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
-
         sql_params.insert(0, user_id)
         db = self.db_provider()
         ans = db.execute(sql, tuple(sql_params))

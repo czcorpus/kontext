@@ -177,7 +177,7 @@ define(['jquery', 'win'], function ($, win) {
         this.inputElm.blur();  // These two lines prevent Firefox from deleting
         this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-        prom = $.ajax('ajax_query_history', {
+        prom = $.ajax('ajax_query_history?query_type=cql', {
             dataType : 'json'
         }).promise();
 
