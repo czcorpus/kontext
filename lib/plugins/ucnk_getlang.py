@@ -54,10 +54,10 @@ class GetLang(object):
             ans = {}
             root_dir = '%s/../../locale' % os.path.dirname(__file__)
             for item in os.listdir(root_dir):
-                c1, c2 = item.split('_')
-                if not c1 in ans:
-                    ans[c1] = []
-                ans[c1].append(item)
+                c = item.split('_')[0]
+                if not c in ans:
+                    ans[c] = []
+                ans[c].append(item)
             return ans
 
         if not isinstance(source, Cookie.BaseCookie):
