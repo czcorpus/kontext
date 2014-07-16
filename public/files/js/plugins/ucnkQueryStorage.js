@@ -186,7 +186,7 @@ define(['jquery', 'win'], function ($, win) {
         if (this.inputElm.val()) {
             this.data.push({
                 query : this.inputElm.val(),
-                query_type : $('#queryselector').val(),
+                query_type : $('#queryselector option:selected').data('type'),
                 corpname : lib.pluginApi.conf.corpname,
                 subcorpname : self.getCurrentSubcorpname(),
                 humanCorpname : lib.pluginApi.conf.humanCorpname
@@ -290,7 +290,7 @@ define(['jquery', 'win'], function ($, win) {
 
             tbl.append(listItem);
             listItem.append(link);
-            listItem.append('&nbsp;<span class="corpname">(' + v.humanCorpname + subcorpSuff + ')</span>');
+            listItem.append('&nbsp;<span class="corpname">(' + v.query_type + ', ' + v.humanCorpname + subcorpSuff + ')</span>');
         });
         this.highlightCurrentRow();
     };
