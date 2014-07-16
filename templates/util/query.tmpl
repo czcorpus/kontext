@@ -46,19 +46,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <td>
             <select class="qselector" id="queryselector$suff" name="queryselector$suff" data-parallel-corp="$suff">
                 #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
-                <option value="iqueryrow" $selected>$_("Basic")</option>
+                <option value="iqueryrow" data-type="iquery" $selected>$_("Basic")</option>
                 #if $getVar('has_lemmaattr' + $suff, '')
                 #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
-                <option value="lemmarow" $selected>$_("Lemma")</option>
+                <option value="lemmarow" data-type="lemma" $selected>$_("Lemma")</option>
                 #end if
                 #set $selected = ($querytype == 'phraserow') and 'selected="selected"' or ''
-                <option value="phraserow" $selected>$_("Phrase")</option>
+                <option value="phraserow" data-type="phrase" $selected>$_("Phrase")</option>
                 #set $selected = ($querytype == 'wordrow') and 'selected="selected"' or ''
-                <option value="wordrow" $selected>$_("Word Form")</option>
+                <option value="wordrow" data-type="word" $selected>$_("Word Form")</option>
                 #set $selected = ($querytype == 'charrow') and 'selected="selected"' or ''
-                <option value="charrow" $selected>$_("Character")</option>
+                <option value="charrow" data-type="char" $selected>$_("Character")</option>
                 #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
-                <option value="cqlrow" $selected>$_("CQL")</option>
+                <option value="cqlrow" data-type="cql" $selected>$_("CQL")</option>
             </select>
         </td>
     </tr>
