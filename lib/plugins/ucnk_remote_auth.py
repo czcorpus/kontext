@@ -23,7 +23,6 @@ method.
 import urllib
 import os
 import urlparse
-import cPickle
 
 from auth import AbstractAuth
 
@@ -56,53 +55,8 @@ def create_instance(conf, sessions, db):
     login_url = conf.get('plugins', 'auth')['login_url'] % (urllib.quote(login_url_continue))
     logout_url = conf.get('plugins', 'auth')['logout_url'] % (urllib.quote(logout_url_continue))
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
-
-    cache_path = conf.get('plugins', 'auth').get('ucnk:cache_path', None)
-    cache = Cache(cache_path) if cache_path else None
-
     return CentralAuth(db_conn=db.get(), sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
-                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name, cache=cache)
-
-
-class Cache(object):
-    """
-    cPickle-based key-value storage. Data are saved automatically
-    before the object is being destroyed.
-    Cache supports dict-like access to individual records (d = cache['foo'],
-    cache['bar'] = ...).
-    """
-    def __init__(self, data_path):
-        """
-        arguments:
-        data_path -- path to a serialized cache data; if it does not exist then a new file is created
-        """
-        self.data_path = data_path
-        self.data = {}
-        try:
-            with open(self.data_path, 'rb') as f:
-                self.data = cPickle.load(f)
-        finally:
-            pass
-
-    def save(self):
-        """
-        Saves cache to the 'self.data_path' file. This is also
-        done automatically via __del__ method.
-        """
-        with open(self.data_path, 'wb') as f:
-            cPickle.dump(self.data, f)
-
-    def __getitem__(self, user_id):
-        return self.data[user_id]
-
-    def __setitem__(self, user_id, data):
-        self.data[user_id] = data
-
-    def __contains__(self, user_id):
-        return self.data.__contains__(user_id)
-
-    def __del__(self):
-        self.save()
+                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
 
 
 class CentralAuth(AbstractAuth):
@@ -110,27 +64,31 @@ class CentralAuth(AbstractAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db_conn, sessions, admins, login_url, logout_url, cookie_name, cache=None):
+    def __init__(self, db_conn, sessions, admins, login_url, logout_url, cookie_name):
         """
-        arguments:
-        db_conn -- database connection
-        sessions -- session handler
-        admins -- list of usernames with administrator privileges
-        login_url -- the application redirects a user to this URL when login is requested
-        logout_url -- the application redirects a user to this URL when logout is requested
-        cookie_name -- name of the cookie used to store an authentication ticket
-        cache -- dict-like object used to cache some data; optional
+        Parameters
+        ----------
+        db_conn : object
+            database connection
+        sessions : objet
+            a session handler
+        admins : tuple|list
+            list of usernames with administrator privileges
+        login_url : str
+            the application redirects a user to this URL when login is necessary
+        logout_url : str
+            the application redirects a user to this URL when logout is requested
+        cookie_name : str
+            name of the cookie used to store authentication ticket
         """
         self.db_conn = db_conn
         self.sessions = sessions
+        self.corplist = []
         self.admins = admins
         self.login_url = login_url
         self.logout_url = logout_url
         self.cookie_name = cookie_name
-
         self.user = 'anonymous'
-        self.corplist = []
-        self.cache = cache
 
     def get_ticket(self, cookies):
         if self.cookie_name in cookies:
@@ -186,33 +144,28 @@ class CentralAuth(AbstractAuth):
         global _corplist
 
         if len(self.corplist) == 0:
-            if self.cache and user in self.cache:
-                _corplist = self.cache[user]
-            else:
-                conn = self.db_conn
-                cursor = conn.cursor()
-                cursor.execute("""SELECT corpora.name, limited FROM (
-    SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
-    FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
-    UNION
-    SELECT r2.corpora AS corpus_id, r2.limited AS limited
-    FROM user AS u2
-    JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
-    JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
-                rows = cursor.fetchall()
-                corpora = []
-                for row in rows:
-                    if row[1]:
-                        corpora.append('omezeni/%s' % row[0])
-                    else:
-                        corpora.append(row[0])
-                cursor.close()
-                if not 'susanne' in corpora:
-                    corpora.append('susanne')
-                corpora.sort()
-                _corplist = corpora
-                if self.cache:
-                    self.cache[user] = corpora
+            conn = self.db_conn
+            cursor = conn.cursor()
+            cursor.execute("""SELECT corpora.name, limited FROM (
+SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
+FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
+UNION
+SELECT r2.corpora AS corpus_id, r2.limited AS limited
+FROM user AS u2
+JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
+JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user))
+            rows = cursor.fetchall()
+            corpora = []
+            for row in rows:
+                if row[1]:
+                    corpora.append('omezeni/%s' % row[0])
+                else:
+                    corpora.append(row[0])
+            cursor.close()
+            if not 'susanne' in corpora:
+                corpora.append('susanne')
+            corpora.sort()
+            _corplist = corpora
         return _corplist
 
     def is_administrator(self):
