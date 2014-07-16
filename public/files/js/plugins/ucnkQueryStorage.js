@@ -310,8 +310,10 @@ define(['jquery', 'win'], function ($, win) {
         //this.data = null; // TODO maybe we can cache the data here
         this.inputElm.off('keyup.queryStoragePluginMoveSelection');
         this.highlightedRow = 0;
-        this.boxElm.remove();
-        this.boxElm = null;
+        if (this.boxElm) {
+            this.boxElm.remove();
+            this.boxElm = null;
+        }
         $('#make-concordance-button').attr('disabled', null);
     };
 
@@ -384,13 +386,27 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
+     * Detaches plugin instance from provided element.
+     * All the event handlers are removed too.
+     *
+     * @param elm
+     */
+    lib.detach = function (elm) {
+        if (typeof $(elm).data('plugin') === 'object') {
+            $(elm).data('plugin').close();
+            $(win).off('keyup.queryStoragePlugin');
+            $(elm).data('plugin', null);
+        }
+    };
+
+    /**
      *
      * @param pluginApi
      */
     lib.init = function (pluginApi) {
         lib.pluginApi = pluginApi;
         if (!lib.pluginApi.conf.anonymousUser) {
-            $('input.history').each(function () {
+            $('input.history:visible').each(function () {
                 lib.bind(this);
             });
 
