@@ -77,11 +77,12 @@ class Cache(object):
         data_path -- path to a serialized cache data; if it does not exist then a new file is created
         """
         self.data_path = data_path
+        self.data = {}
         try:
             with open(self.data_path, 'rb') as f:
                 self.data = cPickle.load(f)
-        except IOError:
-            self.data = {}
+        finally:
+            pass
 
     def save(self):
         """
