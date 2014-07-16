@@ -115,6 +115,24 @@ define(['jquery', 'win'], function ($, win) {
             }
         });
 
+        this.boxElm.find('.filter-checkbox').on('click', function (event) {
+            if ($(event.currentTarget).is(':checked')) {
+                self.boxElm.find('.rows li').each(function () {
+                    if ($(this).data('corpname') !== lib.pluginApi.conf.corpname) {
+                        $(this).hide();
+                    }
+                });
+
+            } else {
+                self.boxElm.find('.rows li').each(function () {
+                    if ($(this).data('corpname') !== lib.pluginApi.conf.corpname
+                        && !$(this).is(':visible')) {
+                        $(this).show();
+                    }
+                });
+            }
+        });
+
         // we have to block main form Enter key event to prevent submission
         $('#make-concordance-button').attr('disabled', 'disabled');
     };
@@ -211,7 +229,7 @@ define(['jquery', 'win'], function ($, win) {
              + '<div class="footer">'
              + '<label class="filter-current">'
              + lib.pluginApi.translate('current corpus only')
-             + '<input class="filter-checkbox" type="checkbox" checked="checked" disabled="disabled" /></label>'
+             + '<input class="filter-checkbox" type="checkbox" /></label>'
              + '</div>';
 
         this.boxElm = $('<div>');
