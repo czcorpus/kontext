@@ -14,11 +14,51 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import cPickle
+
 try:
     from docutils.core import publish_string
 except ImportError:
     publish_string = lambda s: s
 from lxml import etree
+
+
+class Cache(object):
+    """
+    cPickle-based key-value storage.
+    Cache supports dict-like access to individual records (d = cache['foo'],
+    cache['bar'] = ...).
+    """
+    def __init__(self, data_path):
+        """
+        arguments:
+        data_path -- path to a serialized cache data; if it does not exist then a new file is created
+        """
+        self.data_path = data_path
+        self.data = {}
+        try:
+            with open(self.data_path, 'rb') as f:
+                self.data = cPickle.load(f)
+                if type(self.data) is not dict:
+                    self.data = {}
+        except Exception:
+            pass
+
+    def save(self):
+        """
+        Saves cache to the 'self.data_path' file.
+        """
+        with open(self.data_path, 'wb') as f:
+            cPickle.dump(self.data, f)
+
+    def __getitem__(self, user_id):
+        return self.data[user_id]
+
+    def __setitem__(self, user_id, data):
+        self.data[user_id] = data
+
+    def __contains__(self, user_id):
+        return self.data.__contains__(user_id)
 
 
 class CorpTree(object):
@@ -27,11 +67,12 @@ class CorpTree(object):
     defined in XML format
     """
 
-    def __init__(self, file_path, root_xpath):
+    def __init__(self, file_path, root_xpath, cache=None):
         self.lang = 'en'
         self.list = None
         self.file_path = file_path
         self.root_xpath = root_xpath
+        self.cache = cache
 
     def _translate_markup(self, s):
         """
@@ -137,13 +178,19 @@ class CorpTree(object):
         """
         Loads data from a configuration file
         """
-        data = []
-        with open(self.file_path) as f:
-            xml = etree.parse(f)
-            root = xml.find(self.root_xpath)
-            if root is not None:
-                self._parse_corplist_node(root, data, path='/')
-        self.list = data
+        if self.cache and 'corptree' in self.cache:
+            self.list = self.cache['corptree']
+        else:
+            data = []
+            with open(self.file_path) as f:
+                xml = etree.parse(f)
+                root = xml.find(self.root_xpath)
+                if root is not None:
+                    self._parse_corplist_node(root, data, path='/')
+            self.list = data
+            if self.cache:
+                self.cache['corptree'] = self.list
+                self.cache.save()
 
     def get(self):
         """
@@ -164,5 +211,9 @@ def create_instance(conf):
     """
     Interface function called by KonText creates new plugin instance
     """
+    cache_path = conf.get('plugins', 'corptree').get('ucnk:cache_path', None)
+    cache = Cache(cache_path) if cache_path else None
+
     return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],
-                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'])
+                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
+                    cache=cache)
