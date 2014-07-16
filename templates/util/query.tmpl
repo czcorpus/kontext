@@ -71,7 +71,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" id="iquery$suff" class="spec-chars iquery-input" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+            <input type="text" id="iquery$suff" class="spec-chars iquery-input #unless $suff#history #end unless#" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
         </td>
     </tr>
 
@@ -86,7 +86,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             #if $q
             <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" />
             #else
-            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input" />
+            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input #unless $suff#history #end unless#" />
             #end if
 
             #if $Lposlist
@@ -111,7 +111,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input" />
+            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input #unless $suff#history #end unless#" />
         </td>
     </tr>
 
@@ -122,7 +122,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input" />
+            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input #unless $suff#history #end unless#" />
             #if $Wposlist
             <span class="no-wrap">
                 $_("PoS"):
