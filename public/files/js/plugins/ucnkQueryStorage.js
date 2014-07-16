@@ -59,6 +59,14 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @returns {*}
+     */
+    Plugin.prototype.inputVisible = function () {
+        return this.inputElm.is(':visible');
+    };
+
+    /**
+     *
      * @returns {Number}
      */
     Plugin.prototype.numRows = function () {
@@ -94,7 +102,7 @@ define(['jquery', 'win'], function ($, win) {
                 event.stopPropagation();
                 self.close();
 
-            } else if (event.keyCode === 40 && !self.isActive()) {
+            } else if (event.keyCode === 40 && self.inputVisible() && !self.isActive()) {
                 self.popup();
             }
         });
