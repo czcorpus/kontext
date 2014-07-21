@@ -19,30 +19,35 @@ testing/development purposes and for low-load deployments. This mode can be acti
 
 ### WSGI application within a web-server
 
-KonText can be run in a WSGI-enabled web server (e.g. Apache 2.x + mod_wsgi). This is recommended for
-production deployments.
+KonText can be run within a WSGI-enabled web server (e.g. Apache 2.x + [mod_wsgi](https://code.google.com/p/modwsgi/)).
+This is the recommended mode for production deployments.
 
-Define a loadable configuration file for your Apache 2 installation or update some of existing configuration files::
+Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
+configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
+is */etc/apache2/sites-available/*)::
 
 ```
-  Alias /kontext /path/to/your/app/public
+<VirtualHost *:80>
+    ServerName my.domain
+    DocumentRoot /path/to/kontext/public
 
-  <Directory /path/to/your/app/public>
-    Options +ExecCGI
-    AddHandler cgi-script .cgi
-    AllowOverride FileInfo
-    RewriteEngine On
-    RewriteRule ^$ run.cgi/first_form [L,R=301]
-  </Directory>
+    Alias /files /path/to/kontext/public/files
+    <Directory /path/to/kontext/public/files>
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+    WSGIScriptAlias / /path/to/kontext/public/app.py
+    WSGIDaemonProcess kontext_app processes=2 threads=15 display-name=%{GROUP}
+    WSGIProcessGroup kontext_app
+</VirtualHost>
 ```
 
-VirtualHost-based configuration is possible too. Please refer to the
-[Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
+Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also possible.
+Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
 
-Please note that Apache's document root should be set to the *public* subdirectory
-of the application to prevent access to configuration files, source code and other sensitive data.
-
-Using shown configuration, your web application should be available at URL *http://your_server_hostname/kontext* .
+Please always keep in mind to have only *public* directory accessible by web clients to prevent them viewing
+configuration files, source code and other sensitive data.
 
 Plugin approach
 ---------------
@@ -61,19 +66,30 @@ You can start by exploring plugins we use in our institute - they are included i
 
 ### Client-side implementation notes
 
-Specifications of some plugins include also a client-side functionality. In such cases you have to implement or
-configure some existing solution. Plu-in must be defined as an [AMD](https://github.com/amdjs/amdjs-api) compatible
-module. A minimal implementation may look like in the following sample
+Specifications of some plugins include also a client-side functionality. In case of customizing *ucnk_* plug-ins there
+will be typically no need to modify the client-side part because the difference will be probably in a server
+solution (e.g. different storage engine).
+
+Client-side plug-in must be defined as an [AMD](https://github.com/amdjs/amdjs-api) compatible module. A sample
+implementation may look like in the following code:
 
 ```js
-define([], function () {
+define(['jquery'], function ($) {
 var lib = {};
 
-    lib.init = function () {};
+    lib.init = function () {
+        var button = $('<button>');
+
+        button.text('say hello');
+        button.on('click', function () {
+            console.log('hello');
+        });
+        $('#mainform').append(button);
+    };
+
     return lib;
 });
 ```
-
 
 ### Server-side implementation notes
 
@@ -91,17 +107,58 @@ operational. In such cases, the plugin can implement a method *setup*:
 
 ```python
 def setup(self, **kwargs):
+    # ask CGIPublisher something as he is ready here and now
     pass
 ```
 
-### A note for developers
+### Notes for developers
 
-When implementing an optional plugin you can make it dependent on both default and optional plugins. The only thing
-to be aware of is that optional plugin dependencies in *app.py* must be specified using strings (i.e. you cannot
-directly use the package *plugins*) because when Python interpreter reads optional plugins configuration no optional
-plugin is instantiated yet.
+Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different
+contexts can be used for a single plug-in in theory (1 - module with plug-in implementation, 2 - dynamic module attached to
+the *plugins' package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
+*corpus_enhancer* (i.e. the file is *corpus_enhancer.py*) then the respective part of *config.xml* will look like this:
 
-It is also recommended to add at least following information to a plugin's module docstring:
+```xml
+<kontext>
+  <global>
+    <plugins>
+      <corpus_enhancer>
+        <module>corpus_enhancer</module>
+        ... additional configuration ...
+      </corpus_enhancer>
+      ...
+    </plugins>
+    ...
+  </global>
+</kontext>
+```
+
+And the registration (which defines dynamically created module) in *app.py* will look like this:
+
+```python
+optional_plugins = (
+    # ... existing KonText plug-ins ...
+    ('corpus_enhancer', (dependency1, dependency2,...))
+)
+```
+
+When implementing an optional plugin, you can make it dependent on both default and optional plugins. These dependencies
+are passed as arguments to your *factory function*. The only thing to be aware of is that optional plugin dependencies
+in *optional_plugins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plugins*)
+because when Python interpreter reads the optional plugins configuration no optional plugin is instantiated yet.
+
+In the following example where we define 'my_plugin',  *settings* is a required plug-in (and thus already loaded) and
+*some_optional_plugin* is an optional plugin which cannot be guaranteed to be loaded yet.
+
+```python
+optional_plugins = (
+        # ...
+        ('my_plugin', ('some_optional_plugin', settings)),
+        # ...
+)
+```
+
+It is also recommended to add at least following information to plugin's module docstring:
 
     * 3rd party libraries needed to run the plugin
     * required config.xml entries to properly configure the plugin
@@ -129,20 +186,37 @@ Following plugins are optional:
 | corptree         | loads a hierarchy of corpora from an XML file                                | No               |
 | getlang          | if you want to read current UI language in a non-KonText way                 | No               |
 | live_attributes  | When filtering searched positions by attribute value(s), this provides a knowledge which values of currently unused (within the selection) attributes are still applicable.  | Yes              |
-| query_storage    | KonText may store users' queries for further review/reuse                    | No               |
+| query_storage    | KonText may store users' queries for further review/reuse                    | Yes              |
 
 
 ### The "db" plugin
 
-The "db" plugin provides a connection to a database. An implementation must provide following method:
+The "db" plugin provides a connection to a database. An implementation must provide a callable (either a function or
+an object implementing *__call__*):
 
 ```python
-def get(self):
-    """
-    returns a database connection object
-    """
-    pass
+class MyDbConnection(object):
+    def __init__(self):
+        self.thread_safe_conn = Connection()
+
+    def __call__(self):
+        """
+        returns a database connection object
+        """
+        return self.thread_safe_conn
+
+def create_instance(...):
+    return MyDbConnection()
 ```
+
+```python
+def create_connection():
+    return Connection()
+
+def create_instance(...):
+    return create_connection
+```
+
 
 ### The "auth" plugin
 
