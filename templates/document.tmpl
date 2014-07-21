@@ -119,7 +119,9 @@ requirejs.config({
     for (i = 0; i < names.length; i += 1) {
         define(names[i], [], function () {
             return {
-                init : function () {}
+                init : function () {},
+                reset : function () {},
+                detach : function () {}
             };
         });
     }
