@@ -44,6 +44,6 @@ Requirements
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
     * [PyICU](http://pyicu.osafoundation.org/) library (optional but preferred)
-    * docutils module (optional)
+    * [markdown](https://pypi.python.org/pypi/Markdown) module (optional, for formatted corpora references)
 
-  * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83* and up
+  * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)

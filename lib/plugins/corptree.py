@@ -15,10 +15,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 try:
-    from docutils.core import publish_string
-except ImportError:    
-    def publish_string(source, *args, **kwargs):
-        return source
+    from markdown import markdown
+except ImportError:
+    markdown = lambda s: s
 from lxml import etree
 
 """
@@ -32,6 +31,15 @@ Required config.xml/plugins entries:
 """
 
 
+def translate_markup(s):
+    """
+    Transforms markdown markup into HTML
+    """
+    if not s:
+        return None
+    return markdown(s.strip())
+
+
 class CorpTree(object):
     """
     Loads and provides access to a hierarchical list of corpora
@@ -43,19 +51,6 @@ class CorpTree(object):
         self.list = None
         self.file_path = file_path
         self.root_xpath = root_xpath
-
-    def _translate_markup(self, s):
-        """
-        Transforms docutils markup into HTML subtree
-        """
-        if not s:
-            return None
-        html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-                                     writer_name='html')
-        html = html[html.find('<body>')+6:html.find('</body>')].strip()
-        if type(html) is not unicode:  # we expect that in such case it is still utf-8
-            html = html.decode('utf-8')
-        return html
 
     def get_corplist_title(self, elm):
         """
@@ -112,13 +107,12 @@ class CorpTree(object):
 
                 ref_elm = item.find('reference')
                 if ref_elm is not None:
-                    ans['citation_info']['default_ref'] = self._translate_markup(getattr(ref_elm.find('default'),
-                                                                                         'text', None))
-                    articles = [self._translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
+                    ans['citation_info']['default_ref'] = translate_markup(getattr(ref_elm.find('default'),
+                                                                                   'text', None))
+                    articles = [translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
                     ans['citation_info']['article_ref'] = articles
-                    ans['citation_info']['other_bibliography'] = self._translate_markup(
-                        getattr(ref_elm.find('other_bibliography'),
-                                'text', None))
+                    ans['citation_info']['other_bibliography'] = translate_markup(
+                        getattr(ref_elm.find('other_bibliography'), 'text', None))
 
                 meta_elm = item.find('metadata')
                 if meta_elm is not None:
