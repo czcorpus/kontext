@@ -52,4 +52,4 @@ Requirements
 Installation
 ------------
 
-Please refer to the [INSTALL.md](INSTALL.md) file.
+Please refer to the *INSTALL.md* file.
