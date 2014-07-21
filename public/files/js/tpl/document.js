@@ -471,7 +471,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
     lib.misc = function () {
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
-                queryInput.cmdSwitchQuery(event.target, lib.conf.queryTypesHints);
+                queryInput.cmdSwitchQuery(event, lib.conf.queryTypesHints);
             });
 
             // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
