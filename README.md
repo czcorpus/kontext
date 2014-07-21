@@ -43,7 +43,7 @@ Requirements
 * Python *2.6* or *2.7*
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
-    * [PyICU](http://pyicu.osafoundation.org/) library (optional but preferred)
+    * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) module (optional, for formatted corpora references)
 
   * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)
