@@ -2035,6 +2035,12 @@ msgstr "libovolný typ"
 msgid "Filter list"
 msgstr "Filtrovat seznam"
 
+msgid "No more lines"
+msgstr "Nejsou žádné další řádky"
+
+msgid "Load more"
+msgstr "Nahrát další"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
