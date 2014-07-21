@@ -24,7 +24,7 @@ This is the recommended mode for production deployments.
 
 Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
 configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
-is */etc/apache2/sites-available/*)::
+is */etc/apache2/sites-available/*):
 
 ```
 <VirtualHost *:80>
@@ -49,24 +49,24 @@ Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) fo
 Please always keep in mind to have only *public* directory accessible by web clients to prevent them viewing
 configuration files, source code and other sensitive data.
 
-Plugin approach
----------------
+Plug-in approach
+----------------
 
 Because it is impossible to implement KonText in such a way that fits all the possible requirements in terms of
 integrability into existing information systems, some parts of the application are implemented as plug-ins with
 predefined interface.
 
 For example, if you have an existing user database or if you do not want to bother with user authentication at all
-you can easily implement your own version of the *auth* plugin. If you for example want to store user session data to
-files instead of a database, all you have to do is to rewrite the *sessions* plugin appropriately.
+you can easily implement your own version of the *auth* plug-in. If you for example want to store user session data to
+files instead of a database, all you have to do is to rewrite the *sessions* plug-in appropriately.
 
-You can start by exploring plugins we use in our institute - they are included in the *plugins* directory and have
+You can start by exploring plug-ins we use in our institute - they are included in the *plug-ins* directory and have
 *ucnk_* prefix.
 
 
 ### Client-side implementation notes
 
-Specifications of some plugins include also a client-side functionality. In case of customizing *ucnk_* plug-ins there
+Specifications of some plug-ins include also a client-side functionality. In case of customizing *ucnk_* plug-ins there
 will be typically no need to modify the client-side part because the difference will be probably in a server
 solution (e.g. different storage engine).
 
@@ -93,17 +93,17 @@ var lib = {};
 
 ### Server-side implementation notes
 
-In general, a plugin is a Python object defined in a Python module. the module must implement factory function
+In general, a plug-in is a Python object defined in a Python module. the module must implement factory function
 *create_instance*
 
 ```python
 def create_instance(settings, *args, **kwargs):
-    return MyPluginImplementation()
+    return MyPlug-inImplementation()
 ```
 
-The factory function should create and return a plugin object. Because plugins are instantiated early in the request
+The factory function should create and return a plug-in object. Because plug-ins are instantiated early in the request
 processing workflow, it is sometimes necessary to perform additional configuration after *CGIPublisher* object is fully
-operational. In such cases, the plugin can implement a method *setup*:
+operational. In such cases, the plug-in can implement a method *setup*:
 
 ```python
 def setup(self, **kwargs):
@@ -113,21 +113,21 @@ def setup(self, **kwargs):
 
 ### Notes for developers
 
-Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different
+Plug-ins are configured in *config.xml* under */kontext/global/plug-ins*. Although three different names for different
 contexts can be used for a single plug-in in theory (1 - module with plug-in implementation, 2 - dynamic module attached to
-the *plugins' package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
+the *plug-ins' package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
 *corpus_enhancer* (i.e. the file is *corpus_enhancer.py*) then the respective part of *config.xml* will look like this:
 
 ```xml
 <kontext>
   <global>
-    <plugins>
+    <plug-ins>
       <corpus_enhancer>
         <module>corpus_enhancer</module>
         ... additional configuration ...
       </corpus_enhancer>
       ...
-    </plugins>
+    </plug-ins>
     ...
   </global>
 </kontext>
@@ -136,49 +136,49 @@ the *plugins' package, 3 - config.xml tag) a good practice is to use a single na
 And the registration (which defines dynamically created module) in *app.py* will look like this:
 
 ```python
-optional_plugins = (
+optional_plug-ins = (
     # ... existing KonText plug-ins ...
     ('corpus_enhancer', (dependency1, dependency2,...))
 )
 ```
 
-When implementing an optional plugin, you can make it dependent on both default and optional plugins. These dependencies
-are passed as arguments to your *factory function*. The only thing to be aware of is that optional plugin dependencies
-in *optional_plugins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plugins*)
-because when Python interpreter reads the optional plugins configuration no optional plugin is instantiated yet.
+When implementing an optional plug-in, you can make it dependent on both default and optional plug-ins. These dependencies
+are passed as arguments to your *factory function*. The only thing to be aware of is that optional plug-in dependencies
+in *optional_plug-ins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plug-ins*)
+because when Python interpreter reads the optional plug-ins configuration no optional plug-in is instantiated yet.
 
-In the following example where we define 'my_plugin',  *settings* is a required plug-in (and thus already loaded) and
-*some_optional_plugin* is an optional plugin which cannot be guaranteed to be loaded yet.
+In the following example where we define 'my_plug-in',  *settings* is a required plug-in (and thus already loaded) and
+*some_optional_plug-in* is an optional plug-in which cannot be guaranteed to be loaded yet.
 
 ```python
-optional_plugins = (
+optional_plug-ins = (
         # ...
-        ('my_plugin', ('some_optional_plugin', settings)),
+        ('my_plug-in', ('some_optional_plug-in', settings)),
         # ...
 )
 ```
 
-It is also recommended to add at least following information to plugin's module docstring:
+It is also recommended to add at least following information to plug-in's module docstring:
 
-    * 3rd party libraries needed to run the plugin
-    * required config.xml entries to properly configure the plugin
+    * 3rd party libraries needed to run the plug-in
+    * required config.xml entries to properly configure the plug-in
 
 
-List of currently supported plugins
+List of currently supported plug-ins
 -----------------------------------
 
-Following plugins are mandatory:
+Following plug-ins are mandatory:
 
 
 | id               | description                                                                  | client-side code |
 |------------------|------------------------------------------------------------------------------|------------------|
 | auth             | user authentication                                                          | No               |
-| db               | provides a connection to a database (if required by other plugins)           | No               |
+| db               | provides a connection to a database (if required by other plug-ins)           | No               |
 | query_storage    | stores recent queries entered by users and allows their reopening            | No               |
 | sessions         | handles user sessions (i.e. between-requests persistence)                    | No               |
 | settings_storage | stores users' settings to a persistent storage                               | No               |
 
-Following plugins are optional:
+Following plug-ins are optional:
 
 | id               | description                                                                  | client-side code |
 |------------------|------------------------------------------------------------------------------|------------------|
@@ -189,9 +189,9 @@ Following plugins are optional:
 | query_storage    | KonText may store users' queries for further review/reuse                    | Yes              |
 
 
-### The "db" plugin
+### The "db" plug-in
 
-The "db" plugin provides a connection to a database. An implementation must provide a callable (either a function or
+The "db" plug-in provides a connection to a database. An implementation must provide a callable (either a function or
 an object implementing *__call__*):
 
 ```python
@@ -218,7 +218,7 @@ def create_instance(...):
 ```
 
 
-### The "auth" plugin
+### The "auth" plug-in
 
 The application expects you to provide a custom implementation of authentication module. If you want to test the
 it without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
@@ -297,7 +297,7 @@ KonText supports log-in/log-out in two different ways:
    credentials validation)
 2. outside KonText application (log-in/log-out pages and user session validation are defined outside KonText)
 
-Because of that, all the *auth* plugins must implement methods which tell the KonText where log-in/log-out pages are:
+Because of that, all the *auth* plug-ins must implement methods which tell the KonText where log-in/log-out pages are:
 
 ```python
 def get_login_url(self):
@@ -325,12 +325,12 @@ def revalidate(cookies, session):
     pass
 ```
 
-KonText call this method (if it is provided by your plugin) during session initialization. If an external service
+KonText call this method (if it is provided by your plug-in) during session initialization. If an external service
 responds user is logged in no more, method *revalidate* should change user's session data to an "anonymous user".
 
-### The "sessions" plugin
+### The "sessions" plug-in
 
-The *sessions* plugin is expected to handle web sessions where users are identified by some cookie
+The *sessions* plug-in is expected to handle web sessions where users are identified by some cookie
 *(key, value)* pair.
 
 ```python
@@ -369,10 +369,10 @@ def delete_old_sessions(self):
     """
 ```
 
-### The "settings_storage" plugin
+### The "settings_storage" plug-in
 
-This plugin allows users to store their concordance view settings. In general, it does not matter what kind of storage
-is used here but KonText always provides a database connection plugin (if defined). ::
+This plug-in allows users to store their concordance view settings. In general, it does not matter what kind of storage
+is used here but KonText always provides a database connection plug-in (if defined). ::
 
 ```python
 def __init__(self, conf, db):
@@ -397,10 +397,10 @@ def load(self, user_id, current_settings=None):
     pass
 ```
 
-### The "corptree" plugin"
+### The "corptree" plug-in"
 
-The *corptree* plugin reads a hierarchical list of corpora from an XML file (it can be part of *config.xml* but not
-necessarily). Enclosed version of the plugin requires the following format:
+The *corptree* plug-in reads a hierarchical list of corpora from an XML file (it can be part of *config.xml* but not
+necessarily). Enclosed version of the plug-in requires the following format:
 
 ```xml
 <corplist title="">
@@ -437,29 +437,29 @@ Please note that you do not have to put the *corplist* subtree into the *config.
 to load any XML file and search for the tree node anywhere you want.
 
 
-### The "appbar" plugin
+### The "appbar" plug-in
 
-This optional plugin provides a way how to integrate KonText to an existing group of applications sharing some
+This optional plug-in provides a way how to integrate KonText to an existing group of applications sharing some
 visual page component (typically, a top-positioned toolbar - like e.g. in case of Google applications).
 
 Such page component may provide miscellaneous information (e.g. links to your other applications, knowledge base
 links etc.) but it is expected that its main purpose is to provide user-login status and links to an external
-authentication page. KonText uses this plugin to fetch an HTML fragment of such "toolbar". The HTML data is loaded
+authentication page. KonText uses this plug-in to fetch an HTML fragment of such "toolbar". The HTML data is loaded
 internally (between KonText's hosting server and a "toolbar provider" server, via HTTP) and rendered along with
 KonText's own output.
 
-Please note that if you configure *appbar* plugin then KonText will stop showing its own authentication information
+Please note that if you configure *appbar* plug-in then KonText will stop showing its own authentication information
 and login/logout links.
 
-Because of its specific nature, the "appbar" plugin is instantiated in a slightly different way from other plugins.
-Module your plugin resides in is expected to implement following factory method
+Because of its specific nature, the "appbar" plug-in is instantiated in a slightly different way from other plug-ins.
+Module your plug-in resides in is expected to implement following factory method
 
 ```python
-def create_instance(conf, auth_plugin):
+def create_instance(conf, auth_plug-in):
     pass
 ```
 
-This means that even if your *appbar* implementation does not need an *auth_plugin* instance you still must implement
+This means that even if your *appbar* implementation does not need an *auth_plug-in* instance you still must implement
 compatible *create_instance* method:
 
 ```python
@@ -468,7 +468,7 @@ def create_instance(conf, *args, **kwargs):
     return MyAppBarImplementation()
 ```
 
-Your plugin object is expected to implement a single method *get_contents*::
+Your plug-in object is expected to implement a single method *get_contents*::
 
 ```python
 def get_contents(self, cookies, current_lang, return_url=None):
@@ -477,14 +477,14 @@ def get_contents(self, cookies, current_lang, return_url=None):
 
 *cookies* is a *BonitoCookie(Cookie.BaseCookie)* instance providing dictionary-like access to cookie values,
 *current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
-contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
+contain a ticket of some kind you can validate via your *auth_plug-in* and *current_lang* is useful if you want to
 notify your toolbar/app-bar/whatever content provider which language is currently in use. Argument *return_url*
 serves in case user leaves KonText to some of *appbar*'s pages and these pages are able to navigate him back to
 KonText (typically, user logs in and expects to be redirected back).
 
-### The "getlang" plugin
+### The "getlang" plug-in
 
-This optional plugin allows you to obtain language settings set by some other application (i.e. you want to have a
+This optional plug-in allows you to obtain language settings set by some other application (i.e. you want to have a
 shared toolbar with centralized authentication and user interface settings).
 
 It is required to implement a single method::
@@ -505,11 +505,11 @@ def get_fallback_language(self):
 ```
 
 
-### The "live_attributes" plugin
+### The "live_attributes" plug-in
 
 *[currently in development]*
 
-This is an optional plugin allowing to obtain all the attribute values according to some attribute subset selection.
+This is an optional plug-in allowing to obtain all the attribute values according to some attribute subset selection.
 
 Let's say you have the following structural element defined in your corpus::
 
@@ -523,7 +523,7 @@ Let's also assume you have no translated fiction works in your corpus and you pa
 {"doc.type": "fiction"}
 ```
 
-The plugin should return valid values of all other attributes as found in structural elements
+The plug-in should return valid values of all other attributes as found in structural elements
 where *doc.type == 'fiction'* (your passed values should be included too). Your answer may look like the
 following example:
 
@@ -578,7 +578,7 @@ KonText is configured via an XML configuration file located in the root director
 (do not confuse this with the root directory of the respective web application).
 KonText loads its configuration from path *../config.xml*.
 
-The configuration XML file is expected to be partially customizable according to the needs of 3rd party plugins.
+The configuration XML file is expected to be partially customizable according to the needs of 3rd party plug-ins.
 Generally it has two-level structure: *sections* and *key->value items* (where value can be also a list of items (see
 e.g. */kontext/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
 dedicated functions or modules.
@@ -666,11 +666,11 @@ Sample configuration file **config.sample.xml** provides more examples.
 | /kontext/global/translations/language          | language item - besides language code, it may contain *label* attribute - if defined then the label is shown to user    |
 
 
-### Plugins configuration
+### Plug-ins configuration
 
 | Xpath                                           | Description                                                       |
 |-------------------------------------------------|-------------------------------------------------------------------|
-| /kontext/plugins                                | This section contains a configuration of plugins. Each plugin has its own subtree with a root element named with the name of the respective plugin (e.g. *auth*, *db*, *getlang*). This element must contain at least a *module* element specifying the name of the Python package implementing the plugin. See the *config.sample.xml* |
+| /kontext/plug-ins                                | This section contains a configuration of plug-ins. Each plug-in has its own subtree with a root element named with the name of the respective plug-in (e.g. *auth*, *db*, *getlang*). This element must contain at least a *module* element specifying the name of the Python package implementing the plug-in. See the *config.sample.xml* |
 
 
 ### Caching configuration
