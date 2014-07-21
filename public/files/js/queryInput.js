@@ -21,7 +21,8 @@
 /**
  *
  */
-define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder'], function ($, win, cookies, popupBox, conf, tagbuilder) {
+define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'plugins/queryStorage'], function ($,
+        win, cookies, popupBox, conf, tagbuilder, queryStorage) {
     'use strict';
 
     var lib = {};
@@ -188,11 +189,16 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
 
 
     /**
-     * @param querySelector
+     * Switches between query modes (iquery, cql, lemma,...). If used within event handlers
+     * then the 'source' argument must be the respective event (jQuery.Event). If used manually
+     * (e.g. to init the form) then query type selection input (currently it is a SELECT element)
+     * must be used.
+     *
+     * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    lib.cmdSwitchQuery = function (querySelector, hints) {
-        var jqQs = $(querySelector),
+    lib.cmdSwitchQuery = function (source, hints) {
+        var jqQs,
             newidCom,
             newid,
             jqFocusElem,
@@ -202,6 +208,13 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             jqOldElem,
             jqElem,
             jqQueryTypeHint;
+
+        if (source.hasOwnProperty('currentTarget')) {
+            jqQs = $(source.currentTarget);
+
+        } else { // called 'manually'
+            jqQs = $(source);
+        }
 
         hints = hints || {};
         newidCom = jqQs.val();
@@ -245,6 +258,15 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             $('#queryselector').parent().find('.context-help').remove();
         }
         jqFocusElem.focus();
+
+        if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
+            $('#mainform input.history').each(function () {
+                if (typeof $(this).data('plugin') === 'object') {
+                    queryStorage.detach(this);
+                }
+            });
+            queryStorage.reset();
+        }
         lib.initVirtualKeyboard(jqFocusElem);
     };
 

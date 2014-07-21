@@ -39,6 +39,7 @@ define(['jquery', 'win'], function ($, win) {
         this.inputElm.attr('autocomplete', 'off');
         this.highlightedRow = 0;
         this.data = null; // currently appended data
+        this.dependencies = []; // list of registered external dependencies (see function registerDependency())
         this.bindOnOffEvents();
     }
 
@@ -134,7 +135,7 @@ define(['jquery', 'win'], function ($, win) {
             } else {
                 self.boxElm.find('.rows li').each(function () {
                     if ($(this).data('corpname') !== lib.pluginApi.conf.corpname
-                        && !$(this).is(':visible')) {
+                            && !$(this).is(':visible')) {
                         $(this).show();
                     }
                 });
@@ -184,6 +185,36 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     /**
+     * @typedef {object} Closeable
+     * @property {function} close
+     */
+
+    /**
+     * @param {Closeable} dep
+     */
+    Plugin.prototype.registerDependency = function (dep) {
+        if (typeof dep.close !== 'function') {
+            throw new Error('Registered dependency must implement close() method');
+        }
+        this.dependencies.push(dep);
+    };
+
+    /**
+     *
+     */
+    Plugin.prototype.closeDependencies = function () {
+        var i;
+
+        for (i = 0; i < this.dependencies.length; i += 1) {
+            try {
+                this.dependencies[i].close();
+            } catch (e) {
+                console.error('error closing dependency: ', e);
+            }
+        }
+    };
+
+    /**
      *
      */
     Plugin.prototype.init = function () {
@@ -211,7 +242,6 @@ define(['jquery', 'win'], function ($, win) {
             function (data) {
                 if (data.hasOwnProperty('error')) {
                     lib.pluginApi.showMessage('error', data.error);
-                    // TODO
 
                 } else {
                     if (!this.boxElm) {
@@ -372,6 +402,12 @@ define(['jquery', 'win'], function ($, win) {
                     plugin.popup();
                 }
             });
+            plugin.registerDependency({
+                element : aElm,
+                close : function () {
+                    $(aElm).remove();
+                }
+            });
         }
     };
 
@@ -384,10 +420,9 @@ define(['jquery', 'win'], function ($, win) {
     lib.bind = function (elm) {
         var plugin;
 
-        if ({}.toString.call(lib.pluginApi) !== '[object Object]') {
+        if (Object.prototype.toString.call(lib.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
-
 
         plugin = new Plugin(elm, $(elm).parent());
         $(elm).data('plugin', plugin);
@@ -399,13 +434,24 @@ define(['jquery', 'win'], function ($, win) {
      * Detaches plugin instance from provided element.
      * All the event handlers are removed too.
      *
-     * @param elm
+     * @param {jQuery|HTMLElement} elm
      */
     lib.detach = function (elm) {
-        if (typeof $(elm).data('plugin') === 'object') {
-            $(elm).data('plugin').close();
+        elm = $(elm);
+        if (elm.data('plugin') !== null && typeof elm.data('plugin') === 'object') {
+            elm.data('plugin').close();
+            elm.data('plugin').closeDependencies();
             $(win).off('keyup.queryStoragePlugin');
-            $(elm).data('plugin', null);
+            elm.data('plugin', null);
+        }
+    };
+
+    lib.reset = function () {
+        if (!lib.pluginApi.conf.anonymousUser) {
+            $('input.history:visible').each(function () {
+                var plugin = lib.bind(this);
+                lib.addTriggerButton(plugin);
+            });
         }
     };
 
@@ -415,12 +461,7 @@ define(['jquery', 'win'], function ($, win) {
      */
     lib.init = function (pluginApi) {
         lib.pluginApi = pluginApi;
-        if (!lib.pluginApi.conf.anonymousUser) {
-            $('input.history:visible').each(function () {
-                var plugin = lib.bind(this);
-                lib.addTriggerButton(plugin);
-            });
-        }
+        this.reset();
     };
 
     return lib;
