@@ -47,3 +47,9 @@ Requirements
     * [markdown](https://pypi.python.org/pypi/Markdown) module (optional, for formatted corpora references)
 
   * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)
+
+
+Installation
+------------
+
+Please refer to the [INSTALL.md](INSTALL.md) file.
