@@ -193,21 +193,10 @@ _gaq.push(['_trackPageview']);
 #end if
 </head>
 <body>
-
 #if $qunit_test
 <div id="qunit"></div>
 <div id="qunit-fixture">
 #end if
-
-#if $varExists('_ca_topbar')
-$_ca_topbar
-#else
-
-#def menu_status($id)
-    #if $id in $disabled_menu_items
-        disabled
-    #end if
-#end def
 
 #filter WebSafe
 <div id="common-bar">
@@ -538,11 +527,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 
 </body>
 </html>
-
-#end if
-
 ## ******** Common methods definitions ******** ##
-
 #def corp_sel($onchange=True)
     ## Select corpus name
 
@@ -567,9 +552,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     #end if ## SubcorpList
     #end if
 #end def  ## corp_sel
-
 ## ***************************************** ##
-
 #def corp_sel_node
     #filter None
     <tbody>
@@ -589,9 +572,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     </tbody>
     #end filter
 #end def  ## corp_sel_node
-
 ## ***************************************** ##
-
 #def subcorp_sel($nameid='usesubcorp')
     ## Select subcorpus
 
@@ -616,9 +597,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     #end if
     </i>
 #end def  ## subcorp_sel
-
 ## ***************************************** ##
-
 #def input_hidden($exclude=())
     ## Global form parameters
 
@@ -631,13 +610,17 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
       #end if
     #end for
 #end def
-
 ## ***************************************** ##
-
 #def url_sub($url, $option_name, $new_value)
 ## substituting options in URL to change one particular setting
     #if not re.search('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, $url)
         #return $url + ';%s=%s' % ($option_name, $new_value)
     #end if
     #return re.sub('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, ';%s=%s;' % ($option_name, $new_value), $url)
+#end def
+## ***************************************** ##
+#def menu_status($id)
+    #if $id in $disabled_menu_items
+        disabled
+    #end if
 #end def
