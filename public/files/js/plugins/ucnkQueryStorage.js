@@ -343,17 +343,25 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @returns {*|HTMLElement}
      */
-    lib.addTriggerButton = function () {
+    Plugin.prototype.getWrappingElement = function () {
+        return this.parentElm;
+    };
+
+    /**
+     * @param {Plugin} plugin
+     */
+    lib.addTriggerButton = function (plugin) {
         var liElm,
-            aElm,
-            plugin = $('#cqlrow input.cql-input').data('plugin');
+            aElm;
 
         if (plugin) {
             liElm = $('<li></li>');
             aElm = $('<a class="history"></a>');
             aElm.css('text-transform', 'lowercase');
-            $('#cqlrow .query-toolbox').append(liElm);
+
+            plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             liElm.append(aElm);
             aElm.append(lib.pluginApi.translate('Recent queries'));
             aElm.on('click', function () {
@@ -379,6 +387,8 @@ define(['jquery', 'win'], function ($, win) {
         if ({}.toString.call(lib.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
+
+
         plugin = new Plugin(elm, $(elm).parent());
         $(elm).data('plugin', plugin);
 
@@ -407,10 +417,9 @@ define(['jquery', 'win'], function ($, win) {
         lib.pluginApi = pluginApi;
         if (!lib.pluginApi.conf.anonymousUser) {
             $('input.history:visible').each(function () {
-                lib.bind(this);
+                var plugin = lib.bind(this);
+                lib.addTriggerButton(plugin);
             });
-
-            lib.addTriggerButton();
         }
     };
 
