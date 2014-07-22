@@ -101,6 +101,30 @@ define(['win'], function (win) {
     };
 
     /**
+     *
+     * @returns {number}
+     */
+    ConcLinesStorage.prototype.size = function () {
+        var total = 0;
+
+        if (!Object.keys) {  // let IE8 and his older friends suffer
+            (function () {
+                var p;
+
+                for (p in this.data) {
+                    if (this.data.hasOwnProperty(p)) {
+                        total += 1;
+                    }
+                }
+            }());
+
+        } else {
+            total = Object.keys(this.data).length;
+        }
+        return total;
+    }
+
+    /**
      * Stores data into a sessionStorage as a JSON object
      */
     ConcLinesStorage.prototype.serialize = function () {

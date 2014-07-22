@@ -40,6 +40,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             } else {
                 clStorage.removeLine(id);
             }
+            showNumSelectedItems(clStorage.size());
         });
     }
 
@@ -69,8 +70,21 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 this.checked = false;
             }
         });
+
+        showNumSelectedItems(clStorage.size());
     }
 
+    /**
+     *
+     * @param numSelected
+     */
+    function showNumSelectedItems(numSelected) {
+        $('#result-info .lines-selection').text(layoutModel.translate('selected') + ': ' + numSelected);
+    }
+
+    /**
+     *
+     */
     function anonymousUserWarning() {
         var left,
             box,

@@ -244,6 +244,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <span class="notice-shuffled">
             #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
             </span>
+
+            <span class="separ">|</span>
+            <span class="lines-selection"></span>
         </div>
 
         #block navigation($navid="navigation_form", $nextid="next")
