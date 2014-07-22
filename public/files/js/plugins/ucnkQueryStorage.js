@@ -235,7 +235,7 @@ define(['jquery', 'win'], function ($, win) {
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax('ajax_query_history?query_type=cql', {
+            prom = $.ajax('ajax_query_history', {
                 dataType : 'json'
             }).promise();
 
@@ -319,6 +319,7 @@ define(['jquery', 'win'], function ($, win) {
             listItem.attr('data-rownum', i);
             listItem.attr('data-corpname', v.corpname);
             listItem.attr('data-subcorpname', v.subcorpname);
+            listItem.attr('data-query-type', v.query_type);
 
             link = $(win.document.createElement('em'));
             link.attr('href', v.url);
@@ -332,6 +333,9 @@ define(['jquery', 'win'], function ($, win) {
                 self.setInputVal(self.data[self.highlightedRow].query);
                 if (triggerElm.attr('data-subcorpname')) {
                     self.updateSubcorpSelector(triggerElm.attr('data-subcorpname'));
+                }
+                if (triggerElm.attr('data-query-type')) {
+                    self.setQueryType(triggerElm.attr('data-query-type'));
                 }
                 event.preventDefault();
                 event.stopPropagation();
@@ -375,7 +379,16 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
-     * @param name
+     * @param {string} queryType
+     */
+    Plugin.prototype.setQueryType = function (queryType) {
+        $('#queryselector').val(queryType + 'row');
+        $('#queryselector').change(); // to trigger proper event
+    };
+
+    /**
+     *
+     * @param {string} name
      */
     Plugin.prototype.updateSubcorpSelector = function (name) {
         $('#subcorp-selector').val(name);
