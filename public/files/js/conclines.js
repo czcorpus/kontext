@@ -93,6 +93,14 @@ define(['win'], function (win) {
     };
 
     /**
+     * Removes all the elements and writes the change into sessionStorage
+     */
+    ConcLinesStorage.prototype.clear = function () {
+        this.data = {}
+        win.sessionStorage.removeItem(accessKey);
+    };
+
+    /**
      * Stores data into a sessionStorage as a JSON object
      */
     ConcLinesStorage.prototype.serialize = function () {

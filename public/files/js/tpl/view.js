@@ -20,35 +20,125 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'vendor/jscrollpane'], function (win,
-    $, jqueryPeriodic, layoutModel, detail, popupBox) {
+define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines', 'vendor/jscrollpane'], function (win,
+        $, jqueryPeriodic, layoutModel, detail, popupBox, conclines) {
     'use strict';
 
-    var lib = {};
+    var lib = {},
+        clStorage = conclines.openStorage();
 
-    lib.viewDetailDoneCallback = function (boxInst) {
-        $('a.expand-link').each(function () {
-            $(this).one('click', function (event) {
-                detail.showDetail(
-                    event.target,
-                    $(this).data('url'),
-                    $(this).data('params'),
-                    function (jqXHR, textStatus, errorThrown) {
-                        layoutModel.showMessage('error', errorThrown);
-                    },
-                    // Expand link, when clicked, must bind the same event handler
-                    // for the new expand link. That's why this 'callback recursion' is present.
-                    lib.viewDetailDoneCallback,
-                    layoutModel.createAjaxLoader()
-                );
-                event.preventDefault();
-            });
+    /**
+     * Handles clicking on concordance line checkbox
+     */
+    function rowSelectionEvent() {
+        $('#conc-wrapper').on('click', 'input[type=\'checkbox\']', function (e) {
+            var id = $(e.currentTarget).attr('value');
+
+            if ($(e.currentTarget).is(':checked')) {
+                clStorage.addLine(id);
+
+            } else {
+                clStorage.removeLine(id);
+            }
         });
-        layoutModel.mouseOverImages(boxInst.getRootElement());
-    };
+    }
 
-    lib.misc = function () {
+    /**
+     * Ensures that concordance lines are serialized once user leaves the page.
+     */
+    function onUloadSerialize() {
+        $(win).on('unload', function () {
+            clStorage.serialize();
+        });
+    }
 
+    /**
+     * According to the data found in sessionStorage iterates over current page's
+     * lines and (un)checks them appropriately. In case sessionStorage is not
+     * supported all the checkboxes are disabled.
+     */
+    function refreshSelection() {
+        $('#conclines tr input[type=\'checkbox\']').each(function () {
+            if (!clStorage.supportsSessionStorage()) {
+                $(this).attr('disabled', 'disabled');
+
+            } else if (clStorage.containsLine($(this).val())) {
+                this.checked = true;
+
+            } else {
+                this.checked = false;
+            }
+        });
+    }
+
+    function anonymousUserWarning() {
+        var left,
+            box,
+            top;
+
+        box = popupBox.open(layoutModel.conf.messages.anonymous_user_warning,
+            {top: 0, left: 0}, {type: 'warning'});
+        left = $(win).width() / 2 - box.getPosition().width / 2;
+        top = $('#conc-wrapper').offset().top + 40;
+        box.setCss('left', left + 'px');
+        box.setCss('top', top + 'px');
+        box.setCss('font-size', '120%');
+        box.setCss('height', '70px');
+    }
+
+    /**
+     * This function is taken from jscrollpane demo page
+     */
+    function initConcViewScrollbar() {
+        var elm = $('#conclines-wrapper'),
+            api;
+
+        elm.jScrollPane();
+        api = elm.data('jsp');
+        $(win).on('resize', function () {
+            api.reinitialise();
+        });
+        $(win).on('keydown', function (event) {
+            if ($('#conclines-wrapper:focus').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
+                event.preventDefault();
+            }
+            if ($('input:focus').length === 0) {
+                if (event.keyCode === 37) {
+                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.2, 0));
+
+                } else if (event.keyCode === 39) {
+                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.2, 1));
+                }
+            }
+        });
+    }
+
+    /**
+     * Fills in thousands separator ',' (comma) character into a number string
+     *
+     * @param {string|number} nStr number string (/\d+(.\d*)?)
+     * @return {string} number string with thousands separated by the ',' (comma) character
+     */
+    function addCommas(nStr) {
+        var x,
+            x1,
+            x2,
+            rgx = /(\d+)(\d{3})/;
+
+        nStr += '';
+        x = nStr.split('.');
+        x1 = x[0];
+        x2 = x.length > 1 ? '.' + x[1] : '';
+        while (rgx.test(x1)) {
+            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+        }
+        return x1 + x2;
+    }
+
+    /**
+     * @todo refactor this
+     */
+    function misc() {
         $('#groupmenu').attr('corpname', layoutModel.conf.corpname);
         $('#groupmenu').attr('queryparams', layoutModel.conf.q);
         $('#groupmenu').mouseleave(lib.close_menu);
@@ -109,28 +199,31 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 width: 'nice'
             }
         );
-    };
+    }
 
     /**
-     * Fills in thousands separator ',' (comma) character into a number string
      *
-     * @param {string|number} nStr number string (/\d+(.\d*)?)
-     * @return {string} number string with thousands separated by the ',' (comma) character
+     * @param boxInst
      */
-    lib.addCommas = function (nStr) {
-        var x,
-            x1,
-            x2,
-            rgx = /(\d+)(\d{3})/;
-
-        nStr += '';
-        x = nStr.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
-        while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
-        }
-        return x1 + x2;
+    lib.viewDetailDoneCallback = function (boxInst) {
+        $('a.expand-link').each(function () {
+            $(this).one('click', function (event) {
+                detail.showDetail(
+                    event.target,
+                    $(this).data('url'),
+                    $(this).data('params'),
+                    function (jqXHR, textStatus, errorThrown) {
+                        layoutModel.showMessage('error', errorThrown);
+                    },
+                    // Expand link, when clicked, must bind the same event handler
+                    // for the new expand link. That's why this 'callback recursion' is present.
+                    lib.viewDetailDoneCallback,
+                    layoutModel.createAjaxLoader()
+                );
+                event.preventDefault();
+            });
+        });
+        layoutModel.mouseOverImages(boxInst.getRootElement());
     };
 
     /**
@@ -177,7 +270,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     }
 
                     if (data.fullsize > 0 && layoutModel.conf.q2 !== "R") {
-                        l = lib.addCommas(data.concsize);
+                        l = addCommas(data.concsize);
                         $('#conc-calc-info').html(layoutModel.conf.messages.using_first + ' ' + l +
                             layoutModel.conf.messages.lines_only + ' <a href="view?' +
                             'q=R' + layoutModel.conf.q2toEnd + ';' + layoutModel.conf.globals + '">'
@@ -200,64 +293,20 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     };
 
     /**
-     * This function is taken from jscrollpane demo page
-     */
-    lib.initConcViewScrollbar = function () {
-        var elm = $('#conclines-wrapper'),
-            api;
-
-        elm.jScrollPane();
-        api = elm.data('jsp');
-        $(win).on('resize', function () {
-            api.reinitialise();
-        });
-        $(win).on('keydown', function (event) {
-            if ($('#conclines-wrapper:focus').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
-                event.preventDefault();
-            }
-            if ($('input:focus').length === 0) {
-                if (event.keyCode === 37) {
-                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.2, 0));
-
-                } else if (event.keyCode === 39) {
-                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.2, 1));
-                }
-            }
-        });
-    };
-
-    /**
-     *
-     */
-    lib.anonymousUserWarning = function () {
-        var left,
-            box,
-            top;
-
-        box = popupBox.open(layoutModel.conf.messages.anonymous_user_warning,
-            {top: 0, left: 0}, {type: 'warning'});
-        left = $(win).width() / 2 - box.getPosition().width / 2;
-        top = $('#conc-wrapper').offset().top + 40;
-        box.setCss('left', left + 'px');
-        box.setCss('top', top + 'px');
-        box.setCss('font-size', '120%');
-        box.setCss('height', '70px');
-
-    };
-
-    /**
      *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-        lib.misc();
-        lib.initConcViewScrollbar();
+        misc();
+        initConcViewScrollbar();
         if (conf.anonymousUser) {
-            lib.anonymousUserWarning();
+            anonymousUserWarning();
         }
+        rowSelectionEvent();
+        refreshSelection();
+        onUloadSerialize();
     };
-
 
     return lib;
 

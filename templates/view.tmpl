@@ -194,15 +194,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
   </td>
 #end def
 
-#def oneclick_line($l, $i, $longcorpname)
-  #if $copy_icon
-    <td>
-        <div class="copy_div"><a id="$i" class="copy-button" data-url="widectx_raw" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname"></a></div>
-    </td>
-  #end if
-#end def
-
-
 #def concordance
 #filter WebSafe
 
@@ -304,7 +295,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         #end block
     </div>
 
-
     ## concordance lines
     #set $basecorpname = $corpname.split('/')[-1]
     #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
@@ -320,46 +310,28 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             $align_heading($viewmode, $KWICCorps)
             #end filter
 
-
             #for $i, $l in $enumerate($Lines)
-            <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+            <tr data-toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+                <td>
+                    <input type="checkbox" value="$l.toknum" />
+                </td>
                 <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname">
                     $l.ref
                 </td>
+
                 #filter None
-                #if $refs_up
-                <td class="ref" #if $viewmode == 'kwic'# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$l.toknum&corpname=$corpname', '$_("Loading...")', true);"><u class="note">$l.ref</u></td>
-                #if $copy_icon# <td></td> #end if#
-                #for $ii,$ll in $enumerate($l.get('Align', []))
-                    #set $bcname = $Par_conc_corpnames[$ii+1].n
-                    #if $ll.ref
-                        <td class="ref" #if $viewmode == 'kwic' and $bcname in $KWICCorps# colspan="3" #end if# onclick="show_detail('fullref', 'pos=$ll.toknum&corpname=$cpath$bcname', '$_("Loading...")', true);"><u class="note">$ll.ref</u></td>
-                    #else
+                    $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
+
+                    #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
+                        #set $bcname = $Par_conc_corpnames[$ii+1].n
+                        #if $ll.ref
+                        <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
+                        #else
                         <td></td>
-                    #end if
-                #end for
-            </tr>
-            <tr toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
-                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-                $oneclick_line($l, $i, $corpname)
-                #for $ii,$ll in $enumerate($l.get('Align', []))
-                    #set $bcname = $Par_conc_corpnames[$ii+1].n
-                    $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                #end for
-            #else ## standard display of refs
-                $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-                $oneclick_line($l, $i, $corpname)
-                #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-                  #set $bcname = $Par_conc_corpnames[$ii+1].n
-                  #if $ll.ref
-                    <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
-                  #else
-                    <td></td>
-                  #end if
-                  $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                #end for
-            #end if
-            #end filter
+                        #end if
+                        $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
+                    #end for
+                #end filter
             </tr>
             #end for
         </table>
