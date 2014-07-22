@@ -151,7 +151,7 @@ define(['jquery', 'win'], function ($, win) {
      *
      */
     Plugin.prototype.cleanRowSelection = function () {
-        this.boxElm.find('ul.rows li').removeClass('selected');
+        this.boxElm.find('ol.rows li').removeClass('selected');
     };
 
     /**
@@ -160,7 +160,7 @@ define(['jquery', 'win'], function ($, win) {
     Plugin.prototype.highlightCurrentRow = function () {
         this.cleanRowSelection();
         if (this.data.length > 0) {
-            this.boxElm.find('ul.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
+            this.boxElm.find('ol.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
             this.setInputVal(this.data[this.highlightedRow].query);
         }
     };
@@ -271,7 +271,7 @@ define(['jquery', 'win'], function ($, win) {
         var frame = this.calcSizeAndPosition(this.inputElm),
             html;
 
-        html = '<ul class="rows"></ul>'
+        html = '<ol class="rows"></ol>'
              + '<div class="footer">'
              + '<label class="filter-current">'
              + lib.pluginApi.translate('current corpus only')
@@ -303,7 +303,7 @@ define(['jquery', 'win'], function ($, win) {
      * @param {string} data.corpname
      */
     Plugin.prototype.showData = function (data) {
-        var tbl = this.boxElm.find('ul.rows'),
+        var tbl = this.boxElm.find('ol.rows'),
             listItem,
             link,
             self = this;
@@ -345,6 +345,7 @@ define(['jquery', 'win'], function ($, win) {
             tbl.append(listItem);
             listItem.append(link);
             listItem.append('&nbsp;<span class="corpname">(' + v.query_type + ', ' + v.humanCorpname + subcorpSuff + ')</span>');
+            listItem.wrapInner('<span class="wrapper"></span>');
         });
         this.highlightCurrentRow();
     };
