@@ -21,12 +21,13 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage'], function (win,
-        $, treeComponent, layoutModel, queryInput, queryStorage) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage', 'conclines'], function (win,
+        $, treeComponent, layoutModel, queryInput, queryStorage, conclines) {
     'use strict';
 
     var lib = {},
-        activeParallelCorporaSettingKey = 'active_parallel_corpora';
+        activeParallelCorporaSettingKey = 'active_parallel_corpora',
+        clStorage = conclines.openStorage();
 
     lib.maxEncodedParamsLength = 1500;
     lib.treeComponent = null;
@@ -346,6 +347,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
      */
     lib.init = function (conf) {
         var promises;
+
+        clStorage.clear();
 
         promises = layoutModel.init(conf).add({
             misc : lib.misc(),
