@@ -2041,6 +2041,9 @@ msgstr "Nejsou žádné další řádky"
 msgid "Load more"
 msgstr "Nahrát další"
 
+msgid "selected"
+msgstr "vybráno"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
