@@ -383,8 +383,15 @@ define(['jquery', 'win'], function ($, win) {
      * @param {string} queryType
      */
     Plugin.prototype.setQueryType = function (queryType) {
-        $('#queryselector').val(queryType + 'row');
-        $('#queryselector').change(); // to trigger proper event
+        var newType = queryType + 'row',
+            selectElm = $('#queryselector');
+
+        // it's important to set the select-box's value only if the new value is different
+        // from current one; otherwise, the form is messed-up
+        if (selectElm.val() !== newType) {
+            selectElm.val(newType);
+            $('#queryselector').change(); // to trigger proper event
+        }
     };
 
     /**
