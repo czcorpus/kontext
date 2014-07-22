@@ -148,17 +148,18 @@ class CorpTree(object):
                 return item
         return {}
 
-    def _load(self):
+    def _load(self, force_load=False):
         """
         Loads data from a configuration file
         """
-        data = []
-        with open(self.file_path) as f:
-            xml = etree.parse(f)
-            root = xml.find(self.root_xpath)
-            if root is not None:
-                self._parse_corplist_node(root, data, path='/')
-        self.list = data
+        if self.list is None or force_load:
+            data = []
+            with open(self.file_path) as f:
+                xml = etree.parse(f)
+                root = xml.find(self.root_xpath)
+                if root is not None:
+                    self._parse_corplist_node(root, data, path='/')
+            self.list = data
 
     def get(self):
         """
