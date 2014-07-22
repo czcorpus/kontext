@@ -303,16 +303,21 @@ button#reset-tag-button {
   padding: 0;
 }
 
-.history-widget ul {
-  margin: 5px;
+.history-widget ol {
+  margin: 5px 5px 5px 2.5em;
   padding: 0;
-  list-style-type: none;
 }
 
 .history-widget li {
   padding: 5px 8px;
   border-radius: @border-radius-default;
   cursor: pointer;
+  color: #999999;
+}
+
+.history-widget li .wrapper {
+  display: inline-block;
+  color: @color-default-text;
 }
 
 .history-widget li em {
