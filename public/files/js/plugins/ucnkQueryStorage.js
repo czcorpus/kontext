@@ -38,7 +38,7 @@ define(['jquery', 'win'], function ($, win) {
         this.boxElm = null;
         this.inputElm.attr('autocomplete', 'off');
         this.highlightedRow = 0;
-        this.data = null; // currently appended data
+        this.data = []; // currently appended data
         this.dependencies = []; // list of registered external dependencies (see function registerDependency())
         this.bindOnOffEvents();
     }
@@ -221,39 +221,46 @@ define(['jquery', 'win'], function ($, win) {
         var self = this,
             prom;
 
-        this.data = [];
-        if (this.inputElm.val()) {
-            this.data.push({
-                query : this.inputElm.val(),
-                query_type : $('#queryselector option:selected').data('type'),
-                corpname : lib.pluginApi.conf.corpname,
-                subcorpname : self.getCurrentSubcorpname(),
-                humanCorpname : lib.pluginApi.conf.humanCorpname
-            });
-        }
-        this.inputElm.blur();  // These two lines prevent Firefox from deleting
-        this.inputElm.focus(); // the input after ESC is hit (probably a bug).
-
-        prom = $.ajax('ajax_query_history?query_type=cql', {
-            dataType : 'json'
-        }).promise();
-
-        prom.then(
-            function (data) {
-                if (data.hasOwnProperty('error')) {
-                    lib.pluginApi.showMessage('error', data.error);
-
-                } else {
-                    if (!this.boxElm) {
-                        self.render();
-                    }
-                    self.appendData(data.data);
-                }
-            },
-            function (err) {
-                lib.pluginApi.showMessage('error', err.statusText);
+        if (this.data.length === 0) {
+            if (this.inputElm.val()) {
+                this.data.push({
+                    query : this.inputElm.val(),
+                    query_type : $('#queryselector option:selected').data('type'),
+                    corpname : lib.pluginApi.conf.corpname,
+                    subcorpname : self.getCurrentSubcorpname(),
+                    humanCorpname : lib.pluginApi.conf.humanCorpname
+                });
             }
-        );
+            this.inputElm.blur();  // These two lines prevent Firefox from deleting
+            this.inputElm.focus(); // the input after ESC is hit (probably a bug).
+
+            prom = $.ajax('ajax_query_history?query_type=cql', {
+                dataType : 'json'
+            }).promise();
+
+            prom.then(
+                function (data) {
+                    if (data.hasOwnProperty('error')) {
+                        lib.pluginApi.showMessage('error', data.error);
+
+                    } else {
+                        if (!this.boxElm) {
+                            self.render();
+                        }
+                        self.showData(data.data);
+                    }
+                },
+                function (err) {
+                    lib.pluginApi.showMessage('error', err.statusText);
+                }
+            );
+
+        } else { // data are already loaded - let's just reuse it
+            if (!this.boxElm) {
+                self.render();
+            }
+            this.showData();
+        }
     };
 
     /**
@@ -285,20 +292,24 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      * Cleans-up currently rendered history rows and appends new data
-     * as obtained in parameter data.
+     * as obtained in parameter 'data'. This method has a side effect
+     * as it sets this.data to the new value. If no 'data' is provided
+     * then current this.data value is used.
      *
-     * @param {{}} data
+     * @param {{}} [data]
      * @param {string} data.humanCorpname
      * @param {string} data.subcorpname
      * @param {string} data.corpname
      */
-    Plugin.prototype.appendData = function (data) {
+    Plugin.prototype.showData = function (data) {
         var tbl = this.boxElm.find('ul.rows'),
             listItem,
             link,
             self = this;
 
-        this.data = this.data.concat(data);
+        if (typeof data !== 'undefined') {
+            this.data = data;
+        }
         tbl.empty();
         $.each(this.data, function (i, v) {
             var subcorpSuff = v.subcorpname ? ':' + v.subcorpname : '';
@@ -337,7 +348,6 @@ define(['jquery', 'win'], function ($, win) {
      * Closes history widget.
      */
     Plugin.prototype.close = function () {
-        //this.data = null; // TODO maybe we can cache the data here
         this.inputElm.off('keyup.queryStoragePluginMoveSelection');
         this.highlightedRow = 0;
         if (this.boxElm) {
