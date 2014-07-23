@@ -62,7 +62,7 @@ define(['win', 'jquery'], function (win, $) {
 
         this.timer = null;
 
-        this.newElem = null;
+        this.rootElm = null;
 
         this.timeout = 25000;
 
@@ -88,7 +88,7 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {HTMLElement}
      */
     TooltipBox.prototype.getRootElement = function () {
-        return this.newElem;
+        return this.rootElm;
     };
 
     /**
@@ -97,7 +97,7 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {{}}
      */
     TooltipBox.prototype.getPosition = function () {
-        var jqElem = $(this.newElem),
+        var jqElem = $(this.rootElm),
             ans = jqElem.position();
 
         ans.width = jqElem.width();
@@ -124,7 +124,7 @@ define(['win', 'jquery'], function (win, $) {
      * @return jQuery
      */
     TooltipBox.prototype.findElement = function (query) {
-        return $(this.newElem).find(query);
+        return $(this.rootElm).find(query);
     };
 
     /**
@@ -134,20 +134,20 @@ define(['win', 'jquery'], function (win, $) {
      * @param {String} value
      */
     TooltipBox.prototype.setCss = function (name, value) {
-        $(this.newElem).css(name, value);
+        $(this.rootElm).css(name, value);
     };
 
     /**
      * Closes the box
      */
     TooltipBox.prototype.close = function () {
-        if (this.newElem) {
+        if (this.rootElm) {
             if (this.importedElement) {
                 this.importedElement.css('display', 'none');
                 this.origContentParent.append(this.importedElement);
             }
-            $(this.newElem).remove();
-            this.newElem = null;
+            $(this.rootElm).remove();
+            this.rootElm = null;
 
             if (this.timer) {
                 clearInterval(this.timer);
@@ -189,27 +189,27 @@ define(['win', 'jquery'], function (win, $) {
             boxIntWidth,
             boxTop = 0;
 
-        $(this.newElem).css({
+        $(this.rootElm).css({
             width: boxWidth !== 'nice' ? boxWidth : pageWidth * (1 -  1 / 1.618),
             height: boxHeight
         });
         if (options.top === 'attached-bottom') {
-            boxTop = (this.anchorPosition.top - $(this.newElem).outerHeight(true) - 2) + 'px';
+            boxTop = (this.anchorPosition.top - $(this.rootElm).outerHeight(true) - 2) + 'px';
 
         } else { // includes 'attached-top' option
             boxTop = (this.anchorPosition.top + this.anchorPosition.height) + 'px';
         }
 
-        $(this.newElem).css('top', boxTop);
+        $(this.rootElm).css('top', boxTop);
 
-        boxIntWidth = $(this.newElem).outerWidth(true);
+        boxIntWidth = $(this.rootElm).outerWidth(true);
         if (pageWidth - boxIntWidth > this.anchorPosition.left) {
-            $(this.newElem).css('left', this.anchorPosition.left + 'px');
+            $(this.rootElm).css('left', this.anchorPosition.left + 'px');
 
         } else {
-            $(this.newElem).css({
+            $(this.rootElm).css({
                 left: '100%',
-                'margin-left': '-' + $(this.newElem).outerWidth() + 'px'
+                'margin-left': '-' + $(this.rootElm).outerWidth() + 'px'
             });
         }
     };
@@ -270,39 +270,39 @@ define(['win', 'jquery'], function (win, $) {
             this.importMessages(fetchOption('messages', {}));
         }
 
-        this.newElem = win.document.createElement('div');
-        $(this.newElem).addClass('tooltip-box').hide();
+        this.rootElm = win.document.createElement('div');
+        $(this.rootElm).addClass('tooltip-box').hide();
 
         if (fetchOption('closeIcon', false)) {
             this.jqCloseIcon = $('<a class="close-link" title="' + this.messages.close + '"></a>');
-            $(this.newElem).addClass('framed');
+            $(this.rootElm).addClass('framed');
         }
         if (boxId) {
-            this.newElem.setAttribute('id', boxId);
+            this.rootElm.setAttribute('id', boxId);
         }
         if (boxClass) {
-            $(this.newElem).addClass(boxClass);
+            $(this.rootElm).addClass(boxClass);
         }
-        jqWhereElement.append(this.newElem);
+        jqWhereElement.append(this.rootElm);
 
         if (typeof contents === 'function') {
             contents(this, function () {
                 if (self.jqCloseIcon) {
-                    $(self.newElem).prepend(self.jqCloseIcon);
+                    $(self.rootElm).prepend(self.jqCloseIcon);
                 }
                 if (calculatePosition) {
                     self.calcPosition(opts);
                 }
-                $(self.newElem).show();
+                $(self.rootElm).show();
                 if (typeof self.onShow === 'function') {
                     self.onShowVal = self.onShow.call(self, self.beforeOpenVal);
                 }
             });
 
         } else {
-            $(this.newElem).append(contents);
+            $(this.rootElm).append(contents);
             if (this.jqCloseIcon) {
-                $(this.newElem).prepend(this.jqCloseIcon);
+                $(this.rootElm).prepend(this.jqCloseIcon);
             }
             if (calculatePosition) {
                 this.calcPosition(opts);
@@ -310,12 +310,12 @@ define(['win', 'jquery'], function (win, $) {
             if (typeof this.onShow === 'function') {
                 this.onShowVal = this.onShow.call(this, this.beforeOpenVal);
             }
-            $(self.newElem).show();
+            $(self.rootElm).show();
         }
         if (msgType !== 'plain') {
-            $(this.newElem).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
+            $(this.rootElm).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         }
-        $(this.newElem).css('font-size', fontSize);
+        $(this.rootElm).css('font-size', fontSize);
 
         closeClickHandler = function (event) {
             if (event) {
@@ -385,7 +385,7 @@ define(['win', 'jquery'], function (win, $) {
         box.open(whereElm, contents, options);
 
         windowClickHandler = function (event) {
-            if (event.target !== box.newElem) {
+            if (event.target !== box.rootElm) {
                 $(win.document).off('click', windowClickHandler);
                 box.close();
             }
@@ -447,7 +447,7 @@ define(['win', 'jquery'], function (win, $) {
                 box.open(whereElm, contents, options);
 
                 windowClickHandler = function (event) {
-                    if (event.target !== box.newElem) {
+                    if (event.target !== box.rootElm) {
                         $(win.document).off('click', windowClickHandler);
                         box.close();
                         $(elm).data('popupBox', true);
