@@ -117,6 +117,17 @@ define(['win', 'jquery'], function (win, $) {
     };
 
     /**
+     * Searches for elements in the context of current popup box.
+     * Compatible with jQuery's find.
+     *
+     * @param {jQuery|string|HTMLElement} query
+     * @return jQuery
+     */
+    TooltipBox.prototype.findElement = function (query) {
+        return $(this.newElem).find(query);
+    };
+
+    /**
      * Sets a CSS property of wrapping HTML Element
      *
      * @param {String} name
@@ -204,15 +215,31 @@ define(['win', 'jquery'], function (win, $) {
     };
 
     /**
+     * @typedef {object} PopupBoxOptions
+     * @property {number} options.width
+     * @property {number} options.height
+     * @property {number} options.fontSize
+     * @property {number} options.timeout
+     * @property {string} options.type (info, warning, error, plain)
+     * @property {boolean} options.closeIcon if true then the box can be closed only by the ESC key and special closing icon
+     * @property {function} options.onClose
+     * @property {function} options.beforeOpen
+     * @property {function} options.onShow
+     * @property {function} options.onError
+     * @property {function} options.domId
+     * @property {string} options.htmlClass,
+     * @property {boolean} options.calculatePosition,
+     * @property {{}} options.messages translation messages
+     */
+
+    /**
      *
      * @param whereElement
      * @param {string|function} contents if a function is provided,
      * following signature is expected: function(TooltipBox, finalizeCallback) where first argument is a TooltipBox
      * instance and second argument is a finalization callback which is expected to be called by a user once he
      * finishes content generation.
-     * @param {{}} [options] accepted options are: width, height, fontSize, timeout, type (info, warning, error, plain),
-     * onClose, beforeOpen, onShow, onError, domId, htmlClass, calculatePosition (true, false),
-     * messages (= a dictionary with translations)
+     * @param {PopupBoxOptions} [options]
      *
      */
     TooltipBox.prototype.open = function (whereElement, contents, options) {
@@ -327,6 +354,14 @@ define(['win', 'jquery'], function (win, $) {
         }
     };
 
+    /**
+     *
+     * @returns {string}
+     */
+    TooltipBox.prototype.toString = function () {
+        return '[object TooltipBox]';
+    };
+
     // export TooltipBox constructor
     lib.TooltipBox = TooltipBox;
 
@@ -374,7 +409,7 @@ define(['win', 'jquery'], function (win, $) {
      * @param {Function|String} contents if function then following signature
      * is expected: function(TooltipBox, finalizeCallback)
      * where function updates the box (i.e. no return value is involved here) by accessing TooltipBox object
-     * @param {object} [options]
+     * @param {PopupBoxOptions} [options]
      */
     lib.bind = function (elm, contents, options) {
         var box,
@@ -386,6 +421,8 @@ define(['win', 'jquery'], function (win, $) {
         options = options || {};
         whereElm = $('body');
 
+        $(elm).data('popupBox', true); // true => box is bound but not opened
+
         $(elm).on('click', function (event) {
             var windowClickHandler,
                 elmOffset;
@@ -394,10 +431,10 @@ define(['win', 'jquery'], function (win, $) {
                 beforeOpenValue = beforeOpen.call(self);
             }
 
-            if ($(elm).data('popupBox')) {
+            if (typeof $(elm).data('popupBox') === '[object TooltipBox]') {
                 box = $(elm).data('popupBox');
                 box.close();
-                $(elm).data('popupBox', null);
+                $(elm).data('popupBox', true);
 
             } else {
                 elmOffset = $(event.target).offset();
@@ -413,7 +450,7 @@ define(['win', 'jquery'], function (win, $) {
                     if (event.target !== box.newElem) {
                         $(win.document).off('click', windowClickHandler);
                         box.close();
-                        $(elm).data('popupBox', null);
+                        $(elm).data('popupBox', true);
                     }
                 };
 
@@ -452,6 +489,17 @@ define(['win', 'jquery'], function (win, $) {
             $(this).attr('title', null);
             supElm.append(linkElm);
         });
+    };
+
+    /**
+     *
+     * @param elm
+     * @returns {boolean}
+     */
+    lib.hasAttachedPopupBox = function (elm) {
+        var data = $(elm).data('popupBox');
+
+        return (data && data.toString() === '[object TooltipBox]') || data === true;
     };
 
     return lib;
