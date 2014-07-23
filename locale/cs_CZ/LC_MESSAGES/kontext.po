@@ -2044,6 +2044,12 @@ msgstr "Nahrát další"
 msgid "selected"
 msgstr "vybráno"
 
+msgid "Confirm"
+msgstr "Potvrdit"
+
+msgid "Clear selection"
+msgstr "Zrušit výběr"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

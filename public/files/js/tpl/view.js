@@ -79,7 +79,29 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      * @param numSelected
      */
     function showNumSelectedItems(numSelected) {
-        $('#result-info .lines-selection').text(layoutModel.translate('selected') + ': ' + numSelected);
+        var linesSelection = $('#result-info .lines-selection'),
+            createContent;
+
+        createContent = function (box, finalize) {
+            box.importElement($('<label>' + layoutModel.translate('Clear selection') + '<input type="checkbox" name="clear-selection" /></label>'
+                + '<button class="confirm">' + layoutModel.translate('Confirm') + '</button>'));
+            finalize();
+            box.findElement('button.confirm').on('click', function () {
+                if (box.findElement('input[name=\'clear-selection\']').is(':checked')) {
+                    clStorage.clear();
+                    refreshSelection();
+                    box.close();
+                }
+            });
+        };
+
+        linesSelection.text(layoutModel.translate('selected') + ': ' + numSelected);
+        if (!popupBox.hasAttachedPopupBox(linesSelection)) {
+            popupBox.bind(linesSelection, createContent, {
+                type : 'plain',
+                closeIcon : true
+            });
+        }
     }
 
     /**
