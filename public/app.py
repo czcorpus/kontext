@@ -105,6 +105,7 @@ def setup_plugins():
     init_plugin('sessions', (settings, plugins.db))
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.sessions, plugins.db))
+    init_plugin('op_persistence', (settings, plugins.db))
 
     # optional plugins
     optional_plugins = (

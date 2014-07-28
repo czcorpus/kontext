@@ -2050,6 +2050,9 @@ msgstr "Potvrdit"
 msgid "Clear selection"
 msgstr "Zrušit výběr"
 
+msgid "Invalid stored query identifier"
+msgstr "Neplatný identifikátor uloženého dotazu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
