@@ -716,6 +716,7 @@ class CGIPublisher(object):
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
+
             return (methodname,
                     getattr(method, 'template', default_tpl_path),
                     self._invoke_action(method, pos_args, named_args, tpl_data))
@@ -728,7 +729,7 @@ class CGIPublisher(object):
                     json_msg = str(e).decode('utf-8')
                 else:
                     json_msg = _('Failed to process your request. '
-                                      'Please try again later or contact system support.')
+                                 'Please try again later or contact system support.')
                 return (methodname, None,
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname + '_form'):
