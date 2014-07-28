@@ -113,6 +113,10 @@ def get_traceback():
     return traceback.format_exception(err_type, err_value, err_trace)
 
 
+def humanize_exception(ex):
+    return getattr(ex, 'message', '%r' % ex)
+
+
 class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -646,14 +650,14 @@ class CGIPublisher(object):
 
         except AuthException as e:
             self._status = 401
-            named_args['message'] = ('error', u'%s' % e)
+            named_args['message'] = ('error', u'%s' % humanize_exception(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
-            named_args['message'] = ('error', u'%s' % e)
+            named_args['message'] = ('error',  humanize_exception(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
@@ -661,11 +665,11 @@ class CGIPublisher(object):
             self._status = 500
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(get_traceback())))
             if settings.is_debug_mode():
-                named_args['message'] = ('error', u'%s' % e)
+                named_args['message'] = ('error', humanize_exception(e))
             else:
                 named_args['message'] = ('error',
                                          _('Failed to process your request. '
-                                                'Please try again later or contact system support.'))
+                                           'Please try again later or contact system support.'))
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)

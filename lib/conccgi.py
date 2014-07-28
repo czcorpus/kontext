@@ -19,6 +19,7 @@ from functools import partial
 import logging
 import inspect
 import urllib
+import re
 
 import corplib
 import conclib
@@ -246,6 +247,10 @@ class ConcCGI(CGIPublisher):
         self.disabled_menu_items = []
         self.save_menu = []
 
+        # op_persistence plugin related attributes
+        self._q_code = None  # a key to 'code->query' database
+        self._prev_q_data = None  # data of the previous operation are stored here
+
     def _log_request(self, user_settings, action_name, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
@@ -398,6 +403,34 @@ class ConcCGI(CGIPublisher):
         else:
             pass  # TODO save to the session
 
+    def _restore_prev_operation(self):
+        if plugins.has_plugin('op_persistence') and self.q and plugins.op_persistence.is_valid_id(self.q[0]):
+            self._q_code = self.q[0][1:]
+            self._prev_q_data = plugins.op_persistence.open(self._q_code)
+            # !!! must create a copy here otherwise _q_data (as prev query)
+            # will be rewritten by self.q !!!
+            if self._prev_q_data is not None:
+                self.q = self._prev_q_data['q'][:]
+            else:
+                raise UserActionException(_('Invalid stored query identifier used'))
+
+    def _store_and_export_operation(self, tpl_data):
+        if plugins.has_plugin('op_persistence'):
+            if self.q:
+                query = {
+                    'q': self.q
+                }
+                q_id = plugins.op_persistence.store(self._session_get('user', 'id'),
+                                                    curr_data=query, prev_data=self._prev_q_data)
+                tpl_data['q'] = 'q=~%s' % q_id
+                tpl_data['Q'] = [{'q': '~%s' % q_id}]
+            else:
+                tpl_data['q'] = ''
+                tpl_data['Q'] = []
+        else:
+            tpl_data['q'] = self.urlencode([('q', q) for q in self.q])
+            tpl_data['Q'] = [{'q': q} for q in self.q]
+
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -491,6 +524,8 @@ class ConcCGI(CGIPublisher):
             self.return_url = self._get_current_url()
         else:
             self.return_url = '%sfirst_form?corpname=%s' % (self.get_root_url(), self.corpname)
+
+        self._restore_prev_operation()
 
         if len(path) > 0:
             access_level = self._get_action_prop(path[0], 'access_level')
@@ -741,8 +776,8 @@ class ConcCGI(CGIPublisher):
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
-        result['q'] = self.urlencode([('q', q) for q in self.q])
-        result['Q'] = [{'q': q} for q in self.q]
+        self._store_and_export_operation(result)
+
         result['corpname_url'] = 'corpname=' + self.corpname
 
         global_var_val = [(n, val) for n in self._conc_state_vars
