@@ -23,8 +23,10 @@ Required config.xml/plugins entries:
 import os
 import Cookie
 
+from abstract.getlang import AbstractGetLang
 
-class GetLang(object):
+
+class GetLang(AbstractGetLang):
     """
     Looks for a language settings in user's cookies. It is ok
     to return also None. In such case, KonText will try to
