@@ -16,6 +16,7 @@ from datetime import datetime
 import time
 import random
 
+from abstract.sessions import AbstractSessions
 
 """
 
@@ -33,7 +34,7 @@ Required config.xml/plugins entries:
 """
 
 
-class Sessions(object):
+class Sessions(AbstractSessions):
     """
     SQLite-based session persistence implementation
     """
