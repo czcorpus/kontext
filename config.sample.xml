@@ -60,6 +60,9 @@
             <db_path extension-by="ucnk">/var/www/korpus/db/korpus.db</db_path>
             <num_kept_records extension-by="ucnk">5</num_kept_records>
         </query_storage>
+        <conc_persistence>
+            <module>acme_conc_persistence</module>
+        </conc_persistence>
         <settings_storage>
             <module>acme_settings_storage</module>
         </settings_storage>
