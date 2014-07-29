@@ -18,7 +18,7 @@
 
 required table:
 
-CREATE TABLE kontext_operations (
+CREATE TABLE kontext_conc_persistence (
   id varchar(63) NOT NULL,
   user_id int(11) NOT NULL,
   data text,
@@ -50,7 +50,7 @@ def mk_short_id(s, min_length=6):
     Generates a hash based on md5 but using [a-zA-Z0-9] characters and with
     limited length.
 
-    arguments:
+    arguments:ucnk_op_persistence
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
@@ -98,7 +98,7 @@ class OperationPersistence(object):
         """
         db = self.db_provider()
         # note: we can ask for user_id too but all the codes are public
-        ans = db.execute("SELECT data FROM kontext_operations WHERE id = %s", (data_id, )).fetchone()
+        ans = db.execute("SELECT data FROM kontext_conc_persistence WHERE id = %s", (data_id, )).fetchone()
         db.close()
         if ans is not None:
             return json.loads(ans[0])
@@ -126,7 +126,7 @@ class OperationPersistence(object):
             json_data = json.dumps(curr_data)
 
             db = self.db_provider()
-            db.execute("INSERT INTO kontext_operations (id, user_id, data, created) VALUES (%s, %s, %s, %s)",
+            db.execute("INSERT INTO kontext_conc_persistence (id, user_id, data, created) VALUES (%s, %s, %s, %s)",
                        (data_id, user_id, json_data, time_created))
             db.close()
             latest_id = curr_data['id']
