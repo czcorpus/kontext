@@ -93,10 +93,25 @@ define(['win'], function (win) {
     };
 
     /**
+     *
+     */
+    ConcLinesStorage.prototype.getAll = function () {
+        var ans = [],
+            p;
+
+        for (p in this.data) {
+            if (this.data.hasOwnProperty(p)) {
+                ans.push(parseInt(p, 10));
+            }
+        }
+        return ans;
+    };
+
+    /**
      * Removes all the elements and writes the change into sessionStorage
      */
     ConcLinesStorage.prototype.clear = function () {
-        this.data = {}
+        this.data = {};
         win.sessionStorage.removeItem(accessKey);
     };
 

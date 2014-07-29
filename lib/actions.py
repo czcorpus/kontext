@@ -152,11 +152,9 @@ class Actions(ConcCGI):
         """
         kwic view
 
-        Parameters
-        ----------
-
-        view_params : dict
-            parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based values)
+        arguments:
+        view_params -- parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based
+                       values)
         """
         for k, v in view_params.items():
             if k in self.__dict__:
@@ -2315,5 +2313,17 @@ class Actions(ConcCGI):
                                                     return_url=self.return_url,
                                                     use_fallback=False,
                                                     timeout=20)
-
         return {'html': html}
+
+    @exposed(return_type='json')
+    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
+        import json
+
+        sel_lines = json.loads(rows)
+        self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(['[#%s]' % x for x in sel_lines])))
+        q_id = self._store_operation()
+
+        return {
+            'id' : q_id,
+            'next_url' : 'view?corpname=' + self.corpname + '&q=~' + q_id
+        }
