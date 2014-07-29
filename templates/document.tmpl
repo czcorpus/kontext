@@ -142,6 +142,7 @@ define('conf', [], function () {
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
+    conf.stateParams = "$q;$globals";
 
     conf.messages = {};
     #if $_anonymous
@@ -166,8 +167,6 @@ define('conf', [], function () {
     conf.messages['No more lines'] = "$_('No more lines')";
     conf.messages['Load more'] = "$_('Load more')";
     conf.messages['selected'] = "$_('selected')";
-    conf.messages['Confirm'] = "$_('Confirm')";
-    conf.messages['Clear selection'] = "$_('Clear selection')";
 
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
@@ -191,7 +190,7 @@ define('conf', [], function () {
 #if $app_bar
 #filter None
     $app_bar
-#end filter
+#end filter                           $q;$globals
 #else
 <span class="user">$_("User"):
     #if not $_anonymous
@@ -470,6 +469,19 @@ define('conf', [], function () {
 
     #end filter
 </div>
+
+<div id="selection-actions" style="display: none">
+    <h3>$_('Selection actions')</h3>
+    <form action="delete_lines" method="POST">
+        <select name="actions">
+            <option value="remove">$_('Remove selected lines from the result')</option>
+            <option value="remove_inverted">$_('Remove all but selected lines from the result')</option>
+            <option value="clear">$_('Clear the selection')</option>
+        </select>
+        <button type="button" class="confirm">$_('Proceed')</button>
+    </form>
+</div>
+
 <footer>
     #if $len($avail_languages) > 0
     <div id="switch-language-box">$_("user interface languages"):

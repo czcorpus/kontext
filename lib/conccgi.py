@@ -404,6 +404,15 @@ class ConcCGI(CGIPublisher):
             pass  # TODO save to the session
 
     def _restore_prev_operation(self):
+        """
+        Restores previously stored concordance query data using an ID found in self.q.
+        To even begin the search, two conditions must be met:
+        1. op_persistence plugin is installed
+        2. self.q contains a string recognized as a valid ID of a stored concordance query
+
+        In case the op_persistence is installed and invalid ID is encountered
+        UserActionException will be raised.
+        """
         if plugins.has_plugin('op_persistence') and self.q and plugins.op_persistence.is_valid_id(self.q[0]):
             self._q_code = self.q[0][1:]
             self._prev_q_data = plugins.op_persistence.open(self._q_code)
@@ -414,16 +423,39 @@ class ConcCGI(CGIPublisher):
             else:
                 raise UserActionException(_('Invalid stored query identifier used'))
 
-    def _store_and_export_operation(self, tpl_data):
+    def _store_operation(self):
+        """
+        Stores concordance operation if the op_persistence plugin is installed
+        (otherwise nothing is done).
+
+        returns:
+        string ID of the stored operation or None if nothing was done (from whatever reason)
+        """
+        if plugins.has_plugin('op_persistence') and self.q:
+            query = {
+                'q': self.q,
+                'corpname': self.corpname,
+                'usesubcorp': self.usesubcorp,
+                'align': self.align
+            }
+            q_id = plugins.op_persistence.store(self._session_get('user', 'id'),
+                                                curr_data=query, prev_data=self._prev_q_data)
+        else:
+            q_id = None
+        return q_id
+
+    def _update_output_with_operation(self, op_id, tpl_data):
+        """
+        Updates template data dictionary tpl_data with stored operation values.
+
+        arguments:
+        op_id -- unique operation ID
+        tpl_data -- a dictionary used along with HTML template to render the output
+        """
         if plugins.has_plugin('op_persistence'):
-            if self.q:
-                query = {
-                    'q': self.q
-                }
-                q_id = plugins.op_persistence.store(self._session_get('user', 'id'),
-                                                    curr_data=query, prev_data=self._prev_q_data)
-                tpl_data['q'] = 'q=~%s' % q_id
-                tpl_data['Q'] = [{'q': '~%s' % q_id}]
+            if op_id:
+                tpl_data['q'] = 'q=~%s' % op_id
+                tpl_data['Q'] = [{'q': '~%s' % op_id}]
             else:
                 tpl_data['q'] = ''
                 tpl_data['Q'] = []
@@ -776,7 +808,9 @@ class ConcCGI(CGIPublisher):
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
-        self._store_and_export_operation(result)
+        # op_persistence plugin related
+        op_id = self._store_operation()
+        self._update_output_with_operation(op_id, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
 

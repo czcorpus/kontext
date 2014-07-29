@@ -83,16 +83,53 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             createContent;
 
         createContent = function (box, finalize) {
-            box.importElement($('<label>' + layoutModel.translate('Clear selection') + '<input type="checkbox" name="clear-selection" /></label>'
-                + '<button class="confirm">' + layoutModel.translate('Confirm') + '</button>'));
-            finalize();
-            box.findElement('button.confirm').on('click', function () {
-                if (box.findElement('input[name=\'clear-selection\']').is(':checked')) {
+            var formElm = $('#selection-actions'),
+                getAction;
+
+            getAction = function () {
+                return formElm.find('select[name=\'actions\']').val();
+            };
+
+            formElm.find('button.confirm').off('click').on('click', function () {
+                var action = getAction(),
+                    prom,
+                    pnfilter;
+
+                if (action === 'clear') {
                     clStorage.clear();
                     refreshSelection();
                     box.close();
+
+                } else {
+                    pnfilter = {'remove' : 'n', 'remove_inverted' : 'p'}[action];
+                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + layoutModel.conf.stateParams,
+                        {
+                            dataType : 'json',
+                            type : 'POST',
+                            data : { rows : JSON.stringify(clStorage.getAll())}
+                        }).promise();
+
+                    prom.then(
+                        function (data) {
+                            box.close();
+                            if (!data.error) {
+                                clStorage.clear();
+                                window.location = data.next_url
+
+                            } else {
+                                layoutModel.showMessage('error', data.error);
+                            }
+                        },
+                        function (jqXHR, textStatus) {
+                            box.close();
+                            layoutModel.showMessage('error', textStatus);
+                        }
+                    );
                 }
             });
+
+            box.importElement(formElm);
+            finalize();
         };
 
         linesSelection.text(layoutModel.translate('selected') + ': ' + numSelected);
