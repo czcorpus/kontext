@@ -10,12 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from datetime import datetime
-import time
-import random
-
-from plugins import CorpusDependentPlugin
-
 """
 A plugin providing a storage for user's queries for services such as 'query history'.
 
@@ -48,11 +42,14 @@ CREATE TABLE kontext_saved_queries (
 """
 
 
-class QueryStorageException(Exception):
-    pass
+from datetime import datetime
+import time
+import random
+
+from abstract.query_storage import AbstractQueryStorage
 
 
-class QueryStorage(object):
+class QueryStorage(AbstractQueryStorage):
 
     cols = ('id', 'user_id', 'corpname', 'subcorpname', 'query', 'query_type', 'params', 'created')
 
