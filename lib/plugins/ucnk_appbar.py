@@ -10,10 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import httplib
-import urllib
-import logging
-
 """
 A plugin which loads an HTML code from an external server. Such HTML typically contains an
 information about current user, links to other applications etc.
@@ -30,18 +26,14 @@ Required config.xml/plugin entries:
 </application_bar>
 """
 
+import httplib
+import urllib
+import logging
 
-def create_instance(settings, ticket_id_provider):
-    server = settings.get('plugins', 'application_bar').get('server')
-    path = settings.get('plugins', 'application_bar').get('path', '')
-    port = int(settings.get('plugins', 'application_bar').get('port', 80))
-    css_url = settings.get('plugins', 'application_bar').get('css_url', None)
-    css_url_ie = settings.get('plugins', 'application_bar').get('css_url_ie', None)
-    return ApplicationBar(ticket_id_provider=ticket_id_provider, server=server, path=path, port=port,
-                  css_url=css_url, css_url_ie=css_url_ie)
+from abstract.appbar import AbstractApplicationBar
 
 
-class ApplicationBar(object):
+class ApplicationBar(AbstractApplicationBar):
 
     def __init__(self, ticket_id_provider, server, path, port, css_url, css_url_ie):
         self.ticket_id_provider = ticket_id_provider
@@ -86,3 +78,13 @@ class ApplicationBar(object):
                 logging.getLogger(__name__).warning('Failed to load toolbar data from authentication server: %s' % (e, ))
                 html = self.get_fallback_content() if use_fallback else None
         return html
+
+
+def create_instance(settings, ticket_id_provider):
+    server = settings.get('plugins', 'application_bar').get('server')
+    path = settings.get('plugins', 'application_bar').get('path', '')
+    port = int(settings.get('plugins', 'application_bar').get('port', 80))
+    css_url = settings.get('plugins', 'application_bar').get('css_url', None)
+    css_url_ie = settings.get('plugins', 'application_bar').get('css_url_ie', None)
+    return ApplicationBar(ticket_id_provider=ticket_id_provider, server=server, path=path, port=port,
+                          css_url=css_url, css_url_ie=css_url_ie)
