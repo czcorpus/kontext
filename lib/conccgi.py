@@ -403,7 +403,7 @@ class ConcCGI(CGIPublisher):
         else:
             pass  # TODO save to the session
 
-    def _restore_prev_operation(self):
+    def _restore_prev_conc_params(self):
         """
         Restores previously stored concordance query data using an ID found in self.q.
         To even begin the search, two conditions must be met:
@@ -423,7 +423,7 @@ class ConcCGI(CGIPublisher):
             else:
                 raise UserActionException(_('Invalid stored query identifier used'))
 
-    def _store_operation(self):
+    def _store_conc_params(self):
         """
         Stores concordance operation if the conc_persistence plugin is installed
         (otherwise nothing is done).
@@ -444,7 +444,7 @@ class ConcCGI(CGIPublisher):
             q_id = None
         return q_id
 
-    def _update_output_with_operation(self, op_id, tpl_data):
+    def _update_output_with_conc_params(self, op_id, tpl_data):
         """
         Updates template data dictionary tpl_data with stored operation values.
 
@@ -557,7 +557,7 @@ class ConcCGI(CGIPublisher):
         else:
             self.return_url = '%sfirst_form?corpname=%s' % (self.get_root_url(), self.corpname)
 
-        self._restore_prev_operation()
+        self._restore_prev_conc_params()
 
         if len(path) > 0:
             access_level = self._get_action_prop(path[0], 'access_level')
@@ -809,8 +809,8 @@ class ConcCGI(CGIPublisher):
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
         # conc_persistence plugin related
-        op_id = self._store_operation()
-        self._update_output_with_operation(op_id, result)
+        op_id = self._store_conc_params()
+        self._update_output_with_conc_params(op_id, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
 

@@ -2321,7 +2321,7 @@ class Actions(ConcCGI):
 
         sel_lines = json.loads(rows)
         self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(['[#%s]' % x for x in sel_lines])))
-        q_id = self._store_operation()
+        q_id = self._store_conc_params()
 
         return {
             'id' : q_id,

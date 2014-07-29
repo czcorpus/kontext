@@ -16,6 +16,8 @@
 
 """
 
+
+
 required table:
 
 CREATE TABLE kontext_conc_persistence (
@@ -74,7 +76,7 @@ def mk_short_id(s, min_length=6):
     return ans[:i]
 
 
-class OperationPersistence(object):
+class ConcPersistence(object):
     """
     This class stores user's queries in their internal form (see conccgi.q attribute).
     """
@@ -137,4 +139,4 @@ class OperationPersistence(object):
 
 
 def create_instance(settings, db_provider):
-    return OperationPersistence(db_provider)
+    return ConcPersistence(db_provider)
