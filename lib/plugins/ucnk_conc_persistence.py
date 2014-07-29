@@ -37,6 +37,8 @@ import json
 import time
 import re
 
+from abstract.conc_persistence import AbstractConcPersistence
+
 
 def id_exists(id):
     """
@@ -76,7 +78,7 @@ def mk_short_id(s, min_length=6):
     return ans[:i]
 
 
-class ConcPersistence(object):
+class ConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see conccgi.q attribute).
     """
@@ -85,6 +87,12 @@ class ConcPersistence(object):
         self.db_provider = db_provider
 
     def is_valid_id(self, data_id):
+        """
+        Returns True if data_id is a valid data identifier else False is returned
+
+        arguments:
+        data_id -- identifier to be tested
+        """
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
     def open(self, data_id):
