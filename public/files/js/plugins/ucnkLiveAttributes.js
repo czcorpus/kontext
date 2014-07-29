@@ -128,8 +128,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
                     // close all the other bib-info boxes
                     $('.bib-info').each(function () {
-                        if ($(this).data('popupBox') && !$(this).is($(target))) {
-                            $(this).data('popupBox').close();
+                        if (!$(this).is($(target))) {
+                            popupBox.close(this);
                         }
                     });
 
