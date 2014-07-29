@@ -14,10 +14,6 @@ This module implements /dev/null-like query storage
 """
 
 
-class QueryStorageException(Exception):
-    pass
-
-
 class QueryStorage(object):
 
     def __init__(self, conf, db):
