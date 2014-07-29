@@ -502,5 +502,18 @@ define(['win', 'jquery'], function (win, $) {
         return (data && data.toString() === '[object TooltipBox]') || data === true;
     };
 
+    /**
+     * Closes attached popupBox if there is one within passed element elm
+     *
+     * @param elm
+     */
+    lib.close = function (elm) {
+        var data = $(elm).data('popupBox');
+
+        if (data.toString() === '[object TooltipBox]') {
+            data.close();
+        }
+    };
+
     return lib;
 });
