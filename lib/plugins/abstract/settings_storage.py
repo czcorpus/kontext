@@ -10,21 +10,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import json
+"""
+All the custom settings_storage plug-ins should inherit from AbstractSettingsStorage
+"""
 
-from abstract.settings_storage import AbstractSettingsStorage
 
-
-class SettingsStorage(AbstractSettingsStorage):
-
-    def __init__(self, conf, db_provider):
-        """
-        Parameters
-        ----------
-
-        conf : the 'settings' module (or some compatible object)
-        """
-        self.db_provider = db_provider
+class AbstractSettingsStorage(object):
 
     def save(self, user_id, data):
         """
@@ -34,10 +25,7 @@ class SettingsStorage(AbstractSettingsStorage):
         user_id -- user identifier
         data -- a dictionary containing user settings
         """
-        db = self.db_provider()
-        db.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
-                   (json.dumps(data), user_id))
-        db.close()
+        raise NotImplementedError()
 
     def load(self, user_id, current_settings=None):
         """
@@ -54,15 +42,4 @@ class SettingsStorage(AbstractSettingsStorage):
         current_settings : dict
           new or updated settings dictionary provided as a parameter
         """
-        if current_settings is None:
-            current_settings = {}
-        db = self.db_provider()
-        row = db.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,)).fetchone()
-        if row:
-            current_settings.update(json.loads(row[0]))
-        db.close()
-        return current_settings
-
-
-def create_instance(conf, db):
-    return SettingsStorage(conf, db)
+        raise NotImplementedError()
