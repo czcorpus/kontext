@@ -860,7 +860,7 @@ class Actions(ConcCGI):
         self.disabled_menu_items = ('menu-save',)
         return {}
 
-    @exposed(access_level=1, template='view.tmpl', vars=('concsize',))
+    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view')
     def reduce(self, rlines='250'):
         """
         random sample
