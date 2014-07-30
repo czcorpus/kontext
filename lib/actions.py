@@ -175,22 +175,14 @@ class Actions(ConcCGI):
             sentence_struct = plugins.corptree.get_corpus_info(self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
             self.rightctx = self.senrightctx_tpl % sentence_struct
-            # GDEX changing and turning on and off
-        if self.gdex_enabled and self.gdexcnt:
-            gdex_set = 0
-            for i in range(1, len(self.q)):
-                # 's*' is old gdex call, should be deleted in mid 2011
-                if self.q[i].startswith('s*') or self.q[i][0] == 'e':
-                    self.q[i] = 'e%s %s' % (str(self.gdexcnt), self.gdexconf)
-                    gdex_set = 1
-            if not gdex_set:
-                self.q.append('e%s %s' % (str(self.gdexcnt), self.gdexconf))
-        else:
-            i = 0
-            while i < len(self.q):
-                if self.q[i].startswith('s*') or self.q[i][0] == 'e':
-                    del self.q[i]
-                i += 1
+
+        # 'if GDEX disabled' in Bonito code; KonText has now GDEX functionality
+        i = 0
+        while i < len(self.q):
+            if self.q[i].startswith('s*') or self.q[i][0] == 'e':
+                del self.q[i]
+            i += 1
+
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
         kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
@@ -402,16 +394,12 @@ class Actions(ConcCGI):
             out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
                                         'sel': (doc in reflist and 'selected' or '')})
         out['newctxsize'] = self.kwicleftctx[1:]
-        out['Availgdexconfs'] = self.cm.gdexdict.keys()
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.structattrs
         out['tbl_labels'] = tbl_labels
         return out
 
-    def _set_new_viewopts(self, newctxsize='', gdexcnt=0, gdexconf='', refs_up='', ctxunit=''):
-        self.gdexcnt = gdexcnt
-        self.gdexconf = gdexconf
-
+    def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit=''):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
@@ -456,12 +444,11 @@ class Actions(ConcCGI):
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view')
-    def viewoptsx(self, newctxsize='', gdexcnt=0, gdexconf='', ctxunit='', refs_up='', shuffle=0):
+    def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
-        self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
-                               ctxunit=ctxunit)
-        self._save_options(['pagesize', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
-                            'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
+        self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
+        self._save_options(['pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
+                            'refs_up', 'shuffle'])
         return self.view()
 
     @exposed(access_level=1, vars=('concsize', ))

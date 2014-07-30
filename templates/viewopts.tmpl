@@ -45,12 +45,6 @@ require(['${client_model_dir}/document', 'conf'], function (viewAttrs, conf) {
 
     <fieldset>
         <legend>$_('Result range and paging')</legend>
-        #try
-          #set $nic = $gdexcnt
-        #except
-          #set $gdexcnt = ''
-        #end try
-        <input type="hidden" name="gdex_enabled" value="0" />
 
         <table  class="results-range-and-paging">
             <tr>
@@ -61,12 +55,6 @@ require(['${client_model_dir}/document', 'conf'], function (viewAttrs, conf) {
                 <th>$_("KWIC Context size (positions)"):</th>
                 <td><input type="text" name="newctxsize" value='$newctxsize' size="4" />
                     <input type="hidden" name="ctxunit" value="@pos" />
-                </td>
-            </tr>
-            <tr>
-                <th>$_("Number of lines to be sorted"):</th>
-                <td>
-                    <input type="text" name="gdexcnt" value="$gdexcnt" size="4" />
                 </td>
             </tr>
         </table>
