@@ -187,6 +187,7 @@ Following plug-ins are optional:
 | getlang          | if you want to read current UI language in a non-KonText way                 | No               |
 | live_attributes  | When filtering searched positions by attribute value(s), this provides a knowledge which values of currently unused (within the selection) attributes are still applicable.  | Yes              |
 | query_storage    | KonText may store users' queries for further review/reuse                    | Yes              |
+| conc_persistence | Allows storing queries/filters/etc. longer than URL can handle               | No               |
 
 
 ### The "db" plug-in
@@ -536,6 +537,16 @@ following example:
 ```
 
 This allows user to select desired attributes when creating a query or a subcorpus in a more convenient way.
+
+### The "conc_persistence" plug-in
+
+Original Bonito 2 and older KonText versions keep all the parameters required to specify a concordance (i.e. original
+query, filters, samples etc.) in URL of a page. Although it is in general a good idea (links can be copied and accessed
+by anyone, HTTP method types are not misused), the problem arises with the limited length of URL (starting circa from
+2KB one cannot be sure that the application will work properly).
+
+The *conc_persistence* plugin allows storing these parameters into a database and return a placeholder code which is
+then passed via URL.
 
 
 Deployment and running
