@@ -105,28 +105,9 @@ class PyConc(manatee.Concordance):
         strs = manatee.StrVector(map(lngrp_sortstr, lmap.values()))
         self.linegroup_sort(ids, strs)
 
-    def command_e(self, options):
-        # sort first k lines using GDEX
-        try:
-            import gdex
-        except ImportError:
-            import gdex_old as gdex
-        args = options.split(' ', 1)
-        if len(args) == 2:
-            conf = args[1]
-        else:
-            conf = ''
-        cnt = int(args[0]) or 100
-        best = gdex.GDEX(self.pycorp, conf)
-        best.entryConc(self)
-        best_lines = manatee.IntVector([i for s, i
-                                        in best.best_k(cnt, cnt)])
-        self.set_sorted_view(best_lines)
-
     def command_s(self, options):
         if options[0] == '*':
-            # old GDEX, used command_e, should be deleted in mid 2011
-            self.command_e(options[1:])
+            raise NotImplementedError('GDEX related operations are not supported in KonText')
         else:
             self.sort(options)
 

@@ -32,10 +32,9 @@ import settings
 
 class CorpusManager(object):
 
-    def __init__(self, corplist=(), subcpath=(), gdexpath=()):
+    def __init__(self, corplist=(), subcpath=()):
         self.corplist = list(corplist)
         self.subcpath = list(subcpath)
-        self.gdexdict = dict(gdexpath)
 
     def default_subcpath(self, corp):
         if type(corp) is not manatee.Corpus:
