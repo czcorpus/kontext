@@ -182,20 +182,17 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
      */
     lib.selectText = function (element) {
         var elm = $(element),
-            range,
-            selection;
+            range;
 
-        if (win.document.body.createTextRange) {
-            range = win.document.body.createTextRange();
-            range.moveToElementText(elm.get(0));
-            range.select();
+        if (elm.length === 1) {
+            if (win.document.body.createTextRange) {
+                range = win.document.body.createTextRange();
+                range.moveToElementText(elm.get(0));
+                range.select();
 
-        } else if (win.getSelection) {
-            selection = window.getSelection();
-            range = win.document.createRange();
-            range.selectNodeContents(elm.get(0));
-            selection.removeAllRanges();
-            selection.addRange(range);
+            } else if (win.getSelection) {
+                elm.focus().get(0).select();
+            }
         }
     };
 
