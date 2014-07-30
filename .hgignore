@@ -4,6 +4,7 @@ syntax: glob
 .idea
 doc
 log
+tmp
 *.db
 *.pyc
 config.xml
