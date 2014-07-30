@@ -76,7 +76,7 @@ class StateGlobals(object):
 class ConcCGI(CGIPublisher):
     _conc_state_vars = ('corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
                         'structs', 'refs', 'lemma', 'lpos', 'pagesize',
-                        'usesubcorp', 'align', 'copy_icon', 'gdex_enabled',
+                        'usesubcorp', 'align', 'gdex_enabled',
                         'gdexcnt', 'gdexconf', 'iquery', 'maincorp')
 
     ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
@@ -184,7 +184,6 @@ class ConcCGI(CGIPublisher):
     gdexcnt = Parameter(100, persistent=True)
     gdex_enabled = Parameter(0, persistent=True)
     alt_gdexconf = Parameter(None, persistent=True)
-    copy_icon = Parameter(0, persistent=True)
     _avail_tbl_templates = Parameter(u'')
     multiple_copy = Parameter(0, persistent=True)
     wlsendmail = Parameter(u'')

@@ -203,7 +203,6 @@ class Actions(ConcCGI):
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                 copy_icon=self.copy_icon,
                                  tbl_template=self.tbl_template,
                                  structs=structs)
 
@@ -461,7 +460,7 @@ class Actions(ConcCGI):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, gdexcnt=gdexcnt, gdexconf=gdexconf, refs_up=refs_up,
                                ctxunit=ctxunit)
-        self._save_options(['pagesize', 'copy_icon', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
+        self._save_options(['pagesize', 'gdex_enabled', 'gdexcnt', 'gdexconf', 'kwicleftctx',
                             'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit', 'refs_up', 'shuffle'])
         return self.view()
 
