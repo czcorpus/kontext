@@ -128,14 +128,14 @@ define(['jquery', 'win'], function ($, win) {
         this.boxElm.find('.filter-checkbox').on('click', function (event) {
             if ($(event.currentTarget).is(':checked')) {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== lib.pluginApi.conf.corpname) {
+                    if ($(this).data('corpname') !== lib.pluginApi.conf('corpname')) {
                         $(this).hide();
                     }
                 });
 
             } else {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== lib.pluginApi.conf.corpname
+                    if ($(this).data('corpname') !== lib.pluginApi.conf('corpname')
                             && !$(this).is(':visible')) {
                         $(this).show();
                     }
@@ -227,15 +227,15 @@ define(['jquery', 'win'], function ($, win) {
                 this.data.push({
                     query : this.inputElm.val(),
                     query_type : $('#queryselector option:selected').data('type'),
-                    corpname : lib.pluginApi.conf.corpname,
+                    corpname : lib.pluginApi.conf('corpname'),
                     subcorpname : self.getCurrentSubcorpname(),
-                    humanCorpname : lib.pluginApi.conf.humanCorpname
+                    humanCorpname : lib.pluginApi.conf('humanCorpname')
                 });
             }
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax('ajax_query_history', {
+            prom = $.ajax('ajax_query_history?corpname=' + lib.pluginApi.conf('corpname'), {
                 dataType : 'json'
             }).promise();
 
@@ -486,7 +486,7 @@ define(['jquery', 'win'], function ($, win) {
     };
 
     lib.reset = function () {
-        if (!lib.pluginApi.conf.anonymousUser) {
+        if (!lib.pluginApi.conf('anonymousUser')) {
             $('input.history:visible').each(function () {
                 var plugin = lib.bind(this);
                 lib.addTriggerButton(plugin);

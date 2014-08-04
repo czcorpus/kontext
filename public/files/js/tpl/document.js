@@ -983,7 +983,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
 
     /**
      * @typedef {Object} pluginApi
-     * @property {{}} conf
+     * @property {function} conf
      * @property {function} ajax
      * @property {function} ajaxAnim
      * @property {function} showMessage
@@ -1001,8 +1001,14 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
         var self = this;
 
         return {
-            conf : self.conf,
+            conf : function (key) {
+                if (self.conf.hasOwnProperty(key)) {
+                    return self.conf[key];
 
+                } else {
+                    throw new Error('Unknown configuration key requested: ' + key);
+                }
+            },
             ajax : function () {
                 return self.ajax.apply(self, arguments);
             },
