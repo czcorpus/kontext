@@ -114,7 +114,10 @@ def get_traceback():
 
 
 def humanize_exception(ex):
-    return getattr(ex, 'message', '%r' % ex)
+    msg = getattr(ex, 'message', None)
+    if not msg:
+        msg = '%r' % ex
+    return msg
 
 
 class KonTextCookie(Cookie.BaseCookie):
