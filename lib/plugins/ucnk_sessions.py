@@ -10,14 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import uuid
-import json
-from datetime import datetime
-import time
-import random
-
-from abstract.sessions import AbstractSessions
-
 """
 
 External requirements:
@@ -32,6 +24,14 @@ Required config.xml/plugins entries:
     <cleanup_probability>[a probability that KonText checks for old records; values from 0 to 1]</cleanup_probability>
 </sessions>
 """
+
+import uuid
+import json
+from datetime import datetime
+import time
+import random
+
+from abstract.sessions import AbstractSessions
 
 
 class Sessions(AbstractSessions):
