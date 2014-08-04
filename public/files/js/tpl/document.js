@@ -341,6 +341,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
             error : '../files/img/error-icon.png'
         };
 
+        if (typeof message === 'object' && type === 'error') {
+            message = message['message'];
+        }
+
         innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[type] + '">'
             + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
 
