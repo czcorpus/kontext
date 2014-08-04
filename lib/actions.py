@@ -139,10 +139,9 @@ class Actions(ConcCGI):
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc')
         plugins.auth.logout(self._get_session_id())
-        self._session = {
-            'user': plugins.auth.anonymous_user()  # just to keep rendering ok
-        }
         self._user = None
+        self._init_session()
+
         return {
             'message': ('info', _('You have been logged out'))
         }
