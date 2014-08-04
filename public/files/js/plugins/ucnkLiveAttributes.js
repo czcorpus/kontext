@@ -133,7 +133,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                         }
                     });
 
-                    self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf.corpname
+                    self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf('corpname')
                         + '&id=' + $(target).attr('data-bib-id'),
                         {
                             dataType : 'json',
@@ -176,7 +176,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
             if (isArray(dataItem)) {
                 attrTable.find('.metadata').empty();
-                dataTable = createDataTable(dataItem, ident, self.pluginApi.conf.bibConf, checkedItems);
+                dataTable = createDataTable(dataItem, ident, self.pluginApi.conf('bibConf'), checkedItems);
                 $(inputElm).after(dataTable);
                 $(dataTable).find('.bib-info').each(function () {
                     bindBibLink(this);
@@ -227,7 +227,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             var id = stripPrefix($(this).attr('name')),
                 trElm = $(this).closest('tr'),
                 labelElm = $(this).closest('label'),
-                inputVal = $(this).val() != self.pluginApi.conf.emptyAttrValuePlaceholder ? $(this).val() : '';
+                inputVal = $(this).val() != self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
             if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
@@ -442,7 +442,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             innerHTML;
 
         if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-            innerHTML = '<strong>' + this.pluginApi.conf.corpname + '</strong> <br />&amp; '
+            innerHTML = '<strong>' + this.pluginApi.conf('corpname') + '</strong> <br />&amp; '
                 + alignedCorpnames.join('<br />&amp;');
             this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
             this.numSteps(this.numSteps() + 1);
@@ -579,7 +579,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             });
             $('#content').append(ajaxAnimElm);
 
-            requestURL = 'filter_attributes?corpname=' + pluginApi.conf.corpname
+            requestURL = 'filter_attributes?corpname=' + pluginApi.conf('corpname')
                 + '&attrs=' + JSON.stringify(selectedAttrs);
 
             alignedCorpnames = alignedCorpora.findSelected();
