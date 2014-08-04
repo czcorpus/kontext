@@ -33,3 +33,11 @@ class CorpusDependentPlugin(object):
     """
     def is_enabled_for(self, corpname):
         raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(corpname)')
+
+
+class PluginException(Exception):
+    """
+    General error in a plug-in (e.g. configuration problem, resource problem).
+    User actions should not produce this kind of error.
+    """
+    pass
