@@ -13,6 +13,14 @@
 """
 A simple session handler which writes data to a filesystem.
 Please note that this has not been tested under heavy load.
+
+required config.xml entries:
+<sessions>
+    <module>default_sessions</module>
+    <ttl>14400</ttl>
+    <cleanup_probability>[a value from 0 to 1]</cleanup_probability>
+    <data_path extension-by="default">[ a DIRECTORY where individual session files will be stored]</data_path>
+</sessions>
 """
 
 import uuid
