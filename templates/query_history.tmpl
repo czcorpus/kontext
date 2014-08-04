@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <h2>$_('Recent queries')</h2>
 
     <form class="query-history-filter" action="" method="get">
+        <input type="hidden" name="corpname" value="$corpname" />
         <label>$_('current corpus only')<input type="checkbox" name="current_corpus" value="1" #if $getVar('current_corpus', None)#checked="checked"#end if# /></label>
         $_('query type'):
         <select name="query_type">
