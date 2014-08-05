@@ -19,7 +19,6 @@ required config.xml entries:
     <module>default_sessions</module>
     <ttl>14400</ttl>
     <cleanup_probability>[a value from 0 to 1]</cleanup_probability>
-    <data_path extension-by="default">[ a DIRECTORY where individual session files will be stored]</data_path>
 </sessions>
 """
 
@@ -39,11 +38,11 @@ class DefaultSessions(AbstractSessions):
 
     DEFAULT_CLEANUP_PROBABILITY = 0.5
 
-    def __init__(self, settings):
+    def __init__(self, settings, db):
         """
         Initialization according to the 'settings' object/module
         """
-        self.data_path = settings.get('plugins', 'sessions').get('default:data_path')
+        self.db = db
         self.ttl = settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL)
         self.cleanup_probability = settings.get('plugins', 'sessions').get('cleanup_probability',
                                                                            DefaultSessions.DEFAULT_CLEANUP_PROBABILITY)
@@ -54,8 +53,8 @@ class DefaultSessions(AbstractSessions):
         """
         return time.mktime(datetime.now().timetuple())
 
-    def make_path(self, session_id):
-        return '%s/%s' % (self.data_path, session_id)
+    def _mk_key(self, session_id):
+        return 'session-%s' % (session_id, )
 
     def start_new(self, data=None):
         """
@@ -65,15 +64,14 @@ class DefaultSessions(AbstractSessions):
         if data is None:
             data = {}
 
-        with open(self.make_path(session_id), 'w') as f:
-            json.dump(data, f)
+        self.db.save(data, self._mk_key(session_id))
         return {'id': session_id, 'data': data}
 
     def delete(self, session_id):
         """
         Deletes a session record from the storage
         """
-        os.unlink(self.make_path(session_id))
+        self.db.remove(self._mk_key(session_id))
 
     def load(self, session_id, data=None):
         """
@@ -93,11 +91,9 @@ class DefaultSessions(AbstractSessions):
         if random.random() < DefaultSessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
 
-        file_path = self.make_path(session_id)
-        if os.path.exists(file_path):
-            with open(self.make_path(session_id)) as f:
-                data = json.load(f)
-                return {'id': session_id, 'data': data}
+        session_data = self.db.load(self._mk_key(session_id))
+        if session_data is not None:
+            return {'id': session_id, 'data': session_data}
         else:
             return self.start_new(data)
 
@@ -106,9 +102,7 @@ class DefaultSessions(AbstractSessions):
         Saves session data and updates last update information for a row  identified by session_id.
         If no such record exists then nothing is done and no error is thrown.
         """
-        file_path = self.make_path(session_id)
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
+        self.db.save(data, self._mk_key(session_id))
 
     def delete_old_sessions(self):
         """
@@ -116,15 +110,15 @@ class DefaultSessions(AbstractSessions):
         This method is called automatically (with probability self.cleanup_probability)
         when load() is called.
         """
+        old_records = self.db.all_with_key_prefix('session-', oldest_first=True, limit=100)
         limit_time = self.get_actual_timestamp() - DefaultSessions.DEFAULT_TTL
-        for item in os.listdir(self.data_path):
-            p = '%s/%s' % (self.data_path, item)
-            if os.path.getmtime(p) < limit_time:
-                os.unlink(p)
+        for item in old_records:
+            if item['__timestamp__'] < limit_time:
+                self.db.remove(item['__key__'])
 
 
-def create_instance(config, *args):
+def create_instance(config, db):
     """
     This is an expected plugin module method to create instance of the service
     """
-    return DefaultSessions(config)
+    return DefaultSessions(config, db)
