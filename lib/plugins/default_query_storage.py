@@ -76,7 +76,7 @@ class QueryStorage(AbstractQueryStorage):
             'created': self._current_timestamp()
         })
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
-            self.delete_old_records(data)
+            data = self.delete_old_records(data)
         self.db.save(data, self._mk_key(user_id))
 
     def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
@@ -120,9 +120,10 @@ class QueryStorage(AbstractQueryStorage):
         """
         Deletes oldest records until the final length of the list equals <num_kept_records> configuration value
         """
-        offset = len(data['query_history']) - self.num_kept_records
+        offset = len(data) - self.num_kept_records
         if offset > 0:
-            data['query_history'] = data['query_history'][offset:]
+            return data[offset:]
+        return data
 
 
 def create_instance(settings, db):
