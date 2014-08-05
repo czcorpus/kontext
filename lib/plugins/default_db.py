@@ -26,6 +26,7 @@ high concurrency (hundreds or more simultaneous users).
 import threading
 import json
 import sqlite3
+import time
 
 thread_local = threading.local()
 
@@ -49,15 +50,16 @@ class DefaultDb(object):
 
     def _load_raw_data(self, path):
         cursor = self._conn().cursor()
-        cursor.execute('SELECT value FROM data WHERE key = ?', (path,))
+        cursor.execute('SELECT value, updated FROM data WHERE key = ?', (path,))
         ans = cursor.fetchone()
         if ans:
-            return ans[0]
+            return ans
         return None
 
     def _save_raw_data(self, data, path):
         cursor = self._conn().cursor()
-        cursor.execute('INSERT OR REPLACE INTO data (key, value) VALUES (?, ?)', (path, data))
+        cursor.execute('INSERT OR REPLACE INTO data (key, value, updated) VALUES (?, ?, ?)',
+                       (path, data, int(time.time())))
         self._conn().commit()
 
     def load(self, key, default=None):
@@ -73,7 +75,11 @@ class DefaultDb(object):
         """
         raw_data = self._load_raw_data(key)
         if raw_data is not None:
-            return json.loads(raw_data)
+            data = json.loads(raw_data[0])
+            if type(data) is dict:
+                data['__timestamp__'] = raw_data[1]
+                data['__key__'] = key
+            return data
         return default
 
     def save(self, data, key):
@@ -85,6 +91,18 @@ class DefaultDb(object):
         key -- an access key
         """
         self._save_raw_data(json.dumps(data), key)
+
+    def remove(self, key):
+        """
+        Deletes data with passed access key
+
+        arguments:
+        key -- an access key
+        """
+        conn = self._conn()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM data WHERE key = ?', (key,))
+        conn.commit()
 
     def exists(self, key):
         """
@@ -100,15 +118,28 @@ class DefaultDb(object):
         cursor.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,))
         return cursor.fetchone()[0] > 0
 
-    def all_with_key_prefix(self, prefix):
+    def all_with_key_prefix(self, prefix, oldest_first=False, limit=None):
         """
         Finds all the values with keys starting with 'prefix'
         """
         ans = []
         cursor = self._conn().cursor()
-        cursor.execute('SELECT value FROM data WHERE key LIKE ?', (prefix + '%',))
+        params = [prefix + '%']
+
+        sql = 'SELECT value, key, updated FROM data WHERE key LIKE ?'
+        if oldest_first:
+            sql += ' ORDER by updated'
+        else:
+            sql += ' ORDER by key'
+        if limit is not None:
+            sql += ' LIMIT ?'
+            params.append(limit)
+        cursor.execute(sql, tuple(params))
         for item in cursor.fetchall():
-            ans.append(json.loads(item[0]))
+            data = json.loads(item[0])
+            data['__timestamp__'] = item[2]
+            data['__key__'] = item[1]
+            ans.append(data)
         return ans
 
 
