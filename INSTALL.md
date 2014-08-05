@@ -49,8 +49,8 @@ Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) fo
 Please always keep in mind to have only *public* directory accessible by web clients to prevent them viewing
 configuration files, source code and other sensitive data.
 
-Plug-in approach
-----------------
+Plug-ins
+--------
 
 Because it is impossible to implement KonText in such a way that fits all the possible requirements in terms of
 integrability into existing information systems, some parts of the application are implemented as plug-ins with
@@ -60,8 +60,24 @@ For example, if you have an existing user database or if you do not want to both
 you can easily implement your own version of the *auth* plug-in. If you for example want to store user session data to
 files instead of a database, all you have to do is to rewrite the *sessions* plug-in appropriately.
 
-You can start by exploring plug-ins we use in our institute - they are included in the *plug-ins* directory and have
-*ucnk_* prefix.
+You can start by exploring prepackaged plug-ins located in the *lib/plugins* directory. To make clear which methods
+are required it is advisable to explore and inherit from abstract plug-in classes in *lib/plugins/abstract* directory.
+
+### The fastest way to make the plug-ins work
+
+KonText comes with two prepackaged plug-in series.
+
+1. modules with prefix *ucnk_*
+    * they fit specific needs of the Institute of the Czech National Corpus
+    * most likey they cannot be used directly in your specific environment but you can still explore them to find out how
+    the thing works
+2. modules with prefix *default_*
+    * they provide a complete, working set of plugins needed to run KonText with all the features enabled
+    * the only 3rd party dependency is a working [sqlite3](http://www.sqlite.org/) installation and an appropriate
+    [Python module](https://pypi.python.org/pypi/pysqlite)
+
+The only thing to do when using *default_* plug-ins is to properly configure KonText. You can start with the
+*config-sample.xml* file which has *default_* plugins set already.
 
 
 ### Client-side implementation notes
@@ -221,11 +237,7 @@ def create_instance(...):
 
 ### The "auth" plug-in
 
-The application expects you to provide a custom implementation of authentication module. If you want to test the
-it without (almost) any programming you can use provided *dummy_auth.py* module which authenticates any user
-and always returns the same list of corpora (you probably want to set your own list).
-
-Authentication object is expected to implement the following methods:
+Authentication plug-in object is expected to implement the following methods:
 
 ```python
 def validate_user(self, username, password):
