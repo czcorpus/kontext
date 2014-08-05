@@ -25,7 +25,6 @@ required config.xml entries:
 ...
     <conc_persistence>
         <module>default_conc_persistence</module>
-        <data_path extension-by="default">[path to a directory where data will be stored (multiple files)]</data_path>
     </conc_persistence>
 ...
 </plugins>
@@ -34,8 +33,6 @@ required config.xml entries:
 import hashlib
 import time
 import re
-import os
-import cPickle
 
 from abstract.conc_persistence import AbstractConcPersistence
 
@@ -83,20 +80,11 @@ class ConcPersistence(AbstractConcPersistence):
     This class stores user's queries in their internal form (see conccgi.q attribute).
     """
 
-    def __init__(self, conf):
-        self.data_path = conf.get('plugins', 'conc_persistence').get('default:data_path')
+    def __init__(self, db):
+        self.db = db
 
-    def _mk_data_path(self, code):
-        return '%s/%s.pkl' % (self.data_path, code)
-
-    def _load_data(self, data_id):
-        path = self._mk_data_path(data_id)
-        if os.path.exists(path):
-            return cPickle.load(open(path, 'rb'))
-        return None
-
-    def _save_data(self, data, data_id):
-        cPickle.dump(data, open(self._mk_data_path(data_id), 'wb'))
+    def _mk_key(self, code):
+        return 'concordance-%s' % (code, )
 
     def is_valid_id(self, data_id):
         """
@@ -118,7 +106,7 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        return self._load_data(data_id)
+        return self.db.load(self._mk_key(data_id))
 
     def store(self, user_id, curr_data, prev_data=None):
         """
@@ -139,7 +127,7 @@ class ConcPersistence(AbstractConcPersistence):
             data_id = mk_short_id('%s' % time_created)
             curr_data['id'] = data_id
 
-            self._save_data(curr_data, data_id)
+            self.db.save(curr_data, self._mk_key(data_id))
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
@@ -147,8 +135,8 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
-def create_instance(settings, db_provider):
+def create_instance(settings, db):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(settings)
+    return ConcPersistence(db)
