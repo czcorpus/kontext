@@ -51,6 +51,9 @@ class QueryStorage(AbstractQueryStorage):
     def _current_timestamp(self):
         return int(time.time())
 
+    def _mk_key(self, user_id):
+        return 'query_history-user-%04d' % user_id
+
     def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
         stores information about a query
@@ -63,8 +66,8 @@ class QueryStorage(AbstractQueryStorage):
         query_type -- an identification of the query (iquery, cql, lemma,...)
         params -- additional parameters of the query
         """
-        data = self.db.load(user_id)
-        data['query_history'].append({
+        data = self.db.load(self._mk_key(user_id), [])
+        data.append({
             'corpname': corpname,
             'subcorpname': subcorpname,
             'query': query,
@@ -74,7 +77,7 @@ class QueryStorage(AbstractQueryStorage):
         })
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(data)
-        self.db.save(data, user_id)
+        self.db.save(data, self._mk_key(user_id))
 
     def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
         """
@@ -90,7 +93,7 @@ class QueryStorage(AbstractQueryStorage):
         limit -- how many rows will be selected
         """
 
-        data = self.db.load(user_id)['query_history']
+        data = self.db.load(self._mk_key(user_id), [])
 
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]

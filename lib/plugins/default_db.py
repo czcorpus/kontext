@@ -15,22 +15,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A simple pickle-based implementation of a persistence mechanism
-used by some of 'default_' modules. The plug-in stores only user-related
-information (credentials, query history, settings). Each user has
-her own pickle-encoded file. Files are accessed by user_id. Becase
-of Bonito2-inherited code, it is also necessary to be able to search
-by username. The plug-in creates a simple index for this purpose.
+A simple implementation of a persistence mechanism
+used by some of 'default_' modules. It key->value storage only but it is possible
+to search by a key prefix.
 
 Please note that this solution is not suitable for environments with
-hundreds or more concurrent users.
+high concurrency (hundreds or more simultaneous users).
 """
 
-import cPickle
-import os
-import logging
+import threading
+import json
+import sqlite3
 
-from plugins import PluginException
+thread_local = threading.local()
 
 
 class DefaultDb(object):
@@ -40,92 +37,78 @@ class DefaultDb(object):
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        self.data_root_path = conf.get('default:data_dir')
-        index_path = self._mk_index_path()
-        if os.path.exists(index_path):
-            self._index = cPickle.load(open(index_path, 'rb'))
-        else:
-            self._index = None  # username -> id index
+        self.conf = conf
 
-    def _mk_data_path(self, user_id):
-        return '%s/user-%004d.pkl' % (self.data_root_path, user_id)
-
-    def _mk_index_path(self):
-        return '%s/username_idx.pkl' % self.data_root_path
-
-    def _load_data(self, path):
-        if os.path.exists(path):
-            return cPickle.load(open(path, 'rb'))
-        else:
-            raise PluginException('User database %s not defined.' % path)
-
-    def _save_data(self, data, path):
-        return cPickle.dump(data, open(path, 'wb'))
-
-    def load(self, user_id):
+    def _conn(self):
         """
-        Loads user data. It should always contain 'user', 'settings' and 'query_history' keys.
+        Returns thread-local connection
+        """
+        if not hasattr(thread_local, 'conn'):
+            thread_local.conn = sqlite3.connect(self.conf.get('default:db_path'))
+        return thread_local.conn
+
+    def _load_raw_data(self, path):
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT value FROM data WHERE key = ?', (path,))
+        ans = cursor.fetchone()
+        if ans:
+            return ans[0]
+        return None
+
+    def _save_raw_data(self, data, path):
+        cursor = self._conn().cursor()
+        cursor.execute('INSERT OR REPLACE INTO data (key, value) VALUES (?, ?)', (path, data))
+        self._conn().commit()
+
+    def load(self, key, default=None):
+        """
+        Loads data from key->value storage
 
         arguments:
-        user_id -- a numeric ID of a user
+        key -- an access key
+        default -- optional value to be returned in case no data is found under the 'key'
 
         returns:
-        a dictionary containing all user's data as found in his file
+        a dictionary containing respective data
         """
-        path = self._mk_data_path(user_id)
-        return self._load_data(path)
+        raw_data = self._load_raw_data(key)
+        if raw_data is not None:
+            return json.loads(raw_data)
+        return default
 
-    def save(self, data, user_id):
+    def save(self, data, key):
         """
-        Saves user data.
-
-        arguments:
-        data -- a dictionary containing actual user's data
-        user_id -- a numeric ID of a user
-        """
-        path = self._mk_data_path(user_id)
-        self._save_data(data, path)
-
-    def exists(self, user_id):
-        """
-        Tests whether user file exists.
+        Saves 'data' with 'key'.
 
         arguments:
-        user_id -- a numeric ID of a user
+        data -- a dictionary containing data to be saved
+        key -- an access key
+        """
+        self._save_raw_data(json.dumps(data), key)
+
+    def exists(self, key):
+        """
+        Tests whether the 'key' exists in the storage
+
+        arguments:
+        key -- an access key
 
         returns:
         boolean answer
         """
-        return os.path.exists(self._mk_data_path(user_id))
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,))
+        return cursor.fetchone()[0] > 0
 
-    def find_by_username(self, username):
+    def all_with_key_prefix(self, prefix):
         """
-        Searches for user's data by his username. We assume that username is unique.
-
-        arguments:
-        username -- log-in username of a user
-
-        returns:
-        a dictionary containing user data or None if nothing is found
+        Finds all the values with keys starting with 'prefix'
         """
-        if self._index is None or username not in self._index:
-            self._index = {}
-            for item in self._get_all():
-                self._index[item['user']['username']] = item['user']['id']
-            cPickle.dump(self._index, open(self._mk_index_path(), 'wb'))
-
-        item_id = self._index[username]
-        return self.load(item_id)
-
-    def _get_all(self):
         ans = []
-        for item in os.listdir(self.data_root_path):
-            abs_path = '%s/%s' % (self.data_root_path, item)
-            try:
-                data = cPickle.load(open(abs_path, 'rb'))
-                ans.append(data)
-            except Exception as e:
-                logging.getLogger(__name__).warning(e)
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT value FROM data WHERE key LIKE ?', (prefix + '%',))
+        for item in cursor.fetchall():
+            ans.append(json.loads(item[0]))
         return ans
 
 

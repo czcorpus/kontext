@@ -25,6 +25,9 @@ class SettingsStorage(object):
         """
         self.db = db
 
+    def _mk_key(self, user_id):
+        return 'settings-user-%04d' % user_id
+
     def save(self, user_id, data):
         """
         saves user settings
@@ -33,9 +36,7 @@ class SettingsStorage(object):
         user_id -- a numeric ID of a user
         data -- a dictionary containing user data
         """
-        user_data = self.db.load(user_id)
-        user_data['settings'] = data
-        self.db.save(user_data, user_id)
+        self.db.save(data, self._mk_key(user_id))
 
     def load(self, user_id, current_settings=None):
         """
@@ -48,9 +49,9 @@ class SettingsStorage(object):
         returns:
         new or updated settings dictionary provided as a parameter
         """
-        user_data = self.db.load(user_id)
-        data = user_data['settings']
-
+        data = self.db.load(self._mk_key(user_id))
+        if data is None:
+            data = {}
         if current_settings is not None:
             current_settings.update(data)
             return current_settings

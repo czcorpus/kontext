@@ -28,6 +28,15 @@ class DefaultAuthHandler(AbstractAuth):
     def __init__(self, db, sessions):
         self.db = db
         self.sessions = sessions
+        index_path = self._mk_index_path()
+        curr_index = self.db.load(index_path)
+        self._index = curr_index if curr_index is not None else {}
+
+    def _mk_index_path(self):
+        return 'user-idx'
+
+    def _mk_user_key(self, user_id):
+        return 'user-%04d' % user_id
 
     def validate_user(self, username, password):
         """
@@ -38,7 +47,7 @@ class DefaultAuthHandler(AbstractAuth):
         returns
         True on success, False on failure.
         """
-        user_data = self.db.find_by_username(username)['user']
+        user_data = self.find_user(username)
         pwd_hash = hashlib.md5(password).hexdigest()
 
         if user_data and user_data['username'] == username and user_data['pwd_hash'] == pwd_hash:
@@ -73,7 +82,7 @@ class DefaultAuthHandler(AbstractAuth):
         corplist : list
             list of corpora names (sorted alphabetically)
         """
-        data = self.db.find_by_username(user)['user']
+        data = self.find_user(user)
         return data['corpora']
 
     def is_administrator(self):
@@ -109,6 +118,25 @@ class DefaultAuthHandler(AbstractAuth):
 
     def get_logout_url(self, root_url):
         return '%slogoutx' % root_url
+
+    def find_user(self, username):
+        """
+        Searches for user's data by his username. We assume that username is unique.
+
+        arguments:
+        username -- log-in username of a user
+
+        returns:
+        a dictionary containing user data or None if nothing is found
+        """
+        if self._index is None or username not in self._index:
+            self._index = {}
+            for item in self.db.all_with_key_prefix('user-'):
+                self._index[item['username']] = item['id']
+            self.db.save(self._index, 'username-idx')
+
+        item_id = self._index[username]
+        return self.db.load(self._mk_user_key(item_id))
 
 
 def create_instance(conf, sessions, db):
