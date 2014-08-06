@@ -16,39 +16,43 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+A collection of utilities to work with corpora grammatical tags. The most important
+service here is the TagVariantLoader which provides a backend for tag writing auto-complete
+functionality.
+"""
+
 import settings
 import os
 import re
 import json
-import logging
 import time
 from lxml import etree
 
 from translation import ugettext as _
 
 
-class TagGeneratorException(Exception):
+class TagHelperException(Exception):
     """
-    General error for taghelper module
+    General error for the module
     """
     pass
 
 
 def create_tag_variants_file_path(corpus_name):
     """
-    Generates full path (full = as defined in the main configuration file)
-    to the file listing all existing tag variants within for provided corpus name
+    Generates a full path (full = as defined in the main configuration file)
+    to the file which contains all the existing tag variants for the passed
+    corpus name
 
-    Parameters
-    ----------
-    corpus_name : str
+    arguments:
+    corpus_name -- str
 
-    Returns
-    -------
-    path : str
+    returns:
+    a path to a specific cached file
     """
     if not corpus_name:
-        raise TagGeneratorException('Empty corpus name')
+        raise TagHelperException('Empty corpus name')
     return '%s/%s' % (settings.get('corpora', 'tags_src_dir'), corpus_name)
 
 
@@ -56,13 +60,11 @@ def tag_variants_file_exists(corpus_name):
     """
     Tests whether the path to the provided corpus_name exists
 
-    Parameters
-    ----------
-    corpus_name : str
+    arguments:
+    corpus_name -- str
 
-    Returns
-    -------
-    answer : bool
+    returns:
+    a boolean value
     """
     if corpus_name:
         return os.path.exists(create_tag_variants_file_path(corpus_name))
@@ -86,7 +88,7 @@ def load_tag_descriptions(path, tagset_name, lang):
     xml = etree.parse(open(path))
     root = xml.find('corpora/tagsets/tagset[@name="%s"]' % tagset_name)
     if root is None:
-        raise TagGeneratorException('Failed to find tagset %s' % tagset_name)
+        raise TagHelperException('Failed to find tagset %s' % tagset_name)
 
     num_tag_pos = int(root.attrib['num_pos'])
     values = [None] * num_tag_pos
@@ -126,6 +128,10 @@ def load_tag_descriptions(path, tagset_name, lang):
 
 class TagVariantLoader(object):
     """
+    A backend for tag writing auto-complete, interactive tag writing widgets etc.
+    Please note that values in config.xml/corpora/tags_cache_dir are cached without
+    specific expiration time. It means that any data update must be followed by
+    manual cache clean-up.
     """
 
     spec_char_replacements = (
@@ -158,8 +164,20 @@ class TagVariantLoader(object):
 
     def get_initial_values(self):
         """
-        Loads all values as needed to initialize tag-builder widget.
-        Values are cached forever into a JSON file.
+        Loads all values as needed to initialize tag-builder widget for the current corpus.
+        It means for any tag position all possible values must be returned. Collected
+        data are cached forever as a JSON file.
+
+        returns:
+        a JSON string with the following structure:
+        {
+            "labels" : [label-0, label-1,..., label-N],
+            "tags" : [
+                [ [value-0-0, label-0-0], [value-0-1, label-0-1], ...],
+                [ [value-1-0, label-1-0], [value-1-0, label-1-1], ...],
+                ...
+            ]
+        }
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.__class__.spec_char_replacements)
@@ -215,20 +233,16 @@ class TagVariantLoader(object):
 
     def calculate_variant(self, required_pattern):
         """
-        Returns all tag variants in empty positions for a provided tag pattern.
+        Returns all tag variants in unspecified positions for a provided tag pattern.
         I.e. - if you enter 'A.B..' then all vectors 'v' with v[0] = A and v[2] = B
         will be returned.
 
-        Parameters
-        ----------
-        required_pattern : str
-                           tag pattern (regular expression)
+        arguments:
+        required_pattern -- searched tag pattern (regular expression)
 
-        Returns
-        -------
-        variants : dict
-                   a dictionary where keys represent tag-string position and values are lists of
-                   tuples containing pairs 'ID, description'
+        returns:
+        a dictionary where keys represent tag-string position and values are lists of
+        tuples (ID, description)
         """
         tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
         item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
