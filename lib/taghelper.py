@@ -166,6 +166,8 @@ class TagVariantLoader(object):
         tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
         item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
 
+        translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
+
         if os.path.exists(path) \
                 and time.time() - os.stat(path).st_ctime > settings.get_int('cache', 'clear_interval'):
             os.unlink(path)
@@ -189,9 +191,8 @@ class TagVariantLoader(object):
                     if line[i] == '-':
                         ans[i].add(('-', ''))
                     elif i < len(tagset['values']):
-                        translation_table = dict(tagset['values'][i])
-                        if line[i] in translation_table:
-                            ans[i].add((value, '%s - %s' % (line[i], translation_table[line[i]])))
+                        if line[i] in translation_table[i]:
+                            ans[i].add((value, '%s - %s' % (line[i], translation_table[i][line[i]])))
 
             ans_sorted = []
             for i in range(len(ans)):
