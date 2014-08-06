@@ -69,42 +69,45 @@ def tag_variants_file_exists(corpus_name):
     return False
 
 
-def load_tag_descriptions(path, lang):
+def load_tag_descriptions(path, tagset_name, lang):
     """
-    Parameters
-    ----------
-    path : str
-       path to the XML file containing tag descriptions
+    arguments:
+    path -- path to an XML file containing tag descriptions
+    tagset_name -- an identifier of a tagset (as used in <tagset name="...">)
+    lang -- requested language (if not found then EN version is returned)
 
-    lang : str
-       requested language (if not found then EN version is returned)
-
-    Returns
-    -------
-    2-tuple where 1st item is a dictionary with key = "tag position index"
-    and value = list of 2-tuples (attribute ID, description). 2nd item
-    is a dictionary with key = "tag position index" and value is its description
+    returns:
+    a dictionary containing three keys:
+      * 'values' : [a list (= positions) of lists (= possible values) of 2-tuples (value and description)]
+      * 'labels' : [a list of labels for all the positions]
+      * 'num_pos' : [number of tagset positions]
     """
     lang = lang.split('_')[0]
     xml = etree.parse(open(path))
-    root = xml.find('corpora/tagsets')
-    ans = [None] * len(root)
-    labels = [None] * len(root)
+    root = xml.find('corpora/tagsets/tagset[@name="%s"]' % tagset_name)
+    if root is None:
+        raise TagGeneratorException('Failed to find tagset %s' % tagset_name)
+
+    num_tag_pos = int(root.attrib['num_pos'])
+    values = [None] * num_tag_pos
+    labels = [None] * num_tag_pos
+    undefined_indices = set(range(num_tag_pos))
 
     for item in root:
-        idx = int(item.attrib['position'])
-        ans[idx] = []
+        idx = int(item.attrib['index'])
+        undefined_indices.remove(idx)
+        values[idx] = []
         for v in item:
             if v.tag == 'value':
                 translations = {}
                 for d in v:
                     translations[d.attrib['lang']] = d.text
                 if lang in translations:
-                    ans[idx].append((v.attrib['id'], translations[lang]))
+                    values[idx].append((v.attrib['id'], translations[lang]))
                 elif 'en' in translations:
-                    ans[idx].append((v.attrib['id'], translations['en']))
+                    values[idx].append((v.attrib['id'], translations['en']))
                 else:
-                    ans[idx].append((v.attrib['id'], '[%s]' % _('no description')))
+                    values[idx].append((v.attrib['id'], '[%s]' % _('no description')))
             elif v.tag == 'label':
                 translations = {}
                 for d in v:
@@ -115,7 +118,10 @@ def load_tag_descriptions(path, lang):
                     labels[idx] = translations['en']
                 else:
                     labels[idx] = None
-    return ans, labels
+    for item in undefined_indices:
+        values[item] = []
+        labels[item] = None
+    return dict(values=values, labels=labels, num_pos=num_tag_pos)
 
 
 class TagVariantLoader(object):
@@ -131,17 +137,18 @@ class TagVariantLoader(object):
         ('!', r'\!')
     )
 
-    def __init__(self, corp_name, num_tag_pos, lang):
+    def __init__(self, corpus_name, tagset_name, lang):
         """
         arguments:
-        corp_name -- name/id of the corpus
-        num_tag_pos -- length of tag string
+        corpus_name -- name/id of a corpus
+        tagset_name -- name/id of a tagset
         lang -- two-letter language code (cs, en, de,...)
         """
-        self.corp_name = corp_name
-        self.num_tag_pos = num_tag_pos
-        self.tags_file = open(create_tag_variants_file_path(corp_name))
-        self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.corp_name)
+        self.corpus_name = corpus_name
+        self.tagset_name = tagset_name
+        self.variants_file = open(create_tag_variants_file_path(self.corpus_name))
+        self.metadata_file = settings.conf_path()  # TODO
+        self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.tagset_name)
         self.lang = lang
 
     def get_variant(self, selected_tags):
@@ -156,8 +163,8 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        translations, label_table = load_tag_descriptions(settings.conf_path(), self.lang)
-        item_sequences = tuple([tuple([item[0] for item in position]) for position in translations])
+        tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
+        item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
 
         if os.path.exists(path) \
                 and time.time() - os.stat(path).st_ctime > settings.get_int('cache', 'clear_interval'):
@@ -174,21 +181,18 @@ class TagVariantLoader(object):
                 tst_path += '%s/' % s
                 if not os.path.exists(tst_path):
                     os.mkdir(tst_path, 0775)
-            ans = [set() for i in range(self.num_tag_pos)]
-            for line in self.tags_file:
-                line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
-                for i in range(self.num_tag_pos):
+            ans = [set() for i in range(tagset['num_pos'])]
+            for line in self.variants_file:
+                line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
+                for i in range(tagset['num_pos']):
                     value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
-                    elif i < len(translations):
-                        translation_table = dict(translations[i])
+                    elif i < len(tagset['values']):
+                        translation_table = dict(tagset['values'][i])
                         if line[i] in translation_table:
                             ans[i].add((value, '%s - %s' % (line[i], translation_table[line[i]])))
-                    else:
-                        ans[i].add((value, line[i]))
-                        logging.getLogger(__name__).warn('Tag value import - item %s at position %d not found in '
-                                                         'translation table' % (line[i], i))
+
             ans_sorted = []
             for i in range(len(ans)):
                 cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
@@ -196,9 +200,9 @@ class TagVariantLoader(object):
                 ans_sorted.append(sorted(ans[i], cmp=cmp_by_seq))
 
             for i in range(len(ans_sorted)):
-                if len(ans_sorted[i]) == 1:
+                if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
                     ans_sorted[i] = ()
-            data = json.dumps({'tags': ans_sorted, 'labels': label_table})
+            data = json.dumps({'tags': ans_sorted, 'labels': tagset['labels']})
             with open(path, 'w') as f:
                 f.write(data)
                 f.close()
@@ -225,14 +229,14 @@ class TagVariantLoader(object):
                    a dictionary where keys represent tag-string position and values are lists of
                    tuples containing pairs 'ID, description'
         """
-        translations = load_tag_descriptions(settings.conf_path(), self.lang)[0]
-        item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in translations])
+        tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
+        item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
         patt = re.compile(required_pattern)
         matching_tags = []
-        for line in self.tags_file:
-            line = line.strip() + (self.num_tag_pos - len(line.strip())) * '-'
+        for line in self.variants_file:
+            line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
             if patt.match(line):
                 matching_tags.append(line)
 
@@ -240,8 +244,8 @@ class TagVariantLoader(object):
         for item in matching_tags:
             tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
             for i in range(len(tag_elms)):
-                value = ''.join(map(lambda x : char_replac_tab[x] if x in char_replac_tab else x , item[i]))
-                translation_table = dict(translations[i])
+                value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
+                translation_table = dict(tagset['values'][i])
                 if i not in ans:
                     ans[i] = set()
                 if item[i] == '-':

@@ -419,7 +419,7 @@ necessarily). Enclosed version of the plug-in requires the following format:
 <corplist title="">
   <corplist title="Synchronic Corpora">
      <corplist title="SYN corpora">
-       <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" num_tag_pos="16" />
+       <corpus id="SYN2010" web="http://www.korpus.cz/syn.php" sentence_struct="s" tagset="czech_tagset" />
        ... etc...
      </corplist>
      <corplist title="Diachronic Corpora">
@@ -443,7 +443,7 @@ Attributes for the **corpus** element:
 |-----------------|--------------------------------------------------------------------|
 | id              | name of the corpus (as used within registry files)                 |
 | sentence_struct | structure delimiting sentences                                     |
-| num_tag_pos     | number of character positions in a tag                             |
+| tagset          | (optional) tagset used by this corpus                              |
 | web             | (optional) external link containing information about the corpus   |
 
 Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured

@@ -766,7 +766,6 @@ class ConcCGI(CGIPublisher):
                                               ('lpos', self.lpos),
                                               ('usesubcorp', self.usesubcorp),
                                               ])
-        result['num_tag_pos'] = corp_conf_info.get('num_tag_pos', 0)
         result['citation_info'] = corp_conf_info.get('citation_info', '')
 
     def _setup_optional_plugins_js(self, result):
