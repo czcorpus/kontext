@@ -84,11 +84,11 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		<corpus id="ORWELL" sentence_struct="s" num_tag_pos="16"
+		<corpus id="ORWELL" sentence_struct="s" tagset="czech_tagset"
                 metadata="/var/local/corpora/orwell.db" bib_attr="opus.title" />
 	    </corplist>
             <corplist title="Foreign corpora">
-                <corpus id="SUSANNE" sentence_struct="p" num_tag_pos="8"  />
+                <corpus id="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
 		        <corpus id="BNC" sentence_struct="s">
                     <reference>
                         <default>main bib. entry...</default>
@@ -97,7 +97,7 @@
                     </reference>
                 </corpus>
             </corplist>
-            <corpus id="spoken_stuff" sentence_struct="p" num_tag_pos="16" speech_segment="seg.soundfile" />
+            <corpus id="spoken_stuff" sentence_struct="p" tagset="czech_tagset" speech_segment="seg.soundfile" />
         </corplist>
 
         <tagsets>

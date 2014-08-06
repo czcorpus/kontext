@@ -14,12 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-try:
-    from markdown import markdown
-except ImportError:
-    markdown = lambda s: s
-from lxml import etree
-
 """
 Required config.xml/plugins entries:
 
@@ -29,6 +23,12 @@ Required config.xml/plugins entries:
     <root_elm_path>[an XPath query leading to a root element where configuration can be found]</root_elm_path>
 </corptree>
 """
+
+try:
+    from markdown import markdown
+except ImportError:
+    markdown = lambda s: s
+from lxml import etree
 
 
 def translate_markup(s):
@@ -91,14 +91,13 @@ class CorpTree(object):
             elif item.tag == 'corpus':
                 web_url = item.attrib['web'] if 'web' in item.attrib else None
                 sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
-                num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
 
                 ans = {
                     'id': item.attrib['id'].lower(),
                     'path': path,
                     'web': web_url,
                     'sentence_struct': sentence_struct,
-                    'num_tag_pos': num_tag_pos,
+                    'tagset': item.attrib.get('tagset', None),
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
