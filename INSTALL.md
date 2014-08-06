@@ -129,21 +129,21 @@ def setup(self, **kwargs):
 
 ### Notes for developers
 
-Plug-ins are configured in *config.xml* under */kontext/global/plug-ins*. Although three different names for different
+Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different
 contexts can be used for a single plug-in in theory (1 - module with plug-in implementation, 2 - dynamic module attached to
-the *plug-ins' package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
+the *plugins* package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
 *corpus_enhancer* (i.e. the file is *corpus_enhancer.py*) then the respective part of *config.xml* will look like this:
 
 ```xml
 <kontext>
   <global>
-    <plug-ins>
+    <plugins>
       <corpus_enhancer>
         <module>corpus_enhancer</module>
         ... additional configuration ...
       </corpus_enhancer>
       ...
-    </plug-ins>
+    </plugins>
     ...
   </global>
 </kontext>
@@ -152,7 +152,7 @@ the *plug-ins' package, 3 - config.xml tag) a good practice is to use a single n
 And the registration (which defines dynamically created module) in *app.py* will look like this:
 
 ```python
-optional_plug-ins = (
+optional_plugins = (
     # ... existing KonText plug-ins ...
     ('corpus_enhancer', (dependency1, dependency2,...))
 )
@@ -160,16 +160,16 @@ optional_plug-ins = (
 
 When implementing an optional plug-in, you can make it dependent on both default and optional plug-ins. These dependencies
 are passed as arguments to your *factory function*. The only thing to be aware of is that optional plug-in dependencies
-in *optional_plug-ins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plug-ins*)
+in *optional_plugins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plugins*)
 because when Python interpreter reads the optional plug-ins configuration no optional plug-in is instantiated yet.
 
-In the following example where we define 'my_plug-in',  *settings* is a required plug-in (and thus already loaded) and
-*some_optional_plug-in* is an optional plug-in which cannot be guaranteed to be loaded yet.
+In the following example where we define 'my_plugin',  *settings* is a required plug-in (and thus already loaded) and
+*some_optional_plugin* is an optional plug-in which cannot be guaranteed to be loaded yet.
 
 ```python
-optional_plug-ins = (
+optional_plugins = (
         # ...
-        ('my_plug-in', ('some_optional_plug-in', settings)),
+        ('my_plugin', ('some_optional_plugin', settings)),
         # ...
 )
 ```
@@ -189,7 +189,7 @@ Following plug-ins are mandatory:
 | id               | description                                                                  | client-side code |
 |------------------|------------------------------------------------------------------------------|------------------|
 | auth             | user authentication                                                          | No               |
-| db               | provides a connection to a database (if required by other plug-ins)           | No               |
+| db               | provides a connection to a database (if required by other plug-ins)          | No               |
 | query_storage    | stores recent queries entered by users and allows their reopening            | No               |
 | sessions         | handles user sessions (i.e. between-requests persistence)                    | No               |
 | settings_storage | stores users' settings to a persistent storage                               | No               |
@@ -468,11 +468,11 @@ Because of its specific nature, the "appbar" plug-in is instantiated in a slight
 Module your plug-in resides in is expected to implement following factory method
 
 ```python
-def create_instance(conf, auth_plug-in):
+def create_instance(conf, auth_plugin):
     pass
 ```
 
-This means that even if your *appbar* implementation does not need an *auth_plug-in* instance you still must implement
+This means that even if your *appbar* implementation does not need an *auth_plugin* instance you still must implement
 compatible *create_instance* method:
 
 ```python
@@ -490,7 +490,7 @@ def get_contents(self, cookies, current_lang, return_url=None):
 
 *cookies* is a *BonitoCookie(Cookie.BaseCookie)* instance providing dictionary-like access to cookie values,
 *current_lang* is a string representing selected language (e.g. en_US, cs_CZ). In general *cookies* is expected to
-contain a ticket of some kind you can validate via your *auth_plug-in* and *current_lang* is useful if you want to
+contain a ticket of some kind you can validate via your *auth_plugin* and *current_lang* is useful if you want to
 notify your toolbar/app-bar/whatever content provider which language is currently in use. Argument *return_url*
 serves in case user leaves KonText to some of *appbar*'s pages and these pages are able to navigate him back to
 KonText (typically, user logs in and expects to be redirected back).
@@ -693,7 +693,7 @@ Sample configuration file **config.sample.xml** provides more examples.
 
 | Xpath                                           | Description                                                       |
 |-------------------------------------------------|-------------------------------------------------------------------|
-| /kontext/plug-ins                                | This section contains a configuration of plug-ins. Each plug-in has its own subtree with a root element named with the name of the respective plug-in (e.g. *auth*, *db*, *getlang*). This element must contain at least a *module* element specifying the name of the Python package implementing the plug-in. See the *config.sample.xml* |
+| /kontext/plugins                                | This section contains a configuration of plug-ins. Each plug-in has its own subtree with a root element named with the name of the respective plug-in (e.g. *auth*, *db*, *getlang*). This element must contain at least a *module* element specifying the name of the Python package implementing the plug-in. See the *config.sample.xml* |
 
 
 ### Caching configuration
