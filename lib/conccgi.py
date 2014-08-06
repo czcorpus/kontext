@@ -19,7 +19,6 @@ from functools import partial
 import logging
 import inspect
 import urllib
-import re
 
 import corplib
 import conclib
