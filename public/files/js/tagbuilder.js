@@ -96,23 +96,17 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
     /**
      *
      * @param {string} corpusName
-     * @param {number} numTagPos
      * @param {MultiSelect} multiSelectComponent
      * @param {HTMLElement} hiddenElm
      * @param {HTMLElement} tagDisplay
      * @constructor
      */
-    function TagLoader(corpusName, numTagPos, multiSelectComponent, hiddenElm, tagDisplay) {
+    function TagLoader(corpusName, multiSelectComponent, hiddenElm, tagDisplay) {
 
         /**
          * Holds a corpus name for which this object is configured.
          */
         this.corpusName = corpusName;
-
-        /**
-         *
-         */
-        this.numTagPos = numTagPos;
 
         /**
          *
@@ -138,11 +132,6 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
          * Initial values for all tag positions used by this tag loader (always the same for a specific corpus)
          */
         this.initialValues = null;
-
-        /**
-         *
-         */
-        this.selectedValues = [];
 
         /**
          * List of patterns user gradually created
@@ -526,18 +515,6 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         $(this.hiddenElm).attr('value', this.formStatusToPlainText('.'));
     };
 
-    /**
-     *
-     * @param callback
-     */
-    TagLoader.prototype.initSelectedValues = function (callback) {
-        var i;
-
-        for (i = 0; i < this.numTagPos; i += 1) {
-            callback(this.selectedValues, i);
-        }
-    };
-
     // attach TagLoader to the library
     lib.TagLoader = TagLoader;
 
@@ -547,7 +524,6 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      *
      * @param {TooltipBox} box
      * @param {string} corpusName identifier of a corpus to be used along with this tag loader
-     * @param {Number} numOfPos number of positions in the tag string
      * @param multiSelectComponent
      * @param opt a dictionary with following keys:
      *     resetButton    : ID or element itself for the "reset" button
@@ -558,7 +534,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      *     widgetElement : HTMLElement where the widget is rendered
      * @return {TagLoader}
      */
-    lib.attachTagLoader = function (box, corpusName, numOfPos, multiSelectComponent, opt) {
+    lib.attachTagLoader = function (box, corpusName, multiSelectComponent, opt) {
         var tagLoader,
             hiddenElm,
             tagDisplay,
@@ -582,10 +558,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         hiddenElm = $(opt.hiddenElm).get(0);
         tagDisplay = $(opt.tagDisplay).get(0);
 
-        tagLoader = new TagLoader(corpusName, numOfPos, multiSelectComponent, hiddenElm, tagDisplay);
-        tagLoader.initSelectedValues(function (selectedValues, i) {
-            selectedValues[i] = '-';
-        });
+        tagLoader = new TagLoader(corpusName, multiSelectComponent, hiddenElm, tagDisplay);
 
         $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
         $(tagLoader.tagDisplay).empty().append('.*');
@@ -630,10 +603,9 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param opt.tagDisplayElement - element where tag value is written
      * @param opt.resetButtonElement - element representing the RESET function
      * @param multiSelectOpts {Object}
-     * @param numTagPos {Number}
      * @param {function} errorCallback
      */
-    lib.bindTextInputHelper = function (corpusName, triggerElement, numTagPos, opt, multiSelectOpts, errorCallback) {
+    lib.bindTextInputHelper = function (corpusName, triggerElement, opt, multiSelectOpts, errorCallback) {
         var prop;
 
         for (prop in opt) {
@@ -676,7 +648,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
                     }
                 };
 
-                lib.attachTagLoader(box, corpusName, numTagPos, msComponent, {
+                lib.attachTagLoader(box, corpusName, msComponent, {
                     tagDisplay : $(opt.tagDisplayElement),
                     resetButton : $(opt.resetButtonElement),
                     errorCallback : errorCallback,

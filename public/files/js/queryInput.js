@@ -38,7 +38,6 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         tagbuilder.bindTextInputHelper(
             corpName,
             triggerElm,
-            conf.numTagPos,
             {
                 inputElement: $(inputElm),
                 widgetElement: 'tag-widget',
