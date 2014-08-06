@@ -26,7 +26,7 @@ module.exports = function (grunt) {
             production: {
                 files: {
                     "public/files/css/kontext.min.css": [
-                        "public/files/css/bonito.less",
+                        "public/files/css/kontext.less",
                         "public/files/css/view.less",
                         "public/files/css/widgets.less"
                     ]
