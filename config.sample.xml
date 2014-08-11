@@ -84,12 +84,12 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		<corpus id="ORWELL" sentence_struct="s" tagset="czech_tagset"
+		<corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset"
                 metadata="/var/local/corpora/orwell.db" bib_attr="opus.title" />
 	    </corplist>
             <corplist title="Foreign corpora">
-                <corpus id="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
-		        <corpus id="BNC" sentence_struct="s">
+                <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
+		        <corpus ident="BNC" sentence_struct="s">
                     <reference>
                         <default>main bib. entry...</default>
                         <article>secondary bib. entry (e.g. a paper)</article>
@@ -97,20 +97,23 @@
                     </reference>
                 </corpus>
             </corplist>
-            <corpus id="spoken_stuff" sentence_struct="p" tagset="czech_tagset" speech_segment="seg.soundfile" />
+            <corpus ident="spoken_stuff" sentence_struct="p" tagset="czech_tagset" speech_segment="seg.soundfile" />
         </corplist>
 
         <tagsets>
-            <tagset position="0">
+            <tagset ident="default">
+            <position index="0">
                 <label>
                     <desc lang="en">Position 1</desc>
                     <desc lang="cs">Pozice 1</desc>
                 </label>
-                <value id="A">
+                <value ident="A">
                     <desc lang="en">adjective</desc>
                     <desc lang="cs">adjektivum (přídavné jméno)</desc>
                 </value>
                 <!-- ... etc ... -->
+            </position>
+            <!-- ... etc ... -->
             </tagset>
             <!-- ... etc ... -->
         </tagsets>
