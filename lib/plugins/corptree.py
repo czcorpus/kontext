@@ -15,6 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import cPickle
+import os
+import logging
 
 try:
     from docutils.core import publish_string
@@ -28,21 +30,34 @@ class Cache(object):
     cPickle-based key-value storage.
     Cache supports dict-like access to individual records (d = cache['foo'],
     cache['bar'] = ...).
+
+    arguments:
+    data_path -- path to a corptree XML file
+    last_sys_change -- a timestamp or a function returning a timestamp specifying
+    the last change in KonText (e.g. configuration update)
     """
-    def __init__(self, data_path):
+    def __init__(self, data_path, last_sys_change=None):
         """
         arguments:
         data_path -- path to a serialized cache data; if it does not exist then a new file is created
         """
         self.data_path = data_path
         self.data = {}
+        self.last_sys_change = last_sys_change if callable(last_sys_change) else lambda: last_sys_change
         try:
-            with open(self.data_path, 'rb') as f:
-                self.data = cPickle.load(f)
-                if type(self.data) is not dict:
-                    self.data = {}
-        except Exception:
-            pass
+            if self._cache_is_valid():
+                with open(self.data_path, 'rb') as f:
+                    self.data = cPickle.load(f)
+                    if type(self.data) is not dict:
+                        self.data = {}
+            else:
+                os.unlink(self.data_path)
+        except Exception as e:
+            logging.getLogger(__name__).warning(e)
+            self.data = {}
+
+    def _cache_is_valid(self):
+        return os.path.getmtime(self.data_path) >= self.last_sys_change()
 
     def save(self):
         """
@@ -226,7 +241,7 @@ def create_instance(conf):
         if cache_path:
             if not lang:
                 lang = 'en'
-            cache = Cache(cache_path % lang)
+            cache = Cache(cache_path % lang, last_sys_change=conf.get_mtime)
         return cache
 
     return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],

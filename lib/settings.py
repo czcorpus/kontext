@@ -24,6 +24,7 @@ from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
 _meta = {}  # contains data of attributes of XML elements representing configuration values
+_mtime = None  # a timestamp of file's modification time
 
 auth = None  # authentication module (this is set from the outside)
 
@@ -196,13 +197,21 @@ def load(conf_path='../config.xml'):
       path to the configuration XML file. This value can be
       overridden by an environment variable KONTEXT_CONF_PATH
     """
+    global _mtime
+
     if 'KONTEXT_CONF_PATH' in os.environ:
         conf_path = os.environ['KONTEXT_CONF_PATH']
     parse_config(conf_path)
 
+    _mtime = os.path.getmtime(conf_path)
+
     if get('corpora', 'manatee_registry'):
         os.environ['MANATEE_REGISTRY'] = get('corpora', 'manatee_registry')
     set('session', 'conf_path', conf_path)
+
+
+def get_mtime():
+    return _mtime
 
 
 def get_default_corpus(corplist):
