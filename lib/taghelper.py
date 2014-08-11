@@ -86,7 +86,7 @@ def load_tag_descriptions(path, tagset_name, lang):
     """
     lang = lang.split('_')[0]
     xml = etree.parse(open(path))
-    root = xml.find('corpora/tagsets/tagset[@name="%s"]' % tagset_name)
+    root = xml.find('corpora/tagsets/tagset[@ident="%s"]' % tagset_name)
     if root is None:
         raise TagHelperException('Failed to find tagset %s' % tagset_name)
 
@@ -105,11 +105,11 @@ def load_tag_descriptions(path, tagset_name, lang):
                 for d in v:
                     translations[d.attrib['lang']] = d.text
                 if lang in translations:
-                    values[idx].append((v.attrib['id'], translations[lang]))
+                    values[idx].append((v.attrib['ident'], translations[lang]))
                 elif 'en' in translations:
-                    values[idx].append((v.attrib['id'], translations['en']))
+                    values[idx].append((v.attrib['ident'], translations['en']))
                 else:
-                    values[idx].append((v.attrib['id'], '[%s]' % _('no description')))
+                    values[idx].append((v.attrib['ident'], '[%s]' % _('no description')))
             elif v.tag == 'label':
                 translations = {}
                 for d in v:

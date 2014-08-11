@@ -93,7 +93,7 @@ class CorpTree(object):
                 sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
 
                 ans = {
-                    'id': item.attrib['id'].lower(),
+                    'id': item.attrib['ident'].lower(),
                     'path': path,
                     'web': web_url,
                     'sentence_struct': sentence_struct,
