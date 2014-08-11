@@ -65,14 +65,21 @@ class CorpTree(object):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
+
+    arguments:
+    file_path -- path to an XML file containing corpora tree definition
+    root_xpath -- where to start the search for corpora tree in terms of an XML structure
+    cache_factory -- a function with parameter 'lang' which produces a language-dependent cache instance
+    (or None if not supported)
     """
 
-    def __init__(self, file_path, root_xpath, cache=None):
+    def __init__(self, file_path, root_xpath, cache_factory=None):
         self.lang = 'en'
         self.list = None
         self.file_path = file_path
         self.root_xpath = root_xpath
-        self.cache = cache
+        self.cache_factory = cache_factory
+        self.cache = None
 
     def _translate_markup(self, s):
         """
@@ -81,7 +88,7 @@ class CorpTree(object):
         if not s:
             return None
         html = publish_string(source=s, settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-                                     writer_name='html')
+                              writer_name='html')
         html = html[html.find('<body>')+6:html.find('</body>')].strip()
         html = html.decode('utf-8')
         return html
@@ -204,6 +211,7 @@ class CorpTree(object):
         some "late" information (like locales)
         """
         self.lang = kwargs.get('lang', None)
+        self.cache = self.cache_factory(self.lang)
         self._load()
 
 
@@ -212,8 +220,15 @@ def create_instance(conf):
     Interface function called by KonText creates new plugin instance
     """
     cache_path = conf.get('plugins', 'corptree').get('ucnk:cache_path', None)
-    cache = Cache(cache_path) if cache_path else None
+
+    def cache_factory(lang):
+        cache = None
+        if cache_path:
+            if not lang:
+                lang = 'en'
+            cache = Cache(cache_path % lang)
+        return cache
 
     return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],
                     root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
-                    cache=cache)
+                    cache_factory=cache_factory)
