@@ -24,11 +24,18 @@ Required config.xml/plugins entries:
 </corptree>
 """
 
+import threading
+
 try:
     from markdown import markdown
 except ImportError:
     markdown = lambda s: s
 from lxml import etree
+
+
+thread_local = threading.local()
+thread_local.lang = 'en'  # default language must be set
+thread_local.corplist = []
 
 
 def translate_markup(s):
@@ -47,8 +54,6 @@ class CorpTree(object):
     """
 
     def __init__(self, file_path, root_xpath):
-        self.lang = 'en'
-        self.list = None
         self.file_path = file_path
         self.root_xpath = root_xpath
 
@@ -58,8 +63,8 @@ class CorpTree(object):
         """
         ans = None
 
-        if self.lang:
-            lang = self.lang.split('_')[0]
+        if self._lang():
+            lang = self._lang().split('_')[0]
         else:
             lang = 'en'
         if 'title' in elm.attrib:
@@ -151,27 +156,65 @@ class CorpTree(object):
         """
         Loads data from a configuration file
         """
-        if self.list is None or force_load:
+        if len(self._list()) == 0 or force_load:
             data = []
             with open(self.file_path) as f:
                 xml = etree.parse(f)
                 root = xml.find(self.root_xpath)
                 if root is not None:
                     self._parse_corplist_node(root, data, path='/')
-            self.list = data
+            self._list(data)
+
+    def _lang(self, v=None):
+        """
+        Sets or gets UI language. Values are stored in a thread-local storage so
+        its ok to serve many clients with different languages via a single plug-in
+        instance.
+
+        arguments:
+        v -- (optional) if not None then current language is set to [v] else current
+        language is returned
+
+        returns:
+        current language if called in 'get mode'
+        """
+        if v is None:
+            return thread_local.lang
+        else:
+            thread_local.lang = v
+
+    def _list(self, v=None):
+        """
+        Sets or gets parsed data list.
+
+        arguments:
+        v -- (optional) if not None then current corpus list is set to the passed value else current
+        list is returned
+
+        returns:
+        current corpus list if called in 'get mode'
+        """
+        if v is None:
+            return thread_local.corplist
+        else:
+            thread_local.corplist = v
 
     def get(self):
         """
         Returns corpus tree data
         """
-        return self.list
+        return self._list()
 
     def setup(self, **kwargs):
         """
         Interface method expected by KonText if a module wants to be set-up by
-        some "late" information (like locales)
+        some "late" information (like locales).
+
+        Please note that each request calls this method on the same instance
+        which means that any client-specific data must be thread-local.
         """
-        self.lang = kwargs.get('lang', None)
+        self._lang(kwargs.get('lang', None))
+        self._list([])
         self._load()
 
 
