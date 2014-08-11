@@ -127,6 +127,10 @@ def setup(self, **kwargs):
     pass
 ```
 
+But there is an important difference between *setup()* and *create_instance()*. Please recall the fact that there
+is always a single instance of a plug-in serving all the requests. But each request may pass different parameters into
+the *setup()* function. It means that all the request-specific data (e.g. the language a client uses) must be thread-local.
+
 ### Notes for developers
 
 Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different
