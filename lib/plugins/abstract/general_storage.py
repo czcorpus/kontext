@@ -70,6 +70,16 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
+    def set(self, key, data):
+        """
+        Saves 'data' with 'key'.
+
+        arguments:
+        key -- an access key
+        data -- a dictionary containing data to be saved
+        """
+        raise NotImplementedError()
+
     def remove(self, key):
         """
         Removes a value specified by a key
