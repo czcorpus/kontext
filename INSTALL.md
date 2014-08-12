@@ -228,6 +228,7 @@ Of course, once you want to adopt a foreign plug-in which relies on different "d
 code compatible with your own "db" or pack the foreign "db" plug-in along with the adopted one.
 
 The plug-ins KonText passes "db" to are:
+
 * sessions
 * settings_storage
 * auth
