@@ -38,7 +38,7 @@ if __name__ == '__main__':
             db.set('user:%04d' % item['id'], item)
             user_idx[item['username']] = item['id']
 
-        db.set('user-idx', user_idx)
+        db.set('user_index', user_idx)
 
         print(src_data)
     else:

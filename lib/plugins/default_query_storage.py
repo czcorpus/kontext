@@ -52,7 +52,7 @@ class QueryStorage(AbstractQueryStorage):
         return int(time.time())
 
     def _mk_key(self, user_id):
-        return 'query_history-user-%04d' % user_id
+        return 'query_history:user:%04d' % user_id
 
     def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
