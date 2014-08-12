@@ -65,16 +65,20 @@ are required it is advisable to explore and inherit from abstract plug-in classe
 
 ### The fastest way to make the plug-ins work
 
-KonText comes with two prepackaged plug-in series.
+KonText comes with two prepackaged plug-in series, both located in *lib/plugins* directory:
 
 1. modules with prefix *ucnk_*
     * they fit specific needs of the Institute of the Czech National Corpus
     * most likey they cannot be used directly in your specific environment but you can still explore them to find out how
     the thing works
-2. modules with prefix *default_*
+2. modules with prefix *default_* (with one additional module *redis_db.py*; see below)
     * they provide a complete, working set of plugins needed to run KonText with all the features enabled
-    * the only 3rd party dependency is a working [sqlite3](http://www.sqlite.org/) installation and an appropriate
-    [Python module](https://pypi.python.org/pypi/pysqlite)
+    * there are two database backends available for *default_* modules; both are designed as key->value stores:
+        * [sqlite3](http://www.sqlite.org/)-based ([Python module](https://pypi.python.org/pypi/pysqlite)) for testing and small installations
+        * [Redis](http://redis.io/)-based ([Python module](https://pypi.python.org/pypi/redis/) for production installations
+    * an initial user import must be performed - for this purpose, a script *scripts/plugins/default_query_storage* is available
+     (see also *userdb.sample.json* file to find out how to prepare initial user database)
+
 
 The only thing to do when using *default_* plug-ins is to properly configure KonText. You can start with the
 *config-sample.xml* file which has *default_* plugins set already.
