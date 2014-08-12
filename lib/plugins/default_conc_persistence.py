@@ -84,7 +84,7 @@ class ConcPersistence(AbstractConcPersistence):
         self.db = db
 
     def _mk_key(self, code):
-        return 'concordance-%s' % (code, )
+        return 'concordance:%s' % (code, )
 
     def is_valid_id(self, data_id):
         """

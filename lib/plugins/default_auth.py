@@ -36,7 +36,7 @@ class DefaultAuthHandler(AbstractAuth):
         return 'user-idx'
 
     def _mk_user_key(self, user_id):
-        return 'user-%04d' % user_id
+        return 'user:%04d' % user_id
 
     def validate_user(self, username, password):
         """
@@ -131,7 +131,7 @@ class DefaultAuthHandler(AbstractAuth):
         """
         if self._index is None or username not in self._index:
             self._index = {}
-            for item in self.db.all_with_key_prefix('user-'):
+            for item in self.db.all_with_key_prefix('user:'):
                 self._index[item['username']] = item['id']
             self.db.set('username-idx', self._index)
 

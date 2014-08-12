@@ -54,7 +54,7 @@ class DefaultSessions(AbstractSessions):
         return time.mktime(datetime.now().timetuple())
 
     def _mk_key(self, session_id):
-        return 'session-%s' % (session_id, )
+        return 'session:%s' % (session_id, )
 
     def start_new(self, data=None):
         """

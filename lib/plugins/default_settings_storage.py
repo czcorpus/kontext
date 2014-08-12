@@ -26,7 +26,7 @@ class SettingsStorage(object):
         self.db = db
 
     def _mk_key(self, user_id):
-        return 'settings-user-%04d' % user_id
+        return 'settings:user:%04d' % user_id
 
     def save(self, user_id, data):
         """
