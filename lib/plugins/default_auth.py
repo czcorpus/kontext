@@ -29,7 +29,7 @@ class DefaultAuthHandler(AbstractAuth):
         self.db = db
         self.sessions = sessions
         index_path = self._mk_index_path()
-        curr_index = self.db.load(index_path)
+        curr_index = self.db.get(index_path)
         self._index = curr_index if curr_index is not None else {}
 
     def _mk_index_path(self):
@@ -133,10 +133,10 @@ class DefaultAuthHandler(AbstractAuth):
             self._index = {}
             for item in self.db.all_with_key_prefix('user-'):
                 self._index[item['username']] = item['id']
-            self.db.save(self._index, 'username-idx')
+            self.db.set('username-idx', self._index)
 
         item_id = self._index[username]
-        return self.db.load(self._mk_user_key(item_id))
+        return self.db.get(self._mk_user_key(item_id))
 
 
 def create_instance(conf, sessions, db):

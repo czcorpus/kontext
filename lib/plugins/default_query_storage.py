@@ -66,8 +66,8 @@ class QueryStorage(AbstractQueryStorage):
         query_type -- an identification of the query (iquery, cql, lemma,...)
         params -- additional parameters of the query
         """
-        data = self.db.load(self._mk_key(user_id), [])
-        data.append({
+        data_key = self._mk_key(user_id)
+        self.db.list_push(data_key, {
             'corpname': corpname,
             'subcorpname': subcorpname,
             'query': query,
@@ -76,8 +76,7 @@ class QueryStorage(AbstractQueryStorage):
             'created': self._current_timestamp()
         })
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
-            data = self.delete_old_records(data)
-        self.db.save(data, self._mk_key(user_id))
+            self.delete_old_records(data_key)
 
     def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
         """
@@ -93,7 +92,7 @@ class QueryStorage(AbstractQueryStorage):
         limit -- how many rows will be selected
         """
 
-        data = self.db.load(self._mk_key(user_id), [])
+        data = self.db.list_get(self._mk_key(user_id))
 
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
@@ -116,14 +115,13 @@ class QueryStorage(AbstractQueryStorage):
 
         return sorted(data[offset:(offset + limit)], cmp=lambda x1, x2: -cmp(x1['created'], x2['created']))
 
-    def delete_old_records(self, data):
+    def delete_old_records(self, data_key):
         """
         Deletes oldest records until the final length of the list equals <num_kept_records> configuration value
         """
-        offset = len(data) - self.num_kept_records
-        if offset > 0:
-            return data[offset:]
-        return data
+        num_over = max(0, self.db.list_len(data_key) - self.num_kept_records)
+        if num_over > 0:
+            self.db.trim_list(data_key, num_over, -1)
 
 
 def create_instance(settings, db):

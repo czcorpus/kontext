@@ -106,7 +106,7 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        return self.db.load(self._mk_key(data_id))
+        return self.db.get(self._mk_key(data_id))
 
     def store(self, user_id, curr_data, prev_data=None):
         """
@@ -127,7 +127,7 @@ class ConcPersistence(AbstractConcPersistence):
             data_id = mk_short_id('%s' % time_created)
             curr_data['id'] = data_id
 
-            self.db.save(curr_data, self._mk_key(data_id))
+            self.db.set(self._mk_key(data_id), curr_data)
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
