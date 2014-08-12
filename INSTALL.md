@@ -216,31 +216,23 @@ Following plug-ins are optional:
 
 ### The "db" plug-in
 
-The "db" plug-in provides a connection to a database. An implementation must provide a callable (either a function or
-an object implementing *__call__*):
+The "db" plug-in is kind of specific because it is not used directly by KonText core modules - it is available only to
+other plug-ins. Generally speaking, "db" is expected to provide an interface to access a data storage engine
+(SQL/NoSQL/whatever). But because of its nature, the interface is arbitrary. If the plug-ins you use understand it
+or if you use some individual ad-hoc solutions within your plug-ins then there is no problem at all.
 
-```python
-class MyDbConnection(object):
-    def __init__(self):
-        self.thread_safe_conn = Connection()
+As you can see in the case of *default_* and *ucnk_* plug-ins, their "db" storages are completely different. Yet you
+still can switch from one set to another without need to hack KonText's core code.
 
-    def __call__(self):
-        """
-        returns a database connection object
-        """
-        return self.thread_safe_conn
+Of course, once you want to adopt a foreign plug-in which relies on different "db" implementation you have to make the
+code compatible with your own "db" or pack the foreign "db" plug-in along with the adopted one.
 
-def create_instance(...):
-    return MyDbConnection()
-```
-
-```python
-def create_connection():
-    return Connection()
-
-def create_instance(...):
-    return create_connection
-```
+The plug-ins KonText passes "db" to are:
+* sessions
+* settings_storage
+* auth
+* conc_persistence
+* query_storage
 
 
 ### The "auth" plug-in
