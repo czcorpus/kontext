@@ -6,7 +6,6 @@ app_path = os.path.realpath('%s/../../..' % os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0, '%s/lib' % app_path)
 
 import settings
-from plugins import default_db
 from plugins import default_query_storage
 
 if __name__ == '__main__':
@@ -30,10 +29,16 @@ if __name__ == '__main__':
 
     if len(src_data) > 0:
         settings.load('%s/config.xml' % app_path)
-        db = default_db.create_instance(settings.get('plugins', 'db'))
+        db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')['module'], fromlist=['create_instance'])
+        print(db_adapter.create_instance)
+        db = db_adapter.create_instance(settings.get('plugins', 'db'))
         query_storage = default_query_storage.create_instance(settings, db)
+        user_idx = {}
         for item in src_data:
-            db.save(item, 'user-%04d' % item['id'])
+            db.set('user:%04d' % item['id'], item)
+            user_idx[item['username']] = item['id']
+
+        db.set('user-idx', user_idx)
 
         print(src_data)
     else:
