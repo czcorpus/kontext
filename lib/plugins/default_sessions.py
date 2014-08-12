@@ -43,7 +43,7 @@ class DefaultSessions(AbstractSessions):
         Initialization according to the 'settings' object/module
         """
         self.db = db
-        self.ttl = settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL)
+        self.ttl = int(settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL))
         self.cleanup_probability = settings.get('plugins', 'sessions').get('cleanup_probability',
                                                                            DefaultSessions.DEFAULT_CLEANUP_PROBABILITY)
 
@@ -102,7 +102,10 @@ class DefaultSessions(AbstractSessions):
         Saves session data and updates last update information for a row  identified by session_id.
         If no such record exists then nothing is done and no error is thrown.
         """
-        self.db.set(self._mk_key(session_id), data)
+        sess_key = self._mk_key(session_id)
+        self.db.set(sess_key, data)
+        if hasattr(self.db, 'set_ttl'):
+            self.db.set_ttl(sess_key, self.ttl)
 
     def delete_old_sessions(self):
         """
@@ -110,11 +113,12 @@ class DefaultSessions(AbstractSessions):
         This method is called automatically (with probability self.cleanup_probability)
         when load() is called.
         """
-        old_records = self.db.all_with_key_prefix('session-', oldest_first=True, limit=100)
-        limit_time = self.get_actual_timestamp() - DefaultSessions.DEFAULT_TTL
-        for item in old_records:
-            if item['__timestamp__'] < limit_time:
-                self.db.remove(item['__key__'])
+        if not hasattr(self.db, 'set_ttl'):
+            old_records = self.db.all_with_key_prefix('session:', oldest_first=True, limit=100)
+            limit_time = self.get_actual_timestamp() - self.ttl
+            for item in old_records:
+                if item['__timestamp__'] < limit_time:
+                    self.db.remove(item['__key__'])
 
 
 def create_instance(config, db):

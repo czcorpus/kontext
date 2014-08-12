@@ -33,7 +33,7 @@ class DefaultAuthHandler(AbstractAuth):
         self._index = curr_index if curr_index is not None else {}
 
     def _mk_index_path(self):
-        return 'user-idx'
+        return 'user_index'
 
     def _mk_user_key(self, user_id):
         return 'user:%04d' % user_id
@@ -130,10 +130,7 @@ class DefaultAuthHandler(AbstractAuth):
         a dictionary containing user data or None if nothing is found
         """
         if self._index is None or username not in self._index:
-            self._index = {}
-            for item in self.db.all_with_key_prefix('user:'):
-                self._index[item['username']] = item['id']
-            self.db.set('username-idx', self._index)
+            self._index = self.db.get('username-idx')
 
         item_id = self._index[username]
         return self.db.get(self._mk_user_key(item_id))
