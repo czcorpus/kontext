@@ -29,13 +29,16 @@ with high concurrency (hundreds or more simultaneous users).
 
 import threading
 import json
-import sqlite3
 import time
+
+import sqlite3
+
+from abstract.general_storage import KeyValueStorage
 
 thread_local = threading.local()
 
 
-class DefaultDb(object):
+class DefaultDb(KeyValueStorage):
 
     def __init__(self, conf):
         """
@@ -60,13 +63,35 @@ class DefaultDb(object):
             return ans
         return None
 
-    def _save_raw_data(self, data, path):
+    def _save_raw_data(self, path, data):
         cursor = self._conn().cursor()
         cursor.execute('INSERT OR REPLACE INTO data (key, value, updated) VALUES (?, ?, ?)',
                        (path, data, int(time.time())))
         self._conn().commit()
 
-    def load(self, key, default=None):
+    def list_get(self, key, from_idx=0, to_idx=-1):
+        data = []
+        raw_data = self._load_raw_data(key)
+        if raw_data is not None:
+            data = json.loads(raw_data[0])
+            if type(data) is not list:
+                raise TypeError('There is no list with key %s' % key)
+            data = data[from_idx:to_idx]
+        return data
+
+    def list_push(self, key, value):
+        data = self.list_get(key)
+        data.append(value)
+        self.set(key, data)
+
+    def list_len(self, key):
+        return len(self.list_get(key))
+
+    def list_trim(self, key, keep_left, keep_right):
+        data = self.list_get(key, keep_left, keep_right)
+        self.set(key, data)
+
+    def get(self, key, default=None):
         """
         Loads data from key->value storage
 
@@ -86,15 +111,15 @@ class DefaultDb(object):
             return data
         return default
 
-    def save(self, data, key):
+    def set(self, key, data):
         """
         Saves 'data' with 'key'.
 
         arguments:
-        data -- a dictionary containing data to be saved
         key -- an access key
+        data -- a dictionary containing data to be saved
         """
-        self._save_raw_data(json.dumps(data), key)
+        self._save_raw_data(key, json.dumps(data))
 
     def remove(self, key):
         """

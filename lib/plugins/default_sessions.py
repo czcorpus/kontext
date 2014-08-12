@@ -64,7 +64,7 @@ class DefaultSessions(AbstractSessions):
         if data is None:
             data = {}
 
-        self.db.save(data, self._mk_key(session_id))
+        self.db.set(self._mk_key(session_id), data)
         return {'id': session_id, 'data': data}
 
     def delete(self, session_id):
@@ -91,7 +91,7 @@ class DefaultSessions(AbstractSessions):
         if random.random() < DefaultSessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
 
-        session_data = self.db.load(self._mk_key(session_id))
+        session_data = self.db.get(self._mk_key(session_id))
         if session_data is not None:
             return {'id': session_id, 'data': session_data}
         else:
@@ -102,7 +102,7 @@ class DefaultSessions(AbstractSessions):
         Saves session data and updates last update information for a row  identified by session_id.
         If no such record exists then nothing is done and no error is thrown.
         """
-        self.db.save(data, self._mk_key(session_id))
+        self.db.set(self._mk_key(session_id), data)
 
     def delete_old_sessions(self):
         """

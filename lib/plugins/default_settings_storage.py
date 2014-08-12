@@ -36,7 +36,7 @@ class SettingsStorage(object):
         user_id -- a numeric ID of a user
         data -- a dictionary containing user data
         """
-        self.db.save(data, self._mk_key(user_id))
+        self.db.set(self._mk_key(user_id), data)
 
     def load(self, user_id, current_settings=None):
         """
@@ -49,7 +49,7 @@ class SettingsStorage(object):
         returns:
         new or updated settings dictionary provided as a parameter
         """
-        data = self.db.load(self._mk_key(user_id))
+        data = self.db.get(self._mk_key(user_id))
         if data is None:
             data = {}
         if current_settings is not None:
