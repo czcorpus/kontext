@@ -91,6 +91,27 @@ class DefaultDb(KeyValueStorage):
         data = self.list_get(key, keep_left, keep_right)
         self.set(key, data)
 
+    def hash_get(self, key, field):
+        data = self.get(key)
+        if type(data) is not dict:
+            raise TypeError('hash_get - required value "%s" is not a dict' % key)
+        return data.get(field, None)
+
+    def hash_set(self, key, field, value):
+        """
+        Puts a value into a hash table stored under the passed key
+
+        arguments:
+        key -- data access key
+        field -- hash table entry key
+        value -- a value to be stored
+        """
+        data = self.get(key)
+        if type(data) is not dict:
+            data = {}
+        data[field] = value
+        self.set(key, data)
+
     def get(self, key, default=None):
         """
         Loads data from key->value storage
