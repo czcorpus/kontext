@@ -28,12 +28,6 @@ class DefaultAuthHandler(AbstractAuth):
     def __init__(self, db, sessions):
         self.db = db
         self.sessions = sessions
-        index_path = self._mk_index_path()
-        curr_index = self.db.get(index_path)
-        self._index = curr_index if curr_index is not None else {}
-
-    def _mk_index_path(self):
-        return 'user_index'
 
     def _mk_user_key(self, user_id):
         return 'user:%04d' % user_id
