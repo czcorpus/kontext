@@ -132,7 +132,8 @@ class DefaultAuthHandler(AbstractAuth):
         returns:
         a dictionary containing user data or None if nothing is found
         """
-        return self.db.hash_get('user_index', username)
+        user_key = self.db.hash_get('user_index', username)
+        return self.db.get(user_key)
 
 
 def create_instance(conf, sessions, db):
