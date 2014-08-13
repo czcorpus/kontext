@@ -14,10 +14,8 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="User data editor")
     argparser.add_argument('source_file', metavar="FILE", help="a file containing JSON-encoded initial data")
     argparser.add_argument('action', metavar="ACTION", help="an action to be performed (add, reset)")
-    argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the '
-                                                                 'source contains a list)')
+    argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the '                                                                 'source contains a list)')
     args = argparser.parse_args()
-    print(args)
     print("---------------------")
 
     src_data = json.load(open(args.source_file, 'r'))
@@ -30,15 +28,12 @@ if __name__ == '__main__':
     if len(src_data) > 0:
         settings.load('%s/config.xml' % app_path)
         db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')['module'], fromlist=['create_instance'])
-        print(db_adapter.create_instance)
         db = db_adapter.create_instance(settings.get('plugins', 'db'))
         query_storage = default_query_storage.create_instance(settings, db)
-        user_idx = {}
+
         for item in src_data:
             db.set('user:%04d' % item['id'], item)
-            user_idx[item['username']] = item['id']
-
-        db.set('user_index', user_idx)
+            db.hash_set('user_index', item['username'], item['id'])
 
         print(src_data)
     else:
