@@ -36,9 +36,8 @@ class RedisDb(KeyValueStorage):
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        plugin_conf = conf.get('plugins', 'db')
         self.redis = redis.StrictRedis(
-            host=plugin_conf['host'], port=int(plugin_conf['port'], db=int(plugin_conf['id'])))
+            host=conf['default:host'], port=int(conf['default:port']), db=int(conf['default:id']))
 
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
