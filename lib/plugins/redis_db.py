@@ -91,7 +91,7 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        self.redis.hget(key, field)
+        return self.redis.hget(key, field)
 
     def hash_set(self, key, field, value):
         """
