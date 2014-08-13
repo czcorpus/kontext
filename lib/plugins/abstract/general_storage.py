@@ -60,6 +60,28 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
+    def hash_get(self, key, field):
+        """
+        Gets a value from a hash table stored under the passed key. If there is no
+        such field then None is returned.
+
+        arguments:
+        key -- data access key
+        field -- hash table entry key
+        """
+        raise NotImplementedError()
+
+    def hash_set(self, key, field, value):
+        """
+        Puts a value into a hash table stored under the passed key
+
+        arguments:
+        key -- data access key
+        field -- hash table entry key
+        value -- a value to be stored
+        """
+        raise NotImplementedError()
+
     def get(self, key, default=None):
         """
         Gets a value stored with passed key and returns its JSON decoded form.
