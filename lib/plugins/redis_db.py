@@ -59,7 +59,7 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         value -- value to be pushed
         """
-        self.redis.rpush(key, value)
+        self.redis.rpush(key, json.dumps(value))
 
     def list_len(self, key):
         """
