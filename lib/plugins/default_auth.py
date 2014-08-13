@@ -50,7 +50,7 @@ class DefaultAuthHandler(AbstractAuth):
         user_data = self.find_user(username)
         valid_pwd = False
 
-        if len(user_data['pwd_hash']):
+        if len(user_data['pwd_hash']) == 32:
             pwd_hash = hashlib.md5(password).hexdigest()
             if user_data['pwd_hash'] == pwd_hash:
                 valid_pwd = True
