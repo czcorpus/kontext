@@ -1,0 +1,41 @@
+(*
+   A grammar for parsing Manatee registry files.
+   Current version is unable to parse unicode values
+   properly (they are ignored)
+*)
+
+attribute = "ATTRIBUTE" ;
+
+structure = "STRUCTURE" ;
+
+key = ?/[A-Z0-9]+/? ;
+
+val = ?/[\w/\.\-=|_:,\*@]+/? ;
+
+complexval = ?/[\w/\.\-=|_:,\*\s@]+/? ;
+
+id = ?/[a-zA-Z_]+/? ;
+
+lbracket = "{" ;
+
+rbracket = "}" ;
+
+quot = '"' ;
+
+emptyline = ?/\s+/? ;
+
+attrspec = attribute id ;
+
+structspec = structure id;
+
+structrule = structspec lbracket { attrrule }+ rbracket ;
+
+attrrule = attrspec lbracket { keyval }+ rbracket | attribute id ;
+
+keyval = key quot complexval quot | key val ;
+
+conf = { structrule | attrrule | keyval | emptyline }+ ;
+
+
+
+
