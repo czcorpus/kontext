@@ -48,9 +48,18 @@ class DefaultAuthHandler(AbstractAuth):
         True on success, False on failure.
         """
         user_data = self.find_user(username)
-        pwd_hash = hashlib.md5(password).hexdigest()
+        valid_pwd = False
 
-        if user_data and user_data['username'] == username and user_data['pwd_hash'] == pwd_hash:
+        if len(user_data['pwd_hash']):
+            pwd_hash = hashlib.md5(password).hexdigest()
+            if user_data['pwd_hash'] == pwd_hash:
+                valid_pwd = True
+        else:
+            import crypt
+            if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                valid_pwd = True
+
+        if user_data and user_data['username'] == username and valid_pwd:
             return {
                 'id': user_data['id'],
                 'user': user_data['username'],
@@ -130,10 +139,9 @@ class DefaultAuthHandler(AbstractAuth):
         a dictionary containing user data or None if nothing is found
         """
         if self._index is None or username not in self._index:
-            self._index = self.db.get('username-idx')
+            self._index = self.db.get('user_index')
 
-        item_id = self._index[username]
-        return self.db.get(self._mk_user_key(item_id))
+        return self.db.get(self._index[username])
 
 
 def create_instance(conf, sessions, db):
