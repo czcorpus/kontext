@@ -25,8 +25,6 @@ required config.xml entries:
 import uuid
 import time
 from datetime import datetime
-import json
-import os
 import random
 
 from abstract.sessions import AbstractSessions
@@ -64,7 +62,10 @@ class DefaultSessions(AbstractSessions):
         if data is None:
             data = {}
 
-        self.db.set(self._mk_key(session_id), data)
+        sess_key = self._mk_key(session_id)
+        self.db.set(sess_key, data)
+        if hasattr(self.db, 'set_ttl'):
+            self.db.set_ttl(sess_key, self.ttl)
         return {'id': session_id, 'data': data}
 
     def delete(self, session_id):
@@ -104,8 +105,6 @@ class DefaultSessions(AbstractSessions):
         """
         sess_key = self._mk_key(session_id)
         self.db.set(sess_key, data)
-        if hasattr(self.db, 'set_ttl'):
-            self.db.set_ttl(sess_key, self.ttl)
 
     def delete_old_sessions(self):
         """
