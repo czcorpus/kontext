@@ -121,7 +121,7 @@ class QueryStorage(AbstractQueryStorage):
         """
         num_over = max(0, self.db.list_len(data_key) - self.num_kept_records)
         if num_over > 0:
-            self.db.trim_list(data_key, num_over, -1)
+            self.db.list_trim(data_key, num_over, -1)
 
 
 def create_instance(settings, db):
