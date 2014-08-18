@@ -1552,18 +1552,19 @@ class Actions(ConcCGI):
             # custom save is solved in templates because of compatibility issues
             self.last_corpname = self.corpname
             self._save_options(['last_corpname'])
-
-            return result
-
         except corplib.MissingSubCorpFreqFile as e:
             self.wlmaxitems -= 1
-            out = corplib.build_arf_db(e.args[0], self.wlattr)
+            # Beware - many potential errors arise in the forked process created in corplib.build_arf_db.
+            # But the original Bonito2 code does not include any shared state with ability to express all the required
+            # situations. It writes the string "100%" to the shared log file without hesitation even if the action
+            # completely failed. Enjoy!
+            out = corplib.build_arf_db(e.corp, self.wlattr)
             if out:
                 processing = out[1].strip('%')
             else:
                 processing = '0'
             result.update({'processing': processing == '100' and '99' or processing})
-            return result
+        return result
 
     wordlist.access_level = 1
 

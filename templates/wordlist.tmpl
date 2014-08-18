@@ -29,10 +29,6 @@ $_("Word list")#slurp
 #set global $url_wlpat = $urlquote($wlpat)
 #set global $url_usesubcorp = $urlquote($usesubcorp)
 #set global $curr_settings = '%s;usesubcorp=%s;wlattr=%s;wlminfreq=%s;wlpat=%s;wlicase=%s;wlmaxitems=%s;wlsort=%s;ref_corpname=%s;ref_usesubcorp=%s;wlcache=%s;simple_n=%s;wltype=%s;wlnums=%s;include_nonwords=%s;blcache=%s;wlpage=%s' % ($corpname_url, $url_usesubcorp, $wlattr, $wlminfreq, $url_wlpat, $wlicase, $new_maxitems, $wlsort, $ref_corpname, $ref_usesubcorp, $wlcache, $simple_n, $wltype, $wlnums, $include_nonwords, $blcache, $wlpage)
-
- #if $processing
-   <meta http-equiv="refresh" content="3;wordlist?$curr_settings">
- #end if
 #end filter
 #end def
 
