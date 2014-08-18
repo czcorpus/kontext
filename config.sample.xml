@@ -80,6 +80,7 @@
         <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
         <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
+        <wordlist_cache>/var/local/corpora/cache/wordlist</wordlist_cache> <!-- this is optional -->
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
         <default_corpora>

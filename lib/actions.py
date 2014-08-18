@@ -1310,9 +1310,7 @@ class Actions(ConcCGI):
         return 'Done: rm -rf %s/%s' % (self.cache_dir, corpname)
 
     def build_arf_db(self, corpname='', attrname=''):
-        if not corpname:
-            corpname = self.corpname
-        if os.path.isfile(corplib.subcorp_base_file(self._corp(), attrname) + '.arf'):
+        if os.path.isfile(corplib.wordcount_precalc_path(self._corp(), attrname) + '.arf'):
             return 'Finished'
         out = corplib.build_arf_db(self._corp(), attrname)
         if out:

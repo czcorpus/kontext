@@ -26,6 +26,7 @@ from datetime import datetime
 import logging
 
 import manatee
+import settings
 
 
 class CorpusManager(object):
@@ -544,7 +545,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq'):
     import array
 
-    filename = (subcorp_base_file(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
+    filename = (wordcount_precalc_path(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
     if nums == 'arf':
         frq = array.array('f')
         try:
@@ -621,8 +622,18 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     return items[:wlmaxitems]
 
 
+def wordcount_precalc_path(corp, attrname):
+    if settings.get('corpora', 'wordlist_cache'):
+        file_path = '%s/%s/%s' % (settings.get('corpora', 'wordlist_cache'), corp.get_conf('NAME'), attrname)
+        if not os.path.exists(os.path.dirname(file_path)):
+            os.mkdir(os.path.dirname(file_path))
+        return file_path
+    else:
+        return subcorp_base_file(corp, attrname)
+
+
 def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
-    outfilename = subcorp_base_file(corp, attrname)
+    outfilename = wordcount_precalc_path(corp, attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return
     if hasattr(corp, 'spath'):
@@ -705,7 +716,7 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
 
 
 def build_arf_db(corp, attrname):
-    logfilename = subcorp_base_file(corp, attrname) + '.build'
+    logfilename = wordcount_precalc_path(corp, attrname) + '.build'
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
@@ -727,7 +738,7 @@ def build_arf_db(corp, attrname):
 
 
 def build_arf_db_status(corp, attrname):
-    logfilename = subcorp_base_file(corp, attrname) + '.build'
+    logfilename = wordcount_precalc_path(corp, attrname) + '.build'
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
