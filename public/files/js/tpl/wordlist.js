@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the wordlist.tmpl template
  */
-define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'popupbox'], function (win, $, jqueryPeriodic, layoutModel, popupBox) {
+define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'popupbox'], function (win, $, jqueryPeriodic, layoutModel, popupBox) {
     'use strict';
 
     var lib = {};
