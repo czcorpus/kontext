@@ -1544,8 +1544,8 @@ class Actions(ConcCGI):
 
             result['freq_figure'] = self.FREQ_FIGURES.get(self.wlnums, '?')
 
-            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&from_line=1&to_line=' \
-                     % (self.wlattr, wlpat)
+            params = 'saveformat=%%s&wlattr=%s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%s&wlminfreq=%s&from_line=1&to_line=' \
+                     % (self.wlattr, wlpat, self.wlminfreq)
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
