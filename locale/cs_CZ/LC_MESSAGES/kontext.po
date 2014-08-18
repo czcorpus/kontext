@@ -2053,6 +2053,9 @@ msgstr "Zrušit výběr"
 msgid "Invalid stored query identifier"
 msgstr "Neplatný identifikátor uloženého dotazu"
 
+msgid "Selection actions"
+msgstr "Akce s vybranými řádky"
+
 msgid "Remove selected lines from the result"
 msgstr "Odstranit z výsledku vybrané řádky"
 
