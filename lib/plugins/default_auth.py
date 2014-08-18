@@ -85,7 +85,7 @@ class DefaultAuthHandler(AbstractAuth):
         corplist : list
             list of corpora names (sorted alphabetically)
         """
-        data = self.find_user(user + 'ff')
+        data = self.find_user(user)
         if data and 'corpora' in data:
             return data['corpora']
         else:
