@@ -623,8 +623,8 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
 
 
 def wordcount_precalc_path(corp, attrname):
-    if settings.get('corpora', 'wordlist_cache'):
-        file_path = '%s/%s/%s' % (settings.get('corpora', 'wordlist_cache'), corp.get_conf('NAME'), attrname)
+    if settings.get('corpora', 'wordlist_cache_dir'):
+        file_path = '%s/%s/%s' % (settings.get('corpora', 'wordlist_cache_dir'), corp.get_conf('NAME'), attrname)
         if not os.path.exists(os.path.dirname(file_path)):
             os.mkdir(os.path.dirname(file_path))
         return file_path
