@@ -23,6 +23,7 @@ import glob
 from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
+import logging
 
 import manatee
 
@@ -529,7 +530,15 @@ def subcorp_base_file(corp, attrname):
 
 
 class MissingSubCorpFreqFile(Exception):
-    pass
+
+    def __init__(self, corp):
+        self.corp = corp
+
+    def __repr__(self):
+        return 'MissingSubCorpFreqFile(corp: %s)' % (self.corp.get_conf('NAME'), )
+
+    def __str__(self):
+        return self.__repr__()
 
 
 def frq_db(corp, attrname, nums='frq'):
@@ -614,8 +623,7 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
 
 def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     outfilename = subcorp_base_file(corp, attrname)
-    if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename
-            + '.docf'):
+    if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return
     if hasattr(corp, 'spath'):
         sys.stderr.write('trying find_same_subcorp_file: %s\n' % outfilename)
@@ -645,8 +653,10 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     if logfile:
         toprocessids = float(attr.id_range())
         nextidslog = logstep * toprocessids
-        open(logfile, 'w').write('%d\n%s\n0%%' %
-                                 (os.getpid(), corp.search_size()))
+        try:
+            open(logfile, 'w').write('%d\n%s\n0%%' % (os.getpid(), corp.search_size()))
+        except IOError as e:
+            logging.getLogger(__name__).error(e)
     for i in xrange(attr.id_range()):
         rs = corp.filter_query(doc.whole())
         freq = corp.count_rest(attr.id2poss(i))
