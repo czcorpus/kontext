@@ -751,7 +751,7 @@ class ConcCGI(CGIPublisher):
                 [{'label': corpus.get_conf(n + '.LABEL') or n, 'n': n}
                  for n in corpus.get_conf(listname.upper()).split(',')
                  if n]
-        result['tagsetdoc'] = corpus.get_conf('TAGSETDOC')
+        result['tagsetdoc'] = strings.import_string(corpus.get_conf('TAGSETDOC'), from_encoding=corpus.get_conf('ENCODING'))
         result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a) for a in
                                            corpus.get_conf('SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
