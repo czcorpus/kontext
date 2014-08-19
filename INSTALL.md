@@ -189,30 +189,34 @@ It is also recommended to add at least following information to plug-in's module
 
 
 List of currently supported plug-ins
------------------------------------
+------------------------------------
 
-Following plug-ins are mandatory:
+### mandatory plug-ins
 
 
-| id               | description                                                                  | client-side code |
-|------------------|------------------------------------------------------------------------------|------------------|
-| auth             | user authentication                                                          | No               |
-| db               | provides a connection to a database (if required by other plug-ins)          | No               |
-| query_storage    | stores recent queries entered by users and allows their reopening            | No               |
-| sessions         | handles user sessions (i.e. between-requests persistence)                    | No               |
-| settings_storage | stores users' settings to a persistent storage                               | No               |
+| id                                           | description                                                                  | client-side code |
+|----------------------------------------------|------------------------------------------------------------------------------|------------------|
+| [auth](#plugin_auth)                         | user authentication                                                          | No               |
+| [db](#plugin_db)                             | provides a connection to a database (if required by other plug-ins)          | No               |
+| [sessions](#plugin_sessions)                 | handles user sessions (i.e. between-requests persistence)                    | No               |
+| [settings_storage](#plugin_settings_storage) | stores users' settings to a persistent storage                               | No               |
 
-Following plug-ins are optional:
+### optional plug-ins
 
 | id               | description                                                                  | client-side code |
 |------------------|------------------------------------------------------------------------------|------------------|
 | application_bar  | loads a between-app-shared page element (e.g. a bar at the top of the page)  | No               |
-| corptree         | loads a hierarchy of corpora from an XML file                                | No               |
-| getlang          | if you want to read current UI language in a non-KonText way                 | No               |
-| live_attributes  | When filtering searched positions by attribute value(s), this provides a knowledge which values of currently unused (within the selection) attributes are still applicable.  | Yes              |
+| [corptree](#plugin_corptree)        | loads a hierarchy of corpora from an XML file                                | No               |
+| [getlang](#plugin_getlang)          | if you want to read current UI language in a non-KonText way                 | No               |
+| [live_attributes](#live_attributes)  | When filtering searched positions by attribute value(s), this provides a knowledge which values of currently unused (within the selection) attributes are still applicable.  | Yes              |
 | query_storage    | KonText may store users' queries for further review/reuse                    | Yes              |
-| conc_persistence | Allows storing queries/filters/etc. longer than URL can handle               | No               |
+| [conc_persistence](#plugin_conc_persistence) | Allows storing queries/filters/etc. longer than URL can handle               | No               |
 
+
+Plug-ins detailed information
+-----------------------------
+
+<a name="plugin_db"></a>
 
 ### The "db" plug-in
 
@@ -235,6 +239,7 @@ The plug-ins KonText passes "db" to are:
 * conc_persistence
 * query_storage
 
+<a name="plugin_auth"><a/>
 
 ### The "auth" plug-in
 
@@ -342,6 +347,8 @@ def revalidate(cookies, session):
 KonText call this method (if it is provided by your plug-in) during session initialization. If an external service
 responds user is logged in no more, method *revalidate* should change user's session data to an "anonymous user".
 
+<a name="plugin_sessions"></a>
+
 ### The "sessions" plug-in
 
 The *sessions* plug-in is expected to handle web sessions where users are identified by some cookie
@@ -383,6 +390,8 @@ def delete_old_sessions(self):
     """
 ```
 
+<a name="plugin_settings_storage"></a>
+
 ### The "settings_storage" plug-in
 
 This plug-in allows users to store their concordance view settings. In general, it does not matter what kind of storage
@@ -410,6 +419,8 @@ def load(self, user_id, current_settings=None):
     """
     pass
 ```
+
+<a name="plugin_corptree"></a>
 
 ### The "corptree" plug-in"
 
@@ -447,8 +458,9 @@ Attributes for the **corpus** element:
 | tagset          | (optional) tagset used by this corpus                              |
 | web             | (optional) external link containing information about the corpus   |
 
-Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured
-to load any XML file and search for the tree node anywhere you want.
+Please note that you do not have to put the *corplist* subtree into the *config.xml* file. *Corptree* can be configured to load any XML file and search for the tree node anywhere you want.
+
+
 
 
 ### The "appbar" plug-in
@@ -496,6 +508,8 @@ notify your toolbar/app-bar/whatever content provider which language is currentl
 serves in case user leaves KonText to some of *appbar*'s pages and these pages are able to navigate him back to
 KonText (typically, user logs in and expects to be redirected back).
 
+<a name="plugin_getlang"></a>
+
 ### The "getlang" plug-in
 
 This optional plug-in allows you to obtain language settings set by some other application (i.e. you want to have a
@@ -518,6 +532,7 @@ def get_fallback_language(self):
     pass
 ```
 
+<a name="live_attributes"></a>
 
 ### The "live_attributes" plug-in
 
@@ -550,6 +565,8 @@ following example:
 ```
 
 This allows user to select desired attributes when creating a query or a subcorpus in a more convenient way.
+
+<a name="plugin_conc_persistence"></a>
 
 ### The "conc_persistence" plug-in
 
