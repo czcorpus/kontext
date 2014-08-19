@@ -1462,11 +1462,8 @@ class Actions(ConcCGI):
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.corpname, usesubcorp),
                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
-                if self.wlattr == 'ws_collocations':
-                    kw_func = getattr(corplib, 'ws_keywords')
-                else:
-                    kw_func = getattr(corplib, 'subc_keywords_onstr')
-                    args = args + (self.wlattr,)
+                kw_func = getattr(corplib, 'subc_keywords_onstr')
+                args = args + (self.wlattr,)
                 out = self.call_function(kw_func, args)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
                 result.update({'Keywords': [{'str': w, 'score': round(s, 1),
