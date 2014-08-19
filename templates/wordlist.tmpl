@@ -145,10 +145,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
       #for $i in $Items
         <tr>
-        #if $wlattr == 'ws_collocations'
-          <td class="left">$i.w1 <sub><span class="note">$i.gramrel</span></sub> $i.w2</td>
-          <td><a href="view?q=w$i.seek;$corpname_url;usesubcorp=$url_usesubcorp">$i.freq</a></td>
-        #else
           #set $url_str = $urlquote($i.str.replace('\\', '\\\\').replace('"', '\\"'))
           <td class="left">$i.str</td><td class="num">
           #if '.' in $wlattr
@@ -157,7 +153,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <a href="first?$corpname_url;usesubcorp=$url_usesubcorp;cql=%5B$wlattr%3D%3D%22$url_str%22%5D;default_attr=$wlattr;qmcase=1;queryselector=cqlrow">$i.freq</a>
           #end if
           </td>
-        #end if
         </tr>
       #end for
 
@@ -186,31 +181,17 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         </tr>
       </thead>
       #for $k in $Keywords
-        <tr
-        #if $k.has_key('class')
-          class="$k.class"
-        #end if
-        >
-        #if $wlattr == 'ws_collocations'
-          #set $w1, $gramrel, $w2, $seek = $k.str.split('\t')
-          <td class="left">$w1 <sub><span class="note">$gramrel</span></sub> $w2</td>
-          <td></td>
-          <td><a href="view?q=w$seek;$corpname_url;usesubcorp=$url_usesubcorp">$k.freq</a></td>
-        #else
+        <tr #if $k.has_key('class')#class="$k.class"#end if#>
           <td class="left">$k.str</td>
           <td></td>
           #set $url_str = $urlquote($k.str.replace('"', '\\"'))
           <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq</a></td>
-        #end if
+
           <td>$k.rel</td>
           <td></td>
           <td>
           #if $k.freq_ref
-            #if $wlattr == 'ws_collocations'
-              <a href="view?q=w$seek;corpname=$ref_corpname;usesubcorp=$ref_usesubcorp">$k.freq_ref</a>
-            #else
-              <a href="first?corpname=$ref_corpname;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
-            #end if
+            <a href="first?corpname=$ref_corpname;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
           #else
             0
           #end if

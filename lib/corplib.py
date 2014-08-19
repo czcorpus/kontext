@@ -186,28 +186,6 @@ class CorpusManager(object):
                 return f
         return None
 
-
-def ws_subc_freq(wmap3, corp):
-    if hasattr(corp, 'spath'):
-        fs = wmap3.poss()
-        fs2 = corp.filter_fstream(fs)
-        return corp.count_rest(fs2)
-    return wmap3.getcnt()
-
-
-def ws_find_triple(wmap1, id1, id2, id3):
-    # WARNING: ids has to be bigger than the current position in wmap
-    if not wmap1.findid(id1):
-        return None
-    wmap2 = wmap1.nextlevel()
-    if not wmap2.findid(id2):
-        return None
-    wmap3 = wmap2.nextlevel()
-    if not wmap3.findid(id3):
-        return None
-    return wmap3
-
-
 def add_block_items(items, attr='class', val='even', block_size=3):
     for i in [i for i in range(len(items)) if (i / block_size) % 2]:
         items[i][attr] = val
