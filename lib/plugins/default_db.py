@@ -76,7 +76,7 @@ class DefaultDb(KeyValueStorage):
             data = json.loads(raw_data[0])
             if type(data) is not list:
                 raise TypeError('There is no list with key %s' % key)
-            data = data[from_idx:to_idx]
+            data = data[from_idx:(len(data) + 1 + to_idx)]
         return data
 
     def list_push(self, key, value):

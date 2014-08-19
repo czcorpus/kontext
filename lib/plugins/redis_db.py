@@ -47,7 +47,8 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         from_idx -- optional start index
-        to_idx -- optional (default is -1) end index (excluded); negative values are supported just like in Python lists
+        to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
+        negative values are supported (-1 = last, -2 = penultimate,...)
         """
         return [json.loads(s) for s in self.redis.lrange(key, from_idx, to_idx)]
 
