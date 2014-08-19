@@ -27,7 +27,7 @@ import plugins
 import settings
 import taghelper
 import strings
-from strings import format_number
+from strings import format_number, corpus_get_conf
 from translation import ugettext as _
 
 
@@ -537,7 +537,7 @@ class ConcCGI(CGIPublisher):
             choose_selector(self.__dict__, getattr(self, selectorname))
         self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._user), self.subcpath)
         if getattr(self, 'refs') is None:
-            self.refs = self._corp().get_conf('SHORTREF')
+            self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
         self.__dict__.update(na)
 
         # return url (for 3rd party pages etc.)
@@ -681,7 +681,7 @@ class ConcCGI(CGIPublisher):
         return cn, fallback
 
     def self_encoding(self):
-        enc = self._corp().get_conf('ENCODING')
+        enc = corpus_get_conf(self._corp(), 'ENCODING')
         if enc:
             return enc
         else:
@@ -705,9 +705,9 @@ class ConcCGI(CGIPublisher):
 
     def _add_corpus_related_globals(self, result, corpus):
         result['files_path'] = self._files_path
-        result['struct_ctx'] = corpus.get_conf('STRUCTCTX')
-        result['corp_doc'] = corpus.get_conf('DOCUMENTATION')
-        result['corp_full_name'] = (corpus.get_conf('NAME')
+        result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
+        result['corp_doc'] = corpus_get_conf(corpus, 'DOCUMENTATION')
+        result['corp_full_name'] = (corpus_get_conf(corpus, 'NAME')
                                     or self.corpname)
 
         result['corp_description'] = corpus.get_info()
@@ -726,11 +726,11 @@ class ConcCGI(CGIPublisher):
             result['subcorp_size'] = format_number(sc.search_size())
         else:
             result['subcorp_size'] = None
-        attrlist = corpus.get_conf('ATTRLIST').split(',')
-        sref = corpus.get_conf('SHORTREF')
+        attrlist = corpus_get_conf(corpus, 'ATTRLIST').split(',')
+        sref = corpus_get_conf(corpus, 'SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
-        result['corpencoding'] = corpus.get_conf('ENCODING')
+        result['corpencoding'] = corpus_get_conf(corpus, 'ENCODING')
         poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
         result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
@@ -743,19 +743,19 @@ class ConcCGI(CGIPublisher):
             poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
-        result['default_attr'] = corpus.get_conf('DEFAULTATTR')
+        result['default_attr'] = corpus_get_conf(corpus, 'DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
                 continue
             result[listname] = \
-                [{'label': corpus.get_conf(n + '.LABEL') or n, 'n': n}
-                 for n in corpus.get_conf(listname.upper()).split(',')
+                [{'label': corpus_get_conf(corpus, n + '.LABEL') or n, 'n': n}
+                 for n in corpus_get_conf(corpus, listname.upper()).split(',')
                  if n]
-        result['tagsetdoc'] = strings.import_string(corpus.get_conf('TAGSETDOC'), from_encoding=corpus.get_conf('ENCODING'))
+        result['tagsetdoc'] = corpus_get_conf(corpus, 'TAGSETDOC')
         result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a) for a in
-                                           corpus.get_conf('SUBCORPATTRS')
+                                           corpus_get_conf(corpus, 'SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
-        result['corp_uses_tag'] = 'tag' in corpus.get_conf('ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus_get_conf(corpus, 'ATTRLIST').split(',')
         if self.annotconc and not 'GroupNumbers' in result.keys():
             labelmap = conclib.get_conc_labelmap(self._storeconc_path()
                                                  + '.info')
@@ -1002,7 +1002,7 @@ class ConcCGI(CGIPublisher):
         somewhere on a page).
         """
         if self._corp().get_conf('NAME'):
-            return self._corp().get_conf('NAME')
+            return corpus_get_conf(self._corp(), 'NAME')
         elif self.corpname:
             return self._canonical_corpname(self.corpname)
         else:
@@ -1021,7 +1021,7 @@ class ConcCGI(CGIPublisher):
           corpus object we want to test
         """
         speech_struct = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
-        return speech_struct in self._corp().get_conf('STRUCTATTRLIST').split(',')
+        return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
 
     def _get_speech_segment(self):
         """

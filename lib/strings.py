@@ -15,6 +15,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+"""
+This module contains helper functions to cope with character encoding
+issues given by the facts that application-wide locale settings cannot
+be used in WSGI environment and that manatee.corpus instance does not
+unify encoding of its string-returning functions to UTF-8 (although
+'manatee' module contains 'set_encoding' function it cannot be used in
+concurrent environment as it applies for all the corpora using the
+same 'manatee' module instance).
+"""
+
 import os
 import json
 import re
@@ -205,3 +215,18 @@ def camelize(s):
     """
     a = [x for x in s.split('_') if len(x) > 0]
     return a[0] + ''.join([x[0].upper() + x[1:] for x in a[1:]])
+
+
+def corpus_get_conf(corp, conf_key):
+    """
+    A helper function to retrieve values from corpus registry file using proper
+    encoding conversion.
+
+    arguments:
+    corp -- a manatee.corpus instance
+    conf_key -- a registry configuration value
+    """
+    if conf_key != 'ENCODING':
+        return import_string(corp.get_conf(conf_key), from_encoding=corp.get_conf('ENCODING'))
+    else:
+        return corp.get_conf(conf_key)
