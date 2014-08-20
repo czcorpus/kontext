@@ -221,6 +221,9 @@ class App(object):
 
 settings.load(conf_path=CONF_PATH)
 
+if settings.contains('global', 'manatee_path'):
+    sys.path.insert(0, settings.get('global', 'manatee_path'))
+
 application = App()
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
