@@ -317,20 +317,14 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     };
 
     lib.makePrimaryButtons = function () {
-        $('#mainform .make-primary').on('click', function (evt) {
-            var linkElm,
-                jqCurrPrimaryCorpInput = $('#mainform input[type="hidden"][name="corpname"]'),
-                newPrimary;
+        var queryForm = $('#mainform');
 
-            if ($(evt.target).is('a.make-primary')) {
-                linkElm = evt.target;
+        queryForm.find('.make-primary').on('click', function (evt) {
+            var linkElm = evt.currentTarget,
+                jqCurrPrimaryCorpInput = queryForm.find('input[type="hidden"][name="corpname"]'),
+                newPrimary = $(linkElm).attr('data-corpus-id');
 
-            } else {
-                linkElm = $(evt.target).closest('a').get(0);
-            }
-
-            newPrimary = $(linkElm).attr('data-corpus-id');
-
+            queryForm.attr('action', 'first_form?' + layoutModel.conf.stateParams);
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
             $('#mainform input[type="hidden"][name="corpname"]').val(newPrimary);
