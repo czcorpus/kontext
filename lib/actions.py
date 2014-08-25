@@ -1644,8 +1644,7 @@ class Actions(ConcCGI):
                     if 'label' in item and item['label'] in hints:
                         item['label_hint'] = hints[item['label']]
 
-    def _texttypes_with_norms(self, subcorpattrs='', list_all=False,
-                             format_num=True, ret_nums=True):
+    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True):
         corp = self._corp()
         if not subcorpattrs:
             subcorpattrs = corp.get_conf('SUBCORPATTRS') \
@@ -1655,7 +1654,13 @@ class Actions(ConcCGI):
                     'Normslist': [], 'Blocks': []}
 
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
-        tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_all)
+        # if live_attributes are installed then always shrink bibliographical
+        # entries even if their count is < maxlistsize
+        if plugins.has_plugin('live_attributes'):
+            list_none = (plugins.corptree.get_corpus_info(corp.get_conf('NAME'))['metadata']['label_attr'], )
+        else:
+            list_none = ()
+        tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
         self._add_text_type_hints(tt)
         if not ret_nums:
             return {'Blocks': tt, 'Normslist': []}

@@ -294,22 +294,15 @@ def attr_vals(corpname, avattr, avpattern, avmaxitems=20):
            (avpattern, ','.join(["'" + item + "'" for item in items]))
 
 
-def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
+def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
     """
-    Parameters
-    ----------
-    corp : manatee.Corpus
+    arguments:
+    corp -- manatee.Corpus
+    subcorpattrs -- ??
+    maxlistsize -- in case there is more that this number of items, empty list will be returned
+    shrink_list -- list/tuple of attributes we want to return empty lists for
 
-    subcorpattrs : ??
-
-    maxlistsize : int
-            in case there is more that this number of items, empty list will be returned
-
-    list_all : bool
-            if True then non-empty lists are always returned
-
-    Returns
-    -------
+    returns:
     a list containing following dictionaries
     { 'Line' : [
         { 'attr_doc_label' : '', 'Values' : [ {'v', 'item name'}, ... ], 'name' : '', 'attr_doc' : '', 'label' : '' },
@@ -320,6 +313,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
     if subcorpattrs == '#':
         return []
     attrlines = []
+
     for subcorpline in subcorpattrs.split(','):
         attrvals = []
         for n in subcorpline.split('|'):
@@ -334,9 +328,10 @@ def texttype_values(corp, subcorpattrs, maxlistsize, list_all=False):
             vals = []
             hsep = corp.get_conf(n + '.HIERARCHICAL')
             multisep = corp.get_conf(n + '.MULTISEP')
-            if not hsep and not list_all \
+
+            if not hsep \
                 and (corp.get_conf(n + '.TEXTBOXLENGTH')
-                     or attr.id_range() > maxlistsize):
+                     or attr.id_range() > maxlistsize or n in shrink_list):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
                                             or 24)
             else:  # list of values
