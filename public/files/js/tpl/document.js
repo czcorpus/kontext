@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttributes',
-        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox, util, liveAttributes) {
+define(['win', 'jquery', 'queryInput', 'popupbox',
+        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox) {
     'use strict';
 
     var lib = {};
@@ -962,6 +962,17 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
 
     /**
      *
+     * @returns {*|HTMLElement}
+     */
+    lib.createSmallAjaxLoader = function () {
+        return $('<img src="../files/img/ajax-loader.gif" '
+            + 'alt="' + lib.conf.messages.loading + '" '
+            + 'title="' + lib.conf.messages.loading + '" '
+            + 'style="width: 24px; height: 24px" />');
+    };
+
+    /**
+     *
      */
     lib.resetPlugins = function () {
         var i;
@@ -986,6 +997,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
      * @property {function} conf
      * @property {function} ajax
      * @property {function} ajaxAnim
+     * @property {function} ajaxAnimSmall
      * @property {function} showMessage
      * @property {function} translate
      * @property {function} applySelectAll
@@ -1015,6 +1027,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
 
             ajaxAnim : function () {
                 return self.createAjaxLoader.apply(self, arguments);
+            },
+
+            ajaxAnimSmall : function () {
+                return self.createSmallAjaxLoader.apply(self, arguments);
             },
 
             appendLoader : function () {
@@ -1150,9 +1166,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'util', 'plugins/liveAttribut
             timeoutMessages : lib.timeoutMessages(),
             mouseOverImages : lib.mouseOverImages(),
             enhanceMessages : lib.enhanceMessages(),
-            externalHelpLinks : lib.externalHelpLinks(),
-            liveAttributesInit : liveAttributes.init(lib.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
-                '.text-type-params')
+            externalHelpLinks : lib.externalHelpLinks()
         });
 
         $.each(this.initCallbacks, function (i, fn) {
