@@ -233,7 +233,6 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 trElm.addClass('excluded');
                 labelElm.removeClass('locked');
 
-
             } else {
                 trElm.removeClass('excluded');
                 if (this.checked) {
@@ -534,16 +533,20 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     /**
      *
      * @param pluginApi
-     * @param {AlignedCorpora} alignedCorpora
-     * @param updateButton
+     * @param alignedCorpora
      * @param successAction
+     * @param ajaxAnimation
      */
-    function bindSelectionUpdateEvent(pluginApi, alignedCorpora, updateButton, successAction) {
+    function loadData(pluginApi, alignedCorpora, successAction, ajaxAnimation) {
+        var requestURL,
+            alignedCorpnames,
+            selectedAttrs,
+            fieldset = $('#specify-query-metainformation .text-type-params');
 
         function exportAttrStatus() {
             var ans = {};
 
-            $('.text-type-params .attr-selector:checked').each(function () {
+            fieldset.find('.attr-selector:checked').each(function () {
                 var key = stripPrefix($(this).attr('name'));
 
                 if (!ans.hasOwnProperty(key)) {
@@ -554,11 +557,42 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             return ans;
         }
 
+        selectedAttrs = exportAttrStatus();
+
+        requestURL = 'filter_attributes?corpname=' + pluginApi.conf('corpname')
+            + '&attrs=' + JSON.stringify(selectedAttrs);
+
+        alignedCorpnames = alignedCorpora.findSelected();
+        if (alignedCorpnames) {
+            requestURL += '&aligned=' + JSON.stringify(alignedCorpnames);
+        }
+
+        ajaxAnimation.start();
+
+        pluginApi.ajax(requestURL, {
+            dataType : 'json',
+            success : function (data) {
+                successAction(data, selectedAttrs);
+                ajaxAnimation.stop();
+            },
+            error : function (jqXHR, textStatus, errorThrown) {
+                ajaxAnimation.stop();
+                pluginApi.showMessage('error', errorThrown);
+
+            }
+        });
+    }
+
+    /**
+     *
+     * @param pluginApi
+     * @param {AlignedCorpora} alignedCorpora
+     * @param updateButton
+     * @param successAction
+     */
+    function bindSelectionUpdateEvent(pluginApi, alignedCorpora, updateButton, successAction) {
         updateButton.on('click', function () {
-            var selectedAttrs = exportAttrStatus(),
-                ajaxAnimElm,
-                requestURL,
-                alignedCorpnames;
+            var ajaxAnimation;
 
             /*
             The following json response structure is expected:
@@ -571,35 +605,69 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             }
             */
 
-            ajaxAnimElm = pluginApi.ajaxAnim();
-            $(ajaxAnimElm).css({
-                'position' : 'absolute',
-                'left' : ($(win).width() / 2 - $(ajaxAnimElm).width() / 2) +  'px',
-                'top' : ($(win).height() / 2) + 'px'
-            });
-            $('#content').append(ajaxAnimElm);
-
-            requestURL = 'filter_attributes?corpname=' + pluginApi.conf('corpname')
-                + '&attrs=' + JSON.stringify(selectedAttrs);
-
-            alignedCorpnames = alignedCorpora.findSelected();
-            if (alignedCorpnames) {
-                requestURL += '&aligned=' + JSON.stringify(alignedCorpnames);
-            }
-
-            pluginApi.ajax(requestURL, {
-                dataType : 'json',
-                success : function (data) {
-                    successAction(data, selectedAttrs);
-                    $(ajaxAnimElm).remove();
+            ajaxAnimation = {
+                animElm : null,
+                start : function () {
+                    this.animElm = pluginApi.ajaxAnim();
+                    $(this.animElm).css({
+                        'position' : 'absolute',
+                        'left' : ($(win).width() / 2 - $(this.animElm).width() / 2) +  'px',
+                        'top' : ($(win).height() / 2) + 'px'
+                    });
+                    $('#content').append(this.animElm);
                 },
-                error : function (jqXHR, textStatus, errorThrown) {
-                    $(ajaxAnimElm).remove();
-                    pluginApi.showMessage('error', errorThrown);
+                stop : function () {
+                    $(this.animElm).remove();
+                }
+            };
 
+            loadData(pluginApi, alignedCorpora, successAction, ajaxAnimation);
+
+        });
+    }
+
+    /**
+     *
+     * @param pluginApi
+     * @param alignedCorpora
+     * @param updateAttrTables
+     */
+    function updateSearchFiledsets(pluginApi, alignedCorpora, updateAttrTables) {
+        var fieldset = $('#specify-query-metainformation'),
+            ajaxAnimation,
+            bibAttr = fieldset.find('.text-type-params').attr('data-bib-attr'),
+            bibTable = null;
+
+
+        if (bibAttr) {
+            fieldset.find('table.envelope').each(function (i, table) {
+                if ($(table).attr('data-attr') === bibAttr) {
+                    bibTable = $(table);
+                    return false;
                 }
             });
-        });
+
+            if (bibTable) {
+                ajaxAnimation = {
+                    animElm : null,
+                    start : function () {
+                        this.animElm = pluginApi.ajaxAnimSmall();
+                        this.animElm.css({
+                            'display' : 'block',
+                            'margin' : '0 auto'
+                        });
+                        bibTable.find('input.raw-selection').after(this.animElm);
+                    },
+                    stop : function () {
+                        this.animElm.remove();
+                    }
+                };
+
+                if (!fieldset.hasClass('inactive')) {
+                    loadData(pluginApi, alignedCorpora, updateAttrTables, ajaxAnimation);
+                }
+            }
+        }
     }
 
     /**
@@ -618,7 +686,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             selectionSteps = new SelectionSteps(pluginApi),
             alignedCorpora = new AlignedCorpora(),
             structTables = new StructTables(attrFieldsetWrapper, selectionSteps),
-            resetAll;
+            resetAll,
+            updateAttrTables;
 
 
         attrFieldsetWrapper.find('.attr-selector').on('click', function () {
@@ -630,15 +699,15 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             }
         });
 
-        bindSelectionUpdateEvent(pluginApi, alignedCorpora, $(updateButton),
-            function (data, selectedAttrs) {
-                alignedCorpora.update(data);
-                checkboxes.update(data);
-                rawInputs.update(data);
-                selectionSteps.update(data, selectedAttrs, alignedCorpora);
-                structTables.update();
-            }
-        );
+        updateAttrTables = function (data, selectedAttrs) {
+            alignedCorpora.update(data);
+            checkboxes.update(data);
+            rawInputs.update(data);
+            selectionSteps.update(data, selectedAttrs, alignedCorpora);
+            structTables.update();
+        };
+
+        bindSelectionUpdateEvent(pluginApi, alignedCorpora, $(updateButton), updateAttrTables);
 
         resetAll = function () {
             checkboxes.reset();
@@ -651,6 +720,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         resetButton.on('click', resetAll);
         $(win).on('unload', resetAll);
         pluginApi.registerReset(resetAll);
+
+        updateSearchFiledsets(pluginApi, alignedCorpora, updateAttrTables);
     };
 
     return lib;

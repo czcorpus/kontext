@@ -21,8 +21,9 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage', 'conclines'], function (win,
-        $, treeComponent, layoutModel, queryInput, queryStorage, conclines) {
+define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage',
+    'plugins/liveAttributes', 'conclines'], function (win, $, treeComponent, layoutModel, queryInput, queryStorage,
+                                                      liveAttributes, conclines) {
     'use strict';
 
     var lib = {},
@@ -350,7 +351,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateFieldsets : lib.updateFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            queryStorage : queryStorage.init(layoutModel.pluginApi())
+            queryStorage : queryStorage.init(layoutModel.pluginApi()),
+            liveAttributesInit : liveAttributes.init(layoutModel.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
+                '.text-type-params')
         });
         return promises;
     };
