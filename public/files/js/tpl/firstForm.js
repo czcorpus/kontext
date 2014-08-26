@@ -28,10 +28,23 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
 
     var lib = {},
         activeParallelCorporaSettingKey = 'active_parallel_corpora',
-        clStorage = conclines.openStorage();
+        clStorage = conclines.openStorage(),
+        ExtendedApi;
 
     lib.maxEncodedParamsLength = 1500;
     lib.treeComponent = null;
+
+    ExtendedApi = function () {
+        this.queryFieldsetToggleEvents = [];
+    };
+
+    ExtendedApi.prototype = layoutModel.pluginApi();
+
+    ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
+        this.queryFieldsetToggleEvents.push(fn);
+    };
+
+    lib.extendedApi = new ExtendedApi();
 
     /**
      *
@@ -202,7 +215,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
      */
     lib.bindQueryFieldsetsEvents = function () {
         $('a.form-extension-switch').on('click', function (event) {
-            var jqTriggerLink = $(event.target),
+            var jqTriggerLink = $(event.currentTarget),
                 jqFieldset = jqTriggerLink.closest('fieldset');
 
             jqFieldset.toggleClass('inactive');
@@ -222,6 +235,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
+            $.each(lib.extendedApi.queryFieldsetToggleEvents, function (i, fn) {
+                fn(jqFieldset);
+            });
             layoutModel.mouseOverImages();
         });
     };
@@ -354,8 +370,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateQueryFieldsets : lib.updateQueryFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            queryStorage : queryStorage.init(layoutModel.pluginApi()),
-            liveAttributesInit : liveAttributes.init(layoutModel.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
+            queryStorage : queryStorage.init(lib.extendedApi),
+            liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });
         return promises;

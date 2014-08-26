@@ -17,9 +17,27 @@
  */
 
 define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
+    'use strict';
+
     var lib = {
         pluginApi : null
     };
+
+    /**
+     *
+     * @param s
+     * @returns {*}
+     */
+    function stripPrefix(s) {
+        var x = /^sca_(.+)$/,
+            ans;
+
+        ans = x.exec(s);
+        if (ans) {
+            return ans[1];
+        }
+        return null;
+    }
 
     /**
      * Handles transforming of raw input attribute value selectors (i.e. the ones with too long lists
@@ -78,7 +96,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                     bibLink,
                     itemLabel;
 
-                if (isArray(row)) { // => value and label differ
+                if ($.isArray(row)) { // => value and label differ
                     itemLabel = row[0];
                     rowIdentValue = row[1];
 
@@ -87,7 +105,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                     rowIdentValue = row;
                 }
 
-                if (defaultRowIdKey == bibConf.label_attr) { // => special column representing a list of bib. entries
+                if (defaultRowIdKey === bibConf.label_attr) { // => special column representing a list of bib. entries
                     rowIdentKey = bibConf.id_attr;
                     bibLink = '<a class="bib-info" data-bib-id="' + rowIdentValue + '">i</a>';
 
@@ -118,7 +136,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
          */
         function bindBibLink(target) {
             popupBox.bind($(target),
-                function(tooltipBox, finalizeCallback) {
+                function (tooltipBox, finalizeCallback) {
                     var ajaxAnimElm = self.pluginApi.ajaxAnim();
 
                     $(ajaxAnimElm).css({
@@ -155,8 +173,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 },
                 {
                     type : 'plain'
-                }
-            );
+                });
         }
 
         self.attrFieldsetWrapper.find('.raw-selection').each(function () {
@@ -176,7 +193,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             attrTable.find('.select-all').css('display', 'none');
             $(inputElm).show();
 
-            if (isArray(dataItem)) {
+            if ($.isArray(dataItem)) {
                 attrTable.find('.metadata').empty();
                 dataTable = createDataTable(dataItem, ident, self.pluginApi.conf('bibConf'), checkedItems);
                 $(inputElm).after(dataTable);
@@ -229,7 +246,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             var id = stripPrefix($(this).attr('name')),
                 trElm = $(this).closest('tr'),
                 labelElm = $(this).closest('label'),
-                inputVal = $(this).val() != self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
+                inputVal = $(this).val() !== self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
             if ($.inArray(inputVal, data[id]) < 0) {
                 trElm.addClass('excluded');
@@ -241,7 +258,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                     labelElm.addClass('locked');
                     $(this).attr('disabled', 'disabled');
                     $(this).after('<input class="checkbox-substitute" type="hidden" '
-                    + 'name="' + $(this).attr('name') + '" value="' + $(this).attr('value') + '" />');
+                        + 'name="' + $(this).attr('name') + '" value="' + $(this).attr('value') + '" />');
 
                 } else {
                     labelElm.removeClass('locked');
@@ -336,45 +353,9 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
     /**
      *
-     * @param s
-     * @returns {*}
-     */
-    function stripPrefix(s) {
-        var x = /^sca_(.+)$/,
-            ans;
-
-        ans = x.exec(s);
-        if (ans) {
-            return ans[1];
-        }
-        return null;
-    }
-
-    /**
-     *
-     * @param obj
-     * @returns {boolean}
-     */
-    function isArray(obj) {
-        return Object.prototype.toString.call(obj) === '[object Array]';
-    }
-
-    /**
-     *
-     * @param obj
-     * @returns {boolean}
-     */
-    function isObject(obj) {
-        return Object.prototype.toString.call(obj) === '[object Object]';
-    }
-
-    /**
-     *
      * @constructor
      */
-    function AlignedCorpora() {
-
-    }
+    function AlignedCorpora() {}
 
     /**
      * Disables all the corpora not present in data.corpus_id
@@ -439,10 +420,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         }
         if (v === undefined) {
             return this.jqSteps.data('num-steps');
-
-        } else {
-            this.jqSteps.data('num-steps', v);
         }
+        this.jqSteps.data('num-steps', v);
     };
 
     SelectionSteps.prototype.usedAttributes = function (v) {
@@ -452,10 +431,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
         if (v === undefined) {
             return this.jqSteps.data('used-attrs');
-
-        } else {
-            this.jqSteps.data('used-attrs', v);
         }
+        this.jqSteps.data('used-attrs', v);
     };
 
     /**
@@ -517,7 +494,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      * @returns {string}
      */
     SelectionSteps.prototype.createStepTable = function (data, selectedAttrs) {
-        var html = null,
+        var ansHtml = null,
             usedAttrs = this.usedAttributes(),
             positionInfo = '',
             self = this,
@@ -541,9 +518,12 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                     }
                     html = '<strong>' + p + '</strong> &#8712; {' + values.join(', ') + '}';
                     if (self.numSteps() > 0) {
-                        html = '... &amp; ' + html;
+                        ans.push('... &amp; ' + html);
+
+                    } else {
+                        ans.push(html);
                     }
-                    ans.push(html);
+
                 }
             }
             return ans;
@@ -554,9 +534,9 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             if (data.poscount !== undefined) {
                 positionInfo = this.pluginApi.translate('%s positions').replace('%s', data.poscount);
             }
-            html = this.rawCreateStepTable(this.numSteps(), newAttrs + '<br />' + positionInfo);
+            ansHtml = this.rawCreateStepTable(this.numSteps(), newAttrs + '<br />' + positionInfo);
         }
-        return html;
+        return ansHtml;
     };
 
     /**
@@ -697,13 +677,12 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     lib.init = function (pluginApi, updateButton, resetButton, attrFieldsetWrapper) {
         lib.pluginApi = pluginApi;
         attrFieldsetWrapper = $(attrFieldsetWrapper);
+        resetButton = $(resetButton);
 
         (function () {
-            var resetButton = $(resetButton),
-                rawInputs = new LiveData(pluginApi, attrFieldsetWrapper),
+            var rawInputs = new LiveData(pluginApi, attrFieldsetWrapper),
                 selectionSteps = new SelectionSteps(pluginApi),
                 checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
-                selectionSteps = new SelectionSteps(pluginApi),
                 alignedCorpora = new AlignedCorpora(),
                 structTables = new StructTables(attrFieldsetWrapper, selectionSteps),
                 resetAll,
@@ -741,6 +720,11 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             pluginApi.registerReset(resetAll);
 
             initializeSearchAttrFiledsets(alignedCorpora, checkboxes, updateAttrTables);
+            lib.pluginApi.bindFieldsetToggleEvent(function (fieldset) {
+                if (!fieldset.hasClass('inactive')) {
+                    initializeSearchAttrFiledsets(alignedCorpora, checkboxes, updateAttrTables);
+                }
+            });
         }());
     };
 
