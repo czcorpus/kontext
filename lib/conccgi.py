@@ -402,17 +402,20 @@ class ConcCGI(CGIPublisher):
         To even begin the search, two conditions must be met:
         1. conc_persistence plugin is installed
         2. self.q contains a string recognized as a valid ID of a stored concordance query
+           at the position 0 (other positions may contain additional regular query operations
+           (shuffle, filter,...)
 
         In case the conc_persistence is installed and invalid ID is encountered
         UserActionException will be raised.
         """
-        if plugins.has_plugin('conc_persistence') and self.q and plugins.conc_persistence.is_valid_id(self.q[0]):
-            self._q_code = self.q[0][1:]
+        url_q = self.q[:]
+        if plugins.has_plugin('conc_persistence') and self.q and plugins.conc_persistence.is_valid_id(url_q[0]):
+            self._q_code = url_q[0][1:]
             self._prev_q_data = plugins.conc_persistence.open(self._q_code)
             # !!! must create a copy here otherwise _q_data (as prev query)
             # will be rewritten by self.q !!!
             if self._prev_q_data is not None:
-                self.q = self._prev_q_data['q'][:]
+                self.q = self._prev_q_data['q'][:] + url_q[1:]
             else:
                 raise UserActionException(_('Invalid stored query identifier used'))
 
