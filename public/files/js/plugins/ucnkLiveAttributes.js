@@ -638,11 +638,16 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     }
 
     /**
+     * This function loads bibliography entries into unmodified attribute list
+     * fieldset (i.e. it is best run right after the page is loaded).
+     * There is no need to perform any checks whether items can be loaded for
+     * the current corpus because the function does the check by itself.
+     *
      * @param {Checkboxes} checkBoxes
      * @param {AlignedCorpora} alignedCorpora
      * @param {function} updateAttrTables
      */
-    function updateSearchFiledsets(alignedCorpora, checkBoxes, updateAttrTables) {
+    function initializeSearchAttrFiledsets(alignedCorpora, checkBoxes, updateAttrTables) {
         var fieldset = $('#specify-query-metainformation'),
             ajaxAnimation,
             bibAttr = fieldset.find('.text-type-params').attr('data-bib-attr'),
@@ -681,6 +686,9 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     }
 
     /**
+     * This function initializes the plug-in. It must be run after all the page dependencies
+     * are ready.
+     *
      * @param {{}} pluginApi
      * @param {HTMLElement|jQuery|string} updateButton update button element
      * @param {HTMLElement|jQuery|string} resetButton reset button element
@@ -732,7 +740,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             $(win).on('unload', resetAll);
             pluginApi.registerReset(resetAll);
 
-            updateSearchFiledsets(alignedCorpora, checkboxes, updateAttrTables);
+            initializeSearchAttrFiledsets(alignedCorpora, checkboxes, updateAttrTables);
         }());
     };
 
