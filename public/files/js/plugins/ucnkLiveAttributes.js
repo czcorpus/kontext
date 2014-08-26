@@ -17,7 +17,9 @@
  */
 
 define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
-    var lib = {};
+    var lib = {
+        pluginApi : null
+    };
 
     /**
      * Handles transforming of raw input attribute value selectors (i.e. the ones with too long lists
@@ -271,8 +273,34 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         });
     };
 
+    /**
+     * For all the attributes, the method finds all the checked values:
+     * {
+     *    attr_1 : [value_1_1, value_1_2,...],
+     *    attr_2 : [value_2_1, value_2_2,...],
+     *    ...
+     * }
+     *
+     * @returns {{}}
+     */
+    Checkboxes.prototype.exportStatus = function () {
+        var ans = {};
+
+        this.attrFieldsetWrapper.find('.attr-selector:checked').each(function () {
+            var key = stripPrefix($(this).attr('name'));
+
+            if (!ans.hasOwnProperty(key)) {
+                ans[key] = [];
+            }
+            ans[key].push($(this).val());
+        });
+        return ans;
+    };
+
 
     /**
+     * Handles state of tables wrapping listed values of individual attributes.
+     *
      * @param {jQuery} attrFieldsetWrapper
      * @param {SelectionSteps} selectionSteps
      * @constructor
@@ -395,6 +423,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     };
 
     /**
+     * Handles displaying of the block diagram which depicts user's selection steps.
      *
      * @param pluginApi
      * @constructor
@@ -531,35 +560,30 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     };
 
     /**
+     * Loads valid attributes values according to the current selection.
      *
-     * @param pluginApi
-     * @param alignedCorpora
-     * @param successAction
-     * @param ajaxAnimation
+     * The following json response structure is expected:
+     * {
+     *   "poscount": "49 738 011", <- formatted number representing number of avail. positions in this selection
+     *   "structure1.attribute1": ["a value", ...],
+     *   "structure2.attribute1": ["a value", ...],
+     *   ...
+     *   "structureN.attributeM": {"length": 827} <- a structure with too many items to display reports only its size
+     * }
+     *
+     * @param {AlignedCorpora} alignedCorpora
+     * @param {Checkboxes} checkBoxes
+     * @param {function} successAction
+     * @param {{}} ajaxAnimation
+     * @param {function} ajaxAnimation.start
+     * @param {function} ajaxAnimation.stop
      */
-    function loadData(pluginApi, alignedCorpora, successAction, ajaxAnimation) {
+    function loadData(alignedCorpora, checkBoxes, successAction, ajaxAnimation) {
         var requestURL,
             alignedCorpnames,
-            selectedAttrs,
-            fieldset = $('#specify-query-metainformation .text-type-params');
+            selectedAttrs = checkBoxes.exportStatus();
 
-        function exportAttrStatus() {
-            var ans = {};
-
-            fieldset.find('.attr-selector:checked').each(function () {
-                var key = stripPrefix($(this).attr('name'));
-
-                if (!ans.hasOwnProperty(key)) {
-                    ans[key] = [];
-                }
-                ans[key].push($(this).val());
-            });
-            return ans;
-        }
-
-        selectedAttrs = exportAttrStatus();
-
-        requestURL = 'filter_attributes?corpname=' + pluginApi.conf('corpname')
+        requestURL = 'filter_attributes?corpname=' + lib.pluginApi.conf('corpname')
             + '&attrs=' + JSON.stringify(selectedAttrs);
 
         alignedCorpnames = alignedCorpora.findSelected();
@@ -569,7 +593,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
         ajaxAnimation.start();
 
-        pluginApi.ajax(requestURL, {
+        lib.pluginApi.ajax(requestURL, {
             dataType : 'json',
             success : function (data) {
                 successAction(data, selectedAttrs);
@@ -577,38 +601,26 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             },
             error : function (jqXHR, textStatus, errorThrown) {
                 ajaxAnimation.stop();
-                pluginApi.showMessage('error', errorThrown);
-
+                lib.pluginApi.showMessage('error', errorThrown);
             }
         });
     }
 
     /**
      *
-     * @param pluginApi
      * @param {AlignedCorpora} alignedCorpora
+     * @param {Checkboxes} checkBoxes
      * @param updateButton
      * @param successAction
      */
-    function bindSelectionUpdateEvent(pluginApi, alignedCorpora, updateButton, successAction) {
+    function bindSelectionUpdateEvent(alignedCorpora, checkBoxes, updateButton, successAction) {
         updateButton.on('click', function () {
             var ajaxAnimation;
-
-            /*
-            The following json response structure is expected:
-            {
-                "poscount": "49 738 011", <- formatted number representing number of avail. positions in this selection
-                "structure1.attribute1": ["a value", ...],
-                "structure2.attribute1": ["a value", ...],
-                ...
-                "structureN.attributeM": {"length": 827} <- a structure with too many items to display reports only its size
-            }
-            */
 
             ajaxAnimation = {
                 animElm : null,
                 start : function () {
-                    this.animElm = pluginApi.ajaxAnim();
+                    this.animElm = lib.pluginApi.ajaxAnim();
                     $(this.animElm).css({
                         'position' : 'absolute',
                         'left' : ($(win).width() / 2 - $(this.animElm).width() / 2) +  'px',
@@ -621,18 +633,16 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 }
             };
 
-            loadData(pluginApi, alignedCorpora, successAction, ajaxAnimation);
-
+            loadData(alignedCorpora, checkBoxes, successAction, ajaxAnimation);
         });
     }
 
     /**
-     *
-     * @param pluginApi
-     * @param alignedCorpora
-     * @param updateAttrTables
+     * @param {Checkboxes} checkBoxes
+     * @param {AlignedCorpora} alignedCorpora
+     * @param {function} updateAttrTables
      */
-    function updateSearchFiledsets(pluginApi, alignedCorpora, updateAttrTables) {
+    function updateSearchFiledsets(alignedCorpora, checkBoxes, updateAttrTables) {
         var fieldset = $('#specify-query-metainformation'),
             ajaxAnimation,
             bibAttr = fieldset.find('.text-type-params').attr('data-bib-attr'),
@@ -651,7 +661,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 ajaxAnimation = {
                     animElm : null,
                     start : function () {
-                        this.animElm = pluginApi.ajaxAnimSmall();
+                        this.animElm = lib.pluginApi.ajaxAnimSmall();
                         this.animElm.css({
                             'display' : 'block',
                             'margin' : '0 auto'
@@ -664,7 +674,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 };
 
                 if (!fieldset.hasClass('inactive')) {
-                    loadData(pluginApi, alignedCorpora, updateAttrTables, ajaxAnimation);
+                    loadData(alignedCorpora, checkBoxes, updateAttrTables, ajaxAnimation);
                 }
             }
         }
@@ -677,51 +687,53 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
      * @param {HTMLElement|jQuery|string} attrFieldsetWrapper element containing attribute checkboxes
      */
     lib.init = function (pluginApi, updateButton, resetButton, attrFieldsetWrapper) {
+        lib.pluginApi = pluginApi;
+        attrFieldsetWrapper = $(attrFieldsetWrapper);
 
-        var attrFieldsetWrapper = $(attrFieldsetWrapper),
-            resetButton = $(resetButton),
-            rawInputs = new LiveData(pluginApi, attrFieldsetWrapper),
-            selectionSteps = new SelectionSteps(pluginApi),
-            checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
-            selectionSteps = new SelectionSteps(pluginApi),
-            alignedCorpora = new AlignedCorpora(),
-            structTables = new StructTables(attrFieldsetWrapper, selectionSteps),
-            resetAll,
-            updateAttrTables;
+        (function () {
+            var resetButton = $(resetButton),
+                rawInputs = new LiveData(pluginApi, attrFieldsetWrapper),
+                selectionSteps = new SelectionSteps(pluginApi),
+                checkboxes = new Checkboxes(pluginApi, attrFieldsetWrapper),
+                selectionSteps = new SelectionSteps(pluginApi),
+                alignedCorpora = new AlignedCorpora(),
+                structTables = new StructTables(attrFieldsetWrapper, selectionSteps),
+                resetAll,
+                updateAttrTables;
 
+            attrFieldsetWrapper.find('.attr-selector').on('click', function () {
+                if ($(this).is(':checked')) {
+                    $(this).addClass('user-selected');
 
-        attrFieldsetWrapper.find('.attr-selector').on('click', function () {
-            if ($(this).is(':checked')) {
-                $(this).addClass('user-selected');
+                } else {
+                    $(this).removeClass('user-selected');
+                }
+            });
 
-            } else {
-                $(this).removeClass('user-selected');
-            }
-        });
+            updateAttrTables = function (data, selectedAttrs) {
+                alignedCorpora.update(data);
+                checkboxes.update(data);
+                rawInputs.update(data);
+                selectionSteps.update(data, selectedAttrs, alignedCorpora);
+                structTables.update();
+            };
 
-        updateAttrTables = function (data, selectedAttrs) {
-            alignedCorpora.update(data);
-            checkboxes.update(data);
-            rawInputs.update(data);
-            selectionSteps.update(data, selectedAttrs, alignedCorpora);
-            structTables.update();
-        };
+            bindSelectionUpdateEvent(alignedCorpora, checkboxes, $(updateButton), updateAttrTables);
 
-        bindSelectionUpdateEvent(pluginApi, alignedCorpora, $(updateButton), updateAttrTables);
+            resetAll = function () {
+                checkboxes.reset();
+                alignedCorpora.reset();
+                rawInputs.reset();
+                selectionSteps.reset();
+                structTables.reset();
+            };
 
-        resetAll = function () {
-            checkboxes.reset();
-            alignedCorpora.reset();
-            rawInputs.reset();
-            selectionSteps.reset();
-            structTables.reset();
-        };
+            resetButton.on('click', resetAll);
+            $(win).on('unload', resetAll);
+            pluginApi.registerReset(resetAll);
 
-        resetButton.on('click', resetAll);
-        $(win).on('unload', resetAll);
-        pluginApi.registerReset(resetAll);
-
-        updateSearchFiledsets(pluginApi, alignedCorpora, updateAttrTables);
+            updateSearchFiledsets(alignedCorpora, checkboxes, updateAttrTables);
+        }());
     };
 
     return lib;
