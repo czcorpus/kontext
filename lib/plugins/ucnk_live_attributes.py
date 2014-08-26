@@ -140,9 +140,10 @@ class LiveAttributes(AbstractLiveAttributes):
 
     @staticmethod
     def format_data_types(data):
-        for k in data.keys():
-            if type(data[k]) is int or type(data[k]) is float or (type(data[k]) is str and data[k].isdigit()):
-                data[k] = strings.format_number(data[k])
+        if type(data) is dict:
+            for k in data.keys():
+                if type(data[k]) is int or type(data[k]) is float or (type(data[k]) is str and data[k].isdigit()):
+                    data[k] = strings.format_number(data[k])
         return data
 
     @staticmethod
@@ -160,7 +161,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         ans = db.execute("SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
         if ans:
-            return LiveAttributes.format_data_types(json.loads(ans[0]))
+            return LiveAttributes.format_data_types(json.loads(str(ans[0])))
         return None
 
     @staticmethod
@@ -276,6 +277,18 @@ class LiveAttributes(AbstractLiveAttributes):
         col_map = dict([(x[1], x[0]) for x in col_map])
         ans = db.execute('SELECT * FROM bibliography WHERE id = ?', item_id).fetchone()
         return dict([(k, ans[i]) for k, i in col_map.items()])
+
+    def get_bib_size(self, corpus):
+        """
+        Returns total number of items in bibliography
+        """
+        db = self.db(corpus.get_conf('NAME'))
+        size = self.from_cache(db, 'bib_size')
+        if size is None:
+            ans = db.execute('SELECT COUNT(*) FROM bibliography').fetchone()
+            size = ans[0]
+            self.to_cache(db, 'bib_size', size)
+        return size
 
 
 def create_instance(corptree, settings):
