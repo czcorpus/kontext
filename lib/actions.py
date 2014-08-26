@@ -1646,6 +1646,23 @@ class Actions(ConcCGI):
 
     def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True):
         corp = self._corp()
+        ans = {}
+
+        def compute_norm(attrname, attr, val):
+            valid = attr.str2id(export_string(unicode(val), to_encoding=self._corp().get_conf('ENCODING')))
+            r = corp.filter_query(struct.attr_val(attrname, valid))
+            cnt = 0
+            while not r.end():
+                cnt += normvals[r.peek_beg()]
+                r.next()
+            return cnt
+
+        def safe_int(s):
+            try:
+                return int(s)
+            except ValueError:
+                return 0
+
         if not subcorpattrs:
             subcorpattrs = corp.get_conf('SUBCORPATTRS') \
                 or corp.get_conf('FULLREF')
@@ -1657,62 +1674,55 @@ class Actions(ConcCGI):
         # if live_attributes are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         if plugins.has_plugin('live_attributes'):
-            list_none = (plugins.corptree.get_corpus_info(corp.get_conf('NAME'))['metadata']['label_attr'], )
+            ans['bib_attr'] = plugins.corptree.get_corpus_info(corp.get_conf('NAME'))['metadata']['label_attr']
+            list_none = (ans['bib_attr'], )
         else:
+            ans['bib_attr'] = None
             list_none = ()
         tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
         self._add_text_type_hints(tt)
-        if not ret_nums:
-            return {'Blocks': tt, 'Normslist': []}
-        basestructname = subcorpattrs.split('.')[0]
-        struct = corp.get_struct(basestructname)
-        normvals = {}
-        if self.subcnorm not in ('freq', 'tokens'):
-            try:
-                nas = struct.get_attr(self.subcnorm).pos2str
-            except conclib.manatee.AttrNotFound, e:
-                self.error = str(e)
-                self.subcnorm = 'freq'
-        if self.subcnorm == 'freq':
-            normvals = dict([(struct.beg(i), 1)
-                             for i in range(struct.size())])
-        elif self.subcnorm == 'tokens':
-            normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
-                             for i in range(struct.size())])
-        else:
-            def safe_int(s):
+
+        if ret_nums:
+            basestructname = subcorpattrs.split('.')[0]
+            struct = corp.get_struct(basestructname)
+            normvals = {}
+            if self.subcnorm not in ('freq', 'tokens'):
                 try:
-                    return int(s)
-                except:
-                    return 0
+                    nas = struct.get_attr(self.subcnorm).pos2str
+                except conclib.manatee.AttrNotFound, e:
+                    self.error = str(e)
+                    self.subcnorm = 'freq'
+            if self.subcnorm == 'freq':
+                normvals = dict([(struct.beg(i), 1)
+                                 for i in range(struct.size())])
+            elif self.subcnorm == 'tokens':
+                normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
+                                 for i in range(struct.size())])
+            else:
+                normvals = dict([(struct.beg(i), safe_int(nas(i)))
+                                 for i in range(struct.size())])
 
-            normvals = dict([(struct.beg(i), safe_int(nas(i)))
-                             for i in range(struct.size())])
-
-        def compute_norm(attrname, attr, val):
-            valid = attr.str2id(export_string(unicode(val), to_encoding=self._corp().get_conf('ENCODING')))
-            r = corp.filter_query(struct.attr_val(attrname, valid))
-            cnt = 0
-            while not r.end():
-                cnt += normvals[r.peek_beg()]
-                r.next()
-            return cnt
-
-        for item in tt:
-            for col in item['Line']:
-                if 'textboxlength' in col:
-                    continue
-                if not col['name'].startswith(basestructname):
-                    col['textboxlength'] = 30
-                    continue
-                attr = corp.get_attr(col['name'])
-                aname = col['name'].split('.')[-1]
-                for val in col['Values']:
-                    if format_num:
-                        val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
-                    else:
-                        val['xcnt'] = compute_norm(aname, attr, val['v'])
-        return {'Blocks': tt, 'Normslist': self._get_normslist(basestructname)}
+            for item in tt:
+                for col in item['Line']:
+                    if 'textboxlength' in col:
+                        continue
+                    if not col['name'].startswith(basestructname):
+                        col['textboxlength'] = 30
+                        continue
+                    attr = corp.get_attr(col['name'])
+                    aname = col['name'].split('.')[-1]
+                    for val in col['Values']:
+                        if format_num:
+                            val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
+                        else:
+                            val['xcnt'] = compute_norm(aname, attr, val['v'])
+            ans['Blocks'] = tt
+            ans['Normlist'] = self._get_normslist(basestructname)
+            logging.getLogger(__name__).debug(ans)
+        else:
+            ans['Blocks'] = tt
+            ans['Normslist'] = []
+        return ans
 
     def _get_normslist(self, structname):
         corp = self._corp()
@@ -1734,16 +1744,11 @@ class Actions(ConcCGI):
     @exposed()
     def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
         """
-        Parameters
-        ----------
-        subcorpattrs : str
-            TODO
-        within_condition : str
-            the same meaning as in subcorp()
-        within_struct : str
-            the same meaning as in subcorp()
-        method : str
-            the same meaning as in subcorp()
+        arguments:
+        subcorpattrs -- ???
+        within_condition -- the same meaning as in subcorp()
+        within_struct -- the same meaning as in subcorp()
+        method -- the same meaning as in subcorp()
         """
         self.disabled_menu_items = ('menu-save',)
         self._reset_session_conc()
