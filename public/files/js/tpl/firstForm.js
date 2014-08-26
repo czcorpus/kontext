@@ -166,7 +166,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
      *
      * @returns {$.Deferred.Promise} a promise object
      */
-    lib.updateFieldsets = function () {
+    lib.updateQueryFieldsets = function () {
         var jqLink = $('a.form-extension-switch'),
             jqFieldset,
             elmStatus,
@@ -200,7 +200,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     /**
      *
      */
-    lib.bindStaticElements = function () {
+    lib.bindQueryFieldsetsEvents = function () {
         $('a.form-extension-switch').on('click', function (event) {
             var jqTriggerLink = $(event.target),
                 jqFieldset = jqTriggerLink.closest('fieldset');
@@ -224,7 +224,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             }
             layoutModel.mouseOverImages();
         });
+    };
 
+    lib.bindStaticElements = function () {
         // context-switch TODO
 
         $('#switch_err_stand').on('click', function () {
@@ -348,8 +350,9 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
         promises = layoutModel.init(conf).add({
             misc : lib.misc(),
             bindStaticElements : lib.bindStaticElements(),
+            bindQueryFieldsetsEvents : lib.bindQueryFieldsetsEvents(),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
-            updateFieldsets : lib.updateFieldsets(),
+            updateQueryFieldsets : lib.updateQueryFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.init(layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(layoutModel.pluginApi(), '#live-attrs-update', '#live-attrs-reset',
