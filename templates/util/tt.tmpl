@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def tt_sel
 ## Text Types
 #set $showhiddenlist = $getVar("showhidden", '').split(".")
-<div class="text-type-params">
+<div class="text-type-params" data-bib-attr="$TextTypeSel['bib_attr']">
     <div class="text-type-top-bar">
         #for $nn in $TextTypeSel['Normslist']
         #if $nn.n == $subcnorm
@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         #end if
         #end for
     </div>
+
     #for $t in $TextTypeSel['Blocks']  ## f1
     #for $l in $t['Line'] ## f2
 
