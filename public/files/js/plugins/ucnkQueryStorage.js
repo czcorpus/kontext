@@ -344,7 +344,7 @@ define(['jquery', 'win'], function ($, win) {
 
             tbl.append(listItem);
             listItem.append(link);
-            listItem.append('&nbsp;<span class="corpname">(' + v.query_type + ', ' + v.humanCorpname + subcorpSuff + ')</span>');
+            listItem.append('&nbsp;<span class="corpname">(' + v.query_type_translated + ', ' + v.humanCorpname + subcorpSuff + ')</span>');
             listItem.wrapInner('<span class="wrapper"></span>');
         });
         this.highlightCurrentRow();
@@ -389,6 +389,7 @@ define(['jquery', 'win'], function ($, win) {
         // it's important to set the select-box's value only if the new value is different
         // from current one; otherwise, the form is messed-up
         if (selectElm.val() !== newType) {
+            console.log('new type', newType);
             selectElm.val(newType);
             $('#queryselector').change(); // to trigger proper event
         }

@@ -2215,7 +2215,7 @@ class Actions(ConcCGI):
                 created_dt = datetime.fromtimestamp(row['created'])
                 row['humanCorpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
-                row['query_type'] = types.get(row['query_type'], '?')
+                row['query_type_translated'] = types.get(row['query_type'], '?')
         else:
             rows = ()
         return rows
