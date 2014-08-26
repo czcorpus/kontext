@@ -175,7 +175,7 @@ class LiveAttributes(AbstractLiveAttributes):
         values -- a dictionary with arbitrary nesting level
         """
         value = json.dumps(values)
-        db.execute("INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
+        db.execute("INSERT INTO cache (key, value) VALUES (?, ?)", key, value)
 
     @staticmethod
     def export_key(k):
@@ -245,7 +245,7 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[attr] = set()
 
-        for item in db.execute(sql_template, where_values).fetchall():
+        for item in db.execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
@@ -274,7 +274,7 @@ class LiveAttributes(AbstractLiveAttributes):
         db = self.db(corpus.get_conf('NAME'))
         col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
         col_map = dict([(x[1], x[0]) for x in col_map])
-        ans = db.execute('SELECT * FROM bibliography WHERE id = ?', (item_id,)).fetchone()
+        ans = db.execute('SELECT * FROM bibliography WHERE id = ?', item_id).fetchone()
         return dict([(k, ans[i]) for k, i in col_map.items()])
 
 
