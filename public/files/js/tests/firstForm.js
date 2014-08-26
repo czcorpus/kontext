@@ -82,7 +82,7 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
 
         QUnit.equal(switches.length, 2);
 
-        lib.pagePromises.get('updateFieldsets').then(function () {
+        lib.pagePromises.get('updateQueryFieldsets').then(function () {
             console.log('promise then');
             console.log('switches num', switches.length);
             switches.each(function () {
