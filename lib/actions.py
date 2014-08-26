@@ -2194,6 +2194,15 @@ class Actions(ConcCGI):
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
         from datetime import datetime
 
+        types = {
+            'iquery': _('Basic'),
+            'lemma': _('Lemma'),
+            'phrase': _('Phrase'),
+            'word': _('Word Form'),
+            'char': _('Character'),
+            'cql': 'CQL'
+        }
+
         if plugins.has_plugin('query_storage'):
             if current_corpus:
                 corpname = self.corpname
@@ -2206,6 +2215,7 @@ class Actions(ConcCGI):
                 created_dt = datetime.fromtimestamp(row['created'])
                 row['humanCorpname'] = self._canonical_corpname(row['corpname'])
                 row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
+                row['query_type'] = types.get(row['query_type'], '?')
         else:
             rows = ()
         return rows
