@@ -137,7 +137,7 @@ class RedisDb(KeyValueStorage):
         ttl -- number of seconds to wait before the value is removed
         (please note that update actions reset the timer to zero)
         """
-        self.redis.pexpire(key, ttl)
+        self.redis.expire(key, ttl)
 
     def remove(self, key):
         """
