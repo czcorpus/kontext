@@ -1717,7 +1717,7 @@ class Actions(ConcCGI):
                         else:
                             val['xcnt'] = compute_norm(aname, attr, val['v'])
             ans['Blocks'] = tt
-            ans['Normlist'] = self._get_normslist(basestructname)
+            ans['Normslist'] = self._get_normslist(basestructname)
             logging.getLogger(__name__).debug(ans)
         else:
             ans['Blocks'] = tt
