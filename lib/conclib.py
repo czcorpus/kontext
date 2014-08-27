@@ -215,9 +215,10 @@ def wait_for_conc(corp, q, cachefile, pidfile, minsize):
                     return
             elif sizes["concsize"] >= minsize:
                 return
-        finally:
-            time.sleep(sleeptime * 0.1)
-            sleeptime += 1
+        except:
+            pass
+        time.sleep(sleeptime * 0.1)
+        sleeptime += 1
 
 
 def is_conc_alive(pidfile):
