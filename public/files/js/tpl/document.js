@@ -387,12 +387,13 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
      * @param {Event} event
      */
     lib.formChangeCorpus = function (event) {
-        var jqFormElm = $(event.target).closest('form');
+        var jqFormElm = $(event.target).closest('form'),
+            subcorpSelect = $('#subcorp-selector');
 
         jqFormElm.attr('action', 'first_form');
         jqFormElm.attr('method', 'GET');
-        if (jqFormElm.attr('usesubcorp')) {
-            jqFormElm.attr('usesubcorp', null);
+        if (subcorpSelect.val()) {
+            subcorpSelect.val(null);
         }
         jqFormElm.submit();
     };
