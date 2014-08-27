@@ -150,7 +150,7 @@ class CorpTree(object):
         for item in self.get():
             if item['id'].lower() == corp_name.lower():
                 return item
-        return {}
+        raise ValueError('Missing configuration data for %s' % corp_name)
 
     def _load(self, force_load=False):
         """
