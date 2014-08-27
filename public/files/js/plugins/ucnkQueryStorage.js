@@ -98,7 +98,13 @@ define(['jquery', 'win'], function ($, win) {
         var self = this;
 
         $(win).on('keyup.queryStoragePlugin', function (event) {
-            if (event.keyCode === 13 || (event.keyCode === 27 && self.isActive())) { // ENTER or ESC key
+            if (event.keyCode === 13 && self.isActive()) { // ENTER key
+                self.updateForm(self.getSelectedRow());
+                event.preventDefault();
+                event.stopPropagation();
+                self.close();
+
+            } else if (event.keyCode === 27 && self.isActive()) { // ESC key
                 event.preventDefault();
                 event.stopPropagation();
                 self.close();
@@ -149,6 +155,34 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @param triggerElm
+     */
+    Plugin.prototype.updateForm = function (triggerElm) {
+        triggerElm = $(triggerElm);
+        this.setInputVal(this.data[this.highlightedRow].query);
+        if (triggerElm.attr('data-subcorpname')) {
+            $('#subcorp-selector').val(triggerElm.attr('data-subcorpname'));
+
+        } else {
+            $('#subcorp-selector').val(null); // we must reset subcorpus
+        }
+        if (triggerElm.attr('data-query-type')) {
+            (function (queryType) {
+                var newType = queryType + 'row',
+                    selectElm = $('#queryselector');
+
+                // it's important to set the select-box's value only if the new value is different
+                // from current one; otherwise, the form is messed-up
+                if (selectElm.val() !== newType) {
+                    selectElm.val(newType);
+                    $('#queryselector').change(); // to trigger proper event
+                }
+            }(triggerElm.attr('data-query-type')));
+        }
+    };
+
+    /**
+     *
      */
     Plugin.prototype.cleanRowSelection = function () {
         this.boxElm.find('ol.rows li').removeClass('selected');
@@ -156,12 +190,22 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @returns {HTMLElement}
+     */
+    Plugin.prototype.getSelectedRow = function () {
+        return this.boxElm.find('ol.rows li:nth-child(' + (this.highlightedRow + 1) + ')').get(0);
+    };
+
+    /**
+     *
      */
     Plugin.prototype.highlightCurrentRow = function () {
+        var rowElm;
+
         this.cleanRowSelection();
+        rowElm = $(this.getSelectedRow());
         if (this.data.length > 0) {
-            this.boxElm.find('ol.rows li:nth-child(' + (this.highlightedRow + 1) + ')').addClass('selected');
-            this.setInputVal(this.data[this.highlightedRow].query);
+            rowElm.addClass('selected');
         }
     };
 
@@ -326,20 +370,9 @@ define(['jquery', 'win'], function ($, win) {
             link.append(v.query);
 
             listItem.on('click', function (event) {
-                var triggerElm = $(this);
-
-                self.highlightedRow = parseInt(triggerElm.attr('data-rownum'), 10);
+                self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
                 self.highlightCurrentRow();
-                self.setInputVal(self.data[self.highlightedRow].query);
-                if (triggerElm.attr('data-subcorpname')) {
-                    self.updateSubcorpSelector(triggerElm.attr('data-subcorpname'));
-
-                } else {
-                    self.updateSubcorpSelector(null); // we must reset subcorpus
-                }
-                if (triggerElm.attr('data-query-type')) {
-                    self.setQueryType(triggerElm.attr('data-query-type'));
-                }
+                self.updateForm(this);
                 event.preventDefault();
                 event.stopPropagation();
                 self.close();
@@ -379,30 +412,6 @@ define(['jquery', 'win'], function ($, win) {
      */
     Plugin.prototype.inputHasFocus = function () {
         return this.inputElm.is(':focus');
-    };
-
-    /**
-     *
-     * @param {string} queryType
-     */
-    Plugin.prototype.setQueryType = function (queryType) {
-        var newType = queryType + 'row',
-            selectElm = $('#queryselector');
-
-        // it's important to set the select-box's value only if the new value is different
-        // from current one; otherwise, the form is messed-up
-        if (selectElm.val() !== newType) {
-            selectElm.val(newType);
-            $('#queryselector').change(); // to trigger proper event
-        }
-    };
-
-    /**
-     *
-     * @param {string} name
-     */
-    Plugin.prototype.updateSubcorpSelector = function (name) {
-        $('#subcorp-selector').val(name);
     };
 
     /**
