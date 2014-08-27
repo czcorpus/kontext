@@ -80,7 +80,11 @@ class ConcPersistence(AbstractConcPersistence):
     This class stores user's queries in their internal form (see conccgi.q attribute).
     """
 
-    def __init__(self, db):
+    DEFAULT_TTL_DAYS = 100
+
+    def __init__(self, settings, db):
+        ttl_days = int(settings.get('plugins', 'sessions').get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        self.ttl = ttl_days * 24 * 3600
         self.db = db
 
     def _mk_key(self, code):
@@ -126,8 +130,10 @@ class ConcPersistence(AbstractConcPersistence):
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created)
             curr_data['id'] = data_id
+            data_key = self._mk_key(data_id)
 
-            self.db.set(self._mk_key(data_id), curr_data)
+            self.db.set(data_key, curr_data)
+            self.db.set_ttl(data_key, self.ttl)
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
@@ -139,4 +145,4 @@ def create_instance(settings, db):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(db)
+    return ConcPersistence(settings, db)

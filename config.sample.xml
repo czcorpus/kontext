@@ -41,7 +41,7 @@
         </query_storage>
         <conc_persistence>
             <module>default_conc_persistence</module>
-            <data_path extension-by="default">/home/tomas/work/kontext.dev/tmp/conc</data_path>
+            <ttl_days extension-by="default">100</ttl_days>
         </conc_persistence>
         <settings_storage>
             <module>default_settings_storage</module>
