@@ -11,15 +11,19 @@
 # GNU General Public License for more details.
 
 """
-A simple session handler which writes data to a filesystem.
-Please note that this has not been tested under heavy load.
+A session handler compatible with general_storage.KeyValueStorage implementations
+(currently default_db and redis_db modules).
 
 required config.xml entries:
+
 <sessions>
     <module>default_sessions</module>
     <ttl>14400</ttl>
     <cleanup_probability>[a value from 0 to 1]</cleanup_probability>
 </sessions>
+
+Please note that if you use redis_db storage plug-in then <cleanup_probability> setting
+has no effect as RedisDB removes keys with set TTL automatically.
 """
 
 import uuid
@@ -32,7 +36,7 @@ from abstract.sessions import AbstractSessions
 
 class DefaultSessions(AbstractSessions):
 
-    DEFAULT_TTL = 14400
+    DEFAULT_TTL = 7200
 
     DEFAULT_CLEANUP_PROBABILITY = 0.5
 
@@ -54,6 +58,10 @@ class DefaultSessions(AbstractSessions):
     def _mk_key(self, session_id):
         return 'session:%s' % (session_id, )
 
+    def _set_ttl(self, key):
+        if hasattr(self.db, 'set_ttl'):
+            self.db.set_ttl(key, self.ttl)
+
     def start_new(self, data=None):
         """
         Writes a new session record to the storage
@@ -63,9 +71,9 @@ class DefaultSessions(AbstractSessions):
             data = {}
 
         sess_key = self._mk_key(session_id)
+        data['__timestamp__'] = self.get_actual_timestamp()
         self.db.set(sess_key, data)
-        if hasattr(self.db, 'set_ttl'):
-            self.db.set_ttl(sess_key, self.ttl)
+        self._set_ttl(sess_key)
         return {'id': session_id, 'data': data}
 
     def delete(self, session_id):
@@ -104,7 +112,9 @@ class DefaultSessions(AbstractSessions):
         If no such record exists then nothing is done and no error is thrown.
         """
         sess_key = self._mk_key(session_id)
+        data['__timestamp__'] = self.get_actual_timestamp()
         self.db.set(sess_key, data)
+        self._set_ttl(sess_key)
 
     def delete_old_sessions(self):
         """
