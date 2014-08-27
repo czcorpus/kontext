@@ -142,15 +142,18 @@ class CorpTree(object):
         path, web
         or None if no such item is found
         """
-        tmp = corp_name.split('/')
-        if len(tmp) > 1:
-            corp_name = tmp[1]
+        if corp_name != '':
+            tmp = corp_name.split('/')
+            if len(tmp) > 1:
+                corp_name = tmp[1]
+            else:
+                corp_name = tmp[0]
+            for item in self.get():
+                if item['id'].lower() == corp_name.lower():
+                    return item
+            raise ValueError('Missing configuration data for %s' % corp_name)
         else:
-            corp_name = tmp[0]
-        for item in self.get():
-            if item['id'].lower() == corp_name.lower():
-                return item
-        return {}
+            return {'metadata': {}}  # for 'empty' corpus to work properly
 
     def _load(self, force_load=False):
         """
