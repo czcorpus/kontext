@@ -417,7 +417,7 @@ class ConcCGI(CGIPublisher):
             if self._prev_q_data is not None:
                 self.q = self._prev_q_data['q'][:] + url_q[1:]
             else:
-                raise UserActionException(_('Invalid stored query identifier used'))
+                raise UserActionException(_('Invalid or expired query'))
 
     def _store_conc_params(self):
         """

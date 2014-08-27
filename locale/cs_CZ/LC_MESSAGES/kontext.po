@@ -2068,6 +2068,9 @@ msgstr "Zrušit označení řádků"
 msgid "Proceed"
 msgstr "Provést"
 
+msgid "Invalid or expired query"
+msgstr "Neplatný nebo vypršelý dotaz"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
