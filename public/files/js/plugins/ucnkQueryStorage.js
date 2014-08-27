@@ -333,6 +333,9 @@ define(['jquery', 'win'], function ($, win) {
                 self.setInputVal(self.data[self.highlightedRow].query);
                 if (triggerElm.attr('data-subcorpname')) {
                     self.updateSubcorpSelector(triggerElm.attr('data-subcorpname'));
+
+                } else {
+                    self.updateSubcorpSelector(null); // we must reset subcorpus
                 }
                 if (triggerElm.attr('data-query-type')) {
                     self.setQueryType(triggerElm.attr('data-query-type'));
@@ -389,7 +392,6 @@ define(['jquery', 'win'], function ($, win) {
         // it's important to set the select-box's value only if the new value is different
         // from current one; otherwise, the form is messed-up
         if (selectElm.val() !== newType) {
-            console.log('new type', newType);
             selectElm.val(newType);
             $('#queryselector').change(); // to trigger proper event
         }
