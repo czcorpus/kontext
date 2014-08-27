@@ -357,17 +357,16 @@ class ConcCGI(CGIPublisher):
         Applies corpus-dependent settings in the similar way
         to self._apply_general_user_settings. But in this case,
         a corpus name must be provided to be able to filter out
-        settings of other corpora.
+        settings of other corpora. Otherwise, no action is performed.
         """
-        if len(corpname) == 0:
-            raise ValueError('corpname must be non-empty')
-        ans = {}
-        for k, v in options.items():
-            if k.find(corpname) == 0:
-                ans[k.split(':', 1)[-1]] = v
+        if len(corpname) > 0:
+            ans = {}
+            for k, v in options.items():
+                if k.find(corpname) == 0:
+                    ans[k.split(':', 1)[-1]] = v
 
-        convert_types(options, self.clone_self(), selector=1)
-        self.__dict__.update(options)
+            convert_types(options, self.clone_self(), selector=1)
+            self.__dict__.update(options)
 
     def _get_save_excluded_attributes(self):
         return ()
@@ -494,7 +493,7 @@ class ConcCGI(CGIPublisher):
                     named_args['error'] = _('Corpus access denied')
                     named_args['reset'] = True
         elif len(allowed_corpora) > 0:
-            self.corpname = allowed_corpora[0]
+            self.corpname = ''
         else:
             self.corpname = ''
 
