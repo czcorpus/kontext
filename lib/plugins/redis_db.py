@@ -16,10 +16,9 @@
 
 """
 A simple implementation of a persistence mechanism applicable to default_* plugins
-and based on Redis.
+and based on RedisDB in-memory database engine.
 
-Please note that this concrete solution is not suitable for environments
-with high concurrency (hundreds or more simultaneous users).
+This plug-in should be able to handle high-load installations without any problems.
 """
 
 import json
