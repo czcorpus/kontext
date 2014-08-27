@@ -139,6 +139,14 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 closeIcon : true
             });
         }
+        if (numSelected === 0) {
+            linesSelection.hide();
+            linesSelection.prev('span.separ').hide();
+
+        } else if (!linesSelection.is(':visible')) {
+            linesSelection.show();
+            linesSelection.prev('span.separ').show();
+        }
     }
 
     /**
