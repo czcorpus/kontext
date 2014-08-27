@@ -1674,7 +1674,7 @@ class Actions(ConcCGI):
         # if live_attributes are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         if plugins.has_plugin('live_attributes'):
-            ans['bib_attr'] = plugins.corptree.get_corpus_info(corp.get_conf('NAME'))['metadata']['label_attr']
+            ans['bib_attr'] = plugins.corptree.get_corpus_info(self.corpname)['metadata']['label_attr']
             list_none = (ans['bib_attr'], )
         else:
             ans['bib_attr'] = None
