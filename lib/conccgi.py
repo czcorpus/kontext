@@ -73,17 +73,22 @@ class StateGlobals(object):
 
 
 class ConcCGI(CGIPublisher):
-    _conc_state_vars = ('corpname', 'viewmode', 'attrs', 'attr_allpos', 'ctxattrs',
-                        'structs', 'refs', 'lemma', 'lpos', 'pagesize',
-                        'usesubcorp', 'align', 'iquery', 'maincorp')
+    # A list of attributes needed to be able to view current concordance in case user is somewhere else.
+    # Please note that this list does not include the 'q' parameter which collects currently built query
+    # (a Bonito design choice)
+    CONC_URL_STATE_VARS = ('corpname', 'usesubcorp', 'maincorp',
+                           'viewmode', 'pagesize', 'align',
+                           'attrs', 'attr_allpos', 'ctxattrs', 'structs', 'refs', )
 
     ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
                                  'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
                                  'menu-frequency', 'menu-collocations')
 
-    CONC_PERSISTENT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
-                             'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
-                             'nextlink', 'lastlink', 'prevlink', 'firstlink')
+    # A list of parameters needed to make concordance result parameters (e.g. size, currently viewed page,..)
+    # persistent. It is used to keep showing these values to a user even if he is
+    CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
+                         'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
+                         'nextlink', 'lastlink', 'prevlink', 'firstlink')
 
     # Default corpus must be accessible to any user, otherwise KonText messes up trying
     # to infer some default corpus name and redirect user there. Hopefully, future releases
@@ -212,7 +217,7 @@ class ConcCGI(CGIPublisher):
     viewmode = Parameter('kwic')
     align = Parameter('')
     sel_aligned = Parameter([])
-    maincorp = Parameter('')
+    maincorp = Parameter('')   # used only in case of parallel corpora - specifies corpus with "focus"
     refs_up = Parameter(0, persistent=True)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
@@ -813,10 +818,9 @@ class ConcCGI(CGIPublisher):
 
         result['corpname_url'] = 'corpname=' + self.corpname
 
-        global_var_val = [(n, val) for n in self._conc_state_vars
+        global_var_val = [(n, val) for n in self.CONC_URL_STATE_VARS
                           for val in [getattr(self, n, None)]
                           if getattr(self.__class__, n, None) is not val]
-        
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
@@ -884,7 +888,6 @@ class ConcCGI(CGIPublisher):
 
         # is there a concordance information in session?
         self._restore_conc_results(result)
-
         return result
 
     def _restore_conc_results(self, storage):
@@ -900,7 +903,7 @@ class ConcCGI(CGIPublisher):
             tmp = self._session['conc']
 
             storage['conc_persist'] = True
-            for k in ConcCGI.CONC_PERSISTENT_ATTRS:
+            for k in ConcCGI.CONC_RESULT_ATTRS:
                 storage[k] = tmp[conc_key].get(k)
         else:
             storage['conc_persist'] = False
@@ -923,7 +926,7 @@ class ConcCGI(CGIPublisher):
                                                                                             'conc_persistence_time'):
                 self._session['conc'].pop(k)
 
-        data = dict([(k, src.get(k)) for k in ConcCGI.CONC_PERSISTENT_ATTRS])
+        data = dict([(k, src.get(k)) for k in ConcCGI.CONC_RESULT_ATTRS])
         data['__timestamp__'] = int(curr_time)
         self._session['conc']['#'.join(self.q)] = data
 
