@@ -85,6 +85,11 @@ class ConcCGI(CGIPublisher):
                              'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
                              'nextlink', 'lastlink', 'prevlink', 'firstlink')
 
+    # Default corpus must be accessible to any user, otherwise KonText messes up trying
+    # to infer some default corpus name and redirect user there. Hopefully, future releases
+    # will avoid this.
+    DEFAULT_CORPUS = 'susanne'
+
     error = Parameter(u'')
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
@@ -678,7 +683,7 @@ class ConcCGI(CGIPublisher):
 
         # last resort solution (this shouldn't happen in properly configured production installation)
         if not cn in corp_list:
-            cn = 'susanne'
+            cn = ConcCGI.DEFAULT_CORPUS
             fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
         return cn, fallback
 
@@ -811,7 +816,7 @@ class ConcCGI(CGIPublisher):
         global_var_val = [(n, val) for n in self._conc_state_vars
                           for val in [getattr(self, n, None)]
                           if getattr(self.__class__, n, None) is not val]
-
+        
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
