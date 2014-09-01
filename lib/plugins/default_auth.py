@@ -87,6 +87,9 @@ class DefaultAuthHandler(AbstractAuth):
         """
         data = self.find_user(user)
         if data and 'corpora' in data:
+            corpora = data['corpora']
+            if not 'susanne' in corpora:
+                corpora.append('susanne')
             return data['corpora']
         else:
             return ['susanne']
