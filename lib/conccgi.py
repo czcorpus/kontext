@@ -820,7 +820,7 @@ class ConcCGI(CGIPublisher):
 
         global_var_val = [(n, val) for n in self.CONC_URL_STATE_VARS
                           for val in [getattr(self, n, None)]
-                          if getattr(self.__class__, n, None) is not val]
+                          if getattr(self.__class__, n, None) is not val and val != '']
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
