@@ -165,9 +165,9 @@ if __name__ == '__main__':
                              resp_time_threshold=test['responseTimeLimit'])
         result['title'] = test['title']
         if len(result['errors']) > 0:
-            log.error(result)
+            log.error(json.dumps(result))
         else:
-            log.info(result)
+            log.info(json.dumps(result))
 
         if len(result['errors']) > 0:
             failed_tests.append(result)
