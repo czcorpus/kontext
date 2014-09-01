@@ -44,21 +44,22 @@ class DefaultAuthHandler(AbstractAuth):
         user_data = self.find_user(username)
         valid_pwd = False
 
-        if len(user_data['pwd_hash']) == 32:
-            pwd_hash = hashlib.md5(password).hexdigest()
-            if user_data['pwd_hash'] == pwd_hash:
-                valid_pwd = True
-        else:
-            import crypt
-            if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
-                valid_pwd = True
+        if user_data:
+            if len(user_data['pwd_hash']) == 32:
+                pwd_hash = hashlib.md5(password).hexdigest()
+                if user_data['pwd_hash'] == pwd_hash:
+                    valid_pwd = True
+            else:
+                import crypt
+                if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                    valid_pwd = True
 
-        if user_data and user_data['username'] == username and valid_pwd:
-            return {
-                'id': user_data['id'],
-                'user': user_data['username'],
-                'fullname': '%s %s' % (user_data['firstname'], user_data['lastname'])
-            }
+            if user_data['username'] == username and valid_pwd:
+                return {
+                    'id': user_data['id'],
+                    'user': user_data['username'],
+                    'fullname': '%s %s' % (user_data['firstname'], user_data['lastname'])
+                }
         return self.anonymous_user()
 
     def logout(self, session_id):
