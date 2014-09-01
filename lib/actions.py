@@ -121,9 +121,9 @@ class Actions(ConcCGI):
     @exposed(template='login.tmpl')
     def loginx(self, username='', password=''):
         ans = {}
-        user = plugins.auth.validate_user(username, password)
-        if user.get('id', None) is not None:
-            self._session['user'] = user
+        self._session['user'] = plugins.auth.validate_user(username, password)
+
+        if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
         else:
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
