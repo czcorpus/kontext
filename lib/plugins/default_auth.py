@@ -142,7 +142,7 @@ class DefaultAuthHandler(AbstractAuth):
         return self.db.get(user_key)
 
 
-def create_instance(conf, sessions, db):
+def create_instance(conf, db, sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

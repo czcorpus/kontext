@@ -36,7 +36,7 @@ import urllib
 from auth import AbstractAuth
 
 
-def create_instance(conf, sessions, db_provider):
+def create_instance(conf, db_provider, sessions):
     """
     Factory function (as required by the application) providing
     an instance of authentication module.
