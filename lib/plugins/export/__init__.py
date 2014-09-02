@@ -21,6 +21,17 @@ changed/configured. On the other side, concrete export modules are
 free to be replaced/changed.
 """
 
+from translation import ugettext as _
+
+
+class AbstractExport(object):
+
+    def content_type(self):
+        raise NotImplementedError()
+
+    def raw_content(self):
+        raise NotImplementedError()
+
 
 class Loader(object):
 
@@ -40,7 +51,7 @@ class Loader(object):
         required module or nothing if module is not found
         """
         if name not in self._module_map:
-            raise ValueError('Cannot import __init__ module')
+            raise ValueError(_('Export module [%s] not configured') % name)
         module_name = self._module_map[name]
         module = __import__('plugins.export.%s' % module_name, fromlist=[module_name])
         plugin = module.create_instance()

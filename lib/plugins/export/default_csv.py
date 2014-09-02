@@ -14,12 +14,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+A plug-in allowing export of a concordance (in fact, any row/cell
+like data can be used) to CSV format.
+"""
+
 import csv
 import codecs
 import cStringIO
 
+from . import AbstractExport
+
 
 class Writeable(object):
+    """
+    An auxiliary class serving as a buffer
+    """
     def __init__(self):
         self.rows = []
 
@@ -29,6 +39,8 @@ class Writeable(object):
 
 class UnicodeCSVWriter:
     """
+    An auxiliary class for creating UTF-8 encoded CSV file.
+
     Code taken from http://docs.python.org/2/library/csv.html
     """
 
@@ -54,17 +66,23 @@ class UnicodeCSVWriter:
             self.writerow(row)
 
 
-class CSVExport(object):
+class CSVExport(AbstractExport):
+    """
+    A plug-in itself
+    """
 
     def __init__(self):
         self.csv_buff = Writeable()
         self.csv_writer = UnicodeCSVWriter(self.csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
 
+    def content_type(self):
+        return 'text/csv'
+
+    def raw_content(self):
+        return ''.join(self.csv_buff.rows)
+
     def writerow(self, row):
         self.csv_writer.writerow(row)
-
-    def get_rows(self):
-        return self.csv_buff.rows
 
 
 def create_instance():

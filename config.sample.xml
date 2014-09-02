@@ -58,6 +58,7 @@
         </corptree>
         <export>
             <csv>default_csv</csv>
+            <xlsx>default_xlsx</xlsx>
         </export>
     </plugins>
     <cache>
