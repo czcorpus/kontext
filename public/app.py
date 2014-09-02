@@ -102,13 +102,17 @@ def setup_plugins():
     Sets-up all the plugins. Please note that they are expected
     to be accessed concurrently by multiple requests which means any stateful
     properties should be considered carefully.
+
+    Each plug-in is configured using a pair of values:
+    1 - name
+    2 - dependencies
     """
 
     # required plugins
     init_plugin('db', (settings.get('plugins', 'db'),))
     init_plugin('sessions', (settings, plugins.db))
     init_plugin('settings_storage', (settings, plugins.db))
-    init_plugin('auth', (settings, plugins.sessions, plugins.db))
+    init_plugin('auth', (settings, plugins.db, plugins.sessions))
     init_plugin('conc_persistence', (settings, plugins.db))
     init_plugin('export', (settings,), module=plugins.export)
 
@@ -160,7 +164,7 @@ def load_controller_class(path_info):
     controller etc.).
 
     Please note that currently there is no general automatized loading
-    (i.e. all the path->class mapping is hardcoded here).
+    (i.e. all the path->class mapping is hardcoded in this function).
 
     arguments:
     path_info -- a string as found in environment['PATH_INFO']
