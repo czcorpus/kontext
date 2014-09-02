@@ -476,7 +476,7 @@ class Kwic(object):
     def get_sort_idx(self, q=[], pagesize=20):
         """
         In case sorting is active this method generates shortcuts to pages where new
-        first letter of sorted keys (it can be left, kwic, right) starts.
+        first letter of sorted keys (it can be 'left', 'kwic', 'right') starts.
 
         arguments:
         q -- a query (as a list)
@@ -508,5 +508,15 @@ class Kwic(object):
                     result.append((v[0], p))
                     keys.append(v[0])
             out = result
-        return [{'page': p, 'label': self.import_string(v)} for v, p in out]
+
+        ans = []
+        for v, p in out:
+            try:
+                ans.append({'page': p, 'label': self.import_string(v)})
+            except UnicodeDecodeError:
+                # Without manatee.set_encoding, manatee appears to produce
+                # few extra undecodable items. Ignoring them produces
+                # the same result as in case of official Bonito app.
+                pass
+        return ans
 
