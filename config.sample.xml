@@ -56,6 +56,9 @@
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
         </corptree>
+        <export>
+            <csv>default_csv</csv>
+        </export>
     </plugins>
     <cache>
         <clear_interval>3600</clear_interval>

@@ -1986,7 +1986,6 @@ class Actions(ConcCGI):
     @exposed(access_level=1, vars=('Desc', 'concsize'))
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
                  rightctx='40'):
-
         def merge_conc_line_parts(items):
             """
             converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
@@ -2044,13 +2043,11 @@ class Actions(ConcCGI):
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
                 tpl_data.update(data)
             elif saveformat == 'csv':
-                from butils import UnicodeCSVWriter, Writeable
                 from codecs import BOM_UTF8
+                writer = plugins.export.load_plugin('csv')
 
                 self._headers['Content-Type'] = 'text/csv'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
-                csv_buff = Writeable()
-                csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
 
                 if len(data['Lines']) > 0:
                     if 'Left' in data['Lines'][0]:
@@ -2073,9 +2070,9 @@ class Actions(ConcCGI):
                         row += process_lang(line, left_key, kwic_key, right_key)
                         if 'Align' in line:
                             row += process_lang(line['Align'], left_key, kwic_key, right_key)
-                        csv_writer.writerow(row)
+                        writer.writerow(row)
                 tpl_data.update({
-                    'data': [row.decode('utf-8') for row in csv_buff.rows],
+                    'data': [row.decode('utf-8') for row in writer.get_rows()],
                     'bom_prefix': BOM_UTF8.decode('utf-8')
                 })
             else:

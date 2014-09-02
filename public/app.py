@@ -38,6 +38,7 @@ sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template mo
 CONF_PATH = '%s/../config.xml' % os.path.dirname(__file__)
 
 import plugins
+import plugins.export
 import settings
 import translation
 import strings
@@ -69,7 +70,7 @@ def has_configured_plugin(name):
     return settings.contains('plugins', name) and settings.get('plugins', name).get('module', None)
 
 
-def init_plugin(name, dependencies):
+def init_plugin(name, dependencies, module=None):
     """
     Loads plugin module, creates respective plugin object and creates a [plugin name] attribute
     in the 'plugins' package.
@@ -79,7 +80,10 @@ def init_plugin(name, dependencies):
     dependencies -- list/tuple containing arguments needed to initialize the plugin
     """
     try:
-        plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
+        if module is None:
+            plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
+        else:
+            plugin_module = module
         if plugin_module:
             resolved_deps = []
             for d in dependencies:
@@ -106,6 +110,7 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.sessions, plugins.db))
     init_plugin('conc_persistence', (settings, plugins.db))
+    init_plugin('export', (settings,), module=plugins.export)
 
     # optional plugins
     optional_plugins = (
