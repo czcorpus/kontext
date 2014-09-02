@@ -220,6 +220,7 @@ class Actions(ConcCGI):
                  % (self.pagesize, self.leftctx, self.rightctx, '%s', self.heading, self.numbering,
                     self.align_kwic, 1, conc.size())
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
+        self._add_save_menu_item('XLSX', 'saveconc', params % 'xlsx')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
@@ -2019,7 +2020,7 @@ class Actions(ConcCGI):
             from_line = int(from_line)
             to_line = int(to_line)
 
-            tpl_data = {'from_line': from_line, 'to_line': to_line}
+            output = {'from_line': from_line, 'to_line': to_line}
 
             err = self._validate_range((from_line, to_line), (1, conc.size()))
             if err is not None:
@@ -2037,17 +2038,16 @@ class Actions(ConcCGI):
             if saveformat == 'xml':
                 self._headers['Content-Type'] = 'application/xml'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
-                tpl_data.update(data)
+                output.update(data)
             elif saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
-                tpl_data.update(data)
-            elif saveformat == 'csv':
-                from codecs import BOM_UTF8
-                writer = plugins.export.load_plugin('csv')
+                output.update(data)
+            elif saveformat in ('csv', 'xlsx'):
+                writer = plugins.export.load_plugin(saveformat)
 
-                self._headers['Content-Type'] = 'text/csv'
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('csv')
+                self._headers['Content-Type'] = writer.content_type()
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
 
                 if len(data['Lines']) > 0:
                     if 'Left' in data['Lines'][0]:
@@ -2071,13 +2071,10 @@ class Actions(ConcCGI):
                         if 'Align' in line:
                             row += process_lang(line['Align'], left_key, kwic_key, right_key)
                         writer.writerow(row)
-                tpl_data.update({
-                    'data': [row.decode('utf-8') for row in writer.get_rows()],
-                    'bom_prefix': BOM_UTF8.decode('utf-8')
-                })
+                output = writer.raw_content()
             else:
                 raise UserActionException(_('Unknown export data type'))
-            return tpl_data
+            return output
         except Exception as e:
             self._headers['Content-Type'] = 'text/html'
             if 'Content-Disposition' in self._headers:
