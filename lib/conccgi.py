@@ -374,9 +374,8 @@ class ConcCGI(CGIPublisher):
             for k, v in options.items():
                 if k.find(corpname) == 0:
                     ans[k.split(':', 1)[-1]] = v
-
             convert_types(options, self.clone_self(), selector=1)
-            self.__dict__.update(options)
+            self.__dict__.update(ans)
 
     def _get_save_excluded_attributes(self):
         return ()
