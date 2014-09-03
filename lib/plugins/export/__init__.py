@@ -32,6 +32,9 @@ class AbstractExport(object):
     def raw_content(self):
         raise NotImplementedError()
 
+    def writerow(self, row):
+        raise NotImplementedError()
+
 
 class Loader(object):
 
