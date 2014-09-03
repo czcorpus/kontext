@@ -201,6 +201,22 @@ def number_formatting(key=None):
     return ans
 
 
+def time_formatting():
+    """
+    Returns a time formatting string (as used by time.strftime)
+    according to the currently selected formats.json.
+    """
+    return _current.formatter.conf.get('date')
+
+
+def date_formatting():
+    """
+    Returns a date formatting string (as used by time.strftime)
+    according to the currently selected formats.json.
+    """
+    return _current.formatter.conf.get('time')
+
+
 def escape(s):
     """
     Escapes a CQL attribute value to protect it against RegExp evaluation

@@ -3,5 +3,7 @@
         "decimalSeparator" : ".",
         "numberGrouping": 3,
         "thousandSeparator": ","
-    }
+    },
+    "time" : "%I:%M:%S %p",
+    "date" : "%b %d, %Y"
 }
