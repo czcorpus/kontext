@@ -27,7 +27,7 @@ from openpyxl import Workbook
 from openpyxl.compat import range
 from openpyxl.cell import get_column_letter
 
-from . import AbstractExport
+from . import AbstractExport, lang_row_to_list
 from translation import ugettext as _
 
 
@@ -47,7 +47,11 @@ class XLSXExport(AbstractExport):
         self._wb.save(filename=output)
         return output.getvalue()
 
-    def writerow(self, row):
+    def writerow(self, line_num, *lang_rows):
+        row = []
+        for lang_row in lang_rows:
+            row += lang_row_to_list(lang_row)
+
         for i in range(1, len(row) + 1):
             col = get_column_letter(i)
             self._sheet.cell('%s%s' % (col, self._curr_line)).value = row[i - 1]

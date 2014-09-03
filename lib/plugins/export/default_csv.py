@@ -23,7 +23,7 @@ import csv
 import codecs
 import cStringIO
 
-from . import AbstractExport
+from . import AbstractExport, lang_row_to_list
 
 
 class Writeable(object):
@@ -81,7 +81,12 @@ class CSVExport(AbstractExport):
     def raw_content(self):
         return ''.join(self.csv_buff.rows)
 
-    def writerow(self, row):
+    def writerow(self, line_num, *lang_rows):
+        row = []
+        if line_num is not None:
+            row.append(line_num)
+        for lang_row in lang_rows:
+            row += lang_row_to_list(lang_row)
         self.csv_writer.writerow(row)
 
 
