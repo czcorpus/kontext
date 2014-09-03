@@ -113,7 +113,7 @@ class QueryStorage(AbstractQueryStorage):
         if limit is None:
             limit = len(data)
 
-        return sorted(data[offset:(offset + limit)], cmp=lambda x1, x2: -cmp(x1['created'], x2['created']))
+        return sorted(data, key=lambda x: x['created'], reverse=True)[offset:(offset + limit)]
 
     def delete_old_records(self, data_key):
         """
