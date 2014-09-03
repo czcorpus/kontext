@@ -2209,7 +2209,8 @@ class Actions(ConcCGI):
             for row in rows:
                 created_dt = datetime.fromtimestamp(row['created'])
                 row['humanCorpname'] = self._canonical_corpname(row['corpname'])
-                row['created'] = (created_dt.strftime('%X'), created_dt.strftime('%x'))
+                row['created'] = (created_dt.strftime(strings.date_formatting()),
+                                  created_dt.strftime(strings.time_formatting()))
                 row['query_type_translated'] = types.get(row['query_type'], '?')
         else:
             rows = ()
