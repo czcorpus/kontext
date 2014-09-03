@@ -2004,14 +2004,16 @@ class Actions(ConcCGI):
             if type(root) is dict:
                 root = (root,)
 
-            row = []
+            ans = []
+            ans_item = {}
             for item in root:
                 if 'ref' in item:
-                    row.append(item['ref'])
-                row.append(merge_conc_line_parts(item[left_key]))
-                row.append(merge_conc_line_parts(item[kwic_key]))
-                row.append(merge_conc_line_parts(item[right_key]))
-            return row
+                    ans_item['ref'] = item['ref']
+                ans_item['left_context'] = merge_conc_line_parts(item[left_key])
+                ans_item['kwic'] = merge_conc_line_parts(item[kwic_key])
+                ans_item['right_context'] = merge_conc_line_parts(item[right_key])
+                ans.append(ans_item)
+            return ans
 
         try:
             conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
@@ -2035,15 +2037,11 @@ class Actions(ConcCGI):
                                       leftctx=leftctx, rightctx=rightctx)
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
-            if saveformat == 'xml':
-                self._headers['Content-Type'] = 'application/xml'
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
-                output.update(data)
-            elif saveformat == 'text':
+            if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
                 output.update(data)
-            elif saveformat in ('csv', 'xlsx'):
+            elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.export.load_plugin(saveformat)
 
                 self._headers['Content-Type'] = writer.content_type()
@@ -2061,16 +2059,19 @@ class Actions(ConcCGI):
                     else:
                         raise ConcError(_('Invalid data'))
 
+                    aligned_corpora = [self._corp()] + [self.cm.get_Corpus(c) for c in self.align.split(',') if c]
+                    writer.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
                         if numbering:
-                            row = [str(i + from_line)]
+                            row_num = str(i + from_line)
                         else:
-                            row = []
-                        row += process_lang(line, left_key, kwic_key, right_key)
+                            row_num = None
+                        lang_rows = process_lang(line, left_key, kwic_key, right_key)
                         if 'Align' in line:
-                            row += process_lang(line['Align'], left_key, kwic_key, right_key)
-                        writer.writerow(row)
+                            lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key)
+                        writer.writerow(row_num, *lang_rows)
                 output = writer.raw_content()
             else:
                 raise UserActionException(_('Unknown export data type'))

@@ -1,5 +1,6 @@
 #*
 Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2014  Institute of the Czech National Corpus
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -15,104 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
+##
+## Please note that this template serves only for 'text' output format. All the other
+## format options are solved via export plug-ins.
+##
 #from translation import ugettext as _
-
-#def $print_xml_parline($line, $corpname)
-#filter WebSafe
-<parline corpus="$corpname.n">
-    <ref>$line.ref</ref>#slurp
-    <left_context>#slurp
-        #for $ll in $line.Left
-        #unless $ll.class == 'strc'
-        $ll.str #slurp
-        #end unless
-        #end for
-    </left_context><kwic>#slurp
-    #for $kw in $line.Kwic
-    $kw.str #slurp
-    #end for
-</kwic><right_context>#slurp
-    #for $rr in $line.Right
-    #unless $rr.class == 'strc'
-    $rr.str #slurp
-    #end unless
-    #end for
-</right_context>
-</parline>
-#end filter
-#end def
 #slurp
-#if $saveformat == 'xml'
-<?xml version="1.0" encoding="utf-8"?>
-#filter WebSafe
-<concordance>
-    #if $heading
-    <heading>
-        <corpus>$human_corpname</corpus>
-        #if $usesubcorp
-        <subcorpus>$usesubcorp</subcorpus>
-        #end if
-        <hits>$concsize</hits>
-        <relative_freq note="$result_relative_freq_rel_to">$result_relative_freq</relative_freq>
-        #if $result_arf != ''
-        <arf>$result_arf</arf>
-        #end if
-        <query>#slurp
-            #for $d in $Desc
-            $d.arg $d.size #slurp
-            #end for
-        </query>
-    </heading>
-    #end if
-    ## kwic lines
-    <lines>
-        #for $i, $l in $enumerate($Lines)
-        #if $align
-        #if $numbering
-        #set $num = $i+1
-        <parallel_lines num="$num">
-            #else
-            <parallel_lines>
-                #end if
-                #filter None
-                $print_xml_parline($l, $Par_conc_corpnames[0])#slurp
-                #for $ii, $ll in enumerate($l.get('Align', []))
-                $print_xml_parline($ll, $Par_conc_corpnames[$ii+1])#slurp
-                #end for
-                #end filter
-            </parallel_lines>
-            #else
-            <line>
-                #if $numbering
-                #set $num = $i + 1
-                <num>$num</num>
-                #end if
-                <ref>$l.ref</ref>#slurp
-                <left_context>#slurp
-                    #for $ll in $l.Left
-                    #unless $ll.class == 'strc'
-                    $ll.str #slurp
-                    #end unless
-                    #end for
-                </left_context><kwic>#slurp
-                #for $kw in $l.Kwic
-                $kw.str #slurp
-                #end for
-            </kwic><right_context>#slurp
-                #for $rr in $l.Right
-                #unless $rr.class == 'strc'
-                $rr.str #slurp
-                #end unless
-                #end for
-            </right_context>
-            </line>
-            #end if
-            #end for
-    </lines>
-</concordance>
-
-#end filter
-#elif $saveformat == 'text'
+if $saveformat == 'text'
 ## Text format
 #if $heading
 \# Corpus: $corp_full_name
@@ -190,11 +100,4 @@ $ll.str #slurp
         #end if
 
         #end for
-
-#elif $saveformat == 'csv'
-## kwic lines #################
-$bom_prefix
-#for $row in $data
-$row#slurp
-#end for
 #end if  ## saveformat

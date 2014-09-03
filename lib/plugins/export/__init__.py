@@ -26,14 +26,25 @@ from translation import ugettext as _
 
 class AbstractExport(object):
 
+    def set_corpnames(self, corpnames):
+        pass
+
     def content_type(self):
         raise NotImplementedError()
 
     def raw_content(self):
         raise NotImplementedError()
 
-    def writerow(self, row):
+    def writerow(self, line_num, *lang_rows):
         raise NotImplementedError()
+
+
+def lang_row_to_list(row):
+    ans = []
+    for key in ('ref', 'left_context', 'kwic', 'right_context'):
+        if key in row:
+            ans.append(row[key])
+    return ans
 
 
 class Loader(object):
