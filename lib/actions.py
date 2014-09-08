@@ -206,7 +206,7 @@ class Actions(ConcCGI):
             conclib.PyConc.add_block_items(out['Lines'], block_size=1)
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
-                               'label': conclib.manatee.Corpus(w).get_conf(
+                               'label': corplib.open_corpus(w).get_conf(
                                    'NAME') or w}
                               for w in self._corp().get_conf('ALIGNED').split(',')]
         if self.align and not self.maincorp:
@@ -239,7 +239,7 @@ class Actions(ConcCGI):
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
-                alcorp = conclib.manatee.Corpus(al)
+                alcorp = corplib.open_corpus(al)
                 out['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
                                        'n': al})
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
@@ -1126,7 +1126,7 @@ class Actions(ConcCGI):
         """
         self.disabled_menu_items = ('menu-save', )
         if self.maincorp:
-            corp = conclib.manatee.Corpus(self.maincorp)
+            corp = corplib.open_corpus(self.maincorp)
         else:
             corp = self._corp()
         colllist = corp.get_conf('ATTRLIST').split(',')
@@ -1884,8 +1884,7 @@ class Actions(ConcCGI):
         structname, subquery = tt_query[0]
         if type(path) == unicode:
             path = path.encode("utf-8")
-        if conclib.manatee.create_subcorpus(path, self._corp(), structname,
-                                            subquery):
+        if corplib.create_subcorpus(path, self._corp(), structname, subquery):
             self._redirect('subcorp_list?corpname=%s' % self.corpname)
             return {}
         else:
@@ -1959,8 +1958,8 @@ class Actions(ConcCGI):
 
     @exposed()
     def delsubc_form(self):
-        subc = conclib.manatee.StrVector()
-        conclib.manatee.find_subcorpora(self.subcpath[-1], subc)
+        subc = corplib.create_str_vector()
+        corplib.find_subcorpora(self.subcpath[-1], subc)
         return {'Subcorplist': [{'n': c} for c in subc],
                 'subcorplist_size': min(len(subc), 20)}
 

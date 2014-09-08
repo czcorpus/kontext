@@ -30,6 +30,47 @@ from translation import ugettext as _
 import settings
 
 
+def manatee_version():
+    """
+    Returns Manatee version (as a string)
+    """
+    return manatee.version()
+
+
+def open_corpus(*args, **kwargs):
+    """
+    Creates a manatee.Corpus instance
+    """
+    return manatee.Corpus(*args, **kwargs)
+
+
+def find_subcorpora(*args, **kwargs):
+    """
+    Lists subcorpora at a specified path
+    """
+    return manatee.find_subcorpora(*args, **kwargs)
+
+
+def create_subcorpus(path, corpus, structname, subquery):
+    """
+    Creates a subcorpus
+
+    arguments:
+    path -- path of the new subcorpus file
+    corpus -- parent corpus (a manatee.Corpus instance)
+    structname -- a structure used to specify subcorpus content (only one structure name can be used)
+    subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
+    """
+    return manatee.create_subcorpus(path, corpus, structname, subquery)
+
+
+def create_str_vector():
+    """
+    Creates a new manatee.StrVector instance
+    """
+    return manatee.StrVector()
+
+
 class CorpusManager(object):
 
     def __init__(self, corplist=(), subcpath=()):
@@ -185,6 +226,7 @@ class CorpusManager(object):
             if open(f).read() == scdata:
                 return f
         return None
+
 
 def add_block_items(items, attr='class', val='even', block_size=3):
     for i in [i for i in range(len(items)) if (i / block_size) % 2]:
