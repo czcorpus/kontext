@@ -206,8 +206,10 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
                 self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'),
                     $(this).closest('table.envelope'));
+
+            } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
+                attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
             }
-            attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
         });
     };
 
