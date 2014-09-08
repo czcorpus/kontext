@@ -807,7 +807,7 @@ class ConcCGI(CGIPublisher):
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['human_corpname'] = self._human_readable_corpname()
         result['debug'] = settings.is_debug_mode()
-        result['_version'] = (conclib.manatee.version(), settings.get('global', '__version__'))
+        result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
@@ -824,7 +824,7 @@ class ConcCGI(CGIPublisher):
         result['Globals'] = StateGlobals(global_var_val)
 
         if self.maincorp:
-            thecorp = conclib.manatee.Corpus(self.maincorp)
+            thecorp = corplib.open_corpus(self.maincorp)
         else:
             thecorp = self._corp()
         try:
