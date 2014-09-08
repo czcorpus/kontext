@@ -165,7 +165,7 @@ class ConcCGI(CGIPublisher):
     subcpath = Parameter([])
     css_prefix = Parameter(u'')
     iquery = Parameter(u'')
-    queryselector = Parameter(u'iqueryrow')
+    queryselector = Parameter(u'')  # empty by-default; a session value is used in case nothing is set via URL
     lemma = Parameter(u'')
     lpos = Parameter(u'')
     phrase = Parameter(u'')
@@ -984,6 +984,11 @@ class ConcCGI(CGIPublisher):
         Restores query form's queryselector_* values using session data.
         The 'queryselector' of the primary corpus can be overridden by
         URL parameter 'queryselector'.
+
+        It is also OK if nothing is set for a particular query selector (primary
+        corpus, aligned corpora) either from URL or from session. In such case
+        the respective 'SELECT' HTML element will display its first 'OPTION'
+        which is 'iqueryrow' (= basic query type).
         """
         ans = {}
         if self.queryselector:
