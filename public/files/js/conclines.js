@@ -116,6 +116,7 @@ define(['win'], function (win) {
     };
 
     /**
+     * Returns number of selected rows
      *
      * @returns {number}
      */
