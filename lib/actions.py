@@ -1987,6 +1987,7 @@ class Actions(ConcCGI):
     @exposed(access_level=1, vars=('Desc', 'concsize'))
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
                  rightctx='40'):
+
         def merge_conc_line_parts(items):
             """
             converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \u0159ekl'},
@@ -2031,10 +2032,12 @@ class Actions(ConcCGI):
             fromp = 1
             line_offset = (from_line - 1)
             labelmap = {}
+
+            structs = '%s,%s' % (self.structs, ','.join(self.structattrs))
             data = self.call_function(kwic.kwicpage, (self._get_speech_segment(),),
                                       fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
                                       align=(), alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                      leftctx=leftctx, rightctx=rightctx)
+                                      leftctx=leftctx, rightctx=rightctx, structs=structs)
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'text':
