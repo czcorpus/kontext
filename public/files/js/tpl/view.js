@@ -54,6 +54,33 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     }
 
     /**
+     * User must be notified in case he wants to leave the page but at the same time he
+     * has selected some concordance lines without using them in a filter.
+     */
+    function onBeforeUnloadAsk() {
+        $(win).on('beforeunload.alert_unsaved', function (event) {
+            if (clStorage.size() > 0) {
+                event.returnValue = layoutModel.translate('are_you_sure_to_leave');
+                return event.returnValue;
+            }
+            return undefined; // !! any other value will cause the dialog window to be shown
+        });
+    }
+
+    /**
+     * Some links/forms must be allowed to avoid beforeunload check (e.g. pagination)
+     */
+    function grantPaginationPageLeave() {
+        $('.bonito-pagination form').on('submit', function () {
+            $(win).off('beforeunload.alert_unsaved');
+        });
+
+        $('.bonito-pagination a').on('click', function () {
+            $(win).off('beforeunload.alert_unsaved');
+        });
+    }
+
+    /**
      * According to the data found in sessionStorage iterates over current page's
      * lines and (un)checks them appropriately. In case sessionStorage is not
      * supported all the checkboxes are disabled.
@@ -114,6 +141,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                             box.close();
                             if (!data.error) {
                                 clStorage.clear();
+                                $(win).off('beforeunload.alert_unsaved');
                                 window.location = data.next_url
 
                             } else {
@@ -132,7 +160,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             finalize();
         };
 
-        linesSelection.text(layoutModel.translate('selected') + ': ' + numSelected);
+        linesSelection.text(layoutModel.translate('selected lines') + ': ' + numSelected);
         if (!popupBox.hasAttachedPopupBox(linesSelection)) {
             popupBox.bind(linesSelection, createContent, {
                 type : 'plain',
@@ -386,7 +414,9 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         }
         rowSelectionEvent();
         refreshSelection();
+        onBeforeUnloadAsk();
         onUloadSerialize();
+        grantPaginationPageLeave();
     };
 
     return lib;

@@ -2041,8 +2041,8 @@ msgstr "Nejsou žádné další řádky"
 msgid "Load more"
 msgstr "Nahrát další"
 
-msgid "selected"
-msgstr "vybráno"
+msgid "selected lines"
+msgstr "vybrané řádky"
 
 msgid "Confirm"
 msgstr "Potvrdit"
@@ -2070,6 +2070,9 @@ msgstr "Provést"
 
 msgid "Invalid or expired query"
 msgstr "Neplatný nebo vypršelý dotaz"
+
+msgid "You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost."
+msgstr "Nemáte dokončený výběr řádků (nebyl dosud použit žádný filtr). Opuštěním stránky můžete o tento výběr přijít."
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
