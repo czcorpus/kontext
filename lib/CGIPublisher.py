@@ -619,6 +619,8 @@ class CGIPublisher(object):
         if 'message' in result:
             result['messages'].append(result['message'])
             del(result['message'])
+        if len(self._system_messages) > 0:
+            result['message_auto_hide_interval'] = 0
 
     def _restore_ui_settings(self):
         if 'ui_settings' in self._cookies:
