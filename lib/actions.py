@@ -252,7 +252,8 @@ class Actions(ConcCGI):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
-        self._enable_subcorpora_list(out)
+        self._export_subcorpora_list(out)
+        out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
         self.last_corpname = self.corpname
         self._save_options(['last_corpname'])
         return out
@@ -1381,7 +1382,7 @@ class Actions(ConcCGI):
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
         out['freq_figures'] = self.FREQ_FIGURES
-        self._enable_subcorpora_list(out)
+        self._export_subcorpora_list(out)
         return out
 
     @exposed()

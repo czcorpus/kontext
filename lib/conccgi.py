@@ -612,11 +612,13 @@ class ConcCGI(CGIPublisher):
         if 'conc' in self._session:
             del(self._session['conc'])
 
-    def _enable_subcorpora_list(self, out):
+    def _export_subcorpora_list(self, out):
         """
-        Parameters
-        ----------
-        out : dict
+        Updates passed dictionary by information about available sub-corpora.
+        Listed values depend on current user and corpus.
+
+        arguments:
+        out -- a dictionary used by templating system
         """
         basecorpname = self.corpname.split(':')[0]
         subcorp_list = strings.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
