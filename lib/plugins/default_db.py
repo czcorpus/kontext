@@ -112,6 +112,18 @@ class DefaultDb(KeyValueStorage):
         data[field] = value
         self.set(key, data)
 
+    def hash_get_all(self, key):
+        """
+        Returns complete hash object stored under the passed key.
+
+        arguments:
+        key -- data access key
+        """
+        data = self.get(key)
+        if type(data) is not dict:
+            raise TypeError('hash_get_all - required value "%s" is not a dict' % key)
+        return data
+
     def get(self, key, default=None):
         """
         Loads data from key->value storage

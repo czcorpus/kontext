@@ -104,6 +104,15 @@ class RedisDb(KeyValueStorage):
         """
         self.redis.hset(key, field, value)
 
+    def hash_get_all(self, key):
+        """
+        Returns complete hash object stored under the passed key.
+
+        arguments:
+        key -- data access key
+        """
+        return self.redis.hgetall(key)
+
     def get(self, key, default=None):
         """
         Gets a value stored with passed key and returns its JSON decoded form.
