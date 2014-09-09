@@ -83,6 +83,16 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
+    def hash_get_all(self, key):
+        """
+        Returns complete hash object stored under the passed key.
+        (in some implementations this may be the same as simple get())
+
+        arguments:
+        key -- data access key
+        """
+        raise NotImplementedError()
+
     def get(self, key, default=None):
         """
         Gets a value stored with passed key and returns its JSON decoded form.
