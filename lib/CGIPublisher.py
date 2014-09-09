@@ -254,6 +254,7 @@ class CGIPublisher(object):
         self._status = 200
         self._anonymous = None
         self.user = None
+        self._system_messages = []
 
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
             setattr(self, k, v.unwrap())
@@ -338,6 +339,9 @@ class CGIPublisher(object):
             'server': self.environ.get('HTTP_HOST'),
             'script': self.environ.get('SCRIPT_NAME')
         }
+
+    def _add_system_message(self, msg_type, text):
+        self._system_messages.append((msg_type, text))
 
     def is_template(self, template):
         """
@@ -611,7 +615,10 @@ class CGIPublisher(object):
         Allows special operations to be done after the action itself has been processed but before
         any output or HTTP headers.
         """
-        pass
+        result['messages'] = self._system_messages
+        if 'message' in result:
+            result['messages'].append(result['message'])
+            del(result['message'])
 
     def _restore_ui_settings(self):
         if 'ui_settings' in self._cookies:
