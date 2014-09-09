@@ -29,6 +29,7 @@ import taghelper
 import strings
 from strings import format_number, corpus_get_conf
 from translation import ugettext as _
+import scheduled
 
 
 class ConcError(Exception):
@@ -94,6 +95,9 @@ class ConcCGI(CGIPublisher):
     # to infer some default corpus name and redirect user there. Hopefully, future releases
     # will avoid this.
     DEFAULT_CORPUS = 'susanne'
+
+    # a user settings key entry used to access user's scheduled actions
+    SCHEDULED_ACTIONS_KEY = '_scheduled'
 
     error = Parameter(u'')
     fc_lemword_window_type = Parameter(u'both')
@@ -467,6 +471,28 @@ class ConcCGI(CGIPublisher):
             tpl_data['q'] = self.urlencode([('q', q) for q in self.q])
             tpl_data['Q'] = [{'q': q} for q in self.q]
 
+    def _scheduled_actions(self, user_settings):
+        actions = []
+        if ConcCGI.SCHEDULED_ACTIONS_KEY in user_settings:
+            value = user_settings[ConcCGI.SCHEDULED_ACTIONS_KEY]
+            if type(value) is dict:
+                actions.append(value)
+            elif type(value):
+                actions += value
+            for action in actions:
+                func_name = action['action']
+                if hasattr(scheduled, func_name) and callable(getattr(scheduled, func_name)):
+                    ans = apply(getattr(scheduled, func_name), (), action)
+                    if 'message' in ans:
+                        self._add_system_message('info', ans['message'])
+                    if ans['error'] is not None:
+                        logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
+                            action.get('id', '??'), ans['error'].__class__.__name__, ans['error']))
+                else:
+                    logging.getLogger('SCHEDULING').error('task_id: %s, Failed to invoke scheduled action: %s' % (
+                        action.get('id', '??'), action,))
+            self._save_options()  # this causes scheduled task to be removed from settings
+
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -485,6 +511,7 @@ class ConcCGI(CGIPublisher):
                                 environ=self.environ, fp=self.environ['wsgi.input'])
 
         options, corp_options = self._load_user_settings()
+        self._scheduled_actions(options)
         # only general setting can be applied now because
         # we do not know final corpus name yet
         self._apply_general_user_settings(options, self._init_default_settings)
@@ -627,7 +654,7 @@ class ConcCGI(CGIPublisher):
         out['SubcorpList'] = subcorp_list
 
     def _get_save_excluded_attributes(self):
-        return 'corpname',
+        return 'corpname', ConcCGI.SCHEDULED_ACTIONS_KEY
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
@@ -840,10 +867,6 @@ class ConcCGI(CGIPublisher):
 
         result['root_url'] = self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
-
-        if self._session_get('__message'):
-            result['message'] = ('info', self._session_get('__message'))
-            del(self._session['__message'])
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url(self.get_root_url())

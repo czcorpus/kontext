@@ -214,6 +214,12 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
     <fieldset id="specify-query-metainformation" class="inactive">
       <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information")
       <img class="status over-img" src="../files/img/expand.png" /></a></legend>
+
+      #if $metadata_desc
+      <div class="desc">
+        #filter None#$metadata_desc#end filter#
+      </div>
+      #end if
       <div class="contents">
           <table>
               <tr>
