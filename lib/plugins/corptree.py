@@ -80,6 +80,14 @@ class CorpTree(object):
                     ans = matching[0]
         return ans
 
+    def _parse_meta_desc(self, meta_elm):
+        ans = {}
+
+        for elm in meta_elm:
+            if elm.tag == 'desc':
+                ans[elm.attrib['lang']] = markdown(elm.text)
+        return ans
+
     def _parse_corplist_node(self, root, data, path='/'):
         """
         """
@@ -106,7 +114,7 @@ class CorpTree(object):
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
-                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None}
+                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}}
                 }
 
                 ref_elm = item.find('reference')
@@ -123,24 +131,47 @@ class CorpTree(object):
                     ans['metadata']['database'] = getattr(meta_elm.find('database'), 'text', None)
                     ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
+                    ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
 
                 data.append(ans)
 
-    def get_corpus_info(self, corp_name):
+    def _localize_corpus_info(self, data, lang_code):
+        """
+        Updates localized values from data (please note that not all
+        the data are localized - e.g. paths to files) by a single variant
+        given passed lang_code.
+        """
+        ans = {}
+        ans.update(data)
+
+        desc = ans['metadata']['desc']
+        if lang_code in desc:
+            ans['metadata']['desc'] = desc[lang_code]
+        elif lang_code.split('_')[0] in desc:
+            ans['metadata']['desc'] = desc[lang_code.split('_')[0]]
+        else:
+            ans['metadata']['desc'] = ''
+        return ans
+
+    def get_corpus_info(self, corp_name, language=None):
         """
         Returns an information related to provided corpus name and contained within
         the configuration XML file (i.e. not the data from the registry file). It is
         able to handle names containing the '/' character.
 
-        Parameters
-        ----------
-        corp_name : str, name of the corpus
+        arguments:
+        corp_name -- name of the corpus
+        language -- a language to export localized data to; both xx_YY and xx variants are
+                    accepted (in case there is no match for xx_YY xx is used).
+                    If None then all the variants are returned (=> slightly different structure
+                    of returned dictionary; typically - instead of a str value there is a dict
+                    where keys correspond to language codes).
 
-        Returns
-        -------
-        a dictionary containing following keys:
-        path, web
-        or None if no such item is found
+        returns:
+        a dictionary containing corpus information as defined in config.xml (i.e. <corpus> tag
+        and its attributes and also its subtree (e.g. <metadata> tag).
+        See self._parse_corplist_node method for the information how data is organized in the
+        dictionary.
         """
         if corp_name != '':
             tmp = corp_name.split('/')
@@ -150,7 +181,10 @@ class CorpTree(object):
                 corp_name = tmp[0]
             for item in self.get():
                 if item['id'].lower() == corp_name.lower():
-                    return item
+                    if language is not None:
+                        return self._localize_corpus_info(item, lang_code=language)
+                    else:
+                        return item
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly

@@ -225,6 +225,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
                     .attr('data-alt-img', '../files/img/expand_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_expand);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
+                jqFieldset.find('div.desc').show();
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
@@ -233,6 +234,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
                     .attr('data-alt-img', '../files/img/collapse_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_hide);
                 jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
+                jqFieldset.find('div.desc').hide();
                 layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
             $.each(lib.extendedApi.queryFieldsetToggleEvents, function (i, fn) {

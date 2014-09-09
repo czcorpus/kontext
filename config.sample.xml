@@ -88,8 +88,14 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		<corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset"
-                metadata="/var/local/corpora/orwell.db" bib_attr="opus.title" />
+		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset">
+                    <metadata>
+                        <database>/path/to/a/sqlite/database/metadata-orwell.db</database>
+                        <label_attr>opus.title</label_attr>
+                        <id_attr>opus.id</id_attr>
+                        <desc lang="en">The work of George Orwell</desc>
+                    </metadata>
+                </corpus>
 	    </corplist>
             <corplist title="Foreign corpora">
                 <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
