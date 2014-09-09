@@ -357,8 +357,9 @@ define('conf', [], function () {
 
 #filter WebSafe
 <div id="content">
-    #if $message
+    #if $messages
     <div class="messages">
+        #for $message in $messages
         <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
             <img class="icon" alt="$message[0]" src="../files/img/#if $message[0] == 'error'#error-icon.png#else#info-icon.png#end if#">
             <div class="message-text">#filter None#$message[1]#end filter#</div>
@@ -366,6 +367,7 @@ define('conf', [], function () {
                 <img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />
             </a>
         </div>
+        #end for
     </div>
     #end if
 
