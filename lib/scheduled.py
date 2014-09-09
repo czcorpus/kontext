@@ -20,17 +20,12 @@ from translation import ugettext as _
 
 
 def add_subcorpus(**kwargs):
-    ans = {'error': None}
-    try:
-        shutil.copy(kwargs['src_path'], kwargs['dest_path'])
-        ans['message'] = _('A new sub-corpus has been added to your library')
-    except Exception as e:
-        ans['error'] = e
-    return ans
+    ans = {}
+    shutil.copy(kwargs['src_path'], kwargs['dest_path'])
+    ans['message'] = _('A new sub-corpus has been added to your library')
 
 
 def show_message(**kwargs):
     return {
-        'error': None,
         'message': kwargs['message']
     }

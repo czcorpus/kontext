@@ -482,12 +482,13 @@ class ConcCGI(CGIPublisher):
             for action in actions:
                 func_name = action['action']
                 if hasattr(scheduled, func_name) and callable(getattr(scheduled, func_name)):
-                    ans = apply(getattr(scheduled, func_name), (), action)
-                    if 'message' in ans:
-                        self._add_system_message('info', ans['message'])
-                    if ans['error'] is not None:
+                    try:
+                        ans = apply(getattr(scheduled, func_name), (), action)
+                        if 'message' in ans:
+                            self._add_system_message('info', ans['message'])
+                    except Exception as e:
                         logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
-                            action.get('id', '??'), ans['error'].__class__.__name__, ans['error']))
+                            action.get('id', '??'), e.__class__.__name__, e))
                 else:
                     logging.getLogger('SCHEDULING').error('task_id: %s, Failed to invoke scheduled action: %s' % (
                         action.get('id', '??'), action,))
