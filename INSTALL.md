@@ -75,7 +75,7 @@ KonText comes with two prepackaged plug-in series, both located in *lib/plugins*
     * they provide a complete, working set of plugins needed to run KonText with all the features enabled
     * there are two database backends available for *default_* modules; both are designed as key->value stores:
         * [sqlite3](http://www.sqlite.org/)-based ([Python module](https://pypi.python.org/pypi/pysqlite)) for testing and small installations
-        * [Redis](http://redis.io/)-based ([Python module](https://pypi.python.org/pypi/redis/) for production installations
+        * [Redis](http://redis.io/)-based ([Python module](https://pypi.python.org/pypi/redis/)) for production installations
     * an initial user import must be performed - for this purpose, a script *scripts/plugins/default_query_storage* is available
      (see also *userdb.sample.json* file to find out how to prepare initial user database)
 
@@ -113,16 +113,16 @@ var lib = {};
 
 ### Server-side implementation notes
 
-In general, a plug-in is a Python object defined in a Python module. the module must implement factory function
+In general, a plug-in is a Python object defined in a Python module. The module must implement a factory function
 *create_instance*
 
 ```python
 def create_instance(settings, *args, **kwargs):
-    return MyPlug-inImplementation()
+    return MyPluginImplementation()
 ```
 
 The factory function should create and return a plug-in object. Because plug-ins are instantiated early in the request
-processing workflow, it is sometimes necessary to perform additional configuration after *CGIPublisher* object is fully
+processing workflow, it is sometimes necessary to perform an additional configuration after *CGIPublisher* object is fully
 operational. In such cases, the plug-in can implement a method *setup*:
 
 ```python
