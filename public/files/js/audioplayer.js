@@ -243,6 +243,7 @@ define(['win', 'jquery', 'SoundManager'], function (win, $, SoundManager) {
             },
             onfinish: function () {
                 self.status = self.PLAYER_STATUS_STOPPED;
+                soundManager.destroySound(self.playSessionId);
                 self.removeUserInterface();
                 if (self.itemsToPlay.length > 0) {
                     soundManager.destroySound(self.playSessionId);
