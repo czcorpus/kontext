@@ -73,7 +73,7 @@ class StateGlobals(object):
         return self
 
 
-class ConcCGI(Controller):
+class Kontext(Controller):
     # A list of attributes needed to be able to view current concordance in case user is somewhere else.
     # Please note that this list does not include the 'q' parameter which collects currently built query
     # (a Bonito design choice)
@@ -242,7 +242,7 @@ class ConcCGI(Controller):
     _files_path = u'../files'
 
     def __init__(self, environ, ui_lang):
-        super(ConcCGI, self).__init__(environ=environ, ui_lang=ui_lang)
+        super(Kontext, self).__init__(environ=environ, ui_lang=ui_lang)
         self._curr_corpus = None
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
@@ -473,8 +473,8 @@ class ConcCGI(Controller):
 
     def _scheduled_actions(self, user_settings):
         actions = []
-        if ConcCGI.SCHEDULED_ACTIONS_KEY in user_settings:
-            value = user_settings[ConcCGI.SCHEDULED_ACTIONS_KEY]
+        if Kontext.SCHEDULED_ACTIONS_KEY in user_settings:
+            value = user_settings[Kontext.SCHEDULED_ACTIONS_KEY]
             if type(value) is dict:
                 actions.append(value)
             elif type(value):
@@ -503,7 +503,7 @@ class ConcCGI(Controller):
             s = len(selector)
             args.update(dict([(n[s:], v) for n, v in args.items() if n.startswith(selector)]))
 
-        super(ConcCGI, self)._pre_dispatch(path, selectorname, named_args)
+        super(Kontext, self)._pre_dispatch(path, selectorname, named_args)
         param_types = dict(inspect.getmembers(self.__class__, predicate=lambda x: isinstance(x, Parameter)))
 
         if not action_metadata:
@@ -605,10 +605,10 @@ class ConcCGI(Controller):
         """
         if self._user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
-            for x in ConcCGI.ANON_FORBIDDEN_MENU_ITEMS:
+            for x in Kontext.ANON_FORBIDDEN_MENU_ITEMS:
                 disabled_set.add(x)
             self.disabled_menu_items = tuple(disabled_set)
-        super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
+        super(Kontext, self)._post_dispatch(methodname, tmpl, result)
         if type(result) is dict and '__time__' in result:
             proc_time = result['__time__']
         else:
@@ -655,7 +655,7 @@ class ConcCGI(Controller):
         out['SubcorpList'] = subcorp_list
 
     def _get_save_excluded_attributes(self):
-        return 'corpname', ConcCGI.SCHEDULED_ACTIONS_KEY
+        return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
@@ -717,7 +717,7 @@ class ConcCGI(Controller):
 
         # last resort solution (this shouldn't happen in properly configured production installation)
         if not cn in corp_list:
-            cn = ConcCGI.DEFAULT_CORPUS
+            cn = Kontext.DEFAULT_CORPUS
             fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
         return cn, fallback
 
@@ -928,7 +928,7 @@ class ConcCGI(Controller):
             tmp = self._session['conc']
 
             storage['conc_persist'] = True
-            for k in ConcCGI.CONC_RESULT_ATTRS:
+            for k in Kontext.CONC_RESULT_ATTRS:
                 storage[k] = tmp[conc_key].get(k)
         else:
             storage['conc_persist'] = False
@@ -951,7 +951,7 @@ class ConcCGI(Controller):
                                                                                             'conc_persistence_time'):
                 self._session['conc'].pop(k)
 
-        data = dict([(k, src.get(k)) for k in ConcCGI.CONC_RESULT_ATTRS])
+        data = dict([(k, src.get(k)) for k in Kontext.CONC_RESULT_ATTRS])
         data['__timestamp__'] = int(curr_time)
         self._session['conc']['#'.join(self.q)] = data
 

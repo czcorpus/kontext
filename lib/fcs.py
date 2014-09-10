@@ -10,11 +10,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from conccgi import ConcCGI
+from kontext import Kontext
 from controller import exposed
 
 
-class Actions(ConcCGI):
+class Actions(Kontext):
     """
     An action controller providing services related to the Federated Content Search support
     """

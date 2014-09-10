@@ -18,7 +18,7 @@ import sys
 import re
 import csv
 
-from conccgi import ConcCGI, ConcError
+from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
 import conclib
@@ -31,7 +31,7 @@ from strings import import_string, export_string, format_number
 from translation import ugettext as _
 
 
-class Actions(ConcCGI):
+class Actions(Kontext):
     """
     KonText actions are specified here
     """
@@ -489,13 +489,13 @@ class Actions(ConcCGI):
         multiple level sort concordance
         """
 
-        crit = ConcCGI.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
+        crit = Kontext.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
                                     ml1icase, ml1bward)
         if sortlevel > 1:
-            crit += ConcCGI.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
+            crit += Kontext.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
                                          ml2icase, ml2bward)
             if sortlevel > 2:
-                crit += ConcCGI.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
+                crit += Kontext.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
                                              ml3icase, ml3bward)
         self.q.append(crit)
         return self.view()
@@ -1104,7 +1104,7 @@ class Actions(ConcCGI):
         """
         multilevel frequency list
         """
-        fcrit = ' '.join([ConcCGI.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
+        fcrit = ' '.join([Kontext.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
                                                kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
                                                kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
