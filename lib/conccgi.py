@@ -485,7 +485,7 @@ class ConcCGI(CGIPublisher):
                     try:
                         ans = apply(getattr(scheduled, func_name), (), action)
                         if 'message' in ans:
-                            self._add_system_message('info', ans['message'])
+                            self._add_system_message('message', ans['message'])
                     except Exception as e:
                         logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
                             action.get('id', '??'), e.__class__.__name__, e))
