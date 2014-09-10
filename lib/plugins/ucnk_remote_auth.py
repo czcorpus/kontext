@@ -33,7 +33,7 @@ Required config.xml/plugins entries:
 
 import urllib
 
-from auth import AbstractAuth
+from abstract.auth import AbstractAuth
 
 
 def create_instance(conf, db_provider, sessions):
