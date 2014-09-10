@@ -14,7 +14,7 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="User data editor")
     argparser.add_argument('source_file', metavar="FILE", help="a file containing JSON-encoded initial data")
     argparser.add_argument('action', metavar="ACTION", help="an action to be performed (add, reset)")
-    argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the '                                                                 'source contains a list)')
+    argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the source contains a list)')
     args = argparser.parse_args()
     print("---------------------")
 
