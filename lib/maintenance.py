@@ -12,7 +12,7 @@
 
 import os
 
-from CGIPublisher import KonTextCookie
+from controller import KonTextCookie
 import plugins
 from translation import ugettext as _
 

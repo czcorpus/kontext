@@ -22,7 +22,7 @@ import urllib
 
 import corplib
 import conclib
-from CGIPublisher import CGIPublisher, UserActionException, convert_types, Parameter
+from controller import Controller, UserActionException, convert_types, Parameter
 import plugins
 import settings
 import taghelper
@@ -73,7 +73,7 @@ class StateGlobals(object):
         return self
 
 
-class ConcCGI(CGIPublisher):
+class ConcCGI(Controller):
     # A list of attributes needed to be able to view current concordance in case user is somewhere else.
     # Please note that this list does not include the 'q' parameter which collects currently built query
     # (a Bonito design choice)
@@ -522,7 +522,7 @@ class ConcCGI(CGIPublisher):
         if self._requires_corpus_access(path[0]):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
-                path = [CGIPublisher.NO_OPERATION]
+                path = [Controller.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
                     self._redirect(fallback_url)
                 else:
@@ -832,7 +832,7 @@ class ConcCGI(CGIPublisher):
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        CGIPublisher._add_globals(self, result, methodname, action_metadata)
+        Controller._add_globals(self, result, methodname, action_metadata)
 
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['human_corpname'] = self._human_readable_corpname()

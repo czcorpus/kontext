@@ -122,12 +122,12 @@ def create_instance(settings, *args, **kwargs):
 ```
 
 The factory function should create and return a plug-in object. Because plug-ins are instantiated early in the request
-processing workflow, it is sometimes necessary to perform an additional configuration after *CGIPublisher* object is fully
+processing workflow, it is sometimes necessary to perform an additional configuration after *Controller* object is fully
 operational. In such cases, the plug-in can implement a method *setup*:
 
 ```python
 def setup(self, **kwargs):
-    # ask CGIPublisher something as he is ready here and now
+    # ask Controller something as it is already initialized
     pass
 ```
 
