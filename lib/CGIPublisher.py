@@ -615,12 +615,13 @@ class CGIPublisher(object):
         Allows special operations to be done after the action itself has been processed but before
         any output or HTTP headers.
         """
-        result['messages'] = self._system_messages
-        if 'message' in result:
-            result['messages'].append(result['message'])
-            del(result['message'])
-        if len(self._system_messages) > 0:
-            result['message_auto_hide_interval'] = 0
+        if type(result) is dict:
+            result['messages'] = self._system_messages
+            if 'message' in result:
+                result['messages'].append(result['message'])
+                del(result['message'])
+            if len(self._system_messages) > 0:
+                result['message_auto_hide_interval'] = 0
 
     def _restore_ui_settings(self):
         if 'ui_settings' in self._cookies:
