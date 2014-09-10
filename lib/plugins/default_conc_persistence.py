@@ -77,7 +77,7 @@ def mk_short_id(s, min_length=6):
 
 class ConcPersistence(AbstractConcPersistence):
     """
-    This class stores user's queries in their internal form (see conccgi.q attribute).
+    This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
     DEFAULT_TTL_DAYS = 100
