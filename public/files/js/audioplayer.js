@@ -20,10 +20,11 @@
  * This library provides a simple audio-player (play/pause/stop)
  * based on the SoundManager 2 library (http://www.schillmania.com/projects/soundmanager2/).
  */
-define(['win', 'jquery'], function (win, $) {
+define(['win', 'jquery', 'SoundManager'], function (win, $, SoundManager) {
     'use strict';
 
-    var lib = {};
+    var lib = {},
+        soundManager = SoundManager.soundManager;
 
     /**
      * @param wrapper {string|Element} ID of wrapping HTML element or element itself

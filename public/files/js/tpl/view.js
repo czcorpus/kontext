@@ -20,12 +20,110 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines', 'vendor/jscrollpane'], function (win,
-        $, jqueryPeriodic, layoutModel, detail, popupBox, conclines) {
+define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines',
+        'SoundManager', 'vendor/jscrollpane'], function (win, $, jqueryPeriodic, layoutModel, detail,
+                                                                popupBox, conclines, SoundManager) {
     'use strict';
 
     var lib = {},
         clStorage = conclines.openStorage();
+
+
+    /**
+     * According to the data found in sessionStorage iterates over current page's
+     * lines and (un)checks them appropriately. In case sessionStorage is not
+     * supported all the checkboxes are disabled.
+     */
+    function refreshSelection() {
+        $('#conclines tr input[type=\'checkbox\']').each(function () {
+            if (!clStorage.supportsSessionStorage()) {
+                $(this).attr('disabled', 'disabled');
+
+            } else if (clStorage.containsLine($(this).val())) {
+                this.checked = true;
+
+            } else {
+                this.checked = false;
+            }
+        });
+    }
+
+    /**
+     *
+     * @param numSelected
+     */
+    function showNumSelectedItems(numSelected) {
+        var linesSelection = $('#result-info .lines-selection'),
+            createContent;
+
+        createContent = function (box, finalize) {
+            var formElm = $('#selection-actions'),
+                getAction;
+
+            getAction = function () {
+                return formElm.find('select[name=\'actions\']').val();
+            };
+
+            formElm.find('button.confirm').off('click').on('click', function () {
+                var action = getAction(),
+                    prom,
+                    pnfilter,
+                    filterCodeMapping = {'remove' : 'n', 'remove_inverted' : 'p'};
+
+                if (action === 'clear') {
+                    clStorage.clear();
+                    refreshSelection();
+                    box.close();
+
+                } else {
+                    pnfilter = filterCodeMapping[action];
+                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + layoutModel.conf.stateParams,
+                        {
+                            dataType : 'json',
+                            type : 'POST',
+                            data : { rows : JSON.stringify(clStorage.getAll())}
+                        }).promise();
+
+                    prom.then(
+                        function (data) {
+                            box.close();
+                            if (!data.error) {
+                                clStorage.clear();
+                                $(win).off('beforeunload.alert_unsaved');
+                                win.location = data.next_url;
+
+                            } else {
+                                layoutModel.showMessage('error', data.error);
+                            }
+                        },
+                        function (jqXHR, textStatus) {
+                            box.close();
+                            layoutModel.showMessage('error', textStatus);
+                        }
+                    );
+                }
+            });
+            box.importElement(formElm);
+            finalize();
+        };
+
+        linesSelection.text(layoutModel.translate('selected lines') + ': ' + numSelected);
+        if (!popupBox.hasAttachedPopupBox(linesSelection)) {
+            popupBox.bind(linesSelection, createContent, {
+                type : 'plain',
+                closeIcon : true
+            });
+        }
+        if (numSelected === 0) {
+            linesSelection.hide();
+            linesSelection.prev('span.separ').hide();
+
+        } else if (!linesSelection.is(':visible')) {
+            linesSelection.show();
+            linesSelection.prev('span.separ').show();
+        }
+    }
+
 
     /**
      * Handles clicking on concordance line checkbox
@@ -78,103 +176,6 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         $('.bonito-pagination a').on('click', function () {
             $(win).off('beforeunload.alert_unsaved');
         });
-    }
-
-    /**
-     * According to the data found in sessionStorage iterates over current page's
-     * lines and (un)checks them appropriately. In case sessionStorage is not
-     * supported all the checkboxes are disabled.
-     */
-    function refreshSelection() {
-        $('#conclines tr input[type=\'checkbox\']').each(function () {
-            if (!clStorage.supportsSessionStorage()) {
-                $(this).attr('disabled', 'disabled');
-
-            } else if (clStorage.containsLine($(this).val())) {
-                this.checked = true;
-
-            } else {
-                this.checked = false;
-            }
-        });
-
-        showNumSelectedItems(clStorage.size());
-    }
-
-    /**
-     *
-     * @param numSelected
-     */
-    function showNumSelectedItems(numSelected) {
-        var linesSelection = $('#result-info .lines-selection'),
-            createContent;
-
-        createContent = function (box, finalize) {
-            var formElm = $('#selection-actions'),
-                getAction;
-
-            getAction = function () {
-                return formElm.find('select[name=\'actions\']').val();
-            };
-
-            formElm.find('button.confirm').off('click').on('click', function () {
-                var action = getAction(),
-                    prom,
-                    pnfilter;
-
-                if (action === 'clear') {
-                    clStorage.clear();
-                    refreshSelection();
-                    box.close();
-
-                } else {
-                    pnfilter = {'remove' : 'n', 'remove_inverted' : 'p'}[action];
-                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + layoutModel.conf.stateParams,
-                        {
-                            dataType : 'json',
-                            type : 'POST',
-                            data : { rows : JSON.stringify(clStorage.getAll())}
-                        }).promise();
-
-                    prom.then(
-                        function (data) {
-                            box.close();
-                            if (!data.error) {
-                                clStorage.clear();
-                                $(win).off('beforeunload.alert_unsaved');
-                                window.location = data.next_url
-
-                            } else {
-                                layoutModel.showMessage('error', data.error);
-                            }
-                        },
-                        function (jqXHR, textStatus) {
-                            box.close();
-                            layoutModel.showMessage('error', textStatus);
-                        }
-                    );
-                }
-            });
-
-            box.importElement(formElm);
-            finalize();
-        };
-
-        linesSelection.text(layoutModel.translate('selected lines') + ': ' + numSelected);
-        if (!popupBox.hasAttachedPopupBox(linesSelection)) {
-            popupBox.bind(linesSelection, createContent, {
-                type : 'plain',
-                closeIcon : true
-            });
-        }
-        if (numSelected === 0) {
-            linesSelection.hide();
-            linesSelection.prev('span.separ').hide();
-
-        } else if (!linesSelection.is(':visible')) {
-            linesSelection.show();
-            linesSelection.prev('span.separ').show();
-        }
     }
 
     /**
@@ -310,6 +311,15 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         );
     }
 
+    function soundManagerInit() {
+        SoundManager.soundManager.setup({
+            url: '../files/misc/soundmanager2/',
+            flashVersion: 9,
+            debugMode : false,
+            preferFlash : false
+        });
+    }
+
     /**
      *
      * @param boxInst
@@ -414,9 +424,11 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         }
         rowSelectionEvent();
         refreshSelection();
+        showNumSelectedItems(clStorage.size());
         onBeforeUnloadAsk();
         onUloadSerialize();
         grantPaginationPageLeave();
+        soundManagerInit();
     };
 
     return lib;
