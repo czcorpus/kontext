@@ -16,7 +16,7 @@ It relies on default_db module which requires no database backend.
 """
 import hashlib
 
-from auth import AbstractAuth
+from abstract.auth import AbstractAuth
 from translation import ugettext as _
 
 

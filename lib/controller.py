@@ -31,7 +31,7 @@ import time
 
 import plugins
 import settings
-from auth import AuthException
+from plugins.abstract.auth import AuthException
 from translation import ugettext as _
 
 
