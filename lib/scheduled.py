@@ -21,8 +21,14 @@ from translation import ugettext as _
 
 def add_subcorpus(**kwargs):
     ans = {}
-    shutil.copy(kwargs['src_path'], kwargs['dest_path'])
-    ans['message'] = _('A new sub-corpus has been added to your library')
+    for files in kwargs['files']:
+        shutil.copy(files['src'] % kwargs, files['dst'] % kwargs)
+
+    if not 'message' in kwargs:
+        ans['message'] = _('A new sub-corpus has been added to your library')
+    else:
+        ans['message'] = kwargs['message']
+    return ans
 
 
 def show_message(**kwargs):
