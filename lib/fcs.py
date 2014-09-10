@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 
 from conccgi import ConcCGI
-from CGIPublisher import exposed
+from controller import exposed
 
 
 class Actions(ConcCGI):

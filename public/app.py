@@ -42,7 +42,7 @@ import plugins.export
 import settings
 import translation
 import strings
-from CGIPublisher import KonTextCookie
+from controller import KonTextCookie
 
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')  # we ensure that the application's locale is always the same
 logger = logging.getLogger('')  # root logger

@@ -144,7 +144,7 @@ class CheetahResponseFile(object):
 class JsonEncodedData(object):
     """
     If you want to return already encoded JSON data, you have to
-    wrap them into this object to prevent CGIPublisher to encode it again...
+    wrap them into this object to prevent Controller to encode it again...
     """
 
     def __init__(self, data):
@@ -156,7 +156,7 @@ class JsonEncodedData(object):
 
 class UserActionException(Exception):
     """
-    This exception should cover general errors occurring in CGIPublisher's action methods'
+    This exception should cover general errors occurring in Controller's action methods'
     """
     def __init__(self, message, code=200):
         self.message = message
@@ -177,7 +177,7 @@ class NotFoundException(UserActionException):
 class Parameter(object):
     """
     Setting an object of this type as a static property
-    of CGIPublisher causes CGIPublisher to create an object
+    of Controller causes Controller to create an object
     property with wrapped value. This solves the attribute
     mess in the original Bonito code.
 
@@ -211,7 +211,7 @@ class Parameter(object):
         return self.persistent
 
 
-class CGIPublisher(object):
+class Controller(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
@@ -364,7 +364,7 @@ class CGIPublisher(object):
 
         TODO: values not found in the STATUS_MAP should be treated in a better way
         """
-        s = CGIPublisher.STATUS_MAP.get(self._status, '')
+        s = Controller.STATUS_MAP.get(self._status, '')
         return '%s  %s' % (self._status, s)
 
     def self_encoding(self):
@@ -563,12 +563,12 @@ class CGIPublisher(object):
 
         path = path.split('/')
         if len(path) is 0 or path[0] is '':
-            path = [CGIPublisher.NO_OPERATION]
+            path = [Controller.NO_OPERATION]
         return path
 
     def _redirect(self, url, code=303):
         """
-        Sets CGIPublisher to output HTTP redirection headers.
+        Sets Controller to output HTTP redirection headers.
         Please note that the header output is not immediate -
         an action still must be set and performed. In case there is
         no need to process anything a NOP action (which does nothing)
@@ -586,7 +586,7 @@ class CGIPublisher(object):
 
     def _set_not_found(self):
         """
-        Sets CGIPublisher to output HTTP 404 Not Found response
+        Sets Controller to output HTTP 404 Not Found response
         """
         self._headers.clear()
         self._status = 404
@@ -707,7 +707,7 @@ class CGIPublisher(object):
 
     def process_method(self, methodname, pos_args, named_args, tpl_data=None):
         """
-        This method handles mapping between HTTP actions and CGIPublisher's methods.
+        This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
 
         Returns

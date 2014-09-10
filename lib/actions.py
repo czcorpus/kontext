@@ -19,7 +19,7 @@ import re
 import csv
 
 from conccgi import ConcCGI, ConcError
-from CGIPublisher import JsonEncodedData, UserActionException, exposed, Parameter
+from controller import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
 import conclib
 import corplib
