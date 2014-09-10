@@ -176,10 +176,12 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     };
 
     /**
+     * Updates toggleable fieldsets to the state user set
+     * last time he used the form.
      *
      * @returns {$.Deferred.Promise} a promise object
      */
-    lib.updateQueryFieldsets = function () {
+    lib.updateToggleableFieldsets = function () {
         var jqLink = $('a.form-extension-switch'),
             jqFieldset,
             elmStatus,
@@ -192,6 +194,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
                 jqFieldset.find('div.contents').show();
+                jqFieldset.find('div.desc').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_hide);
@@ -199,6 +202,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
 
             } else {
                 jqFieldset.find('div.contents').hide();
+                jqFieldset.find('div.desc').show();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
                     .attr('alt', layoutModel.conf.messages.click_to_expand);
@@ -370,7 +374,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             bindStaticElements : lib.bindStaticElements(),
             bindQueryFieldsetsEvents : lib.bindQueryFieldsetsEvents(),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
-            updateQueryFieldsets : lib.updateQueryFieldsets(),
+            updateToggleableFieldsets : lib.updateToggleableFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.init(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
