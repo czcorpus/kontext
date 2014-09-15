@@ -17,7 +17,6 @@
 import shutil
 import os
 import re
-import logging
 
 from translation import ugettext as _
 
@@ -33,11 +32,13 @@ class add_subcorpus(object):
       "files": [
         {
           "src": "/path/to/a/source/subcorpus",
-          "dst": "/destination/directory/or/file"
+          "dst": "/destination/directory/or/file",
+          "corpusName": "a name of the corpus"
         },
         {
           "src": "/another/src/...",
           "dst": "/another/dst/...",
+          "corpusName": "a name of the another corpus"
         },
         ...
       ]
@@ -82,9 +83,10 @@ class add_subcorpus(object):
         for files in kwargs['files']:
             src_path = files['src'] % kwargs
             dst_path = files['dst'] % kwargs
+            corpname = files['corpusName']
             while self.target_file_exists(src_path, dst_path):
                 dst_path = self.mk_alt_path(src_path, dst_path)
-            subcorpora.append(self.extract_subcname(dst_path))
+            subcorpora.append('%s:%s' % (corpname, self.extract_subcname(dst_path)))
             shutil.copy(src_path, dst_path)
 
         if not 'message' in kwargs:
