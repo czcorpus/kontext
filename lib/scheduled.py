@@ -90,7 +90,7 @@ class add_subcorpus(object):
             shutil.copy(src_path, dst_path)
 
         if not 'message' in kwargs:
-            ans['message'] = _('New subcorpora in your library: %s' % ', '.join(subcorpora))
+            ans['message'] = _('new subcorpora in your library: %s' % ', '.join(subcorpora))
         else:
             ans['message'] = kwargs['message']
         return ans
