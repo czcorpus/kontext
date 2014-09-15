@@ -15,20 +15,83 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import shutil
+import os
+import re
+import logging
 
 from translation import ugettext as _
 
 
-def add_subcorpus(**kwargs):
-    ans = {}
-    for files in kwargs['files']:
-        shutil.copy(files['src'] % kwargs, files['dst'] % kwargs)
+class add_subcorpus(object):
+    """
+    A callable object representing a task of adding one or more subcorpora.
+    Required task JSON format:
 
-    if not 'message' in kwargs:
-        ans['message'] = _('A new sub-corpus has been added to your library')
-    else:
-        ans['message'] = kwargs['message']
-    return ans
+    {
+      "action": "add_subcorpus",
+      "recipients": null,
+      "files": [
+        {
+          "src": "/path/to/a/source/subcorpus",
+          "dst": "/destination/directory/or/file"
+        },
+        {
+          "src": "/another/src/...",
+          "dst": "/another/dst/...",
+        },
+        ...
+      ]
+    }
+
+    Notes: recipients: null means 'create the task for all the users'
+
+    """
+
+    @staticmethod
+    def target_file_exists(src_path, dst_path):
+        if os.path.isdir(dst_path):
+            dst_path = '%s/%s' % (dst_path, os.path.basename(src_path))
+        return os.path.isfile(dst_path)
+
+    @staticmethod
+    def extract_subcname(path):
+        name = os.path.basename(path)
+        srch = re.search(r'(.+)\.subc$', name)
+        if srch:
+            name = srch.groups()[0]
+        return name
+
+    @staticmethod
+    def mk_alt_path(src_path, dst_path):
+        if os.path.isdir(dst_path):
+            dst_path = '%s/%s' % (dst_path, os.path.basename(src_path))
+        srch = re.search(r'^(.+?)(_([\d]+))?\.subc$', dst_path)
+        if srch:
+            prefix = srch.groups()[0]
+            num = srch.groups()[2]
+            if num is None:
+                num = 2
+            else:
+                num = int(num) + 1
+            return '%s_%d.subc' % (prefix, num)
+        return None
+
+    def __call__(self, **kwargs):
+        ans = {}
+        subcorpora = []
+        for files in kwargs['files']:
+            src_path = files['src'] % kwargs
+            dst_path = files['dst'] % kwargs
+            while self.target_file_exists(src_path, dst_path):
+                dst_path = self.mk_alt_path(src_path, dst_path)
+            subcorpora.append(self.extract_subcname(dst_path))
+            shutil.copy(src_path, dst_path)
+
+        if not 'message' in kwargs:
+            ans['message'] = _('New subcorpora in your library: %s' % ', '.join(subcorpora))
+        else:
+            ans['message'] = kwargs['message']
+        return ans
 
 
 def show_message(**kwargs):
