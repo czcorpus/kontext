@@ -481,17 +481,22 @@ class Kontext(Controller):
                 actions += value
             for action in actions:
                 func_name = action['action']
-                if hasattr(scheduled, func_name) and callable(getattr(scheduled, func_name)):
-                    try:
-                        ans = apply(getattr(scheduled, func_name), (), action)
-                        if 'message' in ans:
-                            self._add_system_message('message', ans['message'])
-                    except Exception as e:
-                        logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
-                            action.get('id', '??'), e.__class__.__name__, e))
-                else:
-                    logging.getLogger('SCHEDULING').error('task_id: %s, Failed to invoke scheduled action: %s' % (
-                        action.get('id', '??'), action,))
+                if hasattr(scheduled, func_name):
+                    fn = getattr(scheduled, func_name)
+                    if inspect.isclass(fn):
+                        fn = fn()
+                    if callable(fn):
+                        try:
+                            ans = apply(fn, (), action)
+                            if 'message' in ans:
+                                self._add_system_message('message', ans['message'])
+                            continue
+                        except Exception as e:
+                            logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
+                                action.get('id', '??'), e.__class__.__name__, e))
+                # avoided by 'continue' in case everything is OK
+                logging.getLogger('SCHEDULING').error('task_id: %s, Failed to invoke scheduled action: %s' % (
+                    action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
