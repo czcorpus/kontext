@@ -2074,6 +2074,9 @@ msgstr "Neplatný nebo vypršelý dotaz"
 msgid "You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost."
 msgstr "Nemáte dokončený výběr řádků (nebyl dosud použit žádný filtr). Opuštěním stránky můžete o tento výběr přijít."
 
+msgid "new subcorpora in your library: %s"
+msgstr "nové subkorpusy ve vaší knihovně: %s"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
