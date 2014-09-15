@@ -1895,7 +1895,6 @@ class Actions(Kontext):
     def subcorp_list(self, selected_subc=(), sort='n'):
         """
         """
-        import tables
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 
@@ -1929,8 +1928,8 @@ class Actions(Kontext):
                     })
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
-        sort_key, rev = tables.parse_sort_key(sort)
 
+        sort_key, rev = self._parse_sorting_param(sort)
         if sort_key in ('size', 'created'):
             data = sorted(data, key=lambda x: x[sort_key], reverse=rev)
         else:

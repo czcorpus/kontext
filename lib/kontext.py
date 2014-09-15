@@ -1111,3 +1111,11 @@ class Kontext(Controller):
         if '~' in ctx and '.' in attr:
             ctx = ctx.split('~')[0]
         return attrpart + ctx
+
+    def _parse_sorting_param(self, k):
+        if k[0] == '-':
+            revers = True
+            k = k[1:]
+        else:
+            revers = False
+        return k, revers
