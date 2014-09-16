@@ -257,13 +257,11 @@ class Controller(object):
         self.environ = environ
         self.ui_lang = ui_lang
         self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
-        self._user = None
         self._session = {}
         self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._anonymous = None
-        self.user = None
         self._system_messages = []
 
         # initialize all the Parameter attributes
@@ -291,7 +289,6 @@ class Controller(object):
 
         if hasattr(plugins.auth, 'revalidate'):
             plugins.auth.revalidate(self._cookies, self._session)
-        self._user = self._session['user']['user']
 
         if self._session['user']['id'] > 0:
             self._anonymous = 0

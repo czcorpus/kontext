@@ -94,7 +94,7 @@ class Actions(Kontext):
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         if not settings.supports_password_change():
             return {'message': ('error', _('This function is disabled.'))}
-        logged_in = settings.auth.validate_user(self._user, curr_passwd)
+        logged_in = plugins.auth.validate_user(self.session_get('user', 'user'), curr_passwd)
         if not logged_in:
             raise UserActionException(_('Unknown user'))
         if settings.auth.validate_password(curr_passwd):
@@ -139,7 +139,6 @@ class Actions(Kontext):
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc')
         plugins.auth.logout(self._get_session_id())
-        self._user = None
         self._init_session()
 
         return {
@@ -1320,7 +1319,7 @@ class Actions(Kontext):
         if pid:
             try:
                 os.kill(int(pid), 9)
-                os.remove(os.path.join(self._tmp_dir, 'findx_upload.%s' % self._user))
+                os.remove(os.path.join(self._tmp_dir, 'findx_upload.%s' % self._session_get('user', 'user')))
             except OSError:
                 pass
         logfile_name = os.path.join(self.subcpath[-1], self.corpname,
@@ -1906,7 +1905,7 @@ class Actions(Kontext):
                     logging.getLogger(__name__).error(e)
 
         data = []
-        corplist = plugins.auth.get_corplist(self._user)
+        corplist = plugins.auth.get_corplist(self._session_get('user', 'user'))
         for corp in corplist:
             try:
                 self.cm.get_Corpus(corp)
