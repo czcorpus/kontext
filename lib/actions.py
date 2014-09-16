@@ -344,7 +344,6 @@ class Actions(Kontext):
         """
         attrs, refs, structs form
         """
-        from tbl_settings import tbl_labels
         from collections import defaultdict
 
         self.disabled_menu_items = ('menu-save',)
@@ -397,7 +396,6 @@ class Actions(Kontext):
         out['newctxsize'] = self.kwicleftctx[1:]
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.structattrs
-        out['tbl_labels'] = tbl_labels
         return out
 
     def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit=''):
@@ -435,12 +433,9 @@ class Actions(Kontext):
 
     @exposed(access_level=1)
     def viewopts(self):
-        from tbl_settings import tbl_labels
-
         self.disabled_menu_items = ('menu-save', )
         out = {
-            'newctxsize': self.kwicleftctx[1:],
-            'tbl_labels': tbl_labels
+            'newctxsize': self.kwicleftctx[1:]
         }
         return out
 
