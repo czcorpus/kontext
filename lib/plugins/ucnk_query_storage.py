@@ -49,6 +49,9 @@ import random
 from abstract.query_storage import AbstractQueryStorage
 
 
+TABLE_NAME = 'kontext_saved_queries'
+
+
 class QueryStorage(AbstractQueryStorage):
 
     cols = ('id', 'user_id', 'corpname', 'subcorpname', 'query', 'query_type', 'params', 'created')
@@ -76,7 +79,7 @@ class QueryStorage(AbstractQueryStorage):
         db = self.db_provider()
         with db.begin() as transaction:
             created = int(time.mktime(datetime.now().timetuple()))
-            db.execute(u"INSERT INTO kontext_saved_queries " +
+            db.execute(u"INSERT INTO %s " % TABLE_NAME +
                        u"(%s) " % ', '.join(QueryStorage.cols[1:]) +
                        (u"VALUES (%s)" % ', '.join(['%s'] * (len(QueryStorage.cols) - 1))),
                       (user_id, corpname, subcorpname, query, query_type, params, created))
@@ -131,11 +134,11 @@ class QueryStorage(AbstractQueryStorage):
         if len(opt_sql) > 0:
             opt_sql.insert(0, '')
 
-        sql = ("SELECT %s FROM kontext_saved_queries"
+        sql = ("SELECT %s FROM %s"
                " WHERE user_id = %%s "
                " %s "
                " ORDER BY created DESC "
-               "%s") % (', '.join(QueryStorage.cols), ' AND '.join(opt_sql), limit_sql)
+               "%s") % (', '.join(QueryStorage.cols), TABLE_NAME, ' AND '.join(opt_sql), limit_sql)
         sql_params.insert(0, user_id)
         db = self.db_provider()
         ans = db.execute(sql, tuple(sql_params))
@@ -149,12 +152,12 @@ class QueryStorage(AbstractQueryStorage):
         # Current solution is not very effective but makes MySQL to complain less
         # in case of active replication and multiple engines used.
         # Typically this will delete just one old record which should be ok.
-        rows = db.execute("SELECT id FROM kontext_saved_queries WHERE user_id = %s "
-                          " ORDER BY created DESC LIMIT %s, 100",
+        rows = db.execute(("SELECT id FROM %s WHERE user_id = %%s "
+                          " ORDER BY created DESC LIMIT %%s, 100") % TABLE_NAME,
                           (user_id, self.num_kept_records)).fetchall()
         for row in rows:
-            db.execute("DELETE FROM kontext_saved_queries WHERE user_id = %s "
-                       " AND id = %s", (user_id, row[0]))
+            db.execute(("DELETE FROM %s WHERE user_id = %%s "
+                       " AND id = %%s") % TABLE_NAME, (user_id, row[0]))
 
 
 def create_instance(settings, db):
