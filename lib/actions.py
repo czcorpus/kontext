@@ -26,8 +26,8 @@ import corplib
 import plugins
 import butils
 from kwiclib import Kwic
-import strings
-from strings import import_string, export_string, format_number
+import l10n
+from l10n import import_string, export_string, format_number
 from translation import ugettext as _
 
 
@@ -267,8 +267,8 @@ class Actions(Kontext):
             'concsize': cs["concsize"],
             'relconcsize': cs["relconcsize"],
             'fullsize': cs["fullsize"],
-            'thousandsSeparator': u'%s' % strings.number_formatting('thousandSeparator'),
-            'decimalSeparator': u'%s' % strings.number_formatting('decimalSeparator')
+            'thousandsSeparator': u'%s' % l10n.number_formatting('thousandSeparator'),
+            'decimalSeparator': u'%s' % l10n.number_formatting('decimalSeparator')
         }
 
     def get_conc_sizes(self, conc):
@@ -555,7 +555,7 @@ class Actions(Kontext):
                     qitem = '[word="(?i)%(q)s"]'
 
             if '--' not in iquery:
-                return ''.join([qitem % {'q': strings.escape(q)}
+                return ''.join([qitem % {'q': l10n.escape(q)}
                                 for q in iquery.split()])
             else:
                 def split_tridash(word, qitem):
@@ -567,7 +567,7 @@ class Actions(Kontext):
                                                     qitem % {'q': w2},
                                                     qitem % {'q': w1 + '-' + w2})
 
-                return ''.join([split_tridash(strings.escape(q), qitem)
+                return ''.join([split_tridash(l10n.escape(q), qitem)
                                 for q in iquery.split()])
 
         elif queryselector == 'lemmarow':
@@ -972,7 +972,7 @@ class Actions(Kontext):
                             wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, strings.escape(w)) for w in wwords])
+                                               % (attr, icase, l10n.escape(w)) for w in wwords])
                         else:  # structure number
                             fquery = '0 0 1 [] within <%s #%s/>' % \
                                      (attr, item['Word'][0]['n'].split('#')[1])
@@ -982,7 +982,7 @@ class Actions(Kontext):
                             block['unprecise'] = True
                         fquery = '0 0 1 [] within <%s %s="%s" />' \
                                  % (structname, attrname,
-                                    strings.escape(item['Word'][0]['n']))
+                                    l10n.escape(item['Word'][0]['n']))
                     if not item['freq']:
                         continue
                     efquery = self.urlencode(fquery)
@@ -1801,10 +1801,10 @@ class Actions(Kontext):
                 v = v.split('|')
             s, a = sa.split('.')
             if type(v) is type([]):
-                query = '(%s)' % ' | '.join(['%s="%s"' % (a, strings.escape(v1))
+                query = '(%s)' % ' | '.join(['%s="%s"' % (a, l10n.escape(v1))
                                              for v1 in v])
             else:
-                query = '%s="%s"' % (a, strings.escape(v))
+                query = '%s="%s"' % (a, l10n.escape(v))
             query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
             if s in structs:
                 structs[s].append(query)
@@ -1933,7 +1933,7 @@ class Actions(Kontext):
         if sort_key in ('size', 'created'):
             data = sorted(data, key=lambda x: x[sort_key], reverse=rev)
         else:
-            data = strings.sort(data, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
+            data = l10n.sort(data, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
 
         sort_keys = dict([(x, (x, '')) for x in ('n', 'size', 'created')])
         if not rev:
@@ -2118,19 +2118,19 @@ class Actions(Kontext):
         ans = {
             'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
             'description': self._corp().get_info(),
-            'size': strings.format_number(int(self._corp().size())),
+            'size': l10n.format_number(int(self._corp().size())),
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'template': template
         }
         try:
-            ans['attrlist'] = [{'name': item, 'size': strings.format_number(int(self._corp().get_attr(item).id_range()))}
+            ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_attr(item).id_range()))}
                                for item in self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = [{'message': ('error', _('Failed to load'))}]
-        ans['structlist'] = [{'name': item, 'size': strings.format_number(int(self._corp().get_struct(item).size()))}
+        ans['structlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_struct(item).size()))}
                              for item in self._corp().get_conf('STRUCTLIST').split(',')]
         return ans
 
@@ -2211,8 +2211,8 @@ class Actions(Kontext):
             for row in rows:
                 created_dt = datetime.fromtimestamp(row['created'])
                 row['humanCorpname'] = self._canonical_corpname(row['corpname'])
-                row['created'] = (created_dt.strftime(strings.date_formatting()),
-                                  created_dt.strftime(strings.time_formatting()))
+                row['created'] = (created_dt.strftime(l10n.date_formatting()),
+                                  created_dt.strftime(l10n.time_formatting()))
                 row['query_type_translated'] = types.get(row['query_type'], '?')
         else:
             rows = ()

@@ -27,7 +27,7 @@ from butils import *
 from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
-from strings import import_string
+from l10n import import_string
 
 try:
     import fcntl

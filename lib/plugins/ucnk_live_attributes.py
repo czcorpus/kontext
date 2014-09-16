@@ -21,7 +21,7 @@ import json
 from functools import wraps
 from hashlib import md5
 
-import strings
+import l10n
 from abstract.live_attributes import AbstractLiveAttributes
 
 
@@ -143,7 +143,7 @@ class LiveAttributes(AbstractLiveAttributes):
         if type(data) is dict:
             for k in data.keys():
                 if type(data[k]) is int or type(data[k]) is float or (type(data[k]) is str and data[k].isdigit()):
-                    data[k] = strings.format_number(data[k])
+                    data[k] = l10n.format_number(data[k])
         return data
 
     @staticmethod

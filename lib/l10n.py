@@ -16,13 +16,21 @@
 # 02110-1301, USA.
 
 """
-This module contains helper functions to cope with character encoding
-issues given by the facts that application-wide locale settings cannot
-be used in WSGI environment and that manatee.corpus instance does not
-unify encoding of its string-returning functions to UTF-8 (although
-'manatee' module contains 'set_encoding' function it cannot be used in
-concurrent environment as it applies for all the corpora using the
-same 'manatee' module instance).
+This module contains localization-related helper functions:
+
+* number formatting
+* date and time formatting
+* string encoding (used mainly to ensure utf-8 is used even if
+  Manatee uses a corpus with different encoding)
+
+There are two important facts to consider when dealing with
+internationalisation of KonText:
+
+1. In WSGI environment, standard 'locale' cannot be used as
+   it works per-process while WSGI typically operates in multi-threaded mode.
+2. Manatee module contains method set_encoding() but it is module-global
+   which is useless in multi-threaded environment as multiple requests are
+   processed using the same module.
 """
 
 import os
@@ -99,7 +107,7 @@ class Formatter(object):
 
 def configure(languages):
     """
-    Configures package strings. You can call this only once (once the application starts).
+    Configures the package. You can call this only once (once the application starts).
     It loads all supported languages and creates respective Formatter objects.
 
     arguments:

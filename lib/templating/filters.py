@@ -21,7 +21,7 @@ from Cheetah.Filters import Filter
 import json
 import urllib
 
-from strings import format_number
+from l10n import format_number
 
 
 class IntegerFormatter(Filter):

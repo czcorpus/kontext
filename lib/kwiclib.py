@@ -22,7 +22,7 @@ import itertools
 import logging
 
 import manatee
-from strings import import_string, export_string
+from l10n import import_string, export_string
 from translation import ugettext as _
 from butils import FixedDict
 
