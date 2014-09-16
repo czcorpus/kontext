@@ -23,7 +23,7 @@
  *
  * @returns QUnit
  */
-define(['vendor/qunit', 'win'], function (QUnit, win) {
+define(['vendor/QUnit', 'win'], function (QUnit, win) {
     'use strict';
 
     var textSeparator = '\n----------------------------------------';

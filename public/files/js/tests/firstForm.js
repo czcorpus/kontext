@@ -64,7 +64,7 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
     QUnit.asyncTest('Corpus info box pops-up', function () {
         QUnit.expect(1);
 
-        lib.pagePromises.get('bindCorpusDescAction').then(function () {
+        lib.pagePromises.doAfter('bindCorpusDescAction', function () {
             QUnit.equal($('.tooltip-box .corpus-name').length, 1);
             QUnit.start();
 
@@ -82,7 +82,7 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
 
         QUnit.equal(switches.length, 2);
 
-        lib.pagePromises.get('updateToggleableFieldsets').then(function () {
+        lib.pagePromises.doAfter('updateToggleableFieldsets', function () {
             console.log('promise then');
             console.log('switches num', switches.length);
             switches.each(function () {
