@@ -1085,7 +1085,7 @@ class Kontext(Controller):
                     % (actual_range + max_range)
             else:
                 msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal '
-                             'than %s' % (actual_range + (max_range[0], )))
+                        'than %s' % (actual_range + (max_range[0], )))
             return UserActionException(msg)
         return None
 
@@ -1099,7 +1099,8 @@ class Kontext(Controller):
             ctx = ctx.split('~')[0]
         return attrpart + ctx
 
-    def _parse_sorting_param(self, k):
+    @staticmethod
+    def _parse_sorting_param(k):
         if k[0] == '-':
             revers = True
             k = k[1:]
