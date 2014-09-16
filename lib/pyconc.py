@@ -24,7 +24,7 @@ import re
 import math
 
 import manatee
-from strings import import_string, export_string, escape
+from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as _
 

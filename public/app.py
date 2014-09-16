@@ -41,7 +41,7 @@ import plugins
 import plugins.export
 import settings
 import translation
-import strings
+import l10n
 from controller import KonTextCookie
 
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')  # we ensure that the application's locale is always the same
@@ -196,7 +196,7 @@ class App(object):
         setup_logger(settings)
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
-        strings.configure(settings.get('global', 'translations'))
+        l10n.configure(settings.get('global', 'translations'))
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
     def __call__(self, environ, start_response):
@@ -205,7 +205,7 @@ class App(object):
         """
         ui_lang = get_lang(environ)
         translation.activate(ui_lang)
-        strings.activate(ui_lang)
+        l10n.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
 
         controller_class = load_controller_class(environ['PATH_INFO'])

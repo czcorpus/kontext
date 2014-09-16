@@ -26,8 +26,8 @@ from controller import Controller, UserActionException, convert_types, Parameter
 import plugins
 import settings
 import taghelper
-import strings
-from strings import format_number, corpus_get_conf
+import l10n
+from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
 
@@ -654,7 +654,7 @@ class Kontext(Controller):
         out -- a dictionary used by templating system
         """
         basecorpname = self.corpname.split(':')[0]
-        subcorp_list = strings.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
+        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
         out['SubcorpList'] = subcorp_list
@@ -914,7 +914,7 @@ class Kontext(Controller):
             result['page_model'] = self.qunit
         else:
             result['client_model_dir'] = 'tpl'
-            result['page_model'] = action_metadata.get('page_model', strings.camelize(methodname))
+            result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 
         # is there a concordance information in session?
         self._restore_conc_results(result)

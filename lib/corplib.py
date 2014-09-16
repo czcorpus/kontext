@@ -23,7 +23,7 @@ from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
 
-from strings import import_string, export_string
+from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
