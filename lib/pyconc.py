@@ -167,16 +167,13 @@ class PyConc(manatee.Concordance):
         """
         Returns all values of provided structural attribute and their corresponding sizes in positions.
 
-        Parameters
-        ----------
-        full_attr_name : str
-           Fully qualified structural attribute name (e.g. "opus.srclang", "doc.id" etc.). Method allows
-           this name to be suffixed if this suffix starts with at least one whitespace. In such case
-           the suffix is ignored.
+        arguments:
+        full_attr_name -- fully qualified structural attribute name (e.g. "opus.srclang", "doc.id" etc.).
+                          Method allows this name to be suffixed if this suffix starts with at least one whitespace.
+                          In such case the suffix is ignored.
 
-        Returns
-        -------
-        dictionary (key = "structural attribute value" and value = "size in positions")
+        returns:
+        a dictionary (key = "structural attribute value" and value = "size in positions")
         """
         full_attr_name = re.split(r'\s+', full_attr_name)[0]
         struct_name, attr_name = full_attr_name.split('.')
@@ -202,23 +199,15 @@ class PyConc(manatee.Concordance):
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
 
-        Parameters
-        ----------
-        crit : str
-            CQL specified criteria
-        limit : str
-            minimal frequency accepted, this value is exclusive! (i.e. accepted values must be
-            greater than the limit)
-        sortkey : str
-            a key according to which the distribution will be sorted
-        normwidth : int
-            specifies width of the bar representing highest frequency
-        ml : str
-            if non-empty then multi-level freq. distribution is generated
-        ftt_include_empty : str
-            TODO
-        rel_mode : {0, 1}
-            TODO
+        arguments:
+        crit -- specified criteria (CQL)
+        limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted values must be
+                greater than the limit)
+        sortkey -- a key according to which the distribution will be sorted
+        normwidth -- specifies width of the bar representing highest frequency
+        ml -- str, if non-empty then multi-level freq. distribution is generated
+        ftt_include_empty -- str, TODO
+        rel_mode -- {0, 1}, TODO
         """
 
         # ml = determines how the bar appears (multilevel x text type)
@@ -402,6 +391,9 @@ class PyConc(manatee.Concordance):
         }
 
     def linegroup_info_select(self, selected_count=5):
+        """
+        TODO: no direct call found for this
+        """
         ids = manatee.IntVector()
         freqs = manatee.IntVector()
         self.get_linegroup_stat(ids, freqs)
@@ -413,6 +405,9 @@ class PyConc(manatee.Concordance):
         return self.selected_grps
 
     def linegroup_info_subset(self, conc):
+        """
+        TODO: no direct call found for this
+        """
         # conc = manatee.Concordance (fstream)
         conc.sync()
         conc.set_linegroup_from_conc(self)

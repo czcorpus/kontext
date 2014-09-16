@@ -13,6 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
+A library containing functions and callable objects representing miscellaneous
+tasks administrator can schedule. Each task requires specific JSON format.
+"""
+
 
 import shutil
 import os
