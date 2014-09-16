@@ -16,19 +16,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A script to schedule tasks of defined type (see lib/scheduled.py) for user accounts.
-This allows sending messages to users create subcorpora for them etc.
+This script is intended for creating 'tasks' triggered by user visiting
+KonText. It can be a simple message, adding a new sub-corpus etc. The task
+is specified by a JSON-encoded data structure. The concrete specification
+can be seen in lib/scheduled.py.
 
-TODO: task JSON format specification
+The script should be able to run with any installation as long as the 'updater'
+package contains properly defined Scheduler class in a properly named module.
+The script chooses proper package by inspecting the 'db' plug-in name.
 """
 
-
 import sys
-import os
 import uuid
+import os
 from functools import wraps
 
-app_path = os.path.realpath('%s/..' % os.path.dirname(os.path.abspath(__file__)))
+
+app_path = os.path.realpath('%s/../..' % os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '%s/lib' % app_path)
 import settings
 import kontext
@@ -71,49 +75,6 @@ def create_task(data, username, user_key):
     return fn(data, username, user_key)
 
 
-class Scheduler(object):
-
-    def __init__(self, db, conf, dry_run):
-        self._db = db
-        self._conf = conf
-        self._dry_run = dry_run
-
-    def _get_anonymous_key(self):
-        if 'anonymous_user_key' in self._conf:
-            return self._conf['anonymous_user_key']
-        return 'user:0000'
-
-    def get_recipients(self, task_data):
-        recipients = task_data.get('recipients', None)
-        if recipients is None:
-            ans = db.hash_get_all('user_index')
-        else:
-            ans = {}
-            for recipient in recipients:
-                ans[recipient] = db.hash_get('user_index', recipient)
-        return ans
-
-    def add_user_task(self, data):
-        anonymous_user = self._get_anonymous_key()
-        for username, record_id in self.get_recipients(data).items():
-            if record_id != anonymous_user:
-                settings_key = 'settings:%s' % record_id
-                task = create_task(data, username, record_id)
-                user_settings = self._db.get(settings_key)
-                if user_settings is None:
-                    user_settings = {}
-                if not kontext.Kontext.SCHEDULED_ACTIONS_KEY in user_settings:
-                    user_settings[kontext.Kontext.SCHEDULED_ACTIONS_KEY] = []
-                user_settings[kontext.Kontext.SCHEDULED_ACTIONS_KEY].append(task)
-                if not self._dry_run:
-                    self._db.set(settings_key, user_settings)
-                else:
-                    print('%s --> %s\n' % (settings_key, task))
-
-    def process_tasks(self):
-        for task in self._conf['tasks']:
-            self.add_user_task(task)
-
 if __name__ == '__main__':
     import argparse
     import json
@@ -133,6 +94,17 @@ if __name__ == '__main__':
         if not 'tasks' in conf:
             print('Invalid configuration format - a \'task\' key must be present.')
             sys.exit(1)
-        scheduler = Scheduler(db, conf, dry_run=args.dry_run)
-        scheduler.process_tasks()
 
+        db_plugin = settings.get('plugins', 'db')['module']
+        plugin_group = db_plugin.split('_')[0]
+
+        updater_module = __import__('updater.%s' % plugin_group, fromlist=['updater'])
+        if not hasattr(updater_module, 'Scheduler'):
+            print('\nERROR: Scheduler class not found in module %s\n' % updater_module.__name__)
+            sys.exit(1)
+        scheduler = updater_module.Scheduler(db=db,
+                                             conf=conf,
+                                             dry_run=args.dry_run,
+                                             settings_action_key=kontext.Kontext.SCHEDULED_ACTIONS_KEY,
+                                             create_task_fn=create_task)
+        scheduler.process_tasks()

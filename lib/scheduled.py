@@ -29,11 +29,11 @@ from translation import ugettext as _
 class add_subcorpus(object):
     """
     A callable object representing a task of adding one or more subcorpora.
-    Required task JSON format:
+    Required JSON task specification:
 
     {
       "action": "add_subcorpus",
-      "recipients": null,
+      "recipients": [...],
       "files": [
         {
           "src": "/path/to/a/source/subcorpus",
@@ -102,6 +102,17 @@ class add_subcorpus(object):
 
 
 def show_message(**kwargs):
+    """
+    A function representing a task of sending a message to a user.
+
+    Required JSON task specification:
+
+    {
+      "action": "show_message",
+      "recipients": [...],
+      "message": "Hi %(username)s, this is a message for you!"
+    }
+    """
     return {
         'message': kwargs['message']
     }
