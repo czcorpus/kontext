@@ -288,13 +288,6 @@ class Kontext(Controller):
             ans['proc_time'] = proc_time
         logging.getLogger('QUERY').info(json.dumps(ans))
 
-    def _get_persistent_attrs(self):
-        """
-        Returns list of object's attributes which (along with their values) will be preserved
-        """
-        attrs = inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter) and m.is_persistent())
-        return tuple([x[0] for x in attrs])
-
     def _requires_corpus_access(self, action):
         # TODO this is a flawed solution - method metadata (access_level should be used instead)
         return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar')
@@ -489,7 +482,7 @@ class Kontext(Controller):
                         try:
                             ans = apply(fn, (), action)
                             if 'message' in ans:
-                                self._add_system_message('message', ans['message'])
+                                self.add_system_message('message', ans['message'])
                             continue
                         except Exception as e:
                             logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (

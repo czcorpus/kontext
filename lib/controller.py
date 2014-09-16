@@ -216,13 +216,23 @@ class Controller(object):
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
     """
+
     _keep_blank_values = Parameter(0)
+
     _url_parameters = Parameter([])
+
     exceptmethod = Parameter(None)
+
+    # specifies response output format (used in case default one is not applicable)
     format = Parameter(u'')
+
+    # after an "action" was called, controller internally (without HTTP redirects)
+    # calls "action_form" which (by convention) leads to a page with a form submitting
+    # to the "action"
     reload = Parameter(0)
 
     _template_dir = u'../cmpltmpl/'
+
     _tmp_dir = u'/tmp'
 
     NO_OPERATION = 'nop'
@@ -256,6 +266,7 @@ class Controller(object):
         self.user = None
         self._system_messages = []
 
+        # initialize all the Parameter attributes
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
             setattr(self, k, v.unwrap())
 
@@ -340,7 +351,16 @@ class Controller(object):
             'script': self.environ.get('SCRIPT_NAME')
         }
 
-    def _add_system_message(self, msg_type, text):
+    def add_system_message(self, msg_type, text):
+        """
+        Adds a system message which will be displayed
+        to a user. It is possible to add multiple messages
+        by repeatedly call this method.
+
+        arguments:
+        msg_type -- one of 'message', 'info', 'warning', 'error'
+        text -- text of the message
+        """
         self._system_messages.append((msg_type, text))
 
     def is_template(self, template):
@@ -426,7 +446,7 @@ class Controller(object):
         (because of current app's architecture derived from Bonito2).
         This means parameter list [(k1, v1), (k2, v2),...] cannot be
         converted into a dictionary and then worked on because some
-        data could be lost in such case.
+        data would be lost in such case.
 
         arguments:
         params -- a dictionary containing parameter names and values
@@ -595,9 +615,22 @@ class Controller(object):
         return self.environ.get('REQUEST_METHOD', '')
 
     def _get_persistent_attrs(self):
-        raise NotImplementedError()
+        """
+        Returns list of object's attributes which (along with their values) will be preserved.
+        A persistent parameter is the one which meets the following properties:
+        1. is of the Parameter type
+        2. returns True on is_persistent()
+        """
+        attrs = inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter) and m.is_persistent())
+        return tuple([x[0] for x in attrs])
 
     def _get_persistent_items(self):
+        """
+        Similar to the _get_persistent_attrs() but returns also values.
+
+        returns:
+        a dictionary property_name : value
+        """
         ans = {}
         for k in self._get_persistent_attrs():
             if hasattr(self, k):
@@ -606,14 +639,14 @@ class Controller(object):
 
     def _pre_dispatch(self, path, selectorname, args, action_metadata=None):
         """
-        Allows special operations to be done before the action itself is processed
+        Allows specific operations to be performed before the action itself is processed.
         """
         return path, selectorname, args
 
     def _post_dispatch(self, methodname, tmpl, result):
         """
-        Allows special operations to be done after the action itself has been processed but before
-        any output or HTTP headers.
+        Allows specific operations to be done after the action itself has been
+        processed but before any output or HTTP headers.
         """
         if type(result) is dict:
             result['messages'] = self._system_messages
@@ -624,6 +657,9 @@ class Controller(object):
                 result['message_auto_hide_interval'] = 0
 
     def _restore_ui_settings(self):
+        """
+        Loads cookie-stored user interface settings.
+        """
         if 'ui_settings' in self._cookies:
             try:
                 self._ui_settings = json.loads(self._cookies['ui_settings'].value)
@@ -855,7 +891,7 @@ class Controller(object):
     def output_result(self, methodname, template, result, action_metadata, outf,
                       return_template=False):
         """
-        Renders response body
+        Renders a response body
         """
         from Cheetah.Template import Template
         # JSON
@@ -863,8 +899,7 @@ class Controller(object):
             if type(result) != JsonEncodedData:
                 json.dump(self.rec_recode(result, utf8_out=True), outf)
             else:
-                # TODO
-                print >> outf, result  # this is obsolete
+                print >> outf, result
         # Template
         elif type(result) is DictType:
             self._add_globals(result, methodname, action_metadata)
