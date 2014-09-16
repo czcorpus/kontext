@@ -15,6 +15,9 @@ import json
 from abstract.settings_storage import AbstractSettingsStorage
 
 
+TABLE_NAME = 'noske_user_settings'
+
+
 class SettingsStorage(AbstractSettingsStorage):
 
     def __init__(self, conf, db_provider):
@@ -35,7 +38,7 @@ class SettingsStorage(AbstractSettingsStorage):
         data -- a dictionary containing user settings
         """
         db = self.db_provider()
-        db.execute("REPLACE INTO noske_user_settings SET data = %s, user_id = %s, updated=UNIX_TIMESTAMP()",
+        db.execute("REPLACE INTO %s SET data = %%s, user_id = %%s, updated=UNIX_TIMESTAMP()" % TABLE_NAME,
                    (json.dumps(data), user_id))
         db.close()
 
@@ -57,7 +60,7 @@ class SettingsStorage(AbstractSettingsStorage):
         if current_settings is None:
             current_settings = {}
         db = self.db_provider()
-        row = db.execute('SELECT data FROM noske_user_settings WHERE user_id = %s', (user_id,)).fetchone()
+        row = db.execute('SELECT data FROM %s WHERE user_id = %%s' % TABLE_NAME, (user_id,)).fetchone()
         if row:
             current_settings.update(json.loads(row[0]))
         db.close()

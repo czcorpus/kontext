@@ -34,6 +34,9 @@ import random
 from abstract.sessions import AbstractSessions
 
 
+TABLE_NAME = 'noske_session'
+
+
 class Sessions(AbstractSessions):
     """
     SQLite-based session persistence implementation
@@ -66,7 +69,7 @@ class Sessions(AbstractSessions):
         session_id = str(uuid.uuid1())
         if data is None:
             data = {}
-        db.execute('INSERT INTO noske_session (id, updated, data) VALUES (%s, %s, %s)',
+        db.execute('INSERT INTO %s (id, updated, data) VALUES (%%s, %%s, %%s)' % TABLE_NAME,
                    (session_id, self.get_actual_timestamp(), json.dumps(data)))
         db.close()
         return {'id': session_id, 'data': data}
@@ -76,7 +79,7 @@ class Sessions(AbstractSessions):
         Deletes a session record from the storage
         """
         db = self.db_provider()
-        db.execute("DELETE FROM noske_session WHERE id = %s", (session_id, ))
+        db.execute("DELETE FROM %s WHERE id = %%s" % TABLE_NAME, (session_id, ))
         db.close()
 
     def load(self, session_id, data=None):
@@ -97,7 +100,7 @@ class Sessions(AbstractSessions):
         if random.random() < Sessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
         db = self.db_provider()
-        row = db.execute("SELECT data FROM noske_session WHERE id = %s", (session_id, )).fetchone()
+        row = db.execute("SELECT data FROM %s WHERE id = %%s" % TABLE_NAME, (session_id, )).fetchone()
         db.close()
         if row:
             return {'id': session_id, 'data': json.loads(row[0])}
@@ -110,7 +113,7 @@ class Sessions(AbstractSessions):
         If no such record exists then nothing is done and no error is thrown.
         """
         db = self.db_provider()
-        db.execute('UPDATE noske_session SET data = %s, updated = %s WHERE id = %s',
+        db.execute('UPDATE %s SET data = %%s, updated = %%s WHERE id = %%s' % TABLE_NAME,
                    (json.dumps(data), self.get_actual_timestamp(), session_id))
         db.close()
 
@@ -122,7 +125,7 @@ class Sessions(AbstractSessions):
         """
         db = self.db_provider()
         limit_time = self.get_actual_timestamp() - Sessions.DEFAULT_TTL
-        db.execute('DELETE FROM noske_session WHERE updated < %s', (limit_time, ))
+        db.execute('DELETE FROM %s WHERE updated < %%s' % TABLE_NAME, (limit_time, ))
         db.close()
 
 

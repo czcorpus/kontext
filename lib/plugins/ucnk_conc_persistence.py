@@ -15,9 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-
-
-
 required table:
 
 CREATE TABLE kontext_conc_persistence (
@@ -38,6 +35,9 @@ import time
 import re
 
 from abstract.conc_persistence import AbstractConcPersistence
+
+
+TABLE_NAME = 'kontext_conc_persistence'
 
 
 def id_exists(id):
@@ -108,7 +108,7 @@ class ConcPersistence(AbstractConcPersistence):
         """
         db = self.db_provider()
         # note: we can ask for user_id too but all the codes are public
-        ans = db.execute("SELECT data FROM kontext_conc_persistence WHERE id = %s", (data_id, )).fetchone()
+        ans = db.execute("SELECT data FROM %s WHERE id = %%s" % TABLE_NAME, (data_id, )).fetchone()
         db.close()
         if ans is not None:
             return json.loads(ans[0])
@@ -136,7 +136,7 @@ class ConcPersistence(AbstractConcPersistence):
             json_data = json.dumps(curr_data)
 
             db = self.db_provider()
-            db.execute("INSERT INTO kontext_conc_persistence (id, user_id, data, created) VALUES (%s, %s, %s, %s)",
+            db.execute("INSERT INTO %s (id, user_id, data, created) VALUES (%%s, %%s, %%s, %%s)" % TABLE_NAME,
                        (data_id, user_id, json_data, time_created))
             db.close()
             latest_id = curr_data['id']
