@@ -501,25 +501,17 @@ msgstr "Filtrovat konkordanci"
 msgid "Clear All"
 msgstr "Vymazat formulář"
 
-#: cmpltmpl/selectstored.py:88
-msgid "Select stored concordance"
-msgstr "Vybrat uloženou konkordanci"
-
-#: cmpltmpl/selectstored.py:126 cmpltmpl/wordlist.py:526
 #: cmpltmpl/document.py:470 cmpltmpl/corpus_details.py:106
 #: cmpltmpl/concdesc.py:170
 msgid "Corpus"
 msgstr "Korpus"
 
-#: cmpltmpl/selectstored.py:140
 msgid "Selected"
 msgstr "Vybráno"
 
-#: cmpltmpl/selectstored.py:160
 msgid "View conc"
 msgstr "Zobrazit konk."
 
-#: cmpltmpl/selectstored.py:167
 msgid "Last Stored Concordances"
 msgstr "Poslední uložené konkordance"
 
