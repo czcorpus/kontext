@@ -10,6 +10,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+"""
+This module acts as a WSGI-compatible wrapper around gettext.
+
+The module must be initialized first by calling the load_translations()
+function. It is sufficient to do this just once (when KonText service
+starts).
+
+Each request must call the activate() function to ensure that
+the client has a proper language set.
+
+To use common underscore function just make the following:
+
+from translation import ugettext as _
+"""
+
+
 from threading import local
 import gettext
 import os
@@ -22,7 +38,10 @@ _current = local()  # thread local is used to allow per-request translation
 def load_translations(languages):
     """
     arguments:
-    languages -- list of required languages
+    languages -- list of required languages; languages should be encoded in xx_YY form
+                 but basically it can have any form matching locale/ subdirectories names
+                 (i.e. if you have locale/klingon subdirectory containing gettext translations
+                 then languages = ('klingon',) is a valid argument)
     """
     global _translations
 
