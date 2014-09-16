@@ -78,7 +78,7 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
             $('form[action="subcorp"]').attr('method', 'GET').submit();
         };
         treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'),
-            layoutModel.conf.messages, {clickableText: true}, updateForm);
+            layoutModel.conf.messages, {clickableText: true, searchable : true}, updateForm);
     };
 
     lib.initAttributeHints = function () {
