@@ -1060,7 +1060,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
      * A key-value storage with some convenient functions.
      * @constructor
      */
-    function Map() {
+    function Promises() {
         this.prom = {};
     }
 
@@ -1070,9 +1070,9 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
      *
      * @param arg0
      * @param [arg1]
-     * @returns {Map} the called object
+     * @returns {Promises} the called object
      */
-    Map.prototype.add = function (arg0, arg1) {
+    Promises.prototype.add = function (arg0, arg1) {
         var prop;
 
         if (typeof arg0 === 'object' && arg1 === undefined) {
@@ -1097,7 +1097,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
      * @param key
      * @returns {boolean}
      */
-    Map.prototype.contains = function (key) {
+    Promises.prototype.contains = function (key) {
         return this.prom.hasOwnProperty(key);
     };
 
@@ -1108,7 +1108,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
      * @param key
      * @returns {*}
      */
-    Map.prototype.get = function (key) {
+    Promises.prototype.get = function (key) {
         if (this.prom[key]) {
             return this.prom[key];
 
@@ -1118,13 +1118,40 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
     };
 
     /**
+     * Binds a function to be run after the promise
+     * identified by 'promiseId' is fulfilled. In case
+     * there is no promise under the 'promiseId' key then
+     * ad-hoc one is created and immediately resolved.
+     *
+     * @param {string} promiseId an identifier of the promise as defined in
+     * the init() function
+     * @param {function} fn a function to be run after the promise is resolved;
+     * the signature is: function (value)
+     */
+    Promises.prototype.doAfter = function (promiseId, fn) {
+        var prom2;
+
+        promiseId = this.get(promiseId);
+
+        if (!promiseId) {
+            promiseId = $.Deferred();
+            prom2 = promiseId.then(fn);
+            promiseId.resolve();
+
+        } else {
+            prom2 = promiseId.then(fn);
+        }
+        return prom2;
+    };
+
+    /**
      *
      * @param {{}} conf
-     * @return {Map}
+     * @return {Promises}
      */
     lib.init = function (conf) {
         var settingsObj,
-            promises = new Map();
+            promises = new Promises();
 
         try {
             settingsObj = JSON.parse($.cookie('ui_settings'));
