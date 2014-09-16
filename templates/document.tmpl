@@ -86,7 +86,7 @@ paths['plugins/queryStorage'] = './plugins/$query_storage_js';
 missingPlugins.push('plugins/queryStorage');
 #end if
 #if $qunit_test
-paths['QUnit'] = './qunit'
+paths['vendor/QUnit'] = './vendor/qunit'
 #end if
 
 requirejs.config({
@@ -100,7 +100,7 @@ requirejs.config({
             deps: ['jquery']
         }
         #if $qunit_test
-        , 'QUnit' : {
+        , 'vendor/QUnit' : {
             exports : 'QUnit',
             init: function() {
                 QUnit.config.autoload = false;
