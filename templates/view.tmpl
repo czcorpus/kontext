@@ -37,14 +37,8 @@ $_("Concordance")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.annotconc = "$annotconc";
     conf.q = "$q";
     conf.messages.ctrlc_to_copy = "$_('Press Ctrl+C to copy the text')";
-
-    #if $can_annotate and $annotconc
-    conf.canAnnotate = $can_annotate;
-    conf.annotConc = "$annotconc";
-    #end if
 
     conf.messages.calc_warning = '$_("Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus.")';
     conf.messages.are_you_sure_to_leave = "$_('You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost.')";
@@ -91,10 +85,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     <td class="lc #if $basecorpname == $maincorp#maincorp#end if#" >
   #else
     <td class="par #if $basecorpname == $maincorp#maincorp#end if#">
-    #if $annotconc
-      <span class="groupbox" data-pos="$l.toknum">
-      $l.linegroup</span>
-    #end if
   #end if
 
   #set $closed_segment = None
@@ -155,9 +145,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td>
     <td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
-    #if $annotconc
-      <span class="groupbox" data-pos="$l.toknum">$l.linegroup</span>
-    #end if
   #else
     </span>
   #end if
@@ -304,7 +291,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             #end filter
 
             #for $i, $l in $enumerate($Lines)
-            <tr data-toknum="$l.toknum" class="#if $annotconc#concline#elif $i%2# even#end if#">
+            <tr data-toknum="$l.toknum">
                 <td>
                     <input type="checkbox" value="$l.toknum" />
                 </td>

@@ -37,6 +37,10 @@
   font-family: 'Roboto Condensed';
 }
 
+table#conclines tr:nth-child(2n):not(.active) {
+  background-color: @color-light-green;
+}
+
 table#conclines {
   border-spacing: 0px;
   padding-bottom: 20px;
@@ -366,6 +370,7 @@ table#conclines .concordance-col-heading {
 #conclines tr.active {
   background-color: #8AC3DA;
 }
+
 
 .expand-link img {
   display: inline-block;

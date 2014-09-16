@@ -2079,29 +2079,6 @@ class Actions(Kontext):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    def _storeconc_path(self, annotconc=None):
-        #stderr.write ('storedconc_path: dir: %s, corp: %s, annot: %s\n' %
-        #              (self._conc_dir, self.corpname.split, self.annotconc))
-        return os.path.join(self._conc_dir, self.corpname.split(':')[0],
-                            annotconc or self.annotconc)
-
-    @exposed(access_level=1, template='saveconc_form.tmpl', vars=('Desc',))
-    def storeconc(self, storeconcname=''):
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
-        self.annotconc = storeconcname
-        cpath = self._storeconc_path()
-        cdir = os.path.dirname(cpath)
-        if not os.path.isdir(cdir):
-            os.makedirs(cdir)
-        conc.save(cpath + '.conc')
-        um = os.umask(self.annotconc_info_umask)
-        labels = '\n'.join(['<li><n>%i</n><lab>%s</lab></li>' % (n + 1, x)
-                            for (n, x) in enumerate(self.annotconc_init_labels)])
-        labels = '<concinfo>\n<labels>\n%s\n</labels>\n</concinfo>\n' % labels
-        open(cpath + '.info', 'w').write(labels)
-        os.umask(um)
-        return {'stored': storeconcname, 'conc_size': conc.size()}
-
     @exposed(return_type='json')
     def ajax_get_corp_details(self):
         """

@@ -225,9 +225,7 @@ class Kontext(Controller):
     refs_up = Parameter(0, persistent=True)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
-    can_annotate = Parameter(0)
     enable_sadd = Parameter(0)
-    annotconc = Parameter(u'')
 
     empty_attr_value_placeholder = Parameter('')
     tag_builder_support = Parameter([])
@@ -795,10 +793,6 @@ class Kontext(Controller):
                                            corpus_get_conf(corpus, 'SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(corpus, 'ATTRLIST').split(',')
-        if self.annotconc and not 'GroupNumbers' in result.keys():
-            labelmap = conclib.get_conc_labelmap(self._storeconc_path()
-                                                 + '.info')
-            result['GroupNumbers'] = conclib.format_labelmap(labelmap)
         result['commonurl'] = self.urlencode([('corpname', self.corpname),
                                               ('lemma', self.lemma),
                                               ('lpos', self.lpos),
