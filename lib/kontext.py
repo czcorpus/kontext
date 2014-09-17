@@ -813,7 +813,8 @@ class Kontext(Controller):
             result[js_file_key] = None
             if plugins.has_plugin(opt_plugin):
                 plugin_obj = getattr(plugins, opt_plugin)
-                if not isinstance(plugin_obj, plugins.CorpusDependentPlugin) or plugin_obj.is_enabled_for(self.corpname):
+                # if the plug-in is "always on" or "sometimes off but currently on" then it must configure JavaScript
+                if not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or plugin_obj.is_enabled_for(self.corpname):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
                     if js_file:
                         result[js_file_key] = js_file
