@@ -36,16 +36,7 @@ import urllib
 from abstract.auth import AbstractAuth
 
 
-def create_instance(conf, db_provider, sessions):
-    """
-    Factory function (as required by the application) providing
-    an instance of authentication module.
-    """
-    login_url = conf.get('plugins', 'auth')['login_url']
-    logout_url = conf.get('plugins', 'auth')['logout_url']
-    cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
-    return CentralAuth(db_provider=db_provider, sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
-                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
+IMPLICIT_CORPUS = 'susanne'
 
 
 class CentralAuth(AbstractAuth):
@@ -55,20 +46,13 @@ class CentralAuth(AbstractAuth):
 
     def __init__(self, db_provider, sessions, admins, login_url, logout_url, cookie_name):
         """
-        Parameters
-        ----------
-        db_provider : object
-            database connection wrapper
-        sessions : objet
-            a session handler
-        admins : tuple|list
-            list of usernames with administrator privileges
-        login_url : str
-            the application redirects a user to this URL when login is necessary
-        logout_url : str
-            the application redirects a user to this URL when logout is requested
-        cookie_name : str
-            name of the cookie used to store authentication ticket
+        arguments:
+        db_provider -- a database connection wrapper (SQLAlchemy)
+        sessions -- a session plug-in instance
+        admins -- tuple/list of usernames with administrator privileges
+        login_url -- a URL the application redirects a user to when login is necessary
+        logout_url -- a URL the application redirects a user to when logout is requested
+        cookie_name -- name of the cookie used to store authentication ticket
         """
         self.db_provider = db_provider
         self.sessions = sessions
@@ -80,6 +64,15 @@ class CentralAuth(AbstractAuth):
         self.user = 'anonymous'
 
     def get_ticket(self, cookies):
+        """
+        Returns authentication ticket
+
+        arguments:
+        cookies -- a Cookie.BaseCookie compatible instance
+
+        returns:
+        ticket id
+        """
         if self.cookie_name in cookies:
             ticket_id = cookies[self.cookie_name].value
         else:
@@ -91,13 +84,9 @@ class CentralAuth(AbstractAuth):
         Re-validates user authentication using cookie and session data (in general).
         Resulting user data is written to session. No value is returned.
 
-        Parameters
-        ----------
-        cookies : dict
-            cookies
-
-        session : dict
-            session data
+        arguments:
+        cookies -- a Cookie.BaseCookie compatible instance
+        session -- dictionary like session data
         """
         ticket_id = self.get_ticket(cookies)
         cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
@@ -126,10 +115,11 @@ class CentralAuth(AbstractAuth):
         """
         Fetches list of available corpora according to provided user
 
-        Returns
-        -------
-        list
-          list of corpora names (sorted alphabetically) available to current user (specified in the _user variable)
+        arguments:
+        user -- username
+
+        returns:
+        list of corpora names (sorted alphabetically) available to current user (specified in the _user variable)
         """
         global _corplist
 
@@ -150,15 +140,19 @@ JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user
                 else:
                     corpora.append(row[0])
             db.close()
-            if not 'susanne' in corpora:
-                corpora.append('susanne')
+            if not IMPLICIT_CORPUS in corpora:
+                corpora.append(IMPLICIT_CORPUS)
             corpora.sort()
             _corplist = corpora
         return _corplist
 
     def is_administrator(self):
         """
-        Tests whether the current user's name belongs to the 'administrators' group
+        Tests whether the current user's name belongs to the 'administrators' group.
+        This is affected by /kontext/global/administrators configuration section.
+
+        returns:
+        bool
         """
         return self.user in self.admins
 
@@ -167,3 +161,15 @@ JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (user, user
 
     def get_logout_url(self, root_url):
         return self.logout_url % (urllib.quote('%sfirst_form' % root_url))
+
+
+def create_instance(conf, db_provider, sessions):
+    """
+    Factory function providing
+    an instance of authentication module.
+    """
+    login_url = conf.get('plugins', 'auth')['login_url']
+    logout_url = conf.get('plugins', 'auth')['logout_url']
+    cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
+    return CentralAuth(db_provider=db_provider, sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
+                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
