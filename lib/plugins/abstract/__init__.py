@@ -9,8 +9,15 @@ classes to keep the plug-in implementation clear and consistent.
 
 class CorpusDependentPlugin(object):
     """
-    This class prescribes methods required by optional plug-ins to
-    run without internal errors
+    This class prescribes methods required by optional plug-ins which
+    must remain inactive in case of some corpora.
     """
     def is_enabled_for(self, corpname):
+        """
+        arguments:
+        corpname -- a name of the corpus
+
+        returns:
+        True if plug-in supports corpus 'corpname' else False
+        """
         raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(corpname)')

@@ -1905,7 +1905,7 @@ class Actions(Kontext):
                     logging.getLogger(__name__).error(e)
 
         data = []
-        corplist = plugins.auth.get_corplist(self._session_get('user', 'user'))
+        corplist = plugins.auth.get_corplist(self._session_get('user', 'id'))
         for corp in corplist:
             try:
                 self.cm.get_Corpus(corp)

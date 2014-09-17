@@ -39,7 +39,11 @@ class DefaultAuthHandler(AbstractAuth):
 
     @staticmethod
     def _mk_user_key(user_id):
-        return 'user:%04d' % user_id
+        return 'user:%d' % user_id
+
+    @staticmethod
+    def _mk_list_key(user_id):
+        return 'corplist:user:%s' % user_id
 
     def validate_user(self, username, password):
         """
@@ -98,12 +102,11 @@ class DefaultAuthHandler(AbstractAuth):
         returns:
         a list of corpora names (sorted alphabetically)
         """
-        data = self.find_user(user)
-        if data and 'corpora' in data:
-            corpora = data['corpora']
+        corpora = self.db.get(self._mk_list_key(user))
+        if corpora:
             if not IMPLICIT_CORPUS in corpora:
                 corpora.append(IMPLICIT_CORPUS)
-            return data['corpora']
+            return corpora
         else:
             return [IMPLICIT_CORPUS]
 
