@@ -20,16 +20,25 @@ from abstract.auth import AbstractAuth
 from translation import ugettext as _
 
 
+IMPLICIT_CORPUS = 'susanne'
+
+
 class DefaultAuthHandler(AbstractAuth):
     """
     Sample authentication handler
     """
 
     def __init__(self, db, sessions):
+        """
+        arguments:
+        db -- a 'db' plug-in
+        sessions -- a 'sessions' plugin
+        """
         self.db = db
         self.sessions = sessions
 
-    def _mk_user_key(self, user_id):
+    @staticmethod
+    def _mk_user_key(user_id):
         return 'user:%04d' % user_id
 
     def validate_user(self, username, password):
@@ -64,6 +73,8 @@ class DefaultAuthHandler(AbstractAuth):
 
     def logout(self, session_id):
         """
+        arguments:
+        session_id -- a session ID
         """
         self.sessions.delete(session_id)
 
@@ -81,19 +92,20 @@ class DefaultAuthHandler(AbstractAuth):
         """
         Fetches list of corpora available to the current user
 
-        Returns
-        -------
-        corplist : list
-            list of corpora names (sorted alphabetically)
+        arguments:
+        user -- username
+
+        returns:
+        a list of corpora names (sorted alphabetically)
         """
         data = self.find_user(user)
         if data and 'corpora' in data:
             corpora = data['corpora']
-            if not 'susanne' in corpora:
-                corpora.append('susanne')
+            if not IMPLICIT_CORPUS in corpora:
+                corpora.append(IMPLICIT_CORPUS)
             return data['corpora']
         else:
-            return ['susanne']
+            return [IMPLICIT_CORPUS]
 
     def is_administrator(self):
         """
