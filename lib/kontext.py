@@ -514,7 +514,7 @@ class Kontext(Controller):
         self._apply_general_user_settings(options, self._init_default_settings)
 
         # corpus access check
-        allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'user'))
+        allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'id'))
         if self._requires_corpus_access(path[0]):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
@@ -570,7 +570,7 @@ class Kontext(Controller):
         convert_types(na, self.clone_self())
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'user')), self.subcpath)
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'id')), self.subcpath)
         if getattr(self, 'refs') is None:
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
         self.__dict__.update(na)
