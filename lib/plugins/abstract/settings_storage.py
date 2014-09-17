@@ -19,7 +19,7 @@ class AbstractSettingsStorage(object):
 
     def save(self, user_id, data):
         """
-        Save user settings
+        Save user settings. Old user settings are expected to be rewritten.
 
         arguments:
         user_id -- user identifier
@@ -31,15 +31,13 @@ class AbstractSettingsStorage(object):
         """
         Loads user individual settings.
 
-        Parameters
-        ----------
-        current_settings : dict
-          if provided then instead of returning new dictionary method updates this one
-          and returns it
+        arguments:
+        user_id -- an ID of the user
+        current_settings -- dict-like object (JSON serializable); if provided then instead
+                            of returning new dictionary the method updates this one by loaded
+                            values and returns the same reference
 
-        Returns
-        -------
-        current_settings : dict
-          new or updated settings dictionary provided as a parameter
+        returns:
+        new or updated settings dictionary provided as a parameter
         """
         raise NotImplementedError()

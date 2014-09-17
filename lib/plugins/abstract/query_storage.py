@@ -21,9 +21,7 @@ class AbstractQueryStorage(object):
         """
         Writes data as a new saved query
 
-        Returns
-        -------
-        str : id of the query (either new or existing)
+        returns: an ID of the query (either new or existing)
         """
         raise NotImplementedError()
 
@@ -44,14 +42,8 @@ class AbstractQueryStorage(object):
 
     def delete_old_records(self, db, user_id):
         """
+        arguments:
+        db -- a database connection adapter
+        user_id -- user ID
         """
         raise NotImplementedError()
-
-
-def create_instance(settings, db):
-    """
-    arguments:
-    settings -- the settings.py module
-    db -- a 'db' plugin implementation
-    """
-    return QueryStorage(settings, db)

@@ -53,6 +53,9 @@ class ApplicationBar(AbstractApplicationBar):
         </script>"""
 
     def get_contents(self, cookies, curr_lang, return_url, use_fallback=True, timeout=2):
+        """
+        see plugins.abstract.appbar.AbstractApplicationBar documentation
+        """
         html = None
         if not curr_lang:
             curr_lang = 'en'

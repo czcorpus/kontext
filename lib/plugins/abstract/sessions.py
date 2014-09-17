@@ -26,12 +26,18 @@ class AbstractSessions(object):
     def start_new(self, data=None):
         """
         Writes a new session record to the storage
+
+        arguments:
+        data -- a Python dict-compatible type (must be serializable by the json module)
         """
         raise NotImplementedError()
 
     def delete(self, session_id):
         """
         Deletes a session record from the storage
+
+        arguments:
+        session_id -- an ID of the session
         """
         raise NotImplementedError()
 
@@ -42,13 +48,10 @@ class AbstractSessions(object):
         you should take that session_id and write it to cookies if you call this
         method.
 
-        Parameters
-        ----------
-        session_id : str
-            identifier of the session
-
-        data : dict
-            data to be used and written in case the session does not exist
+        arguments:
+        session_id -- a ID of the session
+        data -- a dict or compatible (json serializable) data to be used and written in
+                case the session does not exist
         """
         raise NotImplementedError()
 
@@ -56,6 +59,11 @@ class AbstractSessions(object):
         """
         Saves session data and updates last update information for a row  identified by session_id.
         If no such record exists then nothing is done and no error is thrown.
+
+        arguments:
+        session_id -- a ID of the session
+        data -- a dict or compatible (json serializable) data to be used and written in
+                case the session does not exist
         """
         raise NotImplementedError()
 
@@ -64,5 +72,8 @@ class AbstractSessions(object):
         Removes sessions with last update older than current time minus self.ttl.
         This method is called automatically (with probability self.cleanup_probability)
         when load() is called.
+
+        There are no rules how many items should be removed in one call as this depends
+        on how many requests per time KonText serves.
         """
         raise NotImplementedError()
