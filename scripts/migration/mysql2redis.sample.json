@@ -1,0 +1,14 @@
+{
+    "mysql" : {
+        "hostname" : "localhost",
+        "user" : "db_username",
+        "passwd" : "db_passwd",
+        "dbname" : "db_name"
+    },
+    "redis" : {
+        "hostname" : "localhost",
+        "port" : 6379,
+        "id" :  0
+    },
+    "default_corpora" : ["susanne", "other_corpus"]
+}
