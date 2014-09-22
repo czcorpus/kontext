@@ -25,7 +25,7 @@ def mysql_connection(user, passwd, hostname, dbname, params=None):
     conn_url = 'mysql://%(user)s:%(passwd)s@%(hostname)s/%(dbname)s?%(params)s' % {
         'user': user, 'passwd': passwd,
         'hostname': hostname, 'dbname': dbname,
-        'params': '&'.join(['%s=%s' % (k, v) for k, v in params])}
+        'params': '&'.join(['%s=%s' % (k, v) for k, v in params.items()])}
     return create_engine(conn_url, pool_size=2, max_overflow=0, encoding='utf-8')
 
 
@@ -220,11 +220,13 @@ if __name__ == '__main__':
                                   dbname=conf['mysql']['dbname'])
     export_obj = Export(mysqldb=mysql_conn, default_corpora=conf.get('default_corpora', None))
     ans = export_obj.run(args.user)
+    print('Finished loading source data')
 
     if args.dry_run:
         import_obj = Import(DummyRedis())
     else:
         import_obj = Import(redis_connection(host=conf['redis']['hostname'],
                                              port=conf['redis']['port'],
-                                             id=conf['redis']['id']))
+                                             db_id=conf['redis']['id']))
     import_obj.run(ans)
+    print('Sync done.')
