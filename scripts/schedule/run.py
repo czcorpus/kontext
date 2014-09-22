@@ -83,6 +83,8 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Scheduler")
     argparser.add_argument('file', metavar="FILE", help="a JSON file containing task(s) specification")
     argparser.add_argument('-d', '--dry-run', action='store_true', help="allows running without affecting storage data")
+    argparser.add_argument('-r', '--recipient', type=str,
+                           help="force a single recipient (no matter what JSON conf contains)")
     args = argparser.parse_args()
 
     settings.load('%s/config.xml' % app_path)
@@ -94,6 +96,10 @@ if __name__ == '__main__':
         if not 'tasks' in conf:
             print('Invalid configuration format - a \'task\' key must be present.')
             sys.exit(1)
+
+        if args.recipient:
+            for t in conf['tasks']:
+                t['recipients'] = [args.recipient]
 
         db_plugin = settings.get('plugins', 'db')['module']
         plugin_group = db_plugin.split('_')[0]
