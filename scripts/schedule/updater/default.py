@@ -45,7 +45,11 @@ class Scheduler(object):
     def add_user_task(self, data):
         anonymous_user = self._get_anonymous_key()
         for username, record_id in self.get_recipients(data).items():
-            if record_id != anonymous_user:
+            if not record_id:
+                print('unknown recipient \'%s\'; omitting' % username)
+            elif record_id == anonymous_user:
+                print('omitting anonymous user')
+            else:
                 settings_key = 'settings:%s' % record_id
                 task = self._create_task_fn(data, username, record_id)
                 user_settings = self._db.get(settings_key)
