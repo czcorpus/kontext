@@ -3,7 +3,8 @@
         "hostname" : "localhost",
         "user" : "db_username",
         "passwd" : "db_passwd",
-        "dbname" : "db_name"
+        "dbname" : "db_name",
+        "params" : {"charset": "utf8"}
     },
     "redis" : {
         "hostname" : "localhost",

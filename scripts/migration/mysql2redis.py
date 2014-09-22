@@ -217,7 +217,8 @@ if __name__ == '__main__':
     mysql_conn = mysql_connection(user=conf['mysql']['user'],
                                   passwd=conf['mysql']['passwd'],
                                   hostname=conf['mysql']['hostname'],
-                                  dbname=conf['mysql']['dbname'])
+                                  dbname=conf['mysql']['dbname'],
+                                  params=conf['mysql'].get('params', {}))
     export_obj = Export(mysqldb=mysql_conn, default_corpora=conf.get('default_corpora', None))
     ans = export_obj.run(args.user)
     print('Finished loading source data')
