@@ -7,7 +7,6 @@ import argparse
 
 from lxml import etree
 
-
 MAIN_TAGSET = 'pp_tagset'
 
 
@@ -135,6 +134,37 @@ def update_tagspec(xml, omit_ucnk):
 def misc(xml, omit_ucnk):
     xml.getroot().tag = 'kontext'
 
+    global_elm = xml.find('global')
+    maint_elm = etree.Element('maintenance')
+    maint_elm.text = 'true'  # !!
+    global_elm.append(maint_elm)
+
+
+def update_translations(xml, omit_ucnk):
+    if not omit_ucnk:
+        translat_elm = xml.find('global/translations')
+        for item in translat_elm:
+            if item.text == 'cs':
+                item.text = 'cs_CZ'
+            elif item.text == 'en':
+                item.text = 'en_US'
+            elif item.text == 'sk':
+                item.text = 'sk_SK'
+
+
+def update_logging_conf(xml, omit_ucnk):
+    log_path = xml.find('global/log_path')
+    global_elm = log_path.getparent()
+
+    new_elm = etree.Element('log_file_size')
+    if not omit_ucnk:
+        new_elm.text = '10000000'
+    global_elm.insert(global_elm.index(log_path) + 1, new_elm)
+
+    new_elm = etree.Element('log_num_files')
+    if not omit_ucnk:
+        new_elm.text = '100'
+    global_elm.insert(global_elm.index(log_path) + 2, new_elm)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Converts KonText config.xml version 0.5.x to the version 0.6")
@@ -152,7 +182,9 @@ if __name__ == '__main__':
         update_query_storage_plugin,
         conc_persistence_plugin,
         update_corptree,
-        update_tagspec
+        update_tagspec,
+        update_logging_conf,
+        update_translations
     )
     for up in update_actions:
         apply(up, (xml, args.omit_ucnk))
