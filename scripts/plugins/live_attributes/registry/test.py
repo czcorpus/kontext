@@ -23,4 +23,5 @@ if __name__ == '__main__':
         semantics=confparsing.ConfigSemantics())
     tree_walker = confparsing.TreeWalker(ast)
     ans = tree_walker.run()
+    print(ans)
     print(ans.get_structattrs())

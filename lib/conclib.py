@@ -408,9 +408,9 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         wait_for_conc(corp, q, cachefile, pidfile, minsize)
         if not os.path.exists(cachefile):
             try:
-                msg = open(pidfile).read().split("\n")[-2]
-            except:
-                msg = "Failed to process request."
+                msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split("\n")[-2])
+            except Exception as e:
+                msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
             raise RuntimeError(unicode(msg, "utf-8"))
         conc = PyConc(corp, 'l', cachefile)
         return conc
