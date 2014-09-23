@@ -104,12 +104,12 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
         #end for
 
         <div id="add-searched-lang-widget">
+            <select>
+                #for $a in $Aligned
+                <option value="$a.n">$a.label</option>
+                #end for
+            </select>
             <button type="button">$_('Add')</button>
-            $_('corpus') <select>
-            #for $a in $Aligned
-            <option value="$a.n">$a.label</option>
-            #end for
-        </select>
         </div>
 
     </fieldset>
