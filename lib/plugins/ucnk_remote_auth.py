@@ -44,7 +44,7 @@ class CentralAuth(AbstractAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db_provider, sessions, admins, login_url, logout_url, cookie_name):
+    def __init__(self, db_provider, sessions, admins, login_url, logout_url, cookie_name, anonymous_id):
         """
         arguments:
         db_provider -- a database connection wrapper (SQLAlchemy)
@@ -53,7 +53,9 @@ class CentralAuth(AbstractAuth):
         login_url -- a URL the application redirects a user to when login is necessary
         logout_url -- a URL the application redirects a user to when logout is requested
         cookie_name -- name of the cookie used to store authentication ticket
+        anonymous_id -- numeric ID of anonymous user
         """
+        super(CentralAuth, self).__init__(anonymous_id)
         self.db_provider = db_provider
         self.sessions = sessions
         self.corplist = []
@@ -172,4 +174,5 @@ def create_instance(conf, db_provider, sessions):
     logout_url = conf.get('plugins', 'auth')['logout_url']
     cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
     return CentralAuth(db_provider=db_provider, sessions=sessions, admins=conf.get('global', 'ucnk:administrators'),
-                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name)
+                       login_url=login_url, logout_url=logout_url, cookie_name=cookie_name,
+                       anonymous_id=conf.get_int('global', 'anonymous_user_id'))

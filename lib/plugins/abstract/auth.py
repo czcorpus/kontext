@@ -19,6 +19,9 @@ class AbstractAuth(object):
     Custom implementations should inherit this.
     """
 
+    def __init__(self, anonymous_id):
+        self._anonymous_id = 0
+
     def anonymous_user(self):
         """
         Returns a dictionary containing (key, value) pairs
@@ -26,7 +29,7 @@ class AbstractAuth(object):
         user = 'anonymous', fullname = _('anonymous')
         """
         return {
-            'id': 0,
+            'id': self._anonymous_id,
             'user': 'anonymous',
             'fullname': _('anonymous')
         }
