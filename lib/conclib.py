@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2003-2009  Pavel Rychly
 #
 # This program is free software; you can redistribute it and/or
@@ -23,40 +22,12 @@ import logging
 
 import manatee
 import settings
-from butils import *
+from butils import flck_sh_lock, flck_unlock, setproctitle
 from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
 from l10n import import_string
-
-try:
-    import fcntl
-except ImportError:
-    try:
-        import msvcrt
-    except ImportError:
-        # no locking available, dummy defs
-        flck_sh_lock = flck_ex_lock = flck_unlock = lambda f: None
-    else:
-        # Windows: msvcrt.locking
-        def flck_sh_lock(file):
-            file.seek(0)
-            msvcrt.locking(file.fileno(), msvcrt.LK_LOCK, 1)
-        flck_ex_lock = flck_sh_lock
-
-        def flck_unlock(file):
-            file.seek(0)
-            msvcrt.locking(file.fileno(), msvcrt.LK_UNLCK, 1)
-else:
-    # UNIX: fcntl.lockf
-    def flck_sh_lock(file):
-        fcntl.lockf(file, fcntl.LOCK_SH, 1, 0, 0)
-
-    def flck_ex_lock(file):
-        fcntl.lockf(file, fcntl.LOCK_EX, 1, 0, 0)
-
-    def flck_unlock(file):
-        fcntl.lockf(file, fcntl.LOCK_UN, 1, 0, 0)
+import conccache as cc
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
@@ -70,23 +41,6 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     ctxs.extend([{'n': _('%iR') % c, 'ctx': '%i>0' % c}
                 for c in range(1, max_ctx + 1)])
     return ctxs
-
-
-def load_map(cache_dir):
-    import cPickle
-    try:
-        f = open(cache_dir + '00CONCS.map', 'rb')
-    except IOError:
-        return {}
-    try:
-        flck_sh_lock(f)
-        ret = cPickle.load(f)
-        flck_unlock(f)
-    except cPickle.UnpicklingError:
-        os.rename(cache_dir + '00CONCS.map',
-                  cache_dir + '00CONCS-broken-%d.map' % os.getpid())
-        return {}
-    return ret
 
 
 def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
@@ -113,7 +67,7 @@ def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
         cache_dir = cache_dir + '/' + corp.corpname + '/'
-        saved = load_map(cache_dir)
+        saved = cc.load_map(cache_dir)
         cache_val = saved.get((subchash, q))
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
@@ -138,68 +92,6 @@ def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
         ans['fullsize'] = fullsize
         ans['relconcsize'] = relconcsize
     return ans
-
-
-def uniqname(key, used):
-    name = '#'.join([''.join([c for c in w if c.isalnum()]) for w in key])
-    name = name[1:15].encode("UTF-8")  # UTF-8 because os.path manipulations
-    if not name:
-        name = 'noalnums'
-    if name in used:
-        used = [w[len(name):] for w in used if w.startswith(name)]
-        i = 0
-        while str(i) in used:
-            i += 1
-        name += str(i)
-    return name
-
-
-def add_to_map(cache_dir, pid_dir, subchash, key, size):
-    import cPickle
-    kmap = pidfile = None
-    try:
-        f = open(cache_dir + '00CONCS.map', 'r+b')
-    except IOError:
-        f = open(cache_dir + '00CONCS.map', 'wb')
-        kmap = {}
-    flck_ex_lock(f)
-    if kmap is None:
-        kmap = cPickle.load(f)
-    if (subchash, key) in kmap:
-        ret, storedsize = kmap[subchash, key]
-        if storedsize < size:
-            kmap[subchash, key] = (ret, size)
-            f.seek(0)
-            cPickle.dump(kmap, f)
-    else:
-        ret = uniqname(key, [r for (r, s) in kmap.values()])
-        kmap[subchash, key] = (ret, size)
-        f.seek(0)
-        cPickle.dump(kmap, f)
-        pidfile = open(pid_dir + ret + ".pid", "w")
-        pidfile.write(str(os.getpid()) + "\n")
-        pidfile.flush()
-    f.close()  # also automatically flck_unlock (f)
-    if not pidfile:
-        pidfile = pid_dir + ret + ".pid"
-    return cache_dir + ret + ".conc", pidfile
-
-
-def del_from_map(cache_dir, subchash, key):
-    import cPickle
-    try:
-        f = open(cache_dir + '00CONCS.map', 'r+b')
-    except IOError:
-        return
-    flck_ex_lock(f)
-    kmap = cPickle.load(f)
-    try:
-        del kmap[subchash, key]
-        f.seek(0)
-        cPickle.dump(kmap, f)
-    except KeyError:
-        pass
-    f.close()  # also automatically flck_unlock (f)
 
 
 def wait_for_conc(corp, q, cachefile, pidfile, minsize):
@@ -268,7 +160,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     except OSError:
         pass
 
-    saved = load_map(cache_dir)
+    saved = cc.load_map(cache_dir)
     if contains_shuffle_seq(q):
         srch_from = 1
     else:
@@ -283,7 +175,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
             pidfile = os.path.realpath(pid_dir + cache_val[0] + ".pid")
             wait_for_conc(corp, q, cachefile, pidfile, minsize)
             if not os.path.exists(cachefile):  # broken cache
-                del_from_map(cache_dir, subchash, q)
+                cc.del_from_map(cache_dir, subchash, q)
                 try:
                     os.remove(pidfile)
                 except OSError:
@@ -297,7 +189,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             if not is_conc_alive(pidfile) and not conc.finished():
                 # unfinished and dead concordance
-                del_from_map(cache_dir, subchash, q)
+                cc.del_from_map(cache_dir, subchash, q)
                 try:
                     os.remove(cachefile)
                 except OSError:
@@ -323,7 +215,7 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
             conc = None
-            cachefile, pidfile = add_to_map(cache_dir, pid_dir, subchash,
+            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
                                             q_copy, 0)
             if type(pidfile) != file:  # computation got started meanwhile
                 wait_for_conc(corp, q, cachefile, pidfile, -1)
@@ -333,7 +225,7 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
                 conc.sync()
                 conc.save(cachefile)
                 # update size in map file
-                add_to_map(cache_dir, pid_dir, subchash, q_copy, conc.size())
+                cc.add_to_map(cache_dir, pid_dir, subchash, q_copy, conc.size())
                 fullsize = conc.fullsize()
                 os.remove(pidfile.name)
                 pidfile.close()
@@ -364,7 +256,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         # PID file will have fd 1
         pidfile = None
         try:
-            cachefile, pidfile = add_to_map(cache_dir, pid_dir,
+            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir,
                                              subchash, q, 0)
             if type(pidfile) != file:
                 # conc got started meanwhile by another process
@@ -387,7 +279,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
             conc.save(tmp_cachefile)  # whole
             os.rename(tmp_cachefile, cachefile)
             # update size in map file
-            add_to_map(cache_dir, pid_dir, subchash, q, conc.size())
+            cc.add_to_map(cache_dir, pid_dir, subchash, q, conc.size())
             os.remove(pidfile.name)
             pidfile.close()
         except Exception as e:
@@ -423,11 +315,11 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
-        cachefile, pidfile = add_to_map(cache_dir, pid_dir, subchash,
-                                        q[:1], conc.size())
+        cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
+                                           q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
-        add_to_map(cache_dir, pid_dir, subchash, q[:1], conc.size())
+        cc.add_to_map(cache_dir, pid_dir, subchash, q[:1], conc.size())
         os.remove(pidfile.name)
         pidfile.close()
     return conc
@@ -483,8 +375,8 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cachefile, pidfile = add_to_map(cache_dir, pid_dir, subchash,
-                                             q[:act + 1], conc.size())
+            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
+                                               q[:act + 1], conc.size())
             if type(pidfile) != file:
                 wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
             else:
@@ -536,7 +428,7 @@ def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate
              't': ('', ''),
              }
     desc = []
-    saved = load_map(cache_dir + '/' + corpname + '/')
+    saved = cc.load_map(cache_dir + '/' + corpname + '/')
     q = tuple(q)
 
     for i in range(len(q)):
