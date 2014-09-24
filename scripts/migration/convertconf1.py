@@ -133,11 +133,15 @@ def update_tagspec(xml, omit_ucnk):
 
 def misc(xml, omit_ucnk):
     xml.getroot().tag = 'kontext'
-
     global_elm = xml.find('global')
+
     maint_elm = etree.Element('maintenance')
     maint_elm.text = 'true'  # !!
     global_elm.append(maint_elm)
+
+    anonymous_id_elm = etree.Element('anonymous_user_id')
+    anonymous_id_elm.text = '0'
+    global_elm.append(anonymous_id_elm)
 
 
 def update_translations(xml, omit_ucnk):
