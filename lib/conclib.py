@@ -43,7 +43,7 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     return ctxs
 
 
-def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
+def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
     """
     arguments:
     corp -- manatee.Corpus instance
@@ -62,6 +62,8 @@ def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
     """
     import struct
 
+    if q is None:
+        q = []
     ans = {'finished': None, 'concsize': None, 'fullsize': None, 'relconcsize': None}
     if not cachefile:  # AJAX call
         q = tuple(q)
@@ -96,27 +98,27 @@ def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
 
 def wait_for_conc(corp, q, cachefile, pidfile, minsize):
     pidfile = os.path.realpath(pidfile)
-    sleeptime = 1
+    i = 1
     while True:
-        if sleeptime % 5 == 0 and not is_conc_alive(pidfile):
+        if i % 5 == 0 and not is_conc_alive(pidfile):
             return
         try:
             sizes = get_cached_conc_sizes(corp, q, None, cachefile)
             if minsize == -1:
-                if sizes["finished"] == 1:  # whole conc
+                if sizes['finished'] == 1:  # whole conc
                     return
-            elif sizes["concsize"] >= minsize:
+            elif sizes['concsize'] >= minsize:
                 return
         except:
             pass
-        time.sleep(sleeptime * 0.1)
-        sleeptime += 1
+        time.sleep(i * 0.1)
+        i += 1
 
 
 def is_conc_alive(pidfile):
     try:
         pid = open(pidfile).readline()[:-1]
-        link = os.readlink("/proc/%s/fd/1" % pid)
+        link = os.readlink('/proc/%s/fd/1' % pid)
         if link != pidfile:
             return False
     except:
@@ -172,7 +174,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
         cache_val = cache_map[(subchash, q[:i])]
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
-            pidfile = os.path.realpath(pid_dir + cache_val[0] + ".pid")
+            pidfile = os.path.realpath(pid_dir + cache_val[0] + '.pid')
             wait_for_conc(corp, q, cachefile, pidfile, minsize)
             if not os.path.exists(cachefile):  # broken cache
                 del cache_map[(subchash, q)]
@@ -202,14 +204,15 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
             ans = (i, conc)
             break
     logging.getLogger(__name__).debug('get_cached_conc(%s, [%s]) -> %s, %01.4f'
-                                      % (corp.corpname, ','.join(q), 'hit' if ans[1] else 'miss', time.time() - start_time))
+                                      % (corp.corpname, ','.join(q), 'hit' if ans[1] else 'miss',
+                                         time.time() - start_time))
     return ans
 
 
 def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
     start_time = time.time()
     q = tuple(q)
-    if q[0][0] == "R":  # online sample
+    if q[0][0] == 'R':  # online sample
         if fullsize == -1:  # need to compute original conc first
             q_copy = list(q)
             q_copy[0] = q[0][1:]
@@ -244,9 +247,8 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
     r, w = os.fdopen(r, 'r'), os.fdopen(w, 'w')
     if os.fork() == 0:  # child
         r.close()  # child writes
-        title = "bonito concordance;corp:%s;action:%s;params:%s;" \
-                % (corp.get_conffile(), q[0][0], q[0][1:])
-        setproctitle(title.encode("utf-8"))
+        title = 'bonito concordance;corp:%s;action:%s;params:%s;' % (corp.get_conffile(), q[0][0], q[0][1:])
+        setproctitle(title.encode('utf-8'))
         # close stdin/stdout/stderr so that the webserver closes
         # connection to client when parent ends
         os.close(0)
@@ -259,10 +261,10 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
             cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
             if type(pidfile) != file:
                 # conc got started meanwhile by another process
-                w.write(cachefile + "\n" + pidfile)
+                w.write(cachefile + '\n' + pidfile)
                 w.close()
                 os._exit(0)
-            w.write(cachefile + "\n" + pidfile.name)
+            w.write(cachefile + '\n' + pidfile.name)
             w.close()
             conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
                                 fullsize, pid_dir)
@@ -274,7 +276,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
                     cachefile, False, True, True)  # partial + append
                 time.sleep(sleeptime)
                 sleeptime += 0.1
-            tmp_cachefile = cachefile + ".tmp"
+            tmp_cachefile = cachefile + '.tmp'
             conc.save(tmp_cachefile)  # whole
             os.rename(tmp_cachefile, cachefile)
             # update size in map file
@@ -284,7 +286,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         except Exception as e:
             logging.getLogger(__name__).error(e)
             if not w.closed:
-                w.write("error\nerror")
+                w.write('error\nerror')
                 w.close()
             import traceback
             if type(pidfile) == file:
@@ -294,15 +296,15 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
             os._exit(0)  # os._exit <= we're closing child process
     else:  # parent
         w.close()  # parent reads
-        cachefile, pidfile = r.read().split("\n")
+        cachefile, pidfile = r.read().split('\n')
         r.close()
         wait_for_conc(corp, q, cachefile, pidfile, minsize)
         if not os.path.exists(cachefile):
             try:
-                msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split("\n")[-2])
+                msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
             except Exception as e:
                 msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
-            raise RuntimeError(unicode(msg, "utf-8"))
+            raise RuntimeError(msg)
         conc = PyConc(corp, 'l', cachefile)
         return conc
 
@@ -324,7 +326,7 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
     return conc
 
 
-def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
+def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
              cache_dir='cache', samplesize=0):
     if not q:
         return None
@@ -336,7 +338,7 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         else:
             minsize = fromp * pagesize
     cache_dir = cache_dir + '/' + corp.corpname + '/'
-    pid_dir = cache_dir + "run/"
+    pid_dir = cache_dir + 'run/'
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
@@ -347,12 +349,11 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
                                           minsize)
         if toprocess == len(q):
             save = 0
-        if not conc and q[0][0] == "R":  # online sample
+        if not conc and q[0][0] == 'R':  # online sample
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            t, c = get_cached_conc(corp, subchash, q_copy, cache_dir,
-                                    pid_dir, -1)
+            t, c = get_cached_conc(corp, subchash, q_copy, cache_dir, pid_dir, -1)
             if c:
                 fullsize = c.fullsize()
     else:
@@ -386,8 +387,6 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
 
 
 def conc_is_sorted(q):
-    """
-    """
     ans = True
     for item in q:
         if item[0] in ('r', 'f'):
@@ -397,7 +396,9 @@ def conc_is_sorted(q):
     return ans
 
 
-def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate=True):
+def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, translate=True):
+    if q is None:
+        q = []
     if translate:
         _t = lambda s: _(s)
     else:
@@ -454,8 +455,7 @@ def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate
                 op = 'Multilevel Sort'
             args = '%s in %s' % (sortattrs[0].split('/')[0],
                                  sortopt.get(sortattrs[1][:4], sortattrs[1]))
-            url1p.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}
-                           .get(sortattrs[1][:2], '')))
+            url1p.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}.get(sortattrs[1][:2], '')))
         elif opid == 'f':
             size = ''
             args = _('enabled')
@@ -473,19 +473,18 @@ def get_full_ref(corp, pos):
     refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str(pos)))
             for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'speech_segment_struct_attr')]
-    data['Refs'] = [{'name': n == '#' and _('Token number')
-                             or corp.get_conf(n + '.LABEL') or n,
-                     'val': v}
-                    for n, v in refs]
+    data['Refs'] = [{'name': n == '#' and _('Token number') or corp.get_conf(n + '.LABEL') or n,
+                     'val': v} for n, v in refs]
     for n, v in refs:
         data[n.replace('.', '_')] = v
     return data
 
 
-def get_detail_context(corp, pos, hitlen=1,
-                        detail_left_ctx=40, detail_right_ctx=40,
-                        addattrs=[], structs='', detail_ctx_incr=60):
+def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
+                       addattrs=None, structs='', detail_ctx_incr=60):
     data = {}
+    if addattrs is None:
+        addattrs = []
     corpus_encoding = corp.get_conf('ENCODING')
     wrapdetail = corp.get_conf('WRAPDETAIL')
     if wrapdetail:
@@ -515,7 +514,7 @@ def get_detail_context(corp, pos, hitlen=1,
     region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos))
     region_kwic = tokens2strclass(cr.region(pos, pos + hitlen))
     region_right = tokens2strclass(cr.region(pos + hitlen,
-                                              pos + hitlen + detail_right_ctx))
+                                             pos + hitlen + detail_right_ctx))
     for seg in region_left + region_kwic + region_right:
         seg['str'] = import_string(seg['str'].replace('===NONE===', ''), from_encoding=corpus_encoding)
     for seg in region_kwic:
@@ -565,7 +564,7 @@ def fcs_scan(corpname, scan_query, max_ter, start):
                 value = value[1:-1].strip()
             else:
                 raise Exception
-    except Exception, e:
+    except Exception:
         raise Exception(10, scan_query, 'Query syntax error')
     if not attr in attrs:
         raise Exception(16, attr, 'Unsupported index')
@@ -576,4 +575,3 @@ def fcs_scan(corpname, scan_query, max_ter, start):
         wlpattern = '.*' + value + '.*'
     wl = corplib.wordlist(corp, wlattr=attr, wlpat=wlpattern, wlsort='f')
     return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
-
