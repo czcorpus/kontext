@@ -1,4 +1,5 @@
 # Copyright (c) 2003-2009  Pavel Rychly
+# Copyright (c) 2014 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,37 +16,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 """
-Functions for handling cache file mapping between queries+subcorpora and filenames
-containing respective saved concordances.
+Functions for handling cache file mapping between (query, subcorpus) key
+and filename containing respective saved concordances.
 """
+import os
+import logging
 
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
-import os
 
 
-CACHE_FILENAME = '00CONCS.map'
-
-
-def load_map(cache_dir):
-    import cPickle
-    try:
-        f = open(cache_dir + CACHE_FILENAME, 'rb')
-    except IOError:
-        return {}
-    try:
-        flck_sh_lock(f)
-        ret = cPickle.load(f)
-        flck_unlock(f)
-    except cPickle.UnpicklingError:
-        os.rename(cache_dir + CACHE_FILENAME,
-                  cache_dir + '00CONCS-broken-%d.map' % os.getpid())
-        return {}
-    return ret
-
-
-def uniqname(key, used):
+def _uniqname(key, used):
     name = '#'.join([''.join([c for c in w if c.isalnum()]) for w in key])
-    name = name[1:15].encode("UTF-8")  # UTF-8 because os.path manipulations
+    name = name[1:15].encode('UTF-8')  # UTF-8 because os.path manipulations
     if not name:
         name = 'noalnums'
     if name in used:
@@ -57,49 +39,85 @@ def uniqname(key, used):
     return name
 
 
-def add_to_map(cache_dir, pid_dir, subchash, key, size):
-    import cPickle
-    kmap = pidfile = None
-    try:
-        f = open(cache_dir + CACHE_FILENAME, 'r+b')
-    except IOError:
-        f = open(cache_dir + CACHE_FILENAME, 'wb')
-        kmap = {}
-    flck_ex_lock(f)
-    if kmap is None:
-        kmap = cPickle.load(f)
-    if (subchash, key) in kmap:
-        ret, storedsize = kmap[subchash, key]
-        if storedsize < size:
+class CacheMapping(object):
+
+    CACHE_FILENAME = '00CONCS.map'
+
+    def __init__(self, cache_dir):
+        self._cache_dir = cache_dir
+        self._data = None
+
+    def _load_map(self):
+        import cPickle
+        ans = {}
+        try:
+            f = open(self._cache_dir + self.CACHE_FILENAME, 'rb')
+        except IOError as ex:
+            logging.getLogger(__name__).warning('Failed to load concordance cache mapping: %s' % ex)
+        try:
+            flck_sh_lock(f)
+            ans = cPickle.load(f)
+            flck_unlock(f)
+        except cPickle.UnpicklingError as ex:
+            logging.getLogger(__name__).warning('Failed to unpickle cache mapping file: %s' % ex)
+            os.unlink(self._cache_dir + self.CACHE_FILENAME)
+        return ans if ans is not None else {}
+
+    def add_to_map(self, pid_dir, subchash, key, size):
+        import cPickle
+        kmap = pidfile = None
+        try:
+            f = open(self._cache_dir + self.CACHE_FILENAME, 'r+b')
+        except IOError:
+            f = open(self._cache_dir + self.CACHE_FILENAME, 'wb')
+            kmap = {}
+        flck_ex_lock(f)
+        if kmap is None:
+            kmap = cPickle.load(f)
+        if (subchash, key) in kmap:
+            ret, storedsize = kmap[subchash, key]
+            if storedsize < size:
+                kmap[subchash, key] = (ret, size)
+                f.seek(0)
+                cPickle.dump(kmap, f)
+        else:
+            ret = _uniqname(key, [r for (r, s) in kmap.values()])
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)
-    else:
-        ret = uniqname(key, [r for (r, s) in kmap.values()])
-        kmap[subchash, key] = (ret, size)
-        f.seek(0)
-        cPickle.dump(kmap, f)
-        pidfile = open(pid_dir + ret + ".pid", "w")
-        pidfile.write(str(os.getpid()) + "\n")
-        pidfile.flush()
-    f.close()  # also automatically flck_unlock (f)
-    if not pidfile:
-        pidfile = pid_dir + ret + ".pid"
-    return cache_dir + ret + ".conc", pidfile
+            pidfile = open(pid_dir + ret + '.pid', 'w')
+            pidfile.write(str(os.getpid()) + '\n')
+            pidfile.flush()
+        f.close()  # also automatically flck_unlock (f)
+        if not pidfile:
+            pidfile = pid_dir + ret + '.pid'
+        return self._cache_dir + ret + '.conc', pidfile
+
+    def _del_from_map(self, tuple_key):
+        subchash, key = tuple_key
+        import cPickle
+        try:
+            f = open(self._cache_dir + self.CACHE_FILENAME, 'r+b')
+        except IOError:
+            return
+        flck_ex_lock(f)
+        kmap = cPickle.load(f)
+        try:
+            del kmap[subchash, key]
+            f.seek(0)
+            cPickle.dump(kmap, f)
+        except KeyError:
+            pass
+        f.close()  # also automatically flck_unlock (f)
+
+    def __getitem__(self, item):
+        if self._data is None:
+            self._data = self._load_map()
+        return self._data.get(item, None)
+
+    def __delitem__(self, key):
+        self._del_from_map(key)
+        self._data = None  # forces load on next __getitem__
 
 
-def del_from_map(cache_dir, subchash, key):
-    import cPickle
-    try:
-        f = open(cache_dir + CACHE_FILENAME, 'r+b')
-    except IOError:
-        return
-    flck_ex_lock(f)
-    kmap = cPickle.load(f)
-    try:
-        del kmap[subchash, key]
-        f.seek(0)
-        cPickle.dump(kmap, f)
-    except KeyError:
-        pass
-    f.close()  # also automatically flck_unlock (f)
+
