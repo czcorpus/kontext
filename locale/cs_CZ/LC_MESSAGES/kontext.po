@@ -2069,6 +2069,12 @@ msgstr "Nemáte dokončený výběr řádků (nebyl dosud použit žádný filtr
 msgid "new subcorpora in your library: %s"
 msgstr "nové subkorpusy ve vaší knihovně: %s"
 
+msgid "Show frequencies of lemmas"
+msgstr "Zobrazit frekvence lemmat"
+
+msgid "Lemmas"
+msgstr "Lemmata"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
