@@ -87,11 +87,10 @@ class ConcPersistence(AbstractConcPersistence):
     DEFAULT_CONC_ID_LENGTH = 8
 
     def __init__(self, settings, db):
-        sess_conf = settings.get('plugins', 'sessions')
-        ttl_days = int(sess_conf.get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        plugin_conf = settings.get('plugins', 'conc_persistence')
+        ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self.ttl = ttl_days * 24 * 3600
-
-        anonymous_user_ttl_days = int(sess_conf.get('ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        anonymous_user_ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
 
         self.db = db
