@@ -52,15 +52,14 @@ class CacheMapping(object):
         ans = {}
         try:
             f = open(self._cache_dir + self.CACHE_FILENAME, 'rb')
-        except IOError as ex:
-            logging.getLogger(__name__).warning('Failed to load concordance cache mapping: %s' % ex)
-        try:
             flck_sh_lock(f)
             ans = cPickle.load(f)
             flck_unlock(f)
         except cPickle.UnpicklingError as ex:
             logging.getLogger(__name__).warning('Failed to unpickle cache mapping file: %s' % ex)
             os.unlink(self._cache_dir + self.CACHE_FILENAME)
+        except IOError as ex:
+            logging.getLogger(__name__).warning('Failed to load concordance cache mapping: %s' % ex)
         return ans if ans is not None else {}
 
     def add_to_map(self, pid_dir, subchash, key, size):
