@@ -509,7 +509,7 @@ def corp_freqs_cache_path(corp, attrname):
         ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
         cache_dir = os.path.abspath(settings.get('corpora', 'cache_dir'))
-        for d in (corp.get_conf('NAME'), 'freqs'):
+        for d in (corp.corpname, 'freqs'):
             cache_dir = '%s/%s' % (cache_dir, d)
             if not os.path.exists(cache_dir):
                 os.mkdir(cache_dir)
@@ -697,25 +697,19 @@ def build_arf_db(corp, attrname):
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run.
     """
+    from multiprocessing import Process
+
     logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
     if os.path.isfile(logfilename):
         log = open(logfilename).read().split('\n')
         return log[0], log[-1].split('\r')[-1]
 
-    tmp = 'build_arf_db:%s:%s (%s)\n' % (corp, attrname, logfilename.decode('utf-8'))
-    sys.stderr.write(tmp.encode('utf-8'))
+    def background_calc():
+        os.nice(10)
+        create_arf_db(corp, attrname, logfilename)
 
-    pid = os.fork()
-    if pid == 0:
-        import daemonize
-        # close only std{in,out,err}
-        daemonize.createDaemon(maxfd=3)
-        if hasattr(os, 'nice'):
-            os.nice(10)
-            create_arf_db(corp, attrname, logfilename)
-        os._exit(0)  # os._exit (i.e. no sys.exit()) must be used here because this is a child process
-    else:
-        return None
+    p = Process(target=background_calc)
+    p.start()
 
 
 def build_arf_db_status(corp, attrname):
