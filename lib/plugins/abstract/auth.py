@@ -20,7 +20,11 @@ class AbstractAuth(object):
     """
 
     def __init__(self, anonymous_id):
-        self._anonymous_id = 0
+        """
+        arguments:
+        anonymous_id -- a numeric ID of anonymous user
+        """
+        self._anonymous_id = anonymous_id
 
     def anonymous_user(self):
         """
