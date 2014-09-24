@@ -915,7 +915,7 @@ class Controller(object):
             outf.write(str(result))
 
     def _user_is_anonymous(self):
-        return not self._session_get('user', 'id')
+        return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
 
     def nop(self):
         """
