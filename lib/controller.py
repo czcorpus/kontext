@@ -290,10 +290,11 @@ class Controller(object):
         if hasattr(plugins.auth, 'revalidate'):
             plugins.auth.revalidate(self._cookies, self._session)
 
-        if self._session['user']['id'] > 0:
-            self._anonymous = 0
-        else:
+        # TODO _anonymous attribute is redundant
+        if self._user_is_anonymous():
             self._anonymous = 1
+        else:
+            self._anonymous = 0
 
     def _close_session(self):
         """
