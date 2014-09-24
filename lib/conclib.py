@@ -67,8 +67,8 @@ def get_cached_conc_sizes(corp, q=[], cache_dir='cache', cachefile=None):
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
         cache_dir = cache_dir + '/' + corp.corpname + '/'
-        saved = cc.load_map(cache_dir)
-        cache_val = saved.get((subchash, q))
+        cache_map = cc.CacheMapping(cache_dir)
+        cache_val = cache_map[(subchash, q)]
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
 
@@ -160,7 +160,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     except OSError:
         pass
 
-    saved = cc.load_map(cache_dir)
+    cache_map = cc.CacheMapping(cache_dir)
     if contains_shuffle_seq(q):
         srch_from = 1
     else:
@@ -169,13 +169,13 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     ans = (0, None)
 
     for i in range(srch_from, 0, -1):
-        cache_val = saved.get((subchash, q[:i]))
+        cache_val = cache_map[(subchash, q[:i])]
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
             pidfile = os.path.realpath(pid_dir + cache_val[0] + ".pid")
             wait_for_conc(corp, q, cachefile, pidfile, minsize)
             if not os.path.exists(cachefile):  # broken cache
-                cc.del_from_map(cache_dir, subchash, q)
+                del cache_map[(subchash, q)]
                 try:
                     os.remove(pidfile)
                 except OSError:
@@ -189,7 +189,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             if not is_conc_alive(pidfile) and not conc.finished():
                 # unfinished and dead concordance
-                cc.del_from_map(cache_dir, subchash, q)
+                cache_map[(subchash, q)]
                 try:
                     os.remove(cachefile)
                 except OSError:
@@ -214,9 +214,8 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            conc = None
-            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
-                                            q_copy, 0)
+            cache_map = cc.CacheMapping(cache_dir)
+            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
             if type(pidfile) != file:  # computation got started meanwhile
                 wait_for_conc(corp, q, cachefile, pidfile, -1)
                 fullsize = PyConc(corp, 'l', cachefile).fullsize()
@@ -225,7 +224,7 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
                 conc.sync()
                 conc.save(cachefile)
                 # update size in map file
-                cc.add_to_map(cache_dir, pid_dir, subchash, q_copy, conc.size())
+                cache_map.add_to_map(pid_dir, subchash, q_copy, conc.size())
                 fullsize = conc.fullsize()
                 os.remove(pidfile.name)
                 pidfile.close()
@@ -256,8 +255,8 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         # PID file will have fd 1
         pidfile = None
         try:
-            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir,
-                                             subchash, q, 0)
+            cache_map = cc.CacheMapping(cache_dir)
+            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
             if type(pidfile) != file:
                 # conc got started meanwhile by another process
                 w.write(cachefile + "\n" + pidfile)
@@ -279,7 +278,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
             conc.save(tmp_cachefile)  # whole
             os.rename(tmp_cachefile, cachefile)
             # update size in map file
-            cc.add_to_map(cache_dir, pid_dir, subchash, q, conc.size())
+            cache_map.add_to_map(pid_dir, subchash, q, conc.size())
             os.remove(pidfile.name)
             pidfile.close()
         except Exception as e:
@@ -315,11 +314,11 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
-        cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
-                                           q[:1], conc.size())
+        cache_map = cc.CacheMapping(cache_dir)
+        cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
-        cc.add_to_map(cache_dir, pid_dir, subchash, q[:1], conc.size())
+        cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
         os.remove(pidfile.name)
         pidfile.close()
     return conc
@@ -375,8 +374,8 @@ def get_conc(corp, minsize=None, q=[], fromp=0, pagesize=0, async=0, save=0,
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cachefile, pidfile = cc.add_to_map(cache_dir, pid_dir, subchash,
-                                               q[:act + 1], conc.size())
+            cache_map = cc.CacheMapping(cache_dir)
+            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
             if type(pidfile) != file:
                 wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
             else:
@@ -428,11 +427,15 @@ def get_conc_desc(q=[], cache_dir='cache', corpname='', subchash=None, translate
              't': ('', ''),
              }
     desc = []
-    saved = cc.load_map(cache_dir + '/' + corpname + '/')
+    cache_map = cc.CacheMapping(cache_dir + '/' + corpname + '/')
     q = tuple(q)
 
     for i in range(len(q)):
-        size = saved.get((subchash, q[:i + 1]), ('', ''))[1]
+        cache_val = cache_map[(subchash, q[:i + 1]), ('', '')]
+        if cache_val:
+            size = cache_val[1]
+        else:
+            size = None
         opid = q[i][0]
         args = q[i][1:]
         url1p = [('q', qi) for qi in q[:i]]
