@@ -82,13 +82,28 @@ class ConcPersistence(AbstractConcPersistence):
 
     DEFAULT_TTL_DAYS = 100
 
+    DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
+
+    DEFAULT_CONC_ID_LENGTH = 8
+
     def __init__(self, settings, db):
-        ttl_days = int(settings.get('plugins', 'sessions').get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        sess_conf = settings.get('plugins', 'sessions')
+        ttl_days = int(sess_conf.get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self.ttl = ttl_days * 24 * 3600
+
+        anonymous_user_ttl_days = int(sess_conf.get('ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
+
         self.db = db
+        self._anonymous_user_id = settings.get_int('global', 'anonymous_user_id')
 
     def _mk_key(self, code):
         return 'concordance:%s' % (code, )
+
+    def _get_ttl_for(self, user_id):
+        if user_id == self._anonymous_user_id:
+            return self.anonymous_user_ttl
+        return self.ttl
 
     def is_valid_id(self, data_id):
         """
@@ -128,12 +143,12 @@ class ConcPersistence(AbstractConcPersistence):
         """
         if prev_data is None or curr_data['q'] != prev_data['q']:
             time_created = time.time()
-            data_id = mk_short_id('%s' % time_created)
+            data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data['id'] = data_id
             data_key = self._mk_key(data_id)
 
             self.db.set(data_key, curr_data)
-            self.db.set_ttl(data_key, self.ttl)
+            self.db.set_ttl(data_key, self._get_ttl_for(user_id))
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
