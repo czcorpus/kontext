@@ -263,7 +263,7 @@ define('conf', [], function () {
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
                     #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
-                    <li class="separ"><a title="$_("Show frequencies of Node tags")" href="freqs?$q;$globals;fcrit=tag/e+0~0>0;ml=0">$_("Node tags")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of lemmas")" href="freqs?$q;$globals;fcrit=lemma/e+0~0>0;ml=0">$_("Lemmas")</a></li>
                     #end if
                     <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
                     #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
