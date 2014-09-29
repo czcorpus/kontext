@@ -1436,10 +1436,10 @@ class Actions(Kontext):
                 self.wlnums = 'docf'
 
         lastpage = 0
-        if self._anonymous and self.wlpage >= 10:  # limit paged lists
+        if self._user_is_anonymous() and self.wlpage >= 10:  # limit paged lists
             self.wlpage = 10
             lastpage = 1
-        elif self._anonymous and self.wlmaxitems > 1000:  # limit saved lists
+        elif self._user_is_anonymous() and self.wlmaxitems > 1000:  # limit saved lists
             self.wlpage = 1
             self.wlmaxitems = 1000
         wlstart = (self.wlpage - 1) * self.wlmaxitems + line_offset
