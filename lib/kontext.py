@@ -706,10 +706,10 @@ class Kontext(Controller):
                 and plugins.auth.get_restricted_corp_variant(cn) in corp_list:
             # user wants a canonical variant, has no access to it and restricted variant exists
             cn = plugins.auth.get_restricted_corp_variant(cn)
-            fallback = self._update_current_url({'corpname': cn})
+            fallback = self._updated_current_url({'corpname': cn})
         elif cn != self._canonical_corpname(cn) and cn not in corp_list:
             cn = self._canonical_corpname(cn)
-            fallback = self._update_current_url({'corpname': cn})
+            fallback = self._updated_current_url({'corpname': cn})
 
         # last resort solution (this shouldn't happen in properly configured production installation)
         if not cn in corp_list:
