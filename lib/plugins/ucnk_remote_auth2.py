@@ -83,9 +83,6 @@ class CentralAuth(AbstractAuth):
         self.user = 'anonymous'
         self.auth_db_params = _create_auth_db_params(conf.get('plugins', 'auth'))
 
-
-
-
     @staticmethod
     def _mk_user_key(user_id):
         return 'user:%d' % user_id
@@ -110,7 +107,7 @@ class CentralAuth(AbstractAuth):
             ticket_id = None
         return ticket_id
 
-    def revalidate(self, cookies, session):
+    def revalidate(self, cookies, session, query_string):
         """
         Re-validates user authentication against external database with central
         authentication ticket. using cookie and session data (in general).
@@ -119,18 +116,17 @@ class CentralAuth(AbstractAuth):
         arguments:
         cookies -- a Cookie.BaseCookie compatible instance
         session -- dictionary like session data
+        query_string -- the portion of the request URL that follows '?' (see environmental variable QUERY_STRING)
         """
         if not 'user' in session:
             session['user'] = {}
         user_data = session['user']
         ticket_id = self.get_ticket(cookies)
 
-        if not user_data.get('revalidated', False):
+        if not user_data.get('revalidated', None) or 'remote=1' in query_string.split('&'):
             cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
             db = _connect_auth_db(**self.auth_db_params)
             cursor = db.cursor()
-            import logging
-            logging.getLogger(__name__).debug(dir(db))
             cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
                            % ','.join(cols), (ticket_id, ))
             row = cursor.fetchone()
@@ -138,8 +134,7 @@ class CentralAuth(AbstractAuth):
                 row = dict(zip(cols, row))
             else:
                 row = {}
-            db.close()  # TODO ???
-
+            db.close()
             if 'u.id' in row:
                 user_data['id'] = row['u.id']
                 user_data['user'] = row['u.user']

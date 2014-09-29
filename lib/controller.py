@@ -271,6 +271,9 @@ class Controller(object):
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
+    def _app_cookie_names(self):
+        return ()
+
     def _init_session(self):
         """
         Starts/reloads user's web session data. It can be called even
@@ -287,7 +290,7 @@ class Controller(object):
         self._session = ans['data']
 
         if hasattr(plugins.auth, 'revalidate'):
-            plugins.auth.revalidate(self._cookies, self._session)
+            plugins.auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
 
     def _close_session(self):
         """
@@ -875,8 +878,9 @@ class Controller(object):
                 v = v.encode('utf-8')
             ans.append((k, v))
         # Cookies
-        if self._cookies:
-            ans.extend([('Set-Cookie', v.OutputString()) for v in self._cookies.values()])   # cookies
+        for cookie_id in self._app_cookie_names():
+            if cookie_id in self._cookies.keys():
+                ans.append(('Set-Cookie', self._cookies[cookie_id].OutputString()))
         return ans
 
     def output_result(self, methodname, template, result, action_metadata, outf,
