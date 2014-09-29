@@ -316,7 +316,7 @@ class Kontext(Controller):
                     del(options[k])
 
     def _setup_user_paths(self, user_file_id):
-        if not self._anonymous:
+        if not self._user_is_anonymous():
             self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
@@ -394,7 +394,7 @@ class Kontext(Controller):
             if k in excluded_attrs:
                 del(options[k])
         options.update(tosave)
-        if not self._anonymous:
+        if not self._user_is_anonymous():
             plugins.settings_storage.save(self._session_get('user', 'id'), options)
         else:
             pass  # TODO save to the session
@@ -861,6 +861,7 @@ class Kontext(Controller):
 
         result['root_url'] = self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
+        result['_anonymous'] = self._user_is_anonymous()
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url(self.get_root_url())

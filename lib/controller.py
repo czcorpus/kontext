@@ -261,7 +261,6 @@ class Controller(object):
         self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
-        self._anonymous = None
         self._system_messages = []
 
         # initialize all the Parameter attributes
@@ -289,12 +288,6 @@ class Controller(object):
 
         if hasattr(plugins.auth, 'revalidate'):
             plugins.auth.revalidate(self._cookies, self._session)
-
-        # TODO _anonymous attribute is redundant
-        if self._user_is_anonymous():
-            self._anonymous = 1
-        else:
-            self._anonymous = 0
 
     def _close_session(self):
         """
