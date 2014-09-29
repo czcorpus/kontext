@@ -82,7 +82,7 @@ class DefaultSessions(AbstractSessions):
         """
         self.db.remove(self._mk_key(session_id))
 
-    def load(self, session_id, data=None):
+    def load(self, session_id, fallback_data=None):
         """
         Loads a session record identified by session_id. If no such record exists
         then a new record is created. Method always returns valid session_id. I.e.
@@ -94,7 +94,7 @@ class DefaultSessions(AbstractSessions):
         session_id : str
             identifier of the session
 
-        data : dict
+        fallback_data : dict
             data to be used and written in case the session does not exist
         """
         if random.random() < DefaultSessions.DEFAULT_CLEANUP_PROBABILITY:
@@ -104,7 +104,7 @@ class DefaultSessions(AbstractSessions):
         if session_data is not None:
             return {'id': session_id, 'data': session_data}
         else:
-            return self.start_new(data)
+            return self.start_new(fallback_data)
 
     def save(self, session_id, data):
         """
@@ -123,11 +123,16 @@ class DefaultSessions(AbstractSessions):
         when load() is called.
         """
         if not hasattr(self.db, 'set_ttl'):
-            old_records = self.db.all_with_key_prefix('session:', oldest_first=True, limit=100)
-            limit_time = self.get_actual_timestamp() - self.ttl
-            for item in old_records:
-                if item['__timestamp__'] < limit_time:
-                    self.db.remove(item['__key__'])
+            if hasattr(self.db, 'all_with_key_prefix'):
+                old_records = self.db.all_with_key_prefix('session:', oldest_first=True, limit=100)
+                limit_time = self.get_actual_timestamp() - self.ttl
+                for item in old_records:
+                    if item['__timestamp__'] < limit_time:
+                        self.db.remove(item['__key__'])
+            else:
+                from abstract import PluginException
+                raise PluginException('A "default-compatible" DB plugin must implement either '
+                                      'set_ttl() or all_with_key_prefix() method')
 
 
 def create_instance(config, db):

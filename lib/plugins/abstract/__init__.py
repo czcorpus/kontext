@@ -21,3 +21,7 @@ class CorpusDependentPlugin(object):
         True if plug-in supports corpus 'corpname' else False
         """
         raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(corpname)')
+
+
+class PluginException(Exception):
+    pass
