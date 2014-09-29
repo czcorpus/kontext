@@ -429,7 +429,7 @@ class Controller(object):
         """
         return self.environ.get('REQUEST_URI')
 
-    def _update_current_url(self, params):
+    def _updated_current_url(self, params):
         """
         Modifies current URL using passed parameters.
 
