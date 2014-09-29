@@ -581,9 +581,9 @@ class Kontext(Controller):
             del(self._session[self.ua])
             self.ua = None
         elif self.get_http_method() == 'GET':
-            self.return_url = self._get_current_url()
+            self.return_url = self._updated_current_url({'remote': 1})
         else:
-            self.return_url = '%sfirst_form?corpname=%s' % (self.get_root_url(), self.corpname)
+            self.return_url = '%sfirst_form?corpname=%sremote=1' % (self.get_root_url(), self.corpname)
 
         self._restore_prev_conc_params()
 
@@ -723,6 +723,12 @@ class Kontext(Controller):
             return enc
         else:
             return 'iso-8859-1'
+
+    def _app_cookie_names(self):
+        """
+        Any valid cookie is loaded and available but only these are saved by KonText
+        """
+        return 'ui_settings', settings.get('plugins', 'auth')['auth_cookie_name']
 
     def _corp(self):
         """
