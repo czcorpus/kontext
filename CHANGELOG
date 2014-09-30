@@ -23,6 +23,7 @@ CHANGELOG
 - minor user interface improvements
     - make aligned corpus primary by one click
     - corpus tree widget now contains a search box
+- XLSX export of concordances
 
 -------------------------------------------------------------------------------
 0.5.x
