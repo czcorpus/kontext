@@ -38,7 +38,7 @@ import MySQLdb
 IMPLICIT_CORPUS = 'susanne'
 
 
-def _create_auth_db_params(conf):
+def create_auth_db_params(conf):
     """
     conn_params = {}
     if conf.get('ucnk:auth_db_charset', None):
@@ -52,7 +52,7 @@ def _create_auth_db_params(conf):
     )
 
 
-def _connect_auth_db(**conn_params):
+def connect_auth_db(**conn_params):
     return MySQLdb.connect(**conn_params)
 
 
@@ -81,7 +81,7 @@ class CentralAuth(AbstractAuth):
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
         self.user = 'anonymous'
-        self.auth_db_params = _create_auth_db_params(conf.get('plugins', 'auth'))
+        self.auth_db_params = create_auth_db_params(conf.get('plugins', 'auth'))
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -125,7 +125,7 @@ class CentralAuth(AbstractAuth):
 
         if not user_data.get('revalidated', None) or 'remote=1' in query_string.split('&'):
             cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
-            db = _connect_auth_db(**self.auth_db_params)
+            db = connect_auth_db(**self.auth_db_params)
             cursor = db.cursor()
             cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
                            % ','.join(cols), (ticket_id, ))
