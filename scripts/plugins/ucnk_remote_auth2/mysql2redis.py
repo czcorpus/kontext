@@ -204,6 +204,14 @@ class Import(object):
             self._redis.set('corplist:%s' % k, json.dumps(corplist))
 
 
+def create_import_instance(conf, dry_run=False):
+    if dry_run:
+        import_obj = Import(DummyRedis())
+    else:
+        import_obj = Import(redis_connection(**conf))
+    return import_obj
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Synchronize data from mysql db to redis')
     parser.add_argument('conf_file', metavar='CONF_FILE', help='operation configuration in JSON')
@@ -221,12 +229,6 @@ if __name__ == '__main__':
     export_obj = Export(mysqldb=mysql_conn, default_corpora=conf.get('default_corpora', None))
     ans = export_obj.run(args.user)
     print('Finished loading source data')
-
-    if args.dry_run:
-        import_obj = Import(DummyRedis())
-    else:
-        import_obj = Import(redis_connection(host=conf['redis']['hostname'],
-                                             port=conf['redis']['port'],
-                                             db_id=conf['redis']['id']))
-    import_obj.run(ans)
+    redis_conf = dict(host=conf['redis']['hostname'], port=conf['redis']['port'], db_id=conf['redis']['id'])
+    create_import_instance(conf, dry_run=args.dry_run).run(ans)
     print('Sync done.')
