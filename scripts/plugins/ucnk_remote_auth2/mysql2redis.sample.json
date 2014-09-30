@@ -4,7 +4,8 @@
         "user" : "db_username",
         "passwd" : "db_passwd",
         "dbname" : "db_name",
-        "params" : {"charset": "utf8"}
+        "charset" : "utf8",
+        "use_unicode" : true
     },
     "redis" : {
         "hostname" : "localhost",
