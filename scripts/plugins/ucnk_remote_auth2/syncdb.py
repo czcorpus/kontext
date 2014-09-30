@@ -92,9 +92,9 @@ class DbSync(object):
         """
         cursor = self._mysql.cursor()
         if params:
-            cursor.query(sql, params)
+            cursor.execute(sql, params)
         else:
-            cursor.query(sql)
+            cursor.execute(sql)
         return cursor
 
     def get_user_changes(self):
@@ -146,7 +146,7 @@ class DbSync(object):
         in RedisDB.
         """
         mass_ch = self.find_mass_changes()
-        export = m2r.Export(mysqldb=self._mysql, default_corpora=('susanne',))
+        export = m2r.Export(mysqldb=self._mysql, default_corpora=conf.get('default_corpora', ('susanne',)))
         import_obj = m2r.create_import_instance(self._redis_params, dry_run=dry_run)
         if len(mass_ch) > 0:
             self.log_mass_change()
@@ -156,7 +156,8 @@ class DbSync(object):
                 data = export.run(changed_user[0])
                 if len(data) == 1:
                     import_obj.run(data)
-                    self.delete_log(changed_user[0])
+                    if not dry_run:
+                        self.delete_log(changed_user[0])
                     changed_users += 1
             except Exception as e:
                 logger.error(e)
