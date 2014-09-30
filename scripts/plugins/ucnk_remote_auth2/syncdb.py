@@ -10,7 +10,8 @@ import logging
 from logging import handlers
 import json
 
-APP_PATH = os.path.realpath('%s/../../..' % os.path.dirname(os.path.abspath(__file__)))
+SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
+APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
 sys.path.insert(0, '%s/lib' % APP_PATH)
 import settings
 from plugins import ucnk_remote_auth2 as auth
@@ -19,10 +20,12 @@ import mysql2redis as m2r
 logger = logging.getLogger('syncdb')
 
 DEFAULT_CHECK_INTERVAL = 5
+DEFAULT_LOG_FILE_SIZE = 1000000
+DEFAULT_NUM_LOG_FILES = 5
 
 
 def load_conf():
-    conf_file = '%s/sync.json' % APP_PATH
+    conf_file = '%s/syncdb.json' % APP_PATH
     if os.path.isfile(conf_file):
         return json.load(open(conf_file, 'r'))
     else:
@@ -31,9 +34,10 @@ def load_conf():
 
 def setup_logger(conf):
     if 'logging' in conf:
-        handler = handlers.RotatingFileHandler(conf.get('global', 'log_path'),
-                                               maxBytes=conf.get('global', 'log_file_size', 8000000),
-                                               backupCount=conf.get('global', 'log_num_files', 10))
+        conf = conf['logging']
+        handler = handlers.RotatingFileHandler(conf['path'],
+                                               maxBytes=conf.get('file_size', DEFAULT_LOG_FILE_SIZE),
+                                               backupCount=conf.get('num_files', DEFAULT_NUM_LOG_FILES))
     else:
         handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
@@ -58,7 +62,7 @@ class DbSync(object):
         return cursor
 
     def get_user_changes(self):
-        cursor = self.execute("SELECT user_id FROM user_changelog ORDER BY created ASC")
+        cursor = self.execute("SELECT DISTINCT user_id FROM user_changelog ORDER BY created ASC")
         return cursor.fetchall()
 
     def find_mass_changes(self):
@@ -75,6 +79,10 @@ class DbSync(object):
         self.execute("INSERT INTO user_changelog (user_id, created) SELECT id, NOW() FROM user")
         self._mysql.commit()
 
+    def delete_log(self, user_id):
+        self.execute("DELETE FROM user_changelog WHERE user_id = %s", (user_id,))
+        self._mysql.commit()
+
     def __call__(self, dry_run=False):
         mass_ch = self.find_mass_changes()
         export = m2r.Export(mysqldb=self._mysql, default_corpora=('susanne',))
@@ -87,6 +95,7 @@ class DbSync(object):
                 data = export.run(changed_user[0])
                 if len(data) == 1:
                     import_obj.run(data)
+                    self.delete_log(changed_user[0])
                     changed_users += 1
             except Exception as e:
                 logger.error(e)
@@ -94,6 +103,8 @@ class DbSync(object):
 
 
 if __name__ == '__main__':
+    import time
+
     settings.load('%s/config.xml' % APP_PATH)
     conf = load_conf()
     setup_logger(conf)
@@ -113,6 +124,8 @@ if __name__ == '__main__':
                redis_params=redis_params,
                check_interval=args.interval,
                db_name=mysql_params['db'])
+    t = time.time()
     changed = w(dry_run=args.dry_run)
+    t = time.time() - t
     if changed > 0:
-        logger.info('Synchronized %d users.' % changed)
+        logger.info('Synchronized %d users in %01.1f sec.' % (changed, t))
