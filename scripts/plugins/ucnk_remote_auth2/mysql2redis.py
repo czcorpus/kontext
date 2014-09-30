@@ -13,20 +13,14 @@ import json
 import datetime
 import argparse
 
-from sqlalchemy import create_engine
+import MySQLdb
 
 
-def mysql_connection(user, passwd, hostname, dbname, params=None):
+def mysql_connection(**kwargs):
     """
     Creates a SQLAlchemy engine instance.
     """
-    if params is None:
-        params = {}
-    conn_url = 'mysql://%(user)s:%(passwd)s@%(hostname)s/%(dbname)s?%(params)s' % {
-        'user': user, 'passwd': passwd,
-        'hostname': hostname, 'dbname': dbname,
-        'params': '&'.join(['%s=%s' % (k, v) for k, v in params.items()])}
-    return create_engine(conn_url, pool_size=2, max_overflow=0, encoding='utf-8')
+    return MySQLdb.connect(**kwargs)
 
 
 def redis_connection(host, port, db_id):
@@ -126,14 +120,16 @@ class Export(object):
         arguments:
         username -- user's username (i.e. no ID here!)
         """
-        rows = self._mysql.execute("""SELECT corpora.name, limited FROM (
+        cursor = self._mysql.cursor()
+        cursor.execute("""SELECT corpora.name, limited FROM (
             SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
             FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
             UNION
             SELECT r2.corpora AS corpus_id, r2.limited AS limited
             FROM user AS u2
             JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
-            JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (username, username)).fetchall()
+            JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (username, username))
+        rows = cursor.fetchall()
         ans = []
         for row in rows:
             if row[1]:
@@ -152,10 +148,12 @@ class Export(object):
         user_id -- if specified then only this user is exported (otherwise, all the users are exported)
         """
         sql = "SELECT %s FROM user" % ','.join(get_user_cols())
+        cursor = self._mysql.cursor()
         if user_id is None:
-            rows = self._mysql.execute('%s ORDER BY id' % sql).fetchall()
+            cursor.execute('%s ORDER BY id' % sql)
         else:
-            rows = self._mysql.execute(('%s WHERE id = %%s' % sql), (user_id,)).fetchall()
+            cursor.execute(('%s WHERE id = %%s' % sql), (user_id,))
+        rows = cursor.fetchall()
         colmap = get_user_cols(as_map=True)
         ans = []
         for row in rows:
@@ -216,9 +214,10 @@ if __name__ == '__main__':
     conf = json.load(open(args.conf_file))
     mysql_conn = mysql_connection(user=conf['mysql']['user'],
                                   passwd=conf['mysql']['passwd'],
-                                  hostname=conf['mysql']['hostname'],
-                                  dbname=conf['mysql']['dbname'],
-                                  params=conf['mysql'].get('params', {}))
+                                  host=conf['mysql']['hostname'],
+                                  db=conf['mysql']['dbname'],
+                                  charset=conf['mysql'].get('charset', 'latin1'),
+                                  use_unicode=conf['mysql'].get('use_unicode', False))
     export_obj = Export(mysqldb=mysql_conn, default_corpora=conf.get('default_corpora', None))
     ans = export_obj.run(args.user)
     print('Finished loading source data')
