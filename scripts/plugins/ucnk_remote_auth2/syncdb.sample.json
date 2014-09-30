@@ -3,5 +3,6 @@
         "path" : "/path/to/a/log/syncdb.log",
         "file_size" : 8000000,
         "num_files" : 10
-    }
+    },
+    "default_corpora" : ["susanne", "bnc"]
 }
