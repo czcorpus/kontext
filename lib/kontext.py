@@ -590,7 +590,7 @@ class Kontext(Controller):
         if len(path) > 0:
             access_level = self._get_action_prop(path[0], 'access_level')
             if access_level and self._user_is_anonymous():
-                import auth
+                from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
 
         return path, selectorname, named_args
