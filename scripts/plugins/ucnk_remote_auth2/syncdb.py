@@ -115,7 +115,18 @@ class DbSync(object):
         cursor = self.query("SELECT DISTINCT user_id FROM user_changelog ORDER BY created ASC")
         return cursor.fetchall()
 
-    def log_mass_changes(self):
+    def log_user_updates(self):
+        """
+        Searches for "real" user updates (cannot use trigger on 'user' here because each request to
+        UCNK's application produces update of user.expire which is quite an overhead here). Luckily,
+        user database in UCNK makes automatic backups of changed user credentials.
+        """
+        self.query('INSERT INTO user_changelog (user_id, created) '
+                   'SELECT id, NOW() FROM user_version '
+                   'where used_until > (NOW() - INTERVAL %d MINUTE)' % self._check_interval)
+        self._mysql.commit()
+
+    def find_mass_changes(self):
         """
         Searches for changes in tables related to the 'user' table and concerning potentially
         all the users (e.g. a new corpus is added). There are certainly more effective
@@ -156,11 +167,14 @@ class DbSync(object):
         Performs an action containing search for changes and updating affected records
         in RedisDB.
         """
-        mass_ch = self.log_mass_changes()
-        export = m2r.Export(mysqldb=self._mysql, default_corpora=conf.get('default_corpora', ('susanne',)))
-        import_obj = m2r.create_import_instance(self._redis_params, dry_run=dry_run)
+        mass_ch = self.find_mass_changes()
         if len(mass_ch) > 0:
             self.log_mass_change()
+        self.log_user_updates()
+
+        export = m2r.Export(mysqldb=self._mysql, default_corpora=conf.get('default_corpora', ('susanne',)))
+        import_obj = m2r.create_import_instance(self._redis_params, dry_run=dry_run)
+
         changed_users = 0
         for changed_user in self.get_logged_changes():
             try:
