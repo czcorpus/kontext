@@ -5,6 +5,17 @@ and it is not needed for default KonText installation.
 
 The script is expected to be run either by cron in regular intervals or manually in
 special cases.
+
+It is possible to specify extra parameters using syncdb.json file located in the
+root of the KonText application.
+{
+   "default_corpora" : ["corp1", "corp2"],
+   "logging" : {
+        "path" : "/path/to/a/log/file",
+        "file_size" : 8000000,
+        "num_files" : 5
+   }
+
 """
 import argparse
 import os
