@@ -101,6 +101,7 @@ def wait_for_conc(corp, q, cachefile, pidfile, minsize):
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
     error_wait = 5  # in sec
     i = 1
+    sizes = {}
     while is_conc_alive(pidfile) and i < hard_limit:
         try:
             sizes = get_cached_conc_sizes(corp, q, None, cachefile)
@@ -114,10 +115,10 @@ def wait_for_conc(corp, q, cachefile, pidfile, minsize):
         time.sleep(i * 0.1)
         i += 1
     if is_conc_alive(pidfile):
-        logging.getLogger(__name__).warning('Concordance calculation limit %d exceeded.' % (hard_limit / 10.))
+        logging.getLogger(__name__).warning('Concordance calculation limit %d exceeded. Params: %s' % (hard_limit / 10., sizes))
     elif not os.path.isfile(cachefile):
-        logging.getLogger(__name__).warning('Concordance asynchronous calculation problem - '
-                                            'cache file still not available. Waiting another %d seconds.' % error_wait)
+        logging.getLogger(__name__).warning('Concordance calculation problem - cache file still not available. '
+                                            'Waiting another %d seconds. Params: %s' % (error_wait, sizes))
         time.sleep(error_wait)
 
 
