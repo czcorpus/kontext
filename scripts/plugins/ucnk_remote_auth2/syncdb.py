@@ -108,14 +108,14 @@ class DbSync(object):
             cursor.execute(sql)
         return cursor
 
-    def get_user_changes(self):
+    def get_logged_changes(self):
         """
         Returns a list of records from user_changelog.
         """
         cursor = self.query("SELECT DISTINCT user_id FROM user_changelog ORDER BY created ASC")
         return cursor.fetchall()
 
-    def find_mass_changes(self):
+    def log_mass_changes(self):
         """
         Searches for changes in tables related to the 'user' table and concerning potentially
         all the users (e.g. a new corpus is added). There are certainly more effective
@@ -156,13 +156,13 @@ class DbSync(object):
         Performs an action containing search for changes and updating affected records
         in RedisDB.
         """
-        mass_ch = self.find_mass_changes()
+        mass_ch = self.log_mass_changes()
         export = m2r.Export(mysqldb=self._mysql, default_corpora=conf.get('default_corpora', ('susanne',)))
         import_obj = m2r.create_import_instance(self._redis_params, dry_run=dry_run)
         if len(mass_ch) > 0:
             self.log_mass_change()
         changed_users = 0
-        for changed_user in self.get_user_changes():
+        for changed_user in self.get_logged_changes():
             try:
                 data = export.run(changed_user[0])
                 if len(data) == 1:
