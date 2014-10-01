@@ -4,6 +4,8 @@ Note: this is UCNK specific functionality
 A simple script for (repeated) importing/updating of user data (including their allowed
 corpora) from MySQL/MariaDB database to Redis storage.
 
+It is also used by the syncdb.py script.
+
 The script requires Python Redis client (http://redis-py.readthedocs.org/) and
 SQLAlchemy library (http://www.sqlalchemy.org/).
 """
@@ -230,5 +232,5 @@ if __name__ == '__main__':
     ans = export_obj.run(args.user)
     print('Finished loading source data')
     redis_conf = dict(host=conf['redis']['hostname'], port=conf['redis']['port'], db_id=conf['redis']['id'])
-    create_import_instance(conf, dry_run=args.dry_run).run(ans)
+    create_import_instance(redis_conf, dry_run=args.dry_run).run(ans)
     print('Sync done.')
