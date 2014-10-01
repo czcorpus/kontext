@@ -336,16 +336,25 @@ def get_logout_url(self):
 Class *auth.AbstractAuth* can be used as a base class when implementing custom authentication object. It already
 provides some of required methods.
 
-In case you want to implement "outside KonText" authentication variant, an additional method *revalidate* must
+In case you want to implement an "outside KonText" authentication variant, an additional method *revalidate* must
 be implemented:
 
 ```python
-def revalidate(cookies, session):
+def revalidate(cookies, session, query_string):
     pass
-```
+``` 
 
-KonText call this method (if it is provided by your plug-in) during session initialization. If an external service
-responds user is logged in no more, method *revalidate* should change user's session data to an "anonymous user".
+KonText calls this method (if it is provided by your plug-in) during session initialization. If an external service
+responds that remote session ticket is invalid (= outdated, incorrect), method *revalidate* should change user's session 
+data to an "anonymous user". The method does not necessarily have to check the ticket each time it is called. 
+Once you validate new user session, you can keep user logged-in as long as KonText's own session is valid (then 
+revalidation is performed again).
+ 
+To be able to revalidate anonymous user once she returns from a remote authentication server with updated 
+credentials, KonText redirects to the authentication server with parameter *remote=1*. The plug-in then may check
+for it and force revalidation. The slight problem is that during the phase the method is called there are no
+parsed request parameters available yet. For that reason KonText passes argument *query_string* to the method to
+allow the plug-in custom parameter processing. 
 
 <a name="plugin_sessions"></a>
 
