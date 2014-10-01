@@ -23,6 +23,7 @@ import sys
 import logging
 from logging import handlers
 import json
+from datetime import datetime
 
 SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
@@ -90,6 +91,9 @@ class DbSync(object):
         self._check_interval = check_interval
         self._db_name = db_name
 
+    def _current_dbtime(self):
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
     def query(self, sql, params=None):
         """
         Runs a query.
@@ -121,9 +125,10 @@ class DbSync(object):
         UCNK's application produces update of user.expire which is quite an overhead here). Luckily,
         user database in UCNK makes automatic backups of changed user credentials.
         """
+        now = self._current_dbtime()
         self.query('INSERT INTO user_changelog (user_id, created) '
-                   'SELECT id, NOW() FROM user_version '
-                   'where used_until > (NOW() - INTERVAL %d MINUTE)' % self._check_interval)
+                   'SELECT DISTINCT id, %s FROM user_version '
+                   'where used_until > (%s - INTERVAL %s MINUTE)', (now, now, self._check_interval))
         self._mysql.commit()
 
     def find_mass_changes(self):
@@ -135,12 +140,13 @@ class DbSync(object):
         returns:
         a list of tuples (user_id, last_change_datetime)
         """
+        now = self._current_dbtime()
         sql = "SELECT table_name, update_time " \
               "FROM information_schema.tables " \
-              "WHERE update_time > (NOW() - INTERVAL %s MINUTE) " \
+              "WHERE update_time > (%s - INTERVAL %s MINUTE) " \
               "AND table_schema = %s" \
               "AND table_name IN ('corplist', 'corpora', 'relation')"
-        cursor = self.query(sql, (self._check_interval, self._db_name))
+        cursor = self.query(sql, (now, self._check_interval, self._db_name))
         return cursor.fetchall()
 
     def log_mass_change(self):
@@ -148,8 +154,9 @@ class DbSync(object):
         Writes a change flag to user_changelog for all users. Any previous
         records are deleted first because all the users will be updated anyway.
         """
+        now = self._current_dbtime()
         self.query("DELETE FROM user_changelog")  # we do not need this as each user will be there in a moment
-        self.query("INSERT INTO user_changelog (user_id, created) SELECT id, NOW() FROM user")
+        self.query("INSERT INTO user_changelog (user_id, created) SELECT id, %s FROM user", (now,))
         self._mysql.commit()
 
     def delete_log(self, user_id):
