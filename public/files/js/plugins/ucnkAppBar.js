@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'conf', 'tpl/document'], function ($, conf, layoutModel) {
+define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel, win) {
     'use strict';
 
     var lib = {};
@@ -33,6 +33,22 @@ define(['jquery', 'conf', 'tpl/document'], function ($, conf, layoutModel) {
         promise.fail(function(jqXHR, textStatus, errorThrown) {
              layoutModel.showMessage('error', errorThrown); // TODO
         });
+    };
+
+    lib.init = function (pluginApi) {
+        var code = JSON.parse($('#cnc-toolbar-data').text()),
+            ans;
+
+        if (!pluginApi.userIsAnonymous() && !code['id']) {
+            ans = confirm('You have been logged-out. Do you want to log in again?');
+
+            if (ans === true) {
+                win.location = pluginApi.conf('loginUrl');
+
+            } else {
+                pluginApi.resetToHomepage({remote: 1});
+            }
+        }
     };
 
     return lib;

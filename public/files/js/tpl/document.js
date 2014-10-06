@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'queryInput', 'popupbox',
-        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox) {
+define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
+        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox, applicationBar) {
     'use strict';
 
     var lib = {};
@@ -1052,6 +1052,22 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
 
             registerReset : function (fn) {
                 self.pluginResets.push(fn);
+            },
+
+            resetToHomepage : function (params) {
+                var p,
+                    ans = [];
+
+                for(p in params) {
+                    if (params.hasOwnProperty(p)) {
+                        ans.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                    }
+                }
+                win.location = self.conf.rootURL + 'first_form?' + ans.join('&');
+            },
+
+            userIsAnonymous : function () {
+                return self.conf.anonymousUser;
             }
         };
     };
@@ -1194,7 +1210,8 @@ define(['win', 'jquery', 'queryInput', 'popupbox',
             timeoutMessages : lib.timeoutMessages(),
             mouseOverImages : lib.mouseOverImages(),
             enhanceMessages : lib.enhanceMessages(),
-            externalHelpLinks : lib.externalHelpLinks()
+            externalHelpLinks : lib.externalHelpLinks(),
+            applicationBar : applicationBar.init(lib.pluginApi())
         });
 
         $.each(this.initCallbacks, function (i, fn) {
