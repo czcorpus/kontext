@@ -55,6 +55,7 @@ class CacheMapping(object):
             flck_sh_lock(f)
             ans = cPickle.load(f)
             flck_unlock(f)
+            f.close()
         except cPickle.UnpicklingError as ex:
             logging.getLogger(__name__).warning('Failed to unpickle cache mapping file: %s' % ex)
             os.unlink(self._cache_dir + self.CACHE_FILENAME)
