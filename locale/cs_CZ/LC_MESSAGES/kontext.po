@@ -2075,6 +2075,9 @@ msgstr "Zobrazit frekvence lemmat"
 msgid "Lemmas"
 msgstr "Lemmata"
 
+msgid "You have been logged out. Do you want to log in again?"
+msgstr "Uživatel byl odhlášen. Chcete se znovu přihlásit?"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
