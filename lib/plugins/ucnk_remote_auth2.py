@@ -43,15 +43,18 @@ REVALIDATION_PROBABILITY = 0.1
 
 def create_auth_db_params(conf):
     """
-    conn_params = {}
-    if conf.get('ucnk:auth_db_charset', None):
-        conn_params['charset'] = conf['ucnk:auth_db_charset']
     """
+    if conf['ucnk:auth_db_charset'].lower() in ('utf8', 'utf-8'):
+        use_unicode = True
+    else:
+        use_unicode = False
     return dict(
         host=conf['ucnk:auth_db_host'],
         user=conf['ucnk:auth_db_username'],
         passwd=conf['ucnk:auth_db_password'],
-        db=conf['ucnk:auth_db_name']
+        db=conf['ucnk:auth_db_name'],
+        charset=conf['ucnk:auth_db_charset'],
+        use_unicode=use_unicode
     )
 
 
@@ -146,7 +149,7 @@ class CentralAuth(AbstractAuth):
             if 'u.id' in row:
                 user_data['id'] = row['u.id']
                 user_data['user'] = row['u.user']
-                user_data['fullname'] = u'%s %s' % (row['u.firstName'].decode('utf-8'), row['u.surname'].decode('utf-8'))
+                user_data['fullname'] = u'%s %s' % (row['u.firstName'], row['u.surname'])
             else:
                 user = self.anonymous_user()
                 user_data['id'] = user['id']
