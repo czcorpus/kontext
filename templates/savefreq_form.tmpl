@@ -57,11 +57,18 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savefreqForm, c
             <th>$_("Save frequency list as"):</th>
             <td>
               <label>
-                <input type="radio" name="saveformat" value="text"
-                #if $saveformat == 'text'
+                  <input type="radio" name="saveformat" value="csv"
+                  #if $saveformat == 'csv'
                   checked="checked"
-                #end if
-                /> $_("Text")
+                  #end if
+                  /> CSV
+              </label>
+              <label>
+                  <input type="radio" name="saveformat" value="xlsx"
+                  #if $saveformat == 'xlsx'
+                  checked="checked"
+                  #end if
+                  /> XLSX
               </label>
               <label>
                 <input type="radio" name="saveformat" value="xml"
@@ -71,11 +78,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savefreqForm, c
                 /> $_("XML")
               </label>
               <label>
-                  <input type="radio" name="saveformat" value="csv"
-                  #if $saveformat == 'csv'
+                <input type="radio" name="saveformat" value="text"
+                #if $saveformat == 'text'
                   checked="checked"
-                  #end if
-                  /> CSV
+                #end if
+                /> $_("Text")
               </label>
             </td>
           </tr>
