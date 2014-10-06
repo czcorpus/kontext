@@ -2078,6 +2078,9 @@ msgstr "Lemmata"
 msgid "You have been logged out. Do you want to log in again?"
 msgstr "Uživatel byl odhlášen. Chcete se znovu přihlásit?"
 
+msgid "frequency distribution"
+msgstr "frekvenční distribuce"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

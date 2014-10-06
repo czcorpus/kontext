@@ -21,10 +21,43 @@ like data can be used) to XML format.
 from lxml import etree
 import logging
 
-from . import AbstractExport
+from . import AbstractExport, ExportPluginException
 
 
-class Document(object):
+class FreqDocument(object):
+
+    def __init__(self):
+        self._root = etree.Element('frequency')
+        self._curr_items = None
+
+    def add_block(self, name):
+        curr_block = etree.SubElement(self._root, 'block')
+        name_elm = etree.SubElement(curr_block, 'name')
+        name_elm.text = name
+        self._curr_items = etree.SubElement(curr_block, 'items')
+
+    def add_line(self, data, line_num=None):
+        if self._curr_items is None:
+            self.add_block('')
+        item_elm = etree.SubElement(self._curr_items, 'item')
+
+        if line_num is not None:
+            line_num_elm = etree.SubElement(item_elm, 'num')
+            line_num_elm.text = str(line_num)
+
+        str_elm = etree.SubElement(item_elm, 'str')
+        str_elm.text = data[0]
+        freq_elm = etree.SubElement(item_elm, 'freq')
+        freq_elm.text = data[1]
+        if len(data) > 2:
+            freq_pc_elm = etree.SubElement(item_elm, 'freq_pc')
+            freq_pc_elm.text = data[2]
+
+    def tostring(self):
+        return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
+
+
+class ConcDocument(object):
 
     def __init__(self):
         self._root = etree.Element('concordance')
@@ -44,6 +77,9 @@ class Document(object):
         kwic_elm.text = data.get('kwic', '')
         right_context_elm = etree.SubElement(elm, 'right_context')
         right_context_elm.text = data.get('right_context', '')
+
+    def add_block(self):
+        pass
 
     def add_line(self, data, line_num=None):
         """
@@ -90,8 +126,16 @@ class XMLExport(AbstractExport):
     """
     The plug-in itself
     """
-    def __init__(self):
-        self._document = Document()
+    SUBTYPE_MAP = {
+        'concordance': ConcDocument,
+        'freq': FreqDocument
+    }
+
+    def __init__(self, subtype):
+        subtype_class = self.SUBTYPE_MAP.get(subtype, None)
+        if subtype_class is None:
+            raise ExportPluginException('Unknown export subtype %s' % subtype)
+        self._document = subtype_class()
         self._corpnames = []
 
     def set_corpnames(self, corpnames):
@@ -103,6 +147,9 @@ class XMLExport(AbstractExport):
     def raw_content(self):
         return self._document.tostring()
 
+    def add_block(self, name):
+        self._document.add_block(name)
+
     def writerow(self, line_num, *lang_rows):
         if len(lang_rows) == 0:
             raise ValueError('empty line')
@@ -112,5 +159,5 @@ class XMLExport(AbstractExport):
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
 
 
-def create_instance():
-    return XMLExport()
+def create_instance(subtype):
+    return XMLExport(subtype)

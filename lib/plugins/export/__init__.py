@@ -24,6 +24,10 @@ free to be replaced/changed.
 from translation import ugettext as _
 
 
+class ExportPluginException(Exception):
+    pass
+
+
 class AbstractExport(object):
 
     def set_corpnames(self, corpnames):
@@ -52,7 +56,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name):
+    def load_plugin(self, name, subtype=None):
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
@@ -60,6 +64,7 @@ class Loader(object):
 
         arguments:
         name -- name of the module
+        subtype -- additional type specification (e.g. main type is "XML export", subtype is "frequency distribution")
 
         returns:
         required module or nothing if module is not found
@@ -68,7 +73,7 @@ class Loader(object):
             raise ValueError(_('Export module [%s] not configured') % name)
         module_name = self._module_map[name]
         module = __import__('plugins.export.%s' % module_name, fromlist=[module_name])
-        plugin = module.create_instance()
+        plugin = module.create_instance(subtype=subtype)
         return plugin
 
 

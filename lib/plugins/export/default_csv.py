@@ -51,7 +51,13 @@ class UnicodeCSVWriter:
         self.encoder = codecs.getincrementalencoder(encoding)()
 
     def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
+        normalized_row = []
+        for item in row:
+            if type(item) not in (str, unicode):
+                item = str(item)
+            item = item.encode("utf-8")
+            normalized_row.append(item)
+        self.writer.writerow(normalized_row)
         data = self.queue.getvalue()
         data = data.decode("utf-8")
         # ... and reencode it into the target encoding
@@ -71,9 +77,13 @@ class CSVExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self):
+    def __init__(self, subtype):
         self.csv_buff = Writeable()
         self.csv_writer = UnicodeCSVWriter(self.csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+        if subtype == 'concordance':
+            self._import_row = lang_row_to_list
+        else:
+            self._import_row = lambda x: x
 
     def content_type(self):
         return 'text/csv'
@@ -86,9 +96,9 @@ class CSVExport(AbstractExport):
         if line_num is not None:
             row.append(line_num)
         for lang_row in lang_rows:
-            row += lang_row_to_list(lang_row)
+            row += self._import_row(lang_row)
         self.csv_writer.writerow(row)
 
 
-def create_instance():
-    return CSVExport()
+def create_instance(subtype):
+    return CSVExport(subtype)
