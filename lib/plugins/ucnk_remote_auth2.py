@@ -29,6 +29,8 @@ Required config.xml/plugins entries:
 """
 
 import urllib
+import random
+import logging
 
 from abstract.auth import AbstractAuth
 
@@ -36,6 +38,7 @@ import MySQLdb
 
 
 IMPLICIT_CORPUS = 'susanne'
+REVALIDATION_PROBABILITY = 0.1
 
 
 def create_auth_db_params(conf):
@@ -54,6 +57,10 @@ def create_auth_db_params(conf):
 
 def connect_auth_db(**conn_params):
     return MySQLdb.connect(**conn_params)
+
+
+def _toss():
+    return random.random() < REVALIDATION_PROBABILITY
 
 
 class CentralAuth(AbstractAuth):
@@ -123,7 +130,8 @@ class CentralAuth(AbstractAuth):
         user_data = session['user']
         ticket_id = self.get_ticket(cookies)
 
-        if not user_data.get('revalidated', None) or 'remote=1' in query_string.split('&'):
+        if not user_data.get('revalidated', None) or 'remote=1' in query_string.split('&') or _toss():
+            logging.getLogger(__name__).debug('re-validating user')
             cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
             db = connect_auth_db(**self.auth_db_params)
             cursor = db.cursor()
@@ -145,9 +153,6 @@ class CentralAuth(AbstractAuth):
                 user_data['user'] = user['user']
                 user_data['fullname'] = user['fullname']
             user_data['revalidated'] = True
-        else:
-            import logging
-            logging.getLogger(__name__).debug('passing without re-validation')
 
     def get_corplist(self, user):
         """
