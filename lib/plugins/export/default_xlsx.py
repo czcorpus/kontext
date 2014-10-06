@@ -33,11 +33,16 @@ from translation import ugettext as _
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self):
+    def __init__(self, subtype):
         self._wb = Workbook()
         self._sheet = self._wb.active
-        self._sheet.title = _('concordance')
         self._curr_line = 1
+        if subtype == 'concordance':
+            self._sheet.title = _('concordance')
+            self._import_row = lang_row_to_list
+        else:
+            self._sheet.title = _('frequency distribution')
+            self._import_row = lambda x: x
 
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -50,7 +55,7 @@ class XLSXExport(AbstractExport):
     def writerow(self, line_num, *lang_rows):
         row = []
         for lang_row in lang_rows:
-            row += lang_row_to_list(lang_row)
+            row += self._import_row(lang_row)
 
         for i in range(1, len(row) + 1):
             col = get_column_letter(i)
@@ -58,5 +63,5 @@ class XLSXExport(AbstractExport):
         self._curr_line += 1
 
 
-def create_instance():
-    return XLSXExport()
+def create_instance(subtype):
+    return XLSXExport(subtype)

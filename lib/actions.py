@@ -1058,40 +1058,34 @@ class Actions(Kontext):
 
         result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
         saved_filename = self._canonical_corpname(self.corpname)
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
-            for b in result['Blocks']:
-                b['blockname'] = b['Head'][0]['n']
-            tpl_data = result
-        elif saveformat == 'text':
+
+        if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % saved_filename
-            tpl_data = result
-        elif saveformat == 'csv':
-            from butils import UnicodeCSVWriter, Writeable
-            from codecs import BOM_UTF8
+            output = result
+        elif saveformat in ('csv', 'xml', 'xlsx'):
+            mkfilename = lambda suffix: '%s-freq-distrib.%s' % (self._canonical_corpname(self.corpname), suffix)
+            writer = plugins.export.load_plugin(saveformat, subtype='freq')
 
-            self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.csv"' % saved_filename
-
-            csv_buff = Writeable()
-            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            self._headers['Content-Type'] = writer.content_type()
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
 
             for block in result['Blocks']:
+                col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
+                if saveformat == 'xml':
+                    col_names.insert(0, 'str')
+                if hasattr(writer, 'add_block'):
+                    writer.add_block('')  # TODO block name
                 # write the header first, if required
-                if colheaders:
-                    csv_writer.writerow([item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
+                if colheaders and saveformat != 'xml':
+                    writer.writerow(None, [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
                     # then write the data (first block only)
+                i = 1
                 for item in block['Items']:
-                    csv_writer.writerow([w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
-                csv_writer.writerow('')
-
-            tpl_data = {
-                'csv_rows': [row.decode('utf-8') for row in csv_buff.rows],
-                'bom_prefix': BOM_UTF8.decode('utf-8')
-            }
-        return tpl_data
+                    writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
+                    i += 1
+            output = writer.raw_content()
+        return output
 
     @exposed(access_level=1, template='freqs.tmpl', accept_kwargs=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
@@ -2038,7 +2032,7 @@ class Actions(Kontext):
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
                 output.update(data)
             elif saveformat in ('csv', 'xlsx', 'xml'):
-                writer = plugins.export.load_plugin(saveformat)
+                writer = plugins.export.load_plugin(saveformat, subtype='concordance')
 
                 self._headers['Content-Type'] = writer.content_type()
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
