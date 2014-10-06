@@ -40,7 +40,7 @@ define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel
             ans;
 
         if (!pluginApi.userIsAnonymous() && !code['id']) {
-            ans = confirm('You have been logged-out. Do you want to log in again?');
+            ans = confirm(pluginApi.translate('you have been logged out'));
 
             if (ans === true) {
                 win.location = pluginApi.conf('loginUrl');
