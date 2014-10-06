@@ -814,7 +814,7 @@ class Kontext(Controller):
         """
         import plugins
 
-        for opt_plugin in ('live_attributes', 'query_storage'):
+        for opt_plugin in ('live_attributes', 'query_storage', 'application_bar'):
             js_file_key = '%s_js' % opt_plugin
             result[js_file_key] = None
             if plugins.has_plugin(opt_plugin):

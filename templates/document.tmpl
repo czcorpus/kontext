@@ -85,6 +85,11 @@ paths['plugins/queryStorage'] = './plugins/$query_storage_js';
 #else
 missingPlugins.push('plugins/queryStorage');
 #end if
+#if $application_bar_js
+paths['plugins/applicationBar'] = './plugins/$application_bar_js';
+#else
+missingPlugins.push('plugins/applicationBar');
+#end if
 #if $qunit_test
 paths['vendor/QUnit'] = './vendor/qunit'
 #end if
