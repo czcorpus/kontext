@@ -50,6 +50,9 @@ define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel
                 } else {
                     pluginApi.resetToHomepage({remote: 1});
                 }
+
+            } else if (pluginApi.userIsAnonymous() && typeof code['id'] === 'number') {
+                pluginApi.resetToHomepage({remote: 1});
             }
 
         } catch (e) {
