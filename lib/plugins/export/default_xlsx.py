@@ -40,8 +40,14 @@ class XLSXExport(AbstractExport):
         if subtype == 'concordance':
             self._sheet.title = _('concordance')
             self._import_row = lang_row_to_list
-        else:
+        elif subtype == 'freq':
             self._sheet.title = _('frequency distribution')
+            self._import_row = lambda x: x
+        elif subtype == 'wordlist':
+            self._sheet.title = _('word list')
+            self._import_row = lambda x: x
+        elif subtype == 'coll':
+            self._sheet.title = _('collocations')
             self._import_row = lambda x: x
 
     def content_type(self):
@@ -52,8 +58,16 @@ class XLSXExport(AbstractExport):
         self._wb.save(filename=output)
         return output.getvalue()
 
+    def writeheading(self, data):
+        for i in range(1, len(data) + 1):
+            col = get_column_letter(i)
+            self._sheet.cell('%s%s' % (col, self._curr_line)).value = data[i - 1]
+        self._curr_line += 1
+
     def writerow(self, line_num, *lang_rows):
         row = []
+        if line_num is not None:
+            row.append(line_num)
         for lang_row in lang_rows:
             row += self._import_row(lang_row)
 

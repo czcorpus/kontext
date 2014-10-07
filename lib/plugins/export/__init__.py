@@ -42,6 +42,9 @@ class AbstractExport(object):
     def writerow(self, line_num, *lang_rows):
         raise NotImplementedError()
 
+    def writeheading(self, data):
+        pass  # optional implementation
+
 
 def lang_row_to_list(row):
     ans = []

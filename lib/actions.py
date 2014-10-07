@@ -1037,7 +1037,7 @@ class Actions(Kontext):
 
     @exposed(access_level=1, vars=('Desc',))
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
-                 saveformat='text', from_line=1, to_line='', colheaders=0):
+                 saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
         save a frequency list
         """
@@ -1076,10 +1076,9 @@ class Actions(Kontext):
                     col_names.insert(0, 'str')
                 if hasattr(writer, 'add_block'):
                     writer.add_block('')  # TODO block name
-                # write the header first, if required
-                if colheaders and saveformat != 'xml':
-                    writer.writerow(None, [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
-                    # then write the data (first block only)
+
+                if colheaders or heading:
+                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
                 i = 1
                 for item in block['Items']:
                     writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
@@ -1195,37 +1194,25 @@ class Actions(Kontext):
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self._canonical_corpname(self.corpname)
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.xml"' % saved_filename
-            result['Scores'] = result['Head'][2:]
-            tpl_data = result
-        elif saveformat == 'text':
+        if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % saved_filename
-            tpl_data = result
-        elif saveformat == 'csv':
-            from butils import UnicodeCSVWriter, Writeable
-            from codecs import BOM_UTF8
+            out_data = result
+        elif saveformat in ('csv', 'xml', 'xlsx'):
+            mkfilename = lambda suffix: '%s-collocations.%s' % (self._canonical_corpname(self.corpname), suffix)
+            writer = plugins.export.load_plugin(saveformat, subtype='coll')
 
-            csv_buff = Writeable()
-            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
-            self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.csv' % saved_filename
+            self._headers['Content-Type'] = writer.content_type()
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
 
-            # write the header first, if required
-            if colheaders:
-                csv_writer.writerow([item['n'] for item in result['Head']])
-                # then write the data
+            if colheaders or heading:
+                writer.writeheading([''] + [item['n'] for item in result['Head']])
+            i = 1
             for item in result['Items']:
-                csv_writer.writerow(
-                    (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
-
-            tpl_data = {
-                'data': [row.decode('utf-8') for row in csv_buff.rows],
-                'bom_prefix': BOM_UTF8.decode('utf-8')
-            }
-        return tpl_data
+                writer.writerow(i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+                i += 1
+            out_data = writer.raw_content()
+        return out_data
 
     @exposed(access_level=1, template='widectx.tmpl')
     def structctx(self, pos=0, struct='doc'):
@@ -1577,7 +1564,7 @@ class Actions(Kontext):
 
     @exposed(access_level=1)
     def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
-               ref_usesubcorp='', saveformat='text', colheaders=0):
+               ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
         """
@@ -1606,9 +1593,8 @@ class Actions(Kontext):
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
 
             # write the header first, if required
-            if colheaders:
-                writer.writerow((self.wlattr, 'freq'))
-                # then write the data
+            if colheaders or heading:
+                writer.writeheading(('', self.wlattr, 'freq'))
             i = 1
             for item in ans['Items']:
                 writer.writerow(i, (item['str'], str(item['freq'])))
