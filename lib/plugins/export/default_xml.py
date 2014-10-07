@@ -24,10 +24,37 @@ import logging
 from . import AbstractExport, ExportPluginException
 
 
-class FreqDocument(object):
+class GeneralDocument(object):
+
+    def __init__(self, root_name):
+        self._root = etree.Element(root_name)
+
+    def tostring(self):
+        return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
+
+
+class WordlistDocument(GeneralDocument):
 
     def __init__(self):
-        self._root = etree.Element('frequency')
+        super(WordlistDocument, self).__init__('word_list')
+        self._heading = etree.SubElement(self._root, 'heading')
+        self._items = etree.SubElement(self._root, 'items')
+
+    def add_line(self, data, line_num=None):
+        item_elm = etree.SubElement(self._items, 'item')
+        if line_num is not None:
+            line_num_elm = etree.SubElement(item_elm, 'num')
+            line_num_elm.text = str(line_num)
+        str_elm = etree.SubElement(item_elm, 'str')
+        str_elm.text = data[0]
+        freq_elm = etree.SubElement(item_elm, 'freq')
+        freq_elm.text = str(data[1])
+
+
+class FreqDocument(GeneralDocument):
+
+    def __init__(self):
+        super(WordlistDocument, self).__init__('frequency')
         self._curr_items = None
 
     def add_block(self, name):
@@ -53,14 +80,11 @@ class FreqDocument(object):
             freq_pc_elm = etree.SubElement(item_elm, 'freq_pc')
             freq_pc_elm.text = data[2]
 
-    def tostring(self):
-        return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
 
-
-class ConcDocument(object):
+class ConcDocument(GeneralDocument):
 
     def __init__(self):
-        self._root = etree.Element('concordance')
+        super(WordlistDocument, self).__init__('concordance')
         self._lines = etree.Element('lines')
         self._root.append(self._lines)
 
@@ -118,9 +142,6 @@ class ConcDocument(object):
                 logging.getLogger(__name__).warning('Unable to fetch corpname for XML export')
             self._append_lang(parline_elm, lang_row)
 
-    def tostring(self):
-        return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
-
 
 class XMLExport(AbstractExport):
     """
@@ -128,7 +149,8 @@ class XMLExport(AbstractExport):
     """
     SUBTYPE_MAP = {
         'concordance': ConcDocument,
-        'freq': FreqDocument
+        'freq': FreqDocument,
+        'wordlist': WordlistDocument
     }
 
     def __init__(self, subtype):
