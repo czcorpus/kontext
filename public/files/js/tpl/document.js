@@ -28,6 +28,9 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     var lib = {};
 
     lib.conf = {};
+    lib.plugins = {
+        applicationBar : applicationBar
+    };
     lib.pluginResets = [];
     lib.initCallbacks = [];
 
@@ -61,13 +64,56 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
         }
     }
 
+    /**
+     * Adds a plug-in to the model. In general, it is not
+     * required to do this on a page using some plug-in but
+     * in that case it will not be possible to use plug-in
+     * related methods of document.js model.
+     *
+     * @param name
+     * @param plugin
+     */
+    lib.registerPlugin = function (name, plugin) {
+        lib.plugins[name] = plugin;
+    };
 
     /**
+     * Calls a function on a registered plug-in with some additional
+     * testing of target's callability.
      *
-     * @param fn
+     * @param {string} name
+     * @param {string} fn
+     * @param {string} [args]
+     * @return the same value as called plug-in method
+     */
+    lib.callPlugin = function (name, fn, args) {
+        if (typeof lib.plugins[name] === 'object'
+                && typeof lib.plugins[name][fn] === 'function') {
+            return lib.plugins[name][fn].apply(lib.plugins[name][fn], args);
+
+        } else {
+            throw new Error("Failed to call method " + fn + " on plug-in " + name);
+        }
+    };
+
+    /**
+     * Registers a callback called during model initialization.
+     * It can be either a function or an object specifying plug-in's function
+     * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
+     * @param {function|object} fn
      */
     lib.registerInitCallback = function (fn) {
-        this.initCallbacks.push(fn);
+        if (typeof fn === 'function') {
+            this.initCallbacks.push(fn);
+
+        } else if (typeof fn === 'object' && fn['plugin'] && fn['method']) {
+            this.initCallbacks.push(function () {
+                lib.callPlugin(fn['plugin'], fn['method'], fn['args']);
+            });
+
+        } else {
+            throw new Error('Registered invalid callback');
+        }
     };
 
     /**
