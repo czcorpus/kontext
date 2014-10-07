@@ -71,11 +71,13 @@
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <options_dir>/var/local/corpora/registry/options</options_dir>
-        <cache_dir>/var/local/corpora/cache</cache_dir>
         <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
         <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
+        <cache_dir>/var/local/corpora/cache</cache_dir>
         <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
+        <!-- freqs_cache_dir is optional; if omitted then cache_dir value is used -->
+        <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
