@@ -31,6 +31,7 @@ define(['tpl/document', 'plugins/queryStorage'], function (layoutModel, querySto
      * @param conf page configuration data
      */
     lib.init = function (conf) {
+        layoutModel.registerPlugin('queryStorage', queryStorage);
         layoutModel.init(conf).add({
             queryStorage : queryStorage.init(layoutModel.pluginApi())
         });

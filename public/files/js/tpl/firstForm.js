@@ -367,6 +367,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     lib.init = function (conf) {
         var promises;
 
+        layoutModel.registerPlugin('queryStorage', queryStorage);
         clStorage.clear();
 
         promises = layoutModel.init(conf).add({
