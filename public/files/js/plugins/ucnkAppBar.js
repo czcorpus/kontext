@@ -36,18 +36,24 @@ define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel
     };
 
     lib.init = function (pluginApi) {
-        var code = JSON.parse($('#cnc-toolbar-data').text()),
+        var code,
             ans;
 
-        if (!pluginApi.userIsAnonymous() && !code['id']) {
-            ans = confirm(pluginApi.translate('you have been logged out'));
+        try {
+            code = JSON.parse($('#cnc-toolbar-data').text());
+            if (!pluginApi.userIsAnonymous() && !code['id']) {
+                ans = confirm(pluginApi.translate('you have been logged out'));
 
-            if (ans === true) {
-                win.location = pluginApi.conf('loginUrl');
+                if (ans === true) {
+                    win.location = pluginApi.conf('loginUrl');
 
-            } else {
-                pluginApi.resetToHomepage({remote: 1});
+                } else {
+                    pluginApi.resetToHomepage({remote: 1});
+                }
             }
+
+        } catch (e) {
+            console.error(e);
         }
     };
 

@@ -47,8 +47,8 @@ class ApplicationBar(AbstractApplicationBar):
     def get_fallback_content(self):
         return """<div class="appbar-loading-msg"><span>loading toolbar...</span></div>
         <script type="text/javascript">
-        require(['plugins/ucnkAppBar', 'tpl/document'], function (appBar, document) {
-            document.registerInitCallback(appBar.toolbarReloader);
+        require(['tpl/document'], function (document) {
+            document.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
         });
         </script>"""
 
