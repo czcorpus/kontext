@@ -89,18 +89,19 @@ class DefaultSessions(AbstractSessions):
         you should take that session_id and write it to cookies if you call this
         method.
 
-        Parameters
-        ----------
-        session_id : str
-            identifier of the session
+        arguments:
+        session_id -- identifier of the session (if None is provided then new session is started)
 
-        fallback_data : dict
-            data to be used and written in case the session does not exist
+        fallback_data -- a dict to be used and written in case the session does not exist
         """
         if random.random() < DefaultSessions.DEFAULT_CLEANUP_PROBABILITY:
             self.delete_old_sessions()
 
-        session_data = self.db.get(self._mk_key(session_id))
+        if session_id is not None:
+            session_data = self.db.get(self._mk_key(session_id))
+        else:
+            session_data = None
+
         if session_data is not None:
             return {'id': session_id, 'data': session_data}
         else:
