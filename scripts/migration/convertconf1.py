@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-A migration script for config.xml from versions 0.5.x to the version 0.6
+A migration script for config.xml from versions 0.5.x to the version 0.6.0
 """
 
 import argparse
@@ -8,6 +8,7 @@ import argparse
 from lxml import etree
 
 MAIN_TAGSET = 'pp_tagset'
+MAIN_TAGSET_NUM_POS = 16
 
 
 def rename_attrib(elm, old_name, new_name):
@@ -106,7 +107,7 @@ def update_corptree(xml, omit_ucnk):
     for corpus in xml.xpath('//corplist/corpus'):
         rename_attrib(corpus, 'id', 'ident')
         if 'num_tag_pos' in corpus.attrib:
-            if corpus.attrib['num_tag_pos'] == '16':
+            if corpus.attrib['num_tag_pos'] == str(MAIN_TAGSET_NUM_POS):
                 corpus.attrib['tagset'] = MAIN_TAGSET
             del corpus.attrib['num_tag_pos']
 
@@ -123,6 +124,7 @@ def update_tagspec(xml, omit_ucnk):
 
     new_tagset_elm = etree.Element('tagset')
     new_tagset_elm.attrib['ident'] = MAIN_TAGSET
+    new_tagset_elm.attrib['num_pos'] = str(MAIN_TAGSET_NUM_POS)
     tagsets_elm.append(new_tagset_elm)
 
     for item in old_tagset_list:
