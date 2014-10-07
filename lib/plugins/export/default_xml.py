@@ -29,8 +29,39 @@ class GeneralDocument(object):
     def __init__(self, root_name):
         self._root = etree.Element(root_name)
 
+    @staticmethod
+    def add_line_number(elm, num):
+        if num is not None:
+            line_num_elm = etree.SubElement(elm, 'num')
+            line_num_elm.text = str(num)
+
     def tostring(self):
         return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
+
+
+class CollDocument(GeneralDocument):
+
+    def __init__(self):
+        super(CollDocument, self).__init__('collocations')
+        self._heading = etree.SubElement(self._root, 'heading')
+        self._items = etree.SubElement(self._root, 'items')
+
+    def add_heading(self, data):
+        scores_elm = etree.SubElement(self._heading, 'scores')
+        for d in data:
+            score_elm = etree.SubElement(scores_elm, 'score')
+            score_elm.text = str(d)
+
+    def add_line(self, data, line_num=None):
+        item_elm = etree.SubElement(self._items, 'item')
+        self.add_line_number(item_elm, line_num)
+        str_elm = etree.SubElement(item_elm, 'str')
+        str_elm.text = data[0]
+        freq_elm = etree.SubElement(item_elm, 'freq')
+        freq_elm.text = str(data[1])
+        for v in data[2:]:
+            score_elm = etree.SubElement(item_elm, 'score')
+            score_elm.text = str(v)
 
 
 class WordlistDocument(GeneralDocument):
@@ -50,11 +81,14 @@ class WordlistDocument(GeneralDocument):
         freq_elm = etree.SubElement(item_elm, 'freq')
         freq_elm.text = str(data[1])
 
+    def add_heading(self, data):
+        pass
+
 
 class FreqDocument(GeneralDocument):
 
     def __init__(self):
-        super(WordlistDocument, self).__init__('frequency')
+        super(FreqDocument, self).__init__('frequency')
         self._curr_items = None
 
     def add_block(self, name):
@@ -80,11 +114,14 @@ class FreqDocument(GeneralDocument):
             freq_pc_elm = etree.SubElement(item_elm, 'freq_pc')
             freq_pc_elm.text = data[2]
 
+    def add_heading(self, data):
+        pass
+
 
 class ConcDocument(GeneralDocument):
 
     def __init__(self):
-        super(WordlistDocument, self).__init__('concordance')
+        super(ConcDocument, self).__init__('concordance')
         self._lines = etree.Element('lines')
         self._root.append(self._lines)
 
@@ -103,6 +140,9 @@ class ConcDocument(GeneralDocument):
         right_context_elm.text = data.get('right_context', '')
 
     def add_block(self):
+        pass
+
+    def add_heading(self, data):
         pass
 
     def add_line(self, data, line_num=None):
@@ -150,7 +190,8 @@ class XMLExport(AbstractExport):
     SUBTYPE_MAP = {
         'concordance': ConcDocument,
         'freq': FreqDocument,
-        'wordlist': WordlistDocument
+        'wordlist': WordlistDocument,
+        'coll': CollDocument
     }
 
     def __init__(self, subtype):
@@ -171,6 +212,9 @@ class XMLExport(AbstractExport):
 
     def add_block(self, name):
         self._document.add_block(name)
+
+    def writeheading(self, data):
+        self._document.add_heading(data)
 
     def writerow(self, line_num, *lang_rows):
         if len(lang_rows) == 0:

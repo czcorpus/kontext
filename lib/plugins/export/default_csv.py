@@ -91,6 +91,9 @@ class CSVExport(AbstractExport):
     def raw_content(self):
         return ''.join(self.csv_buff.rows)
 
+    def writeheading(self, data):
+        self.csv_writer.writerow(data)
+
     def writerow(self, line_num, *lang_rows):
         row = []
         if line_num is not None:
