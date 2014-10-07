@@ -20,7 +20,8 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, layoutModel, treeComponent, popupBox) {
+define(['jquery', 'tpl/document', 'treecomponent', 'popupbox', 'plugins/liveAttributes'], function ($, layoutModel,
+        treeComponent, popupBox, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -124,11 +125,26 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, lay
      * @param conf
      */
     lib.init = function (conf) {
+
+        var ExtendedApi = function () {
+            this.queryFieldsetToggleEvents = [];
+        };
+
+        ExtendedApi.prototype = layoutModel.pluginApi();
+
+        ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
+            this.queryFieldsetToggleEvents.push(fn);
+        };
+
+        lib.extendedApi = new ExtendedApi();
+
         layoutModel.init(conf);
         lib.initTreeComponent();
         lib.initSubcCreationVariantSwitch();
         lib.initAttributeHints();
         lib.sizeUnitsSafeSwitch();
+        liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
+            '.text-type-params')
     };
 
 
