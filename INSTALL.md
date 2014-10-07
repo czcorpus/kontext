@@ -39,9 +39,13 @@ is */etc/apache2/sites-available/*):
 
     WSGIScriptAlias / /path/to/kontext/public/app.py
     WSGIDaemonProcess kontext_app processes=2 threads=15 display-name=%{GROUP}
-    WSGIProcessGroup kontext_app
+    WSGIProcessGroup %{GLOBAL}
 </VirtualHost>
 ```
+
+*Important notice*: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this concrete
+form as in other case you may experience occasional error responses from Apache server
+(see https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API for details).
 
 Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also possible.
 Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
