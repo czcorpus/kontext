@@ -1495,6 +1495,7 @@ class Actions(Kontext):
             'from_line=1&to_line=&wlsort=%(wlsort)s') % {'wlattr': self.wlattr, 'wlpat': wlpat, 'wlsort': self.wlsort}
 
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
+            self._add_save_menu_item('XLSX', 'savewl', params % 'xlsx')
             self._add_save_menu_item('XML', 'savewl', params % 'xml')
             self._add_save_menu_item('TXT', 'savewl', params % 'text')
             # custom save is solved in templates because of compatibility issues
@@ -1593,33 +1594,27 @@ class Actions(Kontext):
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
         saved_filename = self._canonical_corpname(self.corpname)
-        if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
-            tpl_data = ans
-        elif saveformat == 'text':
+        if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % saved_filename
-            tpl_data = ans
-        elif saveformat == 'csv':
-            from butils import UnicodeCSVWriter, Writeable
-            from codecs import BOM_UTF8
+            out_data = ans
+        elif saveformat in ('csv', 'xml', 'xlsx'):
+            mkfilename = lambda suffix: '%s-word-list.%s' % (self._canonical_corpname(self.corpname), suffix)
+            writer = plugins.export.load_plugin(saveformat, subtype='wordlist')
 
-            csv_buff = Writeable()
-            csv_writer = UnicodeCSVWriter(csv_buff, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL)
+            self._headers['Content-Type'] = writer.content_type()
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
+
             # write the header first, if required
             if colheaders:
-                csv_writer.writerow((self.wlattr, 'freq'))
+                writer.writerow((self.wlattr, 'freq'))
                 # then write the data
+            i = 1
             for item in ans['Items']:
-                csv_writer.writerow((item['str'], str(item['freq'])))
-            tpl_data = {
-                'data': [row.decode('utf-8') for row in csv_buff.rows],
-                'bom_prefix': BOM_UTF8.decode('utf-8')
-            }
-            self._headers['Content-Type'] = 'text/csv'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.csv"' % saved_filename
-        return tpl_data
+                writer.writerow(i, (item['str'], str(item['freq'])))
+                i += 1
+            out_data = writer.raw_content()
+        return out_data
 
     @exposed()
     def wordlist_process(self, attrname=''):
