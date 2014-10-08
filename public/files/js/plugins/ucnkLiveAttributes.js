@@ -161,7 +161,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                                 var bibHtml = $('<div></div>');
 
                                 $(ajaxAnimElm).remove();
-                                self.renderBibliography(data, bibHtml);
+                                self.renderBibliography(data['bib_data'], bibHtml);
                                 tooltipBox.importElement(bibHtml);
                                 finalizeCallback();
                             },
