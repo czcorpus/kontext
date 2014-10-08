@@ -2265,10 +2265,13 @@ class Actions(Kontext):
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         import json
 
-        sel_lines = json.loads(rows)
-        self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(['[#%s]' % x for x in sel_lines])))
+        data = json.loads(rows)
+        expand = lambda x, n: range(x, x + n)
+        sel_lines = []
+        for item in data:
+            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
+        self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
         q_id = self._store_conc_params()
-
         return {
             'id' : q_id,
             'next_url' : 'view?corpname=' + self.corpname + '&q=~' + q_id

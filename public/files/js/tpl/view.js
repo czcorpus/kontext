@@ -130,10 +130,11 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      */
     function rowSelectionEvent() {
         $('#conc-wrapper').on('click', 'input[type=\'checkbox\']', function (e) {
-            var id = $(e.currentTarget).attr('value');
+            var id = $(e.currentTarget).attr('value'),
+                kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
 
             if ($(e.currentTarget).is(':checked')) {
-                clStorage.addLine(id);
+                clStorage.addLine(id, kwiclen);
 
             } else {
                 clStorage.removeLine(id);

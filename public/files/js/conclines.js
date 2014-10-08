@@ -68,11 +68,13 @@ define(['win'], function (win) {
     };
 
     /**
+     * Adds a selected concordance line.
      *
-     * @param id
+     * @param {number} id position number of first kwic word
+     * @param {number} kwiclen number of kwic words
      */
-    ConcLinesStorage.prototype.addLine = function (id) {
-        this.data[id] = 1;
+    ConcLinesStorage.prototype.addLine = function (id, kwiclen) {
+        this.data[id] = kwiclen;
     };
 
     /**
@@ -101,7 +103,7 @@ define(['win'], function (win) {
 
         for (p in this.data) {
             if (this.data.hasOwnProperty(p)) {
-                ans.push(parseInt(p, 10));
+                ans.push([parseInt(p, 10), this.data[p]]);
             }
         }
         return ans;
