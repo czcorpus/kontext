@@ -605,11 +605,7 @@ class Kontext(Controller):
                 disabled_set.add(x)
             self.disabled_menu_items = tuple(disabled_set)
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
-        if type(result) is dict and '__time__' in result:
-            proc_time = result['__time__']
-        else:
-            proc_time = None
-        self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=proc_time)
+        self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=self._proc_time)
 
     def _attach_tag_builder(self, tpl_out):
         """
