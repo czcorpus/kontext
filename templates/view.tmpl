@@ -293,7 +293,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             #for $i, $l in $enumerate($Lines)
             <tr data-toknum="$l.toknum">
                 <td>
-                    <input type="checkbox" value="$l.toknum" />
+                    <input type="checkbox" value="$l.toknum" data-kwiclen="$l.kwiclen" />
                 </td>
                 <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname">
                     $l.ref
