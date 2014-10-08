@@ -866,7 +866,7 @@ class Kontext(Controller):
         result['_anonymous'] = self._user_is_anonymous()
 
         if plugins.has_plugin('auth'):
-            result['login_url'] = plugins.auth.get_login_url(self.get_root_url())
+            result['login_url'] = plugins.auth.get_login_url(self._updated_current_url({'remote': 1}))
             result['logout_url'] = plugins.auth.get_logout_url(self.get_root_url())
         else:
             result['login_url'] = 'login'

@@ -185,11 +185,11 @@ class CentralAuth(AbstractAuth):
         """
         return self.user in self.admins
 
-    def get_login_url(self, root_url):
-        return self.login_url % (urllib.quote('%sfirst_form' % root_url))
+    def get_login_url(self, return_url):
+        return self.login_url % (urllib.quote(return_url))
 
-    def get_logout_url(self, root_url):
-        return self.logout_url % (urllib.quote('%sfirst_form' % root_url))
+    def get_logout_url(self, return_url):
+        return self.logout_url % (urllib.quote(return_url))
 
 
 def create_instance(conf, db_provider, sessions):
