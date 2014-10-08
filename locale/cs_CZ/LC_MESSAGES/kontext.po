@@ -2081,6 +2081,12 @@ msgstr "Uživatel byl odhlášen. Chcete se znovu přihlásit?"
 msgid "frequency distribution"
 msgstr "frekvenční distribuce"
 
+msgid "highlight selection structure"
+msgstr "zvýraznit strukturu výběru"
+
+msgid "reset selection"
+msgstr "zrušit výběr"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
