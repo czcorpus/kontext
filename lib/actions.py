@@ -2249,8 +2249,8 @@ class Actions(Kontext):
 
     @exposed(return_type='json')
     def bibliography(self, id=''):
-        ans = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
-        return ans
+        bib_data = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
+        return {'bib_data': bib_data}
 
     @exposed(return_type='html', template='empty.tmpl')
     def ajax_get_toolbar(self):
