@@ -262,6 +262,7 @@ class Controller(object):
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._system_messages = []
+        self._proc_time = None
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
@@ -668,7 +669,7 @@ class Controller(object):
         """
         This method wraps all the processing of an HTTP request.
         """
-        start_time = time.time()
+        self._proc_time = time.time()
         path = path if path is not None else self.import_req_path()
         named_args = {}
         headers = []
@@ -717,8 +718,7 @@ class Controller(object):
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
-        if type(result) is dict:
-            result['__time__'] = round(time.time() - start_time, 4)
+        self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
