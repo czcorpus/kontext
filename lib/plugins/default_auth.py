@@ -15,6 +15,7 @@ A simple authentication module to start with.
 It relies on default_db module which requires no database backend.
 """
 import hashlib
+import urllib
 
 from abstract.auth import AbstractAuth
 from translation import ugettext as _
@@ -139,11 +140,17 @@ class DefaultAuthHandler(AbstractAuth):
         """
         return _('Any string can be used.')
 
-    def get_login_url(self, root_url):
-        return '%slogin' % root_url
+    def get_login_url(self, return_url=None):
+        if return_url is not None:
+            return '/login?continue=%s' % urllib.quote(return_url)
+        else:
+            return '/login'
 
-    def get_logout_url(self, root_url):
-        return '%slogoutx' % root_url
+    def get_logout_url(self, return_url=None):
+        if return_url is not None:
+            return '/logoutx?continue=%s' % urllib.quote(return_url)
+        else:
+            return '/logoutx'
 
     def find_user(self, username):
         """
