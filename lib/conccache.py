@@ -47,6 +47,10 @@ class CacheMapping(object):
         self._cache_dir = cache_dir
         self._data = None
 
+    def _clear_cache(self):
+        if os.path.exists(self._cache_dir + self.CACHE_FILENAME):
+            os.unlink(self._cache_dir + self.CACHE_FILENAME)
+
     def _load_map(self):
         import cPickle
         ans = {}
@@ -56,14 +60,9 @@ class CacheMapping(object):
             ans = cPickle.load(f)
             flck_unlock(f)
             f.close()
-        except ValueError as ex:
-            logging.getLogger(__name__).warning('Failed to unpickle cache mapping file: %s' % ex)
-            os.unlink(self._cache_dir + self.CACHE_FILENAME)
-        except cPickle.UnpicklingError as ex:
-            logging.getLogger(__name__).warning('Failed to unpickle cache mapping file: %s' % ex)
-            os.unlink(self._cache_dir + self.CACHE_FILENAME)
-        except IOError as ex:
-            logging.getLogger(__name__).warning('Failed to load concordance cache mapping: %s' % ex)
+        except (ValueError, IOError, EOFError, cPickle.UnpicklingError) as ex:
+            logging.getLogger(__name__).warning('Failed to load/unpickle cache mapping file: %s' % ex)
+            self._clear_cache()
         return ans if ans is not None else {}
 
     def add_to_map(self, pid_dir, subchash, key, size):
