@@ -34,7 +34,7 @@ auth = None  # authentication module (this is set from the outside)
 conf_parsers = {
     'corplist': None,
     'plugins': 'parse_plugins',
-    'tagsets': None,
+    'tagsets': None
 }
 
 
@@ -152,8 +152,6 @@ def parse_general_tree(section):
 
 
 def parse_plugins(root):
-    global _conf, _meta
-
     _conf['plugins'] = {}
     _meta['plugins'] = {}
     for item in root:
@@ -175,8 +173,6 @@ def parse_config(path):
     path : str
       a file system path to the configuration file
     """
-    global _conf, _meta
-
     xml = etree.parse(open(path))
     root = xml.getroot()
 
@@ -251,6 +247,6 @@ def supports_password_change():
 
 
 def _load_version():
-    with open('%s/../package.json' % os.path.dirname(__file__)) as f:
+    with open('%s/../package.json' % os.path.abspath(os.path.dirname(__file__))) as f:
         d = json.load(f)
         set('global', '__version__', d.get('version', '??'))
