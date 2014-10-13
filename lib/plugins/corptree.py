@@ -56,6 +56,7 @@ class CorpTree(object):
     def __init__(self, file_path, root_xpath):
         self.file_path = file_path
         self.root_xpath = root_xpath
+        self._messages = {}
 
     def get_corplist_title(self, elm):
         """
@@ -85,7 +86,18 @@ class CorpTree(object):
 
         for elm in meta_elm:
             if elm.tag == 'desc':
-                ans[elm.attrib['lang']] = markdown(elm.text)
+                if 'ref' in elm.keys():
+                    message_key = elm.attrib['ref']
+                    if message_key in self._messages:
+                        ans = self._messages[message_key]
+                else:
+                    lang_code = elm.attrib['lang']
+                    ans[lang_code] = markdown(elm.text)
+                    if 'ident' in elm.keys():
+                        message_key = elm.attrib['ident']
+                        if message_key not in self._messages:
+                            self._messages[message_key] = {}
+                        self._messages[message_key][lang_code] = ans[lang_code]
         return ans
 
     def _parse_corplist_node(self, root, data, path='/'):
