@@ -378,11 +378,17 @@ define(['win', 'jquery'], function (win, $) {
     lib.open = function (contents, position, options) {
         var box,
             windowClickHandler,
-            whereElm = $('body');
+            whereElm = $('body'),
+            beforeOpen = fetchOptionFunc(options)('beforeOpen', null),
+            beforeOpenValue = null;
 
         options = options || {};
 
-        box = new TooltipBox(position);
+        if (typeof beforeOpen === 'function') {
+            beforeOpenValue = beforeOpen.call(self);
+        }
+
+        box = new TooltipBox(position, beforeOpenValue);
         box.open(whereElm, contents, options);
 
         windowClickHandler = function (event) {
