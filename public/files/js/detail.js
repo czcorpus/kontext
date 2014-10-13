@@ -126,6 +126,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     lib.currentDetail.close();
                 }
                 $(eventTarget).closest('tr').addClass('active');
+                $('#conclines tr.prev-active').removeClass('prev-active');
+
                 lib.currentDetail = popupBox.open(render, null, {
                     type : 'plain',
                     domId : 'detail-frame',
@@ -171,7 +173,13 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     lib.currentDetail.close();
                 }
 
-                $(eventTarget).closest('tr').addClass('active');
+                if (!$(eventTarget).hasClass('expand-link')) {
+                    $('#conclines tr.prev-active').removeClass('prev-active');
+                    $(eventTarget).closest('tr').addClass('active');
+
+                } else {
+                    $('#conclines tr.prev-active').removeClass('prev-active').addClass('active');
+                }
 
                 lib.currentDetail = popupBox.open(data, null, {
                     type : 'plain',
@@ -180,7 +188,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     closeIcon : true,
                     timeout : null,
                     onClose : function () {
-                        $('#conclines tr.active').removeClass('active');
+                        $('#conclines tr.active').removeClass('active').addClass('prev-active');
                         lib.currentDetail = null;
                     }
                 });
