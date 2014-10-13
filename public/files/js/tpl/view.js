@@ -265,7 +265,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             }
 
             detail.showDetail(
-                event.target,
+                event.currentTarget,
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
                 function (jqXHR, textStatus, error) {
@@ -329,7 +329,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         $('a.expand-link').each(function () {
             $(this).one('click', function (event) {
                 detail.showDetail(
-                    event.target,
+                    event.currentTarget,
                     $(this).data('url'),
                     $(this).data('params'),
                     function (jqXHR, textStatus, errorThrown) {
