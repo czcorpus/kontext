@@ -493,17 +493,19 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
             }
         );
 
-        $(win).on('typeahead:opened', function () {
+        $(srchField).on('typeahead:opened', function () {
+            $('#make-concordance-button').attr('disabled', true);
             $(self.rootUl).hide();
             $('.tt-dropdown-menu').css('display', 'inherit');
         });
 
-        $(win).on('typeahead:closed', function () {
+        $(srchField).on('typeahead:closed', function () {
             $(self.rootUl).show();
             $(srchField).typeahead('val', '');
         });
 
-        $(win).on('typeahead:selected', function (jQuery, suggestion) {
+        $(srchField).on('typeahead:selected', function (jQuery, suggestion) {
+            $('#make-concordance-button').attr('disabled', null);
             $(self.nestedTree.leafValues[suggestion.value]).click();
         });
     };
