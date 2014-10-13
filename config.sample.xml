@@ -11,7 +11,7 @@
             <user>janedoe</user>
         </administrators>
         <fonts>
-            <item>http://fonts.googleapis.com/css?family=Roboto:400,700|Roboto+Condensed:400,700&amp;subset=latin-ext</item>
+            <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
         </fonts>
         <translations>
             <language label="česky">cs</language>
