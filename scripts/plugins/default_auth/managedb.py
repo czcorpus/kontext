@@ -32,8 +32,12 @@ if __name__ == '__main__':
         query_storage = default_query_storage.create_instance(settings, db)
 
         for item in src_data:
-            user_key = 'user:%04d' % item['id']
+            user_key = 'user:%d' % item['id']
+            corplist_key = 'corplist:user:%d' % item['id']
+            corpora = item['corpora']
+            del item['corpora']
             db.set(user_key, item)
+            db.set(corplist_key, corpora)
             db.hash_set('user_index', item['username'], user_key)
 
         print(src_data)
