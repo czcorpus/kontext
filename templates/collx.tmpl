@@ -40,7 +40,7 @@ $_("Collocations")#slurp
 <section>
     #filter WebSafe
     <h2>$_("Collocation candidates")</h2>
-    #block navigation($navid="next")
+    #block collx_navigation($navid="next")
 
     #set $allhref = 'collx?%s;%s;cattr=%s;cbgrfns=%s;cminfreq=%s;cminbgr=%s;cfromw=%s;ctow=%s;csortfn=%s' % ($q, $globals, $cattr, $cbgrfns, $cminfreq, $cminbgr, $cfromw, $ctow, $csortfn)
     #if $collpage > 1 or not $lastpage
@@ -116,7 +116,7 @@ $_("Collocations")#slurp
     #end filter
 
     #filter None
-    $navigation("next2")
+    $collx_navigation("next2")
     #end filter
 
 </section>

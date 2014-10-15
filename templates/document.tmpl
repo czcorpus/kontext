@@ -291,15 +291,15 @@ define('conf', [], function () {
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
                 <ul class="submenu">
                     #if $viewmode == 'sen'
-                    <li class="separ"><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$fromp">$_('KWIC')/$_('Sentence')</a></li>
+                    <li class="separ"><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_('KWIC')/$_('Sentence')</a></li>
                     #else
-                    <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$fromp">$_('KWIC')/$_("Sentence")</a></li>
+                    <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_('KWIC')/$_("Sentence")</a></li>
                     #end if
                     #if $align
-                    <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$fromp">$_("Alignment")</a></li>
+                    <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$cached['fromp']">$_("Alignment")</a></li>
                     #end if
-                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$fromp">$_("Attributes, structures and references")&#8230;</a></li>
-                    <li><a href="viewopts?$q;$globals;fromp=$fromp">$_("General concordance view options")&#8230;</a></li>
+                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$cached['fromp']">$_("Attributes, structures and references")&#8230;</a></li>
+                    <li><a href="viewopts?$q;$globals;fromp=$cached['fromp']">$_("General concordance view options")&#8230;</a></li>
                 </ul>
             </li>
 
@@ -388,21 +388,21 @@ define('conf', [], function () {
                     $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
                 #end if
 
-                #if $conc_persist
-                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">$format_number($concsize, mask='%d')
-                    </strong>#if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>
+                #if $cached['conc_persist']
+                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['concsize'], mask='%d')
+                    </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
                     <span class="separ">|</span> #end if
 
-                <abbr title="$_('instances per million') $result_relative_freq_rel_to">i.p.m.</abbr>:
-                <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
-                $result_relative_freq_rel_to
-                #if $result_arf
+                <abbr title="$_('instances per million') $cached['result_relative_freq_rel_to']">i.p.m.</abbr>:
+                <span class="ipm">$format_number($cached['result_relative_freq'], mask='%01.2f')</span>
+                $cached['result_relative_freq_rel_to']
+                #if $cached['result_arf']
                 <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-                <strong id="arf">$format_number($result_arf, mask='%01.2f')</strong>
+                <strong id="arf">$format_number($cached['result_arf'], mask='%01.2f')</strong>
                 #end if
                 <span class="separ">|</span>
                 <span class="notice-shuffled">
-                #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
+                #if $cached['result_shuffled']#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
                 </span>
                 #else
                 &nbsp;
@@ -412,13 +412,13 @@ define('conf', [], function () {
 
             #block navigation($navid="navigation_form", $nextid="next")
             ## navigation
-            #if $numofpages
+            #if $cached['numofpages']
                 <div class="bonito-pagination">
                 <form action="view" id="$navid">
-                #if $prevlink
+                #if $cached['prevlink']
                     <div class="bonito-pagination-left">
-                    <a href="view?$q;$firstlink;$globals"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                    <a href="view?$q;$prevlink;$globals"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                    <a href="view?$q;$cached['firstlink'];$globals"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                    <a href="view?$q;$cached['prevlink'];$globals"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
                     </div>
                 #end if
 
@@ -426,24 +426,24 @@ define('conf', [], function () {
                   #filter None
                   $input_hidden
                   #end filter
-                  <input type="text" name="fromp" value="$fromp" size="2" />
-                  / <span class="numofpages" title="$numofpages">$format_number($numofpages, mask='%d')</span>
+                  <input type="text" name="fromp" value="$cached['fromp']" size="2" />
+                  / <span class="numofpages" title="$cached['numofpages']">$format_number($cached['numofpages'], mask='%d')</span>
                 </div>
 
-                #if $nextlink
+                #if $cached['nextlink']
                     <div class="bonito-pagination-right">
-                    <a href="view?$q;$nextlink;$globals" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
-                    <a id="lastpage" href="view?$q;$lastlink;$globals"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
+                    <a href="view?$q;$cached['nextlink'];$globals" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
+                    <a id="lastpage" href="view?$q;$cached['lastlink'];$globals"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
                     </div>
                 #else
                     <a id="$nextid"></a>
                 #end if
 
-                #if $Sort_idx
+                #if $cached['Sort_idx']
                     <div class="jump-to">
                         $_("Jump to"):
                         <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-                        #for $idx in $Sort_idx
+                        #for $idx in $cached['Sort_idx']
                             <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
                             #filter $Shortener
                             ${idx.label, length=20}
