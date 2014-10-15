@@ -1,6 +1,7 @@
 """
 """
 import sys
+import logging
 
 
 def has_plugin(name):
@@ -15,6 +16,7 @@ def load_plugin(name):
     try:
         module = getattr(_tmp, name)
     except AttributeError:
+        logging.getLogger(__name__).error('Plugin %s configured but not installed (missing Python module?)' % name)
         module = None
     return module
 
