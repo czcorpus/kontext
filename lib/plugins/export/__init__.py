@@ -42,7 +42,7 @@ class AbstractExport(object):
     def writerow(self, line_num, *lang_rows):
         raise NotImplementedError()
 
-    def set_row_types(self, *types):
+    def set_col_types(self, *types):
         pass
 
     def writeheading(self, data):
