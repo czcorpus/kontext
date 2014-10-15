@@ -39,7 +39,7 @@ $_("Frequency list")#slurp
     #filter WebSafe
     <h2>$_("Frequency list")</h2>
 
-    #block navigation($navid="next")
+    #block freqs_navigation($navid="next")
     #set $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
     #if $paging and ($fpage > 1 or not $lastpage)
     <div class="bonito-pagination">
@@ -148,7 +148,7 @@ $_("Frequency list")#slurp
     #end for
 
     #filter none
-    $navigation("next2")
+    $freqs_navigation("next2")
     #end filter
 
     #end filter

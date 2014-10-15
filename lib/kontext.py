@@ -30,6 +30,7 @@ import l10n
 from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
+from structures import Nicedict
 
 
 class ConcError(Exception):
@@ -86,7 +87,7 @@ class Kontext(Controller):
                                  'menu-frequency', 'menu-collocations')
 
     # A list of parameters needed to make concordance result parameters (e.g. size, currently viewed page,..)
-    # persistent. It is used to keep showing these values to a user even if he is
+    # persistent. It is used to keep showing these values to a user even if he is outside the concordance view page.
     CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
                          'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
                          'nextlink', 'lastlink', 'prevlink', 'firstlink')
@@ -907,8 +908,11 @@ class Kontext(Controller):
             result['client_model_dir'] = 'tpl'
             result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 
-        # is there a concordance information in session?
-        self._restore_conc_results(result)
+        # now we store specific information (e.g. concordance parameters)
+        # to keep user informed about data he is working with on any page
+        cached_values = Nicedict()
+        self._restore_conc_results(cached_values)
+        result['cached'] = cached_values
         return result
 
     def _restore_conc_results(self, storage):
