@@ -322,6 +322,10 @@ class Kontext(Controller):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
         self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
+    def _user_has_persistent_settings(self):
+        excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get('excluded_users', ())]
+        return self._session_get('user', 'id') not in excluded_users and not self._user_is_anonymous()
+
     def _load_user_settings(self):
         """
         Loads user settings via settings_storage plugin. The settings are divided
@@ -334,8 +338,13 @@ class Kontext(Controller):
         """
         options = {}
         corp_options = {}
-
-        for k, v in plugins.settings_storage.load(self._session_get('user', 'id')).items():
+        if self._user_has_persistent_settings():
+            data = plugins.settings_storage.load(self._session_get('user', 'id'))
+        else:
+            data = self._session_get('settings')
+            if not data:
+                data = {}
+        for k, v in data.items():
             if ':' not in k:
                 options[k] = v
             else:
@@ -386,19 +395,26 @@ class Kontext(Controller):
         else:
             tosave = [(opt, self.__dict__[opt]) for opt in optlist
                       if opt in self.__dict__]
-        options = {}
+
+        def normalize_opts(opts):
+            if opts is None:
+                opts = {}
+            excluded_attrs = self._get_save_excluded_attributes()
+            for k in opts.keys():
+                if k in excluded_attrs:
+                    del(opts[k])
+            opts.update(tosave)
+            return opts
+
         # data must be loaded (again) because in-memory settings are
-        # in general a subset of the ones stored in db
-        plugins.settings_storage.load(self._session_get('user', 'id'), options)
-        excluded_attrs = self._get_save_excluded_attributes()
-        for k in options.keys():
-            if k in excluded_attrs:
-                del(options[k])
-        options.update(tosave)
-        if not self._user_is_anonymous():
+        # in general a subset of the ones stored in db (and we want
+        # to store (again) even values not used in this particular request)
+        if self._user_has_persistent_settings():
+            options = normalize_opts(plugins.settings_storage.load(self._session_get('user', 'id')))
             plugins.settings_storage.save(self._session_get('user', 'id'), options)
         else:
-            pass  # TODO save to the session
+            options = normalize_opts(self._session_get('settings'))
+            self._session['settings'] = options
 
     def _restore_prev_conc_params(self):
         """

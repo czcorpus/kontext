@@ -49,6 +49,10 @@
         </conc_persistence>
         <settings_storage>
             <module>default_settings_storage</module>
+            <excluded_users>
+                <item>1</item>
+                <item>3</item>
+            </excluded_users>
         </settings_storage>
         <sessions>
             <module>default_sessions</module>
