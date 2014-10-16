@@ -1481,8 +1481,10 @@ class Actions(Kontext):
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.wlnums, '?'))
 
             params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
-                      'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s') % \
-                     {'wlattr': self.wlattr, 'wlpat': wlpat, 'wlsort': self.wlsort, 'wlminfreq': self.wlminfreq}
+                      'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s&wlnums=%(wlnums)s') % {
+                'wlattr': self.wlattr, 'wlpat': wlpat,
+                'wlsort': self.wlsort, 'wlminfreq': self.wlminfreq,
+                'wlnums': self.wlnums}
 
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XLSX', 'savewl', params % 'xlsx')
