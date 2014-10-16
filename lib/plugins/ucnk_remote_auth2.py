@@ -128,12 +128,15 @@ class CentralAuth(AbstractAuth):
         session -- dictionary like session data
         query_string -- the portion of the request URL that follows '?' (see environmental variable QUERY_STRING)
         """
+        if 'remote=1' in query_string.split('&'):
+            session.clear()
+
         if not 'user' in session:
             session['user'] = {}
         user_data = session['user']
         ticket_id = self.get_ticket(cookies)
 
-        if not user_data.get('revalidated', None) or 'remote=1' in query_string.split('&') or _toss():
+        if not user_data.get('revalidated', None) or _toss():
             logging.getLogger(__name__).debug('re-validating user')
             cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
             db = connect_auth_db(**self.auth_db_params)
