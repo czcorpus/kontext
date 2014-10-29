@@ -22,9 +22,39 @@
 define(['jquery', 'win'], function ($, win) {
     'use strict';
 
-    var lib = {};
+    var lib = {},
+        conf = {
+            splitQueryIfSize : 60
+        };
 
     lib.pluginApi = null; // this must be initialized via lib.init(plugInApi)
+
+
+    function splitString(s, maxChunkSize) {
+        var ans = [],
+            line,
+            items = s.split(/([\s,\."':\-\(\)\|])/);
+
+        line = '';
+        while (items.length > 0) {
+            if (line.length + items[0].length <= maxChunkSize) {
+                line += items.shift();
+
+            } else if (line.length > 0) {
+                ans.push(line);
+                line = '';
+
+            } else {
+                line += items.shift().substr(0, maxChunkSize - 3) + '&hellip;';
+            }
+
+        }
+        if (line.length > 0) {
+            ans.push(line);
+        }
+        return ans.join('<br />');
+    }
+
 
     /**
      *
@@ -367,7 +397,7 @@ define(['jquery', 'win'], function ($, win) {
 
             link = $(win.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(v.query);
+            link.append(splitString(v.query, conf.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
