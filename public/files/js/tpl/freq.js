@@ -139,6 +139,9 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
             });
         });
         lib.bindEvents();
+
+        // "Node start at" function is JavaScript-dependent - we have to enable it
+        $('#multilevel-freq-first-level .kwic-alignment-box').css('display', 'block');
     };
 
 
