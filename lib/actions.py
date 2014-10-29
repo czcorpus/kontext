@@ -1066,6 +1066,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-freq-distrib.%s' % (self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='freq')
+            writer.set_col_types(int, unicode, int)
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
@@ -1201,6 +1202,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-collocations.%s' % (self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='coll')
+            writer.set_col_types(int, unicode, *(8 * (float,)))
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
@@ -1589,6 +1591,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-word-list.%s' % (self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='wordlist')
+            writer.set_col_types(int, unicode, float)
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)

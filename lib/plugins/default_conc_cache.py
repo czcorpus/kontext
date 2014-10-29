@@ -122,4 +122,11 @@ class CacheMapping(object):
         self._data = None  # forces load on next __getitem__
 
 
+class CacheMappingFactory(object):
 
+    def get_mapping(self, cache_dir):
+        return CacheMapping(cache_dir)
+
+
+def create_instance(settings, db):
+    return CacheMappingFactory()
