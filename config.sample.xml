@@ -47,6 +47,9 @@
             <ttl_days extension-by="default">100</ttl_days>
             <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
         </conc_persistence>
+        <conc_cache>
+            <module>default_conc_cache</module>
+        </conc_cache>
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users>
