@@ -16,7 +16,7 @@ import math
 import os
 import sys
 import re
-import csv
+import json
 
 from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
@@ -2317,3 +2317,12 @@ class Actions(Kontext):
             'categories': [('', '-')] + [(x, x) for x in l10n.sort(categories, self.ui_lang)]
         }
         return ans
+
+    @exposed(return_type='json')
+    def set_favorite_corp(self, data=''):
+        data = json.loads(data)
+        remove_corp = set([x[0] for x in data.items() if x[1] is False])
+        add_corp = set([x[0] for x in data.items() if x[1] is True])
+        self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
+        self._save_options(optlist=['favorite_corpora'])
+        return {}

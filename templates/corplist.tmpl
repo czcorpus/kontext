@@ -55,6 +55,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
             <th>$_('Name')</th>
             <th>$_('Size')</th>
             <th>$_('Actions')</th>
+            <th>$_('In favorites')</th>
         </tr>
         #for $row in $corplist
         <tr>
@@ -68,6 +69,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                 </p>
                 <a class="detail">$_('detail')</a> |
                 <a href="first_form?corpname=$row.id">$_('use now')</a>
+            </td>
+            <td>
+                <input class="set-favorite" type="checkbox" value="$row.id" #if $row.id in $favorite_corpora#checked="checked"#end if# />
             </td>
         </tr>
         #end for
