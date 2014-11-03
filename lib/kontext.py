@@ -234,6 +234,8 @@ class Kontext(Controller):
     shuffle = Parameter(0, persistent=True)
     SubcorpList = Parameter([])
 
+    favorite_corpora = Parameter([], persistent=True)
+
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
 
     _conc_dir = u''
@@ -385,10 +387,12 @@ class Kontext(Controller):
     def _get_save_excluded_attributes(self):
         return ()
 
-    def _save_options(self, optlist=[], selector=''):
+    def _save_options(self, optlist=None, selector=''):
         """
         Saves user's options to a storage
         """
+        if optlist is None:
+            optlist = []
         if selector:
             tosave = [(selector + ':' + opt, self.__dict__[opt])
                       for opt in optlist if opt in self.__dict__]
