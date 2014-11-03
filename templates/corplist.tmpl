@@ -1,0 +1,77 @@
+#*
+Copyright (c) 2014 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from translation import ugettext as _
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+#end def
+
+#def bodyonload
+require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
+    pageSelf.init(conf);
+});
+#end def
+
+
+#block main
+<section class="corplist">
+    <h2>$_('Available corpora')</h2>
+
+    <form class="filter" action="">
+        $_('Category'): <select name="category">
+            #for $c in $categories
+            <option #if $form.category == $c#selected="selected"#end if#>$c</option>
+            #end for
+        </select>
+
+        $_('min. size'): <input class="min-max" type="text" name="min_size" value="$form.min_size" />
+
+        $_('max. size'): <input class="min-max" type="text" name="max_size" value="$form.max_size" />
+
+        <button type="submit" class="default-button">$_('Filter')</button>
+    </form>
+
+    <table class="data corplist" border="0">
+        <tr>
+            <th>$_('Category')</th>
+            <th>$_('Name')</th>
+            <th>$_('Size')</th>
+            <th>$_('Actions')</th>
+        </tr>
+        #for $row in $corplist
+        <tr>
+            <td>$row.path</td>
+            <td class="corpname">$row.name</td>
+            <td class="num">$row.size</td>
+            <td>
+                <p class="desc" style="display: none">
+                <strong>${row.name}:</strong><br />
+                $row.desc
+                </p>
+                <a class="detail">$_('detail')</a> |
+                <a href="first_form?corpname=$row.id">$_('use now')</a>
+            </td>
+        </tr>
+        #end for
+    </table>
+
+</section>
+#end block

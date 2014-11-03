@@ -2279,6 +2279,36 @@ class Actions(Kontext):
         self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
         q_id = self._store_conc_params()
         return {
-            'id' : q_id,
-            'next_url' : 'view?corpname=' + self.corpname + '&q=~' + q_id
+            'id': q_id,
+            'next_url': 'view?corpname=' + self.corpname + '&q=~' + q_id
         }
+
+    @exposed()
+    def corplist(self, max_size='', min_size='', category=''):
+        def corp_filter(item):
+            if max_size and item['size'] > float(max_size):
+                return False
+            if min_size and item['size'] < float(min_size):
+                return False
+            if category and item['path'] != category:
+                return False
+            return True
+
+        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        categories = set()
+        for c in corplist:
+            c['size'] = l10n.format_number(c['size'])
+            c['fullpath'] = '%s%s' % (c['path'], c['id'])
+            categories.add(c.get('path', None))
+        corplist = sorted(filter(corp_filter, corplist), key=lambda x: x['fullpath'])
+
+        ans = {
+            'form': {
+                'max_size': max_size,
+                'min_size': min_size,
+                'category': category
+            },
+            'corplist': corplist,
+            'categories': ['-'] + l10n.sort(categories, self.ui_lang)
+        }
+        return ans
