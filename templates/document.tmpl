@@ -220,10 +220,11 @@ define('conf', [], function () {
                     <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
-            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Corpora")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li class="separ"><a href="corplist">$_('Available corpora')&#8230;</a></li>
                     <li><a title="$_('List of my subcorpora')" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                    <li><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                 </ul>
             </li>
             <li class="separator">&nbsp;</li>
