@@ -2309,6 +2309,6 @@ class Actions(Kontext):
                 'category': category
             },
             'corplist': corplist,
-            'categories': ['-'] + l10n.sort(categories, self.ui_lang)
+            'categories': [('', '-')] + [(x, x) for x in l10n.sort(categories, self.ui_lang)]
         }
         return ans
