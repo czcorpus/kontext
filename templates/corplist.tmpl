@@ -38,7 +38,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
     <form class="filter" action="">
         $_('Category'): <select name="category">
             #for $c in $categories
-            <option #if $form.category == $c#selected="selected"#end if#>$c</option>
+            <option value="$c[0]" #if $form.category == $c#selected="selected"#end if#>$c[1]</option>
             #end for
         </select>
 
