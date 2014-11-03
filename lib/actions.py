@@ -2285,6 +2285,7 @@ class Actions(Kontext):
 
     @exposed()
     def corplist(self, max_size='', min_size='', category=''):
+
         def corp_filter(item):
             if max_size and item['size'] > float(max_size):
                 return False
@@ -2297,10 +2298,14 @@ class Actions(Kontext):
         corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
         categories = set()
         for c in corplist:
+            categories.add(c.get('path', None))
+        corplist = filter(corp_filter, corplist)
+
+        for c in corplist:
             c['size'] = l10n.format_number(c['size'])
             c['fullpath'] = '%s%s' % (c['path'], c['id'])
-            categories.add(c.get('path', None))
-        corplist = sorted(filter(corp_filter, corplist), key=lambda x: x['fullpath'])
+
+        corplist = sorted(corplist, key=lambda x: x['fullpath'])
 
         ans = {
             'form': {
