@@ -882,7 +882,7 @@ class Kontext(Controller):
         try:
             self._add_corpus_related_globals(result, thecorp)
         except Exception as ex:
-            pass
+            logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
 
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
