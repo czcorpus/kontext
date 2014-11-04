@@ -163,7 +163,7 @@ class CorpusManager(object):
                     corp_info = corp.get_info()
 
                     cl.append({'id': '%s%s' % (id_prefix, c),
-                               'name': corp_name,
+                               'name': import_string(corp_name, from_encoding=corp.get_conf('ENCODING')),
                                'desc': import_string(corp_info, from_encoding=corp.get_conf('ENCODING')),
                                'size': corp.size(),
                                'path': path
