@@ -28,11 +28,12 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutMo
     lib.init = function (conf) {
         layoutModel.init(conf);
         $('table.corplist tr').each(function (i, row) {
+            var trigger = $(row).find('a.detail');
 
             popupBox.bind(
-                $(row).find('a.detail'),
+                trigger,
                 function (tooltipBox, finalize) {
-                    tooltipBox.importElement($(item).siblings('.desc').get(0));
+                    tooltipBox.importElement($(trigger).siblings('.desc').get(0));
                     finalize();
                 },
                 {
