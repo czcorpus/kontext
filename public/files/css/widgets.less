@@ -114,8 +114,8 @@ ul.multiselect li td.checkbox-cell {
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
-    box-shadow: 0px 0px 15px #a5a5a5;
-    padding: 8px 5px 8px 10px;
+    box-shadow: 0px 0px 10pt #a5a5a5;
+    padding: 10pt 12pt 10pt 15pt;
     text-align: left;
 }
 
@@ -144,6 +144,44 @@ ul.multiselect li td.checkbox-cell {
 .tree-component .srch-field.initial {
     color: #ababab;
 }
+
+.tree-component .featured-corpora ul {
+  margin-left: 0;
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.tree-component .featured-corpora ul li {
+  background-image: url('../img/dot.png');
+  .ping-dot-item;
+}
+
+.tree-component .featured-corpora h3 {
+  margin-bottom: 7pt;
+  font-size: 11pt;
+  border-width: 0 0 1pt 0;
+  border-style: solid;
+  border-color: @color-logo-blue;
+}
+
+.tree-component .featured-corpora h3 {
+  margin-top: 3pt;
+}
+
+.tree-component .featured-corpora ul {
+  margin-top: 0;
+}
+
+.tree-component .archive a {
+  color: @color-light-text;
+  text-decoration: none;
+}
+
+.tree-component .archive a:hover {
+  color: @color-logo-pink;
+}
+
+// -------------------------- tag hints -------
 
 .hint-box {
     position: absolute;
@@ -264,11 +302,8 @@ button#reset-tag-button {
 
 .tt-suggestions .tt-suggestion p {
   margin: 0;
-  padding-left: 19px;
   padding-bottom: 6px;
-  background-image: url('../img/dot.png');
-  background-position: 5px 40%;
-  background-repeat: no-repeat;
+  .ping-dot-item;
   cursor: pointer;
 }
 

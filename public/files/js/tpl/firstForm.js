@@ -154,13 +154,14 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
      */
     lib.misc = function () {
         var tc;
-
+        console.log('featured', $('#mainform .featured-corpora'));
         tc = treeComponent.createTreeComponent(
             $('form[action="first"] select[name="corpname"]'),
             layoutModel.conf.messages,
             {
                 clickableText : true,
-                searchable : true
+                searchable : true,
+                customHeader : $('#mainform .featured-corpora')
             },
             layoutModel.formChangeCorpus
         );

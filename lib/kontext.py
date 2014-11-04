@@ -763,6 +763,13 @@ class Kontext(Controller):
             from empty_corpus import EmptyCorpus
             return EmptyCorpus()
 
+    def _load_user_corplists(self):
+        user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
+        featured_corpora = []
+        if plugins.has_plugin('featured_corpora'):
+            featured_corpora.extend(plugins.featured_corpora.get_corpora(self._session_get('user', 'id'), user_corpora))
+        return user_corpora, featured_corpora
+
     def _add_corpus_related_globals(self, result, corpus):
         result['files_path'] = self._files_path
         result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
@@ -778,8 +785,7 @@ class Kontext(Controller):
         else:
             result['corp_web'] = ''
 
-        result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
-                                                         settings.get_bool('corpora', 'use_db_whitelist'))
+        result['Corplist'], result['FeaturedCorplist'] = self._load_user_corplists()
         result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))

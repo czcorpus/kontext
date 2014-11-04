@@ -556,6 +556,19 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         #end for
     </select>
     #end if ## SubcorpList
+
+    #if len($FeaturedCorplist) > 0
+    <div class="featured-corpora" style="display: none">
+        <h3>$_('Featured corpora')</h3>
+        <ul>
+            #for $featured in $FeaturedCorplist
+            <li><a href="first_form?corpname=$featured[0]">$featured[1]</a></li>
+            #end for
+        </ul>
+        <h3>$_('My favorite corpora') <span class="archive">(<a href="corplist">$_('see all')</a>)</span></h3>
+    </div>
+    #end if
+
     #end if
 #end def  ## corp_sel
 ## ***************************************** ##
