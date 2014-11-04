@@ -164,6 +164,8 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
      * @param {boolean} options.clickableText
      * @param {String} options.title
      * @param {boolean} options.searchable
+     * @param {jQuery|HTMLElement} options.customHeader
+     * @param {jQuery|HTMLElement} options.customFooter
      * @param {Function} options.onSwitchVisibility a callback function(status, treeComponent) called whenever
      * visibility status is changed. But only if triggered manually (via a clickable element), i.e. automatic
      * component initalization does NOT cause this callback to be called.
@@ -547,10 +549,22 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
         this.treeWrapper.attr('class', 'tree-component');
         $(this.rootUl).attr('id', jqSelectBoxItem.attr('id'));
         this.jqWrapper.append(this.treeWrapper);
+        if (this.options.customHeader) {
+            if (!$(this.options.customHeader).is(':visible')) {
+                $(this.options.customHeader).show();
+            }
+            this.treeWrapper.append(this.options.customHeader);
+        }
         if (this.options.searchable) {
             this.attachSearchField();
         }
         this.treeWrapper.append(this.rootUl);
+        if (this.options.customFooter) {
+            if (!$(this.options.customFooter).is(':visible')) {
+                $(this.options.customFooter).show();
+            }
+            this.treeWrapper.append(this.options.customFooter);
+        }
         this.attachLinks();
 
         $(this.rootUl.parentNode).append(this.nestedTree.hiddenInput);
