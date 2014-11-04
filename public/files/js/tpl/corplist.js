@@ -52,11 +52,11 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutMo
                         method : 'POST',
                         data : {'data': JSON.stringify(data)},
                         success : function (data) {
-                            console.log('data', data);
+                            console.log('data', data); // TODO
 
                         },
                         error : function () {
-                            console.error(arguments);
+                            console.error(arguments); // TODO
                         }
                     }
                 );
