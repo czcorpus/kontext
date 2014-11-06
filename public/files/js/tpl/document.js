@@ -427,7 +427,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     /**
      * Modifies form (actually, it is always the #mainform)
      * in a way that only current corpus is changed. Under
-     * normal circumstances, the form submints to the concordance
+     * normal circumstances, the form submits to the concordance
      * view page via POST method.
      *
      * @param {Event} event
@@ -1257,7 +1257,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
             mouseOverImages : lib.mouseOverImages(),
             enhanceMessages : lib.enhanceMessages(),
             externalHelpLinks : lib.externalHelpLinks(),
-            applicationBar : applicationBar.init(lib.pluginApi())
+            applicationBar : (new applicationBar.AppBar()).init(lib.pluginApi())
         });
 
         $.each(this.initCallbacks, function (i, fn) {

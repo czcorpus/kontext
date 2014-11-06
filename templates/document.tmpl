@@ -95,7 +95,7 @@ paths['vendor/QUnit'] = './vendor/qunit'
 #end if
 
 requirejs.config({
-    baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
+    baseUrl : '../files/js/min',
     paths: paths,
     shim : {
         'vendor/jscrollpane' : {
