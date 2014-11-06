@@ -11,6 +11,7 @@ config.xml
 .directory
 node_modules
 public/files/js/min
+public/files/js/compiled
 public/files/css/kontext.min.css
 lib/plugins/devel_*
 
