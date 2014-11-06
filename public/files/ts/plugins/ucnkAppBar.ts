@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
+ * Copyright (c) 2014 Institute of the Czech National Corpus
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,27 +16,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel, win) {
-    'use strict';
-
-    var lib = {};
+/// <reference path="../declarations/jquery.d.ts" />
+/// <reference path="../../ts/declarations/document.d.ts" />
 
 
-    lib.toolbarReloader = function () {
-        var promise = $.ajax(conf.rootURL + 'ajax_get_toolbar', {dataType : 'html'});
+export class AppBar implements Model.Plugin {
+
+    /**
+     *
+     */
+    toolbarReloader(): void {
+        var promise = $.ajax(conf['rootURL'] + 'ajax_get_toolbar', {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);
         });
 
         promise.fail(function(jqXHR, textStatus, errorThrown) {
-             layoutModel.showMessage('error', errorThrown); // TODO
+             layoutModel.showMessage(Model.MsgType.error, errorThrown); // TODO
         });
-    };
+    }
 
-    lib.init = function (pluginApi) {
+    /**
+     *
+     * @param pluginApi
+     */
+    init(pluginApi:Model.PluginApi): void {
         var code,
-            ans;
+            ans:boolean;
 
         try {
             code = JSON.parse($('#cnc-toolbar-data').text());
@@ -58,7 +64,8 @@ define(['jquery', 'conf', 'tpl/document', 'win'], function ($, conf, layoutModel
         } catch (e) {
             console.error(e);
         }
-    };
+    }
+}
 
-    return lib;
-});
+
+
