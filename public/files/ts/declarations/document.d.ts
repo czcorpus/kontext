@@ -17,6 +17,8 @@
  */
 
 /// <reference path="jquery.d.ts" />
+/// <reference path="popupbox.d.ts" />
+/// <reference path="dynamic.d.ts" />
 
 declare module Model {
 
@@ -76,7 +78,7 @@ declare module Model {
 
         appendStructList(structListData:Array<number>, jqStructList:JQuery);
 
-        createCorpusInfoBox(tooltipBox:TooltipBox, doneCallback:() => any);
+        createCorpusInfoBox(tooltipBox:PopupBox.TooltipBox, doneCallback:() => any);
     }
 
     /**
@@ -108,9 +110,11 @@ declare module Model {
 
         mainMenu:MainMenu;
 
-        init(conf:Conf):Promises;
+        init(conf:Dynamic.Conf):Promises;
 
         registerPlugin(name:string, plugin:Plugin);
+
+        getPlugin(name:string, plugin:Plugin);
 
         callPlugin(name:string, fnName:string, ...args:any[]);
 
@@ -146,7 +150,7 @@ declare module Model {
 
         misc():void; // TODO this is a mess function
 
-        renderOverview(data:{Desc:Array<{op:any; arg:any; size:number; tourl?:string}>}, tooltipBox:TooltipBox);
+        renderOverview(data:{Desc:Array<{op:any; arg:any; size:number; tourl?:string}>}, tooltipBox:PopupBox.TooltipBox);
 
         queryOverview():void;
 
@@ -175,6 +179,13 @@ declare module Model {
         translate(msg:string):string;
 
         pluginApi():Plugin;
+    }
+
+    /**
+     *
+     */
+    export interface Closeable {
+        close(): void;
     }
 }
 

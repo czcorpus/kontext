@@ -16,14 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- *
- */
-interface Conf {
-    [key:string]: any;
-    foo():void;
+declare module Dynamic {
+
+    /**
+     *
+     */
+    export interface Conf {
+        [key:string]: any;
+    }
 }
 
+declare module "dynamic" {
+    export = Dynamic;
+}
 
-declare var conf:Conf;
-declare var win:Window;
+declare var conf:Dynamic.Conf;
