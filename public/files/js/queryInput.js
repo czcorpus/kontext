@@ -21,8 +21,8 @@
 /**
  *
  */
-define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'plugins/queryStorage'], function ($,
-        win, cookies, popupBox, conf, tagbuilder, queryStorage) {
+define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder'], function ($,
+        win, cookies, popupBox, conf, tagbuilder) {
     'use strict';
 
     var lib = {};
@@ -35,6 +35,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param {pluginApi} pluginApi
      */
     function bindTagHelper(corpName, inputElm, triggerElm, pluginApi) {
+
         tagbuilder.bindTextInputHelper(
             corpName,
             triggerElm,
@@ -193,10 +194,11 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * (e.g. to init the form) then query type selection input (currently it is a SELECT element)
      * must be used.
      *
+     * @param layoutModel
      * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    lib.cmdSwitchQuery = function (source, hints) {
+    lib.cmdSwitchQuery = function (layoutModel, source, hints) {
         var jqQs,
             newidCom,
             newid,
@@ -261,10 +263,10 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
             $('#mainform input.history').each(function () {
                 if (typeof $(this).data('plugin') === 'object') {
-                    queryStorage.detach(this);
+                    layoutModel.getPlugin('queryStorage').detach(this);
                 }
             });
-            queryStorage.reset();
+            layoutModel.getPlugin('queryStorage').reset();
         }
         lib.initVirtualKeyboard(jqFocusElem);
     };

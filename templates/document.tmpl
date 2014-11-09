@@ -122,9 +122,16 @@ requirejs.config({
     for (i = 0; i < names.length; i += 1) {
         define(names[i], [], function () {
             return {
-                init : function () {},
-                reset : function () {},
-                detach : function () {}
+                init : function () {}, // deprecated
+                reset : function () {}, // deprecated
+                detach : function () {}, // deprecated
+                createInstance : function () {
+                    return {
+                        init : function () {},
+                        reset : function () {},
+                        detach : function () {}
+                    };
+                }
             };
         });
     }
