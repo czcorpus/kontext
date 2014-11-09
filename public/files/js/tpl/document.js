@@ -78,6 +78,15 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
+     *
+     * @param name
+     * @returns {*}
+     */
+    lib.getPlugin = function (name) {
+        return lib.plugins[name];
+    };
+
+    /**
      * Calls a function on a registered plug-in with some additional
      * testing of target's callability.
      *
@@ -519,12 +528,12 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     lib.misc = function () {
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
-                queryInput.cmdSwitchQuery(event, lib.conf.queryTypesHints);
+                queryInput.cmdSwitchQuery(lib, event, lib.conf.queryTypesHints);
             });
 
             // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
             if ($(this).val() !== 'iqueryrow') {
-                queryInput.cmdSwitchQuery($(this).get(0), lib.conf.queryTypesHints);
+                queryInput.cmdSwitchQuery(lib, $(this).get(0), lib.conf.queryTypesHints);
             }
         });
 
@@ -1213,7 +1222,8 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
      */
     lib.init = function (conf) {
         var settingsObj,
-            promises = new Promises();
+            promises = new Promises(),
+            appBarPlugin;
 
         try {
             settingsObj = JSON.parse($.cookie('ui_settings'));
@@ -1257,8 +1267,11 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
             mouseOverImages : lib.mouseOverImages(),
             enhanceMessages : lib.enhanceMessages(),
             externalHelpLinks : lib.externalHelpLinks(),
-            applicationBar : (new applicationBar.AppBar()).init(lib.pluginApi())
+            applicationBar : applicationBar.createInstance(lib.pluginApi())
         });
+
+        // init plug-ins
+        lib.registerPlugin('applicationBar', promises.get('applicationBar'));
 
         $.each(this.initCallbacks, function (i, fn) {
             fn();

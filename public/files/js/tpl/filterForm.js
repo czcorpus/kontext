@@ -31,10 +31,11 @@ define(['tpl/document', 'plugins/queryStorage'], function (layoutModel, querySto
      * @param conf page configuration data
      */
     lib.init = function (conf) {
-        layoutModel.registerPlugin('queryStorage', queryStorage);
-        layoutModel.init(conf).add({
-            queryStorage : queryStorage.init(layoutModel.pluginApi())
+        var promises = layoutModel.init(conf).add({
+            queryStorage : queryStorage.createInstance(layoutModel.pluginApi())
         });
+
+        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
     };
 
     return lib;

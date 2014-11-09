@@ -18,15 +18,18 @@
 
 /// <reference path="../declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/document.d.ts" />
+/// <reference path="../../ts/declarations/dynamic.d.ts" />
 
 
 export class AppBar implements Model.Plugin {
+
+    pluginApi:Model.PluginApi;
 
     /**
      *
      */
     toolbarReloader(): void {
-        var promise = $.ajax(conf['rootURL'] + 'ajax_get_toolbar', {dataType : 'html'});
+        var promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);
@@ -45,13 +48,15 @@ export class AppBar implements Model.Plugin {
         var code,
             ans:boolean;
 
+        this.pluginApi = pluginApi;
+
         try {
             code = JSON.parse($('#cnc-toolbar-data').text());
             if (!pluginApi.userIsAnonymous() && !code['id']) {
                 ans = confirm(pluginApi.translate('you have been logged out'));
 
                 if (ans === true) {
-                    win.location = pluginApi.conf('loginUrl');
+                    window.location = pluginApi.conf('loginUrl');
 
                 } else {
                     pluginApi.resetToHomepage({remote: 1});
@@ -65,6 +70,12 @@ export class AppBar implements Model.Plugin {
             console.error(e);
         }
     }
+}
+
+export function createInstance(pluginApi:Model.PluginApi) {
+    var appBar = new AppBar();
+    appBar.init(pluginApi);
+    return appBar;
 }
 
 

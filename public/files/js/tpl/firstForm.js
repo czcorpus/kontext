@@ -154,7 +154,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
      */
     lib.misc = function () {
         var tc;
-        console.log('featured', $('#mainform .featured-corpora'));
+
         tc = treeComponent.createTreeComponent(
             $('form[action="first"] select[name="corpname"]'),
             layoutModel.conf.messages,
@@ -168,7 +168,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
-        queryInput.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints);
+        queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -368,7 +368,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     lib.init = function (conf) {
         var promises;
 
-        layoutModel.registerPlugin('queryStorage', queryStorage);
         clStorage.clear();
 
         promises = layoutModel.init(conf).add({
@@ -378,10 +377,13 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateToggleableFieldsets : lib.updateToggleableFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            queryStorage : queryStorage.init(lib.extendedApi),
+            queryStorage : queryStorage.createInstance(layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });
+
+        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
+
         return promises;
     };
 
