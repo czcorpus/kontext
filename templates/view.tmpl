@@ -66,9 +66,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #def align_heading($viewmode, $KWICCorps)
 #if $getVar('Par_conc_corpnames', [])
 <tr>
+    <td></td>  ## matches selection checkbox
     #for $i, $c in enumerate($Par_conc_corpnames)
-    #if not $refs_up# <td></td> #end if#
-    <td class="concordance-col-heading" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
+    <td class="concordance-col-heading" #if not $refs_up#colspan="2"#end if# #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
     #if $c.n in $KWICCorps
     <a class="select-primary-lang" href="view?$q;${Globals.update('maincorp', $c.n).to_s()};q=x-$c.n" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #else
@@ -285,6 +285,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     #end if
     <div id="conclines-wrapper">
         #if $len($Lines) > 0
+
         <table id="conclines">
             #filter None
             $align_heading($viewmode, $KWICCorps)
