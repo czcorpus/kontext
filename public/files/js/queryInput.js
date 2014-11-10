@@ -309,5 +309,95 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         }
     };
 
+    /**
+     * @param {{}} pluginApi
+     * @param {{}} userSettings
+     */
+    lib.bindQueryFieldsetsEvents = function (pluginApi, userSettings) {
+        $('a.form-extension-switch').on('click', function (event) {
+            var jqTriggerLink = $(event.currentTarget),
+                jqFieldset = jqTriggerLink.closest('fieldset');
+
+            jqFieldset.toggleClass('inactive');
+            if (jqFieldset.hasClass('inactive')) {
+                jqFieldset.find('div.contents').hide();
+                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
+                    .attr('data-alt-img', '../files/img/expand_s.png')
+                    .attr('alt', pluginApi.translate('click_to_expand'));
+                jqTriggerLink.attr('title', pluginApi.translate('click_to_expand'));
+                jqFieldset.find('div.desc').show();
+                userSettings.set(jqTriggerLink.data('box-id'), false);
+
+            } else {
+                jqFieldset.find('div.contents').show();
+                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
+                    .attr('data-alt-img', '../files/img/collapse_s.png')
+                    .attr('alt', pluginApi.translate('click_to_hide'));
+                jqTriggerLink.attr('title', pluginApi.translate('click_to_hide'));
+                jqFieldset.find('div.desc').hide();
+                userSettings.set(jqTriggerLink.data('box-id'), true);
+            }
+            $.each(pluginApi.queryFieldsetToggleEvents, function (i, fn) {
+                fn(jqFieldset);
+            });
+        });
+    };
+
+    /**
+     *
+     * @returns {*}
+     */
+    lib.updateToggleableFieldsets = function (pluginApi, userSettings) {
+        var jqLink = $('a.form-extension-switch'),
+            jqFieldset,
+            elmStatus,
+            defer = $.Deferred(); // currently, this is synchronous
+
+        jqLink.each(function () {
+            jqFieldset = $(this).closest('fieldset');
+            elmStatus = userSettings.get($(this).data('box-id'));
+
+            if (elmStatus === true) {
+                jqFieldset.removeClass('inactive');
+                jqFieldset.find('div.contents').show();
+                jqFieldset.find('div.desc').hide();
+                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
+                    .attr('data-alt-img', '../files/img/collapse_s.png')
+                    .attr('alt', pluginApi.translate('click_to_hide'));
+                jqLink.attr('title', pluginApi.translate('click_to_hide'));
+
+            } else {
+                jqFieldset.find('div.contents').hide();
+                jqFieldset.find('div.desc').show();
+                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
+                    .attr('data-alt-img', '../files/img/expand_s.png')
+                    .attr('alt', pluginApi.translate('click_to_expand'));
+                jqLink.attr('title', pluginApi.translate('click_to_expand'));
+            }
+        });
+        defer.resolve();
+        return defer.promise();
+    };
+
+    /**
+     * Generates PluginApi extended by bindFieldsetToggleEvent() method
+     * required in 'first_form' and 'filter_form' actions
+     *
+     * @param pluginApi
+     */
+    lib.extendedApi = function (pluginApi) {
+        var ExtendedApi = function () {
+            this.queryFieldsetToggleEvents = [];
+        };
+
+        ExtendedApi.prototype = pluginApi;
+
+        ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
+            this.queryFieldsetToggleEvents.push(fn);
+        };
+
+        return new ExtendedApi();
+    };
+
     return lib;
 });

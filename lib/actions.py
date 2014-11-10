@@ -252,7 +252,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._export_subcorpora_list(out)
-        out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
+        self._attach_query_metadata(out)
         self.last_corpname = self.corpname
         self._save_options(['last_corpname'])
         return out
@@ -1776,15 +1776,14 @@ class Actions(Kontext):
                 for a in dir(self) if a.startswith('sca_')]
         structs = {}
         for sa, v in scas:
-            if type(v) in (type(''), type(u'')) and '|' in v:
+            if type(v) in (str, unicode) and '|' in v:
                 v = v.split('|')
             s, a = sa.split('.')
-            if type(v) is type([]):
+            if type(v) is list:
                 query = '(%s)' % ' | '.join(['%s="%s"' % (a, l10n.escape(v1))
                                              for v1 in v])
             else:
                 query = '%s="%s"' % (a, l10n.escape(v))
-            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
             if s in structs:
                 structs[s].append(query)
             else:
