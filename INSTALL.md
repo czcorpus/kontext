@@ -739,7 +739,6 @@ Sample configuration file **config.sample.xml** provides more examples.
 | Xpath                                           | Description                                                       |
 |-------------------------------------------------|-------------------------------------------------------------------|
 | /kontext/corpora/manatee_registry               | Path where corpora registry files are stored                      |
-| /kontext/corpora/options_dir                    | Path where 'options' files are stored                             |
 | /kontext/corpora/cache_dir                      | Path where application stores general cached data                 |
 | /kontext/corpora/subcpath                       | Path where general subcorpora data is stored                      |
 | /kontext/corpora/users_subcpath                 | Path where user's subcorpora are stored                           |
