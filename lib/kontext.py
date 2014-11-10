@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2009  Pavel Rychly
+# Copyright (c) 2003-2013  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
 # Copyright (c) 2013 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
