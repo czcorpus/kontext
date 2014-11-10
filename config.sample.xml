@@ -84,7 +84,6 @@
     </cache>
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
-        <options_dir>/var/local/corpora/registry/options</options_dir>
         <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
         <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
