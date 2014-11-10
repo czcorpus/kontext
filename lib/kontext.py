@@ -643,6 +643,12 @@ class Kontext(Controller):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
+    def _attach_query_metadata(self, tpl_out):
+        """
+        Adds information needed by extended version of text type (and other attributes) selection in a query
+        """
+        tpl_out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
+
     def _add_save_menu_item(self, label, action, params):
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
