@@ -1457,34 +1457,38 @@ class Actions(Kontext):
             else:  # ordinary list
                 if hasattr(self, 'wlfile') and self.wlpat == '.*':
                     self.wlsort = ''
-                result.update({'Items': self.call_function(corplib.wordlist,
-                                                           (self._corp(), self.wlwords))[wlstart:]})
+                result_list = self.call_function(corplib.wordlist, (self._corp(), self.wlwords))[wlstart:]
                 if self.wlwords:
                     result['wlcache'] = self.wlcache
                 if self.blacklist:
                     result['blcache'] = self.blcache
-                result_list = result['Items']
+                result['Items'] = result_list
             if len(result_list) < self.wlmaxitems / self.wlpage:
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
                 result_list = result_list[:-1]
+            result['Items'] = result_list
             self.wlmaxitems -= 1
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
             try:
-                result['wlattr_label'] = self._corp().get_conf(
-                    self.wlattr + '.LABEL') or self.wlattr
-            except Exception:
+                result['wlattr_label'] = self._corp().get_conf(self.wlattr + '.LABEL') or self.wlattr
+            except Exception as e:
                 result['wlattr_label'] = self.wlattr
+                logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
 
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.wlnums, '?'))
 
+            params_values = {
+                'wlattr': self.wlattr,
+                'wlpat': wlpat,
+                'wlsort': self.wlsort,
+                'wlminfreq': self.wlminfreq,
+                'wlnums': self.wlnums
+            }
             params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
-                      'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s&wlnums=%(wlnums)s') % {
-                'wlattr': self.wlattr, 'wlpat': wlpat,
-                'wlsort': self.wlsort, 'wlminfreq': self.wlminfreq,
-                'wlnums': self.wlnums}
+                      'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s&wlnums=%(wlnums)s') % params_values
 
             self._add_save_menu_item('CSV', 'savewl', params % 'csv')
             self._add_save_menu_item('XLSX', 'savewl', params % 'xlsx')
