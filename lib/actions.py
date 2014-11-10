@@ -808,6 +808,7 @@ class Actions(Kontext):
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
+        self._attach_query_metadata(out)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
