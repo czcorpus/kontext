@@ -34,13 +34,13 @@ define(['tpl/document', 'queryInput', 'plugins/queryStorage', 'plugins/liveAttri
      * @param conf page configuration data
      */
     lib.init = function (conf) {
-        layoutModel.registerPlugin('queryStorage', queryStorage);
-        layoutModel.init(conf).add({
+
+        var promises = layoutModel.init(conf).add({
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
                 lib.extendedApi, layoutModel.userSettings),
             updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
                 lib.extendedApi, layoutModel.userSettings),
-            queryStorage : queryStorage.init(lib.extendedApi),
+            queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });

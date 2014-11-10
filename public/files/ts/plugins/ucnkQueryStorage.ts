@@ -558,7 +558,7 @@ export class QueryStoragePlugin implements Model.Plugin {
 
     reset(): void {
         var self = this;
-        if (!this.pluginApi.conf('anonymousUser')) {
+        if (!this.pluginApi.userIsAnonymous()) {
             $('input.history:visible').each(function () {
                 var plugin = self.bind(this);
                 self.addTriggerButton(plugin);
