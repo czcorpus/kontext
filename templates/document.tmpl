@@ -544,12 +544,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #def corp_sel($onchange=True)
     ## Select corpus name
 
-    #if $corplist_size == 1
-    $corp_full_name</b><br>
-    <input type="hidden" name="corpname" value="$corpname" />
-    #else
     <input type="hidden" name="reload" />
-
     <select name="corpname">
       #for $c in $Corplist
         #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
@@ -576,14 +571,13 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     </div>
     #end if
 
-    #end if
 #end def  ## corp_sel
 ## ***************************************** ##
 #def corp_sel_node
     #filter None
     <tbody>
         <tr class="required">
-        #if $corplist_size
+        #if $corplist_size or $FeaturedCorplist
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None
