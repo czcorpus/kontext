@@ -149,7 +149,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             {
                 clickableText : true,
                 searchable : true,
-                customHeader : $('#mainform .featured-corpora')
+                customHeader : $('#mainform .featured-corpora'),
+                defaultButtonLabel : layoutModel.conf.corpname
             },
             layoutModel.formChangeCorpus
         );

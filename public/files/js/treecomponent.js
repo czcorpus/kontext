@@ -50,12 +50,14 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
      *
      * @constructor
      * @param {HTMLElement} button
+     * @param {string} [fallbackLabel] a value to be shown as a button text in case no data is available ('-' by default)
      * @param {function(event, string)} [customCallback] a custom function called whenever user clicks a leaf node;
      * the second argument contains item's value
      */
-    function NestedTree(button, customCallback) {
+    function NestedTree(button, fallbackLabel, customCallback) {
         this.hiddenInput = null;
         this.button = button;
+        this.fallbackLabel = fallbackLabel || '-';
         this.customCallback = customCallback;
         this.leafValues = {}; // leaf item value => leaf item link (A)
     }
@@ -132,27 +134,33 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
     NestedTree.prototype.buildFromSelectElm = function (selectBox) {
         var splitPath,
             rootUl = win.document.createElement('ul'),
-            self = this;
+            self = this,
+            currentCorpname = $(selectBox).val();
 
         this.hiddenInput = win.document.createElement('input');
         $(this.hiddenInput).attr({
             'type': 'hidden',
             'name': $(selectBox).attr('name'),
-            'value': $(selectBox).val()
+            'value': currentCorpname
         });
 
-        $(selectBox).children().each(function () {
-            var path = $(this).data('path');
-            if (path.indexOf('/') === 0) {
-                path = path.substring(1);
-            }
-            if (path.substr(path.length - 1, 1) === '/') {
-                path = path.substr(0, path.length - 1);
-            }
-            splitPath = path.split('/');
-            splitPath.push($(this).attr('value'));
-            self.findUlPath(splitPath, $(this).text(), $(this).attr('title'), rootUl);
-        });
+        if ($(selectBox).children().length > 0) {
+            $(selectBox).children().each(function () {
+                var path = $(this).data('path');
+                if (path.indexOf('/') === 0) {
+                    path = path.substring(1);
+                }
+                if (path.substr(path.length - 1, 1) === '/') {
+                    path = path.substr(0, path.length - 1);
+                }
+                splitPath = path.split('/');
+                splitPath.push($(this).attr('value'));
+                self.findUlPath(splitPath, $(this).text(), $(this).attr('title'), rootUl);
+            });
+
+        } else { // no favorite corpora, but still have to display at least the current corpus
+            $(self.button).empty().append(self.fallbackLabel);
+        }
         return rootUl;
     };
 
@@ -166,6 +174,7 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
      * @param {boolean} options.searchable
      * @param {jQuery|HTMLElement} options.customHeader
      * @param {jQuery|HTMLElement} options.customFooter
+     * @param {string} options.defaultButtonLabel
      * @param {Function} options.onSwitchVisibility a callback function(status, treeComponent) called whenever
      * visibility status is changed. But only if triggered manually (via a clickable element), i.e. automatic
      * component initalization does NOT cause this callback to be called.
@@ -525,7 +534,6 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
             self = this;
 
         this.bindOutsideClick();
-
         wrapper = win.document.createElement('div');
         this.jqWrapper = $(wrapper);
         this.jqWrapper.css({
@@ -542,7 +550,7 @@ define(['jquery', 'win', 'vendor/typeahead'], function ($, win) {
         this.button = this.createActivationButton(this.options.title || this.getTitleOfSelectedItem(selectElm));
         this.jqWrapper.append(this.button);
 
-        this.nestedTree = new NestedTree(this.button, leafNodeClickCallback);
+        this.nestedTree = new NestedTree(this.button, this.options.defaultButtonLabel, leafNodeClickCallback);
         this.rootUl = this.nestedTree.buildFromSelectElm(selectElm);
         $(this.rootUl).addClass('root-list');
         this.treeWrapper = $(win.document.createElement('DIV'));
