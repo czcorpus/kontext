@@ -772,7 +772,6 @@ class Kontext(Controller):
     def _load_user_corplists(self):
         user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
         favorite_corpora = [fc for fc in user_corpora if fc['id'] in self.favorite_corpora]
-
         featured_corpora = []
         if plugins.has_plugin('featured_corpora'):
             featured_corpora.extend(plugins.featured_corpora.get_corpora(self._session_get('user', 'id'), user_corpora))
@@ -793,8 +792,7 @@ class Kontext(Controller):
         else:
             result['corp_web'] = ''
 
-        result['Corplist'], result['FeaturedCorplist'] = self._load_user_corplists()
-        result['corplist_size'] = min(len(result['Corplist']), 20)
+        result['CorplistFn'] = self._load_user_corplists
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
             result['subcorp_size'] = format_number(sc.search_size())

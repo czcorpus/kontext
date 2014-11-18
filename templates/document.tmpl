@@ -540,13 +540,13 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 
 </body>
 </html>
+
 ## ******** Common methods definitions ******** ##
-#def corp_sel($onchange=True)
-    ## Select corpus name
+#def corp_sel($corplist, $featured_corplist)
 
     <input type="hidden" name="reload" />
     <select name="corpname">
-      #for $c in $Corplist
+      #for $c in $corplist
         #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
         <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
       #end for
@@ -559,11 +559,11 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     </select>
     #end if ## SubcorpList
 
-    #if len($FeaturedCorplist) > 0
+    #if len($featured_corplist) > 0
     <div class="featured-corpora" style="display: none">
         <h3>$_('Featured corpora')</h3>
         <ul>
-            #for $featured in $FeaturedCorplist
+            #for $featured in $featured_corplist
             <li><a href="first_form?corpname=$featured[0]">$featured[1]</a></li>
             #end for
         </ul>
@@ -574,6 +574,9 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #end def  ## corp_sel
 ## ***************************************** ##
 #def corp_sel_node
+    ## Select corpus name
+    #set $corplist, $featuredCorplist = $CorplistFn()
+    #set $corplist_size = $min($len($corplist), 20)
     #filter None
     <tbody>
         <tr class="required">
@@ -581,7 +584,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None
-            $corp_sel
+            $corp_sel($corplist, $featuredCorplist)
             #end filter
         #else
             <td colspan="2">
