@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2003-2013  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
 # Copyright (c) 2014 Institute of the Czech National Corpus
@@ -164,7 +163,7 @@ class CorpusManager(object):
                     corp_info = corp.get_info()
 
                     cl.append({'id': '%s%s' % (id_prefix, c),
-                               'name': corp_name,
+                               'name': import_string(corp_name, from_encoding=corp.get_conf('ENCODING')),
                                'desc': import_string(corp_info, from_encoding=corp.get_conf('ENCODING')),
                                'size': corp.size(),
                                'path': path

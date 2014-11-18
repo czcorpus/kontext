@@ -28,7 +28,9 @@ from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
 from l10n import import_string
-import conccache as cc
+import plugins
+
+cache_factory = plugins.conc_cache
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
@@ -70,7 +72,7 @@ def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
         cache_dir = cache_dir + '/' + corp.corpname + '/'
-        cache_map = cc.CacheMapping(cache_dir)
+        cache_map = cache_factory.get_mapping(cache_dir)
         cache_val = cache_map[(subchash, q)]
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
@@ -170,7 +172,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     except OSError:
         pass
 
-    cache_map = cc.CacheMapping(cache_dir)
+    cache_map = cache_factory.get_mapping(cache_dir)
     if contains_shuffle_seq(q):
         srch_from = 1
     else:
@@ -225,7 +227,7 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            cache_map = cc.CacheMapping(cache_dir)
+            cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
             if type(pidfile) != file:  # computation got started meanwhile
                 wait_for_conc(corp, q, cachefile, pidfile, -1)
@@ -265,7 +267,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         # PID file will have fd 1
         pidfile = None
         try:
-            cache_map = cc.CacheMapping(cache_dir)
+            cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
             if type(pidfile) != file:
                 # conc got started meanwhile by another process
@@ -324,7 +326,7 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
-        cache_map = cc.CacheMapping(cache_dir)
+        cache_map = cache_factory.get_mapping(cache_dir)
         cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
@@ -383,7 +385,7 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cache_map = cc.CacheMapping(cache_dir)
+            cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
             if type(pidfile) != file:
                 wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
@@ -436,7 +438,7 @@ def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, transla
              't': ('', ''),
              }
     desc = []
-    cache_map = cc.CacheMapping(cache_dir + '/' + corpname + '/')
+    cache_map = cache_factory.get_mapping(cache_dir + '/' + corpname + '/')
     q = tuple(q)
 
     for i in range(len(q)):

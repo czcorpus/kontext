@@ -93,21 +93,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
         #end filter
         </table>
 
-        #if $getVar('TextTypeSel', None)
-          #set $showhiddenlistsimple = $getVar("showhidsim", '').split(".")
-          #set $hidden = ('texttypeel' in $showhiddenlistsimple) and ' visible' or ' hidden'
-          <div class="advanced_options$hidden">
-          <h3>$_("Text Types")</h3>
-
-            <div class="indent">
-            #filter None
-            $tt_sel
-            #end filter
-            </div>
-
-            </div>
-
-        #end if
+        #filter None
+        $specify_context_form()
+        $specify_meta_form()
+        #end filter
 
         <div class="buttons">
           <input class="submit default-button" type="submit" value="$_("Filter Concordance")" />

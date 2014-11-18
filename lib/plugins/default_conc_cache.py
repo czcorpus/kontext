@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2009  Pavel Rychly
+# Copyright (c) 2003-2014  Pavel Rychly, Vojtech Kovar, Milos Jakubicek
 # Copyright (c) 2014 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
@@ -122,4 +122,11 @@ class CacheMapping(object):
         self._data = None  # forces load on next __getitem__
 
 
+class CacheMappingFactory(object):
 
+    def get_mapping(self, cache_dir):
+        return CacheMapping(cache_dir)
+
+
+def create_instance(settings, db):
+    return CacheMappingFactory()

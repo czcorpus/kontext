@@ -79,7 +79,13 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox', 'plugins/liveAttr
             $('form[action="subcorp"]').attr('method', 'GET').submit();
         };
         treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'),
-            layoutModel.conf.messages, {clickableText: true, searchable : true}, updateForm);
+            layoutModel.conf.messages,
+            {
+                clickableText: true,
+                searchable : true,
+                defaultButtonLabel : layoutModel.conf.corpname
+            },
+            updateForm);
     };
 
     lib.initAttributeHints = function () {

@@ -28,23 +28,11 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
 
     var lib = {},
         activeParallelCorporaSettingKey = 'active_parallel_corpora',
-        clStorage = conclines.openStorage(),
-        ExtendedApi;
+        clStorage = conclines.openStorage();
 
     lib.maxEncodedParamsLength = 1500;
     lib.treeComponent = null;
-
-    ExtendedApi = function () {
-        this.queryFieldsetToggleEvents = [];
-    };
-
-    ExtendedApi.prototype = layoutModel.pluginApi();
-
-    ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
-        this.queryFieldsetToggleEvents.push(fn);
-    };
-
-    lib.extendedApi = new ExtendedApi();
+    lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
 
     /**
      *
@@ -160,14 +148,16 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             layoutModel.conf.messages,
             {
                 clickableText : true,
-                searchable : true
+                searchable : true,
+                customHeader : $('#mainform .featured-corpora'),
+                defaultButtonLabel : layoutModel.conf.corpname
             },
             layoutModel.formChangeCorpus
         );
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
-        queryInput.cmdSwitchQuery($('#queryselector').get(0), layoutModel.conf.queryTypesHints);
+        queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -212,40 +202,6 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
         layoutModel.mouseOverImages();
         defer.resolve();
         return defer.promise();
-    };
-
-    /**
-     *
-     */
-    lib.bindQueryFieldsetsEvents = function () {
-        $('a.form-extension-switch').on('click', function (event) {
-            var jqTriggerLink = $(event.currentTarget),
-                jqFieldset = jqTriggerLink.closest('fieldset');
-
-            jqFieldset.toggleClass('inactive');
-            if (jqFieldset.hasClass('inactive')) {
-                jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
-                    .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', layoutModel.conf.messages.click_to_expand);
-                jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_expand);
-                jqFieldset.find('div.desc').show();
-                layoutModel.userSettings.set(jqTriggerLink.data('box-id'), false);
-
-            } else {
-                jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
-                    .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', layoutModel.conf.messages.click_to_hide);
-                jqTriggerLink.attr('title', layoutModel.conf.messages.click_to_hide);
-                jqFieldset.find('div.desc').hide();
-                layoutModel.userSettings.set(jqTriggerLink.data('box-id'), true);
-            }
-            $.each(lib.extendedApi.queryFieldsetToggleEvents, function (i, fn) {
-                fn(jqFieldset);
-            });
-            layoutModel.mouseOverImages();
-        });
     };
 
     lib.bindStaticElements = function () {
@@ -367,20 +323,26 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     lib.init = function (conf) {
         var promises;
 
-        layoutModel.registerPlugin('queryStorage', queryStorage);
         clStorage.clear();
 
         promises = layoutModel.init(conf).add({
             misc : lib.misc(),
             bindStaticElements : lib.bindStaticElements(),
-            bindQueryFieldsetsEvents : lib.bindQueryFieldsetsEvents(),
+            bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
+                lib.extendedApi,
+                layoutModel.userSettings),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
-            updateToggleableFieldsets : lib.updateToggleableFieldsets(),
+            updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
+                lib.extendedApi,
+                layoutModel.userSettings),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            queryStorage : queryStorage.init(lib.extendedApi),
+            queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });
+
+        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
+		layoutModel.mouseOverImages();
         return promises;
     };
 
