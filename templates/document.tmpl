@@ -95,7 +95,7 @@ paths['vendor/QUnit'] = './vendor/qunit'
 #end if
 
 requirejs.config({
-    baseUrl : #if not $debug#'../files/js/min'#else#'../files/js'#end if#,
+    baseUrl : '../files/js/min',
     paths: paths,
     shim : {
         'vendor/jscrollpane' : {
@@ -122,9 +122,16 @@ requirejs.config({
     for (i = 0; i < names.length; i += 1) {
         define(names[i], [], function () {
             return {
-                init : function () {},
-                reset : function () {},
-                detach : function () {}
+                init : function () {}, // deprecated
+                reset : function () {}, // deprecated
+                detach : function () {}, // deprecated
+                createInstance : function () {
+                    return {
+                        init : function () {},
+                        reset : function () {},
+                        detach : function () {}
+                    };
+                }
             };
         });
     }
@@ -220,10 +227,11 @@ define('conf', [], function () {
                     <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
-            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Subcorpora")</a>
+            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Corpora")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new')&#8230;</a></li>
+                    <li class="separ"><a href="corplist">$_('Available corpora')&#8230;</a></li>
                     <li><a title="$_('List of my subcorpora')" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                    <li><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                 </ul>
             </li>
             <li class="separator">&nbsp;</li>
@@ -536,12 +544,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #def corp_sel($onchange=True)
     ## Select corpus name
 
-    #if $corplist_size == 1
-    $corp_full_name</b><br>
-    <input type="hidden" name="corpname" value="$corpname" />
-    #else
     <input type="hidden" name="reload" />
-
     <select name="corpname">
       #for $c in $Corplist
         #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
@@ -555,14 +558,26 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         #end for
     </select>
     #end if ## SubcorpList
+
+    #if len($FeaturedCorplist) > 0
+    <div class="featured-corpora" style="display: none">
+        <h3>$_('Featured corpora')</h3>
+        <ul>
+            #for $featured in $FeaturedCorplist
+            <li><a href="first_form?corpname=$featured[0]">$featured[1]</a></li>
+            #end for
+        </ul>
+        <h3>$_('My favorite corpora') <span class="archive">(<a href="corplist">$_('see all')</a>)</span></h3>
+    </div>
     #end if
+
 #end def  ## corp_sel
 ## ***************************************** ##
 #def corp_sel_node
     #filter None
     <tbody>
         <tr class="required">
-        #if $corplist_size
+        #if $corplist_size or $FeaturedCorplist
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None

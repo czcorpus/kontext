@@ -234,6 +234,8 @@ class Kontext(Controller):
     shuffle = Parameter(0, persistent=True)
     SubcorpList = Parameter([])
 
+    favorite_corpora = Parameter([], persistent=True)
+
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
 
     _conc_dir = u''
@@ -385,10 +387,12 @@ class Kontext(Controller):
     def _get_save_excluded_attributes(self):
         return ()
 
-    def _save_options(self, optlist=[], selector=''):
+    def _save_options(self, optlist=None, selector=''):
         """
         Saves user's options to a storage
         """
+        if optlist is None:
+            optlist = []
         if selector:
             tosave = [(selector + ':' + opt, self.__dict__[opt])
                       for opt in optlist if opt in self.__dict__]
@@ -639,6 +643,12 @@ class Kontext(Controller):
             for item in tpl_out['Aligned']:
                 tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
+    def _attach_query_metadata(self, tpl_out):
+        """
+        Adds information needed by extended version of text type (and other attributes) selection in a query
+        """
+        tpl_out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
+
     def _add_save_menu_item(self, label, action, params):
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
@@ -759,6 +769,15 @@ class Kontext(Controller):
             from empty_corpus import EmptyCorpus
             return EmptyCorpus()
 
+    def _load_user_corplists(self):
+        user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
+        favorite_corpora = [fc for fc in user_corpora if fc['id'] in self.favorite_corpora]
+
+        featured_corpora = []
+        if plugins.has_plugin('featured_corpora'):
+            featured_corpora.extend(plugins.featured_corpora.get_corpora(self._session_get('user', 'id'), user_corpora))
+        return favorite_corpora, featured_corpora
+
     def _add_corpus_related_globals(self, result, corpus):
         result['files_path'] = self._files_path
         result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
@@ -774,8 +793,7 @@ class Kontext(Controller):
         else:
             result['corp_web'] = ''
 
-        result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
-                                                         settings.get_bool('corpora', 'use_db_whitelist'))
+        result['Corplist'], result['FeaturedCorplist'] = self._load_user_corplists()
         result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
@@ -872,7 +890,7 @@ class Kontext(Controller):
         try:
             self._add_corpus_related_globals(result, thecorp)
         except Exception as ex:
-            pass
+            logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
 
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])

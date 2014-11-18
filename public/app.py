@@ -83,6 +83,7 @@ def init_plugin(name, dependencies, module=None):
     arguments:
     name -- name of the plugin
     dependencies -- list/tuple containing arguments needed to initialize the plugin
+    module -- allows changing configured module programmatically
     """
     try:
         if module is None:
@@ -119,6 +120,7 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.db, plugins.sessions))
     init_plugin('conc_persistence', (settings, plugins.db))
+    init_plugin('conc_cache', (settings, plugins.db))
     init_plugin('export', (settings,), module=plugins.export)
 
     # optional plugins
@@ -128,7 +130,8 @@ def setup_plugins():
         ('query_storage', (settings, plugins.db)),
         ('application_bar', (settings, plugins.auth)),
         ('live_attributes', ('corptree', settings)),
-        ('query_mod', (settings,))
+        ('query_mod', (settings,)),
+        ('featured_corpora', (settings, plugins.db))
     )
 
     for plugin, dependencies in optional_plugins:

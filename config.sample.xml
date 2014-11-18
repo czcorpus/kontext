@@ -47,6 +47,9 @@
             <ttl_days extension-by="default">100</ttl_days>
             <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
         </conc_persistence>
+        <conc_cache>
+            <module>default_conc_cache</module>
+        </conc_cache>
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users>
@@ -64,6 +67,13 @@
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
         </corptree>
+        <featured_corpora>
+            <module>default_featured_corpora</module>
+            <list>
+                <item>bnc</item>
+                <item>my_corpus</item>
+            </list>
+        </featured_corpora>
         <export>
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>
@@ -74,7 +84,6 @@
     </cache>
     <corpora>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
-        <options_dir>/var/local/corpora/registry/options</options_dir>
         <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
         <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>

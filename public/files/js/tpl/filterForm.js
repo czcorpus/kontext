@@ -21,20 +21,31 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['tpl/document', 'plugins/queryStorage'], function (layoutModel, queryStorage) {
+define(['tpl/document', 'queryInput', 'plugins/queryStorage', 'plugins/liveAttributes'], function (
+    layoutModel, queryInput, queryStorage, liveAttributes) {
     'use strict';
 
     var lib = {};
+
+    lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
 
     /**
      *
      * @param conf page configuration data
      */
     lib.init = function (conf) {
-        layoutModel.registerPlugin('queryStorage', queryStorage);
-        layoutModel.init(conf).add({
-            queryStorage : queryStorage.init(layoutModel.pluginApi())
+
+        var promises = layoutModel.init(conf).add({
+            bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
+                lib.extendedApi, layoutModel.userSettings),
+            updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
+                lib.extendedApi, layoutModel.userSettings),
+            queryStorage : queryStorage.createInstance(lib.extendedApi),
+            liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
+                '.text-type-params')
         });
+
+        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
     };
 
     return lib;

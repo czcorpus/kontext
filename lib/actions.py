@@ -16,7 +16,7 @@ import math
 import os
 import sys
 import re
-import csv
+import json
 
 from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
@@ -252,7 +252,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         self._export_subcorpora_list(out)
-        out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
+        self._attach_query_metadata(out)
         self.last_corpname = self.corpname
         self._save_options(['last_corpname'])
         return out
@@ -808,6 +808,7 @@ class Actions(Kontext):
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
+        self._attach_query_metadata(out)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
@@ -1776,15 +1777,14 @@ class Actions(Kontext):
                 for a in dir(self) if a.startswith('sca_')]
         structs = {}
         for sa, v in scas:
-            if type(v) in (type(''), type(u'')) and '|' in v:
+            if type(v) in (str, unicode) and '|' in v:
                 v = v.split('|')
             s, a = sa.split('.')
-            if type(v) is type([]):
+            if type(v) is list:
                 query = '(%s)' % ' | '.join(['%s="%s"' % (a, l10n.escape(v1))
                                              for v1 in v])
             else:
                 query = '%s="%s"' % (a, l10n.escape(v))
-            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
             if s in structs:
                 structs[s].append(query)
             else:
@@ -2283,6 +2283,50 @@ class Actions(Kontext):
         self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
         q_id = self._store_conc_params()
         return {
-            'id' : q_id,
-            'next_url' : 'view?corpname=' + self.corpname + '&q=~' + q_id
+            'id': q_id,
+            'next_url': 'view?corpname=' + self.corpname + '&q=~' + q_id
         }
+
+    @exposed()
+    def corplist(self, max_size='', min_size='', category=''):
+
+        def corp_filter(item):
+            if max_size and item['size'] > float(max_size):
+                return False
+            if min_size and item['size'] < float(min_size):
+                return False
+            if category and item['path'] != category:
+                return False
+            return True
+
+        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        categories = set()
+        for c in corplist:
+            categories.add(c.get('path', None))
+        corplist = filter(corp_filter, corplist)
+
+        for c in corplist:
+            c['size'] = l10n.format_number(c['size'])
+            c['fullpath'] = '%s%s' % (c['path'], c['id'])
+
+        corplist = sorted(corplist, key=lambda x: x['fullpath'])
+
+        ans = {
+            'form': {
+                'max_size': max_size,
+                'min_size': min_size,
+                'category': category
+            },
+            'corplist': corplist,
+            'categories': [('', '-')] + [(x, x) for x in l10n.sort(categories, self.ui_lang)]
+        }
+        return ans
+
+    @exposed(return_type='json')
+    def set_favorite_corp(self, data=''):
+        data = json.loads(data)
+        remove_corp = set([x[0] for x in data.items() if x[1] is False])
+        add_corp = set([x[0] for x in data.items() if x[1] is True])
+        self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
+        self._save_options(optlist=['favorite_corpora'])
+        return {}
