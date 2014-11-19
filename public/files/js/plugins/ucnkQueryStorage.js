@@ -367,7 +367,7 @@ define(['jquery', 'win'], function ($, win) {
 
             link = $(win.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(v.query);
+            link.text(v.query);
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
