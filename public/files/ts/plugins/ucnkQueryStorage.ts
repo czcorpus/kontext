@@ -410,7 +410,7 @@ export class QueryHistory {
 
             link = $(window.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(splitString(v.query, self.splitQueryIfSize));
+            link.text(splitString(v.query, self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
