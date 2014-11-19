@@ -28,6 +28,39 @@ define(['jquery', 'win'], function ($, win) {
 
     /**
      *
+     * @param s
+     * @param maxChunkSize
+     * @returns {string|*}
+     */
+    function splitString(s, maxChunkSize) {
+        var ans = [],
+            line,
+            items = s.split(/([\s,\."':\-\(\)\|])/);
+
+        line = '';
+        while (items.length > 0) {
+            if (line.length + items[0].length <= maxChunkSize) {
+                line += items.shift();
+
+            } else if (line.length > 0) {
+                ans.push(line);
+                line = '';
+
+            } else {
+                line += items.shift().substr(0, maxChunkSize - 3) + '&hellip;';
+            }
+
+        }
+        if (line.length > 0) {
+            ans.push(line);
+        }
+        return ans.join('<br />');
+    }
+
+
+
+    /**
+     *
      * @param inputElm
      * @param parentElm
      * @constructor
@@ -40,6 +73,7 @@ define(['jquery', 'win'], function ($, win) {
         this.highlightedRow = 0;
         this.data = []; // currently appended data
         this.dependencies = []; // list of registered external dependencies (see function registerDependency())
+        this.splitQueryIfSize = 60;
         this.bindOnOffEvents();
     }
 
@@ -367,7 +401,7 @@ define(['jquery', 'win'], function ($, win) {
 
             link = $(win.document.createElement('em'));
             link.attr('href', v.url);
-            link.text(v.query);
+            link.text(splitString(v.query, self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
