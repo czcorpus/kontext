@@ -1002,7 +1002,6 @@ class Kontext(Controller):
                               for o, a, u1, u2, s in
                               conclib.get_conc_desc(self.q,
                                                     corpname=self.corpname,
-                                                    cache_dir=self.cache_dir,
                                                     subchash=getattr(self._corp(), "subchash", None),
                                                     translate=translate)]
 
@@ -1019,7 +1018,6 @@ class Kontext(Controller):
         if 'orig_query' in vars:
             conc_desc = conclib.get_conc_desc(self.q,
                                               corpname=self.corpname,
-                                              cache_dir=self.cache_dir,
                                               subchash=getattr(self._corp(), "subchash", None))
             if len(conc_desc) > 1:
                 result['tourl'] = self.urlencode(conc_desc[0][3])

@@ -31,6 +31,7 @@ from l10n import import_string
 import plugins
 
 cache_factory = plugins.conc_cache
+CACHE_ROOT_DIR = settings.get('corpora', 'cache_dir')
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
@@ -406,7 +407,7 @@ def conc_is_sorted(q):
     return ans
 
 
-def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, translate=True):
+def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
     if q is None:
         q = []
     if translate:
@@ -438,7 +439,7 @@ def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, transla
              't': ('', ''),
              }
     desc = []
-    cache_map = cache_factory.get_mapping(cache_dir + '/' + corpname + '/')
+    cache_map = cache_factory.get_mapping(CACHE_ROOT_DIR + '/' + corpname + '/')
     q = tuple(q)
 
     for i in range(len(q)):
