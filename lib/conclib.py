@@ -47,14 +47,13 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     return ctxs
 
 
-def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
+def get_cached_conc_sizes(corp, q=None, cachefile=None):
     """
     arguments:
     corp -- manatee.Corpus instance
     q -- a list containing preprocessed query
-    cache_dir -- where cache is located
     cachefile -- if not provided then the path is determined automatically
-    using cache_dir, corpus name and the query
+    using CACHE_ROOT_DIR and corpus name, corpus name and the query
 
     returns:
     a dictionary {
@@ -72,7 +71,7 @@ def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
     if not cachefile:  # AJAX call
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
-        cache_dir = cache_dir + '/' + corp.corpname + '/'
+        cache_dir = CACHE_ROOT_DIR + '/' + corp.corpname + '/'
         cache_map = cache_factory.get_mapping(cache_dir)
         cache_val = cache_map[(subchash, q)]
         if cache_val:
@@ -154,7 +153,7 @@ def _contains_shuffle_seq(q_ops):
     return False
 
 
-def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
+def _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     """
     Loads a concordance from cache
     """
@@ -337,8 +336,7 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
     return conc
 
 
-def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
-             cache_dir='cache', samplesize=0):
+def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
     if not q:
         return None
     q = tuple(q)
@@ -348,23 +346,21 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
             minsize = -1
         else:
             minsize = fromp * pagesize
-    cache_dir = cache_dir + '/' + corp.corpname + '/'
+    cache_dir = CACHE_ROOT_DIR + '/' + corp.corpname + '/'
     pid_dir = cache_dir + 'run/'
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
     # try to locate concordance in cache
     if save:
-        toprocess, conc = get_cached_conc(
-            corp, subchash, q, cache_dir, pid_dir,
-                                          minsize)
+        toprocess, conc = _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize)
         if toprocess == len(q):
             save = 0
         if not conc and q[0][0] == 'R':  # online sample
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            t, c = get_cached_conc(corp, subchash, q_copy, cache_dir, pid_dir, -1)
+            t, c = _get_cached_conc(corp, subchash, q_copy, cache_dir, pid_dir, -1)
             if c:
                 fullsize = c.fullsize()
     else:
