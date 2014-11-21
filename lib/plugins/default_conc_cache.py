@@ -66,6 +66,12 @@ class CacheMapping(object):
         return ans if ans is not None else {}
 
     def add_to_map(self, pid_dir, subchash, key, size):
+        """
+        returns:
+        2-tuple
+            (cache_file_path, pidfile_path) if the record is already present
+            (cache_file_path, pidfile_file_object) if this call creates new record
+        """
         import cPickle
         kmap = pidfile = None
         try:
@@ -82,6 +88,7 @@ class CacheMapping(object):
                 kmap[subchash, key] = (ret, size)
                 f.seek(0)
                 cPickle.dump(kmap, f)
+            pidfile = pid_dir + ret + '.pid'
         else:
             ret = _uniqname(key, [r for (r, s) in kmap.values()])
             kmap[subchash, key] = (ret, size)
@@ -91,8 +98,6 @@ class CacheMapping(object):
             pidfile.write(str(os.getpid()) + '\n')
             pidfile.flush()
         f.close()  # also automatically flck_unlock (f)
-        if not pidfile:
-            pidfile = pid_dir + ret + '.pid'
         return self._cache_dir + ret + '.conc', pidfile
 
     def _del_from_map(self, tuple_key):
