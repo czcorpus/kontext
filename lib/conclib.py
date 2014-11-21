@@ -77,7 +77,7 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
 
-    if cachefile:
+    if cachefile and os.path.isfile(cachefile):
         cache = open(cachefile, 'rb')
         flck_sh_lock(cache)
         cache.seek(15)
@@ -100,14 +100,26 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
 
 
 def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
+    """
+    Called by webserver process (i.e. not by the background worker).
+    Waits in a loop until a minimal acceptable cached concordance occurs
+    (i.e. in general this does not wait for the complete concordance -
+    the fact depends on the 'minisize' parameter; if -1 then only whole conc. is
+    accepted).
+
+    arguments:
+    corp -- a manatee.Corpus instance
+    q -- a query tuple
+    cachefile -- concordance cache file path
+    pidfile -- a running worker information file
+    minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
+    """
     pidfile = os.path.realpath(pidfile)
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
-    error_wait = 5  # in sec
     i = 1
-    sizes = {}
     while _is_conc_alive(pidfile) and i < hard_limit:
         try:
-            sizes = get_cached_conc_sizes(corp, q, None, cachefile)
+            sizes = get_cached_conc_sizes(corp, q, cachefile)
             if minsize == -1:
                 if sizes['finished'] == 1:  # whole conc
                     break
@@ -117,21 +129,24 @@ def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
             logging.getLogger(__name__).warning('Concordance calculation error (ignored): %s' % e)
         time.sleep(i * 0.1)
         i += 1
-    if _is_conc_alive(pidfile):
-        logging.getLogger(__name__).warning('Concordance calculation limit %d exceeded. Params: %s' % (hard_limit / 10., sizes))
-    elif not os.path.isfile(cachefile):
-        logging.getLogger(__name__).warning('Concordance calculation problem - cache file still not available. '
-                                            'Waiting another %d seconds. Params: %s' % (error_wait, sizes))
-        time.sleep(error_wait)
+    if not os.path.isfile(cachefile):
+        if i >= hard_limit:
+            logging.getLogger(__name__).warning('Hardcoded limit %01.2f sec. for intermediate concordance exceeded.'
+                                                % (hard_limit / 10.))
+        raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
 def _is_conc_alive(pidfile):
     try:
-        pid = open(pidfile).readline()[:-1]
-        link = os.readlink('/proc/%s/fd/1' % pid)
-        if link != pidfile:
+        if os.path.exists(pidfile):
+            with open(pidfile, 'r') as f:
+                s = f.read()
+                # TODO parse and test too old calculation
+            return True
+        else:
             return False
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).warn('Failed to test concordance calculation state with error %s' % e)
         return False
     return True
 
@@ -201,7 +216,7 @@ def _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             if not _is_conc_alive(pidfile) and not conc.finished():
                 # unfinished and dead concordance
-                cache_map[(subchash, q)]
+                del cache_map[(subchash, q)]
                 try:
                     os.remove(cachefile)
                 except OSError:
@@ -269,8 +284,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
         try:
             cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
-            if type(pidfile) != file:
-                # conc got started meanwhile by another process
+            if type(pidfile) != file:  # conc record already present in cache_map
                 w.write(cachefile + '\n' + pidfile)
                 w.close()
                 os._exit(0)
