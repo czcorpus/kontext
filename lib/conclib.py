@@ -20,6 +20,7 @@ import os
 import sys
 import time
 import logging
+from multiprocessing import Process, Pipe
 
 import manatee
 import settings
@@ -264,77 +265,65 @@ def _compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
     return ans_conc
 
 
-def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, fullsize, minsize):
-    """
-    Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is currently not used
-    """
-    r, w = os.pipe()
-    r, w = os.fdopen(r, 'r'), os.fdopen(w, 'w')
-    if os.fork() == 0:  # child
-        r.close()  # child writes
-        title = 'bonito concordance;corp:%s;action:%s;params:%s;' % (corp.get_conffile(), q[0][0], q[0][1:])
-        setproctitle(title.encode('utf-8'))
-        # close stdin/stdout/stderr so that the webserver closes
-        # connection to client when parent ends
-        os.close(0)
-        os.close(1)
-        os.close(2)
-        # PID file will have fd 1
-        pidfile = None
+class BackgroundCalc(object):
+
+    def __init__(self, sending_pipe, corpus, cache_dir, pid_dir, subchash, q):
+        self._pipe = sending_pipe
+        self._corpus = corpus
+        self._cache_dir = cache_dir
+        self._pid_dir = pid_dir
+        self._subchash = subchash
+        self._q = q
+
+    def __call__(self, samplesize, fullsize):
         try:
-            cache_map = cache_factory.get_mapping(cache_dir)
-            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
+            cache_map = cache_factory.get_mapping(self._cache_dir)
+            cachefile, pidfile = cache_map.add_to_map(self._pid_dir, self._subchash, self._q, 0)
             if type(pidfile) != file:  # conc record already present in cache_map
-                w.write(cachefile + '\n' + pidfile)
-                w.close()
-                os._exit(0)
-            w.write(cachefile + '\n' + pidfile.name)
-            w.close()
-            conc = _compute_conc(corp, q, cache_dir, subchash, samplesize,
-                                fullsize, pid_dir)
+                return  # exit the process
+            self._pipe.send(cachefile + '\n' + pidfile.name)
+            conc = _compute_conc(self._corpus, self._q, self._cache_dir, self._subchash, samplesize,
+                                 fullsize, self._pid_dir)
             sleeptime = 0.1
             time.sleep(sleeptime)
             conc.save(cachefile, False, True)  # partial
             while not conc.finished():
-                conc.save(
-                    cachefile, False, True, True)  # partial + append
+                conc.save(cachefile, False, True, True)  # partial + append
                 time.sleep(sleeptime)
                 sleeptime += 0.1
             tmp_cachefile = cachefile + '.tmp'
             conc.save(tmp_cachefile)  # whole
             os.rename(tmp_cachefile, cachefile)
             # update size in map file
-            cache_map.add_to_map(pid_dir, subchash, q, conc.size())
+            cache_map.add_to_map(self._pid_dir, self._subchash, self._q, conc.size())
             os.remove(pidfile.name)
             pidfile.close()
         except Exception as e:
             logging.getLogger(__name__).error(e)
-            if not w.closed:
-                w.write('error\nerror')
-                w.close()
-            import traceback
-            if type(pidfile) == file:
-                traceback.print_exc(None, pidfile)
-                pidfile.close()
-        finally:
-            os._exit(0)  # os._exit <= we're closing child process
-    else:  # parent
-        w.close()  # parent reads
-        cachefile, pidfile = r.read().split('\n')
-        r.close()
-        _wait_for_conc(corp, q, cachefile, pidfile, minsize)
-        if not os.path.exists(cachefile):
-            try:
-                msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
-            except Exception as e:
-                msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
-            raise RuntimeError(msg)
-        conc = PyConc(corp, 'l', cachefile)
-        return conc
 
 
-def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
-                                    fullsize, pid_dir):
+def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, fullsize, minsize):
+    """
+    Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is currently not used
+    """
+    parent_conn, child_conn = Pipe(duplex=False)
+    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, cache_dir=cache_dir, pid_dir=pid_dir,
+                          subchash=subchash, q=q)
+    proc = Process(target=calc, args=(samplesize, fullsize))
+    proc.start()
+
+    cachefile, pidfile = parent_conn.recv().split('\n')
+    _wait_for_conc(corp, q, cachefile, pidfile, minsize)
+    if not os.path.exists(cachefile):
+        try:
+            msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
+        except Exception as e:
+            msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
+        raise RuntimeError(msg)
+    return PyConc(corp, 'l', cachefile)
+
+
+def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize, fullsize, pid_dir):
     conc = _compute_conc(corp, q, cache_dir, subchash, samplesize,
                                     fullsize, pid_dir)
     conc.sync()  # wait for the computation to finish
