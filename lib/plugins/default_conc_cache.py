@@ -21,6 +21,7 @@ and filename containing respective saved concordances.
 """
 import os
 import logging
+import time
 
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
@@ -68,12 +69,13 @@ class CacheMapping(object):
     def add_to_map(self, pid_dir, subchash, key, size):
         """
         returns:
-        2-tuple
-            (cache_file_path, pidfile_path) if the record is already present
-            (cache_file_path, pidfile_file_object) if this call creates new record
+        3-tuple
+            cache_file_path -- path to a cache file
+            pidfile_path -- path to a pidfile
+            already_present -- True if the record already exists
         """
         import cPickle
-        kmap = pidfile = None
+        kmap = None
         try:
             f = open(self._cache_dir + self.CACHE_FILENAME, 'r+b')
         except IOError:
@@ -88,17 +90,28 @@ class CacheMapping(object):
                 kmap[subchash, key] = (ret, size)
                 f.seek(0)
                 cPickle.dump(kmap, f)
-            pidfile = pid_dir + ret + '.pid'
+            pidfile = pid_dir + ret + '.pid',
+            already_present = True
         else:
             ret = _uniqname(key, [r for (r, s) in kmap.values()])
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)
-            pidfile = open(pid_dir + ret + '.pid', 'w')
-            pidfile.write(str(os.getpid()) + '\n')
-            pidfile.flush()
+            pidfile = pid_dir + ret + '.pid'
+            with open(pidfile, 'wb') as pf:
+                cPickle.dump(
+                    {
+                        'pid': os.getpid(),
+                        'last_check': int(time.time()),
+                        # in case we check status before any calculation (represented by the BackgroundCalc class)
+                        # starts (the calculation updates curr_wait as it runs), we want to be
+                        # sure the limit is big enough for BackgroundCalc to be considered alive
+                        'curr_wait': 100
+                    },
+                    pf)
+            already_present = False
         f.close()  # also automatically flck_unlock (f)
-        return self._cache_dir + ret + '.conc', pidfile
+        return self._cache_dir + ret + '.conc', pidfile, already_present
 
     def _del_from_map(self, tuple_key):
         subchash, key = tuple_key
