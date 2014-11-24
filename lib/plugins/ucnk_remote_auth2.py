@@ -148,19 +148,19 @@ class CentralAuth(AbstractAuth):
                 row = dict(zip(cols, row))
             else:
                 row = {}
-            db.close()
             if 'u.id' in row:
                 user_data['id'] = row['u.id']
                 user_data['user'] = row['u.user']
                 user_data['fullname'] = u'%s %s' % (row['u.firstName'], row['u.surname'])
                 cursor = db.cursor()
-                cursor.execute("CALL shift_user_expiration(%d)" % user_data['id'])
+                cursor.execute("CALL shift_user_expiration(%d)", (user_data['id'],))
             else:
                 user = self.anonymous_user()
                 user_data['id'] = user['id']
                 user_data['user'] = user['user']
                 user_data['fullname'] = user['fullname']
             user_data['revalidated'] = True
+            db.close()
 
     def get_corplist(self, user):
         """
