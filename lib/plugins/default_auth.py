@@ -94,19 +94,19 @@ class DefaultAuthHandler(AbstractAuth):
         """
         pass
 
-    def get_corplist(self, user):
+    def get_corplist(self, user_id):
         """
         Fetches list of corpora available to the current user
 
         arguments:
-        user -- username
+        user_id -- an ID of a user
 
         returns:
         a list of corpora names (sorted alphabetically)
         """
-        corpora = self.db.get(self._mk_list_key(user))
+        corpora = self.db.get(self._mk_list_key(user_id))
         if corpora:
-            if not IMPLICIT_CORPUS in corpora:
+            if IMPLICIT_CORPUS not in corpora:
                 corpora.append(IMPLICIT_CORPUS)
             return corpora
         else:
