@@ -20,6 +20,9 @@ import os
 import sys
 import time
 import logging
+from multiprocessing import Process, Pipe
+import cPickle
+import math
 
 import manatee
 import settings
@@ -28,7 +31,10 @@ from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
 from l10n import import_string
-import conccache as cc
+import plugins
+
+cache_factory = plugins.conc_cache
+CACHE_ROOT_DIR = settings.get('corpora', 'cache_dir')
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
@@ -44,14 +50,13 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     return ctxs
 
 
-def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
+def get_cached_conc_sizes(corp, q=None, cachefile=None):
     """
     arguments:
     corp -- manatee.Corpus instance
     q -- a list containing preprocessed query
-    cache_dir -- where cache is located
     cachefile -- if not provided then the path is determined automatically
-    using cache_dir, corpus name and the query
+    using CACHE_ROOT_DIR and corpus name, corpus name and the query
 
     returns:
     a dictionary {
@@ -65,21 +70,21 @@ def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
 
     if q is None:
         q = []
-    ans = {'finished': None, 'concsize': None, 'fullsize': None, 'relconcsize': None}
+    ans = {'finished': False, 'concsize': None, 'fullsize': None, 'relconcsize': None}
     if not cachefile:  # AJAX call
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
-        cache_dir = cache_dir + '/' + corp.corpname + '/'
-        cache_map = cc.CacheMapping(cache_dir)
+        cache_dir = CACHE_ROOT_DIR + '/' + corp.corpname + '/'
+        cache_map = cache_factory.get_mapping(cache_dir)
         cache_val = cache_map[(subchash, q)]
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
 
-    if cachefile:
+    if cachefile and os.path.isfile(cachefile):
         cache = open(cachefile, 'rb')
         flck_sh_lock(cache)
         cache.seek(15)
-        finished = str(ord(cache.read(1)))
+        finished = bool(ord(cache.read(1)))
         (fullsize,) = struct.unpack('q', cache.read(8))
         cache.seek(32)
         (concsize,) = struct.unpack('i', cache.read(4))
@@ -97,15 +102,27 @@ def get_cached_conc_sizes(corp, q=None, cache_dir='cache', cachefile=None):
     return ans
 
 
-def wait_for_conc(corp, q, cachefile, pidfile, minsize):
+def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
+    """
+    Called by webserver process (i.e. not by the background worker).
+    Waits in a loop until a minimal acceptable cached concordance occurs
+    (i.e. in general this does not wait for the complete concordance -
+    the fact depends on the 'minisize' parameter; if -1 then only whole conc. is
+    accepted).
+
+    arguments:
+    corp -- a manatee.Corpus instance
+    q -- a query tuple
+    cachefile -- concordance cache file path
+    pidfile -- a running worker information file path
+    minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
+    """
     pidfile = os.path.realpath(pidfile)
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
-    error_wait = 5  # in sec
     i = 1
-    sizes = {}
-    while is_conc_alive(pidfile) and i < hard_limit:
+    while _is_conc_alive(pidfile) and i < hard_limit:
         try:
-            sizes = get_cached_conc_sizes(corp, q, None, cachefile)
+            sizes = get_cached_conc_sizes(corp, q, cachefile)
             if minsize == -1:
                 if sizes['finished'] == 1:  # whole conc
                     break
@@ -115,26 +132,31 @@ def wait_for_conc(corp, q, cachefile, pidfile, minsize):
             logging.getLogger(__name__).warning('Concordance calculation error (ignored): %s' % e)
         time.sleep(i * 0.1)
         i += 1
-    if is_conc_alive(pidfile):
-        logging.getLogger(__name__).warning('Concordance calculation limit %d exceeded. Params: %s' % (hard_limit / 10., sizes))
-    elif not os.path.isfile(cachefile):
-        logging.getLogger(__name__).warning('Concordance calculation problem - cache file still not available. '
-                                            'Waiting another %d seconds. Params: %s' % (error_wait, sizes))
-        time.sleep(error_wait)
+    if not os.path.isfile(cachefile):
+        if i >= hard_limit:
+            logging.getLogger(__name__).warning('Hardcoded limit %01.2f sec. for intermediate concordance exceeded.'
+                                                % (hard_limit / 10.))
+        raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
-def is_conc_alive(pidfile):
+def _is_conc_alive(pidfile):
     try:
-        pid = open(pidfile).readline()[:-1]
-        link = os.readlink('/proc/%s/fd/1' % pid)
-        if link != pidfile:
+        if os.path.exists(pidfile):
+            with open(pidfile, 'r') as f:
+                data = cPickle.load(f)
+                # TODO: still not bullet-proof solution
+                if math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
+                    return False
+            return True
+        else:
             return False
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).warn('Failed to test concordance calculation state with error %s' % e)
         return False
     return True
 
 
-def contains_shuffle_seq(q_ops):
+def _contains_shuffle_seq(q_ops):
     """
     Tests whether the provided query sequence contains a subsequence
     of 'shuffle' operation (e.g. on ['foo', 'bar', 'f', 'f', 'something'] returns True)
@@ -151,7 +173,7 @@ def contains_shuffle_seq(q_ops):
     return False
 
 
-def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
+def _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     """
     Loads a concordance from cache
     """
@@ -170,8 +192,8 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     except OSError:
         pass
 
-    cache_map = cc.CacheMapping(cache_dir)
-    if contains_shuffle_seq(q):
+    cache_map = cache_factory.get_mapping(cache_dir)
+    if _contains_shuffle_seq(q):
         srch_from = 1
     else:
         srch_from = len(q)
@@ -183,7 +205,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
             pidfile = os.path.realpath(pid_dir + cache_val[0] + '.pid')
-            wait_for_conc(corp, q, cachefile, pidfile, minsize)
+            _wait_for_conc(corp, q, cachefile, pidfile, minsize)
             if not os.path.exists(cachefile):  # broken cache
                 del cache_map[(subchash, q)]
                 try:
@@ -197,9 +219,9 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
                     conccorp = manatee.Corpus(qq[2:])
                     break
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
-            if not is_conc_alive(pidfile) and not conc.finished():
+            if not _is_conc_alive(pidfile) and not conc.finished():
                 # unfinished and dead concordance
-                cache_map[(subchash, q)]
+                del cache_map[(subchash, q)]
                 try:
                     os.remove(cachefile)
                 except OSError:
@@ -217,7 +239,7 @@ def get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
     return ans
 
 
-def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
+def _compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
     start_time = time.time()
     q = tuple(q)
     if q[0][0] == 'R':  # online sample
@@ -225,10 +247,10 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            cache_map = cc.CacheMapping(cache_dir)
-            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
-            if type(pidfile) != file:  # computation got started meanwhile
-                wait_for_conc(corp, q, cachefile, pidfile, -1)
+            cache_map = cache_factory.get_mapping(cache_dir)
+            cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
+            if in_progress:  # computation got started meanwhile
+                _wait_for_conc(corp, q, cachefile, pidfile, -1)
                 fullsize = PyConc(corp, 'l', cachefile).fullsize()
             else:
                 conc = PyConc(corp, q[0][1], q[0][2:], samplesize)
@@ -237,8 +259,7 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
                 # update size in map file
                 cache_map.add_to_map(pid_dir, subchash, q_copy, conc.size())
                 fullsize = conc.fullsize()
-                os.remove(pidfile.name)
-                pidfile.close()
+                os.remove(pidfile)
         ans_conc = PyConc(corp, q[0][1], q[0][2:], samplesize, fullsize)
     else:
         ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
@@ -247,95 +268,106 @@ def compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
     return ans_conc
 
 
+def _update_pidfile(file_path, **kwargs):
+    with open(file_path, 'rb+') as pf:
+        data = cPickle.load(pf)
+        data.update(kwargs)
+        cPickle.dump(data, pf)
+
+
+class BackgroundCalc(object):
+    """
+    This class wraps background calculation of a concordance (see _get_async_conc() function
+    below).
+    """
+
+    def __init__(self, sending_pipe, corpus, cache_dir, pid_dir, subchash, q):
+        """
+        arguments:
+        sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its parent
+        corpus -- a manatee.Corpus instance
+        cache_dir -- a directory where cached concordance will be created
+        pid_dir -- a directory where "pidfile" (= file containing information about background calculation) will be
+                   temporarily stored
+        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
+        q -- a tuple/list containing current query
+        """
+        self._pipe = sending_pipe
+        self._corpus = corpus
+        self._cache_dir = cache_dir
+        self._pid_dir = pid_dir
+        self._subchash = subchash
+        self._q = q
+
+    def __call__(self, samplesize, fullsize):
+        try:
+            cache_map = cache_factory.get_mapping(self._cache_dir)
+            cachefile, pidfile, in_progress = cache_map.add_to_map(self._pid_dir, self._subchash, self._q, 0)
+
+            if not in_progress:
+                self._pipe.send(cachefile + '\n' + pidfile)
+                # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may not be ready
+                # yet (this is checked by the 'finished()' method).
+                conc = _compute_conc(self._corpus, self._q, self._cache_dir, self._subchash, samplesize,
+                                     fullsize, self._pid_dir)
+                sleeptime = 0.1
+                time.sleep(sleeptime)
+                conc.save(cachefile, False, True)  # partial
+                while not conc.finished():
+                    conc.save(cachefile, False, True, True)  # partial + append
+                    time.sleep(sleeptime)
+                    sleeptime += 0.1
+                    _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime)
+                tmp_cachefile = cachefile + '.tmp'
+                conc.save(tmp_cachefile)  # whole
+                os.rename(tmp_cachefile, cachefile)
+                # update size in map file
+                cache_map.add_to_map(self._pid_dir, self._subchash, self._q, conc.size())
+                os.remove(pidfile)
+        except Exception as e:
+            # Please note that there is no need to clean any mess (pidfile of failed calculation, unfinished
+            # cached concordance etc.) here as this is performed by _get_cached_conc()
+            # function in case it detects a problem.
+            logging.getLogger(__name__).error('Background calculation error: %s' % e)
+
+
 def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, fullsize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is currently not used
     """
-    r, w = os.pipe()
-    r, w = os.fdopen(r, 'r'), os.fdopen(w, 'w')
-    if os.fork() == 0:  # child
-        r.close()  # child writes
-        title = 'bonito concordance;corp:%s;action:%s;params:%s;' % (corp.get_conffile(), q[0][0], q[0][1:])
-        setproctitle(title.encode('utf-8'))
-        # close stdin/stdout/stderr so that the webserver closes
-        # connection to client when parent ends
-        os.close(0)
-        os.close(1)
-        os.close(2)
-        # PID file will have fd 1
-        pidfile = None
+    parent_conn, child_conn = Pipe(duplex=False)
+    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, cache_dir=cache_dir, pid_dir=pid_dir,
+                          subchash=subchash, q=q)
+    proc = Process(target=calc, args=(samplesize, fullsize))
+    proc.start()
+
+    cachefile, pidfile = parent_conn.recv().split('\n')
+    _wait_for_conc(corp, q, cachefile, pidfile, minsize)
+    if not os.path.exists(cachefile):
         try:
-            cache_map = cc.CacheMapping(cache_dir)
-            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q, 0)
-            if type(pidfile) != file:
-                # conc got started meanwhile by another process
-                w.write(cachefile + '\n' + pidfile)
-                w.close()
-                os._exit(0)
-            w.write(cachefile + '\n' + pidfile.name)
-            w.close()
-            conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
-                                fullsize, pid_dir)
-            sleeptime = 0.1
-            time.sleep(sleeptime)
-            conc.save(cachefile, False, True)  # partial
-            while not conc.finished():
-                conc.save(
-                    cachefile, False, True, True)  # partial + append
-                time.sleep(sleeptime)
-                sleeptime += 0.1
-            tmp_cachefile = cachefile + '.tmp'
-            conc.save(tmp_cachefile)  # whole
-            os.rename(tmp_cachefile, cachefile)
-            # update size in map file
-            cache_map.add_to_map(pid_dir, subchash, q, conc.size())
-            os.remove(pidfile.name)
-            pidfile.close()
+            msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
         except Exception as e:
-            logging.getLogger(__name__).error(e)
-            if not w.closed:
-                w.write('error\nerror')
-                w.close()
-            import traceback
-            if type(pidfile) == file:
-                traceback.print_exc(None, pidfile)
-                pidfile.close()
-        finally:
-            os._exit(0)  # os._exit <= we're closing child process
-    else:  # parent
-        w.close()  # parent reads
-        cachefile, pidfile = r.read().split('\n')
-        r.close()
-        wait_for_conc(corp, q, cachefile, pidfile, minsize)
-        if not os.path.exists(cachefile):
-            try:
-                msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
-            except Exception as e:
-                msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
-            raise RuntimeError(msg)
-        conc = PyConc(corp, 'l', cachefile)
-        return conc
+            msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
+        raise RuntimeError(msg)
+    return PyConc(corp, 'l', cachefile)
 
 
-def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize,
-                                    fullsize, pid_dir):
-    conc = compute_conc(corp, q, cache_dir, subchash, samplesize,
+def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize, fullsize, pid_dir):
+    conc = _compute_conc(corp, q, cache_dir, subchash, samplesize,
                                     fullsize, pid_dir)
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
-        cache_map = cc.CacheMapping(cache_dir)
-        cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
+        cache_map = cache_factory.get_mapping(cache_dir)
+        cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
         cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
-        os.remove(pidfile.name)
-        pidfile.close()
+        os.remove(pidfile)
     return conc
 
 
-def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
-             cache_dir='cache', samplesize=0):
+def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
     if not q:
         return None
     q = tuple(q)
@@ -345,23 +377,21 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
             minsize = -1
         else:
             minsize = fromp * pagesize
-    cache_dir = cache_dir + '/' + corp.corpname + '/'
+    cache_dir = CACHE_ROOT_DIR + '/' + corp.corpname + '/'
     pid_dir = cache_dir + 'run/'
     subchash = getattr(corp, 'subchash', None)
     conc = None
     fullsize = -1
     # try to locate concordance in cache
     if save:
-        toprocess, conc = get_cached_conc(
-            corp, subchash, q, cache_dir, pid_dir,
-                                          minsize)
+        toprocess, conc = _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize)
         if toprocess == len(q):
             save = 0
         if not conc and q[0][0] == 'R':  # online sample
             q_copy = list(q)
             q_copy[0] = q[0][1:]
             q_copy = tuple(q_copy)
-            t, c = get_cached_conc(corp, subchash, q_copy, cache_dir, pid_dir, -1)
+            t, c = _get_cached_conc(corp, subchash, q_copy, cache_dir, pid_dir, -1)
             if c:
                 fullsize = c.fullsize()
     else:
@@ -383,14 +413,13 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0,
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cache_map = cc.CacheMapping(cache_dir)
-            cachefile, pidfile = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
-            if type(pidfile) != file:
-                wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
+            cache_map = cache_factory.get_mapping(cache_dir)
+            cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
+            if in_progress:
+                _wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
             else:
                 conc.save(cachefile)
-                os.remove(pidfile.name)
-                pidfile.close()
+                os.remove(pidfile)
     return conc
 
 
@@ -404,7 +433,7 @@ def conc_is_sorted(q):
     return ans
 
 
-def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, translate=True):
+def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
     if q is None:
         q = []
     if translate:
@@ -436,7 +465,7 @@ def get_conc_desc(q=None, cache_dir='cache', corpname='', subchash=None, transla
              't': ('', ''),
              }
     desc = []
-    cache_map = cc.CacheMapping(cache_dir + '/' + corpname + '/')
+    cache_map = cache_factory.get_mapping(CACHE_ROOT_DIR + '/' + corpname + '/')
     q = tuple(q)
 
     for i in range(len(q)):

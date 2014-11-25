@@ -100,6 +100,8 @@ def init_plugin(name, dependencies, module=None):
     except ImportError as e:
         logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                          % (settings.get('plugins', 'getlang')['module'], e))
+    except Exception as e:
+        logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
 
 
 def setup_plugins():
@@ -119,6 +121,7 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.db, plugins.sessions))
     init_plugin('conc_persistence', (settings, plugins.db))
+    init_plugin('conc_cache', (settings, plugins.db))
     init_plugin('export', (settings,), module=plugins.export)
 
     # optional plugins
