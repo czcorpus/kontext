@@ -110,16 +110,20 @@ class CorpTree(object):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
     def _get_corpus_keywords(self, root):
-        ans = []
+        """
+        returns:
+        OrderedDict(keyword_id => {...keyword labels...})
+        """
+        ans = OrderedDict()
         for k in root.findall('./keywords/item'):
             keyword = k.text.strip()
             if keyword in self._keywords:
 
                 if self._keywords[keyword]:
-                    ans.append(self._keywords[keyword])
+                    ans[keyword] = self._keywords[keyword]
                 else:
-                    ans.append(keyword)
-        return tuple(ans)
+                    ans[keyword] = keyword
+        return ans
 
     def _parse_corplist_node(self, root, data, path='/'):
         """
@@ -187,12 +191,12 @@ class CorpTree(object):
         else:
             ans['metadata']['desc'] = ''
 
-        translated_k = []
-        for keyword in ans['metadata']['keywords']:
-            if type(keyword) is dict and lang_code in keyword:
-                translated_k.append(keyword[lang_code])
-            elif type(keyword) is str:
-                translated_k.append(keyword)
+        translated_k = OrderedDict()
+        for keyword, label in ans['metadata']['keywords'].items():
+            if type(label) is dict and lang_code in label:
+                translated_k[keyword] = label[lang_code]
+            elif type(label) is str:
+                translated_k[keyword] = label
         ans['metadata']['keywords'] = translated_k
         return ans
 
