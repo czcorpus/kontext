@@ -36,11 +36,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
     <h2>$_('Available corpora')</h2>
 
     <form class="filter" action="">
-        $_('Category'): <select name="category">
-            #for $c in $categories
-            <option value="$c[0]" #if $form.category == $c#selected="selected"#end if#>$c[1]</option>
+        <div class="keywords">
+        $_('Keywords'):
+            <a class="keyword spec" href="corplist">[$_('None')]</a>
+            #for $c in $keywords
+            <a class="keyword" href="corplist?keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
             #end for
-        </select>
+        </div>
 
         $_('min. size'): <input class="min-max" type="text" name="min_size" value="$form.min_size" />
 
@@ -51,15 +53,14 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
 
     <table class="data corplist" border="0">
         <tr>
-            <th>$_('Category')</th>
             <th>$_('Name')</th>
             <th>$_('Size')</th>
             <th>$_('Actions')</th>
+            <th>$_('Keywords')</th>
             <th>$_('In favorites')</th>
         </tr>
         #for $row in $corplist
         <tr>
-            <td>$row.path</td>
             <td class="corpname">$row.name</td>
             <td class="num">$row.size</td>
             <td>
@@ -69,6 +70,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                 </p>
                 <a class="detail">$_('detail')</a> |
                 <a href="first_form?corpname=$row.id">$_('use now')</a>
+            </td>
+            <td>
+            #for $keyword in $row.metadata.keywords
+            <span class="keyword">$keyword</span>
+            #end for
             </td>
             <td>
                 <input class="set-favorite" type="checkbox" value="$row.id" #if $row.id in $favorite_corpora#checked="checked"#end if# />
