@@ -401,7 +401,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
                         $('#loader').empty();
-                        /* TODO: Currently, we are unable to update ARF on the fly which means we
+                        /* We are unable to update ARF on the fly which means we
                          * have to reload the page after all the server calculations are finished.
                          */
                         win.location.reload();
