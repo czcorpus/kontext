@@ -235,6 +235,7 @@ class Kontext(Controller):
     SubcorpList = Parameter([])
 
     favorite_corpora = Parameter([], persistent=True)
+    keyword = Parameter([])
 
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
 

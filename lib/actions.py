@@ -2287,9 +2287,9 @@ class Actions(Kontext):
             'next_url': 'view?corpname=' + self.corpname + '&q=~' + q_id
         }
 
+    # uses also self.keywords (TODO: cannot define Parameter() here)
     @exposed()
     def corplist(self, max_size='', min_size='', category=''):
-
         def corp_filter(item):
             if max_size and item['size'] > float(max_size):
                 return False
@@ -2297,19 +2297,26 @@ class Actions(Kontext):
                 return False
             if category and item['path'] != category:
                 return False
+            for k in self.keyword:
+                if k not in item['metadata']['keywords'].keys():
+                    return False
             return True
 
         corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
-        categories = set()
-        for c in corplist:
-            categories.add(c.get('path', None))
+        keywords = set()
+
+        for item in corplist:
+            full_data = plugins.corptree.get_corpus_info(item['id'], self.ui_lang)
+            item['metadata'] = full_data['metadata']
+            keywords.update(set(full_data['metadata']['keywords'].items()))
+
         corplist = filter(corp_filter, corplist)
 
         for c in corplist:
             c['size'] = l10n.format_number(c['size'])
             c['fullpath'] = '%s%s' % (c['path'], c['id'])
 
-        corplist = sorted(corplist, key=lambda x: x['fullpath'])
+        corplist = sorted(corplist, key=lambda x: x['name'])
 
         ans = {
             'form': {
@@ -2318,7 +2325,7 @@ class Actions(Kontext):
                 'category': category
             },
             'corplist': corplist,
-            'categories': [('', '-')] + [(x, x) for x in l10n.sort(categories, self.ui_lang)]
+            'keywords': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0])
         }
         return ans
 

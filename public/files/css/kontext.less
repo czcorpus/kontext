@@ -1501,6 +1501,33 @@ table.corplist td.corpname {
   color: @color-logo-pink;
 }
 
+.corplist .keyword {
+  background-color: @color-logo-blue;
+  color: #ffffff;
+  padding: 1pt 5pt;
+  border-radius: @border-radius-default;
+}
+
+section.corplist .keywords {
+  margin: 10pt 0;
+}
+
+section.corplist .keywords .keyword {
+  text-decoration: none;
+  border-style: solid;
+  border-color: @color-logo-blue;
+  border-width: 1pt;
+}
+
+section.corplist .keywords .keyword:hover {
+  text-decoration: none;
+  background-color: @color-bg-light-blue;
+  color: @color-default-text;
+  border-style: solid;
+  border-color: @color-logo-blue;
+  border-width: 1pt;
+}
+
 /* --------------------- media queries --------------------- */
 
 @media screen and (max-width: 720px) {
