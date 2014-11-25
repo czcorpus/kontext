@@ -25,6 +25,7 @@ Required config.xml/plugins entries:
 """
 
 import threading
+from collections import OrderedDict
 
 try:
     from markdown import markdown
@@ -35,7 +36,7 @@ from lxml import etree
 
 thread_local = threading.local()
 thread_local.lang = 'en'  # default language must be set
-thread_local.corplist = []
+thread_local.corplist = OrderedDict()
 
 
 def translate_markup(s):
@@ -57,6 +58,7 @@ class CorpTree(object):
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._messages = {}
+        self._keywords = {}  # keyword (aka tags) database for corpora
 
     def get_corplist_title(self, elm):
         """
@@ -100,6 +102,25 @@ class CorpTree(object):
                         self._messages[message_key][lang_code] = ans[lang_code]
         return ans
 
+    def _parse_keywords(self, root):
+        for k in root.findall('./keyword'):
+            if k.attrib['ident'] not in self._keywords:
+                self._keywords[k.attrib['ident']] = {}
+            for lab in k.findall('./label'):
+                self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
+
+    def _get_corpus_keywords(self, root):
+        ans = []
+        for k in root.findall('./keywords/item'):
+            keyword = k.text.strip()
+            if keyword in self._keywords:
+
+                if self._keywords[keyword]:
+                    ans.append(self._keywords[keyword])
+                else:
+                    ans.append(keyword)
+        return tuple(ans)
+
     def _parse_corplist_node(self, root, data, path='/'):
         """
         """
@@ -109,8 +130,10 @@ class CorpTree(object):
         if title:
             path = "%s%s/" % (path, title)
         for item in root:
-            if not hasattr(item, 'tag'):
+            if not hasattr(item, 'tag'):  # getting rid of non-elements
                 continue
+            elif item.tag == 'keywords':
+                self._parse_keywords(item)
             elif item.tag == 'corplist':
                 self._parse_corplist_node(item, data, path)
             elif item.tag == 'corpus':
@@ -126,7 +149,7 @@ class CorpTree(object):
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
-                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}}
+                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {}}
                 }
 
                 ref_elm = item.find('reference')
@@ -144,7 +167,7 @@ class CorpTree(object):
                     ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
-
+                    ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
                 data.append(ans)
 
     def _localize_corpus_info(self, data, lang_code):
@@ -156,13 +179,21 @@ class CorpTree(object):
         ans = {}
         ans.update(data)
 
+        lang_code = lang_code.split('_')[0]
+
         desc = ans['metadata']['desc']
         if lang_code in desc:
             ans['metadata']['desc'] = desc[lang_code]
-        elif lang_code.split('_')[0] in desc:
-            ans['metadata']['desc'] = desc[lang_code.split('_')[0]]
         else:
             ans['metadata']['desc'] = ''
+
+        translated_k = []
+        for keyword in ans['metadata']['keywords']:
+            if type(keyword) is dict and lang_code in keyword:
+                translated_k.append(keyword[lang_code])
+            elif type(keyword) is str:
+                translated_k.append(keyword)
+        ans['metadata']['keywords'] = translated_k
         return ans
 
     def get_corpus_info(self, corp_name, language=None):
@@ -186,17 +217,13 @@ class CorpTree(object):
         dictionary.
         """
         if corp_name != '':
-            tmp = corp_name.split('/')
-            if len(tmp) > 1:
-                corp_name = tmp[1]
-            else:
-                corp_name = tmp[0]
-            for item in self.get():
-                if item['id'].lower() == corp_name.lower():
-                    if language is not None:
-                        return self._localize_corpus_info(item, lang_code=language)
-                    else:
-                        return item
+            # get rid of path-like corpus ID prefix
+            corp_name = corp_name.split('/')[-1].lower()
+            if corp_name in self._list():
+                if language is not None:
+                    return self._localize_corpus_info(self._list()[corp_name], lang_code=language)
+                else:
+                    return self._list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly
@@ -212,7 +239,7 @@ class CorpTree(object):
                 root = xml.find(self.root_xpath)
                 if root is not None:
                     self._parse_corplist_node(root, data, path='/')
-            self._list(data)
+            self._list([(item['id'].lower(), item) for item in data])
 
     def _lang(self, v=None):
         """
@@ -246,13 +273,13 @@ class CorpTree(object):
         if v is None:
             return thread_local.corplist
         else:
-            thread_local.corplist = v
+            thread_local.corplist = OrderedDict(v)
 
     def get(self):
         """
         Returns corpus tree data
         """
-        return self._list()
+        return self._list().values()
 
     def setup(self, **kwargs):
         """
