@@ -254,24 +254,34 @@ def validate_user(self, username, password):
     """
     Returns bool
     """
-    pass
+    return {
+        'id': 1234,
+        'user': 'jdoe',
+        'fullname': 'John Doe'
+    }
 ```
 
-Returns True on success else False and changes the state of your authentication object to reflect user's properties
+Returns a dictionary containing core credentials (id, username, full name) of a user matching passed 
+arguments. In case no valid user is found, then anonymous user credentials should be returned.
+Please note that *anonymous* user is recognized via config.xml's */kontext/global/anonymous_user_id*
+which means you have to ensure that the *id* key is equal to that value in case of anonymous
+user.
+
 
 ```python
 def logout(self, session_id):
     pass
 ```
 
-Changes current user's status to an 'anonymous' user.
+Changes current user's status to the *anonymous* user. Typically, this is done by writing new
+data into user's session. The method is not expected to return anything.
 
 ```python
-def get_corplist(self, user):
+def get_corplist(self, user_id):
     pass
 ```
 
-Returns list/tuple containing identifiers of corpora available to the *user* (= username).
+Returns a list/tuple containing identifiers of corpora available to a user with ID = *user_id*.
 
 ```python
 def is_administrator(self):
@@ -314,26 +324,27 @@ def get_required_password_properties(self):
     pass
 ```
 
-KonText supports log-in/log-out in two different ways:
+KonText currently supports log-in/log-out in two different ways:
 
 1. within KonText application (i.e. log-in/log-out pages are within KonText and KonText also cares about user
    credentials validation)
 2. outside KonText application (log-in/log-out pages and user session validation are defined outside KonText)
 
-Because of that, all the *auth* plug-ins must implement methods which tell the KonText where log-in/log-out pages are:
+Because of that, all the *auth* plug-ins must implement methods which tell the KonText where log-in/log-out 
+pages are. In case if internal authentication this is simple:
 
 ```python
 def get_login_url(self):
     """
     returns URL of *login* action (because in general, it may be outside the application)
     """
-    pass
+    return '%s/login' % a_server_address_and_path
 
 def get_logout_url(self):
     """
     returns URL of *logout* action (because in general, it may be outside the application)
     """
-    pass
+    return '%s/logout' % a_server_address_and_path
 ```
 
 
