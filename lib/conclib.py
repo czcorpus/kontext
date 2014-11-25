@@ -70,7 +70,7 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
 
     if q is None:
         q = []
-    ans = {'finished': None, 'concsize': None, 'fullsize': None, 'relconcsize': None}
+    ans = {'finished': False, 'concsize': None, 'fullsize': None, 'relconcsize': None}
     if not cachefile:  # AJAX call
         q = tuple(q)
         subchash = getattr(corp, 'subchash', None)
@@ -84,7 +84,7 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
         cache = open(cachefile, 'rb')
         flck_sh_lock(cache)
         cache.seek(15)
-        finished = str(ord(cache.read(1)))
+        finished = bool(ord(cache.read(1)))
         (fullsize,) = struct.unpack('q', cache.read(8))
         cache.seek(32)
         (concsize,) = struct.unpack('i', cache.read(4))
