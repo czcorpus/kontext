@@ -385,10 +385,12 @@ class Kontext(Controller):
     def _get_save_excluded_attributes(self):
         return ()
 
-    def _save_options(self, optlist=[], selector=''):
+    def _save_options(self, optlist=None, selector=''):
         """
         Saves user's options to a storage
         """
+        if optlist is None:
+            optlist = []
         if selector:
             tosave = [(selector + ':' + opt, self.__dict__[opt])
                       for opt in optlist if opt in self.__dict__]
@@ -872,7 +874,7 @@ class Kontext(Controller):
         try:
             self._add_corpus_related_globals(result, thecorp)
         except Exception as ex:
-            pass
+            logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
 
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
@@ -986,7 +988,6 @@ class Kontext(Controller):
                               for o, a, u1, u2, s in
                               conclib.get_conc_desc(self.q,
                                                     corpname=self.corpname,
-                                                    cache_dir=self.cache_dir,
                                                     subchash=getattr(self._corp(), "subchash", None),
                                                     translate=translate)]
 
@@ -1003,7 +1004,6 @@ class Kontext(Controller):
         if 'orig_query' in vars:
             conc_desc = conclib.get_conc_desc(self.q,
                                               corpname=self.corpname,
-                                              cache_dir=self.cache_dir,
                                               subchash=getattr(self._corp(), "subchash", None))
             if len(conc_desc) > 1:
                 result['tourl'] = self.urlencode(conc_desc[0][3])
