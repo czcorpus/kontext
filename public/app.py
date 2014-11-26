@@ -131,7 +131,8 @@ def setup_plugins():
         ('query_storage', (settings, plugins.db)),
         ('application_bar', (settings, plugins.auth)),
         ('live_attributes', ('corptree', settings)),
-        ('query_mod', (settings,))
+        ('query_mod', (settings,)),
+        ('subc_restore', (settings, plugins.db))
     )
 
     for plugin, dependencies in optional_plugins:
