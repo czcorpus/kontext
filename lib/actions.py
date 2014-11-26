@@ -1785,6 +1785,8 @@ class Actions(Kontext):
                                              for v1 in v])
             else:
                 query = '%s="%s"' % (a, l10n.escape(v))
+            # TODO: is the following encoding change always OK?
+            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
             if s in structs:
                 structs[s].append(query)
             else:
