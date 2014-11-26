@@ -1795,22 +1795,15 @@ class Actions(Kontext):
     @exposed(access_level=1)
     def subcorp(self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
         """
-        Parameters
-        ----------
-        subcname : str
-                name of new subcorpus
-        delete : str
-                sets whether to delete existing subcorpus; any non-empty value means 'delete'
-        create : bool
-                sets whether to create new subcorpus
-        within_condition: str
-                custom within condition; if non-empty then clickable form is omitted
-        within_struct : str
-                a structure the within_condition will be applied to
-        method : {'raw', 'gui'}
-                flag indicating whether user used raw query or clickable attribute list; this is
-                actually used only to display proper user interface (i.e. not to detect which
-                values to use when creating the subcorpus)
+        arguments:
+        subcname -- name of new subcorpus
+        delete -- sets whether to delete existing subcorpus; any non-empty value means 'delete'
+        create -- bool, sets whether to create new subcorpus
+        within_condition -- custom within condition; if non-empty then clickable form is omitted
+        within_struct -- a structure the within_condition will be applied to
+        method -- {'raw', 'gui'} a flag indicating whether user used raw query or clickable attribute list; this is
+                  actually used only to display proper user interface (i.e. not to detect which values to use when
+                  creating the subcorpus)
         """
         if self.get_http_method() != 'POST':
             self.last_corpname = self.corpname
@@ -1822,6 +1815,7 @@ class Actions(Kontext):
             for e in ('.subc', '.used'):
                 if os.path.isfile((base + e).encode('utf-8')):
                     os.unlink((base + e).encode('utf-8'))
+
         if within_condition and within_struct:
             within_struct = export_string(within_struct, to_encoding=self._corp().get_conf('ENCODING'))
             within_condition = export_string(within_condition, to_encoding=self._corp().get_conf('ENCODING'))
@@ -1833,6 +1827,7 @@ class Actions(Kontext):
             raise ConcError(_('No subcorpus name specified!'))
         if (not subcname or (not tt_query and delete)
                 or (subcname and not delete and not create)):
+            # an error => generate subc_form parameters
             subc_list = self.cm.subcorp_names(basecorpname)
             for item in subc_list:
                 item['selected'] = False
@@ -1865,6 +1860,13 @@ class Actions(Kontext):
         if type(path) == unicode:
             path = path.encode("utf-8")
         if corplib.create_subcorpus(path, self._corp(), structname, subquery):
+            if plugins.has_plugin('subc_restore'):
+                try:
+                    plugins.subc_restore.store_query(user_id=self._session_get('user', 'id'), corpname=self.corpname,
+                                                     subcname=subcname, structname=tt_query[0][0],
+                                                     condition=tt_query[0][1])
+                except Exception as e:
+                    logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
             self._redirect('subcorp_list?corpname=%s' % self.corpname)
             return {}
         else:
@@ -1878,14 +1880,17 @@ class Actions(Kontext):
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
 
         current_corp = self.corpname
-
         if self.get_http_method() == 'POST':
             base = self.subcpath[-1]
             for subcorp_id in selected_subc:
                 try:
                     corp, subcorp = subcorp_id.split(':', 1)
-                    sc_obj = self.cm.get_Corpus(corp, subcorp)
                     os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
+                    if plugins.has_plugin('subc_restore'):
+                        try:
+                            plugins.subc_restore.delete_query(self._session_get('user', 'id'), corp, subcorp)
+                        except Exception as e:
+                            logging.getLogger(__name__).error('subc_restore plug-in failed to delete a query: %s' % e)
                 except Exception as e:
                     logging.getLogger(__name__).error(e)
 

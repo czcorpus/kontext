@@ -78,6 +78,9 @@
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>
         </export>
+        <subc_restore>
+            <module>acme_subc_restore</module>
+        </subc_restore>
     </plugins>
     <cache>
         <clear_interval>3600</clear_interval>
