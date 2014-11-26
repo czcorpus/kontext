@@ -204,6 +204,8 @@ List of currently supported plug-ins
 | [db](#plugin_db)                             | provides a connection to a database (if required by other plug-ins)          | No               |
 | [sessions](#plugin_sessions)                 | handles user sessions (i.e. between-requests persistence)                    | No               |
 | [settings_storage](#plugin_settings_storage) | stores users' settings to a persistent storage                               | No               |
+| [conc_cache](#plugin_conc_cache) | caches calculated concordances | No |
+| [export](#plugin_export) | exports data sets into file formats (TXT, XML, XLSX, CSV,...) | No |
 
 ### optional plug-ins
 
@@ -215,6 +217,7 @@ List of currently supported plug-ins
 | [live_attributes](#live_attributes)  | When filtering searched positions by attribute value(s), this provides a knowledge which values of currently unused (within the selection) attributes are still applicable.  | Yes              |
 | query_storage    | KonText may store users' queries for further review/reuse                    | Yes              |
 | [conc_persistence](#plugin_conc_persistence) | Allows storing queries/filters/etc. longer than URL can handle               | No               |
+| [subc_restore](#plugin_subc_restore) | Stores and restores subcorpus creation queries | No | 
 
 
 Plug-ins detailed information
@@ -444,6 +447,41 @@ def load(self, user_id, current_settings=None):
     pass
 ```
 
+<a name="plugin_conc_cache"></a>
+
+### The "conc_cache" plug-in
+
+The "conc_cache" plug-in provides functions needed by *lib/conclib.py* when calculating and caching concordances.
+Currently it is not recommended to implement customized versions unless you know well what is going on during 
+concordance calculation and caching. 
+
+The safest way here is to stick with the *default_conc_cache*.
+
+<a name="plugin_export"></a>
+
+### The "export" plug-in
+
+This is kind of a special plug-in in terms of its structure and configuration. The plug-in module itself is just a 
+loader which loads and imports modules providing export to concrete formats (see *default_csv.py*, *default_xlsx.py* and
+*default_xml.py*).
+
+The configuration also differs from other plug-ins. There is no *module* element (because the *module* is in fact 
+the mentioned loader located in the *exports* package) and custom export modules are specified within tags named 
+by exported formats:
+
+```xml
+<export>
+  <csv>default_csv</csv>
+  <xml>default_xml</xml>
+  <xlsx>default_xlsx</xlsx>
+  <ods>my_custom_oo_export</ods>
+</export>
+```
+
+Currently we recommend to use default configuration and modules. Buto in case you want to implement a custom format 
+please note that KonText currently does not offer automatic menu and respective page forms update based on the *export* 
+element. In other words, current export formats are hardcoded in main menu and page forms.
+
 <a name="plugin_corptree"></a>
 
 ### The "corptree" plug-in"
@@ -601,6 +639,14 @@ by anyone, HTTP method types are not misused), the problem arises with the limit
 
 The *conc_persistence* plugin allows storing these parameters into a database and return a placeholder code which is
 then passed via URL.
+
+<a name="plugin_subc_restore"></a>
+
+### The "subc_restore" plug-in
+
+This plug-in is hooked up to subcorpus creation and deletion actions and archives all the necessary arguments to 
+provide additional information in the subcorpus list page or to regenerate subcorpora outside current installation (which
+is CNC's specific need).
 
 
 Deployment and running
