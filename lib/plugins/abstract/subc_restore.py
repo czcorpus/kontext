@@ -18,9 +18,9 @@ Expected factory method signature: create_instance(config, db)
 """
 
 
-class SubcRestore(object):
+class AbstractSubcRestore(object):
 
-    def store_query(self, user_id, struct_name, condition):
+    def store_query(self, user_id, corpname, subcname, struct_name, condition):
         """
         Stores user's subcorpus query. Please note that the method should
         also:
@@ -28,12 +28,25 @@ class SubcRestore(object):
         2. generate and store unique (on its own, i.e. even without user_id) string ID for the record
 
         arguments:
-        user_id -- int identifier of a user
+        user_id -- int, ID of a user
+        corpname -- a name of a corpus
+        subcname -- a name of a subcorpus
         struct_name -- name of a structure used to define a subcorpus
         condition -- a CQL-compatible conjunctive normal form describing required attribute values
                      e.g.: srclang="en" & (txtype="FAC" | txtype="IMA") & txtype_group="fiction"
         returns:
         a string ID of the record
+        """
+        raise NotImplementedError()
+
+    def delete_query(self, user_id, corpname, subcname):
+        """
+        Removes query from archive
+
+        arguments:
+        user_id -- int, ID of a user
+        corpname -- a name of a corpus
+        subcname -- a name of a subcorpus
         """
         raise NotImplementedError()
 
@@ -43,13 +56,21 @@ class SubcRestore(object):
         (including both ends). The method is not expected to support negative indices (like Python does).
 
         arguments:
-        user_id -- int identifier of a user
+        user_id -- int, ID of a user
         from_idx -- values from 0 to num_of_user_queries - 1
         to_idx -- values from 0 to num_of_user_queries - 1
 
         returns:
         a list/tuple of dicts with following structure:
-        { 'id': str, 'user_id': int, 'struct_name': str, 'condition': str, 'timestamp': int }
+        {
+            'id': str,
+            'user_id': int,
+            'corpname': str,
+            'subcname': str,
+            'struct_name': str,
+            'condition': str,
+            'timestamp': int
+        }
         """
         raise NotImplementedError()
 
@@ -59,6 +80,14 @@ class SubcRestore(object):
 
         returns:
         a dict with following structure:
-        { 'id': str, 'user_id': int, 'struct_name': str, 'condition': str, 'timestamp': int }
+        {
+            'id': str,
+            'user_id': int,
+            'corpname': str,
+            'subcname': str,
+            'struct_name': str,
+            'condition': str,
+            'timestamp': int
+        }
         """
         raise NotImplementedError()
