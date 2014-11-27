@@ -74,8 +74,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
             <td class="corpname"><a href="first_form?corpname=$row.name">$row.name</a></td>
             <td class="num">$row.size</td>
             <td>
-            #for $keyword in $row.metadata.keywords
-            <a class="keyword" href="corplist?keyword=$keyword">$keyword</a>
+            #for $keyword, $k_label in $row.metadata.keywords.items()
+            <a class="keyword" href="corplist?keyword=$keyword">$k_label</a>
             #end for
             </td>
             <td>
