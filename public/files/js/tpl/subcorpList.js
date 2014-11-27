@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the subcorp_list.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, treeComponent) {
+define(['jquery', 'tpl/document', 'treecomponent', 'popupbox'], function ($, layoutModel, treeComponent, popupBox) {
     'use strict';
 
     var lib = {};
@@ -39,11 +39,42 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
 
     /**
      *
+     */
+    lib.subcInfo = function () {
+        $('table.data td .subc-query').each(function () {
+            var self = this;
+
+            popupBox.bind(
+                $(self),
+                function (tooltipBox, finalize) {
+                    var elm = $(window.document.createElement('span'));
+                    elm.text(decodeURIComponent($(self).closest('td').data('query')));
+                    tooltipBox.importElement(elm);
+
+                    // close all the other bib-info boxes
+                    $('.subc-query').each(function () {
+                        if (!$(this).is($(self))) {
+                            popupBox.close(this);
+                        }
+                    });
+
+                    finalize();
+                },
+                {
+                    type : 'plain'
+                }
+            );
+        });
+    };
+
+    /**
+     *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.misc();
+        lib.subcInfo();
     };
 
 

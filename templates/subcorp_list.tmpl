@@ -44,6 +44,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
                 <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
                 <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -52,6 +53,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <td><a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">$item.n</a></td>
             <td class="num">$format_number($item.size, mask='%d')</td>
             <td>$item.created</td>
+            #if $item.usesubcorp in $subc_queries
+            <td data-query="$subc_queries[$item.usesubcorp]">
+            <a class="subc-query" href="#">see the query</a>
+            </td>
+            #else
+            <td></td>
+            #end if
             <td>
                 <input type="checkbox" name="selected_subc" value="$item.n" />
             </td>
