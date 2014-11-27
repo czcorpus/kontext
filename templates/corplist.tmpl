@@ -44,7 +44,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
               #if $c[0] in $keywords
               <span class="keyword current" data-keyword-id="$c[0]">$c[1]</span>
               #else
-              <a class="keyword" href="corplist?$keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
+              <a class="keyword" href="corplist?keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
               #end if
             #end for
         </fieldset>
