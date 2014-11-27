@@ -71,7 +71,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         to_idx = -1 if to_idx is None else to_idx - from_idx
         ans = self._db.execute('SELECT %s ' % ', '.join(self.COLS) +
                                'FROM subc_archive WHERE user_id = ? ORDER BY id LIMIT ?, ?',
-                               (user_id, from_idx, to_idx - from_idx + 1)).fetchall()
+                               (user_id, from_idx, to_idx)).fetchall()
         result = []
         for item in ans:
             result.append(dict(zip(self.COLS, item)))
