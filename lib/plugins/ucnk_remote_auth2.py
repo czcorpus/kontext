@@ -152,8 +152,6 @@ class CentralAuth(AbstractAuth):
                 user_data['id'] = row['u.id']
                 user_data['user'] = row['u.user']
                 user_data['fullname'] = u'%s %s' % (row['u.firstName'], row['u.surname'])
-                cursor = db.cursor()
-                cursor.execute("CALL shift_user_expiration(%s)", (user_data['id'],))
             else:
                 user = self.anonymous_user()
                 user_data['id'] = user['id']
