@@ -2294,15 +2294,13 @@ class Actions(Kontext):
             'next_url': 'view?corpname=' + self.corpname + '&q=~' + q_id
         }
 
-    # uses also self.keywords (TODO: cannot define Parameter() here)
+    # uses also self.keyword (TODO: cannot define Parameter() here)
     @exposed()
     def corplist(self, max_size='', min_size='', category=''):
         def corp_filter(item):
             if max_size and item['size'] > float(max_size):
                 return False
             if min_size and item['size'] < float(min_size):
-                return False
-            if category and item['path'] != category:
                 return False
             for k in self.keyword:
                 if k not in item['metadata']['keywords'].keys():
@@ -2332,7 +2330,10 @@ class Actions(Kontext):
                 'category': category
             },
             'corplist': corplist,
-            'keywords': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0])
+            'keywords_labels': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0]),
+            'keywords': self.keyword,  # singular vs. plural - singular used because of 'keyword=k1&keyword=k2&...
+            'max_size': max_size,
+            'min_size': min_size
         }
         return ans
 

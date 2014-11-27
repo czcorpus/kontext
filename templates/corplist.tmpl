@@ -35,49 +35,59 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
 <section class="corplist">
     <h2>$_('Available corpora')</h2>
 
-    <form class="filter" action="">
-        <div class="keywords">
-        $_('Keywords'):
-            <a class="keyword spec" href="corplist">[$_('None')]</a>
-            #for $c in $keywords
-            <a class="keyword" href="corplist?keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
+    <form class="filter" action="corplist">
+
+        <fieldset class="keywords">
+            <legend>$_('Labels')</legend>
+            <a class="keyword reset" href="corplist">- $_('none') -</a>
+            #for $c in $keywords_labels
+              #if $c[0] in $keywords
+              <span class="keyword current" data-keyword-id="$c[0]">$c[1]</span>
+              #else
+              <a class="keyword" href="corplist?$keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
+              #end if
             #end for
-        </div>
+        </fieldset>
 
-        $_('min. size'): <input class="min-max" type="text" name="min_size" value="$form.min_size" />
+        <fieldset>
+            #for $k in $keywords
+                <input type="hidden" name="keyword" value="$k" />
+            #end for
+            <legend>$_('Filter')</legend>
+            $_('size from'): <input class="min-max" type="text" name="min_size" value="$form.min_size" />
+            $_('to'): <input class="min-max" type="text" name="max_size" value="$form.max_size" />
+            <button type="submit" class="default-button">$_('Apply filter')</button>
+        </fieldset>
 
-        $_('max. size'): <input class="min-max" type="text" name="max_size" value="$form.max_size" />
-
-        <button type="submit" class="default-button">$_('Filter')</button>
     </form>
 
     <table class="data corplist" border="0">
         <tr>
             <th>$_('Name')</th>
-            <th>$_('Size')</th>
-            <th>$_('Actions')</th>
-            <th>$_('Keywords')</th>
+            <th>$_('Size (in positions)')</th>
+            <th>$_('Labels')</th>
             <th>$_('In favorites')</th>
+            <th>$_('Actions')</th>
         </tr>
         #for $row in $corplist
         <tr>
-            <td class="corpname">$row.name</td>
+            <td class="corpname"><a href="first_form?corpname=$row.name">$row.name</a></td>
             <td class="num">$row.size</td>
+            <td>
+            #for $keyword in $row.metadata.keywords
+            <a class="keyword" href="corplist?keyword=$keyword">$keyword</a>
+            #end for
+            </td>
+            <td>
+                <input class="set-favorite" type="checkbox" value="$row.id" #if $row.id in $favorite_corpora#checked="checked"#end if# />
+            </td>
             <td>
                 <p class="desc" style="display: none">
                 <strong>${row.name}:</strong><br />
                 $row.desc
                 </p>
-                <a class="detail">$_('detail')</a> |
+                <a class="detail">$_('description')</a> |
                 <a href="first_form?corpname=$row.id">$_('use now')</a>
-            </td>
-            <td>
-            #for $keyword in $row.metadata.keywords
-            <span class="keyword">$keyword</span>
-            #end for
-            </td>
-            <td>
-                <input class="set-favorite" type="checkbox" value="$row.id" #if $row.id in $favorite_corpora#checked="checked"#end if# />
             </td>
         </tr>
         #end for

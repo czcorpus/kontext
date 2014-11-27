@@ -37,7 +37,7 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutMo
                     finalize();
                 },
                 {
-
+                    type : 'plain'
                 }
             );
 

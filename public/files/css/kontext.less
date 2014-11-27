@@ -1501,11 +1501,15 @@ table.corplist td.corpname {
   color: @color-logo-pink;
 }
 
-.corplist .keyword {
-  background-color: @color-logo-blue;
-  color: #ffffff;
-  padding: 1pt 5pt;
+table.corplist a.keyword {
+  text-decoration: none;
+  font-size: 8pt;
+  background-color: @color-bg-light-blue;
+  border-style: solid;
+  border-color: @color-logo-blue;
+  border-width: 1pt;
   border-radius: @border-radius-default;
+  padding: 1pt 5pt;
 }
 
 section.corplist .keywords {
@@ -1513,16 +1517,37 @@ section.corplist .keywords {
 }
 
 section.corplist .keywords .keyword {
+  background-color: @color-bg-light-blue;
   text-decoration: none;
   border-style: solid;
   border-color: @color-logo-blue;
   border-width: 1pt;
+  border-radius: @border-radius-default;
+  padding: 1pt 5pt;
 }
 
-section.corplist .keywords .keyword:hover {
+section.corplist .keywords .keyword.reset {
+  background-color: @color-light-grey;
+  border-color: @color-light-text;
+  color: @color-default-text;
+}
+
+section.corplist .keywords .keyword.reset:hover {
+  border-color: @color-light-text;
+  background-color: white;
+}
+
+section.corplist .keywords .keyword.current {
+  border-style: solid;
+  border-color: @color-logo-pink;
+  border-width: 1pt;
+  color: @color-logo-pink;
+  font-weight: bold;
+}
+
+section.corplist .keywords a.keyword:hover {
   text-decoration: none;
   background-color: @color-bg-light-blue;
-  color: @color-default-text;
   border-style: solid;
   border-color: @color-logo-blue;
   border-width: 1pt;
