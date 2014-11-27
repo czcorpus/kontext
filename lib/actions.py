@@ -17,6 +17,7 @@ import os
 import sys
 import re
 import json
+import urllib
 
 from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
@@ -1896,6 +1897,14 @@ class Actions(Kontext):
                 except Exception as e:
                     logging.getLogger(__name__).error(e)
 
+        subc_queries = {}
+        if plugins.has_plugin('subc_restore'):
+            try:
+                subc_queries = plugins.subc_restore.list_queries(self._session_get('user', 'id'), 0)
+            except Exception as e:
+                logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
+        subc_queries = dict([(x['subcname'], urllib.quote('<%s %s />' % (x['struct_name'], x['condition']))) for x in subc_queries])
+
         data = []
         corplist = plugins.auth.get_corplist(self._session_get('user', 'id'))
         for corp in corplist:
@@ -1928,7 +1937,12 @@ class Actions(Kontext):
             sort_keys[sort_key] = (sort_key, '&#8595;')
 
         self.cm.get_Corpus(current_corp)  # this is necessary to reset manatee module back to its original state
-        return {'subcorp_list': data, 'sort_keys': sort_keys, 'rev': rev}
+        return {
+            'subcorp_list': data,
+            'subc_queries': subc_queries,
+            'sort_keys': sort_keys,
+            'rev': rev
+        }
 
     @exposed(access_level=1, return_type='json')
     def ajax_subcorp_info(self, subcname=''):
