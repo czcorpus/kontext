@@ -15,10 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A simple implementation of conc_persistence plug-in. It does not need any
-database backend. Although it is not resistant to race conditions when accessing
-a concrete data key, during normal operation this should be no problem as there
-are no updates (new data are always written under a new key).
+A simple implementation of conc_persistence plug-in based on KeyValueStorage
+as a back-end.
 
 required config.xml entries:
 <plugins>
