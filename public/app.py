@@ -103,6 +103,7 @@ def init_plugin(name, dependencies, module=None):
                                          % (settings.get('plugins', 'getlang')['module'], e))
     except Exception as e:
         logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
+        raise e
 
 
 def setup_plugins():
