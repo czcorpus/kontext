@@ -17,6 +17,9 @@ SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
 sys.path.insert(0, '%s/lib' % APP_PATH)
 
+KEY_SYMBOLS = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] \
+              + ['%d' % i for i in range(10)]
+
 import settings
 
 logger = logging.getLogger('conc_archive')
@@ -30,6 +33,10 @@ def redis_connection(host, port, db_id):
 
 def sqlite_connection():
     return create_engine('sqlite:///%s' % settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+
+
+def determine_prefix(interval):
+    return KEY_SYMBOLS[int(time.time() / (interval * 60)) % len(KEY_SYMBOLS)]
 
 
 class Archiver(object):
@@ -87,6 +94,9 @@ if __name__ == '__main__':
     settings.load('%s/config.xml' % APP_PATH)
 
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
+    parser.add_argument('-k', '--key-prefix', type=str, help='Processes just keys with defined prefix')
+    parser.add_argument('-c', '--cron-interval', type=int, help='Non-empty values initializes partial processing with '
+                                                                + 'defined interval between chunks')
     parser.add_argument('-d', '--dry-run', action='store_true', help='allows running without affecting storage data')
     args = parser.parse_args()
 
@@ -104,7 +114,15 @@ if __name__ == '__main__':
         default_ttl = int(3600 * 24 * 7 / 3.)
         min_ttl = 3600 * 24 * 1
 
-    archiver = Archiver(from_db=from_db, to_db=to_db, match='conc*', count=50, ttl_range=(min_ttl, default_ttl),
+    if args.key_prefix:
+        match_prefix = 'concordance:%s*' % args.key_prefix
+    elif args.cron_interval:
+        match_prefix = 'concordance:%s*' % determine_prefix(args.cron_interval)
+    else:
+        match_prefix = 'concordance:*'
+
+
+    archiver = Archiver(from_db=from_db, to_db=to_db, match=match_prefix, count=50, ttl_range=(min_ttl, default_ttl),
                         dry_run=args.dry_run)
     archiver.scan_source_db()
     print('stats:')
