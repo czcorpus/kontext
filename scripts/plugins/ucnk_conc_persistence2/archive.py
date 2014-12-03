@@ -168,7 +168,8 @@ class Archiver(object):
             'num_processed': self._num_processed,
             'num_archived': self._num_archived,
             'num_errors': len(self._errors),
-            'match': self._match
+            'match': self._match,
+            'dry_run': self._dry_run
         }
 
 
