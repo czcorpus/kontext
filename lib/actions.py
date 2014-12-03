@@ -311,7 +311,7 @@ class Actions(Kontext):
                 out['message'] = ('error', _('Cannot access recorded query.'))
                 query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
-        conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname, cache_dir=self.cache_dir,
+        conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname,
                                           subchash=getattr(self._corp(), "subchash", None))
 
         out['Desc'] = []
