@@ -35,6 +35,10 @@ import re
 from abstract.conc_persistence import AbstractConcPersistence
 
 
+KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
+               ['%d' % i for i in range(10)]
+
+
 def id_exists(id):
     """
     Tests whether passed id exists
@@ -53,18 +57,12 @@ def mk_short_id(s, min_length=6):
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    chars = (
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-    )
     x = long('0x' + hashlib.md5(s).hexdigest(), 16)
     ans = []
     while x > 0:
-        p = x % len(chars)
-        ans.append(chars[p])
-        x /= len(chars)
+        p = x % len(KEY_ALPHABET)
+        ans.append(KEY_ALPHABET[p])
+        x /= len(KEY_ALPHABET)
     ans = ''.join([str(x) for x in ans])
     max_length = len(ans)
     i = min_length
