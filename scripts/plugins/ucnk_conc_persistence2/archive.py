@@ -36,12 +36,11 @@ SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
 sys.path.insert(0, '%s/lib' % APP_PATH)
 
-KEY_SYMBOLS = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
-              ['%d' % i for i in range(10)]
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
 
 import settings
+from plugins.ucnk_conc_persistence2 import KEY_ALPHABET
 
 logger = logging.getLogger('conc_archive')
 
@@ -99,7 +98,7 @@ def time_based_prefix(interval):
     returns:
     a character from alphabet (here a,...,z,A,...,Z,0,...,9) used for keys
     """
-    return KEY_SYMBOLS[int(time.time() / (interval * 60)) % len(KEY_SYMBOLS)]
+    return KEY_ALPHABET[int(time.time() / (interval * 60)) % len(KEY_ALPHABET)]
 
 
 class Archiver(object):
