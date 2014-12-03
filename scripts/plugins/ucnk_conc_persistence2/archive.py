@@ -54,13 +54,11 @@ class Archiver(object):
 
     def archive_item(self, key, data):
         #print('archiving %s => %s' % (key, data))
-        if not self._dry_run:
-            prefix = 'concordance:'
-            if key.startswith(prefix):
-                key = key[len(prefix):]
-            self._to_db.execute('INSERT INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                                (key, data, int(time.time()), 0))
-        self._num_archived += 1
+        prefix = 'concordance:'
+        if key.startswith(prefix):
+            key = key[len(prefix):]
+        self._to_db.execute('INSERT INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                            (key, data, int(time.time()), 0))
 
     def process_chunk(self, data):
         for key in data:
@@ -70,8 +68,10 @@ class Archiver(object):
             if self._ttl_range[0] <= ttl <= self._ttl_range[1]:
                 data = self._from_db.get(key)
                 try:
-                    self.archive_item(key, data)
-                    self._from_db.delete(key)
+                    if not self._dry_run:
+                        self.archive_item(key, data)
+                        self._from_db.delete(key)
+                    self._num_archived += 1
                 except Exception as e:
                     self._errors.append(e)
 
@@ -107,8 +107,8 @@ if __name__ == '__main__':
     to_db = sqlite_connection()
     default_ttl = settings.get('plugins', 'conc_persistence')['default:ttl_days']
     try:
-        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)
-        min_ttl = 3600 * 24 * 7
+        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)  # if 1/3 of TTL is reached then archiving is possible
+        min_ttl = 3600 * 24 * 7  # smaller TTL then this is understood as non-preserved; TODO: this is a weak concept
     except Exception as e:
         print(e)
         default_ttl = int(3600 * 24 * 7 / 3.)
