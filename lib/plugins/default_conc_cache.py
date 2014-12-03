@@ -106,7 +106,8 @@ class CacheMapping(object):
                         # in case we check status before any calculation (represented by the BackgroundCalc class)
                         # starts (the calculation updates curr_wait as it runs), we want to be
                         # sure the limit is big enough for BackgroundCalc to be considered alive
-                        'curr_wait': 100
+                        'curr_wait': 100,
+                        'error': None
                     },
                     pf)
             already_present = False
