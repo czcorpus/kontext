@@ -140,20 +140,17 @@ def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
 
 
 def _is_conc_alive(pidfile):
-    try:
-        if os.path.exists(pidfile):
-            with open(pidfile, 'r') as f:
-                data = cPickle.load(f)
-                # TODO: still not bullet-proof solution
-                if math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
-                    return False
-            return True
-        else:
-            return False
-    except Exception as e:
-        logging.getLogger(__name__).warn('Failed to test concordance calculation state with error %s' % e)
+    if os.path.exists(pidfile):
+        with open(pidfile, 'r') as f:
+            data = cPickle.load(f)
+            # TODO: still not bullet-proof solution
+            if data.get('error', None):
+                raise Exception(data['error'])
+            elif math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
+                return False
+        return True
+    else:
         return False
-    return True
 
 
 def _contains_shuffle_seq(q_ops):
@@ -269,9 +266,10 @@ def _compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
 
 
 def _update_pidfile(file_path, **kwargs):
-    with open(file_path, 'rb+') as pf:
+    with open(file_path, 'r') as pf:
         data = cPickle.load(pf)
-        data.update(kwargs)
+    data.update(kwargs)
+    with open(file_path, 'w') as pf:
         cPickle.dump(data, pf)
 
 
@@ -300,6 +298,7 @@ class BackgroundCalc(object):
         self._q = q
 
     def __call__(self, samplesize, fullsize):
+        sleeptime = None
         try:
             cache_map = cache_factory.get_mapping(self._cache_dir)
             cachefile, pidfile, in_progress = cache_map.add_to_map(self._pid_dir, self._subchash, self._q, 0)
@@ -329,6 +328,7 @@ class BackgroundCalc(object):
             # cached concordance etc.) here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
+            _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
 
 
 def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, fullsize, minsize):
@@ -342,13 +342,14 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
     proc.start()
 
     cachefile, pidfile = parent_conn.recv().split('\n')
-    _wait_for_conc(corp, q, cachefile, pidfile, minsize)
-    if not os.path.exists(cachefile):
-        try:
-            msg = 'Failed to open cache file %s (pid file: %s)' % (cachefile, open(pidfile).read().split('\n')[-2])
-        except Exception as e:
-            msg = 'Failed to open cache file %s (pid not available due to %s)' % (cachefile, e.__class__.__name__)
-        raise RuntimeError(msg)
+    try:
+        _wait_for_conc(corp, q, cachefile, pidfile, minsize)
+        if not os.path.exists(cachefile):
+            raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' % (cachefile, pidfile))
+    except Exception as e:
+        if os.path.exists(pidfile):
+            os.remove(pidfile)
+        raise e
     return PyConc(corp, 'l', cachefile)
 
 
