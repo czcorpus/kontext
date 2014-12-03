@@ -7,8 +7,10 @@ A script to archive outdated concordance queries from Redis to a SQLite database
 import os
 import sys
 import logging
+import logging.handlers
 import argparse
 import time
+import json
 
 import redis
 from sqlalchemy import create_engine
@@ -17,12 +19,32 @@ SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
 sys.path.insert(0, '%s/lib' % APP_PATH)
 
-KEY_SYMBOLS = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] \
-              + ['%d' % i for i in range(10)]
+KEY_SYMBOLS = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
+              ['%d' % i for i in range(10)]
+DEFAULT_LOG_FILE_SIZE = 1000000
+DEFAULT_NUM_LOG_FILES = 5
 
 import settings
 
 logger = logging.getLogger('conc_archive')
+
+
+def setup_logger(log_path=None):
+    """
+    Configures logging.
+
+    arguments:
+    log_path -- path to a file where log will be written; if omitted then stdout is used
+    """
+    if log_path is not None:
+        handler = logging.handlers.RotatingFileHandler(log_path,
+                                                       maxBytes=DEFAULT_LOG_FILE_SIZE,
+                                                       backupCount=DEFAULT_NUM_LOG_FILES)
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
 def redis_connection(host, port, db_id):
@@ -86,7 +108,8 @@ class Archiver(object):
         return {
             'num_processed': self._num_processed,
             'num_archived': self._num_archived,
-            'num_errors': len(self._errors)
+            'num_errors': len(self._errors),
+            'pattern': self._match
         }
 
 
@@ -98,7 +121,10 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--cron-interval', type=int, help='Non-empty values initializes partial processing with '
                                                                 + 'defined interval between chunks')
     parser.add_argument('-d', '--dry-run', action='store_true', help='allows running without affecting storage data')
+    parser.add_argument('-l', '--log-file', type=str, help='A file used for logging. If omitted then stdout is used')
     args = parser.parse_args()
+
+    setup_logger(args.log_file)
 
     from_db = redis_connection(settings.get('plugins', 'db')['default:host'],
                                settings.get('plugins', 'db')['default:port'],
@@ -126,4 +152,4 @@ if __name__ == '__main__':
                         dry_run=args.dry_run)
     archiver.scan_source_db()
     print('stats:')
-    print(archiver.get_stats())
+    logger.info(json.dumps(archiver.get_stats()))
