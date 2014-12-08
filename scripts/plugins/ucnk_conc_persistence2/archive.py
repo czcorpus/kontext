@@ -38,6 +38,7 @@ sys.path.insert(0, '%s/lib' % APP_PATH)
 
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
+MAX_NUM_SHOW_ERRORS = 10
 
 import settings
 from plugins.ucnk_conc_persistence2 import KEY_ALPHABET
@@ -171,6 +172,9 @@ class Archiver(object):
             'dry_run': self._dry_run
         }
 
+    def get_errors(self):
+        return self._errors
+
 
 if __name__ == '__main__':
     settings.load('%s/config.xml' % APP_PATH)
@@ -211,3 +215,8 @@ if __name__ == '__main__':
                         dry_run=args.dry_run)
     info = archiver.run()
     logger.info(json.dumps(info))
+    errors = archiver.get_errors()
+    for err in errors[:MAX_NUM_SHOW_ERRORS]:
+        logger.error(err)
+    if len(errors) > MAX_NUM_SHOW_ERRORS:
+        logger.warn('More than %d errors occured.' % MAX_NUM_SHOW_ERRORS)
