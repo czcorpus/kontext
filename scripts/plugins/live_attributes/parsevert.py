@@ -15,38 +15,44 @@
 import os
 import argparse
 import json
+import sys
+import re
 
 import sqlite3
 
 import vertparser
-from registry.parser import reg_grammarParser
-from registry import confparsing
 
 
-def get_registry_attrs(path, encoding):
+SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
+APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
+sys.path.insert(0, '%s/lib' % APP_PATH)
+
+import corplib
+import settings
+settings.load('%s/config.xml' % APP_PATH)
+
+if settings.contains('global', 'manatee_path'):
+    sys.path.insert(0, settings.get('global', 'manatee_path'))
+
+os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
+
+
+def get_registry_attrs(corpus_id):
     """
-    Extracts structural attributes from a specified registry file.
+    Returns all the structures and their attributes of a specified corpus.
 
     arguments:
-    path -- path to a registry file
-    encoding -- python-supported character encoding
+    corpus_id -- a corpus identifier
 
     returns:
     a list of 2-tuples (structure, attribute)
     """
-    startrule = 'conf'
-
-    with open(path) as f:
-        text = f.read().decode(encoding).encode('utf-8').decode('ascii', 'ignore')
-    parser = reg_grammarParser(parseinfo=False)
-    ast = parser.parse(
-        text,
-        startrule,
-        filename=path,
-        semantics=confparsing.ConfigSemantics())
-    tree_walker = confparsing.TreeWalker(ast)
-    ans = tree_walker.run()
-    return ans.get_structattrs()
+    cm = corplib.CorpusManager()
+    corpus = cm.get_Corpus(corpus_id)
+    ans = []
+    for attr in re.split(r'\s*,\s*', corpus.get_conf('STRUCTATTRLIST')):
+        ans.append(tuple(attr.split('.')))
+    return ans
 
 
 def get_attrs_from_conf(conf):
@@ -79,13 +85,14 @@ def open_db(db_path):
     return sqlite3.connect(db_path)
 
 
-def create_tables(attrs, uniq_attr, db, reset_existing=False):
+def create_tables(attrs, db, uniq_attr=None, reset_existing=False):
     """
     Creates all the required tables for metadata database.
 
     arguments:
     attrs -- a list of 2-tuples (structure, attribute)
-    uniq_attr -- an attribute (and it structure via struct.attr notation) uniquely identifying a bib. record
+    uniq_attr -- an attribute (and it structure via struct.attr notation) uniquely identifying a bib. record;
+                if None is provided then no bibliography db view is created
     db -- a sqlite3 database connection
     reset_existing -- if True then all the needed existing tables will be removed first
 
@@ -100,8 +107,9 @@ def create_tables(attrs, uniq_attr, db, reset_existing=False):
     attrs_sql += ['poscount INTEGER', 'wordcount INTEGER']
     table_sql = """CREATE TABLE item (%s)""" % ', '.join(attrs_sql)
 
-    view_sql = "CREATE VIEW bibliography AS SELECT %s FROM item" % \
-               (', '.join(['%s AS id' % uniq_attr.replace('.', '_', 1)] + attrs_mod), )
+    if uniq_attr is not None:
+        view_sql = "CREATE VIEW bibliography AS SELECT %s FROM item" % \
+                   (', '.join(['%s AS id' % uniq_attr.replace('.', '_', 1)] + attrs_mod), )
 
     cursor = db.cursor()
     if reset_existing:
@@ -110,7 +118,8 @@ def create_tables(attrs, uniq_attr, db, reset_existing=False):
         cursor.execute('DROP VIEW IF EXISTS bibliography')
     cursor.execute(cache_sql)
     cursor.execute(table_sql)
-    cursor.execute(view_sql)
+    if uniq_attr is not None:
+        cursor.execute(view_sql)
     return attrs_mod
 
 
@@ -206,10 +215,10 @@ if __name__ == '__main__':
             continue
         attrs = get_attrs_from_conf(conf)
         if len(attrs) == 0:
-            attrs = get_registry_attrs(conf['registryFile'], conf['encoding'])
+            attrs = get_registry_attrs(conf['id'])
 
         db = open_db(conf['dbFile'])
-        create_tables(attrs, conf['uniqAttr'], db, reset_existing=args.reset_existing)
+        create_tables(attrs, db, uniq_attr=conf.get('uniqAttr', None), reset_existing=args.reset_existing)
         with open(conf['verticalFile'], 'r') as f:
             data = parse_vert_file(f, conf['encoding'], conf['itemUnit'])
             for row in data:
