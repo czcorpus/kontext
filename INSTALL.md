@@ -45,7 +45,7 @@ is */etc/apache2/sites-available/*):
 
 *Important notice*: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this concrete
 form as in other case you may experience occasional error responses from Apache server
-(see https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API for details).
+(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API) for details).
 
 Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also possible.
 Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
@@ -73,12 +73,14 @@ KonText comes with two prepackaged plug-in series, both located in *lib/plugins*
 
 1. modules with prefix *ucnk_*
     * they fit specific needs of the Institute of the Czech National Corpus
-    * most likey they cannot be used directly in your specific environment but you can still explore them to find out how
+    * most likely they cannot be used directly in your specific environment but you can still explore them to find out how
     the thing works
 2. modules with prefix *default_* (with one additional module *redis_db.py*; see below)
     * they provide a complete, working set of plugins needed to run KonText with all the features enabled
-    * there are two database backends available for *default_* modules; both are designed as key->value stores:
-        * [sqlite3](http://www.sqlite.org/)-based ([Python module](https://pypi.python.org/pypi/pysqlite)) for testing and small installations
+    * there are two database backends available for *default_* modules; both provide key-value storage interface
+      (see *plugins.abstract.general_storage.KeyValueStorage*):
+        * [sqlite3](http://www.sqlite.org/)-based ([Python module](https://pypi.python.org/pypi/pysqlite)) for testing 
+        and small installations
         * [Redis](http://redis.io/)-based ([Python module](https://pypi.python.org/pypi/redis/)) for production installations
     * an initial user import must be performed - for this purpose, a script *scripts/plugins/default_query_storage* is available
      (see also *userdb.sample.json* file to find out how to prepare initial user database)
@@ -90,9 +92,9 @@ The only thing to do when using *default_* plug-ins is to properly configure Kon
 
 ### Client-side implementation notes
 
-Specifications of some plug-ins include also a client-side functionality. In case of customizing *ucnk_* plug-ins there
-will be typically no need to modify the client-side part because the difference will be probably in a server
-solution (e.g. different storage engine).
+Some of the plug-ins include also a client-side functionality which for example enriches user interface benefiting from
+plug-in's server-side services. Unless you want to change user interface in some way there will probably no need
+to modify the client-side code of prepackaged plug-ins even if you rewrite the server-side from scratch.
 
 Client-side plug-in must be defined as an [AMD](https://github.com/amdjs/amdjs-api) compatible module. A sample
 implementation may look like in the following code:
@@ -114,6 +116,15 @@ var lib = {};
     return lib;
 });
 ```
+Additional notes:
+
+* Available 3rd party libraries include *jQuery*, *jQuery-cookies plug-in*, *soundmanager2*, *typeahead*, *virtual-keyboard*.
+* JavaScript code related to a concrete page can be found in *public/files/js/tpl/page_name*.
+* Plug-ins are located in *public/files/js/plugins/pluginNameCamelCase*
+* New client-side libraries and plug-ins are written in [TypeScript](http://www.typescriptlang.org/) and located in 
+  *public/files/ts*.
+* Currently there is no solution for additional CSS files (i.e. adding a new plug-in with some UI representation requires
+you to edit existing CSS/LESS file *widgets.less*).
 
 ### Server-side implementation notes
 
@@ -136,16 +147,24 @@ def setup(self, **kwargs):
 ```
 
 But there is an important difference between *setup()* and *create_instance()*. Please recall the fact that there
-is always a single instance of a plug-in serving all the requests. But each request may pass different parameters into
-the *setup()* function. It means that all the request-specific data (e.g. the language a client uses) must be thread-local.
+is always a single instance of a plug-in serving all the requests (within a single process). But in case of the *setup()*
+method, each request may pass different parameters and in a concurrent way. It means that all the request-specific data 
+(e.g. the language a client uses) must be thread-local.
 
 ### Notes for developers
 
 Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different
-contexts can be used for a single plug-in in theory (1 - module with plug-in implementation, 2 - dynamic module attached to
-the *plugins* package, 3 - config.xml tag) a good practice is to use a single name/id. E.g. if you implement a module
-*corpus_enhancer* (i.e. the file is *corpus_enhancer.py*) then the respective part of *config.xml* will look like this:
+contexts can be used for a single plug-in in theory:
 
+1. a name of a module/file containing the plug-in implementation
+2. a dynamically created module attached to the *plugins* package (see *app.py*)
+3. a name of a tag in *config.xml*
+
+it is a good practice to use a single name/id. E.g. if you implement a module
+*corpus_enhancer* then:
+
+1. your respective Python file should be *lib/plugins/corpus_enhancer.py*
+2. plug-in configuration should look like this:
 ```xml
 <kontext>
   <global>
@@ -160,9 +179,7 @@ the *plugins* package, 3 - config.xml tag) a good practice is to use a single na
   </global>
 </kontext>
 ```
-
-And the registration (which defines dynamically created module) in *app.py* will look like this:
-
+3. And the registration (which defines a dynamically created module) in *app.py* will look like this:
 ```python
 optional_plugins = (
     # ... existing KonText plug-ins ...
@@ -172,11 +189,12 @@ optional_plugins = (
 
 When implementing an optional plug-in, you can make it dependent on both default and optional plug-ins. These dependencies
 are passed as arguments to your *factory function*. The only thing to be aware of is that optional plug-in dependencies
-in *optional_plugins* (file app.py) must be specified using strings (i.e. you cannot directly use the package *plugins*)
-because when Python interpreter reads the optional plug-ins configuration no optional plug-in is instantiated yet.
+in *optional_plugins* (file *app.py*) must be specified using strings (i.e. you cannot directly use the package *plugins*)
+because when Python interpreter executes the optional plug-ins configuration no optional plug-in is instantiated yet.
 
-In the following example where we define 'my_plugin',  *settings* is a required plug-in (and thus already loaded) and
-*some_optional_plugin* is an optional plug-in which cannot be guaranteed to be loaded yet.
+In the following example where we define *my_plugin* where *settings* is a required plug-in (i.e. already loaded and 
+passed directly as a module *settings*) and *some_optional_plugin* is an optional plug-in which cannot be guaranteed to 
+be loaded yet (i.e. defined using a string).
 
 ```python
 optional_plugins = (
@@ -190,6 +208,7 @@ It is also recommended to add at least following information to plug-in's module
 
     * 3rd party libraries needed to run the plug-in
     * required config.xml entries to properly configure the plug-in
+    * required database schema if any
 
 
 List of currently supported plug-ins
@@ -229,16 +248,14 @@ Plug-ins detailed information
 
 The "db" plug-in is kind of specific because it is not used directly by KonText core modules - it is available only to
 other plug-ins. Generally speaking, "db" is expected to provide an interface to access a data storage engine
-(SQL/NoSQL/whatever). But because of its nature, the interface is arbitrary. If the plug-ins you use understand it
-or if you use some individual ad-hoc solutions within your plug-ins then there is no problem at all.
+(SQL/NoSQL/whatever). This facts mean that there is no fixed interface required for a *db* plug-in. As soon as your
+plug-ins understand your *db* implementation, everything is all right. 
 
-As you can see in the case of *default_* and *ucnk_* plug-ins, their "db" storages are completely different. Yet you
-still can switch from one set to another without need to hack KonText's core code.
+The only thing to consider is the fact that there can be only one *db* plug-in at a time. E.g. if you have several 
+plug-ins relying on prepackaged default/redis *db* plug-in and then you implement an additional plug-in using your 
+existing SQL database, then you will have to implement/include a connection adapter by yourself.
 
-Of course, once you want to adopt a foreign plug-in which relies on different "db" implementation you have to make the
-code compatible with your own "db" or pack the foreign "db" plug-in along with the adopted one.
-
-The plug-ins KonText passes "db" to are:
+The plug-ins KonText passes *db* to are:
 
 * sessions
 * settings_storage
@@ -524,7 +541,6 @@ Please note that you do not have to put the *corplist* subtree into the *config.
 
 
 
-
 ### The "appbar" plug-in
 
 This optional plug-in provides a way how to integrate KonText to an existing group of applications sharing some
@@ -690,7 +706,7 @@ KonText is configured via an XML configuration file located in the root director
 KonText loads its configuration from path *../config.xml*.
 
 The configuration XML file is expected to be partially customizable according to the needs of 3rd party plug-ins.
-Generally it has two-level structure: *sections* and *key->value items* (where value can be also a list of items (see
+Generally it has two-level structure: *sections* and *key-value items* (where value can be also a list of items (see
 e.g. */kontext/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
 dedicated functions or modules.
 
@@ -815,37 +831,39 @@ Sample configuration file **config.sample.xml** provides more examples.
 
 ### Tag-builder component configuration
 
-Currently, KonText supports a single tagset helper tool which allows creating tag queries in an interactive way.
-
-Sample file:
+KonText contains a PoS tag construction widget called "tag builder" which provides an interactive way of writing
+PoS tags. Only positional tagsets are supported. Multiple tagsets can be defined:
 
 ```xml
-<kontext>
-...
-<corpora>
-  ...
-  <tagsets>
-    <tagset position="0">
-        <label>
-            <desc lang="en">Part of speech</desc>
-            <desc lang="cs">Slovní druh</desc>
-        </label>
-        <value id="A">
-            <desc lang="en">adjective</desc>
-            <desc lang="cs">adjektivum</desc>
-        </value>
-        <value id="N">
+<tagsets>
+  <tagset ident="ucnk1" num_pos="16">
+    <position index="0">
+      <label>
+        <desc lang="en">Part of speech</desc>
+        <desc lang="cs">Slovní druh</desc>
+      </label>
+      <value id="A">
+        <desc lang="en">adjective</desc>
+        <desc lang="cs">adjektivum</desc>
+      </value>
+      <value id="N">
+       ...
+      </value>
         ...
-        </value>
-        ...
-    </tagset>
-    <tagset position="1">
+    </position>
+    <position index="1">
     ...
-    </tagset>
+    </position>
     ...
-  </tagsets>
-  ...
-</corpora>
-...
-</kontext>
+  </tagset>
+  <tagset ident="my_custom_tagset">
+    ...
+  </tagset>
+</tagsets>
+```
+
+Concrete corpus can be configured to support the widget in the following way:
+
+```xml
+<corpus ident="my_corpus" tagset="ucnk1" />
 ```
