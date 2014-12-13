@@ -51,7 +51,7 @@ from sqlalchemy import create_engine
 from abstract.conc_persistence import AbstractConcPersistence
 
 
-KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
+KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
                ['%d' % i for i in range(10)]
 
 
