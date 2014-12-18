@@ -27,16 +27,18 @@ import re
 import argparse
 
 import sqlite3
+from twisted.test.test_roots import const
 
 import vertparser as vp
 
-CORPORA = ('intercorp_v7_ar', 'intercorp_v7_be', 'intercorp_v7_bg', 'intercorp_v7_ca', 'intercorp_v7_cs',
- 'intercorp_v7_da', 'intercorp_v7_de', 'intercorp_v7_el', 'intercorp_v7_en', 'intercorp_v7_es', 'intercorp_v7_et',
- 'intercorp_v7_fi', 'intercorp_v7_fr', 'intercorp_v7_he', 'intercorp_v7_hi', 'intercorp_v7_hr', 'intercorp_v7_hu',
- 'intercorp_v7_is', 'intercorp_v7_it', 'intercorp_v7_ja', 'intercorp_v7_lt', 'intercorp_v7_lv', 'intercorp_v7_mk',
- 'intercorp_v7_ms', 'intercorp_v7_mt', 'intercorp_v7_nl', 'intercorp_v7_no', 'intercorp_v7_pl', 'intercorp_v7_pt',
- 'intercorp_v7_ro', 'intercorp_v7_ru', 'intercorp_v7_sk', 'intercorp_v7_sl', 'intercorp_v7_sq', 'intercorp_v7_sr',
- 'intercorp_v7_sv', 'intercorp_v7_sy', 'intercorp_v7_tr', 'intercorp_v7_uk', 'intercorp_v7_vi'
+CORPORA = (
+    'intercorp_v7_ar', 'intercorp_v7_be', 'intercorp_v7_bg', 'intercorp_v7_ca', 'intercorp_v7_cs',
+    'intercorp_v7_da', 'intercorp_v7_de', 'intercorp_v7_el', 'intercorp_v7_en', 'intercorp_v7_es', 'intercorp_v7_et',
+    'intercorp_v7_fi', 'intercorp_v7_fr', 'intercorp_v7_he', 'intercorp_v7_hi', 'intercorp_v7_hr', 'intercorp_v7_hu',
+    'intercorp_v7_is', 'intercorp_v7_it', 'intercorp_v7_ja', 'intercorp_v7_lt', 'intercorp_v7_lv', 'intercorp_v7_mk',
+    'intercorp_v7_ms', 'intercorp_v7_mt', 'intercorp_v7_nl', 'intercorp_v7_no', 'intercorp_v7_pl', 'intercorp_v7_pt',
+    'intercorp_v7_ro', 'intercorp_v7_ru', 'intercorp_v7_sk', 'intercorp_v7_sl', 'intercorp_v7_sq', 'intercorp_v7_sr',
+    'intercorp_v7_sv', 'intercorp_v7_sy', 'intercorp_v7_tr', 'intercorp_v7_uk', 'intercorp_v7_vi'
 )
 
 ATTRS = (
@@ -45,7 +47,7 @@ ATTRS = (
     'div.origyear', 'div.isbn', 'div.txtype', 'div.comment', 'div.original', 'div.srclang',
     'div.translator', 'div.transsex', 'div.authsex', 'div.transcomment', 'div.collectionauthor',
     'div.collectiontitle', 'div.volume', 'div.pages', 'div.id', 'div.group'
-    )
+)
 
 SCHEMA = (
     """CREATE TABLE cache (
@@ -101,7 +103,7 @@ SCHEMA = (
 )
 
 
-def open_db(db_path):
+def open_db(db_path, update_existing):
     """
     Opens a sqlite3 database
 
@@ -111,8 +113,10 @@ def open_db(db_path):
     returns:
     a database connection object
     """
-    if os.path.exists(db_path):
+    if os.path.exists(db_path) and not update_existing:
         os.rename(db_path, '%s.bak' % db_path)
+    elif not os.path.exists(db_path) and update_existing:
+        raise Exception('cannot update existing DB - %s does not exist' % db_path)
     return sqlite3.connect(db_path)
 
 
@@ -177,11 +181,7 @@ def insert_record(db, corpus_id, rec):
                    rec.get('translator', ''), rec.get('transsex', ''), rec.get('authsex', ''),
                    rec.get('transcomment', ''), rec.get('collectionauthor', ''), rec.get('collectiontitle', ''),
                    rec.get('volume', ''), rec.get('pages', ''), rec.get('div_wordcount', 0), rec.get('div_wordcount', 0),
-		   rec.get('poscount', 0)))
-
-
-def normalize_div_id(id):
-    return ':'.join(id.split(':')[1:-1])
+                   rec.get('poscount', 0)))
 
 
 def parse_file(f):
@@ -209,7 +209,6 @@ def parse_file(f):
                 curr_doc.update(attrs)
             elif tag == 'div':
                 attrs['__doc__'] = curr_doc
-                #attrs['id'] = normalize_div_id(attrs['id'])
                 metadata.update(attrs)
         elif start is False:
             if tag == 'div':
@@ -247,11 +246,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Metadata extractor for Intercorp v7')
     parser.add_argument('vert_src', metavar='VERT_SRC')
     parser.add_argument('out_db', metavar='OUT_DB')
+    parser.add_argument('-u', '--update-existing', action='store_const', const=True)
     args = parser.parse_args()
-    print(args)
 
-    db = open_db(args.out_db)
-    create_schema(db)
+    db = open_db(args.out_db, update_existing=args.update_existing)
+
+    if not args.update_existing:
+        create_schema(db)
 
     root_path = args.vert_src
     if not root_path[0] == '/':
