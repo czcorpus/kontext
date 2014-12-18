@@ -163,23 +163,23 @@ def insert_record(db, corpus_id, rec):
     cursor = db.cursor()
     cursor.execute("INSERT INTO item (item_id, corpus_id, "
                    "doc_id, doc_lang, doc_version, doc_wordcount, "
-                   "div_author, div_title, div_publisher, div_pubplace, "
-                   "div_pubyear, div_pubmonth, div_origyear, div_isbn, "
-                   "div_txtype, div_comment, div_original, div_srclang, "
-                   "div_translator, div_transsex, div_authsex, "
+                   "div_group, div_author, div_title, div_publisher, "
+                   "div_pubplace, div_pubyear, div_pubmonth, div_origyear, "
+                   "div_isbn, div_txtype, div_comment, div_original, "
+                   "div_srclang, div_translator, div_transsex, div_authsex, "
                    "div_transcomment, div_collectionauthor, div_collectiontitle, "
-                   "div_volume, div_pages, div_wordcount, wordcount, "
-                   "poscount) "
-                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   "div_volume, div_pages, div_wordcount, "
+                   "wordcount, poscount) "
+                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   (rec.get('id'), corpus_id,
                    doc.get('id'), doc.get('lang'), doc.get('version'), doc.get('wordcount'),
-                   rec.get('author', ''), rec.get('title', ''), rec.get('publisher', ''), rec.get('pubplace', ''),
-                   rec.get('pubyear', ''), rec.get('pubmonth', ''), rec.get('origyear', ''),  rec.get('isbn', ''),
-                   rec.get('txtype', ''), rec.get('comment', ''), rec.get('original', ''), rec.get('srclang', ''),
-                   rec.get('translator', ''), rec.get('transsex', ''), rec.get('authsex', ''),
+                   rec.get('group'), rec.get('author', ''), rec.get('title', ''), rec.get('publisher', ''), 
+                   rec.get('pubplace', ''), rec.get('pubyear', ''), rec.get('pubmonth', ''), rec.get('origyear', ''),
+                   rec.get('isbn', ''), rec.get('txtype', ''), rec.get('comment', ''), rec.get('original', ''), 
+                   rec.get('srclang', ''), rec.get('translator', ''), rec.get('transsex', ''), rec.get('authsex', ''),
                    rec.get('transcomment', ''), rec.get('collectionauthor', ''), rec.get('collectiontitle', ''),
-                   rec.get('volume', ''), rec.get('pages', ''), rec.get('div_wordcount', 0), rec.get('div_wordcount', 0),
-                   rec.get('poscount', 0)))
+                   rec.get('volume', ''), rec.get('pages', ''), rec.get('div_wordcount', 0), 
+                   rec.get('div_wordcount', 0), rec.get('poscount', 0)))
 
 
 def parse_file(f):
