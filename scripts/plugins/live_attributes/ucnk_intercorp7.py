@@ -21,13 +21,11 @@ It extracts information from InterCorp v7 vertical files and creates a database
 of respective meta-data.
 """
 
-import sys
 import os
 import re
 import argparse
 
 import sqlite3
-from twisted.test.test_roots import const
 
 import vertparser as vp
 
