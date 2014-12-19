@@ -192,7 +192,8 @@ class LiveAttributes(AbstractLiveAttributes):
     def _get_subcorp_attrs(corpus):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
-    def _sort_result(self, data, bib_label_key):
+    @staticmethod
+    def _sort_result(data, bib_label_key):
         if bib_label_key in data:
             data[bib_label_key] = l10n.sort(data[bib_label_key], 'cs_CZ', key=lambda x: x[0])
 
