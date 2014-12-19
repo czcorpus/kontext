@@ -25,8 +25,8 @@ import l10n
 from abstract.live_attributes import AbstractLiveAttributes
 
 
-def create_cache_key(attr_map, max_attr_list_size, aligned_corpora):
-    return md5('%r %r %r' % (attr_map, max_attr_list_size, aligned_corpora)).hexdigest()
+def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora):
+    return md5('%r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora)).hexdigest()
 
 
 def cached(f):
@@ -40,13 +40,13 @@ def cached(f):
     def wrapper(self, corpus, attr_map, aligned_corpora=None):
         db = self.db(corpus.corpname)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
         ans = f(self, corpus, attr_map, aligned_corpora)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora)
             self.to_cache(db, key, ans)
         return self.format_data_types(ans)
     return wrapper
@@ -192,11 +192,6 @@ class LiveAttributes(AbstractLiveAttributes):
     def _get_subcorp_attrs(corpus):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
-    @staticmethod
-    def _sort_result(data, bib_label_key):
-        if bib_label_key in data:
-            data[bib_label_key] = l10n.sort(data[bib_label_key], 'cs_CZ', key=lambda x: x[0])
-
     @cached
     def get_attr_values(self, corpus, attr_map, aligned_corpora=None):
         """
@@ -253,22 +248,24 @@ class LiveAttributes(AbstractLiveAttributes):
 
         for item in db.execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
-                v = unicode(item[srch_attr_map[attr]])
+                v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
                     if attr == bib_label:
-                        ans[attr].add((v, item[srch_attr_map[bib_id]]))
+                        ans[attr].add((unicode(v), item[srch_attr_map[bib_id]]))
                     elif type(ans[attr]) is set:
                         ans[attr].add(v)
                     elif type(ans[attr]) is int:
                         ans[attr] += int(v)
 
-        self._sort_result(ans, bib_label)
-
         exported = {}
         for k in ans.keys():
             if type(ans[k]) is set:
                 if len(ans[k]) <= self.max_attr_list_size:
-                    exported[self.export_key(k)] = tuple(sorted(ans[k]))
+                    if k == bib_label:
+                        out_data = l10n.sort(ans[k], 'cs_CZ', key=lambda t: t[0])
+                    else:
+                        out_data = tuple(sorted(ans[k]))
+                    exported[self.export_key(k)] = out_data
                 else:
                     exported[self.export_key(k)] = {'length': len(ans[k])}
 
