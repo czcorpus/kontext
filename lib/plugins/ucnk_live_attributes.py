@@ -253,14 +253,14 @@ class LiveAttributes(AbstractLiveAttributes):
 
         for item in db.execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
-                v = item[srch_attr_map[attr]]
+                v = unicode(item[srch_attr_map[attr]])
                 if v is not None and attr not in hidden_attrs:
                     if attr == bib_label:
-                        ans[attr].add((item[srch_attr_map[attr]], item[srch_attr_map[bib_id]]))
+                        ans[attr].add((v, item[srch_attr_map[bib_id]]))
                     elif type(ans[attr]) is set:
-                        ans[attr].add(item[srch_attr_map[attr]])
+                        ans[attr].add(v)
                     elif type(ans[attr]) is int:
-                        ans[attr] += int(item[srch_attr_map[attr]])
+                        ans[attr] += int(v)
 
         self._sort_result(ans, bib_label)
 
