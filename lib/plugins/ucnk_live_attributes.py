@@ -26,7 +26,18 @@ from abstract.live_attributes import AbstractLiveAttributes
 
 
 def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora):
+    """
+    Generates a cache key based on the relevant parameters.
+    Returned value is hashed.
+    """
     return md5('%r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora)).hexdigest()
+
+
+def vanilla_corpname(corpname):
+    """
+    Removes all additional information from corpus name (in UCNK case this means removing path-like prefixes)
+    """
+    return corpname.rsplit('/', 1)[-1]
 
 
 def cached(f):
@@ -38,7 +49,7 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, corpus, attr_map, aligned_corpora=None):
-        db = self.db(corpus.corpname)
+        db = self.db(vanilla_corpname(corpus.corpname))
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora)
             ans = self.from_cache(db, key)
@@ -119,6 +130,9 @@ class LiveAttributes(AbstractLiveAttributes):
     def db(self, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
+
+        arguments:
+        corpname -- vanilla corpus name (i.e. without any path-like prefixes)
         """
         if not corpname in self.databases:
             db_path = self.corptree.get_corpus_info(corpname).get('metadata', {}).get('database')
@@ -206,12 +220,13 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
+        corpname = vanilla_corpname(corpus.corpname)
         attrs = self._get_subcorp_attrs(corpus)
-        db = self.db(corpus.corpname)
+        db = self.db(corpname)
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
-        bib_label = LiveAttributes.import_key(self.corptree.get_corpus_info(corpus.corpname)['metadata']['label_attr'])
-        bib_id = LiveAttributes.import_key(self.corptree.get_corpus_info(corpus.corpname)['metadata']['id_attr'])
+        bib_label = LiveAttributes.import_key(self.corptree.get_corpus_info(corpname)['metadata']['label_attr'])
+        bib_id = LiveAttributes.import_key(self.corptree.get_corpus_info(corpname)['metadata']['id_attr'])
         hidden_attrs = set()
 
         if bib_id not in srch_attrs:
@@ -220,7 +235,7 @@ class LiveAttributes(AbstractLiveAttributes):
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
-        where_sql, where_values = attr_items.export_sql('t1', corpus.corpname)
+        where_sql, where_values = attr_items.export_sql('t1', corpname)
 
         join_sql = []
         i = 2
@@ -275,7 +290,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return exported
 
     def get_bibliography(self, corpus, item_id):
-        db = self.db(corpus.corpname)
+        db = self.db(vanilla_corpname(corpus.corpname))
         col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
         col_map = dict([(x[1], x[0]) for x in col_map])
         ans = db.execute('SELECT * FROM bibliography WHERE id = ?', item_id).fetchone()
@@ -285,7 +300,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         Returns total number of items in bibliography
         """
-        db = self.db(corpus.corpname)
+        db = self.db(vanilla_corpname(corpus.corpname))
         size = self.from_cache(db, 'bib_size')
         if size is None:
             ans = db.execute('SELECT COUNT(*) FROM bibliography').fetchone()
