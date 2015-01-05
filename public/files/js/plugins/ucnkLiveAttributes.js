@@ -92,9 +92,10 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
             $(table).addClass('dynamic');
             $.each(rows, function (i, row) {
-                var checked = $.inArray(row, checkedItems) > -1,
+                var checked = $.inArray(typeof row === 'object' ? row[1] : row, checkedItems) > -1,
                     bibLink,
-                    itemLabel;
+                    itemLabel,
+                    labelAttrName;
 
                 if ($.isArray(row)) { // => value and label differ
                     itemLabel = row[0];
@@ -107,22 +108,26 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
                 if (defaultRowIdKey === bibConf.label_attr) { // => special column representing a list of bib. entries
                     rowIdentKey = bibConf.id_attr;
+                    labelAttrName = bibConf.label_attr;
                     bibLink = '<a class="bib-info" data-bib-id="' + rowIdentValue + '">i</a>';
 
                 } else {
                     rowIdentKey = defaultRowIdKey;
+                    labelAttrName = null;
                     bibLink = '';
                 }
 
                 if (checked) {
                     $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                        + rowIdentKey + '" value="' + row + '" checked="checked" disabled="disabled" /> '
+                        + rowIdentKey + '" ' + (labelAttrName ? ' data-virt-name="' + labelAttrName + '" ' : '')
+                        + ' value="' + (typeof row === 'object' ? row[1] : row) + '" checked="checked" disabled="disabled" /> '
                         + '<input type="hidden" name="sca_' + rowIdentKey + '" value="' + rowIdentValue + '" /> '
                         + itemLabel + '</label></td><td>' + bibLink + '</td></tr>');
 
                 } else {
                     $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
-                        + rowIdentKey + '" value="' + rowIdentValue + '" /> ' + itemLabel + '</label></td><td>'
+                        + rowIdentKey + '" ' + (labelAttrName ? ' data-virt-name="' + labelAttrName + '" ' : '')
+                        + ' value="' + rowIdentValue + '" /> ' + itemLabel + '</label></td><td>'
                         + bibLink + '</td></tr>');
                 }
             });
@@ -189,6 +194,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 checkedItems.push($(this).val());
             });
 
+
             attrTable.find('table.dynamic').remove();
             attrTable.find('.select-all').css('display', 'none');
             $(inputElm).show();
@@ -196,6 +202,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             if ($.isArray(dataItem)) {
                 attrTable.find('.metadata').empty();
                 dataTable = createDataTable(dataItem, ident, self.pluginApi.conf('bibConf'), checkedItems);
+
                 $(inputElm).after(dataTable);
                 $(dataTable).find('.bib-info').each(function () {
                     bindBibLink(this);
@@ -244,19 +251,49 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     Checkboxes.prototype.update = function (data) {
         var self = this;
 
+        function attrValsContain(value, vals) {
+            var ans;
+
+            if (vals.length === 0) {
+                ans = false;
+
+            } else if (typeof vals[0] === 'string') {
+                ans = $.inArray(value, vals) > -1;
+
+            } else if (typeof vals[0] === 'object') {
+                ans = false;
+                $.each(vals, function (item) {
+                    if (item[1] === value) {
+                        ans = true;
+                        return false;
+                    }
+                });
+            }
+            return ans;
+        }
+
+
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
-            var id = stripPrefix($(this).attr('name')),
+            var id,
                 trElm = $(this).closest('tr'),
                 labelElm = $(this).closest('label'),
                 inputVal = $(this).val() !== self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
-            if ($.inArray(inputVal, data[id]) < 0) {
+
+            if ($(this).attr('data-virt-name')) {
+                id = $(this).attr('data-virt-name');
+
+            } else {
+                id = stripPrefix($(this).attr('name'));
+            }
+
+            if (!attrValsContain(inputVal, data[id])) {
                 trElm.addClass('excluded');
                 labelElm.removeClass('locked');
 
             } else {
                 trElm.removeClass('excluded');
-                if (this.checked) {
+                if ($(this).is(':checked')) {
                     labelElm.addClass('locked');
                     $(this).attr('disabled', 'disabled');
                     $(this).after('<input class="checkbox-substitute" type="hidden" '
@@ -565,8 +602,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
             alignedCorpnames,
             selectedAttrs = checkBoxes.exportStatus();
 
-        requestURL = 'filter_attributes?corpname=' + lib.pluginApi.conf('corpname')
-            + '&attrs=' + JSON.stringify(selectedAttrs);
+        requestURL = 'filter_attributes?corpname=' + lib.pluginApi.conf('corpname');
 
         alignedCorpnames = alignedCorpora.findSelected();
         if (alignedCorpnames) {
@@ -576,7 +612,9 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         ajaxAnimation.start();
 
         lib.pluginApi.ajax(requestURL, {
+            type : 'POST',
             dataType : 'json',
+            data : 'attrs=' + JSON.stringify(selectedAttrs),
             success : function (data) {
                 successAction(data, selectedAttrs);
                 ajaxAnimation.stop();
