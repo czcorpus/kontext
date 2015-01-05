@@ -117,6 +117,10 @@ def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
     pidfile -- a running worker information file path
     minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
     """
+    if type(pidfile) is tuple:  # TODO: this is just a temporary fix (a cause should be found)
+        logging.getLogger(__name__).warning('Incorrect pidfile argument format. Params: q=%s, cachefile=%s, pidfile=%s' %
+                                            (q, cachefile, pidfile[0]))
+        pidfile = pidfile[0]
     pidfile = os.path.realpath(pidfile)
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
     i = 1
