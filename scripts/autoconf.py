@@ -13,11 +13,14 @@
 # limitations under the License.
 
 """
-This module is intended to be used by shell scripts which rely on
-properly configured KonText. It imports and loads KonText settings
-and provides a function to setup a simple logging.
+This is an auto-configuration module for KonText shell scripts
+relying on full KonText's configuration (= processed config.xml).
 
-KonText settings are available as a module property 'settings'.
+By importing autoconf module, config.xml is parsed into a 'settings'
+module (autoconf.settings).
+
+There is also a logging object available (autoconf.logger) but it
+must be configured first via setup_logger() function.
 """
 
 import os
@@ -34,16 +37,20 @@ DEFAULT_NUM_LOG_FILES = 5
 import settings
 settings.load('%s/config.xml' % APP_PATH)
 
-logger = logging.getLogger('conc_archive')
+logger = logging.getLogger('kontext_script')
 
 
-def setup_logger(log_path=None):
+def setup_logger(log_path=None, logger_name=None):
     """
-    Configures logging.
+    Configures logging (= module's logger variable).
 
     arguments:
     log_path -- path to a file where log will be written; if omitted then stdout is used
+    logger_name -- a name to be used for logger (by default it is 'kontext_script')
     """
+    if logger_name is not None:
+        logger.name = logger_name
+
     if log_path is not None:
         handler = logging.handlers.RotatingFileHandler(log_path,
                                                        maxBytes=DEFAULT_LOG_FILE_SIZE,
