@@ -425,6 +425,23 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
+     * Transforms an existing element into a context help link with bound pop-up message.
+     *
+     * @param {HTMLElement} triggerElm an element to be transformed into a context help link
+     * @param text text of the help
+     */
+    lib.contextHelp = function(triggerElm, text) {
+        var image = win.document.createElement('img');
+
+        $(triggerElm).addClass('context-help');
+        $(image).attr('data-alt-img', '../files/img/question-mark_s.png')
+            .attr('src', '../files/img/question-mark.png')
+            .addClass('over-img');
+        $(triggerElm).append(image);
+        popupbox.bind(triggerElm, text, { width: 'nice' });
+    };
+
+    /**
      * Modifies form (actually, it is always the #mainform)
      * in a way that only current corpus is changed. Under
      * normal circumstances, the form submints to the concordance
@@ -1114,6 +1131,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
 
             userIsAnonymous : function () {
                 return self.conf.anonymousUser;
+            },
+
+            contextHelp : function (triggerElm, text) {
+                return self.contextHelp(triggerElm, text);
             }
         };
     };
