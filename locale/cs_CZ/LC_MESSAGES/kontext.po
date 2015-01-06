@@ -108,8 +108,8 @@ msgid "You have been logged out"
 msgstr "Byli jste odhlášeni."
 
 #: lib/actions.py:174
-msgid "Empty result"
-msgstr "Žádný výsledek"
+msgid "No result. Please make sure the query and selected query type are correct."
+msgstr "Žádný výsledek. Zkontrolujte prosím zadání a zvolený typ dotazu."
 
 #: lib/actions.py:182 cmpltmpl/wordlist.py:311 cmpltmpl/document.py:2213
 #: cmpltmpl/document.py:2325 cmpltmpl/document.py:2355
