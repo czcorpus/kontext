@@ -188,7 +188,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 attrTable = $(this).closest('table.envelope'),
                 checkedItems = [],
                 dataTable,
-                msg = self.pluginApi.translate('number of matching items');
+                msg = self.pluginApi.translate('number of matching items'),
+                helpLink = win.document.createElement('a');
 
             attrTable.find('table.dynamic .attr-selector:checked').each(function () {
                 checkedItems.push($(this).val());
@@ -216,6 +217,8 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
             } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
                 attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
+                attrTable.find('.metadata').append(helpLink);
+                self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('bib_list_warning'));
             }
         });
     };
