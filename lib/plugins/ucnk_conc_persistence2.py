@@ -117,6 +117,12 @@ class ConcPersistence(AbstractConcPersistence):
             return self.anonymous_user_ttl
         return self.ttl
 
+    def _get_persist_level_for(self, user_id):
+        if user_id == self._anonymous_user_id:
+            return 0
+        else:
+            return 1
+
     def is_valid_id(self, data_id):
         """
         Returns True if data_id is a valid data identifier else False is returned
@@ -164,6 +170,7 @@ class ConcPersistence(AbstractConcPersistence):
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data['id'] = data_id
+            curr_data['persist_level'] = self._get_persist_level_for(user_id)
             data_key = self._mk_key(data_id)
 
             self.db.set(data_key, curr_data)
