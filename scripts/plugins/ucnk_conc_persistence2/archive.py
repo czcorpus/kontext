@@ -32,9 +32,10 @@ import json
 import redis
 from sqlalchemy import create_engine
 
-SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
-sys.path.insert(0, '%s/lib' % APP_PATH)
+sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(__file__)))
+import autoconf
+settings = autoconf.settings
+logger = autoconf.logger
 
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
@@ -42,26 +43,6 @@ MAX_NUM_SHOW_ERRORS = 10
 
 import settings
 from plugins.ucnk_conc_persistence2 import KEY_ALPHABET
-
-logger = logging.getLogger('conc_archive')
-
-
-def setup_logger(log_path=None):
-    """
-    Configures logging.
-
-    arguments:
-    log_path -- path to a file where log will be written; if omitted then stdout is used
-    """
-    if log_path is not None:
-        handler = logging.handlers.RotatingFileHandler(log_path,
-                                                       maxBytes=DEFAULT_LOG_FILE_SIZE,
-                                                       backupCount=DEFAULT_NUM_LOG_FILES)
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
 def redis_connection(host, port, db_id):
@@ -177,8 +158,6 @@ class Archiver(object):
 
 
 if __name__ == '__main__':
-    settings.load('%s/config.xml' % APP_PATH)
-
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
     parser.add_argument('-k', '--key-prefix', type=str, help='Processes just keys with defined prefix')
     parser.add_argument('-c', '--cron-interval', type=int, help='Non-empty values initializes partial processing with '
@@ -187,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--log-file', type=str, help='A file used for logging. If omitted then stdout is used')
     args = parser.parse_args()
 
-    setup_logger(args.log_file)
+    autoconf.setup_logger(log_path=args.log_file, logger_name='conc_archive')
 
     from_db = redis_connection(settings.get('plugins', 'db')['default:host'],
                                settings.get('plugins', 'db')['default:port'],
