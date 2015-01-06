@@ -86,7 +86,7 @@ ACTION_MAP = {
 }
 
 if __name__ == '__main__':
-    autoconf.setup_logger()
+    autoconf.setup_logger(logger_name='conc_archive')
 
     parser = argparse.ArgumentParser(description='A script to control UCNK metadata cache')
     parser.add_argument('action', metavar='ACTION', help='one of {status, clear}')
