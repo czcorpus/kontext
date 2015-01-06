@@ -142,6 +142,8 @@ declare module Model {
 
         showMessage(type:MsgType, message:string);
 
+        contextHelp(triggerElm:HTMLElement, text:string);
+
         formChangeCorpus(event:Event);
 
         setAlignedCorporaFieldsDisabledState(state:boolean);
