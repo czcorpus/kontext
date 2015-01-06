@@ -211,7 +211,7 @@ class Actions(Kontext):
         if self.align and not self.maincorp:
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
-            out['message'] = ('info', _('Empty result'))
+            out['message'] = ('info', _('No result. Please make sure the query and selected query type are correct.'))
             out['next_url'] = '%sfirst_form' % self.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
