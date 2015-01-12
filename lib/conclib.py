@@ -102,7 +102,7 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
     return ans
 
 
-def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
+def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     """
     Called by webserver process (i.e. not by the background worker).
     Waits in a loop until a minimal acceptable cached concordance occurs
@@ -113,7 +113,9 @@ def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
     arguments:
     corp -- a manatee.Corpus instance
     q -- a query tuple
+    subchash -- a subcorpus name transformed into a cache key entry
     cachefile -- concordance cache file path
+    cache_map -- a CacheMapping instance
     pidfile -- a running worker information file path
     minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
     """
@@ -140,6 +142,7 @@ def _wait_for_conc(corp, q, cachefile, pidfile, minsize):
         if i >= hard_limit:
             logging.getLogger(__name__).warning('Hardcoded limit %01.2f sec. for intermediate concordance exceeded.'
                                                 % (hard_limit / 10.))
+        cache_map.del_full_entry((subchash, q))
         raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
@@ -206,7 +209,8 @@ def _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
         if cache_val:
             cachefile = os.path.join(cache_dir, cache_val[0] + '.conc')
             pidfile = os.path.realpath(pid_dir + cache_val[0] + '.pid')
-            _wait_for_conc(corp, q, cachefile, pidfile, minsize)
+            _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile, cache_map=cache_map,
+                           pidfile=pidfile, minsize=minsize)
             if not os.path.exists(cachefile):  # broken cache
                 del cache_map[(subchash, q)]
                 try:
@@ -251,7 +255,8 @@ def _compute_conc(corp, q, cache_dir, subchash, samplesize, fullsize, pid_dir):
             cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
             if in_progress:  # computation got started meanwhile
-                _wait_for_conc(corp, q, cachefile, pidfile, -1)
+                _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile, cache_map=cache_map,
+                               pidfile=pidfile, minsize=-1)
                 fullsize = PyConc(corp, 'l', cachefile).fullsize()
             else:
                 conc = PyConc(corp, q[0][1], q[0][2:], samplesize)
@@ -347,7 +352,8 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
 
     cachefile, pidfile = parent_conn.recv().split('\n')
     try:
-        _wait_for_conc(corp, q, cachefile, pidfile, minsize)
+        _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
+                       cache_map=cache_factory.get_mapping(cache_dir), pidfile=pidfile, minsize=minsize)
         if not os.path.exists(cachefile):
             raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' % (cachefile, pidfile))
     except Exception as e:
@@ -421,7 +427,8 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, s
             cache_map = cache_factory.get_mapping(cache_dir)
             cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
             if in_progress:
-                _wait_for_conc(corp, q[:act + 1], cachefile, pidfile, -1)
+                _wait_for_conc(corp=corp, q=q[:act + 1], subchash=subchash, cachefile=cachefile,
+                               cache_map=cache_map, pidfile=pidfile, minsize=-1)
             else:
                 conc.save(cachefile)
                 os.remove(pidfile)
