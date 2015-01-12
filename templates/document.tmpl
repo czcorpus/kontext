@@ -381,7 +381,8 @@ define('conf', [], function () {
 
     #filter None
     #block concordance
-    #if $display_closed_conc
+
+    #if $display_closed_conc and not $contains_errors
     <div id="conc-wrapper">
         <div id="conc-top-bar">
             <div id="result-info">
