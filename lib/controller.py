@@ -28,6 +28,7 @@ import logging
 import StringIO
 import inspect
 import time
+import re
 
 import plugins
 import settings
@@ -665,6 +666,37 @@ class Controller(object):
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
 
+    @staticmethod
+    def _export_error(err):
+        """
+        This method is intended to extract details about (some) errors via their
+        messages. It is quite a lame solution but it appears that in case of
+        syntax errors, attribute errors etc. Manatee raises only RuntimeError
+        without further type distinction.
+
+        arguments:
+        err -- an instance of Exception (or a subclass)
+
+        returns:
+        user-readable text of the error
+        """
+        text = err.message if type(err.message) == unicode else err.message.decode('utf-8')
+
+        if 'Query evaluation error' in text:
+            srch = re.match(r'.+ at position (\d+):', text)
+            if srch:
+                text = 'Query failed: Syntax error at position %s.' % srch.groups()[0]
+            else:
+                text = 'Query failed: Syntax error.'
+            text = '%s Please make sure the query and selected query type are correct.' % text
+        elif 'AttrNotFound' in text:
+            srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
+            if srch:
+                text = 'Attribute "%s" not found.' % srch.groups()[0]
+            else:
+                text = 'Attribute not found.'
+        return text
+
     def run(self, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
@@ -780,7 +812,7 @@ class Controller(object):
                 return (methodname, None,
                         {'error': json_msg})
             if not self.exceptmethod and self.is_template(methodname + '_form'):
-                tpl_data['message'] = ('error', e.message if type(e.message) == unicode else e.message.decode('utf-8'))
+                tpl_data['message'] = ('error', self._export_error(e))
                 self.exceptmethod = methodname + '_form'
             if settings.is_debug_mode() or not self.exceptmethod:
                 raise e
