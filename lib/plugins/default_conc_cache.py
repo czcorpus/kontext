@@ -48,6 +48,12 @@ class CacheMapping(object):
         self._cache_dir = cache_dir
         self._data = None
 
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._load_map()
+        return self._data
+
     def _clear_cache(self):
         if os.path.exists(self._cache_dir + self.CACHE_FILENAME):
             os.unlink(self._cache_dir + self.CACHE_FILENAME)
@@ -139,14 +145,12 @@ class CacheMapping(object):
         arguments:
         entry_key -- a 2-tuple (subchash, query) where query is a tuple of min length 1
         """
-        for k in self._data.keys():
+        for k in self.data.keys():
             if entry_key[0] == k[0] and entry_key[1][0] == k[1][0]:
                 self.__delitem__(k)   # original record's key must be used (k ~ entry_key match can be partial)
 
     def __getitem__(self, item):
-        if self._data is None:
-            self._data = self._load_map()
-        return self._data.get(item, None)
+        return self.data.get(item, None)
 
     def __delitem__(self, key):
         self._del_from_map(key)
