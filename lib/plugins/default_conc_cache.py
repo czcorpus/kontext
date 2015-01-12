@@ -131,6 +131,18 @@ class CacheMapping(object):
             pass
         f.close()  # also automatically flck_unlock (f)
 
+    def del_full_entry(self, entry_key):
+        """
+        Removes all the entries with the same base query no matter
+        what other parameters (e.g. shuffle) of the query are.
+
+        arguments:
+        entry_key -- a 2-tuple (subchash, query) where query is a tuple of min length 1
+        """
+        for k in self._data.keys():
+            if entry_key[0] == k[0] and entry_key[1][0] == k[1][0]:
+                self.__delitem__(k)   # original record's key must be used (k ~ entry_key match can be partial)
+
     def __getitem__(self, item):
         if self._data is None:
             self._data = self._load_map()
@@ -138,7 +150,7 @@ class CacheMapping(object):
 
     def __delitem__(self, key):
         self._del_from_map(key)
-        self._data = None  # forces load on next __getitem__
+        self._data = None  # forces auto-load on next __getitem__
 
 
 class CacheMappingFactory(object):
