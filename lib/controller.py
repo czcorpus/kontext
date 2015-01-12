@@ -114,7 +114,7 @@ def get_traceback():
     return traceback.format_exception(err_type, err_value, err_trace)
 
 
-def humanize_exception(ex):
+def fetch_exception_msg(ex):
     msg = getattr(ex, 'message', None)
     if not msg:
         msg = '%r' % ex
@@ -646,6 +646,7 @@ class Controller(object):
         """
         if type(result) is dict:
             result['messages'] = self._system_messages
+            result['contains_errors'] = self.contains_errors()
             if 'message' in result:
                 result['messages'].append(result['message'])
                 del(result['message'])
@@ -667,12 +668,15 @@ class Controller(object):
         return '__exposed__' in metadata
 
     @staticmethod
-    def _export_error(err):
+    def _analyze_error(err):
         """
         This method is intended to extract details about (some) errors via their
-        messages. It is quite a lame solution but it appears that in case of
+        messages and return more specific type with fixed text message.
+        It is quite a lame solution but it appears that in case of
         syntax errors, attribute errors etc. Manatee raises only RuntimeError
         without further type distinction.
+
+        Please note that in some cases passed exception object may be returned too.
 
         arguments:
         err -- an instance of Exception (or a subclass)
@@ -688,14 +692,23 @@ class Controller(object):
                 text = 'Query failed: Syntax error at position %s.' % srch.groups()[0]
             else:
                 text = 'Query failed: Syntax error.'
-            text = '%s Please make sure the query and selected query type are correct.' % text
+            new_err = UserActionException('%s Please make sure the query and selected query type are correct.' % text)
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
                 text = 'Attribute "%s" not found.' % srch.groups()[0]
             else:
                 text = 'Attribute not found.'
-        return text
+            new_err = UserActionException(text)
+        else:
+            new_err = err
+        return new_err
+
+    def contains_errors(self):
+        for item in self._system_messages:
+            if item[0] == 'error':
+                return True
+        return False
 
     def run(self, path=None, selectorname=None):
         """
@@ -721,19 +734,23 @@ class Controller(object):
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
                 methodname, tmpl, result = self.process_method(path[0], path, named_args)
+                # Let's test whether process_method used requested our method.
+                # If not (e.g. there was an error and a fallback has been used) then reload action metadata
+                if methodname != path[0]:
+                    action_metadata = self._get_method_metadata(methodname)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
         except AuthException as e:
             self._status = 401
-            named_args['message'] = ('error', u'%s' % humanize_exception(e))
+            self.add_system_message('error', u'%s' % fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
-            named_args['message'] = ('error',  humanize_exception(e))
+            self.add_system_message('error',  fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
@@ -741,11 +758,11 @@ class Controller(object):
             self._status = 500
             logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(get_traceback())))
             if settings.is_debug_mode():
-                named_args['message'] = ('error', humanize_exception(e))
+                self.add_system_message('error', fetch_exception_msg(e))
             else:
-                named_args['message'] = ('error',
-                                         _('Failed to process your request. '
-                                           'Please try again later or contact system support.'))
+                self.add_system_message('error',
+                                        _('Failed to process your request. '
+                                          'Please try again later or contact system support.'))
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', path, named_args)
@@ -775,7 +792,7 @@ class Controller(object):
         Returns
         -------
         result : tuple of 3 elements
-          0 = method name
+          0 = method name actually used (it may have changed e.g. due to an error)
           1 = template name
           2 = template data dict
         """
@@ -800,7 +817,9 @@ class Controller(object):
                     getattr(method, 'template', default_tpl_path),
                     self._invoke_action(method, pos_args, named_args, tpl_data))
         except Exception as e:
-            logging.getLogger(__name__).error(''.join(get_traceback()))
+            e2 = self._analyze_error(e)
+            if not isinstance(e2, UserActionException):
+                logging.getLogger(__name__).error(''.join(get_traceback()))
 
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
@@ -809,17 +828,17 @@ class Controller(object):
                 else:
                     json_msg = _('Failed to process your request. '
                                  'Please try again later or contact system support.')
-                return (methodname, None,
-                        {'error': json_msg})
-            if not self.exceptmethod and self.is_template(methodname + '_form'):
-                tpl_data['message'] = ('error', self._export_error(e))
-                self.exceptmethod = methodname + '_form'
-            if settings.is_debug_mode() or not self.exceptmethod:
-                raise e
+                return methodname, None, {'error': json_msg}
+            else:
+                if not self.exceptmethod and self.is_template(methodname + '_form'):
+                    self.exceptmethod = methodname + '_form'
+                if not self.exceptmethod:  # let general error handlers in run() handle the error
+                    raise e2
+                else:
+                    self.add_system_message('error', e2.message)
 
-            self.error = e.message if type(e.message) == unicode else e.message.decode('utf-8')
-            em, self.exceptmethod = self.exceptmethod, None
-            return self.process_method(em, pos_args, named_args, tpl_data)
+                em, self.exceptmethod = self.exceptmethod, None
+                return self.process_method(em, pos_args, named_args, tpl_data)
 
     def recode_input(self, x, decode=1):
         """
