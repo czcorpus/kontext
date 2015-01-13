@@ -21,10 +21,11 @@
 /// <reference path="../../ts/declarations/dynamic.d.ts" />
 
 
-function splitString(s: string, maxChunkSize: number): string {
-    var ans:Array<string> = [],
+function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
+    var ans:Array<HTMLElement> = [],
         line:string,
-        items:Array<string> = s.split(/([\s,\."':\-\(\)\|])/);
+        items:Array<string> = s.split(/([\s,\."':\-\(\)\|])/),
+        newItem:HTMLElement;
 
     line = '';
     while (items.length > 0) {
@@ -32,18 +33,28 @@ function splitString(s: string, maxChunkSize: number): string {
             line += items.shift();
 
         } else if (line.length > 0) {
-            ans.push(line);
+            newItem = document.createElement('span');
+            newItem.textContent = line;
+            if (ans.length > 0) {
+                ans.push(document.createElement('br'))
+            }
+            ans.push(newItem);
             line = '';
 
         } else {
             line += items.shift().substr(0, maxChunkSize - 3) + '&hellip;';
         }
-
     }
     if (line.length > 0) {
-        ans.push(line);
+        if (ans.length > 0) {
+            ans.push(document.createElement('br'));
+        }
+        newItem = document.createElement('span');
+        newItem.textContent = line;
+        ans.push(newItem);
     }
-    return ans.join('<br />');
+
+    return ans;
 }
 
 /**
@@ -410,7 +421,7 @@ export class QueryHistory {
 
             link = $(window.document.createElement('em'));
             link.attr('href', v.url);
-            link.text(splitString(v.query, self.splitQueryIfSize));
+            link.append(splitString(v.query, self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
