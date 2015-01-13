@@ -544,7 +544,7 @@ class Kontext(Controller):
                 if action_metadata.get('return_type', None) != 'json':
                     self._redirect(fallback_url)
                 else:
-                    path = ['json_error']
+                    path = ['json_error']  # just passing a fallback method for JSON response
                     named_args['error'] = _('Corpus access denied')
                     named_args['reset'] = True
         elif len(allowed_corpora) > 0:
