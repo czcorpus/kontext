@@ -620,33 +620,56 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         popupbox.bind($(triggerElement),
             function (box, finalizeCallback) {
                 var msComponent = multiselect.createMultiselectComponent(opt.widgetElement, multiSelectOpts),
-                    insertTagClickAction,
-                    buttonEnterAction,
                     caretPos = util.getCaretPosition($(opt.inputElement));
 
-                insertTagClickAction = function () {
+                function cqlIsClosed(cql) {
+                    var numParenthesis = cql.replace(/\\"/, 'x')
+                        .replace(/"[^"]+"/, '"x"')
+                        .split(/(\[|\])/)
+                        .reduce(function (prev, curr) {
+                            if (curr === '[') {
+                                return [prev[0] + 1, prev[1]];
+                            } else if (curr === ']') {
+                                return [prev[0], prev[1] + 1];
+                            } else {
+                                return prev;
+                            }
+                        }, [0, 0]);
+
+                    if (numParenthesis[0] === numParenthesis[1]) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                function insertTagClickAction() {
                     var bef, aft;
 
-                    if ($(opt.inputElement).val()) {
-                        bef = $(opt.inputElement).val().substring(0, caretPos);
-                        aft = $(opt.inputElement).val().substring(caretPos);
+                    bef = $(opt.inputElement).val().substring(0, caretPos);
+                    aft = $(opt.inputElement).val().substring(caretPos);
+
+                    if (bef.length > 0) {
+                        bef += ' ';
+                    }
+
+                    if (!cqlIsClosed(bef)) {
                         $(opt.inputElement).val(bef + 'tag="' + $(opt.tagDisplayElement).text() + '"' + aft);
 
                     } else {
-                        $(opt.inputElement).val('[tag="' + $(opt.tagDisplayElement).text() + '"]');
+                        $(opt.inputElement).val(bef + '[tag="' + $(opt.tagDisplayElement).text() + '"]' + aft);
                     }
                     box.close();
                     $(win.document).off('keypress.tagBuilder');
                     $(opt.inputElement).focus();
-                };
+                }
 
-                buttonEnterAction = function (event) {
+                function buttonEnterAction(event) {
                     if (event.which === 13) {
                         insertTagClickAction(event);
                         event.stopPropagation();
                         event.preventDefault();
                     }
-                };
+                }
 
                 lib.attachTagLoader(box, corpusName, msComponent, {
                     tagDisplay : $(opt.tagDisplayElement),
