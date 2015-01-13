@@ -151,8 +151,11 @@ def _is_conc_alive(pidfile):
         with open(pidfile, 'r') as f:
             data = cPickle.load(f)
             # TODO: still not bullet-proof solution
-            if data.get('error', None):
-                raise Exception(data['error'])
+            err = data.get('error', None)
+            if isinstance(err, Exception):
+                raise err
+            elif err:
+                raise Exception(str(data['error']))
             elif math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
                 return False
         return True
@@ -337,7 +340,7 @@ class BackgroundCalc(object):
             # cached concordance etc.) here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
-            _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
+            _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=e)
 
 
 def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, fullsize, minsize):
