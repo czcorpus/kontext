@@ -684,7 +684,11 @@ class Controller(object):
         returns:
         user-readable text of the error
         """
-        text = err.message if type(err.message) == unicode else err.message.decode('utf-8')
+        if err.message:
+            text = err.message if type(err.message) == unicode else err.message.decode('utf-8')
+        else:
+            text = unicode(err)
+            err.message = text  # in case we return the original error
 
         if 'Query evaluation error' in text:
             srch = re.match(r'.+ at position (\d+):', text)
