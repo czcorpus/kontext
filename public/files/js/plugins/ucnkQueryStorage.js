@@ -35,7 +35,8 @@ define(['jquery', 'win'], function ($, win) {
     function splitString(s, maxChunkSize) {
         var ans = [],
             line,
-            items = s.split(/([\s,\."':\-\(\)\|])/);
+            items = s.split(/([\s,\."':\-\(\)\|])/),
+            newItem;
 
         line = '';
         while (items.length > 0) {
@@ -43,7 +44,12 @@ define(['jquery', 'win'], function ($, win) {
                 line += items.shift();
 
             } else if (line.length > 0) {
-                ans.push(line);
+                if (ans.length > 0) {
+                    ans.push(document.createElement('br'))
+                }
+                newItem = document.createElement('span');
+                newItem.textContent = line;
+                ans.push(newItem);
                 line = '';
 
             } else {
@@ -52,9 +58,14 @@ define(['jquery', 'win'], function ($, win) {
 
         }
         if (line.length > 0) {
-            ans.push(line);
+            if (ans.length > 0) {
+                ans.push(document.createElement('br'));
+            }
+            newItem = document.createElement('span');
+            newItem.textContent = line;
+            ans.push(newItem);
         }
-        return ans.join('<br />');
+        return ans;
     }
 
 
@@ -401,7 +412,7 @@ define(['jquery', 'win'], function ($, win) {
 
             link = $(win.document.createElement('em'));
             link.attr('href', v.url);
-            link.text(splitString(v.query, self.splitQueryIfSize));
+            link.append(splitString(v.query, self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
