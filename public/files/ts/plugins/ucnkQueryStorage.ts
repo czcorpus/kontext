@@ -196,14 +196,14 @@ export class QueryHistory {
         this.boxElm.find('.filter-checkbox').on('click', function (event) {
             if ($(event.currentTarget).is(':checked')) {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== this.pluginApi.conf('corpname')) {
+                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')) {
                         $(this).hide();
                     }
                 });
 
             } else {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== this.pluginApi.conf('corpname')
+                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')
                         && !$(this).is(':visible')) {
                         $(this).show();
                     }
