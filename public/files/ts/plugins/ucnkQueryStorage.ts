@@ -33,11 +33,11 @@ function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
             line += items.shift();
 
         } else if (line.length > 0) {
-            newItem = document.createElement('span');
-            newItem.textContent = line;
             if (ans.length > 0) {
                 ans.push(document.createElement('br'))
             }
+            newItem = document.createElement('span');
+            newItem.textContent = line;
             ans.push(newItem);
             line = '';
 
