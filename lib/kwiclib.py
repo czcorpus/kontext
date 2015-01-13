@@ -201,6 +201,14 @@ class Kwic(object):
         arguments:
         result -- KwicPageData type is required
         """
+        def create_empty_cell():
+            return {'rightsize': 0, 'hitlen': ';hitlen=9', 'Right': [], 'Kwic': [], 'linegroup': '_', 'leftsize': 0,
+                    'ref': '', 'rightspace': '', 'leftspace': '', 'Tbl_refs': [], 'kwiclen': 0, 'toknum': None,
+                    'Left': []}
+
+        def fix_length(arr, length):
+            return arr + [create_empty_cell() for _ in range(length - len(arr))]
+
         if not alignlist:
             return
         al_lines = []
@@ -225,7 +233,15 @@ class Kwic(object):
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(
                     self.kwiclines(None, fromline, toline, '0', '0', 'word', '', refs, structs, labelmap, righttoleft))
-        aligns = zip(*al_lines)
+
+        # It appears that Manatee returns lists of different lengths in case some translations
+        # are missing at the end of a concordance. Following block fixes this issue.
+        al_lines_fixed = []
+        max_len = len(max(al_lines, key=lambda v: len(v)))
+        for item in al_lines:
+            al_lines_fixed.append(fix_length(item, max_len))
+
+        aligns = zip(*al_lines_fixed)
         for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
 
