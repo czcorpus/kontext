@@ -71,3 +71,25 @@ class EmptyCorpus(object):
     def size(self):
         return 0
 
+
+class ErrorCorpus(EmptyCorpus):
+    """
+    This type is used in case we encounter a corpus-initialization error
+    and yet we still need proper template/etc. variables initialized
+    (e.g. user visits URL containing non-existing sub-corpus)
+    """
+
+    def __init__(self, err):
+        """
+        arguments:
+        err -- an error which caused that the original corpus failed to initialize
+        """
+        super(ErrorCorpus, self).__init__()
+        self._error = err
+
+    def get_error(self):
+        """
+        returns original error
+        """
+        return self._error
+
