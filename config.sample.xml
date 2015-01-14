@@ -14,9 +14,9 @@
             <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
         </fonts>
         <translations>
-            <language label="česky">cs</language>
-            <language label="English">en</language>
-            <language label="slovensky">sk</language>
+            <language label="česky">cs_CZ</language>
+            <language label="English">en_US</language>
+            <language label="slovensky">sk_SK</language>
         </translations>
         <conc_persistence_time>1800</conc_persistence_time>
         <error_report_url>http://acmecorpora.org/support</error_report_url>
@@ -118,7 +118,7 @@
                         <desc lang="en">The work of George Orwell</desc>
                     </metadata>
                 </corpus>
-	    </corplist>
+	        </corplist>
             <corplist title="Foreign corpora">
                 <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
 		        <corpus ident="BNC" sentence_struct="s">
