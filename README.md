@@ -46,8 +46,9 @@ Requirements
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
-
-  * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)
+* corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)
+* a key-value storage
+    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available) 
 
 
 Installation
