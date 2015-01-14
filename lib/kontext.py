@@ -31,7 +31,7 @@ from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
 from structures import Nicedict
-from empty_corpus import ErrorCorpus
+import fallback_corpus
 
 
 class ConcError(Exception):
@@ -519,7 +519,7 @@ class Kontext(Controller):
         """
         def validate_corpus():
             c = self._corp()
-            if isinstance(c, ErrorCorpus):
+            if isinstance(c, fallback_corpus.ErrorCorpus):
                 return c.get_error()
             return None
 
@@ -785,11 +785,9 @@ class Kontext(Controller):
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as e:
-                from empty_corpus import ErrorCorpus
-                return ErrorCorpus(e)
+                return fallback_corpus.ErrorCorpus(e)
         else:
-            from empty_corpus import EmptyCorpus
-            return EmptyCorpus()
+            return fallback_corpus.EmptyCorpus()
 
     def _load_user_corplists(self):
         user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
