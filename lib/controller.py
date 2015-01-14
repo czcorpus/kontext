@@ -264,6 +264,7 @@ class Controller(object):
         self._status = 200
         self._system_messages = []
         self._proc_time = None
+        self._validators = []  # a list of functions which must pass (= return None) before any action is performed
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
@@ -336,6 +337,18 @@ class Controller(object):
         val -- session ID value (a string is expected)
         """
         self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
+
+    def add_validator(self, fn):
+        """
+        Adds a function which is then run after pre_dispatch but before action processing.
+        If the function returns an instance of Exception then Controller raises this value.
+        The validation fails on first encountered error (i.e. subsequent validators are not run).
+        This is intended for ancestors to inject pre-run checks.
+
+        arguments:
+        fn -- a callable instance
+        """
+        self._validators.append(fn)
 
     def get_root_url(self):
         """
@@ -469,6 +482,17 @@ class Controller(object):
 
         parsed_url[4] = urllib.urlencode(new_params)
         return urlparse.urlunparse(parsed_url)
+
+    def _pre_action_validate(self):
+        """
+        Runs defined validators before action itself is performed
+        (but after pre_dispatch is run).
+        See Controller.add_validator for more info.
+        """
+        for validator in self._validators:
+            err = validator()
+            if isinstance(err, Exception):
+                raise err
 
     def _invoke_action(self, action, args, named_args, tpl_data=None):
         """
@@ -737,6 +761,7 @@ class Controller(object):
 
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
+                self._pre_action_validate()
                 methodname, tmpl, result = self.process_method(path[0], path, named_args)
                 # Let's test whether process_method used requested our method.
                 # If not (e.g. there was an error and a fallback has been used) then reload action metadata
