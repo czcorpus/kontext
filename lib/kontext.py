@@ -780,8 +780,7 @@ class Kontext(Controller):
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
         result['corplist_size'] = min(len(result['Corplist']), 20)
         if self.usesubcorp:
-            sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
-            result['subcorp_size'] = format_number(sc.search_size())
+            result['subcorp_size'] = format_number(self._corp().search_size())
         else:
             result['subcorp_size'] = None
         attrlist = corpus_get_conf(corpus, 'ATTRLIST').split(',')
