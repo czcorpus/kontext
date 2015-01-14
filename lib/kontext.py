@@ -31,6 +31,7 @@ from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
 from structures import Nicedict
+from empty_corpus import ErrorCorpus
 
 
 class ConcError(Exception):
@@ -245,7 +246,7 @@ class Kontext(Controller):
 
     def __init__(self, environ, ui_lang):
         super(Kontext, self).__init__(environ=environ, ui_lang=ui_lang)
-        self._curr_corpus = None
+        self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
@@ -516,6 +517,14 @@ class Kontext(Controller):
         """
         Runs before main action is processed
         """
+        def validate_corpus():
+            c = self._corp()
+            if isinstance(c, ErrorCorpus):
+                return c.get_error()
+            return None
+
+        self.add_validator(validate_corpus)
+
         def choose_selector(args, selector):
             selector += ':'
             s = len(selector)
@@ -756,16 +765,28 @@ class Kontext(Controller):
 
     def _corp(self):
         """
-        Returns current corpus (as a manatee object).
-        This should be preferred over accessing _curr_corpus attribute
-        because they may produce different results!
+        Returns current corpus (as a manatee object). The method ensures
+        that a corpus-like object is always returned even in case of an error.
+        To interrupt normal request processing a controller validator (see add_validator)
+        is defined.
+
+        This should be always preferred over accessing _curr_corpus attribute.
+
+        returns:
+        a manatee.Corpus instance in case everything is OK (corpus is known, object is initialized
+        without errors) or ErrorCorpus in case an exception occurred or Empty corpus in case
+        the action does not need one (but KonText's internals do).
         """
         if self.corpname:
-            if not self._curr_corpus or (self.usesubcorp and not hasattr(self._curr_corpus, 'subcname')):
-                self._curr_corpus = self.cm.get_Corpus(self.corpname, self.usesubcorp)
-                # TODO opravit poradne!
-            self._curr_corpus._conc_dir = self._conc_dir
-            return self._curr_corpus
+            try:
+                if not self._curr_corpus or (self.usesubcorp and not hasattr(self._curr_corpus, 'subcname')):
+                    self._curr_corpus = self.cm.get_Corpus(self.corpname, self.usesubcorp)
+                    # TODO opravit poradne!
+                self._curr_corpus._conc_dir = self._conc_dir
+                return self._curr_corpus
+            except Exception as e:
+                from empty_corpus import ErrorCorpus
+                return ErrorCorpus(e)
         else:
             from empty_corpus import EmptyCorpus
             return EmptyCorpus()
@@ -795,8 +816,7 @@ class Kontext(Controller):
 
         result['CorplistFn'] = self._load_user_corplists
         if self.usesubcorp:
-            sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
-            result['subcorp_size'] = format_number(sc.search_size())
+            result['subcorp_size'] = format_number(self._corp().search_size())
         else:
             result['subcorp_size'] = None
         attrlist = corpus_get_conf(corpus, 'ATTRLIST').split(',')
