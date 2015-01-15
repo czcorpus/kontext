@@ -2102,8 +2102,8 @@ msgstr "Atribut \"%s\" nebyl nalezen."
 msgid "Attribute not found."
 msgstr "Atribut nebyl nalezen."
 
-msgid "Please make sure the query and selected query type are correct."
-msgstr "Zkontrolujte prosím zadání a zvolený typ dotazu."
+msgid "%s Please make sure the query and selected query type are correct."
+msgstr "%s Zkontrolujte prosím zadání a zvolený typ dotazu."
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
