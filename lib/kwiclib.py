@@ -236,11 +236,7 @@ class Kwic(object):
 
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
-        al_lines_fixed = []
-        max_len = len(max(al_lines, key=lambda v: len(v)))
-        for item in al_lines:
-            al_lines_fixed.append(fix_length(item, max_len))
-
+        al_lines_fixed = [fix_length(item, len(result.Lines)) for item in al_lines]
         aligns = zip(*al_lines_fixed)
         for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
