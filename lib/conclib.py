@@ -143,7 +143,8 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
             logging.getLogger(__name__).warning('Hardcoded limit %01.2f sec. for intermediate concordance exceeded.'
                                                 % (hard_limit / 10.))
         cache_map.del_full_entry((subchash, q))
-        raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
+        logging.getLogger(__name__).error('wait_for_conc(): missing cache file: %s' % cachefile)
+        raise Exception(_('Failed to calculate the concordance. Please try again.'))
 
 
 def _is_conc_alive(pidfile):
