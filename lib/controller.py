@@ -717,16 +717,16 @@ class Controller(object):
         if 'Query evaluation error' in text:
             srch = re.match(r'.+ at position (\d+):', text)
             if srch:
-                text = 'Query failed: Syntax error at position %s.' % srch.groups()[0]
+                text = _('Query failed: Syntax error at position %s.') % srch.groups()[0]
             else:
-                text = 'Query failed: Syntax error.'
-            new_err = UserActionException('%s Please make sure the query and selected query type are correct.' % text)
+                text = _('Query failed: Syntax error.')
+            new_err = UserActionException(_('%s Please make sure the query and selected query type are correct.') % text)
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
-                text = 'Attribute "%s" not found.' % srch.groups()[0]
+                text = _('Attribute "%s" not found.') % srch.groups()[0]
             else:
-                text = 'Attribute not found.'
+                text = _('Attribute not found.')
             new_err = UserActionException(text)
         else:
             new_err = err
