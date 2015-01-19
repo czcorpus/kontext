@@ -133,7 +133,7 @@
         </corplist>
 
         <tagsets>
-            <tagset ident="default">
+            <tagset ident="default" num_pos="4">
             <position index="0">
                 <label>
                     <desc lang="en">Position 1</desc>
