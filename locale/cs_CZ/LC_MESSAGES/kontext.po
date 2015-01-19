@@ -2090,6 +2090,24 @@ msgstr "zrušit výběr"
 msgid "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection."
 msgstr "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru."
 
+msgid "Query failed: Syntax error at position %s."
+msgstr "Dotaz selhal: Syntaktická chyba na pozici %s."
+
+msgid "Query failed: Syntax error."
+msgstr "Dotaz selhal: Syntaktická chyba."
+
+msgid "Attribute \"%s\" not found."
+msgstr "Atribut \"%s\" nebyl nalezen."
+
+msgid "Attribute not found."
+msgstr "Atribut nebyl nalezen."
+
+msgid "%s Please make sure the query and selected query type are correct."
+msgstr "%s Zkontrolujte prosím zadání a zvolený typ dotazu."
+
+msgid "Failed to calculate the concordance. Please try again."
+msgstr "Nepodařilo se vytvořit konkordanci. Zkuste prosím akci opakovat."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
