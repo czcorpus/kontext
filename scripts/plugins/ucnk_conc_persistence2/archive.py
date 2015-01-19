@@ -40,7 +40,7 @@ logger = autoconf.logger
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
 MAX_NUM_SHOW_ERRORS = 10
-MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24   # empirical value
+MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24 * 3   # empirical value
 
 import settings
 from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
@@ -140,7 +140,7 @@ class Archiver(object):
             if self._is_archivable(data, item_ttl=ttl):
                 try:
                     if not self._dry_run:
-                        self._archive_item(key, data)
+                        self._archive_item(key, json.dumps(data))
                         self._from_db.delete(key)
                     self._num_archived += 1
                 except Exception as e:
