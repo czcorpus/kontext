@@ -40,9 +40,10 @@ logger = autoconf.logger
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
 MAX_NUM_SHOW_ERRORS = 10
+MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24   # empirical value
 
 import settings
-from plugins.ucnk_conc_persistence2 import KEY_ALPHABET
+from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
 
 
 def redis_connection(host, port, db_id):
@@ -104,6 +105,7 @@ class Archiver(object):
         self._count = count
         self._ttl_range = ttl_range
         self._num_processed = 0
+        self._num_new_type = 0  # just to check old type records ratio
         self._num_archived = 0
         self._errors = []
         self._dry_run = dry_run
@@ -116,12 +118,26 @@ class Archiver(object):
                             (key, data, int(time.time()), 0))
         logger.debug('archived %s => %s' % (key, data))
 
-    def _process_chunk(self, data):
-        for key in data:
+    @staticmethod
+    def _is_new_type(data):
+        return PERSIST_LEVEL_KEY in data
+
+    def _is_archivable(self, data, item_ttl):
+        if self._is_new_type(data):
+            # current calc. method
+            return data[PERSIST_LEVEL_KEY] == 1 and item_ttl < MAX_INTERVAL_BETWEEN_ITEM_VISITS
+        else:
+            # legacy calc. method
+            return self._ttl_range[0] <= item_ttl <= self._ttl_range[1]
+
+    def _process_chunk(self, data_keys):
+        for key in data_keys:
             self._num_processed += 1
             ttl = self._from_db.ttl(key)
-            if self._ttl_range[0] <= ttl <= self._ttl_range[1]:
-                data = self._from_db.get(key)
+            data = json.loads(self._from_db.get(key))
+            if self._is_new_type(data):
+                self._num_new_type += 1
+            if self._is_archivable(data, item_ttl=ttl):
                 try:
                     if not self._dry_run:
                         self._archive_item(key, data)
@@ -148,6 +164,7 @@ class Archiver(object):
         return {
             'num_processed': self._num_processed,
             'num_archived': self._num_archived,
+            'num_new_type': self._num_new_type,
             'num_errors': len(self._errors),
             'match': self._match,
             'dry_run': self._dry_run
