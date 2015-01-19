@@ -106,7 +106,7 @@ class ConcPersistence(AbstractConcPersistence):
         plugin_conf = settings.get('plugins', 'conc_persistence')
         ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self.ttl = ttl_days * 24 * 3600
-        anonymous_user_ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        anonymous_user_ttl_days = int(plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
 
         self.db = db
