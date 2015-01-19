@@ -54,6 +54,10 @@ from abstract.conc_persistence import AbstractConcPersistence
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
                ['%d' % i for i in range(10)]
 
+PERSIST_LEVEL_KEY = 'persist_level'
+ID_KEY = 'id'
+QUERY_KEY = 'q'
+
 
 def id_exists(id):
     """
@@ -166,18 +170,18 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
         """
-        if prev_data is None or curr_data['q'] != prev_data['q']:
+        if prev_data is None or curr_data[QUERY_KEY] != prev_data[QUERY_KEY]:
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
-            curr_data['id'] = data_id
-            curr_data['persist_level'] = self._get_persist_level_for(user_id)
+            curr_data[ID_KEY] = data_id
+            curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
             data_key = self._mk_key(data_id)
 
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self._get_ttl_for(user_id))
-            latest_id = curr_data['id']
+            latest_id = curr_data[ID_KEY]
         else:
-            latest_id = prev_data['id']
+            latest_id = prev_data[ID_KEY]
 
         return latest_id
 
