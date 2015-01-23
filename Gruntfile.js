@@ -96,15 +96,14 @@ module.exports = function (grunt) {
             all : {
                 files : [
                     {
-                        cwd : 'public/files/ts',
-                        src : ["**/*.ts"],
+                        src : ["public/files/js/**/*.ts"],
                         dest : "public/files/js/compiled"
                     }
                 ],
                 options : {
                     module: 'amd',
                     target: 'es5',
-                    basePath: 'public/files/ts',
+                    basePath: 'public/files/js',
                     sourceMap: true,
                     declaration: true
                 }
