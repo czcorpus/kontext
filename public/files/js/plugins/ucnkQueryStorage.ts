@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../declarations/jquery.d.ts" />
+/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/document.d.ts" />
 /// <reference path="../../ts/declarations/dynamic.d.ts" />
+
+import model = require('tpl/document');
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
@@ -85,9 +87,9 @@ export class QueryHistory {
 
     data: Array<any>;
 
-    dependencies: Array<Model.Closeable>;
+    dependencies: Array<model.Closeable>;
 
-    pluginApi: Model.PluginApi;
+    pluginApi: model.PluginApi;
 
     splitQueryIfSize: number = 60;
 
@@ -96,7 +98,7 @@ export class QueryHistory {
      * @param inputElm
      * @param parentElm
      */
-    constructor(inputElm: HTMLElement, parentElm: HTMLElement, pluginApi: Model.PluginApi) {
+    constructor(inputElm: HTMLElement, parentElm: HTMLElement, pluginApi: model.PluginApi) {
         this.inputElm = $(inputElm);
         this.parentElm = $(parentElm);
         this.pluginApi = pluginApi;
@@ -295,7 +297,7 @@ export class QueryHistory {
     /**
      * @param {Closeable} dep
      */
-    registerDependency(dep:Model.Closeable): void {
+    registerDependency(dep:model.Closeable): void {
         if (typeof dep.close !== 'function') {
             throw new Error('Registered dependency must implement close() method');
         }
@@ -341,7 +343,7 @@ export class QueryHistory {
 
             prom.done(function (data) {
                     if (data.hasOwnProperty('error')) {
-                        self.pluginApi.showMessage(Model.MsgType.error, data.error);
+                        self.pluginApi.showMessage(model.MsgType.error, data.error);
 
                     } else {
                         if (!this.boxElm) {
@@ -351,7 +353,7 @@ export class QueryHistory {
                     }
             });
             prom.fail(function (err) {
-                self.pluginApi.showMessage(Model.MsgType.error, err.statusText);
+                self.pluginApi.showMessage(model.MsgType.error, err.statusText);
             });
 
         } else { // data are already loaded - let's just reuse it
@@ -486,15 +488,15 @@ export class QueryHistory {
 }
 
 
-export class QueryStoragePlugin implements Model.Plugin {
+export class QueryStoragePlugin implements model.Plugin {
 
-    pluginApi:Model.PluginApi;
+    pluginApi:model.PluginApi;
 
     /**
      *
      * @param pluginApi
      */
-    init(pluginApi:Model.PluginApi):void {
+    init(pluginApi:model.PluginApi):void {
         this.pluginApi = pluginApi;
         this.reset();
     }
@@ -583,7 +585,7 @@ export class QueryStoragePlugin implements Model.Plugin {
  *
  * @returns {QueryStoragePlugin}
  */
-export function createInstance(pluginApi:Model.PluginApi):QueryStoragePlugin {
+export function createInstance(pluginApi:model.PluginApi):QueryStoragePlugin {
     var plugin = new QueryStoragePlugin();
 
     plugin.init(pluginApi);

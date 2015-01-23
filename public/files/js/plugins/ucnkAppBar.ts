@@ -16,54 +16,56 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../declarations/jquery.d.ts" />
+/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/document.d.ts" />
 /// <reference path="../../ts/declarations/dynamic.d.ts" />
 
+import model = require('tpl/document');
 
-export class AppBar implements Model.Plugin {
+export class AppBar implements model.Plugin {
 
-    pluginApi:Model.PluginApi;
+    pluginApi:model.PluginApi;
+
+    constructor(pluginApi:model.PluginApi) {
+        this.pluginApi = pluginApi;
+    }
 
     /**
      *
      */
     toolbarReloader(): void {
-        var promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
+        var self = this,
+            promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);
         });
 
         promise.fail(function(jqXHR, textStatus, errorThrown) {
-             layoutModel.showMessage(Model.MsgType.error, errorThrown); // TODO
+             self.pluginApi.showMessage(model.MsgType.error, errorThrown); // TODO
         });
     }
 
     /**
-     *
-     * @param pluginApi
      */
-    init(pluginApi:Model.PluginApi): void {
+    init(): void {
         var code,
             ans:boolean;
 
-        this.pluginApi = pluginApi;
-
         try {
             code = JSON.parse($('#cnc-toolbar-data').text());
-            if (!pluginApi.userIsAnonymous() && !code['id']) {
-                ans = confirm(pluginApi.translate('you have been logged out'));
+            if (!this.pluginApi.userIsAnonymous() && !code['id']) {
+                ans = confirm(this.pluginApi.translate('you have been logged out'));
 
                 if (ans === true) {
-                    window.location = pluginApi.conf('loginUrl');
+                    window.location = this.pluginApi.conf('loginUrl');
 
                 } else {
-                    pluginApi.resetToHomepage({remote: 1});
+                    this.pluginApi.resetToHomepage({remote: 1});
                 }
 
-            } else if (pluginApi.userIsAnonymous() && typeof code['id'] === 'number') {
-                pluginApi.resetToHomepage({remote: 1});
+            } else if (this.pluginApi.userIsAnonymous() && typeof code['id'] === 'number') {
+                this.pluginApi.resetToHomepage({remote: 1});
             }
 
         } catch (e) {
@@ -72,9 +74,9 @@ export class AppBar implements Model.Plugin {
     }
 }
 
-export function createInstance(pluginApi:Model.PluginApi) {
-    var appBar = new AppBar();
-    appBar.init(pluginApi);
+export function createInstance(pluginApi:model.PluginApi) {
+    var appBar = new AppBar(pluginApi);
+    appBar.init();
     return appBar;
 }
 

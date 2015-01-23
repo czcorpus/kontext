@@ -20,7 +20,10 @@
 /// <reference path="popupbox.d.ts" />
 /// <reference path="dynamic.d.ts" />
 
-declare module Model {
+declare module "tpl/document" {
+
+    import popupBox = require("popupbox");
+
 
     /**
      * User message types
@@ -48,37 +51,45 @@ declare module Model {
     /**
      *
      */
-    interface PluginApi {
+    export interface PluginApi {
         conf(key:string):any;
         ajax(...args:any[]);
-        ajaxAnim();
+        ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader();
-        showMessage(type:MsgType, message:string);
+        showMessage(type:any, message:string); // TODO type: MsgType vs string
         translate(text:string):string;
-        applySelectAll(elm:HTMLElement, context);
+        applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         resetToHomepage(params:any); // TODO
         userIsAnonymous():boolean;
+        contextHelp(triggerElm:HTMLElement, text:string);
+    }
+
+    /**
+     * This contains extensions required by pages which contain query input form
+     */
+    export interface QueryPagePluginApi extends PluginApi {
+        bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void);
     }
 
     /**
      *
      */
-    interface Plugin {
+    export interface Plugin {
         init(api:PluginApi):void;
     }
 
     /**
      *
      */
-    interface CorpusInfoBox {
+    export interface CorpusInfoBox {
 
         appendAttribList(attribListData:{name:string; size:number; error?:string}[], jqAttribList:JQuery);
 
         appendStructList(structListData:Array<number>, jqStructList:JQuery);
 
-        createCorpusInfoBox(tooltipBox:PopupBox.TooltipBox, doneCallback:() => any);
+        createCorpusInfoBox(tooltipBox:popupBox.TooltipBox, doneCallback:() => any);
     }
 
     /**
@@ -90,7 +101,7 @@ declare module Model {
 
         getActiveSubmenuId():string;
 
-        setActiveSubmenuId(id:string);void;
+        setActiveSubmenuId(id:string):void;
 
         closeSubmenu(id:string):void;
 
@@ -110,7 +121,7 @@ declare module Model {
 
         mainMenu:MainMenu;
 
-        init(conf:Dynamic.Conf):Promises;
+        init(conf:Runtime.Conf):Promises;
 
         registerPlugin(name:string, plugin:Plugin);
 
@@ -152,7 +163,7 @@ declare module Model {
 
         misc():void; // TODO this is a mess function
 
-        renderOverview(data:{Desc:Array<{op:any; arg:any; size:number; tourl?:string}>}, tooltipBox:PopupBox.TooltipBox);
+        renderOverview(data:{Desc:Array<{op:any; arg:any; size:number; tourl?:string}>}, tooltipBox:popupBox.TooltipBox);
 
         queryOverview():void;
 
@@ -191,4 +202,6 @@ declare module Model {
     }
 }
 
-declare var layoutModel:Model.LayoutModel;
+
+
+

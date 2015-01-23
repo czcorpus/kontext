@@ -16,18 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare module Dynamic {
+/**
+ * Specifies objects generated at runtime
+ */
+declare module Runtime {
 
-    /**
-     *
-     */
     export interface Conf {
         [key:string]: any;
     }
 }
 
-declare module "dynamic" {
-    export = Dynamic;
-}
 
-declare var conf:Dynamic.Conf;
+
