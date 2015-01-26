@@ -241,13 +241,20 @@ def get_corplist():
     if _corplist is None:
         conn = create_db_connection()
         cursor = conn.cursor()
-        cursor.execute(fq("SELECT uc.name FROM user_corpus AS uc JOIN user AS un ON uc.user_id = un.id "
-                          " WHERE un.user = %(p)s"),  (_user, ))
+        cursor.execute("SELECT id, sketches FROM user WHERE user = %s ", (_user,))
+        urow = cursor.fetchone()
+
+        cursor.execute("CALL user_corpus_proc(%s)", (urow[0],))
         rows = cursor.fetchall()
         if len(rows) > 0:
-            corpora = [row[0] for row in rows]
+            if urow[1] == 1:
+                sketches_on = True
+            corpora = [row[3] for row in rows]
         else:
             corpora = []
+        
+        cursor.close()
+        cursor = conn.cursor()
 
         corpora.sort()
         _corplist = corpora
