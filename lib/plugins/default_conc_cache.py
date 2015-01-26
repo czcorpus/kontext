@@ -99,7 +99,7 @@ class CacheMapping(object):
             pidfile = pid_dir + ret + '.pid',
             already_present = True
         else:
-            ret = _uniqname(key, [r for (r, s) in kmap.values()])
+            ret = _uniqname(key, [r[0] for r in kmap.values()])
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)
