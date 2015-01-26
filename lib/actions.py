@@ -2166,31 +2166,19 @@ class Actions(Kontext):
         return out
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
-        from datetime import datetime
-
-        types = {
-            'iquery': _('Basic'),
-            'lemma': _('Lemma'),
-            'phrase': _('Phrase'),
-            'word': _('Word Form'),
-            'char': _('Character'),
-            'cql': 'CQL'
-        }
-
         if plugins.has_plugin('query_storage'):
+            from query_history import Export
+
             if current_corpus:
                 corpname = self.corpname
             else:
                 corpname = None
+
+            exporter = Export(corpus_manager=self.cm, corpname_canonizer=self._canonical_corpname)
             rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), offset=offset, limit=limit,
                                                           query_type=query_type, corpname=corpname,
                                                           from_date=from_date, to_date=to_date)
-            for row in rows:
-                created_dt = datetime.fromtimestamp(row['created'])
-                row['humanCorpname'] = self._canonical_corpname(row['corpname'])
-                row['created'] = (created_dt.strftime(l10n.date_formatting()),
-                                  created_dt.strftime(l10n.time_formatting()))
-                row['query_type_translated'] = types.get(row['query_type'], '?')
+            rows = [exporter.export_row(row) for row in rows]
         else:
             rows = ()
         return rows

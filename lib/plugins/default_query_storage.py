@@ -64,17 +64,18 @@ class QueryStorage(AbstractQueryStorage):
         subcorpname -- subcorpus name (None if there is no subcorpus used)
         query -- a query to be stored
         query_type -- an identification of the query (iquery, cql, lemma,...)
-        params -- additional parameters of the query
+        params -- additional arguments
         """
         data_key = self._mk_key(user_id)
-        self.db.list_push(data_key, {
+        item = {
+            'params': params if type(params) is dict else {},
             'corpname': corpname,
             'subcorpname': subcorpname,
             'query': query,
             'query_type': query_type,
-            'params': params,
             'created': self._current_timestamp()
-        })
+        }
+        self.db.list_push(data_key, item)
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(data_key)
 

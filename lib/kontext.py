@@ -688,8 +688,16 @@ class Kontext(Controller):
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
+            params = {
+                'default_attr': self.default_attr,
+                'qmcase': self.qmcase
+            }
+            if query_type == 'lemma':
+                params['lpos'] = self.lpos
+            elif query_type == 'word':
+                params['wpos'] = self.wpos
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                        subcorpname=self.usesubcorp, query=query, query_type=query_type)
+                                        subcorpname=self.usesubcorp, query=query, query_type=query_type, params=params)
 
     def _determine_curr_corpus(self, form, corp_list):
         """
@@ -829,9 +837,6 @@ class Kontext(Controller):
             poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
         result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['lpos_dict'] = dict([(y, x) for x, y in poslist])
-        poslist = self.cm.corpconf_pairs(corpus, 'WSPOSLIST')
-        if not poslist:
-            poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
         result['default_attr'] = corpus_get_conf(corpus, 'DEFAULTATTR')

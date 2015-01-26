@@ -31,20 +31,14 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
 
     function appendData(data) {
         $.each(data.data, function () {
-            var href = 'first_form?corpname=' + this.corpname
-                + '&' + this.query_type + '=' + encodeURIComponent(this.query)
-                + '&queryselector=' + this.query_type + 'row';
-
-            if (this.subcorpname) {
-                href += '&usesubcorp=' + this.subcorpname;
-            }
             $('table.query-history .expand-line').before('<tr class="data-item">'
                 + '<td class="query">' + this.query + '</td>'
                 + '<td class="corpname">' + this.humanCorpname + '</td>'
                 + '<td class="corpname">' + this.subcorpname + '</td>'
                 + '<td>' + this.query_type_translated + '</td>'
+                + '<td>' + this.details + '</td>'
                 + '<td class="date">' + this.created[1] + ' <strong>' + this.created[0] + '</strong></td>'
-                + '<td><a href="' + href + '">' + layoutModel.translate('use_query') + '</a></td>'
+                + '<td><a href="' + this.query_form_url + '">' + layoutModel.translate('use_query') + '</a></td>'
                 );
         });
     }
@@ -78,7 +72,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     }
 
     function addExpandLink() {
-        $('table.query-history').append('<tr class="expand-line"><td colspan="6"><a class="expand-list">'
+        $('table.query-history').append('<tr class="expand-line"><td colspan="7"><a class="expand-list">'
             + layoutModel.translate('Load more') + '</a></td></tr>');
 
         $('table.query-history').find('a.expand-list').on('click', function () {
