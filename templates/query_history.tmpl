@@ -69,6 +69,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <th>$_('corpus')</th>
         <th>$_('subcorpus')</th>
         <th>$_('query type')</th>
+        <th>$_('details')</th>
         <th>$_('date and time')</th>
         <th></th>
     </tr>
@@ -78,8 +79,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <td class="corpname">$row.humanCorpname</td>
             <td class="corpname">#if $row.subcorpname #$row.subcorpname#else# - #end if#</td>
             <td>$row.query_type_translated</td>
+            <td>$row.get('details', '')</td>
             <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
-            <td><a href="first_form?corpname=${corpname}&$row.query_type=#filter $URLEncode#$row.query#end filter#&queryselector=${row.query_type}row#if $row.subcorpname#&usesubcorp=${row.subcorpname}#end if#">$_('use query')</a></td>
+            <td><a href="$row.query_form_url">$_('use query')</a></td>
         </tr>
     #end for
     </table>

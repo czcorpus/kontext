@@ -21,7 +21,16 @@ class AbstractQueryStorage(object):
         """
         Writes data as a new saved query
 
-        returns: an ID of the query (either new or existing)
+        arguments:
+        user_id -- a numeric ID of a user
+        corpname -- corpus name
+        subcorpname -- subcorpus name (None if there is no subcorpus used)
+        query -- a query to be stored
+        query_type -- an identification of the query (iquery, cql, lemma,...)
+        params -- additional parameters of the query
+
+        returns:
+        an ID of the query (either new or existing)
         """
         raise NotImplementedError()
 
@@ -47,3 +56,4 @@ class AbstractQueryStorage(object):
         user_id -- user ID
         """
         raise NotImplementedError()
+
