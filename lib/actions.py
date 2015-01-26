@@ -16,7 +16,7 @@ import math
 import os
 import sys
 import re
-import csv
+import urllib
 
 from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
@@ -2289,7 +2289,14 @@ class Actions(Kontext):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         self.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
         q_id = self._store_conc_params()
+        params = {
+            'corpname': self.corpname,
+            'q': '~%s' % q_id
+        }
+        if self.usesubcorp:
+            params['usesubcorp'] = self.usesubcorp
+
         return {
             'id' : q_id,
-            'next_url' : 'view?corpname=' + self.corpname + '&q=~' + q_id
+            'next_url' : 'view?%s' % '&'.join(['%s=%s' % (k, urllib.quote(v)) for k, v in params.items()])
         }
