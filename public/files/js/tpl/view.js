@@ -413,6 +413,20 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     };
 
     /**
+     * Ensures that view's URL is always reusable (which is not always
+     * guaranteed implicitly - e.g. in case the form was submitted via POST
+     * method).
+     */
+    function makePageReusable(conf) {
+        if (Modernizr.history) {
+            window.history.replaceState({}, window.document.title, '/view?' + conf.stateParams);
+
+        } else if (!conf.replicableQuery) {
+            window.location = '/view?' + conf.stateParams;
+        }
+    }
+
+    /**
      *
      * @param conf
      */
@@ -430,6 +444,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         onUloadSerialize();
         grantPaginationPageLeave();
         soundManagerInit();
+        makePageReusable(conf);
     };
 
     return lib;

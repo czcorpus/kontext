@@ -256,13 +256,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
             });
 
             if (cleanData.length > lib.maxEncodedParamsLength) {
-                dialogAns = win.confirm(layoutModel.conf.messages.too_long_condition);
-                if (dialogAns) {
-                    $(win).unload(function () {
-                        $('#mainform').attr('method', 'GET').attr('action', 'first');
-                    });
-                    $('#mainform').attr('method', 'POST').attr('action', 'subcorp_form').submit();
-                }
+                $('#mainform').attr('method', 'POST').submit();
                 event.stopPropagation();
                 return false;
             }

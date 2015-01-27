@@ -757,7 +757,12 @@ class Actions(Kontext):
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
         self._store_query_selector_types()
-        return self.view()
+        ans = self.view()
+        if self.get_http_method() == 'POST':
+            ans['replicable_query'] = False
+        else:
+            ans['replicable_query'] = True
+        return ans
 
     @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'))
     def filter_form(self, within=0):
