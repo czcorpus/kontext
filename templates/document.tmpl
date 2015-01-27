@@ -154,6 +154,7 @@ define('conf', [], function () {
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
     conf.stateParams = "$q;$globals";
+    conf.isDebug = #if $debug#true#else#false#end if#;
 
     conf.messages = {};
     #if $_anonymous
