@@ -350,16 +350,6 @@ class Controller(object):
         """
         self._validators.append(fn)
 
-    def get_root_url(self):
-        """
-        Returns the root URL of the application (based on environmental variables)
-        """
-        return '%(protocol)s://%(server)s%(script)s/' % {
-            'protocol': self.environ['wsgi.url_scheme'],
-            'server': self.environ.get('HTTP_HOST'),
-            'script': self.environ.get('SCRIPT_NAME')
-        }
-
     def add_system_message(self, msg_type, text):
         """
         Adds a system message which will be displayed
@@ -483,8 +473,17 @@ class Controller(object):
         parsed_url[4] = urllib.urlencode(new_params)
         return urlparse.urlunparse(parsed_url)
 
-    @staticmethod
-    def create_url(action, params):
+    def get_root_url(self):
+        """
+        Returns the root URL of the application (based on environmental variables)
+        """
+        return '%(protocol)s://%(server)s%(script)s/' % {
+            'protocol': self.environ['wsgi.url_scheme'],
+            'server': self.environ.get('HTTP_HOST'),
+            'script': self.environ.get('SCRIPT_NAME')
+        }
+
+    def create_url(self, action, params):
         """
         Generates URL from provided action identifier and parameters.
         Please note that utf-8 compatible keys and values are expected here
@@ -494,9 +493,7 @@ class Controller(object):
         action -- action identification (e.g. 'filter_form', 'admin/users')
         params -- a dict-like object containing parameter names and values
         """
-        root = settings.get('global', 'root_url', '/')
-        if root[-1] != '/':
-            root += '/'
+        root = self.get_root_url()
         params_str = '&'.join(['%s=%s' % (k, quote(v.encode('utf-8'))) for k, v in params.items()])
         if len(params_str) > 0:
             return '%s%s?%s' % (root, action, params_str)
