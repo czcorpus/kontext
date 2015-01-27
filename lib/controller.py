@@ -483,6 +483,26 @@ class Controller(object):
         parsed_url[4] = urllib.urlencode(new_params)
         return urlparse.urlunparse(parsed_url)
 
+    @staticmethod
+    def create_url(action, params):
+        """
+        Generates URL from provided action identifier and parameters.
+        Please note that utf-8 compatible keys and values are expected here
+        (i.e. you can pass either pure ASCII values or UTF-8 ones).
+
+        arguments:
+        action -- action identification (e.g. 'filter_form', 'admin/users')
+        params -- a dict-like object containing parameter names and values
+        """
+        root = settings.get('global', 'root_url', '/')
+        if root[-1] != '/':
+            root += '/'
+        params_str = '&'.join(['%s=%s' % (k, quote(v.encode('utf-8'))) for k, v in params.items()])
+        if len(params_str) > 0:
+            return '%s%s?%s' % (root, action, params_str)
+        else:
+            return '%s%s' % (root, action)
+
     def _pre_action_validate(self):
         """
         Runs defined validators before action itself is performed
