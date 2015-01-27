@@ -2298,5 +2298,5 @@ class Actions(Kontext):
 
         return {
             'id' : q_id,
-            'next_url' : 'view?%s' % '&'.join(['%s=%s' % (k, urllib.quote(v)) for k, v in params.items()])
+            'next_url' : 'view?%s' % '&'.join(['%s=%s' % (k, urllib.quote(v.encode('utf-8'))) for k, v in params.items()])
         }
