@@ -2299,8 +2299,8 @@ class Actions(Kontext):
             params['usesubcorp'] = self.usesubcorp
 
         return {
-            'id' : q_id,
-            'next_url' : 'view?%s' % '&'.join(['%s=%s' % (k, urllib.quote(v)) for k, v in params.items()])
+            'id': q_id,
+            'next_url': self.create_url('view', params)
         }
 
     # uses also self.keyword (TODO: cannot define Parameter() here)
