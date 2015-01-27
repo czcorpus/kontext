@@ -33,7 +33,7 @@ export class AppBar implements model.Plugin {
     /**
      *
      */
-    toolbarReloader(): void {
+    toolbarReloader = () => {
         var self = this,
             promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
 
@@ -44,7 +44,7 @@ export class AppBar implements model.Plugin {
         promise.fail(function(jqXHR, textStatus, errorThrown) {
              self.pluginApi.showMessage(model.MsgType.error, errorThrown); // TODO
         });
-    }
+    };
 
     /**
      */
@@ -69,7 +69,9 @@ export class AppBar implements model.Plugin {
             }
 
         } catch (e) {
-            console.error(e);
+            if (this.pluginApi.conf('isDebug')) {
+                console.error(e);
+            }
         }
     }
 }
