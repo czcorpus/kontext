@@ -91,7 +91,7 @@ class Formatter(object):
                     mask = '%01.2f'
                 n1, n2 = (mask % v).split('.')
             else:
-                raise TypeError('format_number accepts only int and float types')
+                raise TypeError('format_number accepts only int and float types, %s obtained' % (type(v).__name__,))
 
             for i, v in enumerate(n1[::-1]):
                 if i > 0 and i % self.conf['numbers']['numberGrouping'] == 0:
