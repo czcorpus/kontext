@@ -36,13 +36,11 @@ required config.xml entries:
 
 class AbstractFeaturedCorpora(object):
 
-    def get_corpora(self, user_id, user_corplist):
+    def mark_featured(self, user_corplist):
         """
-        arguments:
-        user_id -- an ID of a user
-        user_corplist -- list of dicts where each contains at least 'id' and 'name' keys
+        updates provided list of corpora details (i.e. list of dicts) with key 'featured': True/False
 
-        returns:
-        tuple of 2-tuples (corpus_id, corpus_name)
+        arguments:
+        user_corplist -- list of dicts {'canonical_id': ...} (additional keys are OK)
         """
         raise NotImplementedError()

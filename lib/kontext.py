@@ -797,13 +797,21 @@ class Kontext(Controller):
         else:
             return fallback_corpus.EmptyCorpus()
 
-    def _load_user_corplists(self):
+    def _load_fav_corplist(self):
+        def simplify_num(v):
+            if v > 1e9:
+                return '%dG' % (round(v / 1e9, 0))
+            if v > 1e6:
+                return '%dM' % (round(v / 1e6, 0))
+            return '%d' % (round(v / 1e3, 0) * 1e3,)
+
         user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
-        favorite_corpora = [fc for fc in user_corpora if fc['id'] in self.favorite_corpora]
-        featured_corpora = []
+        favorite_corpora = [fc for fc in user_corpora if fc['canonical_id'] in self.favorite_corpora]
+        for item in favorite_corpora:
+            item['size'] = simplify_num(item['size'])
         if plugins.has_plugin('featured_corpora'):
-            featured_corpora.extend(plugins.featured_corpora.get_corpora(self._session_get('user', 'id'), user_corpora))
-        return favorite_corpora, featured_corpora
+            plugins.featured_corpora.mark_featured(user_corpora)
+        return favorite_corpora
 
     def _add_corpus_related_globals(self, result, corpus):
         result['files_path'] = self._files_path
@@ -820,7 +828,7 @@ class Kontext(Controller):
         else:
             result['corp_web'] = ''
 
-        result['CorplistFn'] = self._load_user_corplists
+        result['CorplistFn'] = self._load_fav_corplist
         if self.usesubcorp:
             result['subcorp_size'] = format_number(self._corp().search_size())
         else:
