@@ -88,13 +88,18 @@ export class Corplist {
 
     private currCorpname:string;
 
+    private hiddenInput:HTMLElement;
+
+    private parentForm:HTMLElement;
+
     /**
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, currCorpname) {
+    constructor(options:Options, data:Array<CorplistItem>, currCorpname, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
+        this.parentForm = parentForm;
         this.currCorpname = currCorpname;
         this.visible = Visibility.HIDDEN;
         this.widgetClass = 'corplist-widget'; // TODO options
@@ -107,6 +112,17 @@ export class Corplist {
         this.switchComponentVisibility();
         e.preventDefault();
         e.stopPropagation();
+    };
+
+    /**
+     *
+     */
+    onItemClick = (e:Event) => {
+        $(this.hiddenInput).val($(e.currentTarget).data('id'));
+        e.stopPropagation();
+        e.preventDefault();
+        $(this.parentForm).attr('action', 'first_form'); // TODO abs. URL
+        $(this.parentForm).submit();
     };
 
     /**
@@ -163,6 +179,14 @@ export class Corplist {
         this.widgetWrapper = window.document.createElement('div');
         $(this.triggerButton).after(this.widgetWrapper);
 
+        this.hiddenInput = window.document.createElement('input');
+        $(this.hiddenInput).attr({
+            'type': 'hidden',
+            'name': jqSelectBoxItem.attr('name'),
+            'value': this.currCorpname
+        });
+        $(this.widgetWrapper).append(this.hiddenInput);
+
         this.jqWrapper = $(this.widgetWrapper);
         this.jqWrapper.addClass(this.widgetClass);
 
@@ -171,11 +195,16 @@ export class Corplist {
 
         $.each(self.data, function (i, item) {
             var isFeatured = item.featured;
-            self.jqWrapper.append('<tr><td><a ' + (isFeatured ? 'class="featured"' : '')
-                + 'title="' + item.description + '"'
-                + ' href="/first_form?corpname=' + item.value + '">' + item.name + '</a></td>'
+            self.jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
+                + ' title="' + item.description + '"'
+                + ' href="/first_form?corpname=' + item.value + '" data-id="' + item.value + '">' + item.name + '</a></td>'
                 + '<td class="num">~' + item.size + '</td></tr>');
         });
+
+        this.jqWrapper.find('a.corplist-item').each(function() {
+            $(this).on('click', self.onItemClick);
+        });
+
         this.jqWrapper.css({
             position: 'absolute'
         });
@@ -213,7 +242,7 @@ export function create(selectElm:HTMLElement, options:Options):Corplist {
     if (!currCorpname) {
         currCorpname = '??';
     }
-    corplist = new Corplist(options, data, currCorpname);
+    corplist = new Corplist(options, data, currCorpname, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }
