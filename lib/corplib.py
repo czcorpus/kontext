@@ -147,45 +147,38 @@ class CorpusManager(object):
     def corplist_with_names(self, paths, use_db_whitelist=True):
         """
         arguments:
-        paths -- list of dicts ('id' -> ?, 'path' -> ?, 'sentence_struct' -> ?)
-            data from corpora hierarchy XML
+        paths -- list of dicts {'id': ..., 'path': ..., 'sentence_struct'...})
+            data from corpora hierarchy XML; please not that 'id' is expected to be canonical (i.e. without path prefix)
         use_db_witelist -- if True then access is limited according to the data (specified per user)
             found in the database
         """
-        simple_names = []
-        subdir_map = {}
-
-        for c in self.corplist:
-            tmp = c.rsplit('/', 1)
-            if len(tmp) == 2:
-                simple_names.append(tmp[1])
-                subdir_map[tmp[1]] = '%s/' % tmp[0]
-            else:
-                simple_names.append(tmp[0])
-                subdir_map[tmp[0]] = ''
+        # mapping canonical names (e.g. syn2010) to user-limited ones (e.g. guest/syn2010)
+        restrict_name_map = dict([(canonical_corpname(c), c) for c in self.corplist])
+        simple_names = set(restrict_name_map.keys())
         cl = []
-
         for item in paths:
-            c, path, web = item['id'], item['path'], item['sentence_struct']
-            if c in simple_names or not use_db_whitelist:
-                id_prefix = subdir_map[c] if c in subdir_map else ''
-                corp_name = '?'
+            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if canonical_id in simple_names or not use_db_whitelist:
                 try:
-                    corp = manatee.Corpus(c)
-                    corp_name = corp.get_conf('NAME') or c
+                    corp_id = restrict_name_map[canonical_id]
+                    corp = manatee.Corpus(corp_id)
+                    corp_name = corp.get_conf('NAME') if corp.get_conf('NAME') else canonical_id
                     corp_info = corp.get_info()
 
-                    cl.append({'id': '%s%s' % (id_prefix, c),
+                    cl.append({'id': corp_id,
+                               'canonical_id': canonical_id,
                                'name': import_string(corp_name, from_encoding=corp.get_conf('ENCODING')),
                                'desc': import_string(corp_info, from_encoding=corp.get_conf('ENCODING')),
                                'size': corp.size(),
                                'path': path
-                    })
+                               })
                 except Exception, e:
                     import logging
                     logging.getLogger(__name__).warn(u'Failed to fetch info about %s with error %s (%r)'
                                                      % (corp_name, type(e).__name__, e))
-                    cl.append({'id': '%s%s' % (id_prefix, c), 'name': c, 'path': path, 'desc': '', 'size': ''})
+                    cl.append({
+                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
         return cl
 
     def subcorpora(self, corpname):
