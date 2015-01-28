@@ -545,13 +545,14 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 </html>
 
 ## ******** Common methods definitions ******** ##
-#def corp_sel($corplist, $featured_corplist)
+#def corp_sel($corplist)
 
     <input type="hidden" name="reload" />
     <select name="corpname">
       #for $c in $corplist
         #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-        <option value="$c['id']" title="$c['desc'] ($c['size'])" data-path="$c['path']" $selected>$c['name']</option>
+        <option value="$c['id']" title="$c['desc']" data-size="$c['size']" data-path="$c['path']"
+            data-featured="#if $c.get('featured', None)#1#else#0#end if#" $selected>$c['name']</option>
       #end for
     </select>
     #if $SubcorpList
@@ -560,25 +561,15 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
         #end for
     </select>
-    #end if ## SubcorpList
 
-    #if len($featured_corplist) > 0
-    <div class="featured-corpora" style="display: none">
-        <h3>$_('Featured corpora')</h3>
-        <ul>
-            #for $featured in $featured_corplist
-            <li><a href="first_form?corpname=$featured[0]">$featured[1]</a></li>
-            #end for
-        </ul>
-        <h3>$_('My favorite corpora') <span class="archive">(<a href="corplist">$_('see all')</a>)</span></h3>
-    </div>
-    #end if
+    <div class="corpus-archive-link"><a href="corplist">$_('see/add more corpora')</a></div>
+    #end if ## SubcorpList
 
 #end def  ## corp_sel
 ## ***************************************** ##
 #def corp_sel_node
     ## Select corpus name
-    #set $corplist, $featuredCorplist = $CorplistFn()
+    #set $corplist = $CorplistFn()
     #set $corplist_size = $min($len($corplist), 20)
     #filter None
     <tbody>
@@ -587,7 +578,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None
-            $corp_sel($corplist, $featuredCorplist)
+            $corp_sel($corplist)
             #end filter
         #else
             <td colspan="2">

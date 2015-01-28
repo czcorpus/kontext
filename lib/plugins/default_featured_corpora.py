@@ -16,7 +16,6 @@ and compared with user-available corpora - the intersection of
 both sets is returned.
 """
 
-
 from abstract.featured_corpora import AbstractFeaturedCorpora
 
 
@@ -25,21 +24,18 @@ class FeaturedCorpora(AbstractFeaturedCorpora):
     def __init__(self, conf):
         self._conf = conf
 
-    def get_corpora(self, user_id, user_corplist):
+    def mark_featured(self, user_corplist):
         """
         arguments:
         user_id -- an ID of a user
-        user_corplist -- list of dicts where each contains at least 'id' and 'name' keys
-
-        returns:
-        tuple of 2-tuples (corpus_id, corpus_name)
+        user_corplist -- list of dicts {'canonical_id': ...} (additional keys are OK)
         """
-        user_corpora = dict([(x['id'], x) for x in user_corplist])
-        featured = []
-        for featured_corp in self._conf.get('list', []):
-            if featured_corp in user_corpora:
-                featured.append((featured_corp, user_corpora[featured_corp].get('name', None)))
-        return featured
+        featured_corp = self._conf.get('list', [])
+        for item in user_corplist:
+            if item['canonical_id'] in featured_corp:
+                item['featured'] = True
+            else:
+                item['featured'] = False
 
 
 def create_instance(conf, *args):

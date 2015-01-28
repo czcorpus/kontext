@@ -21,8 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins/queryStorage',
-    'plugins/liveAttributes', 'conclines'], function (win, $, treeComponent, layoutModel, queryInput, queryStorage,
+define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/queryStorage',
+    'plugins/liveAttributes', 'conclines'], function (win, $, corplistComponent, layoutModel, queryInput, queryStorage,
                                                       liveAttributes, conclines) {
     'use strict';
 
@@ -143,7 +143,7 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'queryInput', 'plugins
     lib.misc = function () {
         var tc;
 
-        tc = treeComponent.createTreeComponent(
+        tc = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
             layoutModel.conf.messages,
             {
