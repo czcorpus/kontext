@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../ts/declarations/jquery.d.ts" />
+/// <reference path="../ts/declarations/typeahead.d.ts" />
+
+/// <amd-dependency path="vendor/typeahead" />
+
 import $ = require('jquery');
 
 /**
@@ -43,6 +48,12 @@ export interface CorplistItem {
     size: any;
 }
 
+/**
+ *
+ */
+export interface CorplistItemClick {
+    (callback:{data: (s:string) => any}):void;
+}
 
 /**
  *
@@ -63,6 +74,254 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
         });
     });
     return ans;
+}
+
+/**
+ *
+ */
+export interface WidgetSubFunc {
+    show():void;
+    hide():void;
+}
+
+/**
+ *
+ */
+export class WidgetMenu {
+
+    widgetWrapper:JQuery;
+
+    menuWrapper:JQuery;
+
+    searchBox:Search;
+
+    favoriteBox:Favorites;
+
+    funcMap:{[name:string]: WidgetSubFunc};
+
+    /**
+     *
+     * @param widgetWrapper
+     */
+    constructor(widgetWrapper:JQuery) {
+        this.widgetWrapper = widgetWrapper;
+        this.menuWrapper = $('<div class="menu"></div>');
+        this.widgetWrapper.append(this.menuWrapper);
+        this.funcMap = {};
+    }
+
+    /**
+     *
+     * @param ident
+     * @returns {*}
+     */
+    getFuncByIdent(ident:string):WidgetSubFunc {
+        return this.funcMap[ident];
+    }
+
+    /**
+     *
+     */
+    reset():void {
+        var self = this;
+        this.menuWrapper.find('a').each(function () {
+            $(this).removeClass('current');
+            self.getFuncByIdent($(this).data('func')).hide();
+        });
+    }
+
+    /**
+     *
+     * @param trigger
+     */
+    setCurrent(trigger:HTMLElement):void;
+    setCurrent(trigger:string):void;
+    setCurrent(trigger:any) {
+        var triggerElm:HTMLElement;
+
+        if (typeof trigger === 'string') {
+            triggerElm = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
+
+        } else {
+            triggerElm = trigger;
+        }
+
+        this.reset();
+        $(triggerElm).addClass('current');
+        this.getFuncByIdent($(triggerElm).data('func')).show();
+    }
+
+    /**
+     *
+     * @param searchBox
+     * @param favoriteBox
+     */
+    init(searchBox:Search, favoriteBox:Favorites):void {
+        var self = this;
+        this.menuWrapper.append('<a data-func="my-corpora">my corpora</a> | <a data-func="search">search</a>');
+        this.favoriteBox = favoriteBox;
+        this.searchBox = searchBox;
+        this.funcMap['my-corpora'] = this.favoriteBox;
+        this.funcMap['search'] = this.searchBox;
+        this.setCurrent('my-corpora');
+
+        this.menuWrapper.find('a').on('click', function (e:any) {
+            self.setCurrent(e.currentTarget);
+        });
+    }
+}
+
+/**
+ *
+ */
+export class Search implements WidgetSubFunc {
+
+    widgetWrapper:HTMLElement;
+
+    itemClickCallback:CorplistItemClick;
+
+    wrapper:HTMLElement;
+
+    srchField:HTMLElement;
+
+    /**
+     *
+     * @param widgetWrapper
+     */
+    constructor(widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+        this.widgetWrapper = widgetWrapper;
+        this.itemClickCallback = itemClickCallback;
+        this.wrapper = window.document.createElement('div');
+        $(this.widgetWrapper).append(this.wrapper);
+    }
+
+    show():void {
+        $(this.wrapper).show();
+        $(this.srchField).focus();
+    }
+
+    hide():void {
+        $(this.wrapper).hide();
+    }
+
+
+    private initTypeahead():void {
+        var self = this;
+        var remoteOptions:Bloodhound.RemoteOptions<string> = {
+            'url' : 'ajax_list_corpora?query=%QUERY'
+        };
+        var bhOptions:Bloodhound.BloodhoundOptions<string> = {
+            datumTokenizer: //Bloodhound.tokenizers.obj.whitespace('name'),
+                function(d) {
+                    console.log('datumTokenizer: ', d);
+                    return Bloodhound.tokenizers.whitespace(d.name);
+                },
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: remoteOptions
+        };
+        var bestPictures = new Bloodhound(bhOptions);
+        bestPictures.initialize();
+
+        var options:Twitter.Typeahead.Options = {
+            name: 'corplist',
+            hint: true,
+            highlight: true,
+            minLength: 2
+        };
+
+
+        $(this.srchField).typeahead(options, {
+            displayKey : 'name',
+            source : bestPictures.ttAdapter()
+        });
+    /*
+        $(this.srchField).on('typeahead:opened', function () {
+
+        });
+
+        $(this.srchField).on('typeahead:closed', function () {
+
+        });
+    */
+        $(this.srchField).on('typeahead:selected', function (x, suggestion) {
+            self.itemClickCallback({
+                data : function (key:string) {
+                    return suggestion[key];
+                }
+            });
+        });
+
+    }
+
+    /**
+     *
+     */
+    init():void {
+        var jqWrapper = $(this.wrapper);
+        this.srchField = window.document.createElement('input');
+        $(this.srchField).addClass('corp-search').attr('type', 'text');
+        jqWrapper.append(this.srchField);
+        this.initTypeahead();
+        this.hide();
+    }
+}
+
+/**
+ *
+ */
+export class Favorites implements WidgetSubFunc {
+
+    widgetWrapper:HTMLElement;
+
+    data:Array<CorplistItem>;
+
+    wrapper:HTMLElement;
+
+    itemClickCallback:CorplistItemClick;
+
+    /**
+     *
+     * @param widgetWrapper
+     */
+    constructor(widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback:CorplistItemClick) {
+        this.widgetWrapper = widgetWrapper;
+        this.data = data;
+        this.itemClickCallback = itemClickCallback;
+        this.wrapper = window.document.createElement('table');
+        $(this.wrapper).addClass('favorite-list');
+        $(this.widgetWrapper).append(this.wrapper);
+    }
+
+    /**
+     *
+     */
+    init() {
+        var jqWrapper = $(this.wrapper);
+
+        $.each(this.data, function (i, item) {
+            var isFeatured = item.featured;
+            jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
+                + ' title="' + item.description + '"'
+                + ' href="/first_form?corpname=' + item.value + '" data-id="' + item.value + '">' + item.name + '</a></td>'
+                + '<td class="num">~' + item.size + '</td></tr>');
+        });
+
+        jqWrapper.find('a.corplist-item').each(function() {
+            $(this).on('click', function (e:Event) {
+                this.itemClickCallback($(e.currentTarget));
+                e.stopPropagation();
+                e.preventDefault();
+            });
+        });
+    }
+
+    show():void {
+        $(this.wrapper).show();
+    }
+
+    hide():void {
+        $(this.wrapper).hide();
+    }
 }
 
 /**
@@ -94,6 +353,12 @@ export class Corplist {
 
     private parentForm:HTMLElement;
 
+    private mainMenu:WidgetMenu;
+
+    private searchBox:Search;
+
+    private favoritesBox:Favorites;
+
     /**
      *
      * @param options
@@ -120,10 +385,8 @@ export class Corplist {
     /**
      *
      */
-    onItemClick = (e:Event) => {
-        $(this.hiddenInput).val($(e.currentTarget).data('id'));
-        e.stopPropagation();
-        e.preventDefault();
+    onItemClick = (triggerElm:{data: (s:string) => any}) => {
+        $(this.hiddenInput).val(triggerElm.data('id'));
         $(this.parentForm).attr('action', 'first_form'); // TODO abs. URL
         $(this.parentForm).submit();
     };
@@ -145,14 +408,6 @@ export class Corplist {
 
     /**
      *
-     * @returns {number|JQuery}
-     */
-    widgetWidth():number {
-        return $(this.widgetWrapper).width();
-    }
-
-    /**
-     *
      * @param state
      */
     private switchComponentVisibility(state?:Visibility) {
@@ -166,14 +421,11 @@ export class Corplist {
         }
     }
 
-
     /**
      *
      */
     private buildWidget() {
-        var jqSelectBoxItem = $(this.selectElm),
-            table,
-            self = this;
+        var jqSelectBoxItem = $(this.selectElm);
 
         this.triggerButton = window.document.createElement('button');
         $(this.triggerButton).attr('type', 'button').text(this.currCorpname);
@@ -193,20 +445,18 @@ export class Corplist {
         this.jqWrapper = $(this.widgetWrapper);
         this.jqWrapper.addClass(this.widgetClass);
 
-        table = window.document.createElement('table');
-        this.jqWrapper.append(table);
+        // main menu
+        this.mainMenu = new WidgetMenu(this.jqWrapper);
 
-        $.each(self.data, function (i, item) {
-            var isFeatured = item.featured;
-            self.jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
-                + ' title="' + item.description + '"'
-                + ' href="/first_form?corpname=' + item.value + '" data-id="' + item.value + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size + '</td></tr>');
-        });
+        // search func
+        this.searchBox = new Search(this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox.init();
 
-        this.jqWrapper.find('a.corplist-item').each(function() {
-            $(this).on('click', self.onItemClick);
-        });
+        this.favoritesBox = new Favorites(this.widgetWrapper, this.data, this.onItemClick);
+        this.favoritesBox.init();
+
+        // menu initialization
+        this.mainMenu.init(this.searchBox, this.favoritesBox);
 
         this.jqWrapper.css({
             position: 'absolute'
