@@ -88,6 +88,8 @@ export class Corplist {
 
     private currCorpname:string;
 
+    private currCorpIdent:string;
+
     private hiddenInput:HTMLElement;
 
     private parentForm:HTMLElement;
@@ -96,10 +98,11 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, currCorpname, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, currCorpIdent, currCorpname, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
         this.parentForm = parentForm;
+        this.currCorpIdent = currCorpIdent;
         this.currCorpname = currCorpname;
         this.visible = Visibility.HIDDEN;
         this.widgetClass = 'corplist-widget'; // TODO options
@@ -183,7 +186,7 @@ export class Corplist {
         $(this.hiddenInput).attr({
             'type': 'hidden',
             'name': jqSelectBoxItem.attr('name'),
-            'value': this.currCorpname
+            'value': this.currCorpIdent
         });
         $(this.widgetWrapper).append(this.hiddenInput);
 
@@ -234,15 +237,22 @@ export class Corplist {
 export function create(selectElm:HTMLElement, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>,
-        currCorpname;
+        currCorpname:string,
+        currCorpIdent:string,
+        selectedOption:JQuery;
 
+    selectedOption = $(selectElm).find('option:selected');
     data = fetchDataFromSelect(selectElm);
 
-    currCorpname = $(selectElm).find('option:selected').text();
-    if (!currCorpname) {
-        currCorpname = '??';
+    currCorpIdent = selectedOption.attr('value');
+    if (!currCorpIdent) {
+        throw new Error('Failed to determine current corpus');
     }
-    corplist = new Corplist(options, data, currCorpname, $(selectElm).closest('form').get(0));
+    currCorpname = selectedOption.text();
+    if (!currCorpname) {
+        currCorpname = currCorpIdent;
+    }
+    corplist = new Corplist(options, data, currCorpIdent, currCorpname, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }
