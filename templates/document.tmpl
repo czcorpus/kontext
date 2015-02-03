@@ -561,9 +561,8 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
         #end for
     </select>
-
-    <div class="corpus-archive-link"><a href="corplist">$_('see/add more corpora')</a></div>
     #end if ## SubcorpList
+    <div class="corpus-archive-link"><a href="corplist">$_('see/add more corpora')</a></div>
 
 #end def  ## corp_sel
 ## ***************************************** ##
