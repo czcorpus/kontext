@@ -211,16 +211,15 @@ export class Search implements WidgetSubFunc {
             'url' : 'ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
-            datumTokenizer: //Bloodhound.tokenizers.obj.whitespace('name'),
-                function(d) {
-                    console.log('datumTokenizer: ', d);
-                    return Bloodhound.tokenizers.whitespace(d.name);
-                },
+            datumTokenizer: function(d) {
+                return Bloodhound.tokenizers.whitespace(d.name);
+            },
             queryTokenizer: Bloodhound.tokenizers.whitespace,
-            remote: remoteOptions
+            remote: remoteOptions,
+            limit: 100 // TODO configurable
         };
-        var bestPictures = new Bloodhound(bhOptions);
-        bestPictures.initialize();
+        var matchingCorpora = new Bloodhound(bhOptions);
+        matchingCorpora.initialize();
 
         var options:Twitter.Typeahead.Options = {
             name: 'corplist',
@@ -232,7 +231,7 @@ export class Search implements WidgetSubFunc {
 
         $(this.srchField).typeahead(options, {
             displayKey : 'name',
-            source : bestPictures.ttAdapter()
+            source : matchingCorpora.ttAdapter()
         });
     /*
         $(this.srchField).on('typeahead:opened', function () {
