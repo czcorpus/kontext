@@ -2312,6 +2312,15 @@ class Actions(Kontext):
         return ans
 
     @exposed(return_type='json')
+    def ajax_list_corpora(self, query=''):
+        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        ans = []
+        for corp in corplist:
+            if query.lower() in corp['name']:
+                ans.append(corp)
+        return ans
+
+    @exposed(return_type='json')
     def set_favorite_corp(self, data=''):
         data = json.loads(data)
         remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
