@@ -807,6 +807,15 @@ class Kontext(Controller):
 
         user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
         favorite_corpora = [fc for fc in user_corpora if fc['canonical_id'] in self.favorite_corpora]
+        if len(favorite_corpora) == 0:
+            favorite_corpora.append({
+                'id': self.corpname,
+                'canonical_id': self._canonical_corpname(self.corpname),
+                'name': self._human_readable_corpname(),
+                'size': self._corp().search_size(),
+                'desc': 'current corpus (you have no favorite corpora)',
+                'path': ''
+            })
         for item in favorite_corpora:
             item['size'] = simplify_num(item['size'])
         if plugins.has_plugin('featured_corpora'):
