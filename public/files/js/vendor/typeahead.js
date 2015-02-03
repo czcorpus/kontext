@@ -3,8 +3,7 @@
  * https://github.com/twitter/typeahead.js
  * Copyright 2013-2014 Twitter, Inc. and other contributors; Licensed MIT
  */
-
-(function($) {
+define(['jquery'], function ($) {
     var _ = function() {
         "use strict";
         return {
@@ -1779,4 +1778,4 @@
             return this;
         };
     })();
-})(window.jQuery);
+});
