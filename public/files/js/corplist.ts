@@ -295,7 +295,8 @@ export class Favorites implements WidgetSubFunc {
      *
      */
     init() {
-        var jqWrapper = $(this.wrapper);
+        var jqWrapper = $(this.wrapper),
+            self = this;
 
         $.each(this.data, function (i, item) {
             var isFeatured = item.featured;
@@ -307,7 +308,7 @@ export class Favorites implements WidgetSubFunc {
 
         jqWrapper.find('a.corplist-item').each(function() {
             $(this).on('click', function (e:Event) {
-                this.itemClickCallback($(e.currentTarget));
+                self.itemClickCallback($(e.currentTarget));
                 e.stopPropagation();
                 e.preventDefault();
             });
