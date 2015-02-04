@@ -530,23 +530,10 @@ export class Corplist {
  */
 export function create(selectElm:HTMLElement, options:Options):Corplist {
     var corplist:Corplist,
-        data:Array<CorplistItem>,
-        currCorpname:string,
-        currCorpIdent:string,
-        selectedOption:JQuery;
+        data:Array<CorplistItem>;
 
-    selectedOption = $(selectElm).find('option:selected');
     data = fetchDataFromSelect(selectElm);
-
-    currCorpIdent = selectedOption.attr('value');
-    if (!currCorpIdent) {
-        throw new Error('Failed to determine current corpus');
-    }
-    currCorpname = selectedOption.text();
-    if (!currCorpname) {
-        currCorpname = currCorpIdent;
-    }
-    corplist = new Corplist(options, data, currCorpIdent, currCorpname, $(selectElm).closest('form').get(0));
+    corplist = new Corplist(options, data, conf.corpname, conf.humanCorpname, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }
