@@ -160,12 +160,12 @@ export class WidgetMenu {
      */
     init(searchBox:Search, favoriteBox:Favorites):void {
         var self = this;
-        this.menuWrapper.append('<a data-func="my-corpora">my corpora</a> | <a data-func="search">search</a>');
+        this.menuWrapper.append('<a data-func="search">search</a> | <a data-func="my-corpora">my corpora</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
         this.funcMap['my-corpora'] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
         this.funcMap['search'] = this.searchBox;
-        this.setCurrent('my-corpora');
+        this.setCurrent('search');
 
         this.menuWrapper.find('a').on('click', function (e:any) {
             self.setCurrent(e.currentTarget);
@@ -215,15 +215,16 @@ export class Search implements WidgetTab {
         $.each(conf.corporaLabels, function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
-            $(link).append(item[0]);
+            $(link).append(item[0]).addClass('keyword');
             $(link).attr('data-srchkey', item[1]);
             $(link).on('click', function () {
                 $(self.srchField).val('#' + $(link).data('srchkey'));
                 // this forces Typeahead to act like if user changed input manually
                 $(self.srchField).trigger('input');
+                $(self.srchField).focus();
             });
             if (i < conf.corporaLabels.length - 1) {
-                $(div).append(' | ');
+                $(div).append(' ');
             }
         });
     }
@@ -279,11 +280,14 @@ export class Search implements WidgetTab {
      *
      */
     init():void {
-        var jqWrapper = $(this.wrapper);
+        var jqWrapper = $(this.wrapper),
+            inputWrapper = window.document.createElement('div');
+
         this.initLabels();
         this.srchField = window.document.createElement('input');
         $(this.srchField).addClass('corp-search').attr('type', 'text');
-        jqWrapper.append(this.srchField);
+        jqWrapper.append(inputWrapper);
+        $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.initTypeahead();
         this.hide();
     }
