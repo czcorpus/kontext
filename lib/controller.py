@@ -817,6 +817,7 @@ class Controller(object):
         self._post_dispatch(methodname, tmpl, result)
 
         # response rendering
+        resp_time = time.time()
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
 
@@ -824,6 +825,7 @@ class Controller(object):
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
         ans_body = output.getvalue()
         output.close()
+        logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         try:
             self._close_session()
         finally:
