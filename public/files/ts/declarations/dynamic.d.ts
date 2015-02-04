@@ -26,5 +26,10 @@ declare module Runtime {
     }
 }
 
+declare module "conf" {
+    var conf:any;
+    export = conf;
+}
+
 
 
