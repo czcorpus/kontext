@@ -206,6 +206,27 @@ export class Search implements WidgetTab {
         $(this.wrapper).hide();
     }
 
+    private initLabels():void {
+        var div = window.document.createElement('div'),
+            self = this;
+
+        $(this.wrapper).append(div);
+        $(div).addClass('labels');
+        $.each(conf.corporaLabels, function (i, item) {
+            var link = window.document.createElement('a');
+            $(div).append(link);
+            $(link).append(item[0]);
+            $(link).attr('data-srchkey', item[1]);
+            $(link).on('click', function () {
+                $(self.srchField).val('#' + $(link).data('srchkey'));
+                // this forces Typeahead to act like if user changed input manually
+                $(self.srchField).trigger('input');
+            });
+            if (i < conf.corporaLabels.length - 1) {
+                $(div).append(' | ');
+            }
+        });
+    }
 
     private initTypeahead():void {
         var self = this;
@@ -259,6 +280,7 @@ export class Search implements WidgetTab {
      */
     init():void {
         var jqWrapper = $(this.wrapper);
+        this.initLabels();
         this.srchField = window.document.createElement('input');
         $(this.srchField).addClass('corp-search').attr('type', 'text');
         jqWrapper.append(this.srchField);

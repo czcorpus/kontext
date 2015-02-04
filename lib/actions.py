@@ -2315,8 +2315,15 @@ class Actions(Kontext):
     def ajax_list_corpora(self, query=''):
         corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
         ans = []
+        tokens = re.split(r'\s+', query)
+        query_keywords = [t[1:].replace('_', ' ') for t in tokens if len(t) > 0 and t[0] == '#']
+        query_substrs = ' '.join([t for t in tokens if len(t) > 0 and t[0] != '#'])
+
+        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d)
         for corp in corplist:
-            if query.lower() in corp['name']:
+            full_data = plugins.corptree.get_corpus_info(corp['id'], self.ui_lang)
+            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
+            if matches_all([k in keywords for k in query_keywords]) and query_substrs in corp['name']:
                 ans.append(corp)
         return ans
 

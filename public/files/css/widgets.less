@@ -111,6 +111,7 @@ ul.multiselect li td.checkbox-cell {
 /* corpus tree */
 
 .corplist-widget {
+    max-width: 30%; // TODO mobile/touch device should have different setting here
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
@@ -224,6 +225,23 @@ ul.multiselect li td.checkbox-cell {
 
 .corpus-archive-link a {
   color: @color-logo-blue;
+}
+
+.corplist-widget .labels {
+  padding: 5pt;
+}
+
+.corplist-widget .labels a {
+  text-decoration: none;
+}
+
+.corplist-widget .labels a:hover {
+  text-decoration: underline;
+}
+
+.corplist-widget .corp-search {
+  width: 100%;
+  display: block;
 }
 
 // -------------------------- tag hints -------

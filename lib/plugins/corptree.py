@@ -125,6 +125,14 @@ class CorpTree(object):
                     ans[keyword] = keyword
         return ans
 
+    def get_all_corpus_keywords(self, lang):
+        ans = set()
+        lang_key = lang.split('_')[0]
+        for item in self._keywords.values():
+            if lang_key in item:
+                ans.add(item[lang_key])
+        return list(ans)
+
     def _parse_corplist_node(self, root, data, path='/'):
         """
         """

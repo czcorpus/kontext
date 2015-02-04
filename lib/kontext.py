@@ -838,6 +838,8 @@ class Kontext(Controller):
             result['corp_web'] = ''
 
         result['CorplistFn'] = self._load_fav_corplist
+        result['corpora_labels'] = json.dumps(
+            [(item, item.lower().replace(' ', '_')) for item in plugins.corptree.get_all_corpus_keywords(self.ui_lang)])
         if self.usesubcorp:
             result['subcorp_size'] = format_number(self._corp().search_size())
         else:
