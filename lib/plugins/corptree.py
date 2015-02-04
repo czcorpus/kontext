@@ -59,6 +59,7 @@ class CorpTree(object):
         self.root_xpath = root_xpath
         self._messages = {}
         self._keywords = {}  # keyword (aka tags) database for corpora
+        self._featured_keywords = set()  # keywords with specific promotion (e.g. "featured corpora")
 
     def get_corplist_title(self, elm):
         """
@@ -106,6 +107,8 @@ class CorpTree(object):
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
+            if 'type' in k.attrib and k.attrib['type'] == 'featured':
+                self._featured_keywords.add(k.attrib['ident'])
             for lab in k.findall('./label'):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
@@ -126,11 +129,15 @@ class CorpTree(object):
         return ans
 
     def get_all_corpus_keywords(self, lang):
+        """
+        returns:
+        list of 2-tuples (localized_label, featured_bool)
+        """
         ans = set()
         lang_key = lang.split('_')[0]
-        for item in self._keywords.values():
+        for label_key, item in self._keywords.items():
             if lang_key in item:
-                ans.add(item[lang_key])
+                ans.add((item[lang_key], self.keyword_is_featured(label_key)))
         return list(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):
@@ -161,7 +168,8 @@ class CorpTree(object):
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
-                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {}}
+                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {},
+                                 'featured': False}
                 }
 
                 ref_elm = item.find('reference')
@@ -181,6 +189,9 @@ class CorpTree(object):
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
                     ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
                 data.append(ans)
+
+    def keyword_is_featured(self, keyword_ident):
+        return keyword_ident in self._featured_keywords
 
     def _localize_corpus_info(self, data, lang_code):
         """
