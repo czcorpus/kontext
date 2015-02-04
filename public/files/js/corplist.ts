@@ -101,6 +101,8 @@ export class WidgetMenu {
 
     funcMap:{[name:string]: WidgetTab};
 
+    currentBoxId:string;
+
     /**
      *
      * @param widgetWrapper
@@ -151,6 +153,11 @@ export class WidgetMenu {
         this.reset();
         $(triggerElm).addClass('current');
         this.getFuncByIdent($(triggerElm).data('func')).show();
+        this.currentBoxId = $(triggerElm).data('func');
+    }
+
+    getCurrent():WidgetTab {
+        return this.getFuncByIdent(this.currentBoxId);
     }
 
     /**
@@ -449,6 +456,8 @@ export class Corplist {
         } else if (state === Visibility.VISIBLE || state === undefined && this.visible === Visibility.HIDDEN) {
             this.visible = Visibility.VISIBLE;
             $(this.widgetWrapper).show();
+            // even if the tab is 'current' we call this to make sure it is initialized properly
+            this.mainMenu.getCurrent().show();
         }
     }
 
