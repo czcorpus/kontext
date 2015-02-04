@@ -377,8 +377,10 @@ class Kontext(Controller):
         if len(corpname) > 0:
             ans = {}
             for k, v in options.items():
-                if k.find(corpname) == 0:
-                    ans[k.split(':', 1)[-1]] = v
+                tokens = k.rsplit(':', 1)  # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
+                if len(tokens) == 2:
+                    if self._canonical_corpname(tokens[0]) == corpname:
+                        ans[tokens[1]] = v
             convert_types(options, self.clone_self(), selector=1)
             self.__dict__.update(ans)
 
