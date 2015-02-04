@@ -155,6 +155,7 @@ define('conf', [], function () {
     conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
     conf.stateParams = "$q;$globals";
     conf.isDebug = #if $debug#true#else#false#end if#;
+    conf.corporaLabels = ${corpora_labels};
 
     conf.messages = {};
     #if $_anonymous
