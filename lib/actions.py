@@ -230,7 +230,7 @@ class Actions(Kontext):
 
     @exposed(vars=('TextTypeSel', 'LastSubcorp'))
     def first_form(self):
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
+        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
         self._reset_session_conc()
@@ -428,7 +428,10 @@ class Actions(Kontext):
                                 structattrs=structattrs)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize', 'structattrs'], self.corpname)
         # TODO refs_up ???
-        return self.view()
+        if self.q:
+            return self.view()
+        else:
+            self._redirect('first_form')
 
     @exposed(access_level=1)
     def viewopts(self):
@@ -444,7 +447,10 @@ class Actions(Kontext):
         self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
         self._save_options(['pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
                             'refs_up', 'shuffle'])
-        return self.view()
+        if self.q:
+            return self.view()
+        else:
+            self._redirect('first_form')
 
     @exposed(access_level=1, vars=('concsize', ))
     def sort(self):
