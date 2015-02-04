@@ -18,10 +18,12 @@
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/typeahead.d.ts" />
+/// <reference path="../ts/declarations/dynamic.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 
 import $ = require('jquery');
+import conf = require('conf');
 
 /**
  *
@@ -79,7 +81,7 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
 /**
  *
  */
-export interface WidgetSubFunc {
+export interface WidgetTab {
     show():void;
     hide():void;
 }
@@ -97,7 +99,7 @@ export class WidgetMenu {
 
     favoriteBox:Favorites;
 
-    funcMap:{[name:string]: WidgetSubFunc};
+    funcMap:{[name:string]: WidgetTab};
 
     /**
      *
@@ -115,7 +117,7 @@ export class WidgetMenu {
      * @param ident
      * @returns {*}
      */
-    getFuncByIdent(ident:string):WidgetSubFunc {
+    getFuncByIdent(ident:string):WidgetTab {
         return this.funcMap[ident];
     }
 
@@ -161,7 +163,7 @@ export class WidgetMenu {
         this.menuWrapper.append('<a data-func="my-corpora">my corpora</a> | <a data-func="search">search</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
-        this.funcMap['my-corpora'] = this.favoriteBox;
+        this.funcMap['my-corpora'] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
         this.funcMap['search'] = this.searchBox;
         this.setCurrent('my-corpora');
 
@@ -174,7 +176,7 @@ export class WidgetMenu {
 /**
  *
  */
-export class Search implements WidgetSubFunc {
+export class Search implements WidgetTab {
 
     widgetWrapper:HTMLElement;
 
@@ -268,7 +270,7 @@ export class Search implements WidgetSubFunc {
 /**
  *
  */
-export class Favorites implements WidgetSubFunc {
+export class Favorites implements WidgetTab {
 
     widgetWrapper:HTMLElement;
 
