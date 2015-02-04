@@ -285,7 +285,10 @@ export class Search implements WidgetTab {
 
         this.initLabels();
         this.srchField = window.document.createElement('input');
-        $(this.srchField).addClass('corp-search').attr('type', 'text');
+        $(this.srchField)
+            .addClass('corp-search')
+            .attr('type', 'text')
+            .attr('placeholder', '#label or name');
         jqWrapper.append(inputWrapper);
         $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.initTypeahead();
