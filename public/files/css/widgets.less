@@ -111,12 +111,12 @@ ul.multiselect li td.checkbox-cell {
 /* corpus tree */
 
 .corplist-widget {
-    max-width: 30%; // TODO mobile/touch device should have different setting here
+    max-width: 40%; // TODO mobile/touch device should have different setting here
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
     box-shadow: 0px 0px 10pt #a5a5a5;
-    padding: 10pt 12pt 10pt 15pt;
+    padding: 10pt 5pt 10pt 5pt;
     text-align: left;
 }
 
@@ -239,9 +239,20 @@ ul.multiselect li td.checkbox-cell {
   text-decoration: underline;
 }
 
-.corplist-widget .corp-search {
-  width: 100%;
+.corplist-widget .srch-box {
   display: block;
+  text-align: center;
+}
+
+.corplist-widget .corp-search {
+  font-size: 14pt;
+  display: inline-block;
+}
+
+.corplist-widget .keyword {
+  #label-design();
+  white-space: nowrap;
+  line-height: 18pt;
 }
 
 // -------------------------- tag hints -------
@@ -368,6 +379,7 @@ button#reset-tag-button {
   padding-bottom: 6px;
   .ping-dot-item;
   cursor: pointer;
+  font-size: 13pt;
 }
 
 .tt-suggestions .tt-suggestion p:hover {
