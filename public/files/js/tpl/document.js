@@ -1243,8 +1243,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
      */
     lib.init = function (conf) {
         var settingsObj,
-            promises = new Promises(),
-            appBarPlugin;
+            promises = new Promises();
 
         try {
             settingsObj = JSON.parse($.cookie('ui_settings'));
