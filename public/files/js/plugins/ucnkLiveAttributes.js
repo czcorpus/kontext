@@ -80,7 +80,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         function createSelectAllBib() {
             var wrapper = window.document.createElement('label');
 
-            $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('select_all'))
+            $(wrapper).append(' <input type="checkbox" /> ' + self.pluginApi.translate('select_all'))
                 .addClass('select-all');
             return wrapper;
         }
