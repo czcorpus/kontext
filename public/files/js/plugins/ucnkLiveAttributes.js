@@ -77,6 +77,14 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
     LiveData.prototype.update = function (data) {
         var self = this;
 
+        function createSelectAllBib() {
+            var wrapper = window.document.createElement('label');
+
+            $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('select_all'))
+                .addClass('select-all');
+            return wrapper;
+        }
+
         /**
          *
          * @param {{}} rows
@@ -187,6 +195,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
                 inputElm = this,
                 attrTable = $(this).closest('table.envelope'),
                 checkedItems = [],
+                selectAll,
                 dataTable,
                 msg = self.pluginApi.translate('number of matching items'),
                 helpLink = win.document.createElement('a');
@@ -211,9 +220,11 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
                 $(inputElm).hide();
 
-                attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
-                self.pluginApi.applySelectAll($(this).closest('table.envelope').find('.select-all').find('input'),
-                    $(this).closest('table.envelope'));
+                selectAll = createSelectAllBib();
+                attrTable.find('.last-line td').append(selectAll);
+
+                $(selectAll).addClass('dynamic').css('display', 'inherit');
+                self.pluginApi.applySelectAll($(selectAll).find('input').get(0), attrTable.get(0));
 
             } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
                 attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
