@@ -110,6 +110,17 @@ class LiveData {
 
     /**
      *
+     */
+    private createSelectAllBib():HTMLElement {
+        var wrapper:HTMLElement = window.document.createElement('label');
+
+        $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('select_all'))
+                  .addClass('select-all');
+        return wrapper;
+    }
+
+    /**
+     *
      * @param {{}} rows
      * @param {string} defaultRowIdKey
      * @params {{'id_attr': '...', 'label_attr': '...'}} bibConf
@@ -227,9 +238,10 @@ class LiveData {
             var ident = stripPrefix($(this).attr('name')),
                 dataItem:AvailAttrValues = data[ident],
                 inputElm = this,
-                attrTable = $(this).closest('table.envelope'),
+                attrTable:JQuery = $(this).closest('table.envelope'),
                 checkedItems = [],
-                dataTable,
+                selectAll:HTMLElement,
+                dataTable:HTMLElement,
                 msg = self.pluginApi.translate('number of matching items'),
                 helpLink = window.document.createElement('a');
 
@@ -253,13 +265,12 @@ class LiveData {
 
                 $(inputElm).hide();
 
-                attrTable.find('.select-all').addClass('dynamic').css('display', 'inherit');
+                selectAll = self.createSelectAllBib();
+                attrTable.find('.last-line td').append(selectAll);
 
-                if ($(this).closest('table.envelope').find('.select-all').length > 0) {
-                    self.pluginApi.applySelectAll(
-                        $(this).closest('table.envelope').find('.select-all').find('input').get(0),
-                        $(this).closest('table.envelope').get(0));
-                }
+                $(selectAll).addClass('dynamic').css('display', 'inherit');
+                self.pluginApi.applySelectAll($(selectAll).find('input').get(0), attrTable.get(0));
+
 
             } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
                 attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
