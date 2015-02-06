@@ -512,7 +512,7 @@ define('conf', [], function () {
         #end for
     </div>
     #end if
-    <div>
+    <div>                              
         <div id="copyright-info">
             &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
             &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
@@ -526,7 +526,8 @@ define('conf', [], function () {
         $_('debugging mode')
         </div>
         #end if
-        <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
+        #set $customParams = $urllib.quote_plus($environ['REQUEST_URI'])
+        <div id="error-reporting"><a href="$error_report_url$customParams" target="_blank">$_('Report an error')</a></div>
     </div>
 </footer>
 #end filter
