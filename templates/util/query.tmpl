@@ -1,0 +1,341 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2014 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from translation import ugettext as _
+#from cmpltmpl.util.tt import tt
+#extends tt
+
+
+#def query_node($suff='',$filter=False)
+## basic query node form
+<tbody>
+
+    #if $suff
+    <tr class="required">
+        <th></th>
+        <td>
+            <select name="pcq_pos_neg$suff">
+                <option value="pos">$_('Contains')</option>
+                <option value="neg">$_('Does NOT contain')</option>
+            </select>
+        </td>
+    </tr>
+    #end if
+
+    #set $querytype = $getVar("queryselector" + $suff, '')
+
+    <tr class="required" id="querytypeel$suff">
+        <th>$_("Query Type"):</th>
+        <td>
+            <select class="qselector" id="queryselector$suff" name="queryselector$suff" data-parallel-corp="$suff">
+                #set $selected = ($querytype == 'iqueryrow' or $querytype == '') and 'selected="selected"' or ''
+                <option value="iqueryrow" data-type="iquery" $selected>$_("Basic")</option>
+                #if $getVar('has_lemmaattr' + $suff, '')
+                #set $selected = ($querytype == 'lemmarow') and 'selected="selected"' or ''
+                <option value="lemmarow" data-type="lemma" $selected>$_("Lemma")</option>
+                #end if
+                #set $selected = ($querytype == 'phraserow') and 'selected="selected"' or ''
+                <option value="phraserow" data-type="phrase" $selected>$_("Phrase")</option>
+                #set $selected = ($querytype == 'wordrow') and 'selected="selected"' or ''
+                <option value="wordrow" data-type="word" $selected>$_("Word Form")</option>
+                #set $selected = ($querytype == 'charrow') and 'selected="selected"' or ''
+                <option value="charrow" data-type="char" $selected>$_("Character")</option>
+                #set $selected = ($querytype == 'cqlrow') and 'selected="selected"' or ''
+                <option value="cqlrow" data-type="cql" $selected>$_("CQL")</option>
+            </select>
+        </td>
+    </tr>
+
+    #set $hidden = ($querytype == 'iqueryrow' or $querytype == '' or ($querytype == 'lemmarow' and not $has_lemmaattr)) and 'visible' or 'hidden'
+
+    <tr class="required $hidden" id="iqueryrow$suff">
+        <th>$_("Query"):</th>
+        <td>
+            <ul class="query-toolbox">
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            <input type="text" id="iquery$suff" class="spec-chars iquery-input #unless $suff#history #end unless#" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+        </td>
+    </tr>
+
+    #if $has_lemmaattr
+    #set $hidden = ($querytype == 'lemmarow') and 'visible' or 'hidden'
+    <tr class="required $hidden" id="lemmarow$suff">
+        <th>$_("Lemma"):</th>
+        <td>
+            <ul class="query-toolbox">
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            #if $q
+            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" />
+            #else
+            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input #unless $suff#history #end unless#" />
+            #end if
+
+            #if $Lposlist
+                <span class="no-wrap">
+                    $_("PoS"):
+                    <select name="lpos$suff">
+                        <option value="">$_("unspecified")</option>
+                        #for $lp in $Lposlist
+                        <option value="$lp.v" #if $lp.v == $getVar('lpos' + $suff, '')#selected="selected"#end if#>$lp.n</option>
+                        #end for
+                    </select>
+                </span>
+            #end if
+        </td>
+    </tr>
+    #end if  ## has_lemmaattr
+
+    #set $hidden = ($querytype == 'phraserow') and 'visible' or 'hidden'
+    <tr class="required $hidden" id="phraserow$suff">
+        <th>$_("Phrase"):</th>
+        <td>
+            <ul class="query-toolbox">
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input #unless $suff#history #end unless#" />
+        </td>
+    </tr>
+
+    #set $hidden = ($querytype == 'wordrow') and 'visible' or 'hidden'
+    <tr class="required $hidden" id="wordrow$suff">
+        <th>$_("Word Form"):</th>
+        <td>
+            <ul class="query-toolbox">
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input #unless $suff#history #end unless#" />
+            #if $Wposlist
+            <span class="no-wrap">
+                $_("PoS"):
+                <select name="wpos$suff">
+                    <option value="">$_("unspecified")</option>
+                    #for $wp in $Wposlist
+                    <option value="$wp.v"
+                    #if $wp.v == $getVar('wpos' + $suff, '')#selected="selected"#end if#>$wp.n</option>
+                    #end for
+                </select>
+            </span>
+            #end if
+            <span class="no-wrap">
+                <label>$_("Match case"):</label>
+                <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
+            </span>
+        </td>
+    </tr>
+
+    #set $hidden = ($querytype == 'charrow') and 'visible' or 'hidden'
+    <tr class="required $hidden" id="charrow$suff">
+        <th>$_("Character"):</th>
+        <td>
+            <ul class="query-toolbox">
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="spec-chars char-input" />
+        </td>
+    </tr>
+
+    #set $hidden = ($querytype == 'cqlrow') and 'visible' or 'hidden'
+    <tr class="required $hidden" id="cqlrow$suff">
+        <th title="$_("Corpus Query Language")">$_("CQL"):</th>
+        <td>
+            #unless $suff
+            <div id="tag-builder-modal" class="modal-container" style="display: none">
+                <h3>$_('Create a tag')</h3>
+                <div id="tag-display"></div>
+                <button id="insert-tag-button" type="button">$_('Insert')</button>
+                <button id="reset-tag-button" type="button">$_('Reset')</button>
+                <div id="tag-widget"></div>
+            </div>
+            <div id="within-builder-modal" class="modal-container" style="display: none">
+                <h3>$_('Create a within condition')</h3>
+                <div class="inputs">
+                    <span class="selection-container"></span> = <input id="within-value" type="text" />
+                    <button id="within-insert-button" type="button">$_('Insert')</button>
+                </div>
+            </div>
+            #end unless
+
+            <ul class="query-toolbox">
+                #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
+                <li class="insert-tag"><a data-bound-input="cql$suff">$_('insert tag')</a></li>
+                #end if
+                <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
+                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
+            </ul>
+            <input id="cql$suff" class="#unless $suff#history #end unless#spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+
+            #if not $suff
+            <span class="no-wrap">
+                $_("Default attribute"):
+                <select name="default_attr$suff">
+                    #for $a in $getVar('AttrList', ())
+                    <option value="$a.n" #if $a.n == $getVar('default_attr' + $suff, '')#selected="selected" #end if#>$a.n</option>
+                    #end for
+                </select>
+
+                #if $tagsetdoc
+                <a target="_blank" href="$tagsetdoc">$_("Tagset summary")</a>
+                #end if
+            </span>
+            #end if
+        </td>
+    </tr>
+</tbody>
+
+#if $suff
+<tbody><tr><td colspan="2">
+    <input type="checkbox" name="include_empty$suff" id="include_empty$suff"
+    #if $getVar('include_empty'+$suff, '')
+    checked#slurp
+    #end if
+    />
+    <label for="include_empty$suff">$_('include empty lines')</label>
+</td></tr></tbody>
+#end if
+
+#end def ## query_node
+
+
+
+#def specify_context_form
+<fieldset id="specify-context" class="inactive">
+        <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="context-box">$_("Specify context")
+        <img class="status over-img" src="../files/img/expand.png" /></a></legend>
+        <div class="contents">
+        #if $has_lemmaattr
+          <h3>$_("Lemma filter")</h3>
+        #else
+          <h3>$_("Word form filter")</h3>
+        #end if
+          <table class="form">
+            <tr>
+              <th align="left">$_("Window"):</th>
+              <td><select name="fc_lemword_window_type">
+                 <option value="left" #if $fc_lemword_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+                 <option value="right" #if $fc_lemword_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+                 <option value="both" #if $fc_lemword_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+               </select>
+               <select name="fc_lemword_wsize">
+                 <option>1</option>
+                 <option>2</option>
+                 <option>3</option>
+                 <option>4</option>
+                 <option selected="selected">5</option>
+                 <option>7</option>
+                 <option>10</option>
+                 <option>15</option>
+               </select>
+               $_("tokens").
+              </td>
+            </tr>
+            <tr>
+        #if $has_lemmaattr
+              <th align="left">$_("Lemma(s)"):</th>
+        #else
+              <th align="left">$_("Word form(s)"):</th>
+        #end if
+              <td>
+              <input type="text" name="fc_lemword" class="fc_lemword" />
+              <select name="fc_lemword_type">
+                 <option value="all" #if $fc_lemword_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+                 <option value="any" #if $fc_lemword_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+                 <option value="none" #if $fc_lemword_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+               </select>
+               $_("of these items").
+              </td>
+            </tr>
+          </table>
+
+        #if $Wposlist
+          <h3>$_("PoS filter")</h3>
+          <table class="form">
+            <tr>
+              <th align="left">$_("Window"):</th>
+              <td colspan="2"><select name="fc_pos_window_type">
+                 <option value="left" #if $fc_pos_window_type == 'left' then 'selected="selected"' else ''# >$_("left")</option>
+                 <option value="right" #if $fc_pos_window_type == 'right' then 'selected="selected"' else ''# >$_("right")</option>
+                 <option value="both" #if $fc_pos_window_type == 'both' then 'selected="selected"' else ''# >$_("both")</option>
+               </select>
+               <select name="fc_pos_wsize">
+                 <option>1</option>
+                 <option>2</option>
+                 <option>3</option>
+                 <option>4</option>
+                 <option selected="selected">5</option>
+                 <option>7</option>
+                 <option>10</option>
+                 <option>15</option>
+               </select>
+               $_("tokens").
+              </td>
+            </tr>
+            <tr>
+              <th align="left" valign="top">$_("PoS"):<br/><span class="explanation">($_("use Ctrl+click for") <br/>
+        $_("multiple selection"))</span></th>
+            <td><select name="fc_pos" size="4" multiple="multiple" title="$_("Select one or more PoS tags")">
+            #for $w in $Wposlist
+              <option>$_($w.n)</option>
+            #end for
+              </select>
+            </td>
+            <td valign="top">
+              <select name="fc_pos_type">
+                 <option value="all" #if $fc_pos_type == 'all' then 'selected="selected"' else ''# >$_("all")</option>
+                 <option value="any" #if $fc_pos_type == 'any' then 'selected="selected"' else ''# >$_("any")</option>
+                 <option value="none" #if $fc_pos_type == 'none' then 'selected="selected"' else ''# >$_("none")</option>
+               </select>
+               $_("of these items").
+              </td>
+            </tr>
+          </table>
+        #end if
+    </div>
+    </fieldset>
+#end def
+
+
+#def specify_meta_form
+
+<fieldset id="specify-query-metainformation" class="inactive">
+      <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information")
+      <img class="status over-img" src="../files/img/expand.png" /></a></legend>
+
+      #if $metadata_desc
+      <div class="desc">
+        #filter None#$metadata_desc#end filter#
+      </div>
+      #end if
+      <div class="contents">
+          <table>
+              <tr>
+                  <td>
+                    #filter None
+                    $tt_sel
+                    #end filter
+              </td></tr>
+          </table>
+      </div>
+</fieldset>
+
+#end def
+
+
