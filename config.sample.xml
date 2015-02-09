@@ -5,6 +5,7 @@
         <log_file_size>1000000</log_file_size>
         <log_num_files>5</log_num_files>
         <debug>true</debug>
+        <profile_log_path>/optional/path/used/for/profiling/output/if/debug/level/is/2</profile_log_path>
         <max_attr_list_size>30</max_attr_list_size>
         <administrators extension-by="ucnk">
             <user>johndoe</user>
