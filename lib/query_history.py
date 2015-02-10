@@ -75,7 +75,7 @@ class Export(object):
     def _action_url(row):
         url_params = {}
         url_params.update(row)
-        url_params['query'] = urllib.quote(url_params['query'])
+        url_params['query'] = urllib.quote(url_params['query'].encode('utf-8'))
         query_url = [('first_form?corpname=%(corpname)s&%(query_type)s=%(query)s&queryselector=%(query_type)srow'
                       '&usesubcorp=%(subcorpname)s') % url_params]
         params = url_params.get('params', None)
