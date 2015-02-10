@@ -216,7 +216,7 @@ class LiveData {
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             $(ajaxAnimElm).remove();
-                            self.pluginApi.showMessage(model.MsgType.error, errorThrown);
+                            self.pluginApi.showMessage("error", errorThrown);
                         }
                     });
             },

@@ -35,7 +35,7 @@ declare module model {
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader();
-        showMessage(type:any, message:string); // TODO type: MsgType vs string
+        showMessage(type:string, message:string); // TODO type: MsgType vs string
         translate(text:string):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
@@ -43,11 +43,6 @@ declare module model {
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
     }
-
-    /**
-     * User message types
-     */
-    export enum MsgType {info, error, warning, plain }
 
     /**
      * This contains extensions required by pages which contain query input form
@@ -147,7 +142,7 @@ declare module "tpl/document" {
 
         selectText(elm:string):void;
 
-        showMessage(type:model.MsgType, message:string);
+        showMessage(type:string, message:string);
 
         contextHelp(triggerElm:HTMLElement, text:string);
 
