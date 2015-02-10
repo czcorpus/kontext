@@ -690,14 +690,14 @@ class Kontext(Controller):
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
-            params = {
-                'default_attr': self.default_attr,
-                'qmcase': self.qmcase
-            }
+            params = {}
             if query_type == 'lemma':
                 params['lpos'] = self.lpos
             elif query_type == 'word':
                 params['wpos'] = self.wpos
+                params['qmcase'] = self.qmcase
+            elif query_type == 'cql':
+                params['default_attr'] = self.default_attr
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
                                         subcorpname=self.usesubcorp, query=query, query_type=query_type, params=params)
 
