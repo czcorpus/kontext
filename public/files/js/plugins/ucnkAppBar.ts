@@ -20,8 +20,6 @@
 /// <reference path="../../ts/declarations/document.d.ts" />
 /// <reference path="../../ts/declarations/dynamic.d.ts" />
 
-import model = require('tpl/document');
-
 export class AppBar implements model.Plugin {
 
     pluginApi:model.PluginApi;
