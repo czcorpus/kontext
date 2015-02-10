@@ -40,7 +40,7 @@ export class AppBar implements model.Plugin {
         });
 
         promise.fail(function(jqXHR, textStatus, errorThrown) {
-             self.pluginApi.showMessage(model.MsgType.error, errorThrown); // TODO
+             self.pluginApi.showMessage("error", errorThrown); // TODO
         });
     };
 

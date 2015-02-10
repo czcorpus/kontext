@@ -342,7 +342,7 @@ export class QueryHistory {
 
             prom.done(function (data) {
                     if (data.hasOwnProperty('error')) {
-                        self.pluginApi.showMessage(model.MsgType.error, data.error);
+                        self.pluginApi.showMessage("error", data.error);
 
                     } else {
                         if (!this.boxElm) {
@@ -352,7 +352,7 @@ export class QueryHistory {
                     }
             });
             prom.fail(function (err) {
-                self.pluginApi.showMessage(model.MsgType.error, err.statusText);
+                self.pluginApi.showMessage("error", err.statusText);
             });
 
         } else { // data are already loaded - let's just reuse it
