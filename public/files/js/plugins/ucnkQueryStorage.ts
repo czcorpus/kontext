@@ -70,6 +70,7 @@ export interface QueryHistoryRecord {
     humanCorpname: string;
     url: string;
     query: string;
+    details: string;
 }
 
 /**
@@ -436,7 +437,8 @@ export class QueryHistory {
 
             tbl.append(listItem);
             listItem.append(link);
-            listItem.append('&nbsp;<span class="corpname">(' + v.query_type_translated + ', ' + v.humanCorpname + subcorpSuff + ')</span>');
+            listItem.append('&nbsp;<span class="corpname">(' + v.query_type_translated + ', '
+                + v.humanCorpname + subcorpSuff + (v.details ? ', ' + v.details : '') + ')</span>');
             listItem.wrapInner('<span class="wrapper"></span>');
         });
         this.highlightCurrentRow();
