@@ -2114,6 +2114,15 @@ msgstr "KWIC/věta/zarovnání"
 msgid "Show KWICs"
 msgstr "Režim KWIC"
 
+msgid "details"
+msgstr "podrobnosti"
+
+msgid "case sensitive"
+msgstr "rozlišovat velikost písmen"
+
+msgid "default attr."
+msgstr "výchozí atribut"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

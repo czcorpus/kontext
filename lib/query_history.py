@@ -68,7 +68,7 @@ class Export(object):
             elif query_type == 'lemma' and data.get('lpos', None):
                 ans.append(pos_map.get(data['lpos'], '?'))
             elif query_type == 'cql' and data.get('default_attr', None):
-                ans.append(_('default attr.: %s') % data['default_attr'])
+                ans.append(_('default attr.') + ': %s' % data['default_attr'])
             return ', '.join(ans)
 
     @staticmethod
@@ -78,7 +78,10 @@ class Export(object):
         url_params['query'] = urllib.quote(url_params['query'])
         query_url = [('first_form?corpname=%(corpname)s&%(query_type)s=%(query)s&queryselector=%(query_type)srow'
                       '&usesubcorp=%(subcorpname)s') % url_params]
-        for k, v in url_params.get('params', {}).items():
+        params = url_params.get('params', None)
+        if not params:
+            params = {}
+        for k, v in params.items():
             query_url.append('%s=%s' % (k, urllib.quote(str(v))))
         return '&'.join(query_url)
 
