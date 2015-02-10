@@ -1976,8 +1976,8 @@ class Actions(Kontext):
                 root = (root,)
 
             ans = []
-            ans_item = {}
             for item in root:
+                ans_item = {}
                 if 'ref' in item:
                     ans_item['ref'] = item['ref']
                 ans_item['left_context'] = merge_conc_line_parts(item[left_key])
