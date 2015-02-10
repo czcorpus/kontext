@@ -302,13 +302,22 @@ define('conf', [], function () {
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
                 <ul class="submenu">
-                    #if $viewmode == 'sen'
-                    <li class="separ"><a title="$_("Key Words In Context")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_('KWIC')/$_('Sentence')</a></li>
+                    #if not $align
+                        #if $viewmode == 'sen'
+                        <li class="separ"><a title="$_("Show KWICs")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_('KWIC')/$_('Sentence')</a></li>
+                        #else
+                        <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_('KWIC')/$_("Sentence")</a></li>
+                        #end if
                     #else
-                    <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_('KWIC')/$_("Sentence")</a></li>
+                    <li class="separ">
+                    #if $viewmode == 'kwic'
+                    <a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
+                    #elif $viewmode == 'sen'
+                    <a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
+                    #elif $viewmode == 'align'
+                    <a title="$_("Show KWICSs")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
                     #end if
-                    #if $align
-                    <li class="separ"><a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$cached['fromp']">$_("Alignment")</a></li>
+                    </li>
                     #end if
                     <li class="separ"><a href="viewattrs?$q;$globals;fromp=$cached['fromp']">$_("Attributes, structures and references")&#8230;</a></li>
                     <li><a href="viewopts?$q;$globals;fromp=$cached['fromp']">$_("General concordance view options")&#8230;</a></li>

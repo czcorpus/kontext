@@ -2108,6 +2108,12 @@ msgstr "%s Zkontrolujte prosím zadání a zvolený typ dotazu."
 msgid "Failed to calculate the concordance. Please try again."
 msgstr "Nepodařilo se vytvořit konkordanci. Zkuste prosím akci opakovat."
 
+msgid "KWIC/Sentence/Alignment"
+msgstr "KWIC/věta/zarovnání"
+
+msgid "Show KWICs"
+msgstr "Režim KWIC"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
