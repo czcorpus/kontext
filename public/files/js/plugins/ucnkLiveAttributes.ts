@@ -22,7 +22,6 @@
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 
 import popupBox = require("popupbox");
-import model = require("tpl/document");
 
 function stripPrefix(s: string): string {
     var x = /^sca_(.+)$/,

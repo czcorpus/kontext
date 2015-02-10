@@ -20,36 +20,14 @@
 /// <reference path="popupbox.d.ts" />
 /// <reference path="dynamic.d.ts" />
 
-declare module "tpl/document" {
-
-    import popupBox = require("popupbox");
-
-
-    /**
-     * User message types
-     */
-    export enum MsgType {info, error, warning, plain }
-
+/**
+ * This module provides type declarations needed by other modules
+ * without interfering with 'real' document (aka model) module.
+ */
+declare module model {
 
     /**
-     *
-     */
-    interface Promises {
-
-        add(name:string, value:JQueryDeferred<any>);
-
-        add(obj:{[name:string]: JQueryDeferred<any>});
-
-        contains(key:string):boolean;
-
-        get(key:string):JQueryDeferred<any>;
-
-        doAfter(promiseId:string, fn:() => any);
-    }
-
-
-    /**
-     *
+     * An interface used by KonText plug-ins
      */
     export interface PluginApi {
         conf(key:string):any;
@@ -67,9 +45,14 @@ declare module "tpl/document" {
     }
 
     /**
+     * User message types
+     */
+    export enum MsgType {info, error, warning, plain }
+
+    /**
      * This contains extensions required by pages which contain query input form
      */
-    export interface QueryPagePluginApi extends PluginApi {
+    export interface QueryPagePluginApi extends model.PluginApi {
         bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void);
     }
 
@@ -77,18 +60,39 @@ declare module "tpl/document" {
      *
      */
     export interface Plugin {
-        init(api:PluginApi):void;
+        init(api:model.PluginApi):void;
+    }
+
+    /**
+     *
+     */
+    export interface Closeable {
+        close(): void;
+    }
+}
+
+
+declare module "tpl/document" {
+
+    import popupBox = require("popupbox");
+
+    /**
+     *
+     */
+    interface Promises {
+        add(name:string, value:JQueryDeferred<any>);
+        add(obj:{[name:string]: JQueryDeferred<any>});
+        contains(key:string):boolean;
+        get(key:string):JQueryDeferred<any>;
+        doAfter(promiseId:string, fn:() => any);
     }
 
     /**
      *
      */
     export interface CorpusInfoBox {
-
         appendAttribList(attribListData:{name:string; size:number; error?:string}[], jqAttribList:JQuery);
-
         appendStructList(structListData:Array<number>, jqStructList:JQuery);
-
         createCorpusInfoBox(tooltipBox:popupBox.TooltipBox, doneCallback:() => any);
     }
 
@@ -96,23 +100,15 @@ declare module "tpl/document" {
      *
      */
     interface MainMenu {
-
         init():void;
-
         getActiveSubmenuId():string;
-
         setActiveSubmenuId(id:string):void;
-
         closeSubmenu(id:string):void;
-
         getHiddenSubmenu(li:HTMLElement):JQuery;
-
         openSubmenu(activeLi:HTMLElement):void;
-
     }
 
-
-    /**
+        /**
      *
      */
     export interface LayoutModel {
@@ -151,7 +147,7 @@ declare module "tpl/document" {
 
         selectText(elm:string):void;
 
-        showMessage(type:MsgType, message:string);
+        showMessage(type:model.MsgType, message:string);
 
         contextHelp(triggerElm:HTMLElement, text:string);
 
@@ -193,15 +189,7 @@ declare module "tpl/document" {
 
         pluginApi():Plugin;
     }
-
-    /**
-     *
-     */
-    export interface Closeable {
-        close(): void;
-    }
 }
-
 
 
 
