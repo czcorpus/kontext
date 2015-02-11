@@ -14,6 +14,21 @@ A simple featured_corpora plug-in implementation. List is taken
 from defined XML subtree (/kontext/plugins/featured_corpora/list)
 and compared with user-available corpora - the intersection of
 both sets is returned.
+
+Expected XML:
+...
+<plugins>
+...
+  <featured_corpora>
+    <module>default_featured_corpora</module>
+    <list>
+      <item>corpus_id</item>
+      <item>another_corpus_id</item>
+      ...
+    </list>
+  </featured_corpora>
+...
+</plugins>
 """
 
 from abstract.featured_corpora import AbstractFeaturedCorpora
