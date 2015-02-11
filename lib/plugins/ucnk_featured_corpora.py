@@ -23,6 +23,21 @@ This allows promoting a corpus with multiple configurations (e.g.
 if KonText configuration promotes "BNC" and user has access to
 "limited/BNC" then she obtains "BNC" in her featured list too but
 once she selects it, "limited/BNC" will be loaded.
+
+Expected XML:
+...
+<plugins>
+...
+  <featured_corpora>
+    <module>default_featured_corpora</module>
+    <list>
+      <item>corpus_id</item>
+      <item>another_corpus_id</item>
+      ...
+    </list>
+  </featured_corpora>
+...
+</plugins>
 """
 
 from abstract.featured_corpora import AbstractFeaturedCorpora
