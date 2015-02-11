@@ -2123,8 +2123,8 @@ msgstr "rozlišovat velikost písmen"
 msgid "default attr."
 msgstr "výchozí atribut"
 
-msgid "It appears you have entered a CQL but the selected query type is different. Do you want to switch to the CQL mode?"
-msgstr "Vypadá to, že jste vložili CQL, ale zvolený typ dotazu je jiný. Chcete přepnout do režimu CQL?"
+msgid "Possible query type mismatch. Do you want to continue?"
+msgstr "Byl detekován možný nesoulad mezi zvoleným a faktickým typem dotazu. Chcete pokračovat?"
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"

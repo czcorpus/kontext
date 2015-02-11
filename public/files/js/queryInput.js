@@ -378,11 +378,12 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         return defer.promise();
     };
 
-    function isCqlInputTypeMismatch(inputElm, queryTypeElm) {
+    function isPossibleQueryTypeMismatch(inputElm, queryTypeElm) {
         var query = $(inputElm).val(),
             queryType = $(queryTypeElm).find('option:selected').data('type');
 
-        return queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query));
+        return queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query))
+            || queryType === 'cql' && (!/^(\s*"[^\"]+")+$/.exec(query) && !/\[[^\]]*\]/.exec(query));
     }
 
     /**
@@ -425,13 +426,13 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 }
             });
 
-            if (isCqlInputTypeMismatch(currQueryElm, queryTypeElm)) {
-                if (win.confirm(layoutModel.translate('cql_input_type_mismatch'))) {
-                    $('#mainform select.qselector').val('cqlrow');
-                    $('#mainform input.query').each(function () {
-                        $(this).val(null);
-                    });
-                    $('#mainform input.cql-input').val(currQuery);
+            if (isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
+                $('#mainform select.qselector').addClass('error-input');
+                $('#mainform input.query:visible').addClass('error-input');
+                if (!win.confirm(layoutModel.translate('query_type_mismatch'))) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    return false;
                 }
 
             } else if (cleanData.length > lib.maxEncodedParamsLength) {
