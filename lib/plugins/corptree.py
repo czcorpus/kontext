@@ -60,6 +60,7 @@ class CorpTree(object):
         self._messages = {}
         self._keywords = {}  # keyword (aka tags) database for corpora
         self._featured_keywords = set()  # keywords with specific promotion (e.g. "featured corpora")
+        self._favorite_keywords = set()  # keywords understood as user favorite access "labels/tags"
 
     def get_corplist_title(self, elm):
         """
@@ -107,8 +108,11 @@ class CorpTree(object):
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
-            if 'type' in k.attrib and k.attrib['type'] == 'featured':
-                self._featured_keywords.add(k.attrib['ident'])
+            if 'type' in k.attrib:
+                if k.attrib['type'] == 'featured':
+                    self._featured_keywords.add(k.attrib['ident'])
+                elif k.attrib['type'] == 'favorite':
+                    self._favorite_keywords.add(k.attrib['ident'])
             for lab in k.findall('./label'):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
@@ -131,13 +135,24 @@ class CorpTree(object):
     def get_all_corpus_keywords(self, lang):
         """
         returns:
-        list of 2-tuples (localized_label, featured_bool)
+        list of 2-tuples (localized_label, spec_prop)
+        where spec_prop is int such as that:
+        0 - no special property
+        1 - featured label
+        2 - favorite label
         """
+        def encode_prop(l_key):
+            if self.keyword_is_featured(l_key):
+                return 1
+            elif self.keyword_is_favorite(l_key):
+                return 2
+            else:
+                return 0
         ans = set()
         lang_key = lang.split('_')[0]
         for label_key, item in self._keywords.items():
             if lang_key in item:
-                ans.add((item[lang_key], self.keyword_is_featured(label_key)))
+                ans.add((item[lang_key], encode_prop(label_key)))
         return list(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):
@@ -192,6 +207,9 @@ class CorpTree(object):
 
     def keyword_is_featured(self, keyword_ident):
         return keyword_ident in self._featured_keywords
+
+    def keyword_is_favorite(self, keyword_ident):
+        return keyword_ident in self._favorite_keywords
 
     def _localize_corpus_info(self, data, lang_code):
         """
