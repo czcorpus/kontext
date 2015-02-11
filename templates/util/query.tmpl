@@ -112,7 +112,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
             <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input #unless $suff#history #end unless#" />
+            <span class="no-wrap">
+                <label>$_("Match case"):</label>
+                <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
+            </span>
         </td>
+
     </tr>
 
     #set $hidden = ($querytype == 'wordrow') and 'visible' or 'hidden'

@@ -554,7 +554,10 @@ class Actions(Kontext):
                 return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
         elif queryselector == 'phraserow':
             self._save_query(phrase, 'phrase')
-            return '"' + '" "'.join(phrase.split()) + '"'
+            if self.qmcase:
+                return ' '.join(['"%s"' % p for p in phrase.split()])
+            else:
+                return ' '.join(['"(?i)%s"' % p for p in phrase.split()])
         elif queryselector == 'wordrow':
             self._save_query(word, 'word')
             if qmcase:
