@@ -221,46 +221,6 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                 layoutModel.userSettings.set("errstdq", "err");
             }
         });
-
-        $('#make-concordance-button').on('click', function (event) {
-            var data = $('#mainform').serialize().split('&'),
-                cleanData = '',
-                unusedLangs = {},
-                belongsToUnusedLanguage,
-                dialogAns;
-
-            $('.parallel-corp-lang').each(function () {
-                if ($(this).css('display') === 'none') {
-                    unusedLangs[$(this).attr('id').substr(6)] = true;
-                }
-            });
-
-            belongsToUnusedLanguage = function (paramName) {
-                var p;
-
-                for (p in unusedLangs) {
-                    if (unusedLangs.hasOwnProperty(p)) {
-                        if (paramName.indexOf(p) > -1) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-
-            $.each(data, function (i, val) {
-                var items = val.split('=', 2);
-                if (items.length === 2 && items[1] && !belongsToUnusedLanguage(items[0])) {
-                    cleanData += '&' + items[0] + '=' + items[1];
-                }
-            });
-
-            if (cleanData.length > lib.maxEncodedParamsLength) {
-                $('#mainform').attr('method', 'POST').submit();
-                event.stopPropagation();
-                return false;
-            }
-        });
     };
 
     /**
@@ -322,6 +282,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
         promises = layoutModel.init(conf).add({
             misc : lib.misc(),
             bindStaticElements : lib.bindStaticElements(),
+            bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
+                $('#make-concordance-button'), layoutModel),
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
                 lib.extendedApi,
                 layoutModel.userSettings),

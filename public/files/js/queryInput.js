@@ -378,6 +378,68 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         return defer.promise();
     };
 
+    function isCqlInputTypeMismatch(inputElm, queryTypeElm) {
+        var query = $(inputElm).val(),
+            queryType = $(queryTypeElm).find('option:selected').data('type');
+
+        return queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query));
+    }
+
+    /**
+     *
+     * @param submitElm
+     * @param layoutModel
+     */
+    lib.bindBeforeSubmitActions = function (submitElm, layoutModel) {
+        $(submitElm).on('click', function (event) {
+            var currQueryElm = $('#mainform input.query:visible').get(0),
+                queryTypeElm = $('#mainform select.qselector').get(0),
+                currQuery = $(currQueryElm).val(),
+                data = $('#mainform').serialize().split('&'),
+                cleanData = '',
+                unusedLangs = {};
+
+            $('.parallel-corp-lang').each(function () {
+                if ($(this).css('display') === 'none') {
+                    unusedLangs[$(this).attr('id').substr(6)] = true;
+                }
+            });
+
+            function belongsToUnusedLanguage(paramName) {
+                var p;
+
+                for (p in unusedLangs) {
+                    if (unusedLangs.hasOwnProperty(p)) {
+                        if (paramName.indexOf(p) > -1) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            $.each(data, function (i, val) {
+                var items = val.split('=', 2);
+                if (items.length === 2 && items[1] && !belongsToUnusedLanguage(items[0])) {
+                    cleanData += '&' + items[0] + '=' + items[1];
+                }
+            });
+
+            if (isCqlInputTypeMismatch(currQueryElm, queryTypeElm)) {
+                if (win.confirm(layoutModel.translate('cql_input_type_mismatch'))) {
+                    $('#mainform select.qselector').val('cqlrow');
+                    $('#mainform input.query').each(function () {
+                        $(this).val(null);
+                    });
+                    $('#mainform input.cql-input').val(currQuery);
+                }
+
+            } else if (cleanData.length > lib.maxEncodedParamsLength) {
+                $('#mainform').attr('method', 'POST');
+            }
+        });
+    };
+
     /**
      * Generates PluginApi extended by bindFieldsetToggleEvent() method
      * required in 'first_form' and 'filter_form' actions

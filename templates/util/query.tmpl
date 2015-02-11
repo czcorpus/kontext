@@ -71,7 +71,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" id="iquery$suff" class="spec-chars iquery-input #unless $suff#history #end unless#" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+            <input type="text" id="iquery$suff" class="query spec-chars iquery-input #unless $suff#history #end unless#" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
         </td>
     </tr>
 
@@ -84,9 +84,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
             #if $q
-            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" />
+            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="query search lemma-input" />
             #else
-            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input #unless $suff#history #end unless#" />
+            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff"
+                   class="query spec-chars lemma-input #unless $suff#history #end unless#" />
             #end if
 
             #if $Lposlist
@@ -111,7 +112,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input #unless $suff#history #end unless#" />
+            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff"
+                   class="query spec-chars phrase-input #unless $suff#history #end unless#" />
             <span class="no-wrap">
                 <label>$_("Match case"):</label>
                 <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
@@ -127,7 +129,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input #unless $suff#history #end unless#" />
+            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff"
+                   class="query spec-chars word-input #unless $suff#history #end unless#" />
             #if $Wposlist
             <span class="no-wrap">
                 $_("PoS"):
@@ -154,7 +157,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <ul class="query-toolbox">
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
-            <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="spec-chars char-input" />
+            <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff"
+                   class="query spec-chars char-input" />
         </td>
     </tr>
 
@@ -186,7 +190,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
                 <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
             </ul>
-            <input id="cql$suff" class="#unless $suff#history #end unless#spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+            <input id="cql$suff" class="query #unless $suff#history #end unless#spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
 
             #if not $suff
             <span class="no-wrap">
