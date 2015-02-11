@@ -1069,7 +1069,6 @@ msgid "format"
 msgstr "formát"
 
 #: cmpltmpl/wordlist_form.py:355
-#, fuzzy
 msgid ""
 "Wordlist whitelists and blacklists must be plain text (.txt), encoded in "
 "UTF-8, with one item per line.  The items must correspond to the selected "
