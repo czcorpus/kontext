@@ -223,9 +223,13 @@ export class Search implements WidgetTab {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).append(item[0]).addClass('keyword');
-            if (item[2]) {
+            if (item[2] === 1) {
                 $(link).addClass('featured');
                 $(link).attr('title', 'featured'); // TODO translation
+
+            } else if (item[2] === 2) {
+                $(link).addClass('favorite');
+                $(link).attr('title', 'favorite'); // TODO translation
             }
             $(link).attr('data-srchkey', item[1]);
             $(link).on('click', function () {
