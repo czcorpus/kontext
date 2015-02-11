@@ -38,6 +38,8 @@ define(['tpl/document', 'queryInput', 'plugins/queryStorage', 'plugins/liveAttri
         var promises = layoutModel.init(conf).add({
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
                 lib.extendedApi, layoutModel.userSettings),
+            bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
+                $('#mainform input.submit'), layoutModel),
             updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
                 lib.extendedApi, layoutModel.userSettings),
             queryStorage : queryStorage.createInstance(lib.extendedApi),
