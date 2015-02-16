@@ -154,7 +154,7 @@ class TagVariantLoader(object):
         self.tagset_name = tagset_name
         self.variants_file = open(create_tag_variants_file_path(self.corpus_name))
         self.metadata_file = settings.conf_path()  # TODO
-        self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.tagset_name)
+        self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.corpus_name)
         self.lang = lang
 
     def get_variant(self, selected_tags):
