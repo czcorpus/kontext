@@ -106,6 +106,17 @@ def init_plugin(name, dependencies, module=None):
         raise e
 
 
+def cleanup_runtime_modules():
+    """
+    Makes app to forget previously faked modules which
+    ensures proper plugins initialization if not starting from scratch.
+    """
+    del sys.modules['plugins.export']
+    if 'plugins.corptree' in sys.modules:
+        del sys.modules['plugins.corptree']
+        del plugins.corptree
+
+
 def setup_plugins():
     """
     Sets-up all the plugins. Please note that they are expected
@@ -116,7 +127,6 @@ def setup_plugins():
     1 - name
     2 - dependencies
     """
-
     # required plugins
     init_plugin('db', (settings.get('plugins', 'db'),))
     init_plugin('sessions', (settings, plugins.db))
@@ -206,6 +216,7 @@ class App(object):
         Initializes the application and persistent objects/modules (settings, plugins,...)
         """
         setup_logger(settings)
+        cleanup_runtime_modules()
         setup_plugins()
         translation.load_translations(settings.get('global', 'translations'))
         l10n.configure(settings.get('global', 'translations'))
