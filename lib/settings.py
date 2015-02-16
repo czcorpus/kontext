@@ -227,14 +227,29 @@ def get_default_corpus(corplist):
         return get('corpora', 'default_corpora')[0]
 
 
+DEBUG_OFF = 0
+DEBUG_ON = 1
+DEBUG_AND_PROFILE = 2
+
+
+def debug_level():
+    """
+    Returns one of {0, 1, 2}, where
+    0: no debugging
+    1: debugging enabled (log.debug is recorded etc.)
+    2: debugging enabled and profiling enabled
+    """
+    value = get('global', 'debug', '0').lower()
+    return {'false': DEBUG_OFF, '0': DEBUG_OFF, 'true': DEBUG_ON, '1': DEBUG_ON, '2': DEBUG_AND_PROFILE}.get(value, DEBUG_OFF)
+
+
 def is_debug_mode():
     """
     Returns True if the application is in 'debugging mode'
     (which leads to more detailed error messages etc.).
     Otherwise it returns False.
     """
-    value = get('global', 'debug')
-    return value is not None and value.lower() in ('true', '1')
+    return debug_level() > DEBUG_OFF
 
 
 def supports_password_change():
