@@ -159,6 +159,7 @@ class CorpusManager(object):
         for item in paths:
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
             if canonical_id in simple_names or not use_db_whitelist:
+                corp_name = None
                 try:
                     corp_id = restrict_name_map[canonical_id]
                     corp = manatee.Corpus(corp_id)
