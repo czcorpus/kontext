@@ -146,7 +146,7 @@ define('conf', [], function () {
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
-    conf.stateParams = "$q;$globals";
+    conf.stateParams = "$q;$globals#if $align#&align=$align#end if#";
 
     conf.messages = {};
     #if $_anonymous
