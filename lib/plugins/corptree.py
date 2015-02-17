@@ -243,6 +243,8 @@ class CorpTree(object):
         returns:
         current corpus list if called in 'get mode'
         """
+        if not hasattr(thread_local, 'corplist'):
+            thread_local.corplist = []
         if v is None:
             return thread_local.corplist
         else:
@@ -263,7 +265,6 @@ class CorpTree(object):
         which means that any client-specific data must be thread-local.
         """
         self._lang(kwargs.get('lang', None))
-        self._list([])
         self._load()
 
 
