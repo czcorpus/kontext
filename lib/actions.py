@@ -2267,11 +2267,19 @@ class Actions(Kontext):
         q_id = self._store_conc_params()
         params = {
             'corpname': self.corpname,
-            'q': '~%s' % q_id
+            'q': '~%s' % q_id,
+            'viewmode': self.viewmode,
+            'attrs': self.attrs,
+            'attr_allpos': self.attr_allpos,
+            'ctxattrs': self.ctxattrs,
+            'structs': self.structs,
+            'refs': self.refs,
+            'viewmode': self.viewmode
         }
         if self.usesubcorp:
             params['usesubcorp'] = self.usesubcorp
-
+        if self.align:
+            params['align'] = self.align
         return {
             'id': q_id,
             'next_url': self.create_url('view', params)
