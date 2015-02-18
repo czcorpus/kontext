@@ -104,13 +104,12 @@ $_("Frequency list")#slurp
             <th></th>
             <th></th>
             #for $h in $b.Head
-            <th>
+            <th colspan="2">
                 <a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h.s;ftt_include_empty=$ftt_include_empty"
                 #if 'title' in $h# title="$h.title" #end if#>
                 $_($h.n)</a>
             </th>
             #end for
-            <th></th>
         </tr>
         </thead>
         <tbody>
@@ -130,17 +129,25 @@ $_("Frequency list")#slurp
                 #end if
             #for $w in $i.Word
             <td class="word monospace">$w.n</td>
+            <td></td>
             #end for
-            <td align="right" class="frequency">$format_number($i.freq, mask='%d')</td>
+            <td class="num" class="frequency">
+                $format_number($i.freq, mask='%d')
+            </td>
+            <td>
+                #if 'freqbar' in $i
+                <div class="bar" style="height:10px;width:${i['freqbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['freqbar']}" />
+                #elif 'fbar' in $i
+                <div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['fbar']}" />
+                #end if
+            </td>
             #if $i.has_key('rel')
-            <td align="right">$i.rel</td>
+            <td class="num">$i.rel</td>
+            <td>
+            <div class="bar" style="height:10px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['relbar']}" />
+            </td>
             #end if
-            #if $i.norel
-            <td><div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="10" width="$i.fbar" alt="${i['fbar']}" />
-                </td>
-            #else
-            <td><div class="bar" style="height:${i['freqbar']}px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" height="$i.freqbar" width="$i.relbar" alt="${i['relbar']}" /></td>
-            #end if
+
         </tr>
         #end for
         </tbody>
