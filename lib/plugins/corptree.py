@@ -282,6 +282,9 @@ class CorpTree(ThreadLocalData):
         self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
 
     def corplist(self):
+        """
+        Returns list of all defined corpora including all lang. variants of labels etc.
+        """
         if self._corplist is None:
             self._load()
         return self._corplist
@@ -321,7 +324,6 @@ class CorpTree(ThreadLocalData):
         which means that any client-specific data must be thread-local.
         """
         self._lang(kwargs.get('lang', None))
-        self._load()
 
 
 def create_instance(conf):
