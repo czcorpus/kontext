@@ -25,6 +25,7 @@ Required config.xml/plugins entries:
 """
 
 import threading
+import copy
 
 try:
     from markdown import markdown
@@ -153,8 +154,7 @@ class CorpTree(object):
         the data are localized - e.g. paths to files) by a single variant
         given passed lang_code.
         """
-        ans = {}
-        ans.update(data)
+        ans = copy.deepcopy(data)
 
         desc = ans['metadata']['desc']
         if lang_code in desc:
