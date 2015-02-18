@@ -886,7 +886,7 @@ class Actions(Kontext):
             'fcrit': self.urlencode([('fcrit', self.rec_recode(cr))
                                      for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
-            'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, 300, ml,
+            'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,
                                        self.ftt_include_empty, rel_mode) for cr in fcrit],
             'paging': 0,
             'concsize': conc.size(),

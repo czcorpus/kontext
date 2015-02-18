@@ -192,8 +192,7 @@ class PyConc(manatee.Concordance):
             ans[self.import_string(value)] = cnt
         return ans
 
-    def xfreq_dist(self, crit, limit=1, sortkey='f', normwidth=300, ml='',
-                   ftt_include_empty='', rel_mode=0):
+    def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0):
         """
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
@@ -203,7 +202,6 @@ class PyConc(manatee.Concordance):
         limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted values must be
                 greater than the limit)
         sortkey -- a key according to which the distribution will be sorted
-        normwidth -- specifies width of the bar representing highest frequency
         ml -- str, if non-empty then multi-level freq. distribution is generated
         ftt_include_empty -- str, TODO
         rel_mode -- {0, 1}, TODO
@@ -211,17 +209,18 @@ class PyConc(manatee.Concordance):
 
         # ml = determines how the bar appears (multilevel x text type)
         # import math
-        normheight = 15
+        normwidth_freq = 100
+        normwidth_rel = 100
 
         def compute_corrections(freqs, norms):
             from operator import add
             sumn = float(reduce(add, norms))
             if sumn == 0:
-                return float(normwidth) / max(freqs), 0
+                return float(normwidth_rel) / max(freqs), 0
             else:
                 sumf = float(reduce(add, freqs))
                 corr = min(sumf / max(freqs), sumn / max(norms))
-                return normwidth / sumf * corr, normwidth / sumn * corr
+                return normwidth_rel / sumf * corr, normwidth_rel / sumn * corr
 
         words = manatee.StrVector()
         freqs = manatee.NumVector()
@@ -277,12 +276,12 @@ class PyConc(manatee.Concordance):
                 }[rel_mode]
 
                 rel_bar = {
-                    0: 1 + int(f * tofbar * normwidth / (nf * tonbar * maxrel)),
-                    1: 1 + int(float(f) / maxf * normwidth)
+                    0: 1 + int(f * tofbar * normwidth_rel / (nf * tonbar * maxrel)),
+                    1: 1 + int(float(f) / maxf * normwidth_rel)
                 }[rel_mode]
 
                 freq_bar = {
-                    0: int(normheight * (f - minf + 1) / (maxf - minf + 1) + 1),
+                    0: int(normwidth_freq * float(f) / (maxf - minf + 1) + 1),
                     1: 10
                 }[rel_mode]
 
