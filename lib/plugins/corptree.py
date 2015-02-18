@@ -24,7 +24,6 @@ Required config.xml/plugins entries:
 </corptree>
 """
 
-import threading
 from collections import OrderedDict
 
 try:
@@ -33,10 +32,9 @@ except ImportError:
     markdown = lambda s: s
 from lxml import etree
 
+from structures import ThreadLocalData
 
-thread_local = threading.local()
-thread_local.lang = 'en'  # default language must be set
-thread_local.corplist = OrderedDict()
+DEFAULT_LANG = 'en'
 
 
 def translate_markup(s):
@@ -48,13 +46,15 @@ def translate_markup(s):
     return markdown(s.strip())
 
 
-class CorpTree(object):
+class CorpTree(ThreadLocalData):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
     """
 
     def __init__(self, file_path, root_xpath):
+        super(CorpTree, self).__init__(('lang',))
+        self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._messages = {}
@@ -260,27 +260,31 @@ class CorpTree(object):
         if corp_name != '':
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
-            if corp_name in self._list():
+            if corp_name in self.corplist():
                 if language is not None:
-                    return self._localize_corpus_info(self._list()[corp_name], lang_code=language)
+                    return self._localize_corpus_info(self.corplist()[corp_name], lang_code=language)
                 else:
-                    return self._list()[corp_name]
+                    return self.corplist()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly
 
-    def _load(self, force_load=False):
+    def _load(self):
         """
         Loads data from a configuration file
         """
-        if len(self._list()) == 0 or force_load:
-            data = []
-            with open(self.file_path) as f:
-                xml = etree.parse(f)
-                root = xml.find(self.root_xpath)
-                if root is not None:
-                    self._parse_corplist_node(root, data, path='/')
-            self._list([(item['id'].lower(), item) for item in data])
+        data = []
+        with open(self.file_path) as f:
+            xml = etree.parse(f)
+            root = xml.find(self.root_xpath)
+            if root is not None:
+                self._parse_corplist_node(root, data, path='/')
+        self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
+
+    def corplist(self):
+        if self._corplist is None:
+            self._load()
+        return self._corplist
 
     def _lang(self, v=None):
         """
@@ -296,33 +300,17 @@ class CorpTree(object):
         current language if called in 'get mode'
         """
         if v is None:
-            return thread_local.lang
+            if not self.haslocal('lang'):
+                self.setlocal('lang', DEFAULT_LANG)
+            return self.getlocal('lang')
         else:
-            thread_local.lang = v
-
-    def _list(self, v=None):
-        """
-        Sets or gets parsed data list.
-
-        arguments:
-        v -- (optional) if not None then current corpus list is set to the passed value else current
-        list is returned
-
-        returns:
-        current corpus list if called in 'get mode'
-        """
-        if not hasattr(thread_local, 'corplist'):
-            thread_local.corplist = OrderedDict()
-        if v is None:
-            return thread_local.corplist
-        else:
-            thread_local.corplist = OrderedDict(v)
+            self.setlocal('lang', v)
 
     def get(self):
         """
         Returns corpus tree data
         """
-        return self._list().values()
+        return self.corplist().values()
 
     def setup(self, **kwargs):
         """
