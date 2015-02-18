@@ -522,14 +522,15 @@ def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
 
 
 def get_full_ref(corp, pos):
+    corpus_encoding = corp.get_conf('ENCODING')
     data = {}
     refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str(pos)))
             for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'speech_segment_struct_attr')]
     data['Refs'] = [{'name': n == '#' and _('Token number') or corp.get_conf(n + '.LABEL') or n,
-                     'val': v} for n, v in refs]
+                     'val': import_string(v, corpus_encoding)} for n, v in refs]
     for n, v in refs:
-        data[n.replace('.', '_')] = v
+        data[n.replace('.', '_')] = import_string(v, corpus_encoding)
     return data
 
 
