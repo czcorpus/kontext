@@ -25,6 +25,7 @@ Required config.xml/plugins entries:
 """
 
 from collections import OrderedDict
+import copy
 
 try:
     from markdown import markdown
@@ -217,11 +218,8 @@ class CorpTree(ThreadLocalData):
         the data are localized - e.g. paths to files) by a single variant
         given passed lang_code.
         """
-        ans = {}
-        ans.update(data)
-
+        ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
-
         desc = ans['metadata']['desc']
         if lang_code in desc:
             ans['metadata']['desc'] = desc[lang_code]
