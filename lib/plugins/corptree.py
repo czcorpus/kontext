@@ -35,7 +35,6 @@ from lxml import etree
 
 thread_local = threading.local()
 thread_local.lang = 'en'  # default language must be set
-thread_local.corplist = []
 
 
 def translate_markup(s):
@@ -57,6 +56,7 @@ class CorpTree(object):
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._messages = {}
+        self._corplist = None
 
     def get_corplist_title(self, elm):
         """
@@ -201,18 +201,16 @@ class CorpTree(object):
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly
 
-    def _load(self, force_load=False):
+    def _load(self):
         """
         Loads data from a configuration file
         """
-        if len(self._list()) == 0 or force_load:
-            data = []
-            with open(self.file_path) as f:
-                xml = etree.parse(f)
-                root = xml.find(self.root_xpath)
-                if root is not None:
-                    self._parse_corplist_node(root, data, path='/')
-            self._list(data)
+        self._corplist = []
+        with open(self.file_path) as f:
+            xml = etree.parse(f)
+            root = xml.find(self.root_xpath)
+            if root is not None:
+                self._parse_corplist_node(root, self._corplist, path='/')
 
     def _lang(self, v=None):
         """
@@ -232,29 +230,19 @@ class CorpTree(object):
         else:
             thread_local.lang = v
 
-    def _list(self, v=None):
+    def corplist(self):
         """
-        Sets or gets parsed data list.
-
-        arguments:
-        v -- (optional) if not None then current corpus list is set to the passed value else current
-        list is returned
-
-        returns:
-        current corpus list if called in 'get mode'
+        Gets parsed data list (with all lang. versions of labels etc.).
         """
-        if not hasattr(thread_local, 'corplist'):
-            thread_local.corplist = []
-        if v is None:
-            return thread_local.corplist
-        else:
-            thread_local.corplist = v
+        if self._corplist is None:
+            self._load()
+        return self._corplist
 
     def get(self):
         """
         Returns corpus tree data
         """
-        return self._list()
+        return self.corplist()
 
     def setup(self, **kwargs):
         """
@@ -265,7 +253,6 @@ class CorpTree(object):
         which means that any client-specific data must be thread-local.
         """
         self._lang(kwargs.get('lang', None))
-        self._load()
 
 
 def create_instance(conf):
