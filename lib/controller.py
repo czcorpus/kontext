@@ -991,14 +991,13 @@ class Controller(object):
         # JSON
         if action_metadata.get('return_type') == 'json':
             if type(result) != JsonEncodedData:
-                json.dump(self.rec_recode(result, utf8_out=True), outf)
+                json.dump(result, outf)
             else:
                 print >> outf, result
         # Template
         elif type(result) is DictType:
             self._add_globals(result, methodname, action_metadata)
             self._add_undefined(result, methodname, action_metadata.get('vars', ()))
-            result = self.rec_recode(result)
             if template.endswith('.tmpl'):
                 TemplateClass = self._get_template_class(template[:-5])
                 result = TemplateClass(searchList=[result, self])
