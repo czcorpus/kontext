@@ -34,6 +34,14 @@ from structures import Nicedict
 import fallback_corpus
 
 
+def simplify_num(v):
+    if v > 1e9:
+        return '%dG' % (round(v / 1e9, 0))
+    if v > 1e6:
+        return '%dM' % (round(v / 1e6, 0))
+    return '%d' % (round(v / 1e3, 0) * 1e3,)
+
+
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
@@ -806,13 +814,6 @@ class Kontext(Controller):
             return fallback_corpus.EmptyCorpus()
 
     def _load_fav_corplist(self):
-        def simplify_num(v):
-            if v > 1e9:
-                return '%dG' % (round(v / 1e9, 0))
-            if v > 1e6:
-                return '%dM' % (round(v / 1e6, 0))
-            return '%d' % (round(v / 1e3, 0) * 1e3,)
-
         user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
         favorite_corpora = [fc for fc in user_corpora if fc['canonical_id'] in self.favorite_corpora]
         if len(favorite_corpora) == 0:
@@ -947,6 +948,7 @@ class Kontext(Controller):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         result['root_url'] = self.get_root_url()
+        result['static_url'] = '%sfiles/' % self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self._user_is_anonymous()
 

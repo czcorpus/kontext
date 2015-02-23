@@ -395,6 +395,26 @@ button#reset-tag-button {
   border: @input-border-radius;
 }
 
+.tt-suggestions .tt-suggestion {
+}
+
+.tt-suggestions .tt-suggestion a.is-fav,
+.tt-suggestions .tt-suggestion a.not-fav {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+  text-decoration: none;
+  padding-margin: 10pt;
+}
+
+.tt-suggestions .tt-suggestion a.is-fav {
+  background-image: url('../img/favorite.png');
+}
+
+.tt-suggestions .tt-suggestion a.not-fav {
+  background-image: url('../img/favorite_grey.png');
+}
+
 .tt-suggestions .tt-suggestion p {
   margin: 0;
   padding-bottom: 6px;

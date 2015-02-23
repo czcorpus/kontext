@@ -270,13 +270,39 @@ export class Search implements WidgetTab {
 
         $(this.srchField).typeahead(options, {
             displayKey : 'name',
-            source : matchingCorpora.ttAdapter()
-        });
-    /*
-        $(this.srchField).on('typeahead:opened', function () {
+            source : matchingCorpora.ttAdapter(),
+            templates: {
+                suggestion: function (item) {
+                    var ans,
+                        link = window.document.createElement('a');
 
+                    ans = $('<p>' + item.name + ' <span class="num">(~' + item.raw_size + ')</span> </p>');
+
+                    if (item.favorite) {
+                        $(link).addClass('is-fav');
+
+                    } else {
+                        $(link).addClass('not-fav');
+                    }
+                    $(link).append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />');
+                    $(link).on('click', function (event:JQueryEventObject) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if ($(link).hasClass('is-fav')) {
+                            $(link).removeClass('is-fav').addClass('not-fav');
+
+                        } else {
+                            $(link).removeClass('not-fav').addClass('is-fav');
+                        }
+                        return false;
+                    });
+                    ans.append(link);
+                    return ans;
+                }
+            }
         });
 
+        /*
         $(this.srchField).on('typeahead:closed', function () {
 
         });

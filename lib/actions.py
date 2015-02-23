@@ -19,7 +19,7 @@ import re
 import json
 import urllib
 
-from kontext import Kontext, ConcError
+from kontext import Kontext, ConcError, simplify_num
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
 import conclib
@@ -2341,6 +2341,11 @@ class Actions(Kontext):
             full_data = plugins.corptree.get_corpus_info(corp['id'], self.ui_lang)
             keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
             if matches_all([k in keywords for k in query_keywords]) and query_substrs in corp['name']:
+                corp['raw_size'] = simplify_num(corp['size'])
+                if corp['canonical_id'] in self.favorite_corpora:
+                    corp['favorite'] = True
+                else:
+                    corp['favorite'] = False
                 ans.append(corp)
         return ans
 
