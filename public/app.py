@@ -144,7 +144,6 @@ def setup_plugins():
         ('application_bar', (settings, plugins.auth)),
         ('live_attributes', ('corptree', settings)),
         ('query_mod', (settings,)),
-        ('featured_corpora', (settings, plugins.db)),
         ('subc_restore', (settings, plugins.db))
     )
 

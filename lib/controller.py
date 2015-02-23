@@ -768,12 +768,6 @@ class Controller(object):
 
         try:
             self._restore_ui_settings()
-
-            # plugins setup
-            for p in plugins.list_plugins():
-                if hasattr(p, 'setup') and callable(p.setup):
-                    p.setup(lang=self.ui_lang)
-
             self._init_session()
 
             if self._method_is_exposed(action_metadata):

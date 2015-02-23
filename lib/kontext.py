@@ -515,6 +515,7 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
+    # TODO: decompose this method
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
         Runs before main action is processed
@@ -577,7 +578,7 @@ class Kontext(Controller):
             named_args.update(json_data)
         for k in form.keys():
             self._url_parameters.append(k)
-            # must remove empty values, this should be achieved by
+            # must remove empty values, thi   s should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 key = str(k)
@@ -625,6 +626,11 @@ class Kontext(Controller):
             if access_level and self._user_is_anonymous():
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
+
+        # plugins setup
+        for p in plugins.list_plugins():
+            if callable(getattr(p, 'setup', None)):
+                p.setup(self)
 
         return path, selectorname, named_args
 
@@ -820,8 +826,6 @@ class Kontext(Controller):
             })
         for item in favorite_corpora:
             item['size'] = simplify_num(item['size'])
-        if plugins.has_plugin('featured_corpora'):
-            plugins.featured_corpora.mark_featured(user_corpora)
         return favorite_corpora
 
     def _add_corpus_related_globals(self, result, corpus):
@@ -840,8 +844,8 @@ class Kontext(Controller):
             result['corp_web'] = ''
 
         result['CorplistFn'] = self._load_fav_corplist
-        mkitem = lambda x: (x[0], x[0].lower().replace(' ', '_'), x[1])
-        corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords(self.ui_lang)]
+        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
+        corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
         corp_labels = l10n.sort(corp_labels, loc=self.ui_lang, key=lambda x: x[0])
 
         result['corpora_labels'] = json.dumps(corp_labels)
