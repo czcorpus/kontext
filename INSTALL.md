@@ -141,15 +141,19 @@ processing workflow, it is sometimes necessary to perform an additional configur
 operational. In such cases, the plug-in can implement a method *setup*:
 
 ```python
-def setup(self, **kwargs):
+def setup(self, controller_obj):
     # ask Controller something as it is already initialized
     pass
 ```
 
+This (optional) method is called in the end of the *_pre_dispatch()* operation. It means that all the properties
+of the controller are already set and available.
+
 But there is an important difference between *setup()* and *create_instance()*. Please recall the fact that there
 is always a single instance of a plug-in serving all the requests (within a single process). But in case of the *setup()*
 method, each request may pass different parameters and in a concurrent way. It means that all the request-specific data 
-(e.g. the language a client uses) must be thread-local.
+(e.g. the language a client uses) must be thread-local (you can inherit for such purpose from *structures.ThreadLocalData*
+which provides convenience methods like *setlocal*, *getlocal*, *haslocal*).
 
 ### Notes for developers
 

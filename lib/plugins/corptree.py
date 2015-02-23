@@ -47,21 +47,28 @@ def translate_markup(s):
     return markdown(s.strip())
 
 
+def call_controller(controller_obj, method, *args, **kwargs):
+    return apply(getattr(controller_obj, method), args, kwargs)
+
+
 class CorpTree(ThreadLocalData):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
     """
 
+    DEFAULT_FEATURED_KEY = 'featured'
+    DEFAULT_FAVORITE_KEY = 'favorite'
+
     def __init__(self, file_path, root_xpath):
-        super(CorpTree, self).__init__(('lang',))
+        super(CorpTree, self).__init__(('lang', 'favorite_corpora', 'featured_corpora'))  # <- thread local attributes
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._messages = {}
         self._keywords = {}  # keyword (aka tags) database for corpora
-        self._featured_keywords = set()  # keywords with specific promotion (e.g. "featured corpora")
-        self._favorite_keywords = set()  # keywords understood as user favorite access "labels/tags"
+        self._featured_keyword = None  # a keyword representing "featured" corpora
+        self._favorite_keyword = None  # a keyword representing user's "favorite" corpora
 
     def get_corplist_title(self, elm):
         """
@@ -70,9 +77,9 @@ class CorpTree(ThreadLocalData):
         ans = None
 
         if self._lang():
-            lang = self._lang().split('_')[0]
+            lang = self._get_iso639lang()
         else:
-            lang = 'en'
+            lang = DEFAULT_LANG
         if 'title' in elm.attrib:
             if elm.attrib['title']:
                 ans = elm.attrib['title']
@@ -106,18 +113,23 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def _parse_keywords(self, root):
+        if self.DEFAULT_FEATURED_KEY in root.attrib:
+            self._featured_keyword = root.attrib[self.DEFAULT_FEATURED_KEY]
+        else:
+            self._featured_keyword = self.DEFAULT_FEATURED_KEY
+
+        if self.DEFAULT_FAVORITE_KEY in root.attrib:
+            self._favorite_keyword = root.attrib[self.DEFAULT_FAVORITE_KEY]
+        else:
+            self._favorite_keyword = self.DEFAULT_FAVORITE_KEY
+
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
-            if 'type' in k.attrib:
-                if k.attrib['type'] == 'featured':
-                    self._featured_keywords.add(k.attrib['ident'])
-                elif k.attrib['type'] == 'favorite':
-                    self._favorite_keywords.add(k.attrib['ident'])
             for lab in k.findall('./label'):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
-    def _get_corpus_keywords(self, root):
+    def _get_corpus_keywords(self, corpus_id, root):
         """
         returns:
         OrderedDict(keyword_id => {...keyword labels...})
@@ -131,9 +143,11 @@ class CorpTree(ThreadLocalData):
                     ans[keyword] = self._keywords[keyword]
                 else:
                     ans[keyword] = keyword
+        if corpus_id in self.getlocal('favorite_corpora'):
+            ans[self._favorite_keyword] = self._keywords[self._favorite_keyword]
         return ans
 
-    def get_all_corpus_keywords(self, lang):
+    def get_all_corpus_keywords(self):
         """
         returns:
         list of 2-tuples (localized_label, spec_prop)
@@ -143,14 +157,14 @@ class CorpTree(ThreadLocalData):
         2 - favorite label
         """
         def encode_prop(l_key):
-            if self.keyword_is_featured(l_key):
+            if self.keyword_is_featured(l_key, localized=False):
                 return 1
-            elif self.keyword_is_favorite(l_key):
+            elif self.keyword_is_favorite(l_key, localized=False):
                 return 2
             else:
                 return 0
         ans = set()
-        lang_key = lang.split('_')[0]
+        lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
             if lang_key in item:
                 ans.add((item[lang_key], encode_prop(label_key)))
@@ -172,11 +186,12 @@ class CorpTree(ThreadLocalData):
             elif item.tag == 'corplist':
                 self._parse_corplist_node(item, data, path)
             elif item.tag == 'corpus':
+                corpus_id = item.attrib['ident'].lower()
                 web_url = item.attrib['web'] if 'web' in item.attrib else None
                 sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
 
                 ans = {
-                    'id': item.attrib['ident'].lower(),
+                    'id': corpus_id,
                     'path': path,
                     'web': web_url,
                     'sentence_struct': sentence_struct,
@@ -184,8 +199,7 @@ class CorpTree(ThreadLocalData):
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
-                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {},
-                                 'featured': False}
+                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {}}
                 }
 
                 ref_elm = item.find('reference')
@@ -203,14 +217,21 @@ class CorpTree(ThreadLocalData):
                     ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
-                    ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
+                    ans['metadata']['keywords'] = self._get_corpus_keywords(corpus_id, meta_elm)
                 data.append(ans)
 
-    def keyword_is_featured(self, keyword_ident):
-        return keyword_ident in self._featured_keywords
+    def keyword_is_featured(self, keyword_ident, localized=False):
+        if not localized:
+            return keyword_ident == self._featured_keyword
+        return self._keywords[self._featured_keyword][self._get_iso639lang()] == keyword_ident
 
-    def keyword_is_favorite(self, keyword_ident):
-        return keyword_ident in self._favorite_keywords
+    def keyword_is_favorite(self, keyword_ident, localized=False):
+        if not localized:
+            return keyword_ident == self._favorite_keyword
+        return self._keywords[self._favorite_keyword][self._get_iso639lang()] == keyword_ident
+
+    def keyword_is_special(self, keyword_ident, localized=False):
+        return self.keyword_is_favorite(keyword_ident, localized) or self.keyword_is_featured(keyword_ident, localized)
 
     def _localize_corpus_info(self, data, lang_code):
         """
@@ -307,13 +328,16 @@ class CorpTree(ThreadLocalData):
         else:
             self.setlocal('lang', v)
 
+    def _get_iso639lang(self):
+        return self._lang().split('_')[0]
+
     def get(self):
         """
         Returns corpus tree data
         """
         return self.corplist().values()
 
-    def setup(self, **kwargs):
+    def setup(self, controller_obj):
         """
         Interface method expected by KonText if a module wants to be set-up by
         some "late" information (like locales).
@@ -321,7 +345,8 @@ class CorpTree(ThreadLocalData):
         Please note that each request calls this method on the same instance
         which means that any client-specific data must be thread-local.
         """
-        self._lang(kwargs.get('lang', None))
+        self._lang(getattr(controller_obj, 'ui_lang', None))
+        self.setlocal('favorite_corpora', getattr(controller_obj, 'favorite_corpora', ()))
 
 
 def create_instance(conf):
