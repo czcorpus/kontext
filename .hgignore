@@ -8,6 +8,7 @@ tmp
 *.db
 *.pyc
 config.xml
+corplist.xml
 .directory
 node_modules
 public/files/js/min
