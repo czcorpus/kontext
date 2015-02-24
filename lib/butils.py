@@ -136,6 +136,33 @@ class CQLDetectWithin(object):
         return result
 
 
+def get_stack(num_skip=1):
+    """
+    Returns a list of all function calls leading up to this one.
+
+    arguments:
+    num_skip -- number of items to be skipped (default = 1 which is the most recent one, i.e. the get_stack call itself)
+    """
+    import inspect
+    import os
+    c = []
+    for item in inspect.stack()[num_skip:]:
+        c.append('%s(%s): %s()' % (os.path.realpath(item[1]), item[2], item[3]))
+    return c
+
+
+def log_stack(level='debug'):
+    """
+    Works in the similar way as get_stack() but the result is logged instead.
+
+    arguments:
+    level -- logging level to be used (default is 'debug')
+    """
+    import logging
+    fn = getattr(logging.getLogger('STACK'), level)
+    apply(fn, ('\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)]),))
+
+
 class FixedDict(object):
     """
     This class allows creating objects with predefined attributes
