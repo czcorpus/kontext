@@ -18,7 +18,7 @@
 
 import unittest
 
-from butils import FixedDict
+from structures import FixedDict
 
 
 class SampleDict(FixedDict):

@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
-import inspect
 
 try:
     import fcntl
@@ -161,25 +160,3 @@ def log_stack(level='debug'):
     import logging
     fn = getattr(logging.getLogger('STACK'), level)
     apply(fn, ('\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)]),))
-
-
-class FixedDict(object):
-    """
-    This class allows creating objects with predefined attributes
-    (defined via static properties). Any attempt to set attribute
-    not present as a static property raises AttributeError.
-    """
-    def __setattr__(self, key, value):
-        if not key in dict(inspect.getmembers(self.__class__)):
-            raise AttributeError('No such attribute: %s' % key)
-        else:
-            self.__dict__[key] = value
-
-    def __init__(self):
-        for item in inspect.getmembers(self.__class__):
-            if not item[0].startswith('__'):
-                self.__dict__[item[0]] = item[1]
-
-    def __iter__(self):
-        for k, v in self.__dict__.items():
-            yield k, v

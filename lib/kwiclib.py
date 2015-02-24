@@ -24,7 +24,7 @@ import logging
 import manatee
 from l10n import import_string, export_string
 from translation import ugettext as _
-from butils import FixedDict
+from structures import FixedDict
 
 
 def lngrp_sortcrit(lab, separator='.'):
