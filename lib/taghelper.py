@@ -20,6 +20,8 @@
 A collection of utilities to work with corpora grammatical tags. The most important
 service here is the TagVariantLoader which provides a backend for tag writing auto-complete
 functionality.
+
+Please note that this module requires a proper Corptree plug-in configuration and data.
 """
 
 import settings
@@ -86,7 +88,7 @@ def load_tag_descriptions(path, tagset_name, lang):
     """
     lang = lang.split('_')[0]
     xml = etree.parse(open(path))
-    root = xml.find('corpora/tagsets/tagset[@ident="%s"]' % tagset_name)
+    root = xml.find('/tagsets/tagset[@ident="%s"]' % tagset_name)
     if root is None:
         raise TagHelperException('Failed to find tagset %s' % tagset_name)
 
@@ -153,7 +155,7 @@ class TagVariantLoader(object):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.variants_file = open(create_tag_variants_file_path(self.corpus_name))
-        self.metadata_file = settings.conf_path()  # TODO
+        self.metadata_file = settings.get('plugins', 'corptree')['file']
         self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.corpus_name)
         self.lang = lang
 
@@ -181,7 +183,7 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
+        tagset = load_tag_descriptions(self.metadata_file, self.tagset_name, self.lang)
         item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
 
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
@@ -244,7 +246,7 @@ class TagVariantLoader(object):
         a dictionary where keys represent tag-string position and values are lists of
         tuples (ID, description)
         """
-        tagset = load_tag_descriptions(settings.conf_path(), self.tagset_name, self.lang)
+        tagset = load_tag_descriptions(self.metadata_file, self.tagset_name, self.lang)
         item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
