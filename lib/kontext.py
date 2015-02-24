@@ -984,6 +984,12 @@ class Kontext(Controller):
         result['format_number'] = partial(format_number)
 
         result['error_report_url'] = settings.get('global', 'error_report_url', None)
+        
+        if settings.contains('global', 'error_report_params'):
+            result['error_report_hasparams'] = True
+            result['error_report_params'] = settings.get_full('global', 'error_report_params')
+        else: 
+            result['error_report_hasparams'] = False
 
         result['qunit_test'] = self.qunit
         if self.qunit and settings.is_debug_mode():
