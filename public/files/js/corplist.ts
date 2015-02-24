@@ -303,6 +303,7 @@ export class Search implements WidgetTab {
                         $(link).addClass('not-fav');
                     }
                     $(link)
+                        .attr('title', 'In my favorites? (click to change)') // TODO translate
                         .append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />')
                         .on('click', function (event:JQueryEventObject) {
                             var reqData:any = {},
