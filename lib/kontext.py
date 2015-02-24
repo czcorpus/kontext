@@ -847,7 +847,6 @@ class Kontext(Controller):
         result['CorplistFn'] = self._load_fav_corplist
         mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
         corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
-        corp_labels = l10n.sort(corp_labels, loc=self.ui_lang, key=lambda x: x[0])
 
         result['corpora_labels'] = json.dumps(corp_labels)
         if self.usesubcorp:

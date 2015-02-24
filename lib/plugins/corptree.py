@@ -66,7 +66,7 @@ class CorpTree(ThreadLocalData):
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._messages = {}
-        self._keywords = {}  # keyword (aka tags) database for corpora
+        self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
         self._featured_keyword = None  # a keyword representing "featured" corpora
         self._favorite_keyword = None  # a keyword representing user's "favorite" corpora
 
@@ -163,12 +163,12 @@ class CorpTree(ThreadLocalData):
                 return 2
             else:
                 return 0
-        ans = set()
+        ans = []
         lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
             if lang_key in item:
-                ans.add((item[lang_key], encode_prop(label_key)))
-        return list(ans)
+                ans.append((item[lang_key], encode_prop(label_key)))
+        return ans
 
     def _parse_corplist_node(self, root, data, path='/'):
         """
