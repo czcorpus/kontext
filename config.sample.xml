@@ -20,7 +20,10 @@
             <language label="slovensky">sk_SK</language>
         </translations>
         <conc_persistence_time>1800</conc_persistence_time>
-        <error_report_url>http://acmecorpora.org/support</error_report_url>
+        <error_report_url>http://acmecorpora.org/support</error_report_url>      
+        <error_report_params>    
+          <param name="query_url">?queryurl={url}</param>          
+        </error_report_params>
         <anonymous_user_id>0</anonymous_user_id>
     </global>
     <plugins>
