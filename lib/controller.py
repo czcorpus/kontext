@@ -259,7 +259,6 @@ class Controller(object):
         self.ui_lang = ui_lang
         self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
         self._session = {}
-        self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._system_messages = []
@@ -694,17 +693,6 @@ class Controller(object):
             if len(self._system_messages) > 0:
                 result['message_auto_hide_interval'] = 0
 
-    def _restore_ui_settings(self):
-        """
-        Loads cookie-stored user interface settings.
-        """
-        if 'ui_settings' in self._cookies:
-            try:
-                self._ui_settings = json.loads(self._cookies['ui_settings'].value)
-            except ValueError as e:
-                logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
-                self._ui_settings = {}
-
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
 
@@ -767,7 +755,6 @@ class Controller(object):
         action_metadata = self._get_method_metadata(path[0])
 
         try:
-            self._restore_ui_settings()
             self._init_session()
 
             if self._method_is_exposed(action_metadata):
@@ -953,13 +940,6 @@ class Controller(object):
         -------
         bool : True if content should follow else False
         """
-        # The 'ui_settings' cookie is used only by JavaScript client-side code
-        # which always expects the cookie to exists.
-        if 'ui_settings' not in self._cookies:
-            self._cookies['ui_settings'] = None
-        self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
-        self._cookies['ui_settings'] = json.dumps(self._ui_settings)
-
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
         elif return_type == 'xml':
