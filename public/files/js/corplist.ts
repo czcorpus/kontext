@@ -19,6 +19,7 @@
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/typeahead.d.ts" />
 /// <reference path="../ts/declarations/dynamic.d.ts" />
+/// <reference path="../ts/declarations/document.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 
@@ -84,6 +85,18 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
 export interface WidgetTab {
     show():void;
     hide():void;
+}
+
+
+interface SearchResponse {
+    name: string;
+    favorite: boolean;
+    canonical_id: string;
+    raw_size: number;
+    path: string;
+    desc: string;
+    id: string;
+    size: number;
 }
 
 /**
@@ -185,6 +198,8 @@ export class WidgetMenu {
  */
 export class Search implements WidgetTab {
 
+    pluginApi:model.PluginApi;
+
     widgetWrapper:HTMLElement;
 
     itemClickCallback:CorplistItemClick;
@@ -193,11 +208,14 @@ export class Search implements WidgetTab {
 
     srchField:HTMLElement;
 
+    bloodhound:Bloodhound<string>;  // Typeahead's suggestion engine
+
     /**
      *
      * @param widgetWrapper
      */
-    constructor(widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+        this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
@@ -257,8 +275,8 @@ export class Search implements WidgetTab {
             remote: remoteOptions,
             limit: 100 // TODO configurable
         };
-        var matchingCorpora = new Bloodhound(bhOptions);
-        matchingCorpora.initialize();
+        this.bloodhound = new Bloodhound(bhOptions);
+        this.bloodhound.initialize();
 
         var options:Twitter.Typeahead.Options = {
             name: 'corplist',
@@ -270,9 +288,9 @@ export class Search implements WidgetTab {
 
         $(this.srchField).typeahead(options, {
             displayKey : 'name',
-            source : matchingCorpora.ttAdapter(),
+            source : this.bloodhound.ttAdapter(),
             templates: {
-                suggestion: function (item) {
+                suggestion: function (item:SearchResponse) {
                     var ans,
                         link = window.document.createElement('a');
 
@@ -284,29 +302,47 @@ export class Search implements WidgetTab {
                     } else {
                         $(link).addClass('not-fav');
                     }
-                    $(link).append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />');
-                    $(link).on('click', function (event:JQueryEventObject) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if ($(link).hasClass('is-fav')) {
-                            $(link).removeClass('is-fav').addClass('not-fav');
+                    $(link)
+                        .append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />')
+                        .on('click', function (event:JQueryEventObject) {
+                            var reqData:any = {},
+                                favState:boolean;
 
-                        } else {
-                            $(link).removeClass('not-fav').addClass('is-fav');
-                        }
-                        return false;
-                    });
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if ($(link).hasClass('is-fav')) {
+                                $(link).removeClass('is-fav').addClass('not-fav');
+                                favState = false;
+
+                            } else {
+                                $(link).removeClass('not-fav').addClass('is-fav');
+                                favState = true;
+                            }
+                            reqData[item.canonical_id] = favState;
+
+                            self.pluginApi.ajax('set_favorite_corp',
+                                {
+                                    method : 'POST',
+                                    data : {'data': JSON.stringify(reqData)},
+                                    success : function () {
+                                        self.bloodhound.clearRemoteCache();
+
+                                    },
+                                    error : function () {
+                                        self.bloodhound.clearRemoteCache();
+                                        self.pluginApi.showMessage('error', 'Failed to (un)set item as favorite');
+                                    }
+                                }
+                            );
+
+                            return false;
+                        });
                     ans.append(link);
                     return ans;
                 }
             }
         });
 
-        /*
-        $(this.srchField).on('typeahead:closed', function () {
-
-        });
-    */
         $(this.srchField).on('typeahead:selected', function (x, suggestion) {
             self.itemClickCallback({
                 data : function (key:string) {
@@ -314,7 +350,6 @@ export class Search implements WidgetTab {
                 }
             });
         });
-
     }
 
     /**
@@ -413,6 +448,8 @@ export class Corplist {
 
     private data:Array<CorplistItem>;
 
+    private pluginApi:model.PluginApi;
+
     private visible:Visibility;
 
     private widgetClass:string;
@@ -435,12 +472,13 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, currCorpIdent, currCorpname, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pluginApi:model.PluginApi, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
+        this.pluginApi = pluginApi;
         this.parentForm = parentForm;
-        this.currCorpIdent = currCorpIdent;
-        this.currCorpname = currCorpname;
+        this.currCorpIdent = pluginApi.conf('corpname');
+        this.currCorpname = pluginApi.conf('humanCorpname');
         this.visible = Visibility.HIDDEN;
         this.widgetClass = 'corplist-widget'; // TODO options
     }
@@ -523,7 +561,7 @@ export class Corplist {
         this.mainMenu = new WidgetMenu(this.jqWrapper);
 
         // search func
-        this.searchBox = new Search(this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
         this.favoritesBox = new Favorites(this.widgetWrapper, this.data, this.onItemClick);
@@ -558,12 +596,12 @@ export class Corplist {
  * @param selectElm
  * @param options
  */
-export function create(selectElm:HTMLElement, options:Options):Corplist {
+export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
     data = fetchDataFromSelect(selectElm);
-    corplist = new Corplist(options, data, conf.corpname, conf.humanCorpname, $(selectElm).closest('form').get(0));
+    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }
