@@ -145,14 +145,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
         tc = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
-            layoutModel.conf.messages,
-            {
-                clickableText : true,
-                searchable : true,
-                customHeader : $('#mainform .featured-corpora'),
-                defaultButtonLabel : layoutModel.conf.corpname
-            },
-            layoutModel.formChangeCorpus
+            layoutModel.pluginApi()
         );
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 

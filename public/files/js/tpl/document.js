@@ -182,6 +182,16 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
+     *
+     * @param url
+     * @param options
+     * @return {JQueryXHR}
+     */
+    lib.ajax2 = function (url, options) {
+
+    };
+
+    /**
      * Wrapper for jQuery's $.ajax function which is able
      * to handle error states using client's capabilities
      * (error messages, page reload etc.).
@@ -1144,6 +1154,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
 
             contextHelp : function (triggerElm, text) {
                 return self.contextHelp(triggerElm, text);
+            },
+
+            formChangeCorpus : function (event) {
+                return self.formChangeCorpus(event);
             }
         };
     };
