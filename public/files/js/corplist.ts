@@ -294,7 +294,7 @@ export class Search implements WidgetTab {
                     var ans,
                         link = window.document.createElement('a');
 
-                    ans = $('<p>' + item.name + ' <span class="num">(~' + item.raw_size + ')</span> </p>');
+                    ans = $('<p>' + item.name + ' <span class="num">(size: ~' + item.raw_size + ')</span> </p>'); // TODO translate
 
                     if (item.favorite) {
                         $(link).addClass('is-fav');
@@ -411,7 +411,7 @@ export class Favorites implements WidgetTab {
             jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
                 + ' title="' + item.description + '"'
                 + ' href="/first_form?corpname=' + item.value + '" data-id="' + item.value + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size + '</td></tr>');
+                + '<td class="num">~' + item.size + '</td></tr>'); // TODO translate
         });
 
         jqWrapper.find('a.corplist-item').each(function() {
