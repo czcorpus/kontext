@@ -785,7 +785,7 @@ class Kontext(Controller):
         """
         Any valid cookie is loaded and available but only these are saved by KonText
         """
-        return 'ui_settings', settings.get('plugins', 'auth')['auth_cookie_name']
+        return tuple([settings.get('plugins', 'auth')['auth_cookie_name']])
 
     def _corp(self):
         """
@@ -998,6 +998,8 @@ class Kontext(Controller):
         else:
             result['client_model_dir'] = 'tpl'
             result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
+
+        result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')
 
         # now we store specific information (e.g. concordance parameters)
         # to keep user informed about data he is working with on any page

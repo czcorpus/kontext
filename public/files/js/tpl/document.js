@@ -1256,39 +1256,71 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
      * @return {Promises}
      */
     lib.init = function (conf) {
-        var settingsObj,
+        var storageProvider,
             promises = new Promises();
 
-        try {
-            settingsObj = JSON.parse($.cookie('ui_settings'));
+        if (typeof win.localStorage === 'object') {
+            storageProvider = win.localStorage;
 
-        } catch (Error) {
-            settingsObj = {};
+        } else {
+            storageProvider = {
+                key : function (idx) {},
+                getItem : function (key) {},
+                setItem : function (key, value) {},
+                removeItem : function (key) {},
+                length : 0
+            };
         }
 
         lib.promises = {};
         lib.conf = conf;
-        lib.userSettings = {
-            data: settingsObj,
 
-            cookieParams: {
-                path: lib.conf.rootPath
+        lib.userSettings = {
+            storage : storageProvider,
+
+            storageKey : 'kontext_ui',
+
+            timestampKey : '__timestamp__',
+
+            data: {},
+
+            getTimstamp : function () {
+                return new Date().getTime() / 1000;
+            },
+
+            dataIsRecent : function (data) {
+                return !data[this.timestampKey] || data[this.timestampKey]
+                    && ( (new Date().getTime() / 1000 - data[this.timestampKey]) < lib.conf.uiStateTTL);
+            },
+
+            dumpToStorage : function () {
+                this.data[this.timestampKey] = this.getTimstamp();
+                this.storage.setItem(this.storageKey, JSON.stringify(this.data));
             },
 
             get: function (key) {
-                return lib.userSettings.data[key];
+                return this.data[key];
             },
 
             set: function (key, value) {
-                lib.userSettings.data[key] = value;
-                $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
+                this.data[key] = value;
+                this.dumpToStorage();
             },
 
-            del: function (key) {
-                delete (lib.userSettings.data[key]);
-                $.cookie('ui_settings', JSON.stringify(lib.userSettings.data), lib.userSettings.cookieParams);
+            init: function () {
+                var tmp;
+                if (this.storage.getItem(this.storageKey)) {
+                    tmp = JSON.parse(this.storage.getItem(this.storageKey));
+                    if (this.dataIsRecent(tmp)) {
+                        this.data = tmp;
+                    }
+
+                } else {
+                    this.data[this.timestampKey] = this.getTimstamp();
+                }
             }
         };
+        lib.userSettings.init();
 
         promises.add({
             misc : lib.misc(),
