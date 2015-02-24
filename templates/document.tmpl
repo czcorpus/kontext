@@ -537,7 +537,19 @@ define('conf', [], function () {
         $_('debugging mode')
         </div>
         #end if
-        #set $customParams = $urllib.quote_plus($environ['REQUEST_URI'])
+ 
+        #set customParams = ""
+               
+        #if $error_report_hasparams
+          #for $param in $error_report_params
+            #if $param[1]["name"] == "query_url"
+              #set $customParams = $customParams + $param[0].format(url=$urllib.quote_plus($environ['REQUEST_URI'])) 
+            #else
+              #set $customParams = $customParams + $param[0]
+            #end if
+          #end for
+        #end if
+     
         <div id="error-reporting"><a href="$error_report_url$customParams" target="_blank">$_('Report an error')</a></div>
     </div>
 </footer>
