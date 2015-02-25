@@ -157,7 +157,7 @@ define('conf', [], function () {
     conf.stateParams = "$q;$globals#if $align#&align=$align#end if#";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.corporaLabels = ${corpora_labels};
-    conf.uiStateTTL = ${ui_state_ttl};
+    conf.uiStateTTL = $getVar('ui_state_ttl', 7200);
 
     conf.messages = {};
     #if $_anonymous
