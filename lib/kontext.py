@@ -999,7 +999,10 @@ class Kontext(Controller):
             result['client_model_dir'] = 'tpl'
             result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 
-        result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')
+        if settings.contains('global', 'ui_state_ttl'):
+            result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')
+        else:
+            result['ui_state_ttl'] = 3600 * 12
 
         # now we store specific information (e.g. concordance parameters)
         # to keep user informed about data he is working with on any page
