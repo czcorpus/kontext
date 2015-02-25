@@ -69,13 +69,13 @@ class Actions(Kontext):
     """
     This class specifies all the actions KonText offers to a user via HTTP
     """
-    def __init__(self, environ, ui_lang):
+    def __init__(self, request, ui_lang):
         """
         arguments:
-        environ -- wsgi environment variable
+        request -- werkzeug's Request obj.
         ui_lang -- a language code in which current action's result will be presented
         """
-        super(Actions, self).__init__(environ=environ, ui_lang=ui_lang)
+        super(Actions, self).__init__(request=request, ui_lang=ui_lang)
         self.contains_within = False
         self.disabled_menu_items = ()
 
