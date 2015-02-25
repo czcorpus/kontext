@@ -30,6 +30,7 @@ import wsgiref.util
 import logging
 from logging import handlers
 from werkzeug.http import parse_accept_header
+from werkzeug.wrappers import Request
 import locale
 
 
@@ -245,7 +246,7 @@ class App(object):
             body = ''
         else:
             app = controller_class(environ=environ, ui_lang=ui_lang)
-            status, headers, body = app.run()
+            status, headers, body = app.run(Request(environ))
         start_response(status, headers)
         return [body]
 

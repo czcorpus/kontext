@@ -85,13 +85,13 @@ class Actions(Kontext):
         """
         return '/'
 
-    @exposed(access_level=1, template='user_password_form.tmpl')
+    @exposed(access_level=1, template='user_password_form.tmpl', legacy=True)
     def user_password_form(self):
         if not settings.supports_password_change():
             return {'message': ('error', _('This function is disabled.'))}
         return {}
 
-    @exposed(access_level=1, template='user_password.tmpl')
+    @exposed(access_level=1, template='user_password.tmpl', legacy=True)
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
         if not settings.supports_password_change():
             return {'message': ('error', _('This function is disabled.'))}
@@ -119,7 +119,7 @@ class Actions(Kontext):
                                     'menu-collocations', 'menu-conc-desc')
         return {}
 
-    @exposed(template='login.tmpl')
+    @exposed(template='login.tmpl', legacy=True)
     def loginx(self, username='', password=''):
         ans = {}
         self._session['user'] = plugins.auth.validate_user(username, password)
@@ -134,7 +134,7 @@ class Actions(Kontext):
             ans['message'] = ('error', _('Incorrect username or password'))
         return ans
 
-    @exposed(access_level=1, template='login.tmpl')
+    @exposed(access_level=1, template='login.tmpl', legacy=True)
     def logoutx(self):
         self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
@@ -146,7 +146,7 @@ class Actions(Kontext):
             'message': ('info', _('You have been logged out'))
         }
 
-    @exposed(vars=('orig_query', ))
+    @exposed(vars=('orig_query', ), legacy=True)
     def view(self, view_params={}):
         """
         kwic view
@@ -230,7 +230,7 @@ class Actions(Kontext):
         return out
 
     @exposed(vars=('TextTypeSel', 'LastSubcorp'))
-    def first_form(self):
+    def first_form(self, request):
         self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
@@ -258,7 +258,7 @@ class Actions(Kontext):
         self._save_options(['last_corpname'])
         return out
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def get_cached_conc_sizes(self):
         self._headers['Content-Type'] = 'text/plain'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
@@ -295,11 +295,11 @@ class Actions(Kontext):
                     relconcsize=1000000.0 * fullsize / self._corp().search_size(), fullsize=fullsize,
                     finished=conc.finished())
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def concdesc_json(self, query_id=''):
         return self.concdesc(query_id)
 
-    @exposed(access_level=1, vars=('concsize', ))
+    @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def viewattrs(self):
         """
         attrs, refs, structs form
@@ -380,7 +380,7 @@ class Actions(Kontext):
             self.ctxattrs = 'word'
         self.structattrs = structattrs
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view')
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
@@ -394,7 +394,7 @@ class Actions(Kontext):
         else:
             self._redirect('first_form')
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def viewopts(self):
         self.disabled_menu_items = ('menu-save', )
         out = {
@@ -402,7 +402,7 @@ class Actions(Kontext):
         }
         return out
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view')
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
@@ -413,7 +413,7 @@ class Actions(Kontext):
         else:
             self._redirect('first_form')
 
-    @exposed(access_level=1, vars=('concsize', ))
+    @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def sort(self):
         """
         sort concordance form
@@ -421,7 +421,7 @@ class Actions(Kontext):
         self.disabled_menu_items = ('menu-save',)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view')
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
         simple sort concordance
@@ -440,7 +440,7 @@ class Actions(Kontext):
         self.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view')
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def mlsortx(self,
                 ml1attr='word', ml1pos=1, ml1icase='', ml1bward='', ml1fcode='rc',
                 ml2attr='word', ml2pos=1, ml2icase='', ml2bward='', ml2fcode='rc',
@@ -634,7 +634,7 @@ class Actions(Kontext):
         else:  # highlight both
             return fullstruct
 
-    @exposed(template='view.tmpl', page_model='view')
+    @exposed(template='view.tmpl', page_model='view', legacy=True)
     def query(self, qtype='cql'):
         """
         perform query
@@ -744,7 +744,7 @@ class Actions(Kontext):
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
 
-    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view')
+    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view', legacy=True)
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
               fc_lemword_type='',
@@ -773,7 +773,7 @@ class Actions(Kontext):
             ans['replicable_query'] = True
         return ans
 
-    @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'))
+    @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'), legacy=True)
     def filter_form(self, within=0):
         self.disabled_menu_items = ('menu-save',)
 
@@ -786,7 +786,7 @@ class Actions(Kontext):
         self._attach_query_metadata(out)
         return out
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view', legacy=True)
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
                inclkwic=False, within=0):
         """
@@ -831,7 +831,7 @@ class Actions(Kontext):
         self.disabled_menu_items = ('menu-save',)
         return {}
 
-    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view')
+    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view', legacy=True)
     def reduce(self, rlines='250'):
         """
         random sample
@@ -839,7 +839,7 @@ class Actions(Kontext):
         self.q.append('r' + rlines)
         return self.view()
 
-    @exposed(access_level=1, vars=('concsize',))
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def freq(self):
         """
         frequency list form
@@ -852,7 +852,7 @@ class Actions(Kontext):
         }
 
     @exposed(access_level=1)
-    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
+    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, legacy=True):
         """
         display a frequency list
         """
@@ -990,7 +990,7 @@ class Actions(Kontext):
                  'norel': 1, 'fbar': 0})
         return result
 
-    @exposed(access_level=1, vars=('concsize',))
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
         """
         Displays a form to set-up the 'save frequencies' operation
@@ -1011,7 +1011,7 @@ class Actions(Kontext):
             'is_multiblock': is_multiblock
         }
 
-    @exposed(access_level=1, vars=('Desc',))
+    @exposed(access_level=1, vars=('Desc',), legacy=True)
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1063,7 +1063,7 @@ class Actions(Kontext):
             output = writer.raw_content()
         return output
 
-    @exposed(access_level=1, template='freqs.tmpl', accept_kwargs=True)
+    @exposed(access_level=1, template='freqs.tmpl', accept_kwargs=True, legacy=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
@@ -1077,14 +1077,14 @@ class Actions(Kontext):
         self._session['last_freq_level'] = freqlevel
         return result
 
-    @exposed(access_level=1, template='freqs.tmpl')
+    @exposed(access_level=1, template='freqs.tmpl', legacy=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
             self.exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
-    @exposed(access_level=1, vars=('concsize',))
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def coll(self):
         """
         collocations form
@@ -1101,7 +1101,7 @@ class Actions(Kontext):
                'Pos_ctxs': conclib.pos_ctxs(1, 1)}
         return out
 
-    @exposed(access_level=1, vars=('concsize',))
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def collx(self, csortfn='d', cbgrfns=('t', 'm', 'd'), line_offset=0, num_lines=None):
         """
         list collocations
@@ -1134,7 +1134,7 @@ class Actions(Kontext):
         result['to_line'] = 10000  # TODO
         return result
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                       heading=0):
         """
@@ -1151,7 +1151,7 @@ class Actions(Kontext):
             'saveformat': saveformat
         }
 
-    @exposed(access_level=1, vars=('Desc', 'concsize',))
+    @exposed(access_level=1, vars=('Desc', 'concsize',), legacy=True)
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
                  heading=0, colheaders=0):
         """
@@ -1192,7 +1192,7 @@ class Actions(Kontext):
             out_data = writer.raw_content()
         return out_data
 
-    @exposed(access_level=1, template='widectx.tmpl')
+    @exposed(access_level=1, template='widectx.tmpl', legacy=True)
     def structctx(self, pos=0, struct='doc'):
         """
         display a hit in a context of a structure"
@@ -1206,7 +1206,7 @@ class Actions(Kontext):
         result['no_display_links'] = True
         return result
 
-    @exposed(access_level=0)
+    @exposed(access_level=0, legacy=True)
     def widectx(self, pos=0):
         """
         display a hit in a wider context
@@ -1216,19 +1216,19 @@ class Actions(Kontext):
         data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
         return data
 
-    @exposed(access_level=0, return_type='json')
+    @exposed(access_level=0, return_type='json', legacy=True)
     def widectx_raw(self, pos=0):
         data = conclib.get_detail_context(self._corp(), pos)
         return data
 
-    @exposed(access_level=0, return_type='json')
+    @exposed(access_level=0, return_type='json', legacy=True)
     def fullref(self, pos=0):
         """
         display a full reference
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
 
-    @exposed()
+    @exposed(legacy=True)
     def draw_graph(self, fcrit='', flimit=0):
         """
         draw frequency distribution graph
@@ -1239,7 +1239,7 @@ class Actions(Kontext):
         #        print 'Content-Type: text/html; charset=iso-8859-2\n'
         return self.call_function(conc.graph_dist, (fcrit, flimit))
 
-    @exposed(template='wordlist.tmpl')
+    @exposed(template='wordlist.tmpl', legacy=True)
     def build_arf_db(self, corpname='', attrname=''):
         if not corpname:
             corpname = self.corpname
@@ -1251,7 +1251,7 @@ class Actions(Kontext):
         else:
             return {'processing': 0}
 
-    @exposed()
+    @exposed(legacy=True)
     def check_histogram_processing(self):
         logfile_name = os.path.join(self.subcpath[-1], self.corpname,
                                     'hist.build')
@@ -1270,7 +1270,7 @@ class Actions(Kontext):
             out = ('', '')
         return ':'.join(map(str.strip, out))
 
-    @exposed(template='findx_upload_form.tmpl', vars=('LastSubcorp',))
+    @exposed(template='findx_upload_form.tmpl', vars=('LastSubcorp',), legacy=True)
     def kill_histogram_processing(self):
         import glob
 
@@ -1290,7 +1290,7 @@ class Actions(Kontext):
             os.rename(name, name[:-8])
         return self.wordlist_form()
 
-    @exposed()
+    @exposed(legacy=True)
     def findx_form(self):
         out = {'Histlist': []}
         try:
@@ -1314,7 +1314,7 @@ class Actions(Kontext):
                                         'id': id})
         return out
 
-    @exposed(access_level=1, vars=('LastSubcorp',))
+    @exposed(access_level=1, vars=('LastSubcorp',), legacy=True)
     def wordlist_form(self, ref_corpname=''):
         """
         Word List Form
@@ -1338,13 +1338,13 @@ class Actions(Kontext):
         self._export_subcorpora_list(out)
         return out
 
-    @exposed()
+    @exposed(legacy=True)
     def findx_upload_form(self):
         return {
             'processing': self.check_histogram_processing().split(':')[1]
         }
 
-    @exposed()
+    @exposed(legacy=True)
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
         """
         gets arbitrary list of words for wordlist
@@ -1373,7 +1373,7 @@ class Actions(Kontext):
             cache_file.close()
         return wlwords, os.path.basename(filename)
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='',
                  ref_corpname='', ref_usesubcorp='', line_offset=0):
         """
@@ -1499,7 +1499,7 @@ class Actions(Kontext):
             qparts.append('%s!=="%s"' % (self.wlattr, w.strip()))
         self.q = ['q[' + '&'.join(qparts) + ']']
 
-    @exposed(template='freqs.tmpl')
+    @exposed(template='freqs.tmpl', legacy=True)
     def struct_wordlist(self):
         self.exceptmethod = 'wordlist_form'
         if self.fcrit:
@@ -1531,7 +1531,7 @@ class Actions(Kontext):
                            ml1attr=self.wlstruct_attr1, ml2attr=self.wlstruct_attr2,
                            ml3attr=self.wlstruct_attr3)
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                     usesubcorp='', ref_corpname='', ref_usesubcorp='',
                     saveformat='text'):
@@ -1547,7 +1547,7 @@ class Actions(Kontext):
             ans['message'] = ('error', _('Empty result cannot be saved.'))
         return ans
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
                ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
@@ -1588,7 +1588,7 @@ class Actions(Kontext):
             out_data = writer.raw_content()
         return out_data
 
-    @exposed()
+    @exposed(legacy=True)
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
         return corplib.build_arf_db_status(self._corp(), attrname)[1]
@@ -1698,7 +1698,7 @@ class Actions(Kontext):
                 pass
         return normslist
 
-    @exposed()
+    @exposed(legacy=True)
     def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
         """
         arguments:
@@ -1769,7 +1769,7 @@ class Actions(Kontext):
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def subcorp(self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
         """
         arguments:
@@ -1849,7 +1849,7 @@ class Actions(Kontext):
         else:
             raise ConcError(_('Empty subcorpus!'))
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def subcorp_list(self, selected_subc=(), sort='n'):
         """
         """
@@ -1918,26 +1918,26 @@ class Actions(Kontext):
             'rev': rev
         }
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
         return {'subCorpusName': subcname,
                 'corpusSize': format_number(sc.size()),
                 'subCorpusSize': format_number(sc.search_size())}
 
-    @exposed()
+    @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):
         self._headers['Content-Type'] = 'application/json'
         return corplib.attr_vals(self.corpname, avattr, avpat)
 
-    @exposed()
+    @exposed(legacy=True)
     def delsubc_form(self):
         subc = corplib.create_str_vector()
         corplib.find_subcorpora(self.subcpath[-1], subc)
         return {'Subcorplist': [{'n': c} for c in subc],
                 'subcorplist_size': min(len(subc), 20)}
 
-    @exposed(template='subcorp_form')
+    @exposed(template='subcorp_form', legacy=True)
     def delsubc(self, subc=()):
         base = self.subcpath[-1]
         for subcorp in subc:
@@ -1948,7 +1948,7 @@ class Actions(Kontext):
                 pass
         return 'Done'
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = ('menu-save', )
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
@@ -1957,7 +1957,7 @@ class Actions(Kontext):
             # TODO Save menu should be active here
         return {'from_line': from_line, 'to_line': to_line}
 
-    @exposed(access_level=1, vars=('Desc', 'concsize'))
+    @exposed(access_level=1, vars=('Desc', 'concsize'), legacy=True)
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
                  rightctx='40'):
 
@@ -2058,7 +2058,7 @@ class Actions(Kontext):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):
         """
         """
@@ -2085,7 +2085,7 @@ class Actions(Kontext):
                              for item in self._corp().get_conf('STRUCTLIST').split(',')]
         return ans
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def ajax_get_structs_details(self):
         """
         """
@@ -2097,7 +2097,7 @@ class Actions(Kontext):
             ans[k].append(v)
         return ans
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def ajax_get_tag_variants(self, pattern=''):
         """
         """
@@ -2117,13 +2117,17 @@ class Actions(Kontext):
         return JsonEncodedData(ans)
 
     @exposed(template='stats.tmpl')
-    def stats(self, from_date='', to_date='', min_occur=''):
+    def stats(self, request):
 
-        if plugins.auth.is_administrator():
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        min_occur = request.args.get('min_occur')
+
+        if plugins.auth.is_administrator(self._session_get('user', 'id')):
             import system_stats
 
-            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date, to_date=to_date,
-                                     min_occur=min_occur)
+            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date,
+                                     to_date=to_date, min_occur=min_occur)
             maxmin = {}
             for label, section in data.items():
                 maxmin[label] = system_stats.get_max_min(section)
@@ -2157,7 +2161,7 @@ class Actions(Kontext):
             rows = ()
         return rows
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, legacy=True)
     def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''):
         self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
@@ -2181,7 +2185,7 @@ class Actions(Kontext):
             'page_append_records': settings.get('plugins', 'query_storage').get('ucnk:page_append_records', 0)
         }
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_query_history(self, current_corpus='', offset=0, limit=20, query_type=''):
         if not offset:
             offset = 0
@@ -2197,7 +2201,7 @@ class Actions(Kontext):
             'limit': limit
         }
 
-    @exposed(access_level=0)
+    @exposed(access_level=0, legacy=True)
     def audio(self, chunk=''):
         """
         Provides access to audio-files containing speech segments.
@@ -2220,7 +2224,7 @@ class Actions(Kontext):
             self._set_not_found()
             return None
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def filter_attributes(self, attrs=None, aligned=None):
         import json
 
@@ -2240,12 +2244,12 @@ class Actions(Kontext):
         else:
             return {}
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
         bib_data = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
         return {'bib_data': bib_data}
 
-    @exposed(return_type='html', template='empty.tmpl')
+    @exposed(return_type='html', template='empty.tmpl', legacy=True)
     def ajax_get_toolbar(self):
         html = plugins.application_bar.get_contents(cookies=self._cookies,
                                                     curr_lang=self.ui_lang,
@@ -2254,7 +2258,7 @@ class Actions(Kontext):
                                                     timeout=20)
         return {'html': html}
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         import json
 
@@ -2286,7 +2290,7 @@ class Actions(Kontext):
         }
 
     # uses also self.keyword (TODO: cannot define Parameter() here)
-    @exposed()
+    @exposed(legacy=True)
     def corplist(self, max_size='', min_size='', category=''):
         def corp_filter(item):
             if max_size and item['size'] > float(max_size):
@@ -2328,7 +2332,7 @@ class Actions(Kontext):
         }
         return ans
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def ajax_list_corpora(self, query=''):
         corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
         ans = []
@@ -2349,7 +2353,7 @@ class Actions(Kontext):
                 ans.append(corp)
         return ans
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def set_favorite_corp(self, data=''):
         data = json.loads(data)
         remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
