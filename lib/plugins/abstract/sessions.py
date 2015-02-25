@@ -11,69 +11,15 @@
 # GNU General Public License for more details.
 
 """
-All the custom sessions plug-ins should inherit from AbstractSessions
+All the custom sessions must inherit from werkzeug.contrib.sessions.Session
+and inherit or implement the interface of this class.
 """
 
 
 class AbstractSessions(object):
 
-    def get_actual_timestamp(self):
+    def get_cookie_name(self):
         """
-        Returns current UNIX time
-        """
-        raise NotImplementedError()
-
-    def start_new(self, data=None):
-        """
-        Writes a new session record to the storage
-
-        arguments:
-        data -- a Python dict-compatible type (must be serializable by the json module)
-        """
-        raise NotImplementedError()
-
-    def delete(self, session_id):
-        """
-        Deletes a session record from the storage
-
-        arguments:
-        session_id -- an ID of the session
-        """
-        raise NotImplementedError()
-
-    def load(self, session_id, data=None):
-        """
-        Loads a session record identified by session_id. If no such record exists
-        then a new record is created. Method always returns valid session_id. I.e.
-        you should take that session_id and write it to cookies if you call this
-        method.
-
-        arguments:
-        session_id -- a ID of the session
-        data -- a dict or compatible (json serializable) data to be used and written in
-                case the session does not exist
-        """
-        raise NotImplementedError()
-
-    def save(self, session_id, data):
-        """
-        Saves session data and updates last update information for a row  identified by session_id.
-        If no such record exists then nothing is done and no error is thrown.
-
-        arguments:
-        session_id -- a ID of the session
-        data -- a dict or compatible (json serializable) data to be used and written in
-                case the session does not exist
-        """
-        raise NotImplementedError()
-
-    def delete_old_sessions(self):
-        """
-        Removes sessions with last update older than current time minus self.ttl.
-        This method is called automatically (with probability self.cleanup_probability)
-        when load() is called.
-
-        There are no rules how many items should be removed in one call as this depends
-        on how many requests per time KonText serves.
+        Returns name of a cookie used to store session ID
         """
         raise NotImplementedError()
