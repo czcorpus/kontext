@@ -234,8 +234,8 @@ class Kontext(Controller):
     _home_url = u'./first_form'
     _files_path = u'../files'
 
-    def __init__(self, environ, ui_lang):
-        super(Kontext, self).__init__(environ=environ, ui_lang=ui_lang)
+    def __init__(self, request, ui_lang):
+        super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
@@ -307,7 +307,6 @@ class Kontext(Controller):
         if not self._user_is_anonymous():
             self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
-        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
         excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get('excluded_users', ())]
@@ -605,11 +604,10 @@ class Kontext(Controller):
         self._restore_prev_conc_params()
 
         if len(path) > 0:
-            access_level = action_metadata.get('access_level', 1)
+            access_level = action_metadata.get('access_level', 0)  # by default, each action is public
             if access_level and self._user_is_anonymous():
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
-
         # plugins setup
         for p in plugins.list_plugins():
             if callable(getattr(p, 'setup', None)):

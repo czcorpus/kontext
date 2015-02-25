@@ -249,16 +249,16 @@ class Controller(object):
         500: 'Internal Server Error'
     }
 
-    def __init__(self, environ, ui_lang):
+    def __init__(self, request, ui_lang):
         """
         arguments:
         environ -- web server's environment variables
         ui_lang -- language used by user
         """
-        self.environ = environ
+        self._request = request
+        self.environ = self._request.environ  # for backward compatibility
         self.ui_lang = ui_lang
         self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
-        self._session = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._system_messages = []
@@ -283,25 +283,15 @@ class Controller(object):
         creates an empty dictionary with some predefined keys to allow other
         parts of the application to operate properly)
         """
-        cookie_id = self._get_session_id()
-        if plugins.has_plugin('sessions'):
-            ans = plugins.sessions.load(cookie_id, {'user': plugins.auth.anonymous_user()})
-        else:
-            ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
-        self._set_session_id(ans['id'])
-        self._session = ans['data']
+        if 'user' not in self._session:
+            self._session['user'] = plugins.auth.anonymous_user()
 
         if hasattr(plugins.auth, 'revalidate'):
             plugins.auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
 
-    def _close_session(self):
-        """
-        Closes user's web session. Basically, it stores session data to some
-        defined storage via a 'sessions' plugin. It can be called even if there is
-        no 'sessions' plugin defined.
-        """
-        if plugins.has_plugin('sessions'):
-                plugins.sessions.save(self._get_session_id(), self._session)
+    @property  # for legacy reasons, we have to allow an access to the session via _session property
+    def _session(self):
+        return self._request.session
 
     def _session_get(self, *nested_keys):
         """
@@ -312,30 +302,13 @@ class Controller(object):
         Arguments:
         *nested_keys -- keys to access required value (e.g. a['user']['car']['name'] would be 'user', 'car', 'name')
         """
-        curr = self._session
+        curr = dict(self._request.session)
         for k in nested_keys:
             if k in curr:
                 curr = curr[k]
             else:
                 return None
         return curr
-
-    def _get_session_id(self):
-        """
-        Returns session ID. If no ID is found then None is returned
-        """
-        if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
-            return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
-        return None
-
-    def _set_session_id(self, val):
-        """
-        Sets session ID
-
-        Arguments:
-        val -- session ID value (a string is expected)
-        """
-        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
 
     def add_validator(self, fn):
         """
@@ -754,7 +727,6 @@ class Controller(object):
 
         try:
             self._init_session()
-
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
                 self._pre_action_validate()
@@ -805,10 +777,6 @@ class Controller(object):
         ans_body = output.getvalue()
         output.close()
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
-        try:
-            self._close_session()
-        finally:
-            pass
         return self._export_status(), headers, ans_body
 
     def process_method(self, methodname, action_metadata, request, pos_args, named_args):
