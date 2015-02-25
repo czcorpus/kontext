@@ -985,7 +985,8 @@ class Controller(object):
     def _user_is_anonymous(self):
         return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
 
-    def nop(self):
+
+    def nop(self, request):
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
@@ -993,11 +994,11 @@ class Controller(object):
         """
         return None
 
-    @exposed(accept_kwargs=True)
+    @exposed(accept_kwargs=True, legacy=True)
     def message(self, *args, **kwargs):
         return kwargs
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def json_error(self, error='', reset=False):
         """
         Error page
