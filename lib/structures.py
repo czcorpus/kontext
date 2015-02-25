@@ -122,7 +122,7 @@ class FixedDict(object):
 
     def __init__(self):
         for item in inspect.getmembers(self.__class__):
-            if not item[0].startswith('__'):
+            if not item[0].startswith('__') and not callable(getattr(self, item[0], None)):
                 self.__dict__[item[0]] = item[1]
 
     def __iter__(self):
