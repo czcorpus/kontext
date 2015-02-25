@@ -510,16 +510,18 @@ class Controller(object):
             if isinstance(err, Exception):
                 raise err
 
-    def _invoke_action(self, action, args, named_args, tpl_data=None):
+    def _invoke_legacy_action(self, action, args, named_args):
         """
-        Calls an action method (= method with the @exposed annotation)
-        mapped to a specific action.
+        Calls an action method (= method with the @exposed annotation) in the
+        "bonito" way (i.e. with automatic mapping between request args to the
+        target method args). Such action must have legacy=True meta-information.
+        Non-legacy actions are called with werkzeug.wrappers.Request instance
+        as the first (and currently only) argument.
 
         arguments:
         action -- name of the action
         args -- positional arguments of the action (tuple/list)
         named_args -- a dictionary of named args and their defined default values
-        tpl_data -- a dictionary with additional page/response data
         """
         na = named_args.copy()
         if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
@@ -527,10 +529,7 @@ class Controller(object):
         else:
             del_nondef = 1
         convert_types(na, function_defaults(action), del_nondef=del_nondef)
-        ans = apply(action, args[1:], na)
-        if type(ans) == dict and tpl_data is not None:
-            ans.update(tpl_data)
-        return ans
+        return apply(action, args[1:], na)
 
     def call_function(self, func, args, **named_args):
         """
@@ -743,7 +742,7 @@ class Controller(object):
                 return True
         return False
 
-    def run(self, path=None, selectorname=None):
+    def run(self, request, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
         """
@@ -751,7 +750,6 @@ class Controller(object):
         path = path if path is not None else self.import_req_path()
         named_args = {}
         headers = []
-        # user action processing
         action_metadata = self._get_method_metadata(path[0])
 
         try:
@@ -760,7 +758,7 @@ class Controller(object):
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_method(path[0], path, named_args)
+                methodname, tmpl, result = self.process_method(path[0], action_metadata, request, path, named_args)
                 # Let's test whether process_method used requested our method.
                 # If not (e.g. there was an error and a fallback has been used) then reload action metadata
                 if methodname != path[0]:
@@ -772,14 +770,14 @@ class Controller(object):
             self._status = 401
             self.add_system_message('error', u'%s' % fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
             self.add_system_message('error',  fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         except Exception as e:  # we assume that this means some kind of a fatal error
             self._status = 500
@@ -792,7 +790,7 @@ class Controller(object):
                                           'Please try again later or contact system support.'))
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, tmpl, result)
@@ -813,21 +811,20 @@ class Controller(object):
             pass
         return self._export_status(), headers, ans_body
 
-    def process_method(self, methodname, pos_args, named_args, tpl_data=None):
+    def process_method(self, methodname, action_metadata, request, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
 
-        Returns
-        -------
-        result : tuple of 3 elements
+        Please note that 'request' and 'pos_args'+'named_args' are used in a mutually exclusive
+        way (the former is passed to 'new style' actions, the latter is used for legacy ones).
+
+        returns: tuple of 3 elements
           0 = method name actually used (it may have changed e.g. due to an error)
           1 = template name
           2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
-        if tpl_data is None:
-            tpl_data = {}
         # reload parameter returns user from a result page
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
@@ -836,15 +833,16 @@ class Controller(object):
             if methodname != 'subcorp':
                 reload_template = reload.get(methodname, methodname + '_form')
                 if self.is_template(reload_template):
-                    return self.process_method(reload_template,
-                                               pos_args, named_args)
+                    # TODO reload variant has (possibly) different metadata - do we want them here?
+                    return self.process_method(reload_template, action_metadata, request, pos_args, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
-
-            return (methodname,
-                    getattr(method, 'template', default_tpl_path),
-                    self._invoke_action(method, pos_args, named_args, tpl_data))
+            if not action_metadata.get('legacy', False):
+                method_ans = apply(method, (request,))  # new-style actions use werkzeug.wrappers.Request
+            else:
+                method_ans = self._invoke_legacy_action(method, pos_args, named_args)
+            return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as e:
             e2 = self._analyze_error(e)
             if not isinstance(e2, UserActionException):
@@ -867,7 +865,7 @@ class Controller(object):
                     self.add_system_message('error', e2.message)
 
                 em, self.exceptmethod = self.exceptmethod, None
-                return self.process_method(em, pos_args, named_args, tpl_data)
+                return self.process_method(em, action_metadata, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
