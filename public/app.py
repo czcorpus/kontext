@@ -30,6 +30,7 @@ import wsgiref.util
 import logging
 from logging import handlers
 from werkzeug.http import parse_accept_header
+from werkzeug.wrappers import Request, Response
 import locale
 
 
@@ -228,9 +229,14 @@ class App(object):
         ui_lang = get_lang(environ)
         translation.activate(ui_lang)
         l10n.activate(ui_lang)
-        environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
+        environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
 
-        controller_class = load_controller_class(environ['PATH_INFO'])
+        request = Request(environ)
+        sid = request.cookies.get(plugins.sessions.get_cookie_name())
+        if sid is None:
+            request.session = plugins.sessions.new()
+        else:
+            request.session = plugins.sessions.get(sid)
 
         if environ['PATH_INFO'] in ('/', ''):
             url = environ['REQUEST_URI']
@@ -244,10 +250,15 @@ class App(object):
             headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
             body = ''
         else:
-            app = controller_class(environ=environ, ui_lang=ui_lang)
-            status, headers, body = app.run()
+            controller_class = load_controller_class(environ['PATH_INFO'])
+            app = controller_class(request=request, ui_lang=ui_lang)
+            status, headers, body = app.run(request)
+        response = Response(response=body, status=status, headers=headers)
+        if request.session.should_save:
+            plugins.sessions.save(request.session)
+            response.set_cookie(plugins.sessions.get_cookie_name(), request.session.sid)
         start_response(status, headers)
-        return [body]
+        return response(environ, start_response)
 
 
 settings.load(conf_path=CONF_PATH)

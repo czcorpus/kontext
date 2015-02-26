@@ -26,7 +26,6 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
 
     lib.init = function (conf) {
         lib.conf = conf;
-        $.cookie('ui_settings', {});
         QUnit.start();
     };
 
