@@ -25,6 +25,17 @@
           <param name="query_url">?queryurl={url}</param>          
         </error_report_params>
         <anonymous_user_id>0</anonymous_user_id>
+        <logged_values>
+            <item>environ:REMOTE_ADDR</item>
+            <item>environ:HTTP_USER_AGENT</item>
+            <item>date</item>
+            <item>user</item>
+            <item>user_id</item>
+            <item>action</item>
+            <item>params</item>
+            <item>settings</item>
+            <item>proc_time</item>  
+        </logged_values>    
     </global>
     <plugins>
         <db>
