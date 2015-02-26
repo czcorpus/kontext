@@ -18,7 +18,6 @@ import time
 from functools import partial
 import logging
 import inspect
-import urllib
 
 import corplib
 import conclib
@@ -30,7 +29,8 @@ import l10n
 from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
-from structures import Nicedict
+from structures import Nicedict, FixedDict
+from templating import StateGlobals
 import fallback_corpus
 
 
@@ -47,49 +47,31 @@ class ConcError(Exception):
         super(ConcError, self).__init__(msg)
 
 
-class StateGlobals(object):
+class ConcArgsMapping(FixedDict):
     """
-    A simple wrapper for $Globals template variable. Unfortunately,
-    current code (which comes from Bonito 2) operates with $globals
-    (see the difference: g vs. G) which is escaped, hard to update
-    string.
+    This class covers all the attributes representing a concordance. I.e. the application should
+    be able to restore any concordance just by using these parameters.
 
-    This object should replace $globals in the future because it
-    allows easier updates: $Globals.update('corpname', 'bar').to_s()
+    Please note that this list does not include the 'q' parameter which collects currently built query
+    (it has been inherited from Bonito2).
     """
-    def __init__(self, data):
-        self._data = {}
-        if type(data) is dict:
-            data = data.items()
-        for k, v in data:
-            if type(v) is unicode:
-                v = v.encode('utf-8')
-            self._data[k] = v
+    corpname = None
+    usesubcorp = None
+    maincorp = None
+    viewmode = None
+    pagesize = None
+    align = None
+    attrs = None
+    attr_allpos = None
+    ctxattrs = None
+    structs = None
+    refs = None
 
-    def __iter__(self):
-        return iter(self._data)
-
-    def items(self):
-        return self._data.items()
-
-    def to_s(self):
-        return urllib.urlencode(self._data)
-
-    def update(self, *args):
-        if type(args[0]) is dict:
-            self._data.update(args[0])
-        elif len(args) == 2:
-            self._data[args[0]] = args[1]
-        return self
+    def get_attrs(self):
+        return self.__dict__.keys()
 
 
 class Kontext(Controller):
-    # A list of attributes needed to be able to view current concordance in case user is somewhere else.
-    # Please note that this list does not include the 'q' parameter which collects currently built query
-    # (a Bonito design choice)
-    CONC_URL_STATE_VARS = ('corpname', 'usesubcorp', 'maincorp',
-                           'viewmode', 'pagesize', 'align',
-                           'attrs', 'attr_allpos', 'ctxattrs', 'structs', 'refs', )
 
     ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
                                  'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
@@ -252,8 +234,8 @@ class Kontext(Controller):
     _home_url = u'./first_form'
     _files_path = u'../files'
 
-    def __init__(self, environ, ui_lang):
-        super(Kontext, self).__init__(environ=environ, ui_lang=ui_lang)
+    def __init__(self, request, ui_lang):
+        super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
@@ -264,6 +246,7 @@ class Kontext(Controller):
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
+        self._conc_args = ConcArgsMapping()
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -323,14 +306,6 @@ class Kontext(Controller):
         if 'shuffle' not in options:
             options['shuffle'] = 1
 
-    def _get_action_prop(self, action_name, prop_name):
-        prop = None
-        if hasattr(self, action_name):
-            a = getattr(self, action_name)
-            if a and hasattr(a, prop_name):
-                prop = getattr(a, prop_name)
-        return prop
-
     def _filter_out_unused_settings(self, options):
         """
         Removes settings related to others than
@@ -348,7 +323,6 @@ class Kontext(Controller):
         if not self._user_is_anonymous():
             self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
-        self._wseval_dir = '%s/%s' % (settings.get('corpora', 'wseval_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
         excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get('excluded_users', ())]
@@ -646,11 +620,10 @@ class Kontext(Controller):
         self._restore_prev_conc_params()
 
         if len(path) > 0:
-            access_level = self._get_action_prop(path[0], 'access_level')
+            access_level = action_metadata.get('access_level', 0)  # by default, each action is public
             if access_level and self._user_is_anonymous():
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
-
         # plugins setup
         for p in plugins.list_plugins():
             if callable(getattr(p, 'setup', None)):
@@ -801,7 +774,7 @@ class Kontext(Controller):
         """
         Any valid cookie is loaded and available but only these are saved by KonText
         """
-        return 'ui_settings', settings.get('plugins', 'auth')['auth_cookie_name']
+        return tuple([settings.get('plugins', 'auth')['auth_cookie_name']])
 
     def _corp(self):
         """
@@ -922,6 +895,10 @@ class Kontext(Controller):
                     if js_file:
                         result[js_file_key] = js_file
 
+    def _get_attrs(self, attr_names):
+        is_valid = lambda name, value: getattr(self.__class__, name, None) is not value and value != ''
+        return [(n, val) for n in attr_names for val in [getattr(self, n, None)] if is_valid(n, val)]
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -942,10 +919,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(op_id, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
-
-        global_var_val = [(n, val) for n in self.CONC_URL_STATE_VARS
-                          for val in [getattr(self, n, None)]
-                          if getattr(self.__class__, n, None) is not val and val != '']
+        global_var_val = self._get_attrs(self._conc_args.get_attrs())
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
@@ -1016,6 +990,11 @@ class Kontext(Controller):
         else:
             result['client_model_dir'] = 'tpl'
             result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
+
+        if settings.contains('global', 'ui_state_ttl'):
+            result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')
+        else:
+            result['ui_state_ttl'] = 3600 * 12
 
         # now we store specific information (e.g. concordance parameters)
         # to keep user informed about data he is working with on any page

@@ -11,8 +11,10 @@
 # GNU General Public License for more details.
 
 """
-A session handler compatible with general_storage.KeyValueStorage implementations
-(currently default_db and redis_db modules).
+A session handler compatible with werkzeug.contrib.sessions.SessionStore.
+It uses a general_storage.KeyValueStorage as its backend (currently default_db and redis_db modules).
+
+The plug-in implements
 
 required config.xml entries:
 
@@ -27,14 +29,11 @@ has no effect as RedisDB removes keys with set TTL automatically.
 """
 
 import uuid
-import time
-from datetime import datetime
-import random
 
-from abstract.sessions import AbstractSessions
+from werkzeug.contrib.sessions import SessionStore, Session
 
 
-class DefaultSessions(AbstractSessions):
+class DefaultSessions(SessionStore):
 
     DEFAULT_TTL = 7200
 
@@ -45,15 +44,13 @@ class DefaultSessions(AbstractSessions):
         Initialization according to the 'settings' object/module
         """
         self.db = db
+        self._cookie_name = settings.get('plugins', 'auth')['auth_cookie_name']
         self.ttl = int(settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL))
         self.cleanup_probability = settings.get('plugins', 'sessions').get('cleanup_probability',
                                                                            DefaultSessions.DEFAULT_CLEANUP_PROBABILITY)
 
-    def get_actual_timestamp(self):
-        """
-        Returns current UNIX time
-        """
-        return time.mktime(datetime.now().timetuple())
+    def get_cookie_name(self):
+        return self._cookie_name
 
     def _mk_key(self, session_id):
         return 'session:%s' % (session_id, )
@@ -62,78 +59,37 @@ class DefaultSessions(AbstractSessions):
         if hasattr(self.db, 'set_ttl'):
             self.db.set_ttl(key, self.ttl)
 
-    def start_new(self, data=None):
+    def generate_key(self, salt=None):
+        return str(uuid.uuid1())
+
+    def delete(self, session):
+        self.db.remove(self._mk_key(session.sid))
+
+    def get(self, sid):
+        if not self.is_valid_key(sid):
+            return self.new()
+        return Session(self.db.get(self._mk_key(sid)), sid)
+
+    def is_valid_key(self, key):
+        return self.db.exists(self._mk_key(key))
+
+    def new(self):
         """
         Writes a new session record to the storage
         """
         session_id = str(uuid.uuid1())
-        if data is None:
-            data = {}
-
+        data = {}
         sess_key = self._mk_key(session_id)
-        data['__timestamp__'] = self.get_actual_timestamp()
         self.db.set(sess_key, data)
         self._set_ttl(sess_key)
-        return {'id': session_id, 'data': data}
+        return Session(data, session_id)
 
-    def delete(self, session_id):
-        """
-        Deletes a session record from the storage
-        """
-        self.db.remove(self._mk_key(session_id))
+    def save(self, session):
+        self.db.set(self._mk_key(session.sid), dict(session))
 
-    def load(self, session_id, fallback_data=None):
-        """
-        Loads a session record identified by session_id. If no such record exists
-        then a new record is created. Method always returns valid session_id. I.e.
-        you should take that session_id and write it to cookies if you call this
-        method.
-
-        arguments:
-        session_id -- identifier of the session (if None is provided then new session is started)
-
-        fallback_data -- a dict to be used and written in case the session does not exist
-        """
-        if random.random() < DefaultSessions.DEFAULT_CLEANUP_PROBABILITY:
-            self.delete_old_sessions()
-
-        if session_id is not None:
-            session_data = self.db.get(self._mk_key(session_id))
-        else:
-            session_data = None
-
-        if session_data is not None:
-            return {'id': session_id, 'data': session_data}
-        else:
-            return self.start_new(fallback_data)
-
-    def save(self, session_id, data):
-        """
-        Saves session data and updates last update information for a row  identified by session_id.
-        If no such record exists then nothing is done and no error is thrown.
-        """
-        sess_key = self._mk_key(session_id)
-        data['__timestamp__'] = self.get_actual_timestamp()
-        self.db.set(sess_key, data)
-        self._set_ttl(sess_key)
-
-    def delete_old_sessions(self):
-        """
-        Removes sessions with last update older than current time minus self.ttl.
-        This method is called automatically (with probability self.cleanup_probability)
-        when load() is called.
-        """
-        if not hasattr(self.db, 'set_ttl'):
-            if hasattr(self.db, 'all_with_key_prefix'):
-                old_records = self.db.all_with_key_prefix('session:', oldest_first=True, limit=100)
-                limit_time = self.get_actual_timestamp() - self.ttl
-                for item in old_records:
-                    if item['__timestamp__'] < limit_time:
-                        self.db.remove(item['__key__'])
-            else:
-                from abstract import PluginException
-                raise PluginException('A "default-compatible" DB plugin must implement either '
-                                      'set_ttl() or all_with_key_prefix() method')
+    def save_if_modified(self, session):
+        if session.should_save:
+            self.save(session)
 
 
 def create_instance(config, db):

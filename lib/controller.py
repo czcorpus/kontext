@@ -249,17 +249,16 @@ class Controller(object):
         500: 'Internal Server Error'
     }
 
-    def __init__(self, environ, ui_lang):
+    def __init__(self, request, ui_lang):
         """
         arguments:
         environ -- web server's environment variables
         ui_lang -- language used by user
         """
-        self.environ = environ
+        self._request = request
+        self.environ = self._request.environ  # for backward compatibility
         self.ui_lang = ui_lang
         self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
-        self._session = {}
-        self._ui_settings = {}
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._system_messages = []
@@ -284,25 +283,15 @@ class Controller(object):
         creates an empty dictionary with some predefined keys to allow other
         parts of the application to operate properly)
         """
-        cookie_id = self._get_session_id()
-        if plugins.has_plugin('sessions'):
-            ans = plugins.sessions.load(cookie_id, {'user': plugins.auth.anonymous_user()})
-        else:
-            ans = {'id': 0, 'data': {'user': plugins.auth.anonymous_user()}}
-        self._set_session_id(ans['id'])
-        self._session = ans['data']
+        if 'user' not in self._session:
+            self._session['user'] = plugins.auth.anonymous_user()
 
         if hasattr(plugins.auth, 'revalidate'):
             plugins.auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
 
-    def _close_session(self):
-        """
-        Closes user's web session. Basically, it stores session data to some
-        defined storage via a 'sessions' plugin. It can be called even if there is
-        no 'sessions' plugin defined.
-        """
-        if plugins.has_plugin('sessions'):
-                plugins.sessions.save(self._get_session_id(), self._session)
+    @property  # for legacy reasons, we have to allow an access to the session via _session property
+    def _session(self):
+        return self._request.session
 
     def _session_get(self, *nested_keys):
         """
@@ -313,30 +302,13 @@ class Controller(object):
         Arguments:
         *nested_keys -- keys to access required value (e.g. a['user']['car']['name'] would be 'user', 'car', 'name')
         """
-        curr = self._session
+        curr = dict(self._request.session)
         for k in nested_keys:
             if k in curr:
                 curr = curr[k]
             else:
                 return None
         return curr
-
-    def _get_session_id(self):
-        """
-        Returns session ID. If no ID is found then None is returned
-        """
-        if settings.get('plugins', 'auth')['auth_cookie_name'] in self._cookies:
-            return self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']].value
-        return None
-
-    def _set_session_id(self, val):
-        """
-        Sets session ID
-
-        Arguments:
-        val -- session ID value (a string is expected)
-        """
-        self._cookies[settings.get('plugins', 'auth')['auth_cookie_name']] = val
 
     def add_validator(self, fn):
         """
@@ -511,16 +483,18 @@ class Controller(object):
             if isinstance(err, Exception):
                 raise err
 
-    def _invoke_action(self, action, args, named_args, tpl_data=None):
+    def _invoke_legacy_action(self, action, args, named_args):
         """
-        Calls an action method (= method with the @exposed annotation)
-        mapped to a specific action.
+        Calls an action method (= method with the @exposed annotation) in the
+        "bonito" way (i.e. with automatic mapping between request args to the
+        target method args). Such action must have legacy=True meta-information.
+        Non-legacy actions are called with werkzeug.wrappers.Request instance
+        as the first (and currently only) argument.
 
         arguments:
         action -- name of the action
         args -- positional arguments of the action (tuple/list)
         named_args -- a dictionary of named args and their defined default values
-        tpl_data -- a dictionary with additional page/response data
         """
         na = named_args.copy()
         if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
@@ -528,10 +502,7 @@ class Controller(object):
         else:
             del_nondef = 1
         convert_types(na, function_defaults(action), del_nondef=del_nondef)
-        ans = apply(action, args[1:], na)
-        if type(ans) == dict and tpl_data is not None:
-            ans.update(tpl_data)
-        return ans
+        return apply(action, args[1:], na)
 
     def call_function(self, func, args, **named_args):
         """
@@ -694,17 +665,6 @@ class Controller(object):
             if len(self._system_messages) > 0:
                 result['message_auto_hide_interval'] = 0
 
-    def _restore_ui_settings(self):
-        """
-        Loads cookie-stored user interface settings.
-        """
-        if 'ui_settings' in self._cookies:
-            try:
-                self._ui_settings = json.loads(self._cookies['ui_settings'].value)
-            except ValueError as e:
-                logging.getLogger(__name__).warn('Failed to parse ui_settings data: %s' % e)
-                self._ui_settings = {}
-
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
 
@@ -755,7 +715,7 @@ class Controller(object):
                 return True
         return False
 
-    def run(self, path=None, selectorname=None):
+    def run(self, request, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
         """
@@ -763,17 +723,14 @@ class Controller(object):
         path = path if path is not None else self.import_req_path()
         named_args = {}
         headers = []
-        # user action processing
         action_metadata = self._get_method_metadata(path[0])
 
         try:
-            self._restore_ui_settings()
             self._init_session()
-
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_method(path[0], path, named_args)
+                methodname, tmpl, result = self.process_method(path[0], action_metadata, request, path, named_args)
                 # Let's test whether process_method used requested our method.
                 # If not (e.g. there was an error and a fallback has been used) then reload action metadata
                 if methodname != path[0]:
@@ -785,14 +742,14 @@ class Controller(object):
             self._status = 401
             self.add_system_message('error', u'%s' % fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
             self.add_system_message('error',  fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         except Exception as e:  # we assume that this means some kind of a fatal error
             self._status = 500
@@ -805,7 +762,7 @@ class Controller(object):
                                           'Please try again later or contact system support.'))
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, tmpl, result)
@@ -820,27 +777,22 @@ class Controller(object):
         ans_body = output.getvalue()
         output.close()
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
-        try:
-            self._close_session()
-        finally:
-            pass
         return self._export_status(), headers, ans_body
 
-    def process_method(self, methodname, pos_args, named_args, tpl_data=None):
+    def process_method(self, methodname, action_metadata, request, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
 
-        Returns
-        -------
-        result : tuple of 3 elements
+        Please note that 'request' and 'pos_args'+'named_args' are used in a mutually exclusive
+        way (the former is passed to 'new style' actions, the latter is used for legacy ones).
+
+        returns: tuple of 3 elements
           0 = method name actually used (it may have changed e.g. due to an error)
           1 = template name
           2 = template data dict
         """
         reload = {'headers': 'wordlist_form'}
-        if tpl_data is None:
-            tpl_data = {}
         # reload parameter returns user from a result page
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
@@ -849,15 +801,16 @@ class Controller(object):
             if methodname != 'subcorp':
                 reload_template = reload.get(methodname, methodname + '_form')
                 if self.is_template(reload_template):
-                    return self.process_method(reload_template,
-                                               pos_args, named_args)
+                    # TODO reload variant has (possibly) different metadata - do we want them here?
+                    return self.process_method(reload_template, action_metadata, request, pos_args, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
-
-            return (methodname,
-                    getattr(method, 'template', default_tpl_path),
-                    self._invoke_action(method, pos_args, named_args, tpl_data))
+            if not action_metadata.get('legacy', False):
+                method_ans = apply(method, (request,))  # new-style actions use werkzeug.wrappers.Request
+            else:
+                method_ans = self._invoke_legacy_action(method, pos_args, named_args)
+            return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as e:
             e2 = self._analyze_error(e)
             if not isinstance(e2, UserActionException):
@@ -880,7 +833,7 @@ class Controller(object):
                     self.add_system_message('error', e2.message)
 
                 em, self.exceptmethod = self.exceptmethod, None
-                return self.process_method(em, pos_args, named_args, tpl_data)
+                return self.process_method(em, action_metadata, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
@@ -953,13 +906,6 @@ class Controller(object):
         -------
         bool : True if content should follow else False
         """
-        # The 'ui_settings' cookie is used only by JavaScript client-side code
-        # which always expects the cookie to exists.
-        if 'ui_settings' not in self._cookies:
-            self._cookies['ui_settings'] = None
-        self._cookies['ui_settings']['path'] = self.environ.get('SCRIPT_NAME', '/')
-        self._cookies['ui_settings'] = json.dumps(self._ui_settings)
-
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
         elif return_type == 'xml':
@@ -1007,7 +953,8 @@ class Controller(object):
     def _user_is_anonymous(self):
         return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
 
-    def nop(self):
+
+    def nop(self, request):
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
@@ -1015,11 +962,11 @@ class Controller(object):
         """
         return None
 
-    @exposed(accept_kwargs=True)
+    @exposed(accept_kwargs=True, legacy=True)
     def message(self, *args, **kwargs):
         return kwargs
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', legacy=True)
     def json_error(self, error='', reset=False):
         """
         Error page
