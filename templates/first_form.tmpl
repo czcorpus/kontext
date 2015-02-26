@@ -1,0 +1,132 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from translation import ugettext as _
+#from cmpltmpl.util.query import query
+#extends query
+
+#def title
+$_("Concordance - First query form")#slurp
+#end def
+
+#def bodyonload
+require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf) {
+    conf.labelStdQuery = '$_("Std. Query")';
+    conf.labelErrorQuery = '$_("Error Query")';
+    conf.messages.too_long_condition = '$_('The selection condition you have specified is too long. Please create a subcorpus instead.')';
+    conf.messages.cancel = '$_("Cancel")';
+    conf.messages.open_the_subcorpus_form = '$_("Open the subcorpus form")';
+    conf.messages.click_to_expand = '$_('Click to expand')';
+    conf.messages.click_to_hide = '$_('Click to hide')';
+    firstForm.init(conf);
+    #if $getVar('show_cup_menu', '')
+        firstForm.showCupMenu(conf);
+    #end if
+});
+#end def
+
+#def left_submenu_help
+#end def
+
+
+
+#def left_submenu_expert
+    #if $varExists('user_menu') and $supports_password_change
+    <li>
+        <hr />
+        <strong>$_('User'):</strong>
+        <ul class="submenu">
+            <li><a href="user_password_form">$_('Password change')</a></li>
+        </ul>
+    </li>
+    #end if
+#end def
+
+#def main
+#filter WebSafe
+<section>
+    <h2>$_('Search in the corpus')</h2>
+    <form id="mainform" action="first">
+    #if $shuffle
+        <input type="hidden" name="shuffle" value="1" />
+    #end if
+    <table class="form">
+    #filter None
+      $corp_sel_node
+      $query_node
+    </table>
+    #if $getVar('show_cup_menu', '')
+        $cup_err_menu
+    #end if
+
+    #end filter
+    #if $corp_doc
+      <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
+    #end if
+
+    #filter None
+    #if $Aligned
+    <fieldset class="parallel">
+        <legend>$_('Aligned corpora')</legend>
+
+        #set $sel_aln = $align.split(',')
+        #for $a in $Aligned
+        <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
+            <div class="heading">
+                <a class="make-primary" data-corpus-id="$a.n" title="$_('make corpus primary')"><img class="over-img" src="../files/img/go-up.png"
+                                                                               data-alt-img="../files/img/go-up_s.png"
+                                                                               alt="$_('make corpus primary')"
+                                                                               /></a>
+                <h3>$a.label ($a.n)</h3>
+                <a class="close-button" title="$_('Remove the language')"><img
+                        class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png"
+                        alt="close icon" /></a>
+            </div>
+            <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
+            <table class="form">$query_node('_'+$a.n)</table>
+        </div>
+        #end for
+
+        <div id="add-searched-lang-widget">
+            <select>
+                #for $a in $Aligned
+                <option value="$a.n">$a.label</option>
+                #end for
+            </select>
+            <button type="button">$_('Add')</button>
+        </div>
+
+    </fieldset>
+    #end if
+    #end filter
+
+    #filter None
+    $specify_context_form()
+
+    $specify_meta_form()
+    #end filter
+
+    <div class="buttons">
+    <input id="make-concordance-button" class="submit default-button" type="submit" value="$_("Search")" />
+    </div>
+    </form>
+    #end filter
+</section>
+
+#end def
