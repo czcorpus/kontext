@@ -280,24 +280,40 @@ class Kontext(Controller):
         default is None - in such case no information is stored
         """
         import json
-        import datetime    
+        import datetime
+        
+        logged_values = settings.get('global', 'logged_values')       
+        log_data = {} 
 
         params = {}
         if self.environ.get('QUERY_STRING'):
             params.update(dict([item.split('=', 1) for item in [x for x in self.environ.get('QUERY_STRING').split('&')
-                                                                if x]]))
+                                                                if x]])) 
+        
+        for val in logged_values:
+            if val == 'date':
+                log_data['date'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')      
+            elif val == 'action':
+                log_data['action'] = action_name       
+            elif val == 'user_id':
+                log_data['user_id'] = self._session_get('user', 'id')            
+            elif val == 'user':
+                log_data['user'] = self._session_get('user', 'user')               
+            elif val == 'params':
+                log_data['params'] = dict([(k, v) for k, v in params.items() if v])           
+            elif val == 'settings':
+                log_data['settings'] = dict([(k, v) for k, v in user_settings.items() if v])
+            elif val == 'proc_time':
+                if proc_time is not None:
+                    log_data['proc_time'] = proc_time                  
+            elif val in ("environ:HTTP_USER_AGENT", "environ:REMOTE_ADDR"):
+                log_data['request'] = {}   
+                if val == 'environ:HTTP_USER_AGENT':
+                    log_data['request']['user_agent'] = self.environ.get('HTTP_USER_AGENT')                                      
+                elif val == 'environ:REMOTE_ADDR':
+                    log_data['request']['remote_addr'] = self.environ.get('REMOTE_ADDR')
 
-        ans = {
-            'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
-            'action': action_name,
-            'user_id': self._session_get('user', 'id'),
-            'user': self._session_get('user', 'user'),
-            'params': dict([(k, v) for k, v in params.items() if v]),
-            'settings': dict([(k, v) for k, v in user_settings.items() if v])
-        }
-        if proc_time is not None:
-            ans['proc_time'] = proc_time
-        logging.getLogger('QUERY').info(json.dumps(ans))
+        logging.getLogger('QUERY').info(json.dumps(log_data))
 
     def _requires_corpus_access(self, action):
         # TODO this is a flawed solution - method metadata (access_level should be used instead)
@@ -990,6 +1006,8 @@ class Kontext(Controller):
             result['error_report_params'] = settings.get_full('global', 'error_report_params')
         else: 
             result['error_report_hasparams'] = False
+            
+        result['logged_values'] = settings.get('global', 'logged_values', None)
 
         result['qunit_test'] = self.qunit
         if self.qunit and settings.is_debug_mode():
