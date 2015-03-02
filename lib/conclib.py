@@ -240,6 +240,7 @@ def _get_cached_conc(corp, subchash, q, cache_dir, pid_dir, minsize):
                 except OSError:
                     pass
                 continue
+            cache_map.log_use(cachefile)
             ans = (i, conc)
             break
     logging.getLogger(__name__).debug('get_cached_conc(%s, [%s]) -> %s, %01.4f'

@@ -64,6 +64,8 @@
         </conc_persistence>
         <conc_cache>
             <module>default_conc_cache</module>
+            <ttl_hours extension-by="default">168</ttl_hours>
+            <log_access>true</log_access>
         </conc_cache>
         <settings_storage>
             <module>default_settings_storage</module>
