@@ -22,6 +22,7 @@ and filename containing respective saved concordances.
 import os
 import logging
 import time
+from hashlib import sha1
 
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
@@ -40,19 +41,57 @@ def _uniqname(key, used):
     return name
 
 
+class DummyMetadata(object):
+    def log_file_use(self, path):
+        pass
+
+
+class CacheMetadata(object):
+
+    def __init__(self, db, ttl):
+        self._db = db
+        self._ttl = ttl
+
+    @staticmethod
+    def _mk_key(path_hash):
+        return 'conc_cache:%s' % path_hash[:8]
+
+    def load_item(self, path_hash):
+        return self._db.get(self._mk_key(path_hash), {})
+
+    def save_item(self, path_hash, data):
+        self._db.set(self._mk_key(path_hash), data)
+        self._db.set_ttl(self._mk_key(path_hash), self._ttl)
+
+    def log_file_use(self, path):
+        key = sha1(path).hexdigest()
+        data = self.load_item(key)
+        if not data:
+            data['counter'] = 0
+            data['path'] = path
+            data['created'] = int(round(time.time()))
+        data['counter'] += 1
+
+        self.save_item(key, data)
+
+
 class CacheMapping(object):
 
     CACHE_FILENAME = '00CONCS.map'
 
-    def __init__(self, cache_dir):
+    def __init__(self, cache_dir, metadb):
         self._cache_dir = cache_dir
         self._data = None
+        self._metadb = metadb
 
     @property
     def data(self):
         if self._data is None:
             self._data = self._load_map()
         return self._data
+
+    def log_use(self, path):
+        self._metadb.log_file_use(path)
 
     def _clear_cache(self):
         if os.path.exists(self._cache_dir + self.CACHE_FILENAME):
@@ -159,9 +198,16 @@ class CacheMapping(object):
 
 class CacheMappingFactory(object):
 
+    def __init__(self, db, conf):
+        self._db = db
+        self._ttl = 3600 * int(conf.get('plugins', 'conc_cache').get('ttl_hours', 5))
+        tmp = conf.get('plugins', 'conc_cache').get('log_access', False)
+        self._log_access = tmp in (True, 'true', '1')
+
     def get_mapping(self, cache_dir):
-        return CacheMapping(cache_dir)
+        metadata = CacheMetadata(self._db, ttl=self._ttl) if self._log_access else DummyMetadata()
+        return CacheMapping(cache_dir, metadata)
 
 
 def create_instance(settings, db):
-    return CacheMappingFactory()
+    return CacheMappingFactory(db, settings)
