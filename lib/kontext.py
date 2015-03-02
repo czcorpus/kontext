@@ -18,6 +18,7 @@ import time
 from functools import partial
 import logging
 import inspect
+import urllib
 
 import corplib
 import conclib
@@ -265,7 +266,7 @@ class Kontext(Controller):
         import json
         import datetime
         
-        logged_values = settings.get('global', 'logged_values')       
+        logged_values = settings.get('global', 'logged_values', ())
         log_data = {} 
 
         params = {}
@@ -973,13 +974,20 @@ class Kontext(Controller):
         # util functions
         result['format_number'] = partial(format_number)
 
-        result['error_report_url'] = settings.get('global', 'error_report_url', None)
-        
-        if settings.contains('global', 'error_report_params'):
-            result['error_report_hasparams'] = True
-            result['error_report_params'] = settings.get_full('global', 'error_report_params')
-        else: 
-            result['error_report_hasparams'] = False
+        result['error_report_url'] = None
+        if settings.get('global', 'error_report_url', None):
+            err_rep_params = []
+            params_def = settings.get_full('global', 'error_report_params')
+            if params_def[0]:  # 0: conf value, 1: conf metadata; always guaranteed
+                for param_val, param_meta in params_def:
+                    if param_val[0] == '@':
+                        attr = getattr(self, param_val[1:])
+                        real_val = apply(attr) if callable(attr) else attr
+                    else:
+                        real_val = param_val
+                    err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
+                result['error_report_url'] = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
+
             
         result['logged_values'] = settings.get('global', 'logged_values', None)
 
