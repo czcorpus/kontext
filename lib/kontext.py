@@ -273,29 +273,27 @@ class Kontext(Controller):
         if self.environ.get('QUERY_STRING'):
             params.update(dict([item.split('=', 1) for item in [x for x in self.environ.get('QUERY_STRING').split('&')
                                                                 if x]])) 
-        
+
         for val in logged_values:
             if val == 'date':
-                log_data['date'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')      
+                log_data['date'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             elif val == 'action':
-                log_data['action'] = action_name       
+                log_data['action'] = action_name
             elif val == 'user_id':
-                log_data['user_id'] = self._session_get('user', 'id')            
+                log_data['user_id'] = self._session_get('user', 'id')
             elif val == 'user':
-                log_data['user'] = self._session_get('user', 'user')               
+                log_data['user'] = self._session_get('user', 'user')
             elif val == 'params':
-                log_data['params'] = dict([(k, v) for k, v in params.items() if v])           
+                log_data['params'] = dict([(k, v) for k, v in params.items() if v])
             elif val == 'settings':
                 log_data['settings'] = dict([(k, v) for k, v in user_settings.items() if v])
-            elif val == 'proc_time':
-                if proc_time is not None:
-                    log_data['proc_time'] = proc_time                  
-            elif val in ("environ:HTTP_USER_AGENT", "environ:REMOTE_ADDR"):
-                log_data['request'] = {}   
-                if val == 'environ:HTTP_USER_AGENT':
-                    log_data['request']['user_agent'] = self.environ.get('HTTP_USER_AGENT')                                      
-                elif val == 'environ:REMOTE_ADDR':
-                    log_data['request']['remote_addr'] = self.environ.get('REMOTE_ADDR')
+            elif val == 'proc_time' and proc_time is not None:
+                log_data['proc_time'] = proc_time
+            elif val.find('environ:') == 0:
+                if 'request' not in log_data:
+                    log_data['request'] = {}
+                k = val.split(':')[-1]
+                log_data['request'][k] = self.environ.get(k)
 
         logging.getLogger('QUERY').info(json.dumps(log_data))
 
@@ -987,9 +985,6 @@ class Kontext(Controller):
                         real_val = param_val
                     err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
                 result['error_report_url'] = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
-
-            
-        result['logged_values'] = settings.get('global', 'logged_values', None)
 
         result['qunit_test'] = self.qunit
         if self.qunit and settings.is_debug_mode():
