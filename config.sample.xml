@@ -22,7 +22,7 @@
         <conc_persistence_time>1800</conc_persistence_time>
         <error_report_url>http://acmecorpora.org/support</error_report_url>      
         <error_report_params>    
-          <param name="query_url">?queryurl={url}</param>          
+          <param name="queryurl">@_get_current_url</param>
         </error_report_params>
         <anonymous_user_id>0</anonymous_user_id>
         <logged_values>
