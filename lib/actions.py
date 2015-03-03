@@ -119,10 +119,11 @@ class Actions(Kontext):
                                     'menu-collocations', 'menu-conc-desc')
         return {}
 
-    @exposed(template='login.tmpl', legacy=True)
-    def loginx(self, username='', password=''):
+    @exposed(template='login.tmpl')
+    def loginx(self, request):
         ans = {}
-        self._session['user'] = plugins.auth.validate_user(username, password)
+        self._session['user'] = plugins.auth.validate_user(request.form['username'],
+                                                           request.form['password'])
 
         if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
