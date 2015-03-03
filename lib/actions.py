@@ -134,12 +134,12 @@ class Actions(Kontext):
             ans['message'] = ('error', _('Incorrect username or password'))
         return ans
 
-    @exposed(access_level=1, template='login.tmpl', legacy=True)
-    def logoutx(self):
+    @exposed(access_level=1, template='login.tmpl')
+    def logoutx(self, request):
         self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc')
-        plugins.auth.logout(self._get_session_id())
+        plugins.auth.logout(self._session.sid)
         self._init_session()
 
         return {
