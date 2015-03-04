@@ -1095,8 +1095,8 @@ msgid "View"
 msgstr "Zobrazení"
 
 #: cmpltmpl/viewopts.py:158 cmpltmpl/document.py:2475
-msgid "General concordance view options"
-msgstr "Obecné volby zobrazení konkordance"
+msgid "General view options"
+msgstr "Obecné volby zobrazení"
 
 #: cmpltmpl/viewopts.py:164
 msgid "Following settings apply for all the corpora."

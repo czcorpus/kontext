@@ -105,6 +105,14 @@ class Kontext(Controller):
                          'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
                          'nextlink', 'lastlink', 'prevlink', 'firstlink')
 
+
+    GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
+                       'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems')
+
+    LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
+                          'csortfn')
+
+
     # Default corpus must be accessible to any user, otherwise KonText messes up trying
     # to infer some default corpus name and redirect user there. Hopefully, future releases
     # will avoid this.
@@ -326,19 +334,6 @@ class Kontext(Controller):
         if 'shuffle' not in options:
             options['shuffle'] = 1
 
-    def _filter_out_unused_settings(self, options):
-        """
-        Removes settings related to others than
-        current corpus.
-        This is not very effective but currently it is the
-        simplest and still quite effective solution.
-        """
-        if self.corpname:
-            for k in options.keys():
-                elms = k.split(':')
-                if len(elms) == 2 and elms[0] != self.corpname:
-                    del(options[k])
-
     def _setup_user_paths(self, user_file_id):
         if not self._user_is_anonymous():
             self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
@@ -401,7 +396,7 @@ class Kontext(Controller):
             for k, v in options.items():
                 tokens = k.rsplit(':', 1)  # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
                 if len(tokens) == 2:
-                    if self._canonical_corpname(tokens[0]) == corpname:
+                    if self._canonical_corpname(tokens[0]) == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                         ans[tokens[1]] = v
             convert_types(options, self.clone_self(), selector=1)
             self.__dict__.update(ans)
@@ -635,12 +630,6 @@ class Kontext(Controller):
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
         self._apply_corpus_user_settings(corp_options, self.corpname)
-
-        # Once we know the current corpus we can remove
-        # settings related to other corpora. It is quite
-        # a dumb solution but currently there is no other way
-        # (other than always loading all the settings)
-        self._filter_out_unused_settings(self.__dict__)
 
         # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
         self._map_args_to_attrs(form, selectorname, named_args)
