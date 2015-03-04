@@ -42,40 +42,94 @@ def _uniqname(key, used):
 
 
 class DummyMetadata(object):
+    """
+    This is just a dummy replacement for CacheMetadata class
+    in case there is no need to store any metadata for
+    cached files.
+    """
     def log_file_use(self, path):
         pass
 
 
 class CacheMetadata(object):
+    """
+    This class stores additional metadata for individual cached
+    files. It expects a KeyValueStorage instance as a storage.
+    Stored information can be used by independently running cache
+    clean-up script.
+    """
 
-    def __init__(self, db, ttl):
+    def __init__(self, db, ttl, initial_health):
         self._db = db
         self._ttl = ttl
+        self._initial_health = initial_health
 
     @staticmethod
     def _mk_key(path_hash):
         return 'conc_cache:%s' % path_hash[:8]
 
     def load_item(self, path_hash):
+        """
+        Loads an item from storage
+
+        arguments:
+        path_hash -- an sha1 hash of cache file's absolute path
+
+        returns:
+        a matching item or None
+        """
         return self._db.get(self._mk_key(path_hash), {})
 
     def save_item(self, path_hash, data):
+        """
+        Saves respective item to the storage.
+
+        arguments:
+        path_hash -- an sha1 hash of cache file's absolute path
+        data -- a dict containing cache file metadata
+        """
         self._db.set(self._mk_key(path_hash), data)
-        self._db.set_ttl(self._mk_key(path_hash), self._ttl)
+
+    def remove_item(self, path_hash):
+        """
+        Removes an item from the storage
+
+        arguments:
+        path_hash -- an sha1 hash of cache file's absolute path
+        """
+        self._db.remove(self._mk_key(path_hash))
 
     def log_file_use(self, path):
+        """
+        Logs cache file access. In case no metadata is present for the file yet
+        it creates a new record.
+        The file is given following properties:
+          * counter (initialized to 1) - keeps track on how many times the file has been used
+          * health - a "magic" value initialized to some empiric value and then decreased by the clean-up script
+          * path - the value of the 'path' argument
+          * created - a timestamp with creation time
+
+        arguments:
+        path -- an absolute path to the cache file (i.e. no hash here)
+        """
         key = sha1(path).hexdigest()
         data = self.load_item(key)
         if not data:
-            data['counter'] = 0
+            data['counter'] = 1
+            data['health'] = self._initial_health
             data['path'] = path
             data['created'] = int(round(time.time()))
-        data['counter'] += 1
-
-        self.save_item(key, data)
+            self.save_item(key, data)
+            self._db.set_ttl(self._mk_key(key), self._ttl)
+        else:
+            data['counter'] += 1
+            self.save_item(key, data)
 
 
 class CacheMapping(object):
+    """
+    A slightly modified version of Bonito's original CacheMapping.
+    """
 
     CACHE_FILENAME = '00CONCS.map'
 
@@ -197,16 +251,39 @@ class CacheMapping(object):
 
 
 class CacheMappingFactory(object):
+    """
+    In case of concordance cache the plug-in is in fact this factory instance
+    which produces individual instances (distinguished by cache_dir) of actual
+    cache-control object.
+    """
 
     def __init__(self, db, conf):
-        self._db = db
-        self._ttl = 3600 * int(conf.get('plugins', 'conc_cache').get('ttl_hours', 5))
-        tmp = conf.get('plugins', 'conc_cache').get('log_access', False)
-        self._log_access = tmp in (True, 'true', '1')
+        """
+        arguments:
+        db -- a KeyValueStorage compatible object
+        conf -- KonText settings
+        """
+        ttl = 3600 * int(conf.get('plugins', 'conc_cache').get('default:fallback_ttl', 5))
+        initial_health = float(conf.get('plugins', 'conc_cache').get('default:initial_health', 5))
+        tmp = conf.get('plugins', 'conc_cache').get('default:log_access', False)
+        log_access = tmp in (True, 'true', '1')
+        self._metadb = CacheMetadata(db=db, ttl=ttl, initial_health=initial_health) if log_access else DummyMetadata()
 
     def get_mapping(self, cache_dir):
-        metadata = CacheMetadata(self._db, ttl=self._ttl) if self._log_access else DummyMetadata()
-        return CacheMapping(cache_dir, metadata)
+        """
+        Creates a new CacheMapping instance
+
+        arguments:
+        cache_dir -- a directory where the cache should operate
+        """
+        # please note that the _metadb is shared between all CacheMapping instances
+        return CacheMapping(cache_dir, self._metadb)
+
+    def get_metadb(self):
+        """
+        Returns a metadata object (CacheMetadata or DummyMetadata)
+        """
+        return self._metadb
 
 
 def create_instance(settings, db):
