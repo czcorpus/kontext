@@ -445,6 +445,11 @@ class Actions(Kontext):
     def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
+        # This KonText version does not allow user settings for
+        # collocations and frequencies pages. To save something reasonable
+        # we use 'pagesize' here.
+        self.citemsperpage = self.pagesize
+        self.fmaxitems = self.pagesize
         self._save_options(self.GENERAL_OPTIONS)
 
         if self.q:
