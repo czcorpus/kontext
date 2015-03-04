@@ -72,6 +72,27 @@ class ConcArgsMapping(FixedDict):
         return self.__dict__.keys()
 
 
+class LegacyForm(object):
+    """
+    A wrapper class which ensures that Werkzeug's request.form (= MultiDict)
+    will be compatible with legacy code in the Kontext class.
+    """
+    def __init__(self, form):
+        self._form = form
+
+    def __iter__(self):
+        return self._form.__iter__()
+
+    def keys(self):
+        return self._form.keys()
+
+    def getvalue(self, k):
+        tmp = self._form.getlist(k)
+        if len(tmp) == 1:
+            return tmp[0]
+        return tmp
+
+
 class Kontext(Controller):
 
     ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
@@ -512,64 +533,18 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
-    # TODO: decompose this method
-    def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
+    def _map_args_to_attrs(self, form, selectorname, named_args):
         """
-        Runs before main action is processed
+        Maps URL and form arguments to self.__dict__. This is intended for
+        legacy action methods.
         """
-        def validate_corpus():
-            c = self._corp()
-            if isinstance(c, fallback_corpus.ErrorCorpus):
-                return c.get_error()
-            return None
-
-        self.add_validator(validate_corpus)
-
         def choose_selector(args, selector):
             selector += ':'
             s = len(selector)
             args.update(dict([(n[s:], v) for n, v in args.items() if n.startswith(selector)]))
 
-        super(Kontext, self)._pre_dispatch(path, selectorname, named_args)
         param_types = dict(inspect.getmembers(self.__class__, predicate=lambda x: isinstance(x, Parameter)))
 
-        if not action_metadata:
-            action_metadata = {}
-        form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
-                                environ=self.environ, fp=self.environ['wsgi.input'])
-
-        options, corp_options = self._load_user_settings()
-        self._scheduled_actions(options)
-        # only general setting can be applied now because
-        # we do not know final corpus name yet
-        self._apply_general_user_settings(options, self._init_default_settings)
-
-        # corpus access check
-        allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'id'))
-        if self._requires_corpus_access(path[0]):
-            self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
-            if fallback_url:
-                path = [Controller.NO_OPERATION]
-                if action_metadata.get('return_type', None) != 'json':
-                    self._redirect(fallback_url)
-                else:
-                    path = ['json_error']  # just passing a fallback method for JSON response
-                    named_args['error'] = _('Corpus access denied')
-                    named_args['reset'] = True
-        elif len(allowed_corpora) > 0:
-            self.corpname = ''
-        else:
-            self.corpname = ''
-
-        # now we can apply also corpus-dependent settings
-        # because the corpus name is already known
-        self._apply_corpus_user_settings(corp_options, self.corpname)
-
-        # Once we know the current corpus we can remove
-        # settings related to other corpora. It is quite
-        # a dumb solution but currently there is no other way
-        # (other than always loading all the settings)
-        self._filter_out_unused_settings(self.__dict__)
         if 'json' in form:
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
@@ -605,6 +580,70 @@ class Kontext(Controller):
         if getattr(self, 'refs') is None:
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
         self.__dict__.update(na)
+
+    def _check_corpus_access(self, path, form, action_metadata):
+        allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'id'))
+        if self._requires_corpus_access(path[0]):
+            self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
+            if fallback_url:
+                path = [Controller.NO_OPERATION]
+                if action_metadata.get('return_type', None) != 'json':
+                    self._redirect(fallback_url)
+                else:
+                    path = ['json_error']  # just passing a fallback method for JSON response
+                    named_args['error'] = _('Corpus access denied')
+                    named_args['reset'] = True
+        elif len(allowed_corpora) > 0:
+            self.corpname = ''
+        else:
+            self.corpname = ''
+        return path
+
+    # TODO: decompose this method (phase 2)
+    def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
+        """
+        Runs before main action is processed
+        """
+        def validate_corpus():
+            c = self._corp()
+            if isinstance(c, fallback_corpus.ErrorCorpus):
+                return c.get_error()
+            return None
+        self.add_validator(validate_corpus)
+
+        super(Kontext, self)._pre_dispatch(path, selectorname, named_args)
+
+        if not action_metadata:
+            action_metadata = {}
+        is_legacy_method = action_metadata.get('legacy', False)
+
+        if is_legacy_method:
+            form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
+                                    environ=self.environ, fp=self.environ['wsgi.input'])
+        else:
+            form = LegacyForm(self._request.form)
+
+        options, corp_options = self._load_user_settings()
+        self._scheduled_actions(options)
+        # only general setting can be applied now because
+        # we do not know final corpus name yet
+        self._apply_general_user_settings(options, self._init_default_settings)
+
+        # corpus access check and modify path in case user cannot access currently requested corp.
+        path = self._check_corpus_access(path, form, action_metadata)
+
+        # now we can apply also corpus-dependent settings
+        # because the corpus name is already known
+        self._apply_corpus_user_settings(corp_options, self.corpname)
+
+        # Once we know the current corpus we can remove
+        # settings related to other corpora. It is quite
+        # a dumb solution but currently there is no other way
+        # (other than always loading all the settings)
+        self._filter_out_unused_settings(self.__dict__)
+
+        # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
+        self._map_args_to_attrs(form, selectorname, named_args)
 
         # return url (for 3rd party pages etc.)
         if self.ua in self._session:

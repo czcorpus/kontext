@@ -62,8 +62,8 @@ class DefaultSessions(SessionStore):
     def generate_key(self, salt=None):
         return str(uuid.uuid1())
 
-    def delete(self, session):
-        self.db.remove(self._mk_key(session.sid))
+    def delete(self, session_id):
+        self.db.remove(self._mk_key(session_id))
 
     def get(self, sid):
         if not self.is_valid_key(sid):
