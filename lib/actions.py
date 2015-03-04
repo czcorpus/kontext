@@ -113,7 +113,7 @@ class Actions(Kontext):
         self._redirect(self.get_root_url())
 
     @exposed()
-    def login(self):
+    def login(self, request):
         self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                     'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
                                     'menu-collocations', 'menu-conc-desc')
