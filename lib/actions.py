@@ -426,7 +426,7 @@ class Actions(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'pagesize', 'structattrs'], self.corpname)
+        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.corpname)
         # TODO refs_up ???
         if self.q:
             return self.view()
@@ -445,8 +445,8 @@ class Actions(Kontext):
     def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
         # TODO pagesize?
         self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
-        self._save_options(['pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
-                            'refs_up', 'shuffle'])
+        self._save_options(self.GENERAL_OPTIONS)
+
         if self.q:
             return self.view()
         else:
@@ -1137,8 +1137,7 @@ class Actions(Kontext):
         list collocations
         """
         self.cbgrfns = ''.join(cbgrfns)
-        self._save_options(['cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr',
-                            'collpage', 'citemsperpage', 'cbgrfns', 'csortfn'], self.corpname)
+        self._save_options(self.LOCAL_COLL_OPTIONS, self.corpname)
 
         collstart = (self.collpage - 1) * self.citemsperpage + line_offset
 
