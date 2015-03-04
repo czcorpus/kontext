@@ -77,18 +77,24 @@ class LegacyForm(object):
     A wrapper class which ensures that Werkzeug's request.form (= MultiDict)
     will be compatible with legacy code in the Kontext class.
     """
-    def __init__(self, form):
+    def __init__(self, form, args):
         self._form = form
+        self._args = args
 
     def __iter__(self):
-        return self._form.__iter__()
+        return self.keys().__iter__()
+
+    def __contains__(self, item):
+        return self._form.__contains__(item) or self._args.__contains__(item)
 
     def keys(self):
-        return self._form.keys()
+        return list(set(self._form.keys() + self._args.keys()))
 
     def getvalue(self, k):
         tmp = self._form.getlist(k)
-        if len(tmp) == 1:
+        if len(tmp) == 0 and k in self._args:
+            return self._args[k]
+        elif len(tmp) == 1:
             return tmp[0]
         return tmp
 
@@ -616,7 +622,7 @@ class Kontext(Controller):
             form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
                                     environ=self.environ, fp=self.environ['wsgi.input'])
         else:
-            form = LegacyForm(self._request.form)
+            form = LegacyForm(self._request.form, self._request.args)
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
