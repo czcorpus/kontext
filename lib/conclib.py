@@ -361,6 +361,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
                        cache_map=cache_factory.get_mapping(cache_dir), pidfile=pidfile, minsize=minsize)
         if not os.path.exists(cachefile):
             raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' % (cachefile, pidfile))
+        cache_factory.get_mapping(cache_dir).log_use(cachefile)
     except Exception as e:
         if os.path.exists(pidfile):
             os.remove(pidfile)
@@ -370,7 +371,7 @@ def _get_async_conc(corp, q, save, cache_dir, pid_dir, subchash, samplesize, ful
 
 def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize, fullsize, pid_dir):
     conc = _compute_conc(corp, q, cache_dir, subchash, samplesize,
-                                    fullsize, pid_dir)
+                         fullsize, pid_dir)
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
@@ -380,6 +381,7 @@ def _get_sync_conc(corp, q, save, cache_dir, subchash, samplesize, fullsize, pid
         # update size in map file
         cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
         os.remove(pidfile)
+        cache_map.log_use(cachefile)
     return conc
 
 
