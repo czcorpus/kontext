@@ -833,6 +833,7 @@ class Controller(object):
                     self.add_system_message('error', e2.message)
 
                 em, self.exceptmethod = self.exceptmethod, None
+                action_metadata = self._get_method_metadata(em)
                 return self.process_method(em, action_metadata, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
