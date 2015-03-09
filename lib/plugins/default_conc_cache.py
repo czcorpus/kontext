@@ -27,6 +27,10 @@ from hashlib import sha1
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
 
+def fspath_hash(path):
+    return sha1(path).hexdigest()
+
+
 def _uniqname(key, used):
     name = '#'.join([''.join([c for c in w if c.isalnum()]) for w in key])
     name = name[1:15].encode('UTF-8')  # UTF-8 because os.path manipulations
@@ -73,7 +77,7 @@ class CacheMetadata(object):
         Loads an item from storage
 
         arguments:
-        path_hash -- an sha1 hash of cache file's absolute path
+        path_hash -- a hash (determined by function fspath_hash) of cache file's absolute path
 
         returns:
         a matching item or None
@@ -85,7 +89,7 @@ class CacheMetadata(object):
         Saves respective item to the storage.
 
         arguments:
-        path_hash -- an sha1 hash of cache file's absolute path
+        path_hash -- a hash (determined by function fspath_hash) of cache file's absolute path
         data -- a dict containing cache file metadata
         """
         self._db.set(self._mk_key(path_hash), data)
@@ -95,7 +99,7 @@ class CacheMetadata(object):
         Removes an item from the storage
 
         arguments:
-        path_hash -- an sha1 hash of cache file's absolute path
+        path_hash -- a hash (determined by function fspath_hash) of cache file's absolute path
         """
         self._db.remove(self._mk_key(path_hash))
 
@@ -112,7 +116,7 @@ class CacheMetadata(object):
         arguments:
         path -- an absolute path to the cache file (i.e. no hash here)
         """
-        key = sha1(path).hexdigest()
+        key = fspath_hash(path)
         data = self.load_item(key)
         if not data:
             data['counter'] = 1
@@ -124,6 +128,13 @@ class CacheMetadata(object):
         else:
             data['counter'] += 1
             self.save_item(key, data)
+
+    def apply_on_entries(self, fn, match='conc_cache:*'):
+        """
+        Applies a function "fn" to a set of matching keys in a following
+        manner: fn(plugins.redis_db.RedisDb, key)
+        """
+        self._db.apply_on_entries(fn, match=match)
 
 
 class CacheMapping(object):
@@ -145,6 +156,10 @@ class CacheMapping(object):
         return self._data
 
     def log_use(self, path):
+        """
+        Logs an information that a passed cache file has been read.
+        This may be used by a cache-cleaning script.
+        """
         self._metadb.log_file_use(path)
 
     def _clear_cache(self):
@@ -279,7 +294,8 @@ class CacheMappingFactory(object):
         # please note that the _metadb is shared between all CacheMapping instances
         return CacheMapping(cache_dir, self._metadb)
 
-    def get_metadb(self):
+    @property
+    def metadb(self):
         """
         Returns a metadata object (CacheMetadata or DummyMetadata)
         """
