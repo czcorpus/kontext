@@ -133,3 +133,25 @@ class KeyValueStorage(object):
         boolean value
         """
         raise NotImplementedError()
+
+    def set_ttl(self, key, ttl):
+        """
+        Set auto expiration timeout in seconds.
+
+        arguments:
+        key -- data access key
+        ttl -- number of seconds to wait before the value is removed
+        (please note that update actions may reset the timer to zero)
+        """
+        pass
+
+    def apply_on_entries(self, fn, match):
+        """
+        Iterates through keys matching provided argument "match" and
+        applies function "fn" in a following manner: fn(self, key).
+
+        It should not be expected from the implementations that they
+        handle real-time changes of data in a 'transaction-like' way,
+        i.e. elements may disappear, re-enter etc.
+        """
+        pass
