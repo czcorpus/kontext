@@ -99,7 +99,7 @@ class CacheCleanup(CacheFiles):
             if data['health'] <= 0:
                 self._db.remove_item(path_hash)
                 os.unlink(path)
-                self._num_removed
+                self._num_removed += 1
             else:
                 self._db.save_item(path_hash, data)
         else:
@@ -164,8 +164,8 @@ class CacheInfo(CacheFiles):
                 avg_health /= registered_num
                 avg_age /= registered_num
                 ans += [
-                    '    average use: %s' % avg_used,
-                    '    average health: %01.2f' % avg_health,
+                    '    average use: %01.1f' % avg_used,
+                    '    average health: %01.1f' % avg_health,
                     '    average age: %s' % self._sec_to_hms(avg_age),
                     ''
                 ]
