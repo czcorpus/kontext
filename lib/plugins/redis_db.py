@@ -37,6 +37,7 @@ class RedisDb(KeyValueStorage):
         """
         self.redis = redis.StrictRedis(
             host=conf['default:host'], port=int(conf['default:port']), db=int(conf['default:id']))
+        self._scan_chunk_size = 50
 
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
@@ -146,6 +147,23 @@ class RedisDb(KeyValueStorage):
         (please note that update actions reset the timer to zero)
         """
         self.redis.expire(key, ttl)
+
+    def apply_on_entries(self, fn, match):
+        """
+        Iterates through keys matching provided argument "match" and
+        applies function "fn" in a following manner: fn(self, key).
+
+        Please see http://redis.io/commands/scan#scan-guarantees
+        for the information how Redis handles such iteration.
+        """
+        def apply_on_chunk(ch):
+            for item in ch:
+                apply(fn, (self, item))
+        cursor, data = self.redis.scan(match=match, count=self._scan_chunk_size)
+        apply_on_chunk(data)
+        while cursor > 0:
+            cursor, data = self.redis.scan(cursor=cursor, match=match, count=self._scan_chunk_size)
+            apply_on_chunk(data)
 
     def remove(self, key):
         """
