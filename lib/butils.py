@@ -157,6 +157,8 @@ def log_stack(level='debug'):
     arguments:
     level -- logging level to be used (default is 'debug')
     """
+    import threading
     import logging
     fn = getattr(logging.getLogger('STACK'), level)
-    apply(fn, ('\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)]),))
+    stack = '\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)])
+    apply(fn, ('(thread %s) --> %s' % (threading.current_thread().ident, stack),))
