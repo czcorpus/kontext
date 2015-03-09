@@ -40,7 +40,7 @@ settings.load('%s/config.xml' % APP_PATH)
 logger = logging.getLogger('kontext_script')
 
 
-def setup_logger(log_path=None, logger_name=None):
+def setup_logger(log_path=None, logger_name=None, logging_level=None):
     """
     Configures logging (= module's logger variable).
 
@@ -59,4 +59,6 @@ def setup_logger(log_path=None, logger_name=None):
         handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
+    if logging_level is None:
+        logging_level = logging.INFO if not settings.is_debug_mode() else logging.DEBUG
+    logger.setLevel(logging_level)
