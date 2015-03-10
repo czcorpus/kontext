@@ -154,7 +154,7 @@ define('conf', [], function () {
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
-    conf.stateParams = "$q;$globals#if $align#&align=$align#end if#";
+    conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.corporaLabels = ${corpora_labels};
     conf.uiStateTTL = ${ui_state_ttl};
@@ -209,7 +209,7 @@ define('conf', [], function () {
 #if $app_bar
 #filter None
     $app_bar
-#end filter                           $q;$globals
+#end filter
 #else
 <span class="user">$_("User"):
     #if not $_anonymous
@@ -237,7 +237,7 @@ define('conf', [], function () {
             <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Corpora")</a>
                 <ul class="submenu">
                     <li class="separ"><a href="corplist">$_('Available corpora')&#8230;</a></li>
-                    <li><a title="$_('List of my subcorpora')" href="subcorp_list?$q;$globals">$_('My subcorpora')&#8230;</a></li>
+                    <li><a title="$_('List of my subcorpora')" href="subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
                     <li><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                 </ul>
             </li>
@@ -246,7 +246,7 @@ define('conf', [], function () {
                 <ul class="submenu">
                     #set $i = 0
                     #for $item in $save_menu
-                    <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="$item.action?$q;$globals&$item.params">$item.label</a></li>
+                    <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="$item.action?$join_params($q, $globals, $item.params)">$item.label</a></li>
                     #set $i = $i + 1
                     #end for
                     #block custom_save
@@ -256,19 +256,19 @@ define('conf', [], function () {
 
             <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="$_('Concordance based on current parameters')" href="view?$q;$globals">$_('Current concordance')</a></li>
-                    <li class="separ"><a title="$_("Complex sorting options")" href="sort?$q;$globals">$_('Sorting')&#8230;</a></li>
-                    <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$q;q=f;$globals">$_("Shuffle")</a></li>
-                    <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Concordance based on current parameters')" href="view?$join_params($q, $globals)">$_('Current concordance')</a></li>
+                    <li class="separ"><a title="$_("Complex sorting options")" href="sort?$join_params($q, $globals)">$_('Sorting')&#8230;</a></li>
+                    <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$join_params($q, 'q=f', $globals)">$_("Shuffle")</a></li>
+                    <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$join_params($q, $globals)">$_('Sample')&#8230;</a></li>
                     <li class="separ"><a id="query-overview-trigger"
                         title="$_('Details about current query and related operations')"
-                        href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q"
-                        data-json-href="concdesc_json?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                        href="concdesc?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)"
+                        data-json-href="concdesc_json?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)">$_('Query overview')&#8230;</a></li>
                     <li>
                     #if len($undo_q) > 0
-                    <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
+                    <a title="$_('Revert last operation on current concordance')" href="view?$join_params($globals, $undo_q)">$_('Undo')</a>
                     #else
-                    <span class="disabled" title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</span>
+                    <span class="disabled" title="$_('Revert last operation on current concordance')" href="view?$join_params($globals, $undo_q)">$_('Undo')</span>
                     #end if
                     </li>
                 </ul>
@@ -276,30 +276,30 @@ define('conf', [], function () {
 
             <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
                 <ul class="submenu">
-                    <li class="separ"><a href="filter_form?$q;$globals&pnfilter=p">$_('Positive')&#8230;</a></li>
-                    <li><a href="filter_form?$q;$globals&pnfilter=n">$_('Negative')&#8230;</a></li>
+                    <li class="separ"><a href="filter_form?$join_params($q, $globals, 'pnfilter=p')">$_('Positive')&#8230;</a></li>
+                    <li><a href="filter_form?$join_params($q, $globals, 'pnfilter=n')">$_('Negative')&#8230;</a></li>
                 </ul>
             </li>
 
             <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
                 <ul class="submenu">
                     #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
-                    <li class="separ"><a title="$_("Show frequencies of lemmas")" href="freqs?$q;$globals;fcrit=lemma/e+0~0>0;ml=0">$_("Lemmas")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of lemmas")" href="freqs?$join_params($q, $globals, 'fcrit=lemma/e+0~0>0', 'ml=0')">$_("Lemmas")</a></li>
                     #end if
-                    <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$q;$globals;fcrit=word/e+0~0>0;ml=0">$_("Node forms")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$join_params($q, $globals, 'fcrit=word/e+0~0>0', 'ml=0')">$_("Node forms")</a></li>
                     #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
-                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$q;$globals;fcrit=$fcrit_shortref;ml=0">$_("Doc IDs")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$join_params($q, $globals, 'fcrit=$fcrit_shortref', 'ml=0')">$_("Doc IDs")</a></li>
                     #end if
                     #if $varExists('ttcrit') and $ttcrit
-                    <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$q;$globals;$ttcrit">$_("Text Types")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$join_params($q, $globals, $ttcrit)">$_("Text Types")</a></li>
                     #end if
-                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$q;$globals">$_('Custom')&#8230;</a></li>
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
             <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
                 <ul class="submenu">
-                    <li><a href="coll?$q;$globals">$_('Custom')&#8230;</a></li>
+                    <li><a href="coll?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
                 </ul>
             </li>
 
@@ -307,23 +307,23 @@ define('conf', [], function () {
                 <ul class="submenu">
                     #if not $align
                         #if $viewmode == 'sen'
-                        <li class="separ"><a title="$_("Show KWICs")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_('KWIC')/$_('Sentence')</a></li>
+                        <li class="separ"><a title="$_("Show KWICs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_('Sentence')</a></li>
                         #else
-                        <li class="separ"><a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_('KWIC')/$_("Sentence")</a></li>
+                        <li class="separ"><a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_("Sentence")</a></li>
                         #end if
                     #else
                     <li class="separ">
                     #if $viewmode == 'kwic'
-                    <a title="$_("Show sentences")" href="view?$q;${url_sub($globals,'viewmode','sen')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
+                    <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
                     #elif $viewmode == 'sen'
-                    <a title="$_("Show aligned segments")" href="view?$q;${url_sub($globals,'viewmode','align')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
+                    <a title="$_("Show aligned segments")" href="view?$join_params($q, $url_sub($globals,'viewmode','align'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
                     #elif $viewmode == 'align'
-                    <a title="$_("Show KWICSs")" href="view?$q;${url_sub($globals,'viewmode','kwic')};fromp=$cached['fromp']">$_("KWIC/Sentence/Alignment")</a>
+                    <a title="$_("Show KWICSs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
                     #end if
                     </li>
                     #end if
-                    <li class="separ"><a href="viewattrs?$q;$globals;fromp=$cached['fromp']">$_("Attributes, structures and references")&#8230;</a></li>
-                    <li><a href="viewopts?$q;$globals;fromp=$cached['fromp']">$_("General view options")&#8230;</a></li>
+                    <li class="separ"><a href="viewattrs?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
+                    <li><a href="viewopts?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("General view options")&#8230;</a></li>
                 </ul>
             </li>
 
@@ -442,8 +442,8 @@ define('conf', [], function () {
                 <form action="view" id="$navid">
                 #if $cached['prevlink']
                     <div class="bonito-pagination-left">
-                    <a href="view?$q;$cached['firstlink'];$globals"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                    <a href="view?$q;$cached['prevlink'];$globals"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                    <a href="view?$join_params($q, $cached['firstlink'], $globals)"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                    <a href="view?$join_params($q, $cached['prevlink'], $globals)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
                     </div>
                 #end if
 
@@ -457,8 +457,8 @@ define('conf', [], function () {
 
                 #if $cached['nextlink']
                     <div class="bonito-pagination-right">
-                    <a href="view?$q;$cached['nextlink'];$globals" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
-                    <a id="lastpage" href="view?$q;$cached['lastlink'];$globals"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
+                    <a href="view?$join_params($q, $cached['nextlink'], $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
+                    <a id="lastpage" href="view?$join_params($q, $cached['lastlink'], $globals)"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
                     </div>
                 #else
                     <a id="$nextid"></a>
@@ -488,7 +488,7 @@ define('conf', [], function () {
             &nbsp;
         </div>
         <div id="conc-bottom-bar" class="minimized">
-            <a class="expand-conc" href="view?$q;$globals" title="$_('click to show current concordance')">
+            <a class="expand-conc" href="view?$join_params($q, $globals)" title="$_('click to show current concordance')">
                 <img class="over-img" src="$files_path/img/expand-conc.png" data-alt-img="../files/img/expand-conc_s.png" />
             </a>
         </div>
