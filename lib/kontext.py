@@ -592,8 +592,6 @@ class Kontext(Controller):
                     self._redirect(fallback_url)
                 else:
                     path = ['json_error']  # just passing a fallback method for JSON response
-                    named_args['error'] = _('Corpus access denied')
-                    named_args['reset'] = True
         elif len(allowed_corpora) > 0:
             self.corpname = ''
         else:
