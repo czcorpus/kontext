@@ -307,7 +307,8 @@ class Actions(Kontext):
         """
         from collections import defaultdict
 
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-save', 'menu-concordance',
+                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
         out = {}
         if self.maincorp:
             corp = corplib.manatee.Corpus(self.maincorp)
@@ -397,7 +398,8 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def viewopts(self):
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-save', 'menu-concordance',
+                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
         out = {
             'newctxsize': self.kwicleftctx[1:]
         }
