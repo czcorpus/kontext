@@ -730,7 +730,7 @@ class Controller(object):
             if self._method_is_exposed(action_metadata):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_method(path[0], action_metadata, request, path, named_args)
+                methodname, tmpl, result = self.process_method(path[0], request, path, named_args)
                 # Let's test whether process_method used requested our method.
                 # If not (e.g. there was an error and a fallback has been used) then reload action metadata
                 if methodname != path[0]:
@@ -742,14 +742,14 @@ class Controller(object):
             self._status = 401
             self.add_system_message('error', u'%s' % fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
             self.add_system_message('error',  fetch_exception_msg(e))
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         except Exception as e:  # we assume that this means some kind of a fatal error
             self._status = 500
@@ -762,7 +762,7 @@ class Controller(object):
                                           'Please try again later or contact system support.'))
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
-            methodname, tmpl, result = self.process_method('message', action_metadata, request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, tmpl, result)
@@ -779,7 +779,7 @@ class Controller(object):
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         return self._export_status(), headers, ans_body
 
-    def process_method(self, methodname, action_metadata, request, pos_args, named_args):
+    def process_method(self, methodname, request, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
@@ -796,13 +796,14 @@ class Controller(object):
         # reload parameter returns user from a result page
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
+        action_metadata = self._get_method_metadata(methodname)
         if getattr(self, 'reload', None):
             self.reload = None
             if methodname != 'subcorp':
                 reload_template = reload.get(methodname, methodname + '_form')
                 if self.is_template(reload_template):
                     # TODO reload variant has (possibly) different metadata - do we want them here?
-                    return self.process_method(reload_template, action_metadata, request, pos_args, named_args)
+                    return self.process_method(reload_template, request, pos_args, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
@@ -833,8 +834,7 @@ class Controller(object):
                     self.add_system_message('error', e2.message)
 
                 em, self.exceptmethod = self.exceptmethod, None
-                action_metadata = self._get_method_metadata(em)
-                return self.process_method(em, action_metadata, request, pos_args, named_args)
+                return self.process_method(em, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
@@ -954,7 +954,7 @@ class Controller(object):
     def _user_is_anonymous(self):
         return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
 
-
+    @exposed()
     def nop(self, request):
         """
         Represents an empty operation. This is sometimes required
