@@ -883,7 +883,6 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
 
             jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
             if (jqSubMenuUl.length > 0) {
-
                 jqActiveLi.addClass('active');
                 jqSubMenuUl.css('display', 'block');
                 this.jqMenuLevel2.addClass('active').empty().append(jqSubMenuUl);
@@ -927,24 +926,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
                         }
                     }
                 });
-
-                $(this).on('mouseleave', function (event) {
-                    var jqMenuLi = $(event.target).closest('li'),
-                        jqSubmenu = self.jqMenuLevel2.find('ul');
-
-                    if (jqSubmenu.length === 0 || self.getActiveSubmenuId() !== jqMenuLi.attr('id')) {
-                        jqMenuLi.removeClass('active');
-                    }
-                });
             });
 
-            this.jqMenuLevel2.on('mouseleave', function (event) {
-                var jqMenuLi = $(event.target).closest('li'),
-                    jqSubmenu = self.jqMenuLevel2.find('ul');
-
-                if (jqSubmenu.length === 0 || self.getActiveSubmenuId() !== jqMenuLi.attr('id')) {
-                    jqMenuLi.removeClass('active');
-                }
+            self.jqMenuBar.on('mouseleave', function (event) {
+                self.closeSubmenu(self.getActiveSubmenuId());
             });
 
             $(win).on('resize', function () {
