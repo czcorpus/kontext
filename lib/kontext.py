@@ -1036,6 +1036,7 @@ class Kontext(Controller):
         cached_values = Nicedict()
         self._restore_conc_results(cached_values)
         result['cached'] = cached_values
+        result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
         return result
 
     def _restore_conc_results(self, storage):
