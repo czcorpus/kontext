@@ -381,7 +381,7 @@ a#logo-wrapper {
 }
 
 #menu-level-1 a:hover {
-  color: #000000 !important;
+  color: #000000;
 }
 
 #menu-level-1 li.disabled a:hover {
@@ -403,6 +403,7 @@ ul.submenu {
   border-radius: 6px;
   min-width: 110px;
   display: none;
+  list-style: none;
 }
 
 #menu-level-1 > li.separator {
@@ -443,8 +444,8 @@ ul.submenu {
 }
 
 #menu-level-2 ul li {
-  display: inline-block;
-  padding: 1px 5px;
+  display: list-item;
+  padding: 1.9pt 10pt;
 }
 
 ul.submenu li {
@@ -452,13 +453,18 @@ ul.submenu li {
 }
 
 ul.submenu li.separ {
+  border-width: 0;
   border-style: solid;
   border-color: #00AAEB;
-  border-width: 0 1px 0 0;
 }
 
 #menu-level-2 ul.submenu li.disabled a {
   color: #999999;
+}
+
+
+#menu-level-2 li:not(.disabled) a:hover {
+  color: #009EE0;
 }
 
 #active-corpus {
