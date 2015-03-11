@@ -46,20 +46,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (saveconcForm, c
                 <th>$_("Save concordance as"):</th>
                 <td>
                     <label>
-                        <input type="radio" name="saveformat" value="text"
-                        #if $saveformat == 'text'
-                        checked="checked"
-                        #end if
-                        /> $_("Text")
-                    </label>
-                    <label>
-                        <input type="radio" name="saveformat" value="xml"
-                        #if $saveformat == 'xml'
-                        checked="checked"
-                        #end if
-                        /> $_("XML")
-                    </label>
-                    <label>
                         <input type="radio" name="saveformat" value="csv"
                          #if $saveformat == 'csv'
                         checked="checked"
@@ -72,6 +58,20 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (saveconcForm, c
                         checked="checked"
                         #end if
                         /> XLSX (Excel)
+                    </label>
+                    <label>
+                        <input type="radio" name="saveformat" value="xml"
+                        #if $saveformat == 'xml'
+                        checked="checked"
+                        #end if
+                        /> $_("XML")
+                    </label>
+                    <label>
+                        <input type="radio" name="saveformat" value="text"
+                        #if $saveformat == 'text'
+                        checked="checked"
+                        #end if
+                        /> $_("Text")
                     </label>
                 </td>
             </tr>
