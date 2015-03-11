@@ -481,7 +481,7 @@ def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
     q = tuple(q)
 
     for i in range(len(q)):
-        cache_val = cache_map[(subchash, q[:i + 1]), ('', '')]
+        cache_val = cache_map[(subchash, q[:i + 1])]
         if cache_val:
             size = cache_val[1]
         else:
