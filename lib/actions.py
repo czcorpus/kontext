@@ -19,7 +19,7 @@ import re
 import json
 import urllib
 
-from kontext import Kontext, ConcError, simplify_num
+from kontext import Kontext, ConcError, simplify_num, MainMenu
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
 import conclib
@@ -114,9 +114,9 @@ class Actions(Kontext):
 
     @exposed()
     def login(self, request):
-        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
+                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
+                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         return {}
 
     @exposed(template='login.tmpl')
@@ -128,18 +128,17 @@ class Actions(Kontext):
         if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
         else:
-            self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
-                                        'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter',
-                                        'menu-frequency',
-                                        'menu-collocations', 'menu-conc-desc')
+            self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
+                                        MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
+                                        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
             ans['message'] = ('error', _('Incorrect username or password'))
         return ans
 
     @exposed(access_level=1, template='login.tmpl')
     def logoutx(self, request):
-        self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc')
+        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
+                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
+                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         plugins.auth.logout(self._session.sid)
         self._init_session()
 
@@ -232,8 +231,8 @@ class Actions(Kontext):
 
     @exposed(vars=('TextTypeSel', 'LastSubcorp'))
     def first_form(self, request):
-        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
         self._reset_session_conc()
         out.update(self._restore_query_selector_types())
@@ -307,8 +306,8 @@ class Actions(Kontext):
         """
         from collections import defaultdict
 
-        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-save', 'menu-concordance',
-                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
+        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         out = {}
         if self.maincorp:
             corp = corplib.manatee.Corpus(self.maincorp)
@@ -398,8 +397,8 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def viewopts(self):
-        self.disabled_menu_items = ('menu-sort', 'menu-sample', 'menu-save', 'menu-concordance',
-                                    'menu-filter', 'menu-frequency', 'menu-collocations', 'menu-conc-desc')
+        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         out = {
             'newctxsize': self.kwicleftctx[1:]
         }
@@ -421,7 +420,7 @@ class Actions(Kontext):
         """
         sort concordance form
         """
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = (MainMenu.SAVE,)
         return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
@@ -778,7 +777,7 @@ class Actions(Kontext):
 
     @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'), legacy=True)
     def filter_form(self, within=0):
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = (MainMenu.SAVE,)
 
         self.lemma = ''
         self.lpos = ''
@@ -831,7 +830,7 @@ class Actions(Kontext):
     def reduce_form(self):
         """
         """
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = (MainMenu.SAVE,)
         return {}
 
     @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view', legacy=True)
@@ -847,7 +846,7 @@ class Actions(Kontext):
         """
         frequency list form
         """
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = (MainMenu.SAVE,)
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
             'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1),
@@ -998,7 +997,7 @@ class Actions(Kontext):
         """
         Displays a form to set-up the 'save frequencies' operation
         """
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = (MainMenu.SAVE, )
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         is_multiblock = len(result['Blocks']) > 1
         if not to_line:
@@ -1092,7 +1091,7 @@ class Actions(Kontext):
         """
         collocations form
         """
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = (MainMenu.SAVE, )
         if self.maincorp:
             corp = corplib.open_corpus(self.maincorp)
         else:
@@ -1141,7 +1140,7 @@ class Actions(Kontext):
                       heading=0):
         """
         """
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = (MainMenu.SAVE, )
 
         self.citemsperpage = sys.maxint
         result = self.collx(csortfn, cbgrfns)
@@ -1321,8 +1320,8 @@ class Actions(Kontext):
         """
         Word List Form
         """
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         self._reset_session_conc()
         out = {}
         if not ref_corpname:
@@ -1380,8 +1379,8 @@ class Actions(Kontext):
                  ref_corpname='', ref_usesubcorp='', line_offset=0):
         """
         """
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc', 'menu-concordance')
+        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
         if not wlpat:
             self.wlpat = '.*'
@@ -1537,7 +1536,7 @@ class Actions(Kontext):
     def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
                     usesubcorp='', ref_corpname='', ref_usesubcorp='',
                     saveformat='text'):
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = (MainMenu.SAVE, )
         if to_line == '':
             to_line = 1000
 
@@ -1709,7 +1708,7 @@ class Actions(Kontext):
         within_struct -- the same meaning as in subcorp()
         method -- the same meaning as in subcorp()
         """
-        self.disabled_menu_items = ('menu-save',)
+        self.disabled_menu_items = (MainMenu.SAVE,)
         self._reset_session_conc()
 
         tt_sel = self._texttypes_with_norms()
@@ -1855,8 +1854,8 @@ class Actions(Kontext):
     def subcorp_list(self, selected_subc=(), sort='n'):
         """
         """
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
+        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
         current_corp = self.corpname
         if self.get_http_method() == 'POST':
@@ -1952,7 +1951,7 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def saveconc_form(self, from_line=1, to_line=''):
-        self.disabled_menu_items = ('menu-save', )
+        self.disabled_menu_items = (MainMenu.SAVE, )
         conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
         if not to_line:
             to_line = conc.size()
@@ -2165,9 +2164,9 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''):
-        self.disabled_menu_items = ('menu-view', 'menu-sort', 'menu-sample',
-                                    'menu-save', 'menu-concordance', 'menu-filter', 'menu-frequency',
-                                    'menu-collocations', 'menu-view')
+        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.SAVE,
+                                    MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS)
         self._reset_session_conc()  # TODO in case user returns using back button, this may produce UX problems
         num_records = int(settings.get('plugins', 'query_storage').get('ucnk:page_num_records', 0))
 

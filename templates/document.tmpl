@@ -234,11 +234,11 @@ define('conf', [], function () {
                     <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
                 </ul>
             </li>
-            <li id="menu-subcorpus" class="$menu_status('menu-subcorpus')"><a class="trigger">$_("Corpora")</a>
+            <li id="menu-corpora" class="$menu_status('menu-corpora')"><a class="trigger">$_("Corpora")</a>
                 <ul class="submenu">
                     <li class="separ"><a href="corplist">$_('Available corpora')&#8230;</a></li>
-                    <li><a title="$_('List of my subcorpora')" href="subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
-                    <li><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
+                    <li class="$menu_status('menu-corpora:my-subcorpora')"><a title="$_('List of my subcorpora')" href="subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
+                    <li class="$menu_status('menu-corpora:new-subcorpus')"><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                 </ul>
             </li>
             <li class="separator">&nbsp;</li>
@@ -648,7 +648,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #end def
 ## ***************************************** ##
 #def menu_status($id)
-    #if $id in $disabled_menu_items
-        disabled
-    #end if
+    #for $item in $disabled_menu_items
+    #if $item.matches($id)#disabled#end if#
+    #end for
 #end def
