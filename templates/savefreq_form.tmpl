@@ -68,7 +68,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savefreqForm, c
                   #if $saveformat == 'xlsx'
                   checked="checked"
                   #end if
-                  /> XLSX
+                  /> XLSX (Excel)
               </label>
               <label>
                 <input type="radio" name="saveformat" value="xml"
@@ -112,7 +112,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savefreqForm, c
         </table>
 
         <div class="buttons">
-        <input type="submit" value="$_("Save Frequency List")" id="submit" />
+        <input type="submit" class="default-button" value="$_("Save Frequency List")" id="submit" />
         </div>
     </form>
 </section>
