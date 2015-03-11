@@ -1708,7 +1708,7 @@ class Actions(Kontext):
         within_struct -- the same meaning as in subcorp()
         method -- the same meaning as in subcorp()
         """
-        self.disabled_menu_items = (MainMenu.SAVE,)
+        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         self._reset_session_conc()
 
         tt_sel = self._texttypes_with_norms()
@@ -2293,6 +2293,8 @@ class Actions(Kontext):
     # uses also self.keyword (TODO: cannot define Parameter() here)
     @exposed(legacy=True)
     def corplist(self, max_size='', min_size='', category=''):
+        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
+
         def corp_filter(item):
             if max_size and item['size'] > float(max_size):
                 return False

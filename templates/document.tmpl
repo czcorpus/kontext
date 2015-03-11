@@ -305,23 +305,23 @@ define('conf', [], function () {
 
             <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
                 <ul class="submenu">
+                    <li class="separ $menu_status('menu-view:kwic-sentence')">
                     #if not $align
                         #if $viewmode == 'sen'
-                        <li class="separ"><a title="$_("Show KWICs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_('Sentence')</a></li>
+                        <a title="$_("Show KWICs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_('Sentence')</a>
                         #else
-                        <li class="separ"><a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_("Sentence")</a></li>
+                        <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_("Sentence")</a>
                         #end if
                     #else
-                    <li class="separ">
-                    #if $viewmode == 'kwic'
-                    <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
-                    #elif $viewmode == 'sen'
-                    <a title="$_("Show aligned segments")" href="view?$join_params($q, $url_sub($globals,'viewmode','align'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
-                    #elif $viewmode == 'align'
-                    <a title="$_("Show KWICSs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #if $viewmode == 'kwic'
+                        <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #elif $viewmode == 'sen'
+                        <a title="$_("Show aligned segments")" href="view?$join_params($q, $url_sub($globals,'viewmode','align'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #elif $viewmode == 'align'
+                        <a title="$_("Show KWICSs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #end if
                     #end if
                     </li>
-                    #end if
                     <li class="separ"><a href="viewattrs?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
                     <li><a href="viewopts?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("General view options")&#8230;</a></li>
                 </ul>
