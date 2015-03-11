@@ -216,6 +216,13 @@ class Controller(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
+
+    Request processing composes of the following phases:
+      1) pre-dispatch (_pre_dispatch() method)
+      2) validation of registered callbacks (_pre_action_validate() method)
+      3) processing of mapped action method
+      4) post-dispatch (_post_dispatch() method)
+      5) building output headers and body
     """
 
     _keep_blank_values = Parameter(0)
@@ -252,7 +259,7 @@ class Controller(object):
     def __init__(self, request, ui_lang):
         """
         arguments:
-        environ -- web server's environment variables
+        request -- Werkzeug's request object
         ui_lang -- language used by user
         """
         self._request = request
@@ -295,12 +302,13 @@ class Controller(object):
 
     def _session_get(self, *nested_keys):
         """
-        Retrieves a value from session dictionary. If no such value is found
-        then None is returned. More than one key is understood as a 'path' of
-        a nested dictionaries.
+        This is just a convenience method to retrieve session's nested values:
+        E.g. self._session['user']['car']['name'] can be rewritten
+        as self._session_get('user', 'car', 'name').
+        If no matching keys are found then None is returned.
 
         Arguments:
-        *nested_keys -- keys to access required value (e.g. a['user']['car']['name'] would be 'user', 'car', 'name')
+        *nested_keys -- keys to access required value
         """
         curr = dict(self._request.session)
         for k in nested_keys:
@@ -336,7 +344,7 @@ class Controller(object):
 
     def is_template(self, template):
         """
-        Tests whether provided template name corresponds
+        Tests whether the provided template name corresponds
         to a respective python module (= compiled template).
 
         Arguments:
@@ -802,7 +810,6 @@ class Controller(object):
             if methodname != 'subcorp':
                 reload_template = reload.get(methodname, methodname + '_form')
                 if self.is_template(reload_template):
-                    # TODO reload variant has (possibly) different metadata - do we want them here?
                     return self.process_method(reload_template, request, pos_args, named_args)
         method = getattr(self, methodname)
         try:
