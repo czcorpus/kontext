@@ -99,11 +99,69 @@ class LegacyForm(object):
         return tmp
 
 
-class Kontext(Controller):
+class MainMenuItem(object):
+    def __init__(self, name):
+        self.name = name
+        self.items = []
 
-    ANON_FORBIDDEN_MENU_ITEMS = ('menu-new-query:history', 'menu-new-query:wordlist', 'menu-view', 'menu-subcorpus',
-                                 'menu-sort', 'menu-sample', 'menu-save', 'menu-concordance', 'menu-filter',
-                                 'menu-frequency', 'menu-collocations')
+    def __call__(self, *items):
+        self.items.extend(items)
+        return self
+
+    def __repr__(self):
+        if len(self.items) > 0:
+            return ', '.join(['%s:%s' % (self.name, item) for item in self.items])
+        else:
+            return self.name
+
+    def matches(self, s):
+        """
+        Tests whether a provided template menu identifier
+        (based on convention main_menu_item:submenu_item)
+        matches this one.
+
+        arguments:
+        s -- (sub)menu item string identifier
+        """
+        s2 = s.split(':')
+        if len(s2) == 2:
+            return self.name == s2[0] and s2[1] in self.items
+        else:
+            return self.name == s2[0] and len(self.items) == 0
+
+
+class MainMenu(object):
+    """
+    Specifies main menu items on KonText page. Items themselves are used
+    to disable parts of the menu (whole sections or individual submenu items).
+
+    Examples:
+    1) to disable whole FILTER section just add MainMenu.FILTER to the list of
+       disabled menu items (see kontext.Kontext).
+    2) to disable the 'word list' and 'history' functionalities in 'new query' section
+       just add MainMenu.NEW_QUERY('wordlist', 'history')
+    """
+    NEW_QUERY = MainMenuItem('menu-new-query')
+    VIEW = MainMenuItem('menu-view')
+    SAVE = MainMenuItem('menu-save')
+    CORPORA = MainMenuItem('menu-corpora')
+    CONCORDANCE = MainMenuItem('menu-concordance')
+    FILTER = MainMenuItem('menu-filter')
+    FREQUENCY = MainMenuItem('menu-frequency')
+    COLLOCATIONS = MainMenuItem('menu-collocations')
+    HELP = MainMenuItem('menu-help')
+
+
+class Kontext(Controller):
+    """
+    A controller.Controller extension implementing
+    KonText-specific requirements.
+    """
+    # main menu items disabled for public users (this is applied automatically during _post_dispatch())
+    ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
+                                 MainMenu.CORPORA('my-subcorpora', 'new-subcorpus'),
+                                 MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
+                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
 
     # A list of parameters needed to make concordance result parameters (e.g. size, currently viewed page,..)
     # persistent. It is used to keep showing these values to a user even if he is outside the concordance view page.
@@ -278,7 +336,6 @@ class Kontext(Controller):
         self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
-        self.ua = None
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
@@ -639,11 +696,7 @@ class Kontext(Controller):
         self._map_args_to_attrs(form, selectorname, named_args)
 
         # return url (for 3rd party pages etc.)
-        if self.ua in self._session:
-            self.return_url = self._session[self.ua]
-            del(self._session[self.ua])
-            self.ua = None
-        elif self.get_http_method() == 'GET':
+        if self.get_http_method() == 'GET':
             self.return_url = self._updated_current_url({'remote': 1})
         else:
             self.return_url = '%sfirst_form?corpname=%sremote=1' % (self.get_root_url(), self.corpname)
@@ -668,9 +721,8 @@ class Kontext(Controller):
         """
         if self._user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
-            for x in Kontext.ANON_FORBIDDEN_MENU_ITEMS:
-                disabled_set.add(x)
-            self.disabled_menu_items = tuple(disabled_set)
+            self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
+        logging.getLogger(__name__).debug('DISABLED: %s' % (self.disabled_menu_items,))
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=self._proc_time)
 
