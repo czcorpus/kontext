@@ -35,11 +35,13 @@ import fallback_corpus
 
 
 def simplify_num(v):
-    if v > 1e9:
+    if v >= 1e9:
         return '%dG' % (round(v / 1e9, 0))
-    if v > 1e6:
+    if v >= 1e6:
         return '%dM' % (round(v / 1e6, 0))
-    return '%d' % (round(v / 1e3, 0) * 1e3,)
+    if v >= 1e3:
+        return '%dK' % (round(v / 1e3, 0))
+    return '%d' % (round(v / 1e2, 0) * 100,)
 
 
 class ConcError(Exception):
