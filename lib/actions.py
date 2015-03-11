@@ -87,14 +87,14 @@ class Actions(Kontext):
 
     @exposed(access_level=1, template='user_password_form.tmpl', legacy=True)
     def user_password_form(self):
-        if not settings.supports_password_change():
-            return {'message': ('error', _('This function is disabled.'))}
+        if not plugins.auth.uses_internal_user_pages():
+            raise UserActionException(_('This function is disabled.'))
         return {}
 
     @exposed(access_level=1, template='user_password.tmpl', legacy=True)
     def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
-        if not settings.supports_password_change():
-            return {'message': ('error', _('This function is disabled.'))}
+        if not plugins.auth.uses_internal_user_pages():
+            UserActionException(_('This function is disabled.'))
         logged_in = plugins.auth.validate_user(self.session_get('user', 'user'), curr_passwd)
         if not logged_in:
             raise UserActionException(_('Unknown user'))

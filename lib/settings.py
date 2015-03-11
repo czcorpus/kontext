@@ -42,10 +42,7 @@ def contains(section, key=None):
     """
     Tests whether the config contains a section or a section+key (if a key provided is not None)
     """
-    if (key is None and section in _conf) or (key is not None and section in _conf and key in _conf[section]):
-        return True
-    else:
-        return False
+    return (key is None and section in _conf) or (key is not None and section in _conf and key in _conf[section])
 
 
 def get(section, key=None, default=None):
@@ -250,15 +247,6 @@ def is_debug_mode():
     Otherwise it returns False.
     """
     return debug_level() > DEBUG_OFF
-
-
-def supports_password_change():
-    req_functions = ('validate_password', 'validate_new_password', 'get_required_password_properties',
-                     'update_user_password')
-    for item in req_functions:
-        if not hasattr(auth, item) or not hasattr(getattr(auth, item), '__call__'):
-            return False
-    return True
 
 
 def _load_version():

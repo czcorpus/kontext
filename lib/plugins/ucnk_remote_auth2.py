@@ -198,6 +198,9 @@ class CentralAuth(AbstractAuth):
     def get_logout_url(self, return_url):
         return self.logout_url % (urllib.quote(return_url))
 
+    def uses_internal_user_pages(self):
+        return False
+
 
 def create_instance(conf, db_provider, sessions):
     """

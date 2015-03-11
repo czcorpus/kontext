@@ -1017,7 +1017,7 @@ class Kontext(Controller):
         except Exception as ex:
             logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
 
-        result['supports_password_change'] = settings.supports_password_change()
+        result['supports_password_change'] = plugins.auth.uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
