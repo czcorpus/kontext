@@ -61,7 +61,7 @@ class CorpTree(ThreadLocalData):
     DEFAULT_FAVORITE_KEY = 'favorite'
 
     def __init__(self, file_path, root_xpath):
-        super(CorpTree, self).__init__(('lang', 'favorite_corpora', 'featured_corpora'))  # <- thread local attributes
+        super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
@@ -129,22 +129,23 @@ class CorpTree(ThreadLocalData):
             for lab in k.findall('./label'):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
-    def _get_corpus_keywords(self, corpus_id, root):
+    def _get_corpus_keywords(self, root):
         """
+        Returns fixed labels (= keywords) for the corpus. Please
+        note that the "favorite" flag is not included here.
         returns:
         OrderedDict(keyword_id => {...keyword labels...})
         """
+        import logging
+        logging.getLogger(__name__).debug('keywords; %s' % (self._keywords,))
         ans = OrderedDict()
         for k in root.findall('./keywords/item'):
             keyword = k.text.strip()
             if keyword in self._keywords:
-
                 if self._keywords[keyword]:
                     ans[keyword] = self._keywords[keyword]
                 else:
                     ans[keyword] = keyword
-        if corpus_id in self.getlocal('favorite_corpora'):
-            ans[self._favorite_keyword] = self._keywords[self._favorite_keyword]
         return ans
 
     def get_all_corpus_keywords(self):
@@ -217,7 +218,7 @@ class CorpTree(ThreadLocalData):
                     ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
-                    ans['metadata']['keywords'] = self._get_corpus_keywords(corpus_id, meta_elm)
+                    ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
                 data.append(ans)
 
     def keyword_is_featured(self, keyword_ident, localized=False):
@@ -346,7 +347,6 @@ class CorpTree(ThreadLocalData):
         which means that any client-specific data must be thread-local.
         """
         self._lang(getattr(controller_obj, 'ui_lang', None))
-        self.setlocal('favorite_corpora', getattr(controller_obj, 'favorite_corpora', ()))
 
 
 def create_instance(conf):
