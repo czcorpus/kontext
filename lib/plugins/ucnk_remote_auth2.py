@@ -159,6 +159,10 @@ class CentralAuth(AbstractAuth):
                 user_data['fullname'] = user['fullname']
             user_data['revalidated'] = True
             db.close()
+            # Normally, the 'modified' flag should be set by Werkzeug's session automatically
+            # (via its CallbackDict) but there was a problem detected once (Werkzeug v0.9.6)
+            # when the auto-update failed from unknown reason. So just to be sure this won't happen again.
+            session.modified = True
 
     def get_corplist(self, user):
         """
