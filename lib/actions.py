@@ -297,7 +297,44 @@ class Actions(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def concdesc_json(self, query_id=''):
-        return self.concdesc(query_id)
+        self.disabled_menu_items = (MainMenu.SAVE,)
+        out = {}
+
+        query_desc = ''
+        query_desc_raw = ''
+        is_public = True
+        if query_id and plugins.has_plugin('query_storage'):
+            ans = plugins.query_storage.get_user_query(self._session_get('user', 'id'), query_id)
+            if ans:
+                query_desc_raw = ans['description']
+                query_desc = plugins.query_storage.decode_description(query_desc_raw)
+                is_public = ans['public']
+            else:
+                out['message'] = ('error', _('Cannot access recorded query.'))
+                query_id = None  # we have to invalidate the query_id (to render HTML properly)
+
+        conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname,
+                                          subchash=getattr(self._corp(), "subchash", None))
+
+        out['Desc'] = []
+        for o, a, u1, u2, s in conc_desc:
+            u2.append(('corpname', self.corpname))
+            out['Desc'].append({
+                'op': o,
+                'arg': a,
+                'churl': self.urlencode(u1),
+                'tourl': self.urlencode(u2),
+                'size': s})
+
+        out.update({
+            'supports_query_save': plugins.has_plugin('query_storage'),
+            'query_desc': query_desc,
+            'query_desc_raw': query_desc_raw,
+            'query_id': query_id,
+            'export_url': '%sto?q=%s' % (self.get_root_url(), query_id),
+            'is_public': is_public
+        })
+        return out
 
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def viewattrs(self):
