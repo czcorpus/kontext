@@ -145,7 +145,8 @@ def setup_plugins():
         ('application_bar', (settings, plugins.auth)),
         ('live_attributes', ('corptree', settings)),
         ('query_mod', (settings,)),
-        ('subc_restore', (settings, plugins.db))
+        ('subc_restore', (settings, plugins.db)),
+        ('taghelper', (settings,))
     )
 
     for plugin, dependencies in optional_plugins:

@@ -2139,12 +2139,10 @@ class Actions(Kontext):
     def ajax_get_tag_variants(self, pattern=''):
         """
         """
-        import taghelper
-
         try:
-            tag_loader = taghelper.TagVariantLoader(self.corpname,
-                                                    plugins.corptree.get_corpus_info(self.corpname)['tagset'],
-                                                    self.ui_lang)
+            tag_loader = plugins.taghelper.loader(self.corpname,
+                                                  plugins.corptree.get_corpus_info(self.corpname)['tagset'],
+                                                  self.ui_lang)
         except IOError:
             raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
 
