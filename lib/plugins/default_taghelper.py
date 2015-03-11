@@ -17,14 +17,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A collection of utilities to work with corpora grammatical tags. The most important
-service here is the TagVariantLoader which provides a backend for tag writing auto-complete
-functionality.
+A 'taghelper' plug-in implementation. It provides a data-driven, interactive way
+how to create a tag query. Please note that this works only with tag formats with
+fixed positions for defined categories (e.g.: part of speech = character 0,
+gender = character 1, case = character 2,...)
 
 Please note that this module requires a proper Corptree plug-in configuration and data.
+
+Required XML:
+<plugins>
+...
+  <module>default_taghelper</module>
+  <clear_interval extension-by="default">[TTL - number of seconds]</clear_interval>
+  <tags_cache_dir extension-by="default">/path/to/a/dir/where/files/are/cached</tags_cache_dir>
+...
+</plugins>
 """
 
-import settings
 import os
 import re
 import json
@@ -41,91 +50,97 @@ class TagHelperException(Exception):
     pass
 
 
-def create_tag_variants_file_path(corpus_name):
-    """
-    Generates a full path (full = as defined in the main configuration file)
-    to the file which contains all the existing tag variants for the passed
-    corpus name
+class Taghelper(object):
 
-    arguments:
-    corpus_name -- str
+    def __init__(self, conf):
+        self._conf = conf
 
-    returns:
-    a path to a specific cached file
-    """
-    if not corpus_name:
-        raise TagHelperException('Empty corpus name')
-    return '%s/%s' % (settings.get('corpora', 'tags_src_dir'), corpus_name)
+    def loader(self, corpus_name, tagset_name, lang):
+        return TagVariantLoader(self, self._conf, corpus_name, tagset_name, lang)
 
+    def create_tag_variants_file_path(self, corpus_name):
+        """
+        Generates a full path (full = as defined in the main configuration file)
+        to the file which contains all the existing tag variants for the passed
+        corpus name
 
-def tag_variants_file_exists(corpus_name):
-    """
-    Tests whether the path to the provided corpus_name exists
+        arguments:
+        corpus_name -- str
 
-    arguments:
-    corpus_name -- str
+        returns:
+        a path to a specific cached file
+        """
+        if not corpus_name:
+            raise TagHelperException('Empty corpus name')
+        return '%s/%s' % (self._conf['default:tags_src_dir'], corpus_name)
 
-    returns:
-    a boolean value
-    """
-    if corpus_name:
-        return os.path.exists(create_tag_variants_file_path(corpus_name))
-    return False
+    def tag_variants_file_exists(self, corpus_name):
+        """
+        Tests whether the path to the provided corpus_name exists
 
+        arguments:
+        corpus_name -- str
 
-def load_tag_descriptions(path, tagset_name, lang):
-    """
-    arguments:
-    path -- path to an XML file containing tag descriptions
-    tagset_name -- an identifier of a tagset (as used in <tagset name="...">)
-    lang -- requested language (if not found then EN version is returned)
+        returns:
+        a boolean value
+        """
+        if corpus_name:
+            return os.path.exists(self.create_tag_variants_file_path(corpus_name))
+        return False
 
-    returns:
-    a dictionary containing three keys:
-      * 'values' : [a list (= positions) of lists (= possible values) of 2-tuples (value and description)]
-      * 'labels' : [a list of labels for all the positions]
-      * 'num_pos' : [number of tagset positions]
-    """
-    lang = lang.split('_')[0]
-    xml = etree.parse(open(path))
-    root = xml.find('/tagsets/tagset[@ident="%s"]' % tagset_name)
-    if root is None:
-        raise TagHelperException('Failed to find tagset %s' % tagset_name)
+    def load_tag_descriptions(self, tagset_name, lang):
+        """
+        arguments:
+        path -- path to an XML file containing tag descriptions
+        tagset_name -- an identifier of a tagset (as used in <tagset name="...">)
+        lang -- requested language (if not found then EN version is returned)
 
-    num_tag_pos = int(root.attrib['num_pos'])
-    values = [None] * num_tag_pos
-    labels = [None] * num_tag_pos
-    undefined_indices = set(range(num_tag_pos))
+        returns:
+        a dictionary containing three keys:
+          * 'values' : [a list (= positions) of lists (= possible values) of 2-tuples (value and description)]
+          * 'labels' : [a list of labels for all the positions]
+          * 'num_pos' : [number of tagset positions]
+        """
+        lang = lang.split('_')[0]
+        xml = etree.parse(open(self._conf['default:taglist_path']))
+        root = xml.find('/tagsets/tagset[@ident="%s"]' % tagset_name)
+        if root is None:
+            raise TagHelperException('Failed to find tagset %s' % tagset_name)
 
-    for item in root:
-        idx = int(item.attrib['index'])
-        undefined_indices.remove(idx)
-        values[idx] = []
-        for v in item:
-            if v.tag == 'value':
-                translations = {}
-                for d in v:
-                    translations[d.attrib['lang']] = d.text
-                if lang in translations:
-                    values[idx].append((v.attrib['ident'], translations[lang]))
-                elif 'en' in translations:
-                    values[idx].append((v.attrib['ident'], translations['en']))
-                else:
-                    values[idx].append((v.attrib['ident'], '[%s]' % _('no description')))
-            elif v.tag == 'label':
-                translations = {}
-                for d in v:
-                    translations[d.attrib['lang']] = d.text
-                if lang in translations:
-                    labels[idx] = translations[lang]
-                elif 'en' in translations:
-                    labels[idx] = translations['en']
-                else:
-                    labels[idx] = None
-    for item in undefined_indices:
-        values[item] = []
-        labels[item] = None
-    return dict(values=values, labels=labels, num_pos=num_tag_pos)
+        num_tag_pos = int(root.attrib['num_pos'])
+        values = [None] * num_tag_pos
+        labels = [None] * num_tag_pos
+        undefined_indices = set(range(num_tag_pos))
+
+        for item in root:
+            idx = int(item.attrib['index'])
+            undefined_indices.remove(idx)
+            values[idx] = []
+            for v in item:
+                if v.tag == 'value':
+                    translations = {}
+                    for d in v:
+                        translations[d.attrib['lang']] = d.text
+                    if lang in translations:
+                        values[idx].append((v.attrib['ident'], translations[lang]))
+                    elif 'en' in translations:
+                        values[idx].append((v.attrib['ident'], translations['en']))
+                    else:
+                        values[idx].append((v.attrib['ident'], '[%s]' % _('no description')))
+                elif v.tag == 'label':
+                    translations = {}
+                    for d in v:
+                        translations[d.attrib['lang']] = d.text
+                    if lang in translations:
+                        labels[idx] = translations[lang]
+                    elif 'en' in translations:
+                        labels[idx] = translations['en']
+                    else:
+                        labels[idx] = None
+        for item in undefined_indices:
+            values[item] = []
+            labels[item] = None
+        return dict(values=values, labels=labels, num_pos=num_tag_pos)
 
 
 class TagVariantLoader(object):
@@ -145,18 +160,21 @@ class TagVariantLoader(object):
         ('!', r'\!')
     )
 
-    def __init__(self, corpus_name, tagset_name, lang):
+    def __init__(self, taghelper, conf, corpus_name, tagset_name, lang):
         """
         arguments:
+        taghelper -- a Taghelper instance
+        conf -- a dict containing plug-in configuration
         corpus_name -- name/id of a corpus
         tagset_name -- name/id of a tagset
         lang -- two-letter language code (cs, en, de,...)
         """
+        self._taghelper = taghelper
+        self._conf = conf
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
-        self.variants_file = open(create_tag_variants_file_path(self.corpus_name))
-        self.metadata_file = settings.get('plugins', 'corptree')['file']
-        self.cache_dir = '%s/%s' % (settings.get('corpora', 'tags_cache_dir'), self.corpus_name)
+        self.variants_file = open(self._taghelper.create_tag_variants_file_path(self.corpus_name))
+        self.cache_dir = '%s/%s' % (self._conf['default:tags_cache_dir'], self.corpus_name)
         self.lang = lang
 
     def get_variant(self, selected_tags):
@@ -183,13 +201,13 @@ class TagVariantLoader(object):
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.__class__.spec_char_replacements)
-        tagset = load_tag_descriptions(self.metadata_file, self.tagset_name, self.lang)
+        tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
         item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
 
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
 
         if os.path.exists(path) \
-                and time.time() - os.stat(path).st_ctime > settings.get_int('cache', 'clear_interval'):
+                and time.time() - os.stat(path).st_ctime > self._conf['default:clear_interval']:
             os.unlink(path)
 
         if not os.path.exists(path):
@@ -246,7 +264,7 @@ class TagVariantLoader(object):
         a dictionary where keys represent tag-string position and values are lists of
         tuples (ID, description)
         """
-        tagset = load_tag_descriptions(self.metadata_file, self.tagset_name, self.lang)
+        tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
         item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.spec_char_replacements)
@@ -285,4 +303,12 @@ class TagVariantLoader(object):
             cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                 if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
             ans[key] = sorted(ans[key], cmp=cmp_by_seq) if ans[key] is not None else None
-        return { 'tags' : ans, 'labels' : [] }
+        return {'tags': ans, 'labels': []}
+
+
+def create_instance(conf):
+    """
+    arguments:
+    conf -- KonText's settings module or a compatible object
+    """
+    return Taghelper(conf.get('plugins', 'taghelper'))

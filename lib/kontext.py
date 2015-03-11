@@ -25,7 +25,6 @@ import conclib
 from controller import Controller, UserActionException, convert_types, Parameter
 import plugins
 import settings
-import taghelper
 import l10n
 from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
@@ -736,12 +735,12 @@ class Kontext(Controller):
             data to be used when building an output page from a template
         """
         tpl_out['tag_builder_support'] = {
-            '': taghelper.tag_variants_file_exists(self.corpname)
+            '': plugins.taghelper.tag_variants_file_exists(self.corpname)
         }
         tpl_out['user_menu'] = True
         if 'Aligned' in tpl_out:
             for item in tpl_out['Aligned']:
-                tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
+                tpl_out['tag_builder_support']['_%s' % item['n']] = plugins.taghelper.tag_variants_file_exists(item['n'])
 
     def _attach_query_metadata(self, tpl_out):
         """
