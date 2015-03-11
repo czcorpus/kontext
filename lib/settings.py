@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-This module wraps application's configuration (as specified in config.xml) and provides some additional helper
-methods.
+This module wraps application's configuration (as specified in config.xml) and
+provides some additional helper methods.
 """
 
 import sys
@@ -24,18 +24,15 @@ import os
 from lxml import etree
 import json
 
-_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
-_conf_path = None
-_meta = {}  # contains data of attributes of XML elements representing configuration values
-auth = None  # authentication module (this is set from the outside)
 
-# This dict defines special parsing of quoted sections. Sections not mentioned there
-# are considered to be lists of key->value pairs (i.e. no complex types).
-conf_parsers = {
-    'corplist': None,
-    'plugins': 'parse_plugins',
-    'tagsets': None
-}
+class ConfState(object):
+    conf_path = None
+
+_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
+_meta = {}  # contains data of attributes of XML elements representing configuration values
+_state = ConfState()
+
+SECTIONS = ('global', 'external_links', 'plugins', 'cache', 'corpora')
 
 
 def contains(section, key=None):
@@ -50,12 +47,9 @@ def get(section, key=None, default=None):
     Gets a configuration value. This function never throws an exception in
     case it cannot find the required value.
 
-    Parameters.
-    ----------
-    section : str
-              name of the section (global, database,...)
-    key : str (optional)
-          name of the configuration value; if omitted then whole section is returned
+    arguments:
+    section -- name of the section (global, database,...)
+    key -- (optional) name of the configuration value; if omitted then whole section is returned
     """
     if key is None and section in _conf:
         return _conf[section]
@@ -87,7 +81,7 @@ def get_full(section, key):
 
 def get_bool(section, key, default=None):
     """
-    The same as get() but returnparse_pluginss a bool type
+    The same as get() but returns a bool type
     (True for 'true', '1' values, False for 'false', '0' values)
     """
     fixed_key = str(get(section, str(key).lower(), default)).lower()
@@ -120,18 +114,31 @@ def custom_prefix(elm):
     return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
 
 
-def parse_general_tree(section):
+def parse_config_section(section):
+    """
+    Parses a single level config section:
+      <section>
+        <item_name_1>item_value_1</item_name_1>
+        <item_name_2>item_value_2</item_name_2>
+        ...
+        <item_name_M>item_value_M</item_name_M>
+      </section>
+
+    Value can be also a list:
+    <section>
+      <item_name>
+        <item>value 1</item>
+        <item>value 2</item>
+        ...
+        <item>value N</item>
+      </item_name>
+    </section>
+    """
     ans = {}
     meta = {}
     for item in section:
         if item.tag is etree.Comment:
             continue
-        elif item.tag in conf_parsers:
-            node_processor = conf_parsers[item.tag]
-            if node_processor is not None:
-                getattr(sys.modules[__name__], conf_parsers[item.tag])(item)
-            else:
-                pass  # we ign.ore items with None processor deliberately
         else:
             item_id = '%s%s' % (custom_prefix(item), item.tag)
             if len(item.getchildren()) == 0:
@@ -148,55 +155,45 @@ def parse_general_tree(section):
     return ans, meta
 
 
-def parse_plugins(root):
-    _conf['plugins'] = {}
-    _meta['plugins'] = {}
-    for item in root:
-        _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_general_tree(item)
-
-
 def parse_config(path):
     """
     Parses application configuration XML file. A two-level structure is expected where
     first level represents sections and second level key->value pairs. It is also possible
     to have values of list type (e.g. <my_conf_value><item>v1</item><item>v2</item></my_conf_value>)
 
-    There are also specific sections which can be processed by an assigned function (see variable conf_parsers).
-    This can be used to omit some sections too (you just define empty function or set None value in conf_parsers
-    for such section).
-
-    Parameters
-    ----------
-    path : str
-      a file system path to the configuration file
+    arguments:
+    path -- a file system path to the configuration file
     """
     xml = etree.parse(open(path))
     root = xml.getroot()
 
+    _conf['plugins'] = {}
+    _meta['plugins'] = {}
+
     for section in root:
-        if section.tag in conf_parsers:
-            getattr(sys.modules[__name__], conf_parsers[section.tag])(section)
-        else:
-            section_id = '%s%s' % (custom_prefix(section), section.tag)
-            _conf[section_id], _meta[section_id] = parse_general_tree(section)
+        if section.tag in SECTIONS:
+            if section.tag != 'plugins':
+                section_id = '%s%s' % (custom_prefix(section), section.tag)
+                _conf[section_id], _meta[section_id] = parse_config_section(section)
+            else:
+                for item in section:
+                    _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(item)
 
 
-def load(conf_path):
+def load(path):
     """
     Loads application's configuration from a provided file
 
-    Arguments:
-    conf_path -- path to a configuration XML file
+    arguments:
+      conf_path -- path to a configuration XML file
     """
-    global _conf_path
-
-    _conf_path = conf_path
-    parse_config(_conf_path)
+    _state.conf_path = path
+    parse_config(_state.conf_path)
     _load_version()
 
 
 def conf_path():
-    return _conf_path
+    return _state.conf_path
 
 
 def get_default_corpus(corplist):
@@ -204,15 +201,11 @@ def get_default_corpus(corplist):
     Returns name of the default corpus to be offered to a user. Select first
     corpus from the list which is conform with user's access rights
 
-    Parameters
-    ----------
-    corplist : list or tuple of str
-      list of corpora names
+    arguments:
+    corplist -- list of corpora names
 
-    Returns
-    -------
-    str
-      name of the corpus to be used as a default one
+    returns:
+      name of a corpus to be used as a default one
     """
     default_corp_list = get('corpora', 'default_corpora')
     if get_bool('corpora', 'use_db_whitelist'):
