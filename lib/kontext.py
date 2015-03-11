@@ -163,6 +163,9 @@ class Kontext(Controller):
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
                                  MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
 
+    CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
+                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'))
+
     # A list of parameters needed to make concordance result parameters (e.g. size, currently viewed page,..)
     # persistent. It is used to keep showing these values to a user even if he is outside the concordance view page.
     CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
@@ -722,7 +725,6 @@ class Kontext(Controller):
         if self._user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
-        logging.getLogger(__name__).debug('DISABLED: %s' % (self.disabled_menu_items,))
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=self._proc_time)
 
