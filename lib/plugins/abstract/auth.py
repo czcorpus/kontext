@@ -76,6 +76,14 @@ class AbstractAuth(object):
         """
         return corpus_name
 
+    def uses_internal_user_pages(self):
+        """
+        If True then actions like 'user_password', 'user_password_form' etc. are enabled
+        (if False then KonText raises an exception in case user tries to access them).
+        This should be fixed during module life-cycle (i.e. hardcoded).
+        """
+        return True
+
 
 class AuthException(Exception):
     """
