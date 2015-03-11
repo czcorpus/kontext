@@ -261,7 +261,7 @@ class App(object):
         return response(environ, start_response)
 
 
-settings.load(conf_path=CONF_PATH)
+settings.load(path=CONF_PATH)
 
 if settings.contains('global', 'manatee_path'):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
