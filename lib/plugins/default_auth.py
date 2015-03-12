@@ -142,15 +142,15 @@ class DefaultAuthHandler(AbstractAuth):
 
     def get_login_url(self, return_url=None):
         if return_url is not None:
-            return '/login?continue=%s' % urllib.quote(return_url)
+            return '/user/login?continue=%s' % urllib.quote(return_url)
         else:
-            return '/login'
+            return '/user/login'
 
     def get_logout_url(self, return_url=None):
         if return_url is not None:
-            return '/logoutx?continue=%s' % urllib.quote(return_url)
+            return '/user/logoutx?continue=%s' % urllib.quote(return_url)
         else:
-            return '/logoutx'
+            return '/user/logoutx'
 
     def find_user(self, username):
         """
