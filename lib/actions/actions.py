@@ -112,39 +112,6 @@ class Actions(Kontext):
         settings.auth.update_user_password(new_passwd)
         self._redirect(self.get_root_url())
 
-    @exposed()
-    def login(self, request):
-        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        return {}
-
-    @exposed(template='login.tmpl')
-    def loginx(self, request):
-        ans = {}
-        self._session['user'] = plugins.auth.validate_user(request.form['username'],
-                                                           request.form['password'])
-
-        if self._session['user'].get('id', None):
-            self._redirect('%sfirst_form' % (self.get_root_url(), ))
-        else:
-            self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                        MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-            ans['message'] = ('error', _('Incorrect username or password'))
-        return ans
-
-    @exposed(access_level=1, template='login.tmpl')
-    def logoutx(self, request):
-        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        plugins.auth.logout(self._session.sid)
-        self._init_session()
-
-        return {
-            'message': ('info', _('You have been logged out'))
-        }
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self, view_params={}):
@@ -1713,7 +1680,6 @@ class Actions(Kontext):
                             val['xcnt'] = compute_norm(aname, attr, val['v'])
             ans['Blocks'] = tt
             ans['Normslist'] = self._get_normslist(basestructname)
-            logging.getLogger(__name__).debug(ans)
         else:
             ans['Blocks'] = tt
             ans['Normslist'] = []
