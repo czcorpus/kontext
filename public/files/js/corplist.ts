@@ -180,7 +180,7 @@ export class WidgetMenu {
      */
     init(searchBox:Search, favoriteBox:Favorites):void {
         var self = this;
-        this.menuWrapper.append('<a data-func="search">search</a> | <a data-func="my-corpora">my corpora</a>');
+        this.menuWrapper.append('<a data-func="search">search</a> | <a data-func="my-corpora">my favorite</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
         this.funcMap['my-corpora'] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
@@ -578,8 +578,6 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
         this.switchComponentVisibility(Visibility.HIDDEN);
-
-        this.jqWrapper.append($('.corpus-archive-link'));
     }
 
     /**
