@@ -136,8 +136,6 @@ class CorpTree(ThreadLocalData):
         returns:
         OrderedDict(keyword_id => {...keyword labels...})
         """
-        import logging
-        logging.getLogger(__name__).debug('keywords; %s' % (self._keywords,))
         ans = OrderedDict()
         for k in root.findall('./keywords/item'):
             keyword = k.text.strip()
