@@ -114,18 +114,10 @@ class Actions(Kontext):
 
 
     @exposed(vars=('orig_query', ), legacy=True)
-    def view(self, view_params={}):
+    def view(self):
         """
-        kwic view
-
-        arguments:
-        view_params -- parameter_name->value pairs with the highest priority (i.e. it overrides any url/cookie-based
-                       values)
+        KWIC view
         """
-        for k, v in view_params.items():
-            if k in self.__dict__:
-                self.__dict__[k] = v
-
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.q))
 
         self.righttoleft = False
@@ -192,7 +184,6 @@ class Actions(Kontext):
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
                                                                                                      self.rightctx))
-
         self._store_conc_results(out)
         return out
 
