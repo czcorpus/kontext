@@ -341,7 +341,7 @@ class BackgroundCalc(object):
             # Please note that there is no need to clean any mess (pidfile of failed calculation, unfinished
             # cached concordance etc.) here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
-            logging.getLogger(__name__).error('Background calculation error: %s' % e)
+            logging.getLogger(__name__).error('Background calculation %s: %s' % (e.__class__.__name__, e))
             _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=e)
 
 
