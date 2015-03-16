@@ -31,7 +31,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
 #end def
 
 #def main
-<section>
+<section class="full">
     #filter WebSafe
     <h2>$_("Attributes, structures and references")</h2>
     <p>#filter None#$($_('Following settings apply only for the <strong>%s</strong> corpus.') % $human_corpname)#end filter#</p>
@@ -43,7 +43,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
     <input type='hidden' name='fromp' value='$fromp' />
 
     <a name="attributes"></a>
-    <fieldset>
+    <fieldset class="settings-group">
         <legend>$_("Attributes")</legend>
 
         #set $navid = 'id="firstattr"'
@@ -63,7 +63,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
 
     #if $Availstructs
     <a name="structures"></a>
-    <fieldset>
+    <fieldset class="settings-group">
         <legend>$_("Structures")</legend>
 
         #set $i = 0
@@ -88,7 +88,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
     #end if
 
     <a name="references"></a>
-    <fieldset>
+    <fieldset class="settings-group">
         <legend>$_("References")</legend>
 
         #set $i = 0

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Institute of the Czech National Corpus
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
  */
 
 /**
- * This module contains functionality related directly to the first_form.tmpl template
+ * This module contains functionality related directly to the viewopts template
  */
 define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
     'use strict';
@@ -46,50 +46,13 @@ define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
 
     /**
      *
-     * @param parentElm
-     * @returns {boolean}
-     */
-    function uncheckChecked(parentElm) {
-        $(parentElm).find('input[type="checkbox"]:checked').each(function () {
-            $(this).prop('checked', false);
-        });
-    }
-
-    /**
-     *
-     */
-    lib.setupStructattrCheckboxes = function () {
-        $('.structattr-checkbox').on('click', function (event) {
-            var triggerElm = $(event.target),
-                structId = triggerElm.attr('data-struct-id'),
-                parentCheckbox;
-
-            parentCheckbox = triggerElm.closest('fieldset').find('input[name="setstructs"][value="' + structId + '"]');
-
-            if (triggerElm.is(':checked') && !parentCheckbox.is(':checked')) {
-                parentCheckbox.prop('checked', true);
-            }
-        });
-
-        $('input[type="checkbox"][name="setstructs"]').on('click', function (event) {
-            uncheckChecked($(event.target).closest('fieldset').find('ul[data-struct-id="' + $(event.target).val() + '"]'));
-        });
-    };
-
-    /**
-     *
      * @param conf
      */
     lib.init = function (conf) {
         layoutModel.init(conf);
-
-        $('#mainform input.select-all').each(function () {
-            layoutModel.applySelectAll(this, $(this).closest('fieldset'));
-        });
-
-        lib.setupStructattrCheckboxes();
         blockUnsaved();
     };
+
 
     return lib;
 });

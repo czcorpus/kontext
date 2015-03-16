@@ -2125,6 +2125,9 @@ msgstr "výchozí atribut"
 msgid "Possible query type mismatch. Do you want to continue?"
 msgstr "Byl detekován možný nesoulad mezi zvoleným a faktickým typem dotazu. Chcete pokračovat?"
 
+msgid "There are unsaved changes on the page. Do you want to continue without saving them?"
+msgstr "Na stránce jsou neuložené změny. Chcete pokračovat bez jejich uložení?"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
