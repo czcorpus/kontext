@@ -698,7 +698,13 @@ class Controller(object):
         user-readable text of the error
         """
         if err.message:
-            text = err.message if type(err.message) == unicode else err.message.decode('utf-8')
+            if type(err.message) == unicode:
+                text = err.message
+            else:
+                try:
+                    text = err.message.decode('utf-8')
+                except:
+                    text = str(err)
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
