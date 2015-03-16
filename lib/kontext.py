@@ -337,7 +337,6 @@ class Kontext(Controller):
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
-        self.root_path = self.environ.get('SCRIPT_NAME', '/')
         self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
@@ -1023,6 +1022,7 @@ class Kontext(Controller):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         result['root_url'] = self.get_root_url()
+        result['root_path'] = settings.get('global', 'root_path')
         result['static_url'] = '%sfiles/' % self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self._user_is_anonymous()

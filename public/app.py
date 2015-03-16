@@ -29,9 +29,10 @@ import os
 import wsgiref.util
 import logging
 from logging import handlers
+import locale
+
 from werkzeug.http import parse_accept_header
 from werkzeug.wrappers import Request, Response
-import locale
 
 
 sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
@@ -199,10 +200,13 @@ def load_controller_class(path_info):
         from maintenance import MaintenanceController
         controller_class = MaintenanceController
     elif path_info.startswith('/fcs'):
-        from fcs import Actions
+        from actions.fcs import Actions
         controller_class = Actions
+    elif path_info.startswith('/user'):
+        from actions.user import User
+        controller_class = User
     else:
-        from actions import Actions
+        from actions.actions import Actions
         controller_class = Actions
     return controller_class
 

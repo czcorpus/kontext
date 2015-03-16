@@ -406,9 +406,13 @@ class Controller(object):
         else:
             template_dir = self._template_dir
             name = name[0]
-
-        file, pathname, description = imp.find_module(name, [template_dir])
-        module = imp.load_module(name, file, pathname, description)
+        try:
+            f, pathname, description = imp.find_module(name, [template_dir])
+        except ImportError:
+            # if some non-root action (e.g. /user/login) calls a root one (e.g. /message)
+            # then we have to look for root actions' templates too
+            f, pathname, description = imp.find_module(name, ['%s/..' % template_dir])
+        module = imp.load_module(name, f, pathname, description)
         return getattr(module, name)
 
     def _get_current_url(self):
@@ -579,7 +583,7 @@ class Controller(object):
         /stats/
         /tools/admin/
         """
-        raise NotImplementedError('Each action controller must implement method get_module_url_prefix()')
+        raise NotImplementedError('Each action controller must implement method get_mapping_url_prefix()')
 
     def import_req_path(self):
         """
