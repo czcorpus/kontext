@@ -1,0 +1,90 @@
+#*
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#encoding UTF-8
+#from translation import ugettext as _
+#from cmpltmpl.document import document
+#from templating.filters import *
+
+#extends document
+
+#def title
+#end def
+
+#def bodyonload
+    require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
+        conf.messages.failed_to_delete_the_query = "$_('Failed to delete the query')";
+        conf.messages.deleted_query = "$_('Deleted the query.')";
+        conf.messages.undeleted_query = "$_('Undeleted the query.')";
+        conf.messages.failed_to_undelete_the_query = "$_('Failed to undelete the query.')";
+        conf.messages.undo = "$_('Undo')";
+        conf.messages.use_query = "$_('use query')";
+
+        conf.page.page_num_records = $page_num_records;
+        conf.page.page_append_records = $page_append_records;
+
+        pageSelf.init(conf);
+    });
+#end def
+
+#block main
+<section>
+    <h2>$_('Recent queries')</h2>
+
+    <form class="query-history-filter" action="" method="get">
+        <input type="hidden" name="corpname" value="$corpname" />
+        <label>$_('current corpus only')<input type="checkbox" name="current_corpus" value="1" #if $getVar('current_corpus', None)#checked="checked"#end if# /></label>
+        $_('query type'):
+        <select name="query_type">
+            <option value="">$_('any type')</option>
+            <option value="iquery" #if $getVar('query_type', '') == 'iquery'#selected="selected"#end if#>$_('Basic')</option>
+            <option value="lemma" #if $getVar('query_type', '') == 'lemma'#selected="selected"#end if#>$_('Lemma')</option>
+            <option value="phrase" #if $getVar('query_type', '') == 'phrase'#selected="selected"#end if#>$_('Phrase')</option>
+            <option value="word" #if $getVar('query_type', '') == 'word'#selected="selected"#end if#>$_('Word Form')</option>
+            <option value="char" #if $getVar('query_type', '') == 'char'#selected="selected"#end if#>$_('Character')</option>
+            <option value="cql" #if $getVar('query_type', '') == 'cql'#selected="selected"#end if#>CQL</option>
+        </select>
+        <button class="default-button" type="submit">$_('Filter list')</button>
+    </form>
+
+    #if $len($data) > 0
+    <table border="0" class="data query-history">
+    <tr>
+        <th>$_('query')</th>
+        <th>$_('corpus')</th>
+        <th>$_('query type')</th>
+        <th>$_('details')</th>
+        <th>$_('date and time')</th>
+        <th></th>
+    </tr>
+    #for $row in $data
+        <tr class="data-item">
+            <td class="query">$row.query</td>
+            <td class="corpname">$row.humanCorpname#if $row.subcorpname #:$row.subcorpname#end if#</td>
+            <td>$row.query_type_translated</td>
+            <td class="details">$row.get('details', '')</td>
+            <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
+            <td><a href="$row.query_form_url">$_('use query')</a></td>
+        </tr>
+    #end for
+    </table>
+    #else
+    <p>[$_('Empty list')]</p>
+    #end if
+</section>
+#end block

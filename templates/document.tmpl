@@ -1,0 +1,654 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+#encoding UTF-8
+#import urllib
+#import re
+#from templating.filters import *
+#from translation import ugettext as _
+##
+<!DOCTYPE html>
+<html>
+#filter WebSafe
+<head>
+<title>$title</title>
+<meta charset="utf-8" />
+<link rel="icon" type="image/x-icon" href="$files_path/img/favicon.ico" />
+#for $css_font in $css_fonts
+<link href='$css_font' rel='stylesheet' type='text/css'>
+#end for
+#end filter
+
+#if $debug
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}kontext.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
+#else
+<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css" />
+#end if
+<noscript>
+    <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
+</noscript>
+#if $app_bar_css
+<link rel="stylesheet" type="text/css" href="$app_bar_css" />
+#end if
+<link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
+#if $qunit_test
+<link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
+#end if
+<!--[if lte IE 7]>
+<link rel="stylesheet" type="text/css" href="$app_bar_css_ie" media="all">
+<![endif]-->
+
+<script type="text/javascript" src="$files_path/js/vendor/modernizr.custom.min.js"></script>
+<script type="text/javascript" src="$files_path/js/vendor/virtual-keyboard.js" charset="UTF-8"></script>
+#if $debug
+<script type="text/javascript" src="$files_path/js/vendor/less.js" ></script>
+#end if
+<script type="text/javascript" src="$files_path/js/vendor/requirejs.min.js"></script>
+#block headers
+#end block
+#if $getVar('ca_headers', '')
+$ca_headers
+#else
+<script type="text/javascript">
+var missingPlugins = [],
+    paths = {
+        'jquery' : './vendor/jquery.min',
+        'vendor/jscrollpane' : './vendor/jscrollpane.min',
+        'plugins' : './plugins',
+        'SoundManager' : './vendor/soundmanager2.min'
+    };
+
+#if $live_attributes_js
+paths['plugins/liveAttributes'] = './plugins/$live_attributes_js';
+#else
+missingPlugins.push('plugins/liveAttributes');
+#end if
+#if $query_storage_js
+paths['plugins/queryStorage'] = './plugins/$query_storage_js';
+#else
+missingPlugins.push('plugins/queryStorage');
+#end if
+#if $application_bar_js
+paths['plugins/applicationBar'] = './plugins/$application_bar_js';
+#else
+missingPlugins.push('plugins/applicationBar');
+#end if
+#if $qunit_test
+paths['vendor/QUnit'] = './vendor/qunit'
+#end if
+
+requirejs.config({
+    baseUrl : '../files/js/min',
+    paths: paths,
+    shim : {
+        'vendor/jscrollpane' : {
+            deps: ['jquery']
+        },
+        'typeahead' : {
+            deps: ['jquery']
+        }
+        #if $qunit_test
+        , 'vendor/QUnit' : {
+            exports : 'QUnit',
+            init: function() {
+                QUnit.config.autoload = false;
+                QUnit.config.autostart = false;
+            }
+        }
+        #end if
+    }
+});
+
+(function (names) {
+    var i;
+
+    for (i = 0; i < names.length; i += 1) {
+        define(names[i], [], function () {
+            return {
+                init : function () {}, // deprecated
+                reset : function () {}, // deprecated
+                detach : function () {}, // deprecated
+                createInstance : function () {
+                    return {
+                        init : function () {},
+                        reset : function () {},
+                        detach : function () {}
+                    };
+                }
+            };
+        });
+    }
+}(missingPlugins));
+
+define('win', [], function () { return window; });
+
+define('conf', [], function () {
+    var conf = {};
+    conf.page = {};
+    conf.menuAutoHideInterval = 1500;
+    conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 15000);
+    conf.rootURL = "$root_url";
+    conf.rootPath = "$root_path";
+    conf.staticUrl = "$static_url";
+    conf.corpname = "$corpname";
+    conf.humanCorpname = "$human_corpname";
+    conf.session_cookie_name = "$session_cookie_name";
+    conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
+    conf.loginUrl = "$login_url";
+    conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
+    conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
+    conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
+    conf.isDebug = #if $debug#true#else#false#end if#;
+    conf.corporaLabels = ${corpora_labels};
+    conf.uiStateTTL = ${ui_state_ttl};
+
+    conf.messages = {};
+    #if $_anonymous
+    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
+    #end if
+    conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
+    conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
+    conf.messages.view_result = "$_('View result')";
+    conf.messages.operation = "$_('Operation')";
+    conf.messages.parameters = "$_('Parameters')";
+    conf.messages.num_of_hits = "$_('Num of Hits')";
+    conf.messages.query_overview = "$_('Query overview')";
+    conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
+    conf.messages.close = "$_('close')";
+    conf.messages.search_by_name = "$_('Search by name')";
+    conf.messages.more_information_at = "$_('More information at')";
+    conf.messages.loading = "$_('Loading...')";
+    conf.messages['number of matching positions'] = "$_('number of matching positions')";
+    conf.messages['number of matching items'] = "$_('number of matching items')";
+    conf.messages['%s positions'] = "$_('%s positions')";
+    conf.messages['Recent queries'] = "$_('Recent queries')";
+    conf.messages['No more lines'] = "$_('No more lines')";
+    conf.messages['Load more'] = "$_('Load more')";
+    conf.messages['selected lines'] = "$_('selected lines')";
+    conf.messages['you have been logged out'] = "$_('You have been logged out. Do you want to log in again?')";
+    conf.messages['bib_list_warning'] = "$_('Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection.')";
+    conf.messages['select_all'] = "$_('Select all')";
+    conf.messages['query_type_mismatch'] = "$_('Possible query type mismatch. Do you want to continue?')";
+
+    conf.queryTypesHints = {
+        iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
+    };
+    conf.messages.msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
+    conf.messages.failed_to_load_corpus_info = "$_('Failed to load corpus information.')";
+
+    return conf;
+});
+</script>
+#end if
+</head>
+<body>
+#if $qunit_test
+<div id="qunit"></div>
+<div id="qunit-fixture">
+#end if
+
+#filter WebSafe
+<div id="common-bar">
+#if $app_bar
+#filter None
+    $app_bar
+#end filter
+#else
+<span class="user">$_("User"):
+    #if not $_anonymous
+        $user_info.fullname
+        (<a href="$logout_url">$_('logout')</a>)
+    #else
+        $user_info.fullname
+        <a href="$login_url">($_('login'))</a>
+    #end if
+</span>
+#end if
+</div>
+
+<header id="topbar">
+    <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 208px;height: 68px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
+    <div id="menu-bar">
+        <ul id="menu-level-1">
+            <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
+                <ul class="submenu">
+                    <li class="separ"><a title="$_('Enter new query')" href="first_form?$corpname_url&amp;lemma=$lemma&amp;lpos=$lpos&amp;align=$align">$_('New query')&#8230;</a></li>
+                    <li class="separ $menu_status('menu-new-query:history')"><a title="$_('List of recent queries')" href="query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
+                    <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")" href="wordlist_form?$corpname_url">$_("Word List")&#8230;</a></li>
+                </ul>
+            </li>
+            <li id="menu-corpora" class="$menu_status('menu-corpora')"><a class="trigger">$_("Corpora")</a>
+                <ul class="submenu">
+                    <li class="separ"><a href="corplist">$_('Available corpora')&#8230;</a></li>
+                    <li class="$menu_status('menu-corpora:my-subcorpora')"><a title="$_('List of my subcorpora')" href="subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
+                    <li class="$menu_status('menu-corpora:new-subcorpus')"><a title="$_('Create new subcorpus')" href="subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
+                </ul>
+            </li>
+            <li class="separator">&nbsp;</li>
+            <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
+                <ul class="submenu">
+                    #set $i = 0
+                    #for $item in $save_menu
+                    <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="$item.action?$join_params($q, $globals, $item.params)">$item.label</a></li>
+                    #set $i = $i + 1
+                    #end for
+                    #block custom_save
+                    #end block
+                </ul>
+            </li>
+
+            <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
+                <ul class="submenu">
+                    <li class="separ"><a title="$_('Concordance based on current parameters')" href="view?$join_params($q, $globals)">$_('Current concordance')</a></li>
+                    <li class="separ"><a title="$_("Complex sorting options")" href="sort?$join_params($q, $globals)">$_('Sorting')&#8230;</a></li>
+                    <li class="separ"><a title="$_("Randomize ordering of lines")" href="view?$join_params($q, 'q=f', $globals)">$_("Shuffle")</a></li>
+                    <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$join_params($q, $globals)">$_('Sample')&#8230;</a></li>
+                    <li class="separ"><a id="query-overview-trigger"
+                        title="$_('Details about current query and related operations')"
+                        href="concdesc?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)"
+                        data-json-href="concdesc_json?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)">$_('Query overview')&#8230;</a></li>
+                    <li>
+                    #if len($undo_q) > 0
+                    <a title="$_('Revert last operation on current concordance')" href="view?$join_params($globals, $undo_q)">$_('Undo')</a>
+                    #else
+                    <span class="disabled" title="$_('Revert last operation on current concordance')" href="view?$join_params($globals, $undo_q)">$_('Undo')</span>
+                    #end if
+                    </li>
+                </ul>
+            </li>
+
+            <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
+                <ul class="submenu">
+                    <li class="separ"><a href="filter_form?$join_params($q, $globals, 'pnfilter=p')">$_('Positive')&#8230;</a></li>
+                    <li><a href="filter_form?$join_params($q, $globals, 'pnfilter=n')">$_('Negative')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
+                <ul class="submenu">
+                    #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
+                    <li class="separ"><a title="$_("Show frequencies of lemmas")" href="freqs?$join_params($q, $globals, 'fcrit=lemma/e+0~0>0', 'ml=0')">$_("Lemmas")</a></li>
+                    #end if
+                    <li class="separ"><a title="$_("Show frequencies of Node forms")" href="freqs?$join_params($q, $globals, 'fcrit=word/e+0~0>0', 'ml=0')">$_("Node forms")</a></li>
+                    #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
+                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="freqs?$join_params($q, $globals, 'fcrit=$fcrit_shortref', 'ml=0')">$_("Doc IDs")</a></li>
+                    #end if
+                    #if $varExists('ttcrit') and $ttcrit
+                    <li class="separ"><a title="$_("Show frequencies of Text Types")" href="freqs?$join_params($q, $globals, $ttcrit)">$_("Text Types")</a></li>
+                    #end if
+                    <li><a title="$_("Entry form for computing frequencies")" href="freq?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
+                <ul class="submenu">
+                    <li><a href="coll?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
+                <ul class="submenu">
+                    <li class="separ $menu_status('menu-view:kwic-sentence')">
+                    #if not $align
+                        #if $viewmode == 'sen'
+                        <a title="$_("Show KWICs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_('Sentence')</a>
+                        #else
+                        <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_('KWIC')/$_("Sentence")</a>
+                        #end if
+                    #else
+                        #if $viewmode == 'kwic'
+                        <a title="$_("Show sentences")" href="view?$join_params($q, $url_sub($globals,'viewmode','sen'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #elif $viewmode == 'sen'
+                        <a title="$_("Show aligned segments")" href="view?$join_params($q, $url_sub($globals,'viewmode','align'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #elif $viewmode == 'align'
+                        <a title="$_("Show KWICSs")" href="view?$join_params($q, $url_sub($globals,'viewmode','kwic'), 'fromp='+$str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                        #end if
+                    #end if
+                    </li>
+                    <li class="separ"><a href="viewattrs?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
+                    <li><a href="viewopts?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("General view options")&#8230;</a></li>
+                </ul>
+            </li>
+
+            <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
+                <ul class="submenu">
+                    <li class="separ"><a href="https://wiki.korpus.cz/doku.php/manualy:kontext:index" target="_blank">$_('User manual')&#8230;</a></li>
+                    <li class="separ"><a href="https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms')&#8230;</a></li>
+                    <li><a href="https://wiki.korpus.cz/doku.php/cnk:uvod" target="_blank">$_('Available corpora')&#8230;</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div id="menu-level-2-wrapper">
+            <div id="menu-level-2" data-current-menu=""></div>
+        </div>
+    </div>
+
+    #if $corp_full_name
+    <div id="active-corpus">
+        $_('corpus')
+        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+        <div id="corp-size-information">
+        #if $usesubcorp
+            <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
+        #else
+            #filter None
+            $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">
+            <img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
+            #end filter
+        #end if
+        </div>
+        #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
+        <div id="corpus-citation-link">
+            <a href="#">$_('How to cite the corpus')</a>
+        </div>
+        #end if
+    </div>
+    #end if
+
+    #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
+    <div id="corpus-citation-box">
+        <h3>$_('How to cite the corpus')</h3>
+        <h4>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</h4>
+        #filter None# $citation_info.default_ref #end filter#
+
+        #if len($citation_info.article_ref) > 0
+            <h4>$_('Reference(s)'):</h4>
+            <ul>
+            #for $article_item in $citation_info.article_ref
+                <li>#filter None# $article_item #end filter#</li>
+            #end for
+            </ul>
+        #end if
+
+        #if $citation_info.other_bibliography
+        <h4>$_('General references'):</h4>
+        #filter None# $citation_info.other_bibliography #end filter#
+        #end if
+    </div>
+    #end if
+</header>
+#end filter
+
+#filter WebSafe
+<div id="content">
+    #if $messages
+    <div class="messages">
+        #for $message in $messages
+        <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
+            <img class="icon" alt="$message[0]" src="../files/img/${message[0]}-icon.png">
+            <div class="message-text">#filter None#$message[1]#end filter#</div>
+            <a class="close-icon">
+                <img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />
+            </a>
+        </div>
+        #end for
+    </div>
+    #end if
+
+    #filter None
+    #block concordance
+
+    #if $display_closed_conc and not $contains_errors
+    <div id="conc-wrapper">
+        <div id="conc-top-bar">
+            <div id="result-info">
+                #if $usesubcorp
+                    $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
+                #end if
+
+                #if $cached['conc_persist']
+                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['concsize'], mask='%d')
+                    </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
+                    <span class="separ">|</span> #end if
+
+                <abbr title="$_('instances per million') $cached['result_relative_freq_rel_to']">i.p.m.</abbr>:
+                <span class="ipm">$format_number($cached['result_relative_freq'], mask='%01.2f')</span>
+                $cached['result_relative_freq_rel_to']
+                #if $cached['result_arf']
+                <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
+                <strong id="arf">$format_number($cached['result_arf'], mask='%01.2f')</strong>
+                #end if
+                <span class="separ">|</span>
+                <span class="notice-shuffled">
+                #if $cached['result_shuffled']#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
+                </span>
+                #else
+                &nbsp;
+                #end if
+            </div>
+
+
+            #block navigation($navid="navigation_form", $nextid="next")
+            ## navigation
+            #if $cached['numofpages']
+                <div class="bonito-pagination">
+                <form action="view" id="$navid">
+                #if $cached['prevlink']
+                    <div class="bonito-pagination-left">
+                    <a href="view?$join_params($q, $cached['firstlink'], $globals)"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                    <a href="view?$join_params($q, $cached['prevlink'], $globals)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                    </div>
+                #end if
+
+                <div class="bonito-pagination-core">
+                  #filter None
+                  $input_hidden
+                  #end filter
+                  <input type="text" name="fromp" value="$cached['fromp']" size="2" />
+                  / <span class="numofpages" title="$cached['numofpages']">$format_number($cached['numofpages'], mask='%d')</span>
+                </div>
+
+                #if $cached['nextlink']
+                    <div class="bonito-pagination-right">
+                    <a href="view?$join_params($q, $cached['nextlink'], $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
+                    <a id="lastpage" href="view?$join_params($q, $cached['lastlink'], $globals)"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
+                    </div>
+                #else
+                    <a id="$nextid"></a>
+                #end if
+
+                #if $cached['Sort_idx']
+                    <div class="jump-to">
+                        $_("Jump to"):
+                        <select onchange="this.form.fromp.value = this.value; this.form.submit();">
+                        #for $idx in $cached['Sort_idx']
+                            <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
+                            #filter $Shortener
+                            ${idx.label, length=20}
+                            #end filter
+                            </option>
+                        #end for
+                        </select>
+                    </div>
+                #end if
+                </form>
+                </div>
+            #end if
+            #end block
+
+        </div>
+        <div id="conclines-wrapper">
+            &nbsp;
+        </div>
+        <div id="conc-bottom-bar" class="minimized">
+            <a class="expand-conc" href="view?$join_params($q, $globals)" title="$_('click to show current concordance')">
+                <img class="over-img" src="$files_path/img/expand-conc.png" data-alt-img="../files/img/expand-conc_s.png" />
+            </a>
+        </div>
+    </div>
+    #end if
+    #end block
+
+    #block main
+    #end block
+
+    #end filter
+</div>
+
+<div id="selection-actions" style="display: none">
+    <h3>$_('Selection actions')</h3>
+    <form action="delete_lines" method="POST">
+        <select name="actions">
+            <option value="remove">$_('Remove selected lines from the result')</option>
+            <option value="remove_inverted">$_('Remove all but selected lines from the result')</option>
+            <option value="clear">$_('Clear the selection')</option>
+        </select>
+        <button type="button" class="confirm">$_('Proceed')</button>
+    </form>
+</div>
+
+<footer>
+    #if $len($avail_languages) > 0
+    <div id="switch-language-box">$_("user interface languages"):
+        #set $i = 0
+        #for $lang in $avail_languages
+        <a data-lang="$lang[0]">$lang[1].get('label', $lang[0])</a>#if $i < $len($avail_languages) - 1# | #end if#
+        #set $i = $i + 1
+        #end for
+    </div>
+    #end if
+    <div>                              
+        <div id="copyright-info">
+            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
+            &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
+            &copy; <a href="http://nlp.fi.muni.cz/">NLP Centre FI MU</a>
+        </div>
+        <div id="app-version">
+            $_('version') <strong>$_version[1]</strong>, $_('uses') manatee-<span>$_version[0]</span>
+        </div>
+        #if $debug
+        <div class="debug-warning">
+        $_('debugging mode')
+        </div>
+        #end if
+
+        #if $error_report_url:
+        <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
+        #end if
+    </div>
+</footer>
+#end filter
+
+#if $qunit_test
+</div>
+#end if
+
+<script type="text/javascript">
+#block bodyonload
+require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
+    pageself.init(conf);
+});
+#end block
+</script>
+
+</body>
+</html>
+
+## ******** Common methods definitions ******** ##
+#def corp_sel($corplist)
+
+    <input type="hidden" name="reload" />
+    <select name="corpname">
+      #for $c in $corplist
+        #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
+        <option value="$c['id']" title="$c['desc']" data-size="$c['size']" data-path="$c['path']"
+            data-featured="#if $c.get('featured', None)#1#else#0#end if#" $selected>$c['name']</option>
+      #end for
+    </select>
+    #if $SubcorpList
+    <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+        #for $subc in $SubcorpList
+        <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
+        #end for
+    </select>
+    #end if ## SubcorpList
+    <div class="corpus-archive-link"><a href="corplist">$_('see/add more corpora')</a></div>
+
+#end def  ## corp_sel
+## ***************************************** ##
+#def corp_sel_node
+    ## Select corpus name
+    #set $corplist = $CorplistFn()
+    #set $corplist_size = $min($len($corplist), 20)
+    #filter None
+    <tbody>
+        <tr class="required">
+            <th>$_("Corpus"):</th>
+            <td colspan="2">
+            #filter None
+            $corp_sel($corplist)
+            #end filter
+            </td>
+        </tr>
+    </tbody>
+    #end filter
+#end def  ## corp_sel_node
+## ***************************************** ##
+#def subcorp_sel($nameid='usesubcorp')
+    ## Select subcorpus
+
+    #if $LastSubcorp
+      <select name="$nameid" id="$nameid">
+        <option value="">$_("whole corpus")</option>
+        #for $l in $LastSubcorp
+          <option
+          #if $l.n == $getVar($nameid, '')
+            selected
+          #end if
+          >$l.n</option>
+        #end for
+        </select>
+        <i>
+        <a href="subcorp?$corpname_url">$_("info")</a>
+        </i>
+    #end if
+    <i>
+    #if not $_anonymous
+      <a href="subcorp_form?$corpname_url">$_("create new")</a>
+    #end if
+    </i>
+#end def  ## subcorp_sel
+## ***************************************** ##
+#def input_hidden($exclude=())
+    ## Global form parameters
+
+    #for $qq in $Q
+      <input type="hidden" name="q" value="${qq['q'], also='"'}" />
+    #end for
+    #for $g_name, $g_value in $Globals.items()
+      #if not $g_name in $exclude
+      <input type="hidden" name="$g_name" value="$g_value" />
+      #end if
+    #end for
+#end def
+## ***************************************** ##
+#def url_sub($url, $option_name, $new_value)
+## substituting options in URL to change one particular setting
+    #if not re.search('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, $url)
+        #return $url + ';%s=%s' % ($option_name, $new_value)
+    #end if
+    #return re.sub('(^|[;&])%s=[^;&]*([;&]|$)' % $option_name, ';%s=%s;' % ($option_name, $new_value), $url)
+#end def
+## ***************************************** ##
+#def menu_status($id)
+    #for $item in $disabled_menu_items
+    #if $item.matches($id)#disabled#end if#
+    #end for
+#end def

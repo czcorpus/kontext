@@ -1,0 +1,402 @@
+@import "shared.less";
+
+#conc-wrapper {
+  border-radius: 9px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: @portal-box-shadow;
+}
+
+#conc-top-bar,
+#conc-bottom-bar {
+  overflow: hidden;
+  background-color: @color-default-green;
+  padding: 5px 20px;
+}
+
+#conc-bottom-bar.minimized {
+  padding: 0px 20px;
+}
+
+#conc-top-bar span.separ {
+  font-size: 120%;
+  font-weight: normal;
+  color: #00A8E8;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+}
+
+#conclines-wrapper {
+  overflow: auto;
+  background-color: #FFFFFF;
+}
+
+#conclines {
+  background-color: white;
+  font-size: 10pt;
+  font-family: 'Roboto Condensed';
+}
+
+table#conclines tr:nth-child(2n):not(.active) {
+  background-color: @color-light-green;
+}
+
+table#conclines {
+  border-spacing: 0px;
+  padding-bottom: 20px;
+  width: 100%;
+}
+
+table#conclines tr td {
+  padding: 2px;
+}
+
+table#conclines tr .attr {
+  font-family: @monospace-font-family;
+  font-size: 90%;
+  font-weight: bold;
+}
+
+td.maincorp {
+  background-color: rgba(0, 100, 255, 0.1);
+}
+
+/* concordance formating */
+
+.ref {
+  white-space: nowrap;
+  cursor: pointer;
+  color: #009EE0;
+  font-weight: bold;
+}
+
+tr.active .ref {
+  color: #FFFFFF;
+}
+
+.lc {
+  text-align: right;
+  white-space: nowrap;
+  padding-right: 0.1em;
+  border-right: 0px !important;
+}
+
+.rc {
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 0.3em;
+  border-right: 0px !important;
+}
+
+.kw {
+  text-align: center;
+  white-space: nowrap;
+
+}
+
+.coll {
+  color: @color-logo-pink;
+  font-weight: bold;
+  font-style: normal;
+  cursor: pointer;
+}
+
+i.coll {
+  font-style: italic;
+  font-weight: normal;
+}
+
+.strc {
+  color: green;
+  font-style: normal;
+  font-size: 110%
+}
+
+#detail-frame,
+#query-overview {
+  position: fixed;
+  bottom: 15px;
+  height: auto;
+}
+
+.query-overview {
+  padding: 1.5em;
+  background-color: #E9F7FC;
+}
+
+.query-overview {
+  text-align: center;
+}
+
+.query-overview h3 {
+  display: inline-block;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  border-style: solid;
+  border-color: @color-default-green;
+  border-width: 0 0 1px 0;
+}
+
+.query-overview table {
+  border-collapse: collapse;
+  border: none;
+}
+
+.query-overview table th,
+.query-overview table td {
+  padding: 5px 1em;
+}
+
+.query-overview table th {
+  color: @color-logo-pink;
+  border: none;
+}
+
+.query-overview table td {
+  text-align: left;
+  border: 1px solid @color-default-green;
+}
+
+table.full-ref {
+  border-spacing: 0;
+  border: 1px solid @color-default-green;
+  border-radius: @border-radius-default;
+  margin: 0 auto;
+  background-color: #FFFFFF;
+}
+
+table.full-ref td,
+table.full-ref th {
+  padding: 0.3em;
+  text-align: left;
+}
+
+table.full-ref th {
+  padding-left: 1em;
+}
+
+table.full-ref td.data {
+  padding-right: 1.5em;
+}
+
+table.full-ref td.data:not(:last-child) {
+  border-color: @color-light-frame;
+  border-style: solid;
+  border-width: 0 1px 0 0;
+}
+
+table.full-ref tr:nth-child(odd) {
+  background-color: @color-light-green;
+}
+
+#hideel img {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 10px auto 0px auto;
+}
+
+#hideel img:hover {
+  background-image: url(../img/roll_down_active.png);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+#hideel {
+  display: block;
+  width: 100%;
+  height: 18px;
+}
+
+.par {
+  padding: 2px;
+}
+
+.with_tickbox {
+  padding: 4px;
+}
+
+/* concordance annotation */
+tr.selected {
+  background-color: #bdb;
+}
+
+tr.highlight {
+  background-color: #bfb;
+}
+
+tr.highlight td {
+  border-top: 1px dashed #484;
+  border-bottom: 1px dashed #484;
+}
+
+#groupmenu td:hover {
+  background-color: #6c6;
+}
+
+#groupmenu {
+  padding: 5em;
+  margin: -5em;
+  position: absolute;
+  visibility: hidden;
+  cursor: default;
+}
+
+#groupmenu table {
+  background-color: #bfb;
+  border: solid 1px green;
+  padding: 3px;
+}
+
+#groupmenu td {
+  padding: 0 5px 0 5px;
+}
+
+.grp {
+  background-color: #6c6;
+  cursor: pointer;
+  padding: .1em;
+  margin-left: 2px
+}
+
+.groupbox {
+  color: black;
+  background-color: lightgreen;
+  font-weight: normal;
+  border: solid 1px green;
+  cursor: pointer;
+}
+
+#annot_undo {
+  background-color: #f88;
+  padding: 1px 0.6em 1px 0.6em
+}
+
+tr.even {
+  background-color: @color-light-green;
+}
+
+/* spoken corpus */
+
+a.speech-link {
+  font-size: 120%;
+  color: #9ce;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 0 0.1em 0 0.1em;
+}
+
+.active a.speech-link {
+  color: #E9F7FC;
+}
+
+a.speech-link:hover {
+  background-color: #9ce;
+  color: #FFF;
+}
+
+#audio-wrapper {
+  position: absolute;
+  z-index: 1000;
+}
+
+.audio-controls {
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid #767284;
+  background-color: #e9f7fc;
+  padding: 4px 8px;
+  overflow: hidden;
+  box-shadow: 3px 3px 4px #aaa;
+}
+
+.audio-controls a.img-button-play,
+.audio-controls a.img-button-play-b,
+.audio-controls a.img-button-pause,
+.audio-controls a.img-button-pause-b,
+.audio-controls a.img-button-stop,
+.audio-controls a.img-button-stop-b {
+  width: 24px;
+  height: 24px;
+  float: left;
+  text-decoration: none;
+}
+
+.audio-controls a.img-button-play {
+  background-image: url('../img/media_start.png');
+}
+
+.audio-controls a.img-button-play-b {
+  background-image: url('../img/media_start_b.png');
+}
+
+.audio-controls a.img-button-pause {
+  background-image: url('../img/media_pause.png');
+}
+
+.audio-controls a.img-button-pause-b {
+  background-image: url('../img/media_pause_b.png');
+}
+
+.audio-controls a.img-button-stop {
+  background-image: url('../img/media_stop.png');
+}
+
+#audio-error-confirm {
+  display: block;
+  margin: 0;
+  padding: 0;
+  line-height: 100%;
+}
+
+.audio-controls a.audio-error-confirm {
+
+  text-decoration: none;
+  display: block;
+  padding: 3px 5px;
+  font-weight: bold;
+  font-size: 120%;
+}
+
+.audio-controls a.audio-error-confirm:hover {
+  color: #FFFFFF !important;
+}
+
+table#conclines .concordance-col-heading {
+  min-width: 280px;
+  text-align: center;
+}
+
+#conclines .select-primary-lang {
+  font-size: 110%;
+  font-family: "Roboto";
+}
+
+#conclines tr.active {
+  background-color: #8AC3DA;
+}
+
+
+.expand-link img {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 5px;
+}
+
+.jump-to {
+  margin: 5px auto 5px auto;
+}
+
+.jump-to select {
+  font-size: 80%;
+}
+
+.expand-conc {
+  display: block;
+  text-align: center;
+  padding-top: 3px;
+}
+
+.expand-conc img {
+  display: inline-block;
+}
