@@ -184,7 +184,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         conc.switch_aligned(os.path.basename(self.corpname))
-        kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
+        kwic = Kwic(self._corp(), self.corpname, conc)
         labelmap = {}
 
         # we merge structs (e.g. 'doc', 'p') with structural attributes (e.g. 'doc.id', 'p.version')
@@ -2029,7 +2029,7 @@ class Actions(Kontext):
 
         try:
             conc = self.call_function(conclib.get_conc, (self._corp(), self.samplesize))
-            kwic = Kwic(self._corp(), self._canonical_corpname(self.corpname), conc)
+            kwic = Kwic(self._corp(), self.corpname, conc)
             conc.switch_aligned(os.path.basename(self.corpname))
             from_line = int(from_line)
             to_line = int(to_line)
