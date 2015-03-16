@@ -152,8 +152,8 @@ class ConcPersistence(AbstractConcPersistence):
             tmp = self._archive.execute('SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
             if tmp:
                 data = json.loads(tmp[0])
-                self._archive.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1',
-                                      (int(round(time.time())),))
+                self._archive.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
+                                      (int(round(time.time())), data_id))
         return data
 
     def store(self, user_id, curr_data, prev_data=None):
