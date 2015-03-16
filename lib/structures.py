@@ -26,14 +26,23 @@ class Nicedict(object):
     """
     A dictionary which does not throw KeyError in case user
     accesses a key which is not present.
+
+    arguments:
+    data -- an optional dict or Nicedict to insert initial daata
+    strict -- if True then Nicedict behaves just like regular
+              'dict' in terms of a value access; default is False
+    empty_val -- a value to be returned if a key is not found; default is None
     """
-    def __init__(self, data=None, strict=False):
-        self.data = data if data else {}
+    def __init__(self, data=None, strict=False, empty_val=None):
+        self.data = {}
+        if data is not None:
+            self.update(data)
         self.strict = strict
+        self.empty_val = empty_val
 
     def __getitem__(self, k):
         if not self.strict:
-            return self.data.get(k, None)
+            return self.data.get(k, self.empty_val)
         else:
             return self.data[k]
 
