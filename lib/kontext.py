@@ -1088,7 +1088,7 @@ class Kontext(Controller):
 
         # now we store specific information (e.g. concordance parameters)
         # to keep user informed about data he is working with on any page
-        cached_values = Nicedict()
+        cached_values = Nicedict(empty_val='')
         self._restore_conc_results(cached_values)
         result['cached'] = cached_values
         result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
