@@ -122,7 +122,7 @@ msgstr "Nelze načíst uložený dotaz."
 
 #: lib/actions.py:333
 msgid "Document number"
-msgstr "Počet dokumentů"
+msgstr "Pořadí dokumentu"
 
 #: lib/actions.py:352
 #, python-format
