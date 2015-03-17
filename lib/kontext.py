@@ -373,7 +373,7 @@ class Kontext(Controller):
             for k, v in options.items():
                 tokens = k.rsplit(':', 1)  # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
                 if len(tokens) == 2:
-                    if self._canonical_corpname(tokens[0]) == corpname and tokens[1] not in self.GENERAL_OPTIONS:
+                    if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                         ans[tokens[1]] = v
             convert_types(options, self.clone_self(), selector=1)
             self.__dict__.update(ans)
@@ -830,6 +830,13 @@ class Kontext(Controller):
                     if js_file:
                         result[js_file_key] = js_file
 
+    def _get_attrs(self, attr_names, force_values=None):
+        if force_values is None:
+            force_values = {}
+        is_valid = lambda name, value: getattr(self.__class__, name, None) is not value and value != ''
+        get_val = lambda k: force_values[k] if k in force_values else getattr(self, k, None)
+        return [(n, val) for n in attr_names for val in [get_val(n)] if is_valid(n, val)]
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1102,6 +1109,15 @@ class Kontext(Controller):
                         'than %s' % (actual_range + (max_range[0], )))
             return UserActionException(msg)
         return None
+
+    def _get_struct_opts(self):
+        """
+        Returns structures and structural attributes the current concordance should display.
+        Note: current solution is little bit confusing - there are two overlapping parameters
+        here: structs & structattrs where the former is the one used in URL and the latter
+        stores user's persistent settings (but can be also passed via URL with some limitations).
+        """
+        return '%s,%s' % (self.structs, ','.join(self.structattrs))
 
     @staticmethod
     def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
