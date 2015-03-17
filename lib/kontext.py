@@ -462,7 +462,7 @@ class Kontext(Controller):
             for k, v in options.items():
                 tokens = k.rsplit(':', 1)  # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
                 if len(tokens) == 2:
-                    if self._canonical_corpname(tokens[0]) == corpname and tokens[1] not in self.GENERAL_OPTIONS:
+                    if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                         ans[tokens[1]] = v
             convert_types(options, self.clone_self(), selector=1)
             self.__dict__.update(ans)
