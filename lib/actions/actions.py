@@ -146,15 +146,11 @@ class Actions(Kontext):
         kwic = Kwic(self._corp(), self.corpname, conc)
         labelmap = {}
 
-        # we merge structs (e.g. 'doc', 'p') with structural attributes (e.g. 'doc.id', 'p.version')
-        # because manatee accepts both together
-        # important note: "self.structs" is a string of comma-separated values while "self.structattrs" is a list
-        structs = '%s,%s' % (self.structs, ','.join(self.structattrs))
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
                                  tbl_template=self.tbl_template,
-                                 structs=structs)
+                                 structs=self._get_struct_opts())
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
@@ -184,6 +180,10 @@ class Actions(Kontext):
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
                                                                                                      self.rightctx))
+        # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
+        # to be able to display extended context with all set structural attributes
+        out['widectx_globals'] = self.urlencode(self._get_attrs(self._conc_args.get_attrs(),
+                                                                dict(structs=self._get_struct_opts())))
         self._store_conc_results(out)
         return out
 
@@ -2001,11 +2001,10 @@ class Actions(Kontext):
             line_offset = (from_line - 1)
             labelmap = {}
 
-            structs = '%s,%s' % (self.structs, ','.join(self.structattrs))
             data = self.call_function(kwic.kwicpage, (self._get_speech_segment(),),
                                       fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
                                       align=(), alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                      leftctx=leftctx, rightctx=rightctx, structs=structs)
+                                      leftctx=leftctx, rightctx=rightctx, structs=self._get_struct_opts())
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'text':
