@@ -214,7 +214,7 @@ def time_formatting():
     Returns a time formatting string (as used by time.strftime)
     according to the currently selected formats.json.
     """
-    return _current.formatter.conf.get('date')
+    return _current.formatter.conf.get('time')
 
 
 def date_formatting():
@@ -222,7 +222,7 @@ def date_formatting():
     Returns a date formatting string (as used by time.strftime)
     according to the currently selected formats.json.
     """
-    return _current.formatter.conf.get('time')
+    return _current.formatter.conf.get('date')
 
 
 def escape(s):
