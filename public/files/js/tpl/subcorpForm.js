@@ -20,8 +20,8 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'treecomponent', 'popupbox', 'plugins/liveAttributes'], function ($, layoutModel,
-        treeComponent, popupBox, liveAttributes) {
+define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttributes'], function (
+        $, layoutModel, corplistComponent, popupBox, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -73,19 +73,11 @@ define(['jquery', 'tpl/document', 'treecomponent', 'popupbox', 'plugins/liveAttr
     };
 
     lib.initTreeComponent = function () {
-        var updateForm = function () {
-            // in case user only changes current corpus, the form is submitted using GET method
-            // which causes server not to create any subcorpus yet
-            $('form[action="subcorp"]').attr('method', 'GET').submit();
-        };
-        treeComponent.createTreeComponent($('form[action="subcorp"] select[name="corpname"]'),
-            layoutModel.conf.messages,
-            {
-                clickableText: true,
-                searchable : true,
-                defaultButtonLabel : layoutModel.conf.corpname
-            },
-            updateForm);
+        corplistComponent.create(
+            $('form[action="subcorp"] select[name="corpname"]'),
+            layoutModel.pluginApi(),
+            {formTarget: 'subcorp_form', submitMethod: 'GET'}
+        );
     };
 
     lib.initAttributeHints = function () {

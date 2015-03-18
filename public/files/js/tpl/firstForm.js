@@ -145,7 +145,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
         tc = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
-            layoutModel.pluginApi()
+            layoutModel.pluginApi(),
+            {formTarget: 'first_form'}
         );
         lib.treeComponent = tc[0]; // only one tree component is created for the page
 

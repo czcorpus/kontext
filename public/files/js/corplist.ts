@@ -56,7 +56,9 @@ export interface CorplistItemClick {
  *
  */
 export interface Options {
-    onItemClick:CorplistItemClick
+    formTarget?:string;
+    submitMethod?:string;
+    widgetClass?:string;
 }
 
 /**
@@ -466,6 +468,8 @@ export class Corplist {
 
     private favoritesBox:Favorites;
 
+    onItemClick:CorplistItemClick;
+
     /**
      *
      * @param options
@@ -478,7 +482,18 @@ export class Corplist {
         this.currCorpIdent = pluginApi.conf('corpname');
         this.currCorpname = pluginApi.conf('humanCorpname');
         this.visible = Visibility.HIDDEN;
-        this.widgetClass = 'corplist-widget'; // TODO options
+        this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
+
+        this.onItemClick = (corpusId:string) => {
+            $(this.hiddenInput).val(corpusId);
+            if (this.options.formTarget) {
+                $(this.parentForm).attr('action', this.options.formTarget);
+            }
+            if (this.options.submitMethod) {
+                $(this.parentForm).attr('method', this.options.submitMethod);
+            }
+            $(this.parentForm).submit();
+        };
     }
 
     /**
@@ -488,15 +503,6 @@ export class Corplist {
         this.switchComponentVisibility();
         e.preventDefault();
         e.stopPropagation();
-    };
-
-    /**
-     *
-     */
-    onItemClick = (corpusId:string) => {
-        $(this.hiddenInput).val(corpusId);
-        $(this.parentForm).attr('action', 'first_form'); // TODO abs. URL
-        $(this.parentForm).submit();
     };
 
     /**
