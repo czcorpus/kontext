@@ -26,12 +26,6 @@
 import $ = require('jquery');
 import conf = require('conf');
 
-/**
- *
- */
-export interface Options {
-    title:string;
-}
 
 /**
  *
@@ -55,7 +49,14 @@ export interface CorplistItem {
  *
  */
 export interface CorplistItemClick {
-    (callback:{data: (s:string) => any}):void;
+    (corpId:string): void;
+}
+
+/**
+ *
+ */
+export interface Options {
+    onItemClick:CorplistItemClick
 }
 
 /**
@@ -344,12 +345,8 @@ export class Search implements WidgetTab {
             }
         });
 
-        $(this.srchField).on('typeahead:selected', function (x, suggestion) {
-            self.itemClickCallback({
-                data : function (key:string) {
-                    return suggestion[key];
-                }
-            });
+        $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
+            self.itemClickCallback(suggestion['id']);
         });
     }
 
@@ -416,7 +413,7 @@ export class Favorites implements WidgetTab {
 
         jqWrapper.find('a.corplist-item').each(function() {
             $(this).on('click', function (e:Event) {
-                self.itemClickCallback($(e.currentTarget));
+                self.itemClickCallback($(e.currentTarget).data('id'));
                 e.stopPropagation();
                 e.preventDefault();
             });
@@ -496,8 +493,8 @@ export class Corplist {
     /**
      *
      */
-    onItemClick = (triggerElm:{data: (s:string) => any}) => {
-        $(this.hiddenInput).val(triggerElm.data('id'));
+    onItemClick = (corpusId:string) => {
+        $(this.hiddenInput).val(corpusId);
         $(this.parentForm).attr('action', 'first_form'); // TODO abs. URL
         $(this.parentForm).submit();
     };
