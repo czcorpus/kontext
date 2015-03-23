@@ -49,16 +49,48 @@ export interface CorplistItem {
  *
  */
 export interface CorplistItemClick {
-    (corpId:string): void;
+    (corpId:string, corpName:string): void;
 }
 
 /**
  *
  */
 export interface Options {
+
+    /**
+     * form's action attribute; if omitted then form's current one is used
+     */
     formTarget?:string;
+
+    /**
+     * GET or POST; if omitted then form's current method is used
+     */
     submitMethod?:string;
+
+    /**
+     * Using custom action disables implicit form submission which means
+     * formTarget and submitMethod options have no effect unless you use
+     * them directly in some way.
+     */
+    itemClickAction?:CorplistItemClick;
+
+    /**
+     * A HTML class to be used for widget's wrapping container.
+     * If omitted then 'corplist-widget' is used.
+     */
     widgetClass?:string;
+
+    /**
+     *
+     * @param widget
+     */
+    onHide?:(widget:Corplist)=>void;
+
+    /**
+     *
+     * @param widget
+     */
+    onShow?:(widget:Corplist)=>void;
 }
 
 /**
@@ -348,7 +380,7 @@ export class Search implements WidgetTab {
         });
 
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
-            self.itemClickCallback(suggestion['id']);
+            self.itemClickCallback(suggestion['id'], suggestion['name']);
         });
     }
 
@@ -415,7 +447,7 @@ export class Favorites implements WidgetTab {
 
         jqWrapper.find('a.corplist-item').each(function() {
             $(this).on('click', function (e:Event) {
-                self.itemClickCallback($(e.currentTarget).data('id'));
+                self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
                 e.stopPropagation();
                 e.preventDefault();
             });
@@ -468,7 +500,29 @@ export class Corplist {
 
     private favoritesBox:Favorites;
 
-    onItemClick:CorplistItemClick;
+    onHide:(widget:Corplist)=>void;
+
+    onShow:(widget:Corplist)=>void;
+
+
+    onItemClick:CorplistItemClick = (corpusId:string, corpusName:string) => {
+        $(this.hiddenInput).val(corpusId);
+        this.setButtonLabel(corpusName);
+
+        if (this.options.itemClickAction) {        
+            console.log('calling with this as ', this);
+            this.options.itemClickAction.call(this, corpusId);
+
+        } else {            
+            if (this.options.formTarget) {
+                $(this.parentForm).attr('action', this.options.formTarget);
+            }
+            if (this.options.submitMethod) {
+                $(this.parentForm).attr('method', this.options.submitMethod);
+            }
+            $(this.parentForm).submit();
+        }
+    };
 
     /**
      *
@@ -483,17 +537,8 @@ export class Corplist {
         this.currCorpname = pluginApi.conf('humanCorpname');
         this.visible = Visibility.HIDDEN;
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
-
-        this.onItemClick = (corpusId:string) => {
-            $(this.hiddenInput).val(corpusId);
-            if (this.options.formTarget) {
-                $(this.parentForm).attr('action', this.options.formTarget);
-            }
-            if (this.options.submitMethod) {
-                $(this.parentForm).attr('method', this.options.submitMethod);
-            }
-            $(this.parentForm).submit();
-        };
+        this.onHide = this.options.onHide ? this.options.onHide : null;
+        this.onShow = this.options.onShow ? this.options.onShow : null;
     }
 
     /**
@@ -528,13 +573,34 @@ export class Corplist {
         if (state === Visibility.HIDDEN || state === undefined && this.visible === Visibility.VISIBLE) {
             this.visible = Visibility.HIDDEN;
             $(this.widgetWrapper).hide();
+            if (typeof this.onHide === 'function') {
+                this.onHide.call(this, this);
+            }
 
         } else if (state === Visibility.VISIBLE || state === undefined && this.visible === Visibility.HIDDEN) {
             this.visible = Visibility.VISIBLE;
             $(this.widgetWrapper).show();
             // even if the tab is 'current' we call this to make sure it is initialized properly
             this.mainMenu.getCurrent().show();
+            if (typeof this.onShow === 'function') {
+                this.onShow.call(this, this);
+                console.log($(window.document).on);
+            }
         }
+    }
+
+    /**
+     *
+     */
+    public hide():void {
+        this.switchComponentVisibility(Visibility.HIDDEN);
+    }
+
+    /**
+     *
+     */
+    public show():void {
+        this.switchComponentVisibility(Visibility.VISIBLE);
     }
 
     /**
@@ -581,6 +647,13 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
         this.switchComponentVisibility(Visibility.HIDDEN);
+    }
+
+    /**
+     *
+     */
+    setButtonLabel(label:string) {
+        $(this.triggerButton).text(label);
     }
 
     /**
