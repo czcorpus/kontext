@@ -225,6 +225,15 @@ def date_formatting():
     return _current.formatter.conf.get('date')
 
 
+def datetime_formatting(separator=' '):
+    """
+    Returns combined formatting for date and time:
+    [date format string][separator][time format string]
+    according to the currently selected formats.json
+    """
+    return '%s%s%s' % (date_formatting(), separator, time_formatting())
+
+
 def escape(s):
     """
     Escapes a CQL attribute value to protect it against RegExp evaluation
