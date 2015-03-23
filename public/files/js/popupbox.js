@@ -81,6 +81,8 @@ define(['win', 'jquery'], function (win, $) {
 
         this.importedElement = null;
 
+        this.expandLeft = false;
+
         this.messages = {
             close : 'close'
         };
@@ -216,14 +218,26 @@ define(['win', 'jquery'], function (win, $) {
         $(this.rootElm).css('top', boxTop);
 
         boxIntWidth = $(this.rootElm).outerWidth(true);
-        if (pageWidth - boxIntWidth > this.anchorPosition.left) {
-            $(this.rootElm).css('left', this.anchorPosition.left + 'px');
+
+        if (!this.expandLeft) {
+            if (pageWidth - boxIntWidth > this.anchorPosition.left) {
+                $(this.rootElm).css('left', this.anchorPosition.left + 'px');
+
+            } else {
+                $(this.rootElm).css({
+                    left: '100%',
+                    'margin-left': '-' + $(this.rootElm).outerWidth() + 'px'
+                });
+            }
 
         } else {
-            $(this.rootElm).css({
-                left: '100%',
-                'margin-left': '-' + $(this.rootElm).outerWidth() + 'px'
-            });
+            if (this.anchorPosition.left + $(this.triggerElm).outerWidth() - boxIntWidth >= 0) {
+                $(this.rootElm).css('left', (this.anchorPosition.left + $(this.triggerElm).outerWidth() - boxIntWidth)
+                    + 'px');
+
+            } else {
+                $(this.rootElm).css('left', '0');
+            }
         }
     };
 
@@ -240,8 +254,9 @@ define(['win', 'jquery'], function (win, $) {
      * @property {function} options.onShow
      * @property {function} options.onError
      * @property {function} options.domId
-     * @property {string} options.htmlClass,
-     * @property {boolean} options.calculatePosition,
+     * @property {string} options.htmlClass
+     * @property {boolean} options.calculatePosition
+     * @property {boolean} options.expandLeft
      * @property {{}} options.messages translation messages
      */
 
@@ -268,6 +283,7 @@ define(['win', 'jquery'], function (win, $) {
             boxClass = fetchOption('htmlClass', null),
             calculatePosition = fetchOption('calculatePosition', true);
 
+        this.expandLeft = fetchOption('expandLeft', false);
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
         this.onShow = fetchOption('onShow', null);
