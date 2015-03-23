@@ -1766,6 +1766,17 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def subcorp(self, subcname='', delete='', create=False, within_condition='', within_struct='', method=''):
+        ans = self._create_subcorpus(subcname, delete, create, within_condition, within_struct, method)
+        self._redirect('subcorp_list?corpname=%s' % self.corpname)
+        return ans
+
+    @exposed(access_level=1, return_type='json')
+    def ajax_create_subcorpus(self, request):
+        return self._create_subcorpus(subcname=request.form['subcname'], delete=True, create=True,
+                                      within_condition=urllib.unquote(request.form['within_condition']),
+                                      within_struct=request.form['within_struct'], method='raw')
+
+    def _create_subcorpus(self, subcname, delete, create, within_condition, within_struct, method):
         """
         arguments:
         subcname -- name of new subcorpus
@@ -1839,40 +1850,36 @@ class Actions(Kontext):
                                                      condition=tt_query[0][1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
-            self._redirect('subcorp_list?corpname=%s' % self.corpname)
             return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
 
-    @exposed(access_level=1, legacy=True)
-    def subcorp_list(self, selected_subc=(), sort='n'):
+    def _delete_subcorpora(self, subc_list):
+        base = self.subcpath[-1]
+        for subcorp_id in subc_list:
+            try:
+                corp, subcorp = subcorp_id.split(':', 1)
+                os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
+            except Exception as e:
+                logging.getLogger(__name__).error(e)
+
+    def _create_full_subc_list(self, queries, subc_files):
+        pass
+
+
+    @exposed(access_level=1)
+    def subcorp_list(self, request):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
+        sort = 'n'  # TODO
+        show_deleted = int(request.args.get('show_deleted', 0))
         current_corp = self.corpname
         if self.get_http_method() == 'POST':
-            base = self.subcpath[-1]
-            for subcorp_id in selected_subc:
-                try:
-                    corp, subcorp = subcorp_id.split(':', 1)
-                    os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
-                    if plugins.has_plugin('subc_restore'):
-                        try:
-                            plugins.subc_restore.delete_query(self._session_get('user', 'id'), corp, subcorp)
-                        except Exception as e:
-                            logging.getLogger(__name__).error('subc_restore plug-in failed to delete a query: %s' % e)
-                except Exception as e:
-                    logging.getLogger(__name__).error(e)
-
-        subc_queries = {}
-        if plugins.has_plugin('subc_restore'):
-            try:
-                subc_queries = plugins.subc_restore.list_queries(self._session_get('user', 'id'), 0)
-            except Exception as e:
-                logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
-        subc_queries = dict([(x['subcname'], urllib.quote('<%s %s />' % (x['struct_name'], x['condition']))) for x in subc_queries])
+            selected_subc = request.form.get('selected_subc', [])
+            self._delete_subcorpora(selected_subc)
 
         data = []
         corplist = plugins.auth.get_corplist(self._session_get('user', 'id'))
@@ -1882,16 +1889,28 @@ class Actions(Kontext):
                 basecorpname = corp.split(':')[0]
                 for item in self.cm.subcorp_names(basecorpname):
                     sc = self.cm.get_Corpus(corp, item['n'])
+                    subc_id = '%s:%s' % (corp, item['n'])
                     data.append({
-                        'n': '%s:%s' % (corp, item['n']),
+                        'n': subc_id,
                         'v': item['n'],
                         'size': sc.search_size(),
                         'created': sc.created,
                         'corpname': corp,
-                        'usesubcorp': item['n']
+                        'usesubcorp': item['n'],
+                        'deleted': False
                     })
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
+
+        if plugins.has_plugin('subc_restore'):
+            try:
+                full_list = plugins.subc_restore.extend_subc_list(data, self._session_get('user', 'id'),
+                                                                  bool(show_deleted), 0)
+            except Exception as e:
+                logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
+                full_list = []
+        else:
+            full_list = data
 
         sort_key, rev = Kontext._parse_sorting_param(sort)
         if sort_key in ('size', 'created'):
@@ -1907,9 +1926,9 @@ class Actions(Kontext):
 
         self.cm.get_Corpus(current_corp)  # this is necessary to reset manatee module back to its original state
         return {
-            'subcorp_list': data,
-            'subc_queries': subc_queries,
+            'subcorp_list': full_list,
             'sort_keys': sort_keys,
+            'show_deleted': show_deleted,
             'rev': rev
         }
 
@@ -2366,3 +2385,7 @@ class Actions(Kontext):
         self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
         self._save_options(optlist=['favorite_corpora'])
         return {}
+
+    @exposed(return_type='json')
+    def ajax_get_favorite_corpora(self, request):
+        return self._load_fav_corplist()

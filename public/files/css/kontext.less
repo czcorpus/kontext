@@ -791,10 +791,6 @@ fieldset fieldset {
   margin: 6px 10px 6px 6px;
 }
 
-fieldset p {
-  width: 500px;
-}
-
 fieldset.float {
   background-color: transparent;
   border-width: 0;
@@ -885,6 +881,10 @@ table.data th.super {
 
 table.data tbody tr:nth-child(odd) {
   background-color: @color-light-green;
+}
+
+table.data .deleted {
+  color: @color-logo-pink;
 }
 
 table.envelope {
@@ -1640,4 +1640,8 @@ section.corplist .keywords a.keyword:hover {
 .error-input {
   border: 2px solid @color-logo-pink !important;
   border-radius: @border-radius-default !important;
+}
+
+section.my-subcorpora label.show-deleted {
+  float: right;
 }

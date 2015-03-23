@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #from cmpltmpl.document import document
 #extends document
 
+#from templating.filters import Datetime
+#from templating.filters import Bool2Num
+
 #def title
 $_("List of my subcorpora")#slurp
 #end def
@@ -32,44 +35,60 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
 
 #def main
-<section>
+<section class="my-subcorpora">
     <h2>$_('My subcorpora')</h2>
-
     <form id="mainform" action="subcorp_list" method="POST">
-
-    <table class="data" border="0">
-        <thead>
+        <table class="data" border="0">
+            <thead>
+                <tr>
+                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
+                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
+                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
+                    <th>$_('status')</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            #for $item in $subcorp_list
             <tr>
-                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
-                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
-                <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
-                <th></th>
-                <th></th>
+                <td>
+                  #if not $item.deleted
+                  <a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">
+                  #end if
+                  $item.n
+                  #if not $item.deleted
+                  </a>
+                  #end if
+                </td>
+                <td class="num">$format_number($item.size, mask='%d')</td>
+                <td>#filter $Datetime#$item.created#end filter#</td>
+                <td data-query="$item.condition">
+                #set $states = []
+                #if $item.deleted# $states.append('<span class="deleted">' + $_('deleted') + '</span>') #end if#
+                #if $item.condition# $states.append($_('backed up')) #end if#
+                #set $states = ', '.join($states)
+                #filter None# $states #end filter#
+                </td>
+                <td>
+                  <a class="subc-actions"
+                     data-deleted="#filter $Bool2Num#$item.deleted#end filter#"
+                     data-condition="$item.condition"
+                     data-struct_name="$item.struct_name"
+                     data-subcname="$item.usesubcorp"
+                     data-corpname="$item.corpname">$_('actions')</a>
+                </td>
+                <td>
+                    <input type="checkbox" name="selected_subc" value="$item.n" />
+                </td>
             </tr>
-        </thead>
-        <tbody>
-        #for $item in $subcorp_list
-        <tr>
-            <td><a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">$item.n</a></td>
-            <td class="num">$format_number($item.size, mask='%d')</td>
-            <td>$item.created</td>
-            #if $item.usesubcorp in $subc_queries
-            <td data-query="$subc_queries[$item.usesubcorp]">
-            <a class="subc-query" href="#">see the query</a>
-            </td>
-            #else
-            <td></td>
-            #end if
-            <td>
-                <input type="checkbox" name="selected_subc" value="$item.n" />
-            </td>
-        </tr>
-        #end for
-        </tbody>
-    </table>
-    <p>
-        <button type="submit" class="default-button" name="action" value="delete">$_('Delete selected')</button>
-    </p>
+            #end for
+            </tbody>
+        </table>
+        <label class="show-deleted">$_('Show also deleted items') <input type="checkbox" class="show-deleted" #if $show_deleted#checked="checked"#end if# /></label>
+        <p>
+            <button type="submit" class="default-button" name="action" value="delete">$_('Delete selected')</button>
+        </p>
     </form>
 </section>
 
