@@ -51,12 +51,15 @@ define(['win', 'jquery'], function (win, $) {
      * @param {{}} anchorPosition object with 'left', 'top' and 'height' attributes specifying
      * height and anchorPosition of an element the pop-up box will be (visually) bound to
      * @param {*} [beforeOpenVal]
+     * @param {HTMLElement} triggerElm (optional) element which triggered this tooltip box
      */
-    function TooltipBox(anchorPosition, beforeOpenVal) {
+    function TooltipBox(anchorPosition, beforeOpenVal, triggerElm) {
 
         this.anchorPosition = anchorPosition;
 
         this.beforeOpenVal = beforeOpenVal; // optional value returned by user's beforeOpen() callback
+
+        this.triggerElm = triggerElm;
 
         this.onShowVal = null; // optional value returned by user's onShow() callback
 
@@ -81,6 +84,8 @@ define(['win', 'jquery'], function (win, $) {
         this.messages = {
             close : 'close'
         };
+
+        this._suppressKeys = false;
     }
 
     /**
@@ -103,6 +108,13 @@ define(['win', 'jquery'], function (win, $) {
         ans.width = jqElem.width();
         ans.height = jqElem.height();
         return ans;
+    };
+
+    /**
+     *
+     */
+    TooltipBox.prototype.getTriggerElm = function () {
+        return this.triggerElm;
     };
 
     /**
@@ -327,9 +339,11 @@ define(['win', 'jquery'], function (win, $) {
         };
 
         escKeyHandler = function (event) {
-            if (event.keyCode === 27) {
-                self.close();
-                $(win.document).off('keyup', escKeyHandler);
+            if (!self._suppressKeys) {
+                if (event.keyCode === 27) {
+                    self.close();
+                    $(win.document).off('keyup', escKeyHandler);
+                }
             }
         };
         $(win.document).on('keyup', escKeyHandler);
@@ -353,6 +367,14 @@ define(['win', 'jquery'], function (win, $) {
                 this.messages[prop] = messages[prop];
             }
         }
+    };
+
+    /**
+     *
+     * @param v
+     */
+    TooltipBox.prototype.suppressKeys = function (v) {
+        this._suppressKeys = v;
     };
 
     /**
@@ -388,7 +410,7 @@ define(['win', 'jquery'], function (win, $) {
             beforeOpenValue = beforeOpen.call(self);
         }
 
-        box = new TooltipBox(position, beforeOpenValue);
+        box = new TooltipBox(position, beforeOpenValue, null);
         box.open(whereElm, contents, options);
 
         windowClickHandler = function (event) {
@@ -449,7 +471,7 @@ define(['win', 'jquery'], function (win, $) {
                     left: elmOffset.left,
                     top: elmOffset.top,
                     height: $(event.target).height()
-                }, beforeOpenValue);
+                }, beforeOpenValue, $(elm).get(0));
                 $(elm).data('popupBox', box);
                 box.open(whereElm, contents, options);
 
@@ -517,7 +539,7 @@ define(['win', 'jquery'], function (win, $) {
     lib.close = function (elm) {
         var data = $(elm).data('popupBox');
 
-        if (data.toString() === '[object TooltipBox]') {
+        if (data && data.toString() === '[object TooltipBox]') {
             data.close();
         }
     };
