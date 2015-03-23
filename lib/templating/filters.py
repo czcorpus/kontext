@@ -20,8 +20,11 @@ Custom Cheetah filters for the KonText interface
 from Cheetah.Filters import Filter
 import json
 import urllib
+from datetime import datetime
+import time
 
 from l10n import format_number
+from l10n import datetime_formatting
 
 
 class IntegerFormatter(Filter):
@@ -78,3 +81,23 @@ class URLEncode(Filter):
         if type(val) is unicode:
             val = val.encode('utf-8')
         return urllib.quote(val)
+
+
+class Datetime(Filter):
+    def filter(self, val, **kw):
+        if type(val) is datetime:
+            return time.strftime(datetime_formatting(), val.timetuple())
+        elif type(val) is str:
+            return val
+        else:
+            return '??'
+
+
+class Bool2Num(Filter):
+    def filter(self, val, **kw):
+        if type(val) is bool:
+            return str(int(val))
+        elif type(val) is str:
+            return {'true': '1', 'false': '0'}[val.lower()]
+        else:
+            return str(int(bool(val)))
