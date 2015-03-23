@@ -670,7 +670,7 @@ class Controller(object):
         """
         if type(result) is dict:
             result['messages'] = self._system_messages
-            result['contains_errors'] = self.contains_errors()
+            result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
             if 'message' in result:
                 result['messages'].append(result['message'])
                 del(result['message'])
@@ -778,6 +778,7 @@ class Controller(object):
                 self.add_system_message('error',
                                         _('Failed to process your request. '
                                           'Please try again later or contact system support.'))
+
             named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
@@ -841,7 +842,7 @@ class Controller(object):
                 else:
                     json_msg = _('Failed to process your request. '
                                  'Please try again later or contact system support.')
-                return methodname, None, {'error': json_msg}
+                return methodname, None, {'error': json_msg, 'contains_errors': True}
             else:
                 if not self.exceptmethod and self.is_template(methodname + '_form'):
                     self.exceptmethod = methodname + '_form'
