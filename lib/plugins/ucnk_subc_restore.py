@@ -40,11 +40,13 @@ required entry in config.xml:
 
 import time
 import logging
+import urllib
 LOG = logging.getLogger(__name__).debug
 
 from sqlalchemy import create_engine
 
 from abstract.subc_restore import AbstractSubcRestore
+import datetime
 
 
 class UCNKSubcRestore(AbstractSubcRestore):
@@ -84,6 +86,59 @@ class UCNKSubcRestore(AbstractSubcRestore):
             return dict(zip(self.COLS, ans))
         else:
             return None
+
+    def extend_subc_list(self, subc_list, user_id, show_deleted, from_idx, to_idx=None):
+        """
+        Enriches KonText's original subcorpora list by the information about queries which
+        produced these subcorpora. It it also able to insert an information about deleted
+        subcorpora.
+
+        arguments:
+        subc_list -- an original subcorpora list as produced by KonText's respective action
+                     (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
+        user_id -- a database user ID
+        show_deleted -- if True then the method includes removed subcorpora too (though without
+                        some properties obtained from subcorpora files which are not available in such
+                        case)
+        from_idx -- 0..(num_items-1) list offset
+        to_idx -- last item index (None by default)
+
+        returns:
+        a corplist sorted by creation date
+        """
+        subc_queries = self.list_queries(user_id, from_idx, to_idx)
+        subc_queries_map = {}
+        for x in subc_queries:
+            subc_queries_map['%s:%s' % (x['corpname'], x['subcname'])] = x
+
+        if show_deleted:
+            deleted_keys = set(subc_queries_map.keys()) - (set([x['n'] for x in subc_list]))
+        else:
+            deleted_keys = []
+
+        deleted_items = []
+        for dk in deleted_keys:
+            deleted_items.append({
+                'n': dk,
+                'v': dk,
+                'size': None,
+                'created': datetime.datetime.fromtimestamp(subc_queries_map[dk]['timestamp']),
+                'corpname': subc_queries_map[dk]['corpname'],
+                'usesubcorp': subc_queries_map[dk]['subcname'],
+                'struct_name': subc_queries_map[dk]['struct_name'],
+                'condition': urllib.quote(subc_queries_map[dk]['condition']),
+                'deleted': True
+            })
+
+        for subc in subc_list:
+            if subc['n'] in subc_queries_map:
+                subc['struct_name'] = subc_queries_map[subc['n']]['struct_name']
+                subc['condition'] = urllib.quote(subc_queries_map[subc['n']]['condition'])
+            else:
+                subc['struct_name'] = None
+                subc['condition'] = None
+
+        return sorted(subc_list + deleted_items, key=lambda t: t['n'])
 
 
 def create_instance(conf, *args):
