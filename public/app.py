@@ -205,6 +205,9 @@ def load_controller_class(path_info):
     elif path_info.startswith('/user'):
         from actions.user import User
         controller_class = User
+    elif path_info.startswith('/subcorpus'):
+        from actions.subcorpus import Subcorpus
+        controller_class = Subcorpus
     else:
         from actions.actions import Actions
         controller_class = Actions

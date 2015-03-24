@@ -81,7 +81,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
             prom.then(
                 function () {
-                    window.location = layoutModel.conf['rootURL'] + 'subcorp_list'
+                    window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
                 },
                 function (jqXHR, textStatus, errorThrown) {
                     layoutModel.message('error', errorThrown);
@@ -163,7 +163,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                             layoutModel.showMessage('error', data.error);
 
                         } else {
-                            window.location = layoutModel.conf['rootURL'] + 'subcorp_list'
+                            window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
                         }
                     },
                     function (jqXHR, textStatus, errorThrown) {
@@ -280,10 +280,10 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
     function initList() {
         $('section input.show-deleted').on('change', function (e) {
             if ($(e.currentTarget).is(':checked')) {
-                window.location = layoutModel.conf['rootURL'] + 'subcorp_list?show_deleted=1';
+                window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=1';
 
             } else {
-                window.location = layoutModel.conf['rootURL'] + 'subcorp_list?show_deleted=0';
+                window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=0';
             }
         });
     }

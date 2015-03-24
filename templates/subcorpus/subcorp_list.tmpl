@@ -37,13 +37,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #def main
 <section class="my-subcorpora">
     <h2>$_('My subcorpora')</h2>
-    <form id="mainform" action="subcorp_list" method="POST">
+    <form id="mainform" action="${root_url}subcorpus/subcorp_list" method="POST">
         <table class="data" border="0">
             <thead>
                 <tr>
-                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
-                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
-                    <th><a href="subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
+                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
+                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
+                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
                     <th>$_('status')</th>
                     <th></th>
                     <th></th>
@@ -54,7 +54,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <tr>
                 <td>
                   #if not $item.deleted
-                  <a href="first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">
+                  <a href="${root_url}first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">
                   #end if
                   $item.n
                   #if not $item.deleted

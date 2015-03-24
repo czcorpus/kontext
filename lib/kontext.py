@@ -26,7 +26,7 @@ from controller import Controller, UserActionException, convert_types, Parameter
 import plugins
 import settings
 import l10n
-from l10n import format_number, corpus_get_conf
+from l10n import format_number, corpus_get_conf, export_string
 from translation import ugettext as _
 import scheduled
 from structures import Nicedict, FixedDict
@@ -287,6 +287,7 @@ class Kontext(Controller):
     wlsendmail = Parameter(u'')
     cup_hl = Parameter(u'q', persistent=True)
     structattrs = Parameter([], persistent=True)
+    subcnorm = Parameter('tokens')
 
     sortlevel = Parameter(1)
     flimit = Parameter(0)
@@ -1025,7 +1026,6 @@ class Kontext(Controller):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         result['root_url'] = self.get_root_url()
-        result['root_path'] = settings.get('global', 'root_path')
         result['static_url'] = '%sfiles/' % self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self._user_is_anonymous()
@@ -1297,3 +1297,130 @@ class Kontext(Controller):
         else:
             revers = False
         return k, revers
+
+    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True):
+        corp = self._corp()
+        ans = {}
+
+        def compute_norm(attrname, attr, val):
+            valid = attr.str2id(export_string(unicode(val), to_encoding=self._corp().get_conf('ENCODING')))
+            r = corp.filter_query(struct.attr_val(attrname, valid))
+            cnt = 0
+            while not r.end():
+                cnt += normvals[r.peek_beg()]
+                r.next()
+            return cnt
+
+        def safe_int(s):
+            try:
+                return int(s)
+            except ValueError:
+                return 0
+
+        if not subcorpattrs:
+            subcorpattrs = corp.get_conf('SUBCORPATTRS') \
+                or corp.get_conf('FULLREF')
+        if not subcorpattrs or subcorpattrs == '#':
+            return {'message': ('error', _('No meta-information to create a subcorpus.')),
+                    'Normslist': [], 'Blocks': []}
+
+        maxlistsize = settings.get_int('global', 'max_attr_list_size')
+        # if live_attributes are installed then always shrink bibliographical
+        # entries even if their count is < maxlistsize
+        if plugins.has_plugin('live_attributes'):
+            ans['bib_attr'] = plugins.corptree.get_corpus_info(self.corpname)['metadata']['label_attr']
+            list_none = (ans['bib_attr'], )
+        else:
+            ans['bib_attr'] = None
+            list_none = ()
+        tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
+        self._add_text_type_hints(tt)
+
+        if ret_nums:
+            basestructname = subcorpattrs.split('.')[0]
+            struct = corp.get_struct(basestructname)
+            normvals = {}
+            if self.subcnorm not in ('freq', 'tokens'):
+                try:
+                    nas = struct.get_attr(self.subcnorm).pos2str
+                except conclib.manatee.AttrNotFound, e:
+                    self.error = str(e)
+                    self.subcnorm = 'freq'
+            if self.subcnorm == 'freq':
+                normvals = dict([(struct.beg(i), 1)
+                                 for i in range(struct.size())])
+            elif self.subcnorm == 'tokens':
+                normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
+                                 for i in range(struct.size())])
+            else:
+                normvals = dict([(struct.beg(i), safe_int(nas(i)))
+                                 for i in range(struct.size())])
+
+            for item in tt:
+                for col in item['Line']:
+                    if 'textboxlength' in col:
+                        continue
+                    if not col['name'].startswith(basestructname):
+                        col['textboxlength'] = 30
+                        continue
+                    attr = corp.get_attr(col['name'])
+                    aname = col['name'].split('.')[-1]
+                    for val in col['Values']:
+                        if format_num:
+                            val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
+                        else:
+                            val['xcnt'] = compute_norm(aname, attr, val['v'])
+            ans['Blocks'] = tt
+            ans['Normslist'] = self._get_normslist(basestructname)
+        else:
+            ans['Blocks'] = tt
+            ans['Normslist'] = []
+        return ans
+
+    def _get_normslist(self, structname):
+        corp = self._corp()
+        normsliststr = corp.get_conf('DOCNORMS')
+        normslist = [{'n': 'freq', 'label': _('Document counts')},
+                     {'n': 'tokens', 'label': _('Tokens')}]
+        if normsliststr:
+            normslist += [{'n': n, 'label': corp.get_conf(structname + '.'
+                                                          + n + '.LABEL') or n}
+                          for n in normsliststr.split(',')]
+        else:
+            try:
+                corp.get_attr(structname + ".wordcount")
+                normslist.append({'n': 'wordcount', 'label': _('Word counts')})
+            except:
+                pass
+        return normslist
+
+    def _texttype_query(self):
+        scas = [(a[4:], getattr(self, a))
+                for a in dir(self) if a.startswith('sca_')]
+        structs = {}
+        for sa, v in scas:
+            if type(v) in (str, unicode) and '|' in v:
+                v = v.split('|')
+            s, a = sa.split('.')
+            if type(v) is list:
+                query = '(%s)' % ' | '.join(['%s="%s"' % (a, l10n.escape(v1))
+                                             for v1 in v])
+            else:
+                query = '%s="%s"' % (a, l10n.escape(v))
+            # TODO: is the following encoding change always OK?
+            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
+            if s in structs:
+                structs[s].append(query)
+            else:
+                structs[s] = [query]
+        return [(sname, ' & '.join(subquery)) for
+                sname, subquery in structs.items()]
+
+    @staticmethod
+    def _add_text_type_hints(tt):
+        if settings.contains('external_links', 'corpora_related'):
+            hints = dict([(x[1]['key'], x[0]) for x in settings.get_full('external_links', 'corpora_related')])
+            for line in tt:
+                for item in line.get('Line', ()):
+                    if 'label' in item and item['label'] in hints:
+                        item['label_hint'] = hints[item['label']]
