@@ -300,7 +300,7 @@ export class Search implements WidgetTab {
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
-            'url' : 'ajax_list_corpora?query=%QUERY'
+            'url' : self.pluginApi.conf('rootURL') + 'ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
