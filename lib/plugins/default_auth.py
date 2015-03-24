@@ -17,7 +17,7 @@ It relies on default_db module which requires no database backend.
 import hashlib
 import urllib
 
-from abstract.auth import AbstractAuth
+from abstract.auth import AbstractAuth, AuthException
 from translation import ugettext as _
 
 
@@ -58,7 +58,6 @@ class DefaultAuthHandler(AbstractAuth):
         """
         user_data = self.find_user(username)
         valid_pwd = False
-
         if user_data:
             if len(user_data['pwd_hash']) == 32:
                 pwd_hash = hashlib.md5(password).hexdigest()
@@ -84,15 +83,22 @@ class DefaultAuthHandler(AbstractAuth):
         """
         self.sessions.delete(session_id)
 
-    def update_user_password(self, password):
+    def update_user_password(self, user_id, password):
         """
-        Updates current user's password.
+        Updates user's password.
         There is no need to hash/encrypt the password - function does it automatically.
 
         arguments:
+        user_id -- a database ID of a user
         password -- new password
         """
-        pass
+        user_key = self._mk_user_key(user_id)
+        user_data = self.db.get(user_key)
+        if user_data:
+            user_data['pwd_hash'] = hashlib.md5(password).hexdigest()
+            self.db.set(user_key, user_data)
+        else:
+            raise AuthException(_('User %s not found.') % user_id)
 
     def get_corplist(self, user_id):
         """
@@ -122,7 +128,6 @@ class DefaultAuthHandler(AbstractAuth):
         """
         Tests whether provided password matches user's current password
         """
-        return True
 
     def validate_new_password(self, password):
         """
@@ -133,12 +138,12 @@ class DefaultAuthHandler(AbstractAuth):
         -------
         True on success else False
         """
-        return True
+        return len(password) >= 5
 
     def get_required_password_properties(self):
         """
         """
-        return _('Any string can be used.')
+        return _('The string must be at least 5 characters long.')
 
     def get_login_url(self, return_url=None):
         if return_url is not None:

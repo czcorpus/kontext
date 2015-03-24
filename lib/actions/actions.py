@@ -27,7 +27,7 @@ import plugins
 import butils
 from kwiclib import Kwic
 import l10n
-from l10n import import_string, export_string, format_number
+from l10n import import_string
 from translation import ugettext as _
 
 
@@ -82,34 +82,6 @@ class Actions(Kontext):
         This is required as it maps the controller to request URLs
         """
         return '/'
-
-    @exposed(access_level=1, template='user_password_form.tmpl', legacy=True)
-    def user_password_form(self):
-        if not plugins.auth.uses_internal_user_pages():
-            raise UserActionException(_('This function is disabled.'))
-        return {}
-
-    @exposed(access_level=1, template='user_password.tmpl', legacy=True)
-    def user_password(self, curr_passwd='', new_passwd='', new_passwd2=''):
-        if not plugins.auth.uses_internal_user_pages():
-            UserActionException(_('This function is disabled.'))
-        logged_in = plugins.auth.validate_user(self.session_get('user', 'user'), curr_passwd)
-        if not logged_in:
-            raise UserActionException(_('Unknown user'))
-        if settings.auth.validate_password(curr_passwd):
-            pass
-        else:
-            raise UserActionException(_('Invalid password'))
-
-        if new_passwd != new_passwd2:
-            raise UserActionException(_('New password and its confirmation do not match.'))
-
-        if not settings.auth.validate_new_password(new_passwd):
-            raise UserActionException(settings.auth.get_required_password_properties())
-
-        settings.auth.update_user_password(new_passwd)
-        self._redirect(self.get_root_url())
-
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
