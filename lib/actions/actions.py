@@ -1861,7 +1861,7 @@ class Actions(Kontext):
                 corp, subcorp = subcorp_id.split(':', 1)
                 os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
             except Exception as e:
-                logging.getLogger(__name__).error(e)
+                self.add_system_message('error', e)
 
     def _create_full_subc_list(self, queries, subc_files):
         pass
@@ -1878,7 +1878,7 @@ class Actions(Kontext):
         show_deleted = int(request.args.get('show_deleted', 0))
         current_corp = self.corpname
         if self.get_http_method() == 'POST':
-            selected_subc = request.form.get('selected_subc', [])
+            selected_subc = request.form.getlist('selected_subc')
             self._delete_subcorpora(selected_subc)
 
         data = []
