@@ -679,7 +679,7 @@ class Actions(Kontext):
             qbase = 'a%s,' % self.default_attr
         else:
             qbase = 'q'
-        texttypes = self._texttype_query()
+        texttypes = self._texttype_query_OLD()
         if texttypes:
             ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
                                     from_encoding=self._corp().get_conf('ENCODING'))
@@ -792,7 +792,7 @@ class Actions(Kontext):
         if not inclkwic:
             pnfilter = pnfilter.upper()
         rank = {'f': 1, 'l': -1}.get(filfl, 1)
-        texttypes = self._texttype_query()
+        texttypes = self._texttype_query_OLD()
         try:
             query = self._compile_query(cname=self.maincorp)
         except ConcError:

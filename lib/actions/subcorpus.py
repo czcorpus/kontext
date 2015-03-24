@@ -32,9 +32,9 @@ class Subcorpus(Kontext):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
-    def _create_subcorpus(self, subcname, delete, create, within_condition, within_struct, method):
+    def _create_subcorpus(self, request):
         """
-        arguments:
+        req. arguments:
         subcname -- name of new subcorpus
         delete -- sets whether to delete existing subcorpus; any non-empty value means 'delete'
         create -- bool, sets whether to create new subcorpus
@@ -44,6 +44,13 @@ class Subcorpus(Kontext):
                   actually used only to display proper user interface (i.e. not to detect which values to use when
                   creating the subcorpus)
         """
+        # subcname, delete, create, within_condition, within_struct, method
+        subcname = request.form['subcname']
+        delete = int(request.form.get('delete', 0))
+        create = int(request.form.get('create', 0))
+        within_condition = request.form['within_condition']
+        within_struct = request.form['within_struct']
+
         if self.get_http_method() != 'POST':
             self.last_corpname = self.corpname
             self._save_options(['last_corpname'])
@@ -60,7 +67,7 @@ class Subcorpus(Kontext):
             within_condition = export_string(within_condition, to_encoding=self._corp().get_conf('ENCODING'))
             tt_query = [(within_struct, within_condition)]
         else:
-            tt_query = self._texttype_query()
+            tt_query = self._texttype_query(request)
         basecorpname = self.corpname.split(':')[0]
         if create and not subcname:
             raise ConcError(_('No subcorpus name specified!'))
@@ -113,14 +120,7 @@ class Subcorpus(Kontext):
 
     @exposed(access_level=1)
     def subcorp(self, request):
-        ans = self._create_subcorpus(
-            subcname=request.form['subcname'],
-            delete=int(request.form.get('delete', 0)),
-            create=int(request.form.get('create', 0)),
-            within_condition=request.form['within_condition'],
-            within_struct=request.form['within_struct'],
-            method=request.form['method']
-        )
+        ans = self._create_subcorpus(request)
         self._redirect('subcorpus/subcorp_list?corpname=%s' % self.corpname)
         return ans
 
@@ -176,9 +176,7 @@ class Subcorpus(Kontext):
 
     @exposed(access_level=1, return_type='json')
     def ajax_create_subcorpus(self, request):
-        return self._create_subcorpus(subcname=request.form['subcname'], delete=True, create=True,
-                                      within_condition=urllib.unquote(request.form['within_condition']),
-                                      within_struct=request.form['within_struct'], method='raw')
+        return self._create_subcorpus(request)
 
     def _delete_subcorpora(self, subc_list):
         base = self.subcpath[-1]
