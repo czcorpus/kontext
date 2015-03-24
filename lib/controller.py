@@ -459,12 +459,21 @@ class Controller(object):
 
     def get_root_url(self):
         """
-        Returns the root URL of the application (based on environmental variables)
+        Returns the root URL of the application (based on environmental variables). All the action module
+        path elements and action names are removed. E.g.:
+            The app is installed in http://127.0.0.1/app/ and it is currently processing
+            http://127.0.0.1/app/user/login then root URL is still http://127.0.0.1/app/
         """
-        return '%(protocol)s://%(server)s%(script)s/' % {
+        module, action = self.environ.get('PATH_INFO').rsplit('/', 1)
+        module = '%s/' % module
+        if module.endswith(self.get_mapping_url_prefix()):
+            action_module_path = module[:-len(self.get_mapping_url_prefix())]
+        if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
+            action_module_path = action_module_path[1:]
+        return '%(protocol)s://%(server)s/%(script)s' % {
             'protocol': self.environ['wsgi.url_scheme'],
             'server': self.environ.get('HTTP_HOST'),
-            'script': self.environ.get('SCRIPT_NAME')
+            'script': action_module_path
         }
 
     def create_url(self, action, params):
@@ -620,6 +629,8 @@ class Controller(object):
         """
         #self._headers.clear() # TODO resolve this
         self._status = code
+        if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
+            url = self.get_root_url() + url
         if type(url) is unicode:
             url = url.encode('utf-8')
         self._headers['Location'] = url
