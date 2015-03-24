@@ -21,8 +21,8 @@ msgid "Password must be at least %s characters long."
 msgstr "Heslo musí mít alespoň %s znaků."
 
 #: lib/plugins/dummy_auth.py:113
-msgid "Any string can be used."
-msgstr "Lze použít libovolný řetězec."
+msgid "The string must be at least 5 characters long."
+msgstr "Řetězec musí být alespoň 5 znaků dlouhý."
 
 #: lib/conclib.py:83
 #, python-format
@@ -88,8 +88,8 @@ msgid "This function is disabled."
 msgstr "Tato funkce je vypnuta."
 
 #: lib/actions.py:51
-msgid "Unknown user"
-msgstr "Neznámý uživatel"
+msgid "Invalid user or password"
+msgstr "Neznámý uživatel či heslo"
 
 #: lib/actions.py:55
 msgid "Invalid password"

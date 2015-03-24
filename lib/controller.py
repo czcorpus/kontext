@@ -163,6 +163,12 @@ class UserActionException(Exception):
         self.message = message
         self.code = code
 
+    def __repr__(self):
+        return self.message
+
+    def __str__(self):
+        return self.message
+
 
 class NotFoundException(UserActionException):
     """
@@ -170,9 +176,6 @@ class NotFoundException(UserActionException):
     """
     def __init__(self, message):
         super(NotFoundException, self).__init__(message, 404)
-
-    def __str__(self):
-        return self.message
 
 
 class Parameter(object):
