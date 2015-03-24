@@ -317,8 +317,6 @@ class Kontext(Controller):
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
     enable_sadd = Parameter(0)
-
-    empty_attr_value_placeholder = Parameter('')
     tag_builder_support = Parameter([])
 
     shuffle = Parameter(0, persistent=True)
@@ -630,17 +628,12 @@ class Kontext(Controller):
                         # web framework returns a scalar value
                         val = [val]
                 val = self.recode_input(val)
-                if key.startswith('sca_') and val == settings.get('corpora', 'empty_attr_value_placeholder'):
-                    val = ''
                 named_args[key] = val
         na = named_args.copy()
 
         convert_types(na, self.clone_self())
         if selectorname:
             choose_selector(self.__dict__, getattr(self, selectorname))
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'id')), self.subcpath)
-        if getattr(self, 'refs') is None:
-            self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
         self.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
@@ -697,7 +690,12 @@ class Kontext(Controller):
         self._apply_corpus_user_settings(corp_options, self.corpname)
 
         # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
-        self._map_args_to_attrs(form, selectorname, named_args)
+        if is_legacy_method:
+            self._map_args_to_attrs(form, selectorname, named_args)
+        logging.getLogger(__name__)
+        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'id')), self.subcpath)
+        if getattr(self, 'refs') is None:
+            self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
         # return url (for 3rd party pages etc.)
         if self.get_http_method() == 'GET':
@@ -1394,27 +1392,52 @@ class Kontext(Controller):
                 pass
         return normslist
 
-    def _texttype_query(self):
-        scas = [(a[4:], getattr(self, a))
-                for a in dir(self) if a.startswith('sca_')]
+    def _texttype_query_OLD(self, obj=None, access=None, attr_producer=None):
+        """
+        """
+        if obj is None:
+            obj = self
+        if access is None:
+            access = lambda o, att: getattr(o, att)
+        if attr_producer is None:
+            attr_producer = lambda o: dir(o)
+
+        scas = [(a[4:], access(obj, a))
+                for a in attr_producer(obj) if a.startswith('sca_')]
         structs = {}
         for sa, v in scas:
             if type(v) in (str, unicode) and '|' in v:
                 v = v.split('|')
             s, a = sa.split('.')
             if type(v) is list:
-                query = '(%s)' % ' | '.join(['%s="%s"' % (a, l10n.escape(v1))
-                                             for v1 in v])
+                expr_items = []
+                for v1 in v:
+                    if v1 != '':
+                        if v1 == self.empty_attr_value_placeholder:
+                            v1 = ''
+                        expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
+                if len(expr_items) > 0:
+                    query = '(%s)' % ' | '.join(expr_items)
+                else:
+                    query = None
             else:
                 query = '%s="%s"' % (a, l10n.escape(v))
-            # TODO: is the following encoding change always OK?
-            query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
-            if s in structs:
-                structs[s].append(query)
-            else:
-                structs[s] = [query]
+
+            if query is not None:  # TODO: is the following encoding change always OK?
+                query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
+                if s in structs:
+                    structs[s].append(query)
+                else:
+                    structs[s] = [query]
         return [(sname, ' & '.join(subquery)) for
                 sname, subquery in structs.items()]
+
+    def _texttype_query(self, request):
+        """
+        a _texttype_query variant for new style action methods
+        """
+        return self._texttype_query_OLD(obj=request, access=lambda o, x: apply(o.form.getlist, (x,)),
+                                        attr_producer=lambda o: o.form.keys())
 
     @staticmethod
     def _add_text_type_hints(tt):
