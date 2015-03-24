@@ -10,17 +10,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import urllib
 import os
 import logging
 
-import settings
 from controller import exposed
 from kontext import Kontext, ConcError, MainMenu
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import export_string, format_number
+from l10n import export_string, import_string, format_number
 import corplib
 
 
@@ -32,69 +30,31 @@ class Subcorpus(Kontext):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
-    def _create_subcorpus(self, request):
+    def _create_subcorpus(self, request):  # TODO refactor this sh.t
         """
         req. arguments:
         subcname -- name of new subcorpus
-        delete -- sets whether to delete existing subcorpus; any non-empty value means 'delete'
         create -- bool, sets whether to create new subcorpus
         within_condition -- custom within condition; if non-empty then clickable form is omitted
         within_struct -- a structure the within_condition will be applied to
-        method -- {'raw', 'gui'} a flag indicating whether user used raw query or clickable attribute list; this is
-                  actually used only to display proper user interface (i.e. not to detect which values to use when
-                  creating the subcorpus)
         """
-        # subcname, delete, create, within_condition, within_struct, method
         subcname = request.form['subcname']
-        delete = int(request.form.get('delete', 0))
-        create = int(request.form.get('create', 0))
         within_condition = request.form['within_condition']
         within_struct = request.form['within_struct']
-
-        if self.get_http_method() != 'POST':
-            self.last_corpname = self.corpname
-            self._save_options(['last_corpname'])
-            self._redirect('%ssubcorp_form?corpname=%s' % (self.get_root_url(), self.corpname))
-            return None
-        if delete:
-            base = os.path.join(self.subcpath[-1], self.corpname, subcname)
-            for e in ('.subc', '.used'):
-                if os.path.isfile((base + e).encode('utf-8')):
-                    os.unlink((base + e).encode('utf-8'))
+        corp_encoding = self._corp().get_conf('ENCODING')
 
         if within_condition and within_struct:
-            within_struct = export_string(within_struct, to_encoding=self._corp().get_conf('ENCODING'))
-            within_condition = export_string(within_condition, to_encoding=self._corp().get_conf('ENCODING'))
-            tt_query = [(within_struct, within_condition)]
+            tt_query = [(export_string(within_struct, to_encoding=corp_encoding),
+                        export_string(within_condition, to_encoding=corp_encoding))]
         else:
             tt_query = self._texttype_query(request)
-        basecorpname = self.corpname.split(':')[0]
-        if create and not subcname:
-            raise ConcError(_('No subcorpus name specified!'))
-        if (not subcname or (not tt_query and delete)
-                or (subcname and not delete and not create)):
-            # an error => generate subc_form parameters
-            subc_list = self.cm.subcorp_names(basecorpname)
-            for item in subc_list:
-                item['selected'] = False
-            if subc_list:
-                subcname = subc_list[0]['n']
-                subc_list[0]['selected'] = True
-                sc = self.cm.get_Corpus('%s:%s' % (basecorpname, subcname))
-                corp_size = format_number(sc.size())
-                subcorp_size = format_number(sc.search_size())
-            else:
-                subc_list = []
-                corp_size = 0
-                subcorp_size = 0
+            within_struct = import_string(tt_query[0][0], from_encoding=corp_encoding)
+            within_condition = import_string(tt_query[0][1], from_encoding=corp_encoding)
 
-            return {
-                'subcname': subcname,
-                'corpsize': corp_size,
-                'subcsize': subcorp_size,
-                'SubcorpList': subc_list,
-                'fetchSubcInfo': 'false'  # this is ok (it is used as a JavaScript value)
-            }
+        basecorpname = self.corpname.split(':')[0]
+        if not subcname:
+            raise ConcError(_('No subcorpus name specified!'))
+
         path = os.path.join(self.subcpath[-1], basecorpname)
         if not os.path.isdir(path):
             os.makedirs(path)
@@ -109,8 +69,8 @@ class Subcorpus(Kontext):
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.subc_restore.store_query(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                                     subcname=subcname, structname=tt_query[0][0],
-                                                     condition=tt_query[0][1])
+                                                     subcname=subcname, structname=within_struct,
+                                                     condition=within_condition)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
             return {}
