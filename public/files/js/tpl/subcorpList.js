@@ -40,7 +40,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
             within_condition: condition
         };
 
-        return $.ajax(layoutModel.conf['rootURL'] + 'ajax_create_subcorpus', {
+        return $.ajax(layoutModel.conf['rootURL'] + 'subcorpus/ajax_create_subcorpus', {
             method: 'POST',
             data: params
         });
@@ -178,6 +178,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
 
         corpusSelector = $(window.document.createElement('select'));
+        corpusSelector.attr('name', 'corpname');
         $.ajax(layoutModel.conf['rootURL'] + 'ajax_get_favorite_corpora')
             .then(function (data) {
                     $.each(data, function (i, item) {
