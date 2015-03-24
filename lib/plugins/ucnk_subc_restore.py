@@ -126,14 +126,14 @@ class UCNKSubcRestore(AbstractSubcRestore):
                 'corpname': subc_queries_map[dk]['corpname'],
                 'usesubcorp': subc_queries_map[dk]['subcname'],
                 'struct_name': subc_queries_map[dk]['struct_name'],
-                'condition': urllib.quote(subc_queries_map[dk]['condition']),
+                'condition': urllib.quote(subc_queries_map[dk]['condition'].encode('utf-8')),
                 'deleted': True
             })
 
         for subc in subc_list:
             if subc['n'] in subc_queries_map:
                 subc['struct_name'] = subc_queries_map[subc['n']]['struct_name']
-                subc['condition'] = urllib.quote(subc_queries_map[subc['n']]['condition'])
+                subc['condition'] = urllib.quote(subc_queries_map[subc['n']]['condition'].encode('utf-8'))
             else:
                 subc['struct_name'] = None
                 subc['condition'] = None

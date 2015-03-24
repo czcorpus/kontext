@@ -49,9 +49,6 @@ define(['jquery', 'tpl/document', 'treecomponent'], function ($, layoutModel, tr
     lib.init = function (conf) {
         layoutModel.init(conf);
         $('#subcname').focus();
-        if (layoutModel.conf.fetchSubcInfo) {
-            lib.showSubcorpInfo();
-        }
         $('#subcname').on('change', lib.showSubcorpInfo);
         treeComponent.createTreeComponent($('form#subcorpform select[name="corpname"]'),
             layoutModel.conf.messages,
