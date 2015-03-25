@@ -685,9 +685,6 @@ class Controller(object):
         if type(result) is dict:
             result['messages'] = self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
-            if 'message' in result:
-                result['messages'].append(result['message'])
-                del(result['message'])
             if len(self._system_messages) > 0:
                 result['message_auto_hide_interval'] = 0
 
