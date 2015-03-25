@@ -142,7 +142,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
         lib.initAttributeHints();
         lib.sizeUnitsSafeSwitch();
         liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-            '.text-type-params')
+            '.text-type-params');
     };
 
 
