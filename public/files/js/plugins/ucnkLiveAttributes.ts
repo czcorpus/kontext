@@ -737,12 +737,29 @@ class Plugin {
         this.structTables.reset();
     };
 
+    /**
+     * Ensures all the text type boxes are updated according to the
+     * current selection and available data.
+     *
+     * @param data
+     * @param selectedAttrs
+     */
     updateAttrTables = (data, selectedAttrs) => {  // using lexical scope here
         this.alignedCorpora.update(data);
         this.checkboxes.update(data);
         this.rawInputs.update(data);
         this.selectionSteps.update(data, selectedAttrs, this.alignedCorpora);
         this.structTables.update();
+    };
+
+    /**
+     * This just initializes text type boxes once the page is loaded.
+     *
+     * @param data
+     * @param selectedAttrs
+     */
+    initAttrTables = (data, selectedAttrs) => {  // using lexical scope here
+        this.rawInputs.update(data);
     };
 
 
@@ -759,13 +776,14 @@ class Plugin {
      * }
      *
      */
-    loadData(successAction:(d, s) => void, ajaxAnimation:AjaxAnimation) {
+    loadData(successAction:(d, s) => void, ajaxAnimation:AjaxAnimation, selectedCheckboxes:AttributesMap) {
         var self = this,
             requestURL:string,
-            alignedCorpnames,
-            selectedAttrs = this.checkboxes.exportStatus();
+            alignedCorpnames;
 
-        requestURL = 'filter_attributes?corpname=' + this.pluginApi.conf('corpname');
+        requestURL = self.pluginApi.conf('rootURL')
+                + 'filter_attributes?corpname='
+                + this.pluginApi.conf('corpname');
 
         alignedCorpnames = this.alignedCorpora.findSelected();
         if (alignedCorpnames) {
@@ -777,9 +795,9 @@ class Plugin {
         this.pluginApi.ajax(requestURL, {
             type: 'POST',
             dataType: 'json',
-            data: 'attrs=' + JSON.stringify(selectedAttrs),
+            data: 'attrs=' + JSON.stringify(selectedCheckboxes),
             success: function (data) {
-                successAction(data, selectedAttrs);
+                successAction(data, selectedCheckboxes);
                 ajaxAnimation.stop();
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -814,7 +832,7 @@ class Plugin {
                 }
             };
 
-            self.loadData(successAction, ajaxAnimation);
+            self.loadData(successAction, ajaxAnimation, self.checkboxes.exportStatus());
         });
     }
 
@@ -832,7 +850,6 @@ class Plugin {
             bibAttr:string = fieldset.find('.text-type-params').attr('data-bib-attr'),
             bibTable:JQuery = null;
 
-
         if (bibAttr) {
             fieldset.find('table.envelope').each(function (i, table) {
                 if ($(table).attr('data-attr') === bibAttr) {
@@ -840,7 +857,6 @@ class Plugin {
                     return false;
                 }
             });
-
             if (bibTable) {
                 ajaxAnimation = {
                     animElm: null,
@@ -856,9 +872,8 @@ class Plugin {
                         this.animElm.remove();
                     }
                 };
-
                 if (!fieldset.hasClass('inactive')) {
-                    self.loadData(this.updateAttrTables, ajaxAnimation);
+                    self.loadData(this.initAttrTables, ajaxAnimation, {});
                 }
             }
         }
@@ -880,7 +895,6 @@ class Plugin {
                 $(this).removeClass('user-selected');
             }
         });
-
         this.bindSelectionUpdateEvent(this.updateAttrTables);
 
         this.resetButton.on('click', this.resetAll);
