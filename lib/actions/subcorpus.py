@@ -138,12 +138,19 @@ class Subcorpus(Kontext):
         return self._create_subcorpus(request)
 
     def _delete_subcorpora(self, subc_list):
+        """
+        arguments:
+        subc_list -- a list of (corpus, subcorpus) tuples or corpus:subcorpus strings
+        """
         base = self.subcpath[-1]
         for subcorp_id in subc_list:
             try:
-                corp, subcorp = subcorp_id.split(':', 1)
+                if type(subcorp_id) in (str, unicode):
+                    corp, subcorp = subcorp_id.split(':', 1)
+                else:
+                    corp, subcorp = subcorp_id
                 os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
-            except Exception as e:
+            except TypeError as e:
                 self.add_system_message('error', e)
 
     def _create_full_subc_list(self, queries, subc_files):
@@ -226,3 +233,15 @@ class Subcorpus(Kontext):
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size())
         }
+
+    @exposed(access_level=1, return_type='json')
+    def ajax_wipe_subcorpus(self, request):
+        if plugins.has_plugin('subc_restore'):
+            corpus_id = request.form['corpname']
+            subcorp_name = request.form['subcname']
+            plugins.subc_restore.delete_query(self._session_get('user', 'id'), corpus_id, subcorp_name)
+            self.add_system_message('info', _('Subcorpus %s has been deleted permanently.') % subcorp_name)
+        else:
+            self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
+        return {}
+

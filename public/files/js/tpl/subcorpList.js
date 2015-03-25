@@ -24,28 +24,6 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
     var lib = {};
 
-    /**
-     *
-     * @param corpusId a corpus the subcorpus will be created from
-     * @param subcName a name of the new subcorpus
-     * @param structName a structural name to be used to define a subcorpus (e.g. 'div', 'p', 'opus',...)
-     * @param condition required values of respective structural attributes (e.g. 'name="foo" & year="1990"')
-     * @return a promise
-     */
-    function createSubcorpus(corpusId, subcName, structName, condition) {
-        var params = {
-            corpname: corpusId,
-            subcname: subcName,
-            within_struct: structName,
-            within_condition: condition
-        };
-
-        return $.ajax(layoutModel.conf['rootURL'] + 'subcorpus/ajax_create_subcorpus', {
-            method: 'POST',
-            data: params
-        });
-    }
-
     function hasDefinedSubcorpus(elm) {
         return $(elm).attr('data-condition') && $(elm).attr('data-struct_name');
     }
@@ -54,15 +32,57 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
         return $(elm).attr('data-deleted') === '1';
     }
 
+    function SubcorpActions(layoutModel, tooltipBox, dataRow, corpusId, subcorpusName) {
+        this.layoutModel = layoutModel;
+        this.tooltipBox = tooltipBox;
+        this.dataRow = dataRow;
+        this.corpusId = corpusId;
+        this.subcorpusName = subcorpusName;
+    }
+
+    /**
+     * @param structName a structural name to be used to define a subcorpus (e.g. 'div', 'p', 'opus',...)
+     * @param condition required values of respective structural attributes (e.g. 'name="foo" & year="1990"')
+     * @return a promise
+     */
+    SubcorpActions.prototype.createSubcorpus = function (structName, condition) {
+        var self = this,
+            params = {
+                corpname: self.corpusId,
+                subcname: self.subcorpusName,
+                within_struct: structName,
+                within_condition: condition
+            };
+
+        return $.ajax(self.layoutModel.conf['rootURL'] + 'subcorpus/ajax_create_subcorpus', {
+            method: 'POST',
+            data: params
+        });
+    };
+
+    SubcorpActions.prototype.wipeSubcorpus = function () {
+        var self = this,
+            params = {
+                corpname : self.corpusId,
+                subcname : self.subcorpusName
+            };
+
+        return $.ajax(self.layoutModel.conf['rootURL'] + 'subcorpus/ajax_wipe_subcorpus', {
+            method: 'POST',
+            data: params
+        });
+    };
+
     /**
      *
      * @param wrappingElm
      * @param triggerElm
      * @param tooltipBox
      */
-    function createUndeleteForm(wrappingElm, triggerElm, tooltipBox) {
+    SubcorpActions.prototype.createUndeleteForm = function (wrappingElm, triggerElm, tooltipBox) {
         var fieldset1,
-            fieldset1Submit;
+            fieldset1Submit,
+            self = this;
 
         fieldset1 = $(window.document.createElement('fieldset'));
         fieldset1.addClass('subcorp-action-field');
@@ -74,38 +94,58 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
         wrappingElm.append(fieldset1);
 
         fieldset1Submit.on('click', function () {
-            var prom = createSubcorpus($(triggerElm).data('corpname'),
-                $(triggerElm).data('subcname'),
-                $(triggerElm).data('struct_name'),
-                $(triggerElm).data('condition'));
+            var prom = self.createSubcorpus($(triggerElm).data('struct_name'),
+                            $(triggerElm).data('condition'));
 
             prom.then(
                 function () {
-                    window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
+                    window.location = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
                 },
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.message('error', errorThrown);
+                    self.layoutModel.message('error', errorThrown);
                 }
             );
         });
-    }
+    };
 
     /**
      *
      * @param wrappingElm
      */
-    function createWipeForm(wrappingElm) {
+    SubcorpActions.prototype.createWipeForm = function (wrappingElm) {
         var jqFieldset = $(window.document.createElement('fieldset')),
-            actionButton = $(window.document.createElement('button'));
+            actionButton = $(window.document.createElement('button')),
+            self = this;
 
-        $(actionButton).text(layoutModel.translate('delete forever'));
+        $(actionButton)
+            .text(layoutModel.translate('delete forever'))
+            .on('click', function () {
+                var prom;
+
+                prom = self.wipeSubcorpus();
+                prom.then(
+                    function (data) {
+                        if (data.messages) {
+                            $.each(data.messages, function (i, item) {
+                                self.layoutModel.showMessage(item[0], item[1]);
+                            });
+                        }
+                        self.tooltipBox.close();
+                        $(self.dataRow).remove();
+                    },
+                    function (err) {
+                        console.err('err', err); // TODO
+                    }
+                );
+            });
+
 
         jqFieldset.addClass('subcorp-action-field');
         jqFieldset.append('<legend>' + layoutModel.translate('wipe') + '</legend>');
         jqFieldset.append('<p>' + layoutModel.translate('All the remaining information regarding this subcorpus will be deleted. It will be impossible to restore the subcorpus.') + '</p>');
         jqFieldset.append(actionButton);
         wrappingElm.append(jqFieldset);
-    }
+    };
 
     /**
      *
@@ -113,8 +153,9 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
      * @param triggerElm
      * @param tooltipBox
      */
-    function createReuseForm(wrappingElm, triggerElm, tooltipBox) {
-        var jqFieldset,
+    SubcorpActions.prototype.createReuseForm = function (wrappingElm, triggerElm, tooltipBox) {
+        var self = this,
+            jqFieldset,
             corpusSelector,
             subcnameInput = window.document.createElement('input'),
             structInput = window.document.createElement('input'),
@@ -125,9 +166,10 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
         jqFieldset = $(window.document.createElement('fieldset'));
         jqFieldset.addClass('subcorp-action-field');
-        jqFieldset.append('<legend>' + layoutModel.translate('re-use query') + '</legend>');
+        jqFieldset.append('<legend>' + self.layoutModel.translate('re-use query') + '</legend>');
 
-        jqFieldset.append('<span class="subcname-label">' + layoutModel.translate('New subcorpus name') + ':</span>');
+        jqFieldset.append('<span class="subcname-label">'
+                + self.layoutModel.translate('New subcorpus name') + ':</span>');
 
         $(subcnameInput).addClass('subcname');
         jqFieldset.append(subcnameInput);
@@ -150,24 +192,24 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
         jqFieldset.append(withinBox);
 
-        $(submitButton).text(layoutModel.translate('create'))
+        $(submitButton).text(self.layoutModel.translate('create'))
             .on('click', function () {
                 var triggerElm = tooltipBox.getTriggerElm(),
                     prom;
 
-                prom = createSubcorpus(corpusSelector.val(), $(subcnameInput).val(),
+                prom = self.createSubcorpus(corpusSelector.val(), $(subcnameInput).val(),
                     $(triggerElm).data('struct_name'), $(triggerElm).data('condition'));
                 prom.then(
                     function (data) {
                         if (data.contains_errors) {
-                            layoutModel.showMessage('error', data.error);
+                            self.layoutModel.showMessage('error', data.error);
 
                         } else {
-                            window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
+                            window.location = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
                         }
                     },
                     function (jqXHR, textStatus, errorThrown) {
-                        layoutModel.showMessage('error', errorThrown);
+                        self.layoutModel.showMessage('error', errorThrown);
                     }
                 );
             });
@@ -179,7 +221,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
         corpusSelector = $(window.document.createElement('select'));
         corpusSelector.attr('name', 'corpname');
-        $.ajax(layoutModel.conf['rootURL'] + 'ajax_get_favorite_corpora')
+        $.ajax(self.layoutModel.conf['rootURL'] + 'ajax_get_favorite_corpora')
             .then(function (data) {
                     $.each(data, function (i, item) {
                         corpusSelector.append('<option value="' + item.id + '">' + item.name + '</option>');
@@ -193,7 +235,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
                     corplist.create(
                         corpusSelector,
-                        layoutModel.pluginApi(), {
+                        self.layoutModel.pluginApi(), {
                             itemClickAction: function (id) {
                                 this.hide(); // this == Search widget
                             },
@@ -218,11 +260,11 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
                 },
                 function () {
-                    layoutModel.showMessage('error', layoutModel.translate('Failed to load corpora'));
+                    layoutModel.showMessage('error', self.layoutModel.translate('Failed to load corpora'));
                 });
 
         wrappingElm.append(jqFieldset);
-    }
+    };
 
     /**
      * Creates a pop-up box containing miscellaneous functions related to a general subcorpus record
@@ -238,14 +280,20 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                     $(self),
                     function (tooltipBox, finalize) {
                         var divElm = $(window.document.createElement('div')),
-                            triggerElm = tooltipBox.getTriggerElm();
+                            triggerElm = tooltipBox.getTriggerElm(),
+                            component = new SubcorpActions(
+                                layoutModel,
+                                tooltipBox,
+                                $(triggerElm).closest('tr').get(0),
+                                $(triggerElm).data('corpname'),
+                                $(triggerElm).data('subcname'));
 
                         if (hasDeletedFlag(self)) {
-                            createUndeleteForm(divElm, triggerElm, tooltipBox);
-                            createWipeForm(divElm);
+                            component.createUndeleteForm(divElm, triggerElm, tooltipBox);
+                            component.createWipeForm(divElm);
                         }
                         if (hasDefinedSubcorpus(self)) {
-                            createReuseForm(divElm, triggerElm, tooltipBox);
+                            component.createReuseForm(divElm, triggerElm, tooltipBox);
                         }
 
                         tooltipBox.importElement(divElm);
