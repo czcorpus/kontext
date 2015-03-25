@@ -1,0 +1,101 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Institute of the Czech National Corpus
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from translation import ugettext as _
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("View")#slurp
+#end def
+
+#def bodyonload
+require(['${client_model_dir}/${page_model}', 'conf'], function (viewOpts, conf) {
+    viewOpts.init(conf);
+});
+#end def
+
+#def main
+<section>
+    #filter WebSafe
+    <h2>$_("General view options")</h2>
+    <p>$_('Following settings apply for all the corpora.')</p>
+    <form id="mainform" action='viewoptsx'>
+
+    #filter None
+    $input_hidden
+    #end filter
+    <input type='hidden' name='fromp' value='$fromp' />
+
+    <fieldset class="options">
+        <legend>$_('Concordance')</legend>
+
+        <table  class="results-range-and-paging">
+            <tr>
+                <th>$_("Page size (number of lines)"):</th>
+                <td><input type="text" name="pagesize" value='$pagesize' size="2" /></td>
+            </tr>
+            <tr>
+                <th>$_("KWIC Context size (positions)"):</th>
+                <td><input type="text" name="newctxsize" value='$newctxsize' size="2" />
+                    <input type="hidden" name="ctxunit" value="@pos" />
+                </td>
+            </tr>
+        </table>
+    </fieldset>
+
+    <fieldset class="options">
+        <legend>$_('frequency distribution')</legend>
+        <table class="results-range-and-paging">
+            <tr>
+                <th>$_("Page size (number of lines)"):</th>
+                <td><input type="text" name="citemsperpage" value='$citemsperpage' size="2" /></td>
+            </tr>
+        </table>
+    </fieldset>
+
+    <fieldset class="options">
+        <legend>$_('Collocations')</legend>
+        <table class="results-range-and-paging">
+            <tr>
+                <th>$_("Page size (number of lines)"):</th>
+                <td><input type="text" name="fmaxitems" value='$fmaxitems' size="2" /></td>
+            </tr>
+        </table>
+    </fieldset>
+
+    <a name="other-options"></a>
+    <fieldset class="options">
+        <legend>$_('Other options')</legend>
+
+        <input type="hidden" name="shuffle" value="0" />
+        <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
+        <label for="always-shuffle">$_("Shuffle concordance lines by default")</label>
+        <br />
+        ($_('no effect to current concordance')) <br />
+    </fieldset>
+
+    <div class="buttons">
+        <input type="submit" class="default-button" value='$_("Apply View Options")' />
+    </div>
+    </form>
+
+    #end filter
+</section>
+#end def

@@ -1,0 +1,163 @@
+#*
+Copyright (c) 2003-2009  Pavel Rychly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from translation import ugettext as _
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Frequency list")#slurp
+#end def
+
+#def custom_save
+#filter WebSafe
+<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savefreq?saveformat=csv&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">CSV</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savefreq?saveformat=xlsx&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">XLSX</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savefreq?saveformat=xml&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">XML</a></li>
+<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savefreq?saveformat=text&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">TXT</a></li>
+<li><a title="$_("Save Frequency list with custom parameters")" href="savefreq_form?$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">$_("Custom")&#8230;</a></li>
+#end filter
+#end def
+
+#def main
+<section>
+    #filter WebSafe
+    <h2>$_("Frequency list")</h2>
+
+    #block freqs_navigation($navid="next")
+    #set $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
+    #if $paging and ($fpage > 1 or not $lastpage)
+    <div class="bonito-pagination">
+        <form action="freqs">
+            #if $fpage > 1
+            <div class="bonito-pagination-left">
+                <a href="$allhref"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                <a href="$allhref;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
+            </div>
+            #end if
+
+            <div class="bonito-pagination-core">
+                #filter None
+                $input_hidden
+                #end filter
+                #for $fcr in $FCrit
+                <input type="hidden" name="fcrit" value="$fcr.fcrit" />
+                #end for
+                <input type="hidden" name="flimit" value='$flimit' />
+                <input type="hidden" name="freq_sort" value='$freq_sort' />
+                <input type="hidden" name="ml" value='$ml' />
+
+                $_("Page")
+                <input type="text" name="fpage" value="$fpage" size="4" />
+            </div>
+
+            #if not $lastpage
+            <div class="bonito-pagination-right">
+                <a href="$allhref;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+            </div>
+            #else
+            <a id="$navid"></a>
+            #end if
+        </form>
+    </div>
+    #end if
+    #end block
+
+    <form action="freqs">
+        #filter None
+            $input_hidden
+        #end filter
+        #for $f in $FCrit
+        <input type="hidden" name="fcrit" value="$f.fcrit" />
+        #end for
+        <input type="hidden" name="ml" value="$ml" />
+        <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
+        $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
+        <input type="submit" value="$_("Set limit")" />
+    </form>
+
+
+    #for $b in $Blocks
+    #if 'Total' in $b
+    <p><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</p>
+    #end if
+
+    <table class="data">
+        #set $rowNum = 1
+        <thead>
+        <tr>
+            <th></th>
+            <th></th>
+            #for $h in $b.Head
+            <th colspan="2">
+                <a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h.s;ftt_include_empty=$ftt_include_empty"
+                #if 'title' in $h# title="$h.title" #end if#>
+                $_($h.n)</a>
+            </th>
+            #end for
+        </tr>
+        </thead>
+        <tbody>
+        #for $i in $b.get('Items', [])
+        <tr>
+            <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
+            #set $rowNum += 1
+            <td class="nowrap">
+                #if $i.get('pfilter', '')
+                <a href='view?$q;$globals;$i.get('pfilter')'>p</a>/#slurp
+                #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
+                <a href='view?$q;$globals;$i.get('nfilter')'>n</a>
+            </td>
+                #else
+                <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
+                #end if
+                #end if
+            #for $w in $i.Word
+            <td class="word monospace">$w.n</td>
+            <td></td>
+            #end for
+            <td class="num" class="frequency">
+                $format_number($i.freq, mask='%d')
+            </td>
+            <td>
+                #if 'freqbar' in $i
+                <div class="bar" style="height:10px;width:${i['freqbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['freqbar']}" />
+                #elif 'fbar' in $i
+                <div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['fbar']}" />
+                #end if
+            </td>
+            #if $i.has_key('rel')
+            <td class="num">$i.rel</td>
+            <td>
+            <div class="bar" style="height:10px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['relbar']}" />
+            </td>
+            #end if
+
+        </tr>
+        #end for
+        </tbody>
+     </table>
+    #end for
+
+    #filter none
+    $freqs_navigation("next2")
+    #end filter
+
+    #end filter
+</section>
+#end def
