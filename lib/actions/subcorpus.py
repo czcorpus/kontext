@@ -121,7 +121,7 @@ class Subcorpus(Kontext):
 
         out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
-            self._store_checked_text_types(request, 'form', out)
+            self._store_checked_text_types(request.form, out)
 
         out.update({
             'TextTypeSel': tt_sel,
