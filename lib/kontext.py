@@ -1465,3 +1465,9 @@ class Kontext(Controller):
                 for item in line.get('Line', ()):
                     if 'label' in item and item['label'] in hints:
                         item['label_hint'] = hints[item['label']]
+
+    def _store_checked_text_types(self, request, out):
+        out['checked_sca'] = {}
+        for p in request.form.keys():
+            if p.startswith('sca_'):
+                out['checked_sca'][p[4:]] = request.form.getlist(p)
