@@ -121,10 +121,7 @@ class Subcorpus(Kontext):
 
         out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
-            out['checked_sca'] = {}
-            for p in request.form.keys():
-                if p.startswith('sca_'):
-                    out['checked_sca'][p[4:]] = request.form.getlist(p)
+            self._store_checked_text_types(request, out)
 
         out.update({
             'TextTypeSel': tt_sel,
