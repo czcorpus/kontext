@@ -733,6 +733,7 @@ class Actions(Kontext):
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
         self._store_query_selector_types()
+        self._store_checked_text_types(request, 'form', out)
         ans = self.view()
         if self.get_http_method() == 'POST':
             ans['replicable_query'] = False
