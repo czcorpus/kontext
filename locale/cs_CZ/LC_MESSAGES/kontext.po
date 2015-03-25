@@ -2131,6 +2131,9 @@ msgstr "Na stránce jsou neuložené změny. Chcete pokračovat bez jejich ulož
 msgid "Subcorpus created but there was a problem saving a backup copy."
 msgstr "Subkorpus byl vytvořen, ale nepodařilo se uložit záložní kopii."
 
+msgid "Subcorpus %s has been deleted permanently."
+msgstr "Subkorpus %s byl permanentně odstraněn."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
