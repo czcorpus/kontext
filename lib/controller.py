@@ -48,6 +48,13 @@ def exposed(**kwargs):
     set methods' attributes. Please note that there is
     always an implicit property '__exposed__' set to True.
 
+    Currently detected properties:
+    access_level -- 0,1,...
+    template -- a Cheetah template source path
+    vars -- deprecated; do not use
+    page_model -- a JavaScript page module
+    legacy -- True/False
+
     arguments:
     **kwargs -- all the keyword args will be converted into a dict
     """
@@ -229,8 +236,6 @@ class Controller(object):
     """
 
     _keep_blank_values = Parameter(0)
-
-    _url_parameters = Parameter([])
 
     exceptmethod = Parameter(None)
 
