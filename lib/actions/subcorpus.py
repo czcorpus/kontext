@@ -78,7 +78,6 @@ class Subcorpus(Kontext):
                                                      subcname=subcname,
                                                      structname=within_struct,
                                                      condition=within_condition)
-                    raise Exception('foo')
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
