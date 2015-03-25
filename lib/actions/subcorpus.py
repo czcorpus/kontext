@@ -14,7 +14,7 @@ import os
 import logging
 
 from controller import exposed
-from kontext import Kontext, ConcError, MainMenu
+from kontext import Kontext, ConcError, MainMenu, UserActionException
 from translation import ugettext as _
 import plugins
 import l10n
@@ -30,7 +30,7 @@ class Subcorpus(Kontext):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
-    def _create_subcorpus(self, request):  # TODO refactor this sh.t
+    def _create_subcorpus(self, request):
         """
         req. arguments:
         subcname -- name of new subcorpus
@@ -43,7 +43,7 @@ class Subcorpus(Kontext):
         within_struct = request.form['within_struct']
         corp_encoding = self._corp().get_conf('ENCODING')
 
-        if within_condition and within_struct:
+        if within_condition and within_struct:  # user entered a subcorpus query manually
             tt_query = [(export_string(within_struct, to_encoding=corp_encoding),
                         export_string(within_condition, to_encoding=corp_encoding))]
         else:
@@ -59,80 +59,83 @@ class Subcorpus(Kontext):
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, subcname) + '.subc'
-        # XXX ignoring more structures
         if not tt_query:
             raise ConcError(_('Nothing specified!'))
+
+        # Even if _texttype_query() parsed multiple structures into tt_query,
+        # Manatee can accept directly only one (but with arbitrarily complex attribute
+        # condition).
+        # For this reason, we choose only the first struct+condition pair.
+        # It is up to the user interface to deal with it.
         structname, subquery = tt_query[0]
         if type(path) == unicode:
             path = path.encode("utf-8")
         if corplib.create_subcorpus(path, self._corp(), structname, subquery):
             if plugins.has_plugin('subc_restore'):
                 try:
-                    plugins.subc_restore.store_query(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                                     subcname=subcname, structname=within_struct,
+                    plugins.subc_restore.store_query(user_id=self._session_get('user', 'id'),
+                                                     corpname=self.corpname,
+                                                     subcname=subcname,
+                                                     structname=within_struct,
                                                      condition=within_condition)
+                    raise Exception('foo')
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
+                    self.add_system_message('warning',
+                                            _('Subcorpus created but there was a problem saving a backup copy.'))
             return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
 
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm')
     def subcorp(self, request):
-        ans = self._create_subcorpus(request)
-        self._redirect('subcorpus/subcorp_list?corpname=%s' % self.corpname)
+        try:
+            ans = self._create_subcorpus(request)
+            self._redirect('subcorpus/subcorp_list?corpname=%s' % self.corpname)
+        except Exception:
+            ans = self.subcorp_form(request)
         return ans
 
-    @exposed(legacy=True)
-    def subcorp_form(self, subcorpattrs='', subcname='', within_condition='', within_struct='', method='gui'):
+    @exposed()
+    def subcorp_form(self, request):
         """
-        arguments:
-        subcorpattrs -- ???
-        within_condition -- the same meaning as in subcorp()
-        within_struct -- the same meaning as in subcorp()
-        method -- the same meaning as in subcorp()
+        Displays a form to create a new subcorpus
         """
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         self._reset_session_conc()
+        method = request.form.get('method', 'gui')
+        within_condition = request.form.get('within_condition', None)
+        within_struct = request.form.get('within_struct', None)
+        subcname = request.form.get('subcname', None)
 
-        tt_sel = self._texttypes_with_norms()
+        try:
+            tt_sel = self._texttypes_with_norms()
+        except UserActionException as e:
+            tt_sel = {'Normslist': [], 'Blocks': []}
+            self.add_system_message('warning', e)
         structs_and_attrs = {}
         for s, a in [t.split('.') for t in self._corp().get_conf('STRUCTATTRLIST').split(',')]:
-            if not s in structs_and_attrs:
+            if s not in structs_and_attrs:
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
 
-        out = {}
-        out['SubcorpList'] = ()
+        out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
-            for p in self._url_parameters:
+            for p in request.form.keys():
                 if p.startswith('sca_'):
-                    for checked_value in getattr(self, p):
-                        out['checked_sca'][checked_value] = True
+                    out['checked_sca'][p[4:]] = request.form.getlist(p)
 
-        if 'error' in tt_sel:
-            out.update({
-                'message': ('error', tt_sel['error']),
-                'TextTypeSel': tt_sel,
-                'structs_and_attrs': structs_and_attrs,
-                'method': method,
-                'within_condition': '',
-                'within_struct': '',
-                'subcname': ''
-            })
-        else:
-            out.update({
-                'TextTypeSel': tt_sel,
-                'structs_and_attrs': structs_and_attrs,
-                'method': method,
-                'within_condition': within_condition,
-                'within_struct': within_struct,
-                'subcname': subcname
-            })
+        out.update({
+            'TextTypeSel': tt_sel,
+            'structs_and_attrs': structs_and_attrs,
+            'method': method,
+            'within_condition': within_condition,
+            'within_struct': within_struct,
+            'subcname': subcname
+        })
         return out
-
 
     @exposed(access_level=1, return_type='json')
     def ajax_create_subcorpus(self, request):
@@ -154,6 +157,8 @@ class Subcorpus(Kontext):
     @exposed(access_level=1)
     def subcorp_list(self, request):
         """
+        Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
+        installed then the list is enriched by additional re-use/undelete information.
         """
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
@@ -196,6 +201,7 @@ class Subcorpus(Kontext):
         else:
             full_list = data
 
+        # TODO sorting does not work
         sort_key, rev = Kontext._parse_sorting_param(sort)
         if sort_key in ('size', 'created'):
             data = sorted(data, key=lambda x: x[sort_key], reverse=rev)
@@ -219,24 +225,8 @@ class Subcorpus(Kontext):
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.corpname, subcname)
-        return {'subCorpusName': subcname,
-                'corpusSize': format_number(sc.size()),
-                'subCorpusSize': format_number(sc.search_size())}
-
-    @exposed(legacy=True)
-    def delsubc_form(self):
-        subc = corplib.create_str_vector()
-        corplib.find_subcorpora(self.subcpath[-1], subc)
-        return {'Subcorplist': [{'n': c} for c in subc],
-                'subcorplist_size': min(len(subc), 20)}
-
-    @exposed(template='subcorp_form', legacy=True)
-    def delsubc(self, subc=()):
-        base = self.subcpath[-1]
-        for subcorp in subc:
-            cn, sn = subcorp.split(':', 1)
-            try:
-                os.unlink(os.path.join(base, cn, sn) + '.subc')
-            except:
-                pass
-        return 'Done'
+        return {
+            'subCorpusName': subcname,
+            'corpusSize': format_number(sc.size()),
+            'subCorpusSize': format_number(sc.search_size())
+        }

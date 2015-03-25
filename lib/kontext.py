@@ -609,7 +609,6 @@ class Kontext(Controller):
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
         for k in form.keys():
-            self._url_parameters.append(k)
             # must remove empty values, thi   s should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
@@ -1319,8 +1318,7 @@ class Kontext(Controller):
             subcorpattrs = corp.get_conf('SUBCORPATTRS') \
                 or corp.get_conf('FULLREF')
         if not subcorpattrs or subcorpattrs == '#':
-            return {'message': ('error', _('No meta-information to create a subcorpus.')),
-                    'Normslist': [], 'Blocks': []}
+            raise UserActionException(_('No meta-information to create a subcorpus.'))
 
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if live_attributes are installed then always shrink bibliographical
@@ -1394,6 +1392,23 @@ class Kontext(Controller):
 
     def _texttype_query_OLD(self, obj=None, access=None, attr_producer=None):
         """
+        Extracts all the text-type related form parameters user can access when creating
+        a subcorpus or selecing ad-hoc metadata in the query form.
+
+        Because currently there are two ways how action methods access URL/form parameters
+        this method is able to extract the values either from 'self' (= old style) or from
+        the 'request' (new style) object. In the latter case you have to provide item access
+        function and attribute producer (= function which returns an iterable providing names
+        of at least all the relevant attributes). For the latter case, method _texttype_query()
+        is preferred over this one.
+
+        arguments:
+        obj -- object holding argument names and values
+        access -- a function specifying how to extract the value if you know the name and object
+        attr_producer -- a function returning an iterable containing parameter names
+
+        returns:
+        a list of tuples (struct, condition)
         """
         if obj is None:
             obj = self
@@ -1434,7 +1449,10 @@ class Kontext(Controller):
 
     def _texttype_query(self, request):
         """
-        a _texttype_query variant for new style action methods
+        Extracts all the text-type related parameters user can access when creating
+        a subcorpus or selecing ad-hoc metadata in the query form.
+
+        This method is compatible with new-style action functions only.
         """
         return self._texttype_query_OLD(obj=request, access=lambda o, x: apply(o.form.getlist, (x,)),
                                         attr_producer=lambda o: o.form.keys())

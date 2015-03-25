@@ -2128,6 +2128,9 @@ msgstr "Byl detekován možný nesoulad mezi zvoleným a faktickým typem dotazu
 msgid "There are unsaved changes on the page. Do you want to continue without saving them?"
 msgstr "Na stránce jsou neuložené změny. Chcete pokračovat bez jejich uložení?"
 
+msgid "Subcorpus created but there was a problem saving a backup copy."
+msgstr "Subkorpus byl vytvořen, ale nepodařilo se uložit záložní kopii."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
