@@ -162,6 +162,10 @@ class Actions(Kontext):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
+        if self.get_http_method() == 'GET':
+            self._store_checked_text_types(request.args, out)
+        else:
+            self._store_checked_text_types(request.form, out)
         self._reset_session_conc()
         out.update(self._restore_query_selector_types())
         if self._corp().get_conf('ALIGNED'):
@@ -720,25 +724,26 @@ class Actions(Kontext):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=()):
-        self._set_first_query(fc_lemword_window_type,
-                              fc_lemword_wsize,
-                              fc_lemword_type,
-                              fc_lemword,
-                              fc_pos_window_type,
-                              fc_pos_wsize,
-                              fc_pos_type,
-                              fc_pos)
-        if self.sel_aligned:
-            self.align = ','.join(self.sel_aligned)
-        if self.shuffle == 1 and 'f' not in self.q:
-            self.q.append('f')
+
+        ans = {}
         self._store_query_selector_types()
-        self._store_checked_text_types(request, 'form', out)
-        ans = self.view()
-        if self.get_http_method() == 'POST':
-            ans['replicable_query'] = False
-        else:
-            ans['replicable_query'] = True
+        try:
+            self._set_first_query(fc_lemword_window_type,
+                                  fc_lemword_wsize,
+                                  fc_lemword_type,
+                                  fc_lemword,
+                                  fc_pos_window_type,
+                                  fc_pos_wsize,
+                                  fc_pos_type,
+                                  fc_pos)
+            if self.sel_aligned:
+                self.align = ','.join(self.sel_aligned)
+            if self.shuffle == 1 and 'f' not in self.q:
+                self.q.append('f')
+            ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
+            ans.update(self.view())
+        except ConcError as e:
+            raise UserActionException(e.message)
         return ans
 
     @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'), legacy=True)
