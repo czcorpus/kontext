@@ -25,10 +25,10 @@ import inspect
 class Nicedict(object):
     """
     A dictionary which does not throw KeyError in case user
-    accesses a key which is not present.
+    accesses a non-existing key.
 
     arguments:
-    data -- an optional dict or Nicedict to insert initial daata
+    data -- an optional dict or Nicedict to insert initial data
     strict -- if True then Nicedict behaves just like regular
               'dict' in terms of a value access; default is False
     empty_val -- a value to be returned if a key is not found; default is None
@@ -69,7 +69,7 @@ class Nicedict(object):
 
     def update(self, data):
         """
-        Upates this dictionary using passed one
+        Updates self using the passed data (dict or Nicedict)
 
         arguments:
         data -- a Python dict or Nicedict
@@ -120,11 +120,11 @@ class ThreadLocalData(object):
 class FixedDict(object):
     """
     This class allows creating objects with predefined attributes
-    (defined via static properties). Any attempt to set attribute
+    (defined via static properties). Any attempt to set an attribute
     not present as a static property raises AttributeError.
     """
     def __setattr__(self, key, value):
-        if not key in dict(inspect.getmembers(self.__class__)):
+        if key not in dict(inspect.getmembers(self.__class__)):
             raise AttributeError('No such attribute: %s' % key)
         else:
             self.__dict__[key] = value
