@@ -83,6 +83,45 @@ class Actions(Kontext):
         """
         return '/'
 
+    def _store_query_selector_types(self):
+        """
+        Stores the state of all queryselector_* values so they can
+        be used to restore respective forms
+        """
+        if 'forms' not in self._session:
+            self._session['forms'] = {}
+        for item in vars(self):
+            if item.startswith('queryselector'):
+                self._session['forms'][item] = getattr(self, item)
+
+    def _restore_query_selector_types(self):
+        """
+        Restores query form's queryselector_* values using session data.
+        The 'queryselector' of the primary corpus can be overridden by
+        URL parameter 'queryselector'.
+
+        It is also OK if nothing is set for a particular query selector (primary
+        corpus, aligned corpora) either from URL or from session. In such case
+        the respective 'SELECT' HTML element will display its first 'OPTION'
+        which is 'iqueryrow' (= basic query type).
+        """
+        ans = {}
+        if self.queryselector:
+            ans['queryselector'] = self.queryselector
+        elif 'forms' in self._session:
+            ans.update(self._session['forms'])
+        return ans
+
+    def _get_speech_segment(self):
+        """
+        Returns:
+            tuple (structname, attr_name)
+        """
+        segment_str = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
+        if segment_str:
+            return tuple(segment_str.split('.'))
+        return None
+
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
         """
@@ -267,122 +306,6 @@ class Actions(Kontext):
             'is_public': is_public
         })
         return out
-
-    @exposed(access_level=1, vars=('concsize', ), legacy=True)
-    def viewattrs(self):
-        """
-        attrs, refs, structs form
-        """
-        from collections import defaultdict
-
-        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        out = {}
-        if self.maincorp:
-            corp = corplib.manatee.Corpus(self.maincorp)
-            out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
-                               for n in corp.get_conf('ATTRLIST').split(',')
-                               if n]
-        else:
-            corp = self._corp()
-        availstruct = corp.get_conf('STRUCTLIST').split(',')
-        structlist = self.structs.split(',')
-        out['Availstructs'] = [{'n': n,
-                                'sel': (((n in structlist)
-                                         and 'selected') or ''),
-                                'label': corp.get_conf(n + '.LABEL')}
-                               for n in availstruct if n and n != '#']
-
-        availref = corp.get_conf('STRUCTATTRLIST').split(',')
-        structattrs = defaultdict(list)
-        reflist = self.refs.split(',')
-
-        ref_is_allowed = lambda r: r and r not in (
-            '#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
-
-        for item in availref:
-            if ref_is_allowed(item):
-                k, v = item.split('.', 1)
-                structattrs[k].append(v)
-                if not k in reflist:
-                    reflist.append(k)
-
-        out['Availrefs'] = [{
-                            'n': '#',
-                            'label': _('Token number'),
-                            'sel': ((('#' in reflist) and 'selected') or '')
-                            }] + \
-                           [{
-                            'n': '=' + n,
-                            'sel': ((('=' + n in reflist) and 'selected') or ''),
-                            'label': (corp.get_conf(n + '.LABEL') or n)
-                            }
-                            for n in availref if ref_is_allowed(n)
-                            ]
-        doc = corp.get_conf('DOCSTRUCTURE')
-        if doc in availstruct:
-            out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
-                                        'sel': (doc in reflist and 'selected' or '')})
-        out['newctxsize'] = self.kwicleftctx[1:]
-        out['structattrs'] = structattrs
-        out['curr_structattrs'] = self.structattrs
-        return out
-
-    def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit=''):
-        if ctxunit == '@pos':
-            ctxunit = ''
-        if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
-            if not newctxsize.isdigit():
-                self.exceptmethod = 'viewattrs'
-                raise Exception(
-                    _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
-            self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
-            self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
-
-    def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
-        self.attrs = ','.join(setattrs)
-        self.structs = ','.join(setstructs)
-        self.refs = ','.join(setrefs)
-        self.attr_allpos = allpos
-        if allpos == 'all':
-            self.ctxattrs = self.attrs
-        else:
-            self.ctxattrs = 'word'
-        self.structattrs = structattrs
-
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
-        self._set_new_viewattrs(setattrs=setattrs,
-                                allpos=allpos,
-                                setstructs=setstructs,
-                                setrefs=setrefs,
-                                structattrs=structattrs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.corpname)
-        # TODO refs_up ???
-        if self.q:
-            return self.view()
-        else:
-            self._redirect('first_form')
-
-    @exposed(access_level=1, legacy=True)
-    def viewopts(self):
-        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        out = {
-            'newctxsize': self.kwicleftctx[1:]
-        }
-        return out
-
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
-        # TODO pagesize?
-        self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
-        self._save_options(self.GENERAL_OPTIONS)
-
-        if self.q:
-            return self.view()
-        else:
-            self._redirect('first_form')
 
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def sort(self):
@@ -583,14 +506,14 @@ class Actions(Kontext):
             err_within = '<err type="%s"/>' % err_code
         else:
             err_within = '<err/>'
-        err_containing = '';
+        err_containing = ''
         corr_containing = ''
         if err:
-            self.iquery = err;
+            self.iquery = err
             self.queryselector = 'iqueryrow'
             err_containing = ' containing ' + self._compile_basic_query(qtype)
         if corr:
-            self.iquery = corr;
+            self.iquery = corr
             self.queryselector = 'iqueryrow'
             corr_containing = ' containing ' + self._compile_basic_query(qtype)
         err_query = '(%s%s)' % (err_within, err_containing)
@@ -891,7 +814,7 @@ class Actions(Kontext):
             for item in b['Items']:
                 item['pfilter'] = ''
                 item['nfilter'] = ''
-                ## generating positive and negative filter references
+                # generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
             attrs, ranges = parse_fcrit(curr_fcrit)
@@ -910,7 +833,7 @@ class Actions(Kontext):
                 for ii, item in enumerate(block['Items']):
                     if not item['freq']:
                         continue
-                    if not '.' in attr:
+                    if '.' not in attr:
                         if attr in self._corp().get_conf('ATTRLIST').split(','):
                             wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
@@ -942,7 +865,8 @@ class Actions(Kontext):
                     errs += item['freq']
             elif curr_fcrit.split()[0] == 'corr.type':
                 corr_block = b_index
-                for item in block['Items']: corrs += item['freq']
+                for item in block['Items']:
+                    corrs += item['freq']
         freq = conc.size() - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
             pfilter = ';q=p0 0 1 ([] within ! <err/>) within ! <corr/>'
@@ -1734,33 +1658,6 @@ class Actions(Kontext):
         else:
             ans = tag_loader.get_initial_values()
         return JsonEncodedData(ans)
-
-    @exposed(template='stats.tmpl')
-    def stats(self, request):
-
-        from_date = request.args.get('from_date')
-        to_date = request.args.get('to_date')
-        min_occur = request.args.get('min_occur')
-
-        if plugins.auth.is_administrator(self._session_get('user', 'id')):
-            import system_stats
-
-            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date,
-                                     to_date=to_date, min_occur=min_occur)
-            maxmin = {}
-            for label, section in data.items():
-                maxmin[label] = system_stats.get_max_min(section)
-
-            out = {
-                'stats': data,
-                'minmax': maxmin,
-                'from_date': from_date,
-                'to_date': to_date,
-                'min_occur': min_occur
-            }
-        else:
-            out = {'message': ('error', _('You don\'t have enough privileges to see this page.'))}
-        return out
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
         if plugins.has_plugin('query_storage'):

@@ -32,7 +32,8 @@ import scheduled
 from structures import Nicedict, FixedDict
 from templating import StateGlobals
 import fallback_corpus
-from werkzeug.wrappers import Request
+import werkzeug.urls
+from werkzeug.datastructures import MultiDict
 
 
 def simplify_num(v):
@@ -174,13 +175,11 @@ class Kontext(Controller):
                          'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
                          'nextlink', 'lastlink', 'prevlink', 'firstlink')
 
-
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
                        'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
                           'csortfn')
-
 
     # Default corpus must be accessible to any user, otherwise KonText messes up trying
     # to infer some default corpus name and redirect user there. Hopefully, future releases
@@ -305,7 +304,6 @@ class Kontext(Controller):
     errcodes_link = Parameter(u'')
     hidenone = Parameter(1)
 
-
     kwicleftctx = Parameter('-10', persistent=True)
     kwicrightctx = Parameter('10', persistent=True)
     senleftctx_tpl = Parameter('-1:%s')
@@ -392,11 +390,13 @@ class Kontext(Controller):
 
         logging.getLogger('QUERY').info(json.dumps(log_data))
 
-    def _requires_corpus_access(self, action):
+    @staticmethod
+    def _requires_corpus_access(action):
         # TODO this is a flawed solution - method metadata (access_level should be used instead)
         return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar')
 
-    def _init_default_settings(self, options):
+    @staticmethod
+    def _init_default_settings(options):
         if 'shuffle' not in options:
             options['shuffle'] = 1
 
@@ -467,8 +467,9 @@ class Kontext(Controller):
             convert_types(options, self.clone_self(), selector=1)
             self.__dict__.update(ans)
 
-    def _get_save_excluded_attributes(self):
-        return ()
+    @staticmethod
+    def _get_save_excluded_attributes():
+        return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
 
     def _save_options(self, optlist=None, selector=''):
         """
@@ -546,6 +547,18 @@ class Kontext(Controller):
         else:
             q_id = None
         return q_id
+
+    def _redirect_to_conc(self):
+        """
+        Redirects to the current concordance
+        """
+        args = self._get_attrs(self._conc_args.get_attrs())
+        if self._q_code:
+            args.append(('q', '~%s' % self._q_code))
+        else:
+            args += [('q', q) for q in self.q]
+        href = werkzeug.urls.Href(self.get_root_url() + 'view')
+        self._redirect(href(MultiDict(args)))
 
     def _update_output_with_conc_params(self, op_id, tpl_data):
         """
@@ -729,10 +742,8 @@ class Kontext(Controller):
 
     def _attach_tag_builder(self, tpl_out):
         """
-        Parameters
-        ----------
-        tpl_out : dict
-            data to be used when building an output page from a template
+        arguments:
+        tpl_out -- dict data to be used when building an output page from a template
         """
         tpl_out['tag_builder_support'] = {
             '': plugins.taghelper.tag_variants_file_exists(self.corpname)
@@ -772,9 +783,6 @@ class Kontext(Controller):
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
         out['SubcorpList'] = subcorp_list
 
-    def _get_save_excluded_attributes(self):
-        return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
-
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
             params = {}
@@ -786,7 +794,8 @@ class Kontext(Controller):
             elif query_type == 'cql':
                 params['default_attr'] = self.default_attr
             plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                        subcorpname=self.usesubcorp, query=query, query_type=query_type, params=params)
+                                        subcorpname=self.usesubcorp, query=query, query_type=query_type,
+                                        params=params)
 
     def _determine_curr_corpus(self, form, corp_list):
         """
@@ -930,7 +939,6 @@ class Kontext(Controller):
         sref = corpus_get_conf(corpus, 'SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
-        result['corpencoding'] = corpus_get_conf(corpus, 'ENCODING')
         poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
         result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
@@ -986,6 +994,22 @@ class Kontext(Controller):
         get_val = lambda k: force_values[k] if k in force_values else getattr(self, k, None)
         return [(n, val) for n in attr_names for val in [get_val(n)] if is_valid(n, val)]
 
+    def _get_error_reporting_url(self):
+        ans = None
+        if settings.get('global', 'error_report_url', None):
+            err_rep_params = []
+            params_def = settings.get_full('global', 'error_report_params')
+            if params_def[0]:  # 0: conf value, 1: conf metadata; always guaranteed
+                for param_val, param_meta in params_def:
+                    if param_val[0] == '@':
+                        attr = getattr(self, param_val[1:])
+                        real_val = apply(attr) if callable(attr) else attr
+                    else:
+                        real_val = param_val
+                    err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
+                ans = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
+        return ans
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1002,8 +1026,8 @@ class Kontext(Controller):
         result['display_closed_conc'] = len(self.q) > 0 and result.get('message', [None])[0] != 'error'
 
         # conc_persistence plugin related
-        op_id = self._store_conc_params()
-        self._update_output_with_conc_params(op_id, result)
+        new_query_key = self._store_conc_params()
+        self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
         global_var_val = self._get_attrs(self._conc_args.get_attrs())
@@ -1059,20 +1083,9 @@ class Kontext(Controller):
 
         # util functions
         result['format_number'] = partial(format_number)
+        result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
 
-        result['error_report_url'] = None
-        if settings.get('global', 'error_report_url', None):
-            err_rep_params = []
-            params_def = settings.get_full('global', 'error_report_params')
-            if params_def[0]:  # 0: conf value, 1: conf metadata; always guaranteed
-                for param_val, param_meta in params_def:
-                    if param_val[0] == '@':
-                        attr = getattr(self, param_val[1:])
-                        real_val = apply(attr) if callable(attr) else attr
-                    else:
-                        real_val = param_val
-                    err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
-                result['error_report_url'] = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
+        result['error_report_url'] = self._get_error_reporting_url()
 
         result['qunit_test'] = self.qunit
         if self.qunit and settings.is_debug_mode():
@@ -1087,12 +1100,11 @@ class Kontext(Controller):
         else:
             result['ui_state_ttl'] = 3600 * 12
 
-        # now we store specific information (e.g. concordance parameters)
+        # we will store specific information (e.g. concordance parameters)
         # to keep user informed about data he is working with on any page
         cached_values = Nicedict(empty_val='')
         self._restore_conc_results(cached_values)
         result['cached'] = cached_values
-        result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
         return result
 
     def _restore_conc_results(self, storage):
@@ -1120,15 +1132,16 @@ class Kontext(Controller):
         arguments:
         src -- a dict or a dict-like object
         """
-        if not 'conc' in self._session:
+        if 'conc' not in self._session:
             self._session['conc'] = {}
 
         curr_time = int(time.time())
+        conc_info_ttl = settings.get_int('global', 'conc_persistence_time')
+        record_timestamp = lambda rec_key: self._session['conc'][rec_key]['__timestamp__']
+        record_is_old = lambda rec_key: curr_time - record_timestamp(k) > conc_info_ttl
         # let's clean-up too old records to keep session data reasonably big
         for k in self._session['conc'].keys():
-            if '__timestamp__' in self._session['conc'] \
-                or curr_time - self._session['conc'][k]['__timestamp__'] > settings.get_int('global',
-                                                                                            'conc_persistence_time'):
+            if '__timestamp__' in self._session['conc'] or record_is_old(k):
                 self._session['conc'].pop(k)
 
         data = dict([(k, src.get(k)) for k in Kontext.CONC_RESULT_ATTRS])
@@ -1172,37 +1185,12 @@ class Kontext(Controller):
         if methodname.startswith('first'):
             result['show_cup_menu'] = self._is_err_corpus()
 
-    def _store_query_selector_types(self):
+    @staticmethod
+    def _canonical_corpname(c):
         """
-        Stores the state of all queryselector_* values so they can
-        be used to restore respective forms
-        """
-        if 'forms' not in self._session:
-            self._session['forms'] = {}
-        for item in vars(self):
-            if item.startswith('queryselector'):
-                self._session['forms'][item] = getattr(self, item)
-
-    def _restore_query_selector_types(self):
-        """
-        Restores query form's queryselector_* values using session data.
-        The 'queryselector' of the primary corpus can be overridden by
-        URL parameter 'queryselector'.
-
-        It is also OK if nothing is set for a particular query selector (primary
-        corpus, aligned corpora) either from URL or from session. In such case
-        the respective 'SELECT' HTML element will display its first 'OPTION'
-        which is 'iqueryrow' (= basic query type).
-        """
-        ans = {}
-        if self.queryselector:
-            ans['queryselector'] = self.queryselector
-        elif 'forms' in self._session:
-            ans.update(self._session['forms'])
-        return ans
-
-    def _canonical_corpname(self, c):
-        """
+        Returns a corpus identifier without any additional prefixes used
+        to support multiple configurations per single corpus.
+        (e.g. 'public/bnc' will transform into just 'bnc')
         """
         return corplib.canonical_corpname(c)
 
@@ -1234,25 +1222,14 @@ class Kontext(Controller):
         speech_struct = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
         return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
 
-    def _get_speech_segment(self):
+    @staticmethod
+    def _validate_range(actual_range, max_range):
         """
-        Returns:
-            tuple (structname, attr_name)
-        """
-        segment_str = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
-        if segment_str:
-            return tuple(segment_str.split('.'))
-        return None
+        arguments:
+        actual_range -- 2-tuple
+        max_range -- 2-tuple (if second value is None, that validation of the value is omitted
 
-    def _validate_range(self, actual_range, max_range):
-        """
-        Parameters
-        ----------
-        actual_range : 2-tuple
-        max_range : 2-tuple (if second value is None, that validation of the value is omitted
-
-        Returns
-        -------
+        returns:
         None if everything is OK else UserActionException instance
         """
         if actual_range[0] < max_range[0] or (max_range[1] is not None and actual_range[1] > max_range[1]) \
@@ -1467,7 +1444,8 @@ class Kontext(Controller):
                     if 'label' in item and item['label'] in hints:
                         item['label_hint'] = hints[item['label']]
 
-    def _store_checked_text_types(self, src_obj, out):
+    @staticmethod
+    def _store_checked_text_types(src_obj, out):
         """
         arguments:
         src_obj -- an object storing keys and values (or list of values);

@@ -67,7 +67,6 @@ def exposed(**kwargs):
 
 def function_defaults(fun):
     """
-
     """
     defs = {}
     if isclass(fun):
