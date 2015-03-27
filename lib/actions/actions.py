@@ -19,7 +19,7 @@ import re
 import json
 
 from kontext import Kontext, ConcError, simplify_num, MainMenu
-from controller import JsonEncodedData, UserActionException, exposed, Parameter
+from controller import UserActionException, exposed, Parameter
 import settings
 import conclib
 import corplib
@@ -1657,7 +1657,7 @@ class Actions(Kontext):
             ans = tag_loader.get_variant(pattern)
         else:
             ans = tag_loader.get_initial_values()
-        return JsonEncodedData(ans)
+        return ans
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
         if plugins.has_plugin('query_storage'):

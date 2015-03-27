@@ -148,19 +148,6 @@ class CheetahResponseFile(object):
         return self.outfile
 
 
-class JsonEncodedData(object):
-    """
-    If you want to return already encoded JSON data, you have to
-    wrap them into this object to prevent Controller to encode it again...
-    """
-
-    def __init__(self, data):
-        self.data = data
-
-    def __repr__(self):
-        return self.data
-
-
 class UserActionException(Exception):
     """
     This exception should cover general errors occurring in Controller's action methods'
@@ -964,10 +951,7 @@ class Controller(object):
         from Cheetah.Template import Template
         # JSON
         if action_metadata.get('return_type') == 'json':
-            if type(result) != JsonEncodedData:
-                json.dump(result, outf)
-            else:
-                print >> outf, result
+            json.dump(result, outf)
         # Template
         elif type(result) is DictType:
             self._add_globals(result, methodname, action_metadata)

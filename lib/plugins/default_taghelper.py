@@ -180,7 +180,7 @@ class TagVariantLoader(object):
     def get_variant(self, selected_tags):
         """
         """
-        return json.dumps(self.calculate_variant(selected_tags))
+        return self.calculate_variant(selected_tags)
 
     def get_initial_values(self):
         """
@@ -241,14 +241,12 @@ class TagVariantLoader(object):
             for i in range(len(ans_sorted)):
                 if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
                     ans_sorted[i] = ()
-            data = json.dumps({'tags': ans_sorted, 'labels': tagset['labels']})
+            data = {'tags': ans_sorted, 'labels': tagset['labels']}
             with open(path, 'w') as f:
-                f.write(data)
-                f.close()
+                json.dump(data, f)
         else:
             with open(path, 'r') as f:
-                data = f.read()
-                f.close()
+                data = json.load(f)
         return data
 
     def calculate_variant(self, required_pattern):
