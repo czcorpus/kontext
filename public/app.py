@@ -208,6 +208,12 @@ def load_controller_class(path_info):
     elif path_info.startswith('/subcorpus'):
         from actions.subcorpus import Subcorpus
         controller_class = Subcorpus
+    elif path_info.startswith('/options'):
+        from actions.options import Options
+        controller_class = Options
+    elif path_info.startswith('/admin'):
+        from actions.admin import Admin
+        controller_class = Admin
     else:
         from actions.actions import Actions
         controller_class = Actions

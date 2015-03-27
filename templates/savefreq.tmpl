@@ -18,51 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #from translation import ugettext as _
 ##
-#if $saveformat == 'xml'
-#filter WebSafe
-## XML
-<?xml version="1.0" encoding="$corpencoding"?>
-<frequency>
-#if $heading
-  <heading>
-    <corpus>$human_corpname</corpus>
-    #if $usesubcorp
-    <subcorpus>$usesubcorp</subcorpus>
-    #end if
-    <query>#slurp
-    #for $d in $Desc
-$d.get('arg')#slurp
-    #end for
-#slurp
-</query>
-  </heading>
-#end if
-  #for $b in $Blocks
-  <block>
-    <name>$b.blockname</name>
-    <items>
-      #for $i in $b.Items
-      <item>
-        #for $w in $i.Word
-	  <str>$w.n</str>
-	#end for
-	  <freq>$i.freq</freq>
-	  #unless $ml
-	  <rel>$i.rel</rel>
-	  #end unless
-      </item>
-      #end for
-    </items>
-  </block>
-  #end for
-</frequency>
-#end filter
-##
-#elif $saveformat == 'csv'
-$bom_prefix
-#for $item in $csv_rows
-$item#slurp
-#end for
+
 #elif $saveformat == 'text'
 ## text
 #if $heading

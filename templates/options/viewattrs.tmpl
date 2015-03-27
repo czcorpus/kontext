@@ -35,7 +35,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
     #filter WebSafe
     <h2>$_("Attributes, structures and references")</h2>
     <p>#filter None#$($_('Following settings apply only for the <strong>%s</strong> corpus.') % $human_corpname)#end filter#</p>
-    <form id="mainform" action='viewattrsx'>
+    <form id="mainform" action="${root_url}options/viewattrsx">
 
     #filter None
     $input_hidden
