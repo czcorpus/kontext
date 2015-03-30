@@ -26,6 +26,25 @@ required config.xml entries:
 
 Please note that if you use redis_db storage plug-in then <cleanup_probability> setting
 has no effect as RedisDB removes keys with set TTL automatically.
+
+Important note: Werkzeug's session store listens for data change (callbacks on __setitem__,
+__delitem__). But this of course does not apply if you change some nested object:
+
+a)
+session['foo'] = {'x': 10}  # this triggers should_save = True
+
+b)
+session['foo']['x'] = 'whatever'  # this keeps should_save = False
+
+In such case it is better to do something like this:
+tmp = session.get('foo', {})
+tmp['x'] = 'whatever'
+session['foo'] = tmp
+
+Or if you change nested data all the time you can customize app.py
+to ignore 'should_save' attribute and save each time server finishes
+request processing.
+
 """
 
 import uuid
