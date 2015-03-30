@@ -210,8 +210,8 @@ class Kontext(Controller):
     numofpages = Parameter(0)
     pnfilter = Parameter(u'p')
     filfl = Parameter(u'f')
-    filfpos = Parameter(u'-5')
-    filtpos = Parameter(u'5')
+    filfpos = Parameter(u'-5', persistent=Parameter.SEMI_PERSISTENT)
+    filtpos = Parameter(u'5', persistent=Parameter.SEMI_PERSISTENT)
     sicase = Parameter(u'')
     sbward = Parameter(u'')
     ml1icase = Parameter(u'')
@@ -259,7 +259,7 @@ class Kontext(Controller):
     subcpath = Parameter([])
     css_prefix = Parameter(u'')
     iquery = Parameter(u'')
-    queryselector = Parameter(u'')  # empty by-default; a session value is used in case nothing is set via URL
+    queryselector = Parameter(u'', persistent=Parameter.SEMI_PERSISTENT)
     lemma = Parameter(u'')
     lpos = Parameter(u'')
     phrase = Parameter(u'')
@@ -275,19 +275,18 @@ class Kontext(Controller):
     skey = Parameter(u'rc')
     qmcase = Parameter(0)
     rlines = Parameter(u'250')
-    attrs = Parameter(u'word', persistent=True)
-    ctxattrs = Parameter(u'word', persistent=True)
+    attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+    ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
     allpos = Parameter(u'kw')
-    structs = Parameter(u'p,g,err,corr', persistent=True)
+    structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
     q = Parameter([])
-    pagesize = Parameter(40, persistent=True)
+    pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
     _avail_tbl_templates = Parameter(u'')
-    multiple_copy = Parameter(0, persistent=True)
+    multiple_copy = Parameter(0, persistent=Parameter.PERSISTENT)
     wlsendmail = Parameter(u'')
-    cup_hl = Parameter(u'q', persistent=True)
-    structattrs = Parameter([], persistent=True)
-    subcnorm = Parameter('tokens')
+    cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
+    structattrs = Parameter([], persistent=Parameter.PERSISTENT)
 
     sortlevel = Parameter(1)
     flimit = Parameter(0)
@@ -304,21 +303,21 @@ class Kontext(Controller):
     errcodes_link = Parameter(u'')
     hidenone = Parameter(1)
 
-    kwicleftctx = Parameter('-10', persistent=True)
-    kwicrightctx = Parameter('10', persistent=True)
+    kwicleftctx = Parameter('-10', persistent=Parameter.PERSISTENT)
+    kwicrightctx = Parameter('10', persistent=Parameter.PERSISTENT)
     senleftctx_tpl = Parameter('-1:%s')
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
     align = Parameter('')
     sel_aligned = Parameter([])
     maincorp = Parameter('')   # used only in case of parallel corpora - specifies corpus with "focus"
-    refs_up = Parameter(0, persistent=True)
+    refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
     enable_sadd = Parameter(0)
     tag_builder_support = Parameter([])
 
-    shuffle = Parameter(0, persistent=True)
+    shuffle = Parameter(0, persistent=Parameter.PERSISTENT)
     SubcorpList = Parameter([])
 
     favorite_corpora = Parameter([], persistent=True)
@@ -738,7 +737,8 @@ class Kontext(Controller):
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
-        self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=self._proc_time)
+        self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
+                          proc_time=self._proc_time)
 
     def _attach_tag_builder(self, tpl_out):
         """

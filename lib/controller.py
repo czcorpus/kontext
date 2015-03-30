@@ -182,7 +182,12 @@ class Parameter(object):
     value -- a default value of the parameter (defines both value and type)
     persistent -- bool value specifying whether we should save the value to user's settings
     """
-    def __init__(self, value, persistent=False):
+
+    NON_PERSISTENT = 0b0000  # not stored at all
+    PERSISTENT = 0b0001  # stored in user's settings (and not elsewhere)
+    SEMI_PERSISTENT = 0b0010  # stored in user's session (and not elsewhere)
+
+    def __init__(self, value, persistent=NON_PERSISTENT):
         """
         arguments:
         value -- wrapped value (primitive types, empty dict, empty list, tuple)
@@ -204,8 +209,8 @@ class Parameter(object):
     def is_array(self):
         return type(self.value) is tuple or type(self.value) is list
 
-    def is_persistent(self):
-        return self.persistent
+    def meets_persistence(self, p_level):
+        return self.persistent & p_level == p_level
 
 
 class Controller(object):
@@ -639,17 +644,18 @@ class Controller(object):
     def get_http_method(self):
         return self.environ.get('REQUEST_METHOD', '')
 
-    def _get_persistent_attrs(self):
+    def _get_attrs_by_persistence(self, persistence_types):
         """
         Returns list of object's attributes which (along with their values) will be preserved.
         A persistent parameter is the one which meets the following properties:
         1. is of the Parameter type
-        2. returns True on is_persistent()
+        2. has a matching persistence flag
         """
-        attrs = inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter) and m.is_persistent())
+        is_valid_parameter = lambda m: isinstance(m, Parameter) and m.meets_persistence(persistence_types)
+        attrs = inspect.getmembers(self.__class__, predicate=is_valid_parameter)
         return tuple([x[0] for x in attrs])
 
-    def _get_persistent_items(self):
+    def _get_items_by_persistence(self, persistence_types):
         """
         Similar to the _get_persistent_attrs() but returns also values.
 
@@ -657,7 +663,7 @@ class Controller(object):
         a dictionary property_name : value
         """
         ans = {}
-        for k in self._get_persistent_attrs():
+        for k in self._get_attrs_by_persistence(persistence_types):
             if hasattr(self, k):
                 ans[k] = getattr(self, k)
         return ans

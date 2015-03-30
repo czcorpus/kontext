@@ -83,33 +83,50 @@ class Actions(Kontext):
         """
         return '/'
 
-    def _store_query_selector_types(self):
+    def _store_semi_persistent_attrs(self, attr_list):
         """
-        Stores the state of all queryselector_* values so they can
-        be used to restore respective forms
-        """
-        if 'forms' not in self._session:
-            self._session['forms'] = {}
-        for item in vars(self):
-            if item.startswith('queryselector'):
-                self._session['forms'][item] = getattr(self, item)
+        Stores the state of all semi-persistent parameters (i.e. the ones
+        with persistence flag Parameter.PERSISTENT) and also aligned
+        corpora form elements (they must be treated in a different way because
+        they cannot be hardcoded as Parameter instances due to their dynamic nature).
 
-    def _restore_query_selector_types(self):
+        arguments:
+            explicit_list -- a list of attributes to store (the ones
+                             without Parameter.SEMI_PERSISTENT flag will be ignored)
         """
-        Restores query form's queryselector_* values using session data.
-        The 'queryselector' of the primary corpus can be overridden by
-        URL parameter 'queryselector'.
+        semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
+        tmp = self._session.get('semi_persistent_attrs', {})
+        for attr_name in attr_list:
+            if attr_name in semi_persist_attrs:
+                tmp[attr_name] = semi_persist_attrs[attr_name]
+        self._session['semi_persistent_attrs'] = tmp  # this ensures Werkzeug sets 'should_save' attribute
 
-        It is also OK if nothing is set for a particular query selector (primary
-        corpus, aligned corpora) either from URL or from session. In such case
-        the respective 'SELECT' HTML element will display its first 'OPTION'
-        which is 'iqueryrow' (= basic query type).
+        # aligned corpora forms inputs require different approach due to their dynamic nature
+        tmp = self._session.get('aligned_forms', {})
+        for aligned_lang in self.sel_aligned:
+            tmp[aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
+        self._session['aligned_forms'] = tmp  # this ensures Werkzeug sets 'should_save' attribute
+
+    def _fetch_semi_peristent_attrs(self):
+        """
+        Restores the state of all semi-persistent parameters (i.e. the ones
+        with persistence flag Parameter.PERSISTENT) and also aligned
+        corpora form elements (they must be treated in a different way because
+        they cannot be hardcoded as Parameter instances due to their dynamic nature).
+
+        Please note that the original controller's attributes are not touched by this.
+
+        returns:
+        found attributes dict (attr_name => attr_value)
         """
         ans = {}
         if self.queryselector:
             ans['queryselector'] = self.queryselector
-        elif 'forms' in self._session:
-            ans.update(self._session['forms'])
+        elif 'semi_persistent_attrs' in self._session:
+            ans.update(self._session['semi_persistent_attrs'])
+        for form_lang, form_data in self._session.get('aligned_forms', {}).items():
+            for attr_name, attr_val in form_data.items():
+                ans['%s_%s' % (attr_name, form_lang)] = attr_val
         return ans
 
     def _get_speech_segment(self):
@@ -206,7 +223,7 @@ class Actions(Kontext):
         else:
             self._store_checked_text_types(request.form, out)
         self._reset_session_conc()
-        out.update(self._restore_query_selector_types())
+        out.update(self._fetch_semi_peristent_attrs())
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
@@ -649,7 +666,7 @@ class Actions(Kontext):
               fc_pos=()):
 
         ans = {}
-        self._store_query_selector_types()
+        self._store_semi_persistent_attrs(('queryselector',))
         try:
             self._set_first_query(fc_lemword_window_type,
                                   fc_lemword_wsize,
@@ -676,6 +693,7 @@ class Actions(Kontext):
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
+        out.update(self._fetch_semi_peristent_attrs())
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
@@ -688,6 +706,7 @@ class Actions(Kontext):
         """
         Positive/Negative filter
         """
+        self._store_semi_persistent_attrs(('queryselector', 'filfpos', 'filtpos'))
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
