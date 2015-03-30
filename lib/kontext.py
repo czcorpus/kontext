@@ -129,8 +129,8 @@ class Kontext(Controller):
     numofpages = Parameter(0)
     pnfilter = Parameter(u'p')
     filfl = Parameter(u'f')
-    filfpos = Parameter(u'-5')
-    filtpos = Parameter(u'5')
+    filfpos = Parameter(u'-5', persistent=Parameter.SEMI_PERSISTENT)
+    filtpos = Parameter(u'5', persistent=Parameter.SEMI_PERSISTENT)
     sicase = Parameter(u'')
     sbward = Parameter(u'')
     ml1icase = Parameter(u'')
@@ -178,7 +178,7 @@ class Kontext(Controller):
     subcpath = Parameter([])
     css_prefix = Parameter(u'')
     iquery = Parameter(u'')
-    queryselector = Parameter(u'')  # empty by-default; a session value is used in case nothing is set via URL
+    queryselector = Parameter(u'', persistent=Parameter.SEMI_PERSISTENT)
     lemma = Parameter(u'')
     lpos = Parameter(u'')
     phrase = Parameter(u'')
@@ -194,18 +194,18 @@ class Kontext(Controller):
     skey = Parameter(u'rc')
     qmcase = Parameter(0)
     rlines = Parameter(u'250')
-    attrs = Parameter(u'word', persistent=True)
-    ctxattrs = Parameter(u'word', persistent=True)
+    attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+    ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
     allpos = Parameter(u'kw')
-    structs = Parameter(u'p,g,err,corr', persistent=True)
+    structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
     q = Parameter([])
-    pagesize = Parameter(40, persistent=True)
+    pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
     _avail_tbl_templates = Parameter(u'')
-    multiple_copy = Parameter(0, persistent=True)
+    multiple_copy = Parameter(0, persistent=Parameter.PERSISTENT)
     wlsendmail = Parameter(u'')
-    cup_hl = Parameter(u'q', persistent=True)
-    structattrs = Parameter([], persistent=True)
+    cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
+    structattrs = Parameter([], persistent=Parameter.PERSISTENT)
 
     sortlevel = Parameter(1)
     flimit = Parameter(0)
@@ -223,15 +223,15 @@ class Kontext(Controller):
     hidenone = Parameter(1)
 
 
-    kwicleftctx = Parameter('-10', persistent=True)
-    kwicrightctx = Parameter('10', persistent=True)
+    kwicleftctx = Parameter('-10', persistent=Parameter.PERSISTENT)
+    kwicrightctx = Parameter('10', persistent=Parameter.PERSISTENT)
     senleftctx_tpl = Parameter('-1:%s')
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
     align = Parameter('')
     sel_aligned = Parameter([])
     maincorp = Parameter('')   # used only in case of parallel corpora - specifies corpus with "focus"
-    refs_up = Parameter(0, persistent=True)
+    refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
 
     enable_sadd = Parameter(0)
@@ -239,7 +239,7 @@ class Kontext(Controller):
     empty_attr_value_placeholder = Parameter('')
     tag_builder_support = Parameter([])
 
-    shuffle = Parameter(0, persistent=True)
+    shuffle = Parameter(0, persistent=Parameter.PERSISTENT)
     SubcorpList = Parameter([])
 
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
@@ -260,6 +260,7 @@ class Kontext(Controller):
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
+        self._aligned_forms_state = {}  # aligned corpus id => AlignedFormState
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -615,7 +616,8 @@ class Kontext(Controller):
                 disabled_set.add(x)
             self.disabled_menu_items = tuple(disabled_set)
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
-        self._log_request(self._get_persistent_items(), '%s' % methodname, proc_time=self._proc_time)
+        self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
+                          proc_time=self._proc_time)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -1007,33 +1009,60 @@ class Kontext(Controller):
         if methodname.startswith('first'):
             result['show_cup_menu'] = self._is_err_corpus()
 
-    def _store_query_selector_types(self):
-        """
-        Stores the state of all queryselector_* values so they can
-        be used to restore respective forms
-        """
-        if 'forms' not in self._session:
-            self._session['forms'] = {}
-        for item in vars(self):
-            if item.startswith('queryselector'):
-                self._session['forms'][item] = getattr(self, item)
+    def _import_aligned_form_param_names(self, aligned_corp):
+        ans = {}
+        for param_name in ('filfpos', 'filtpos', 'queryselector'):  # TODO where to store this stuff?
+            full_name = '%s_%s' % (param_name, aligned_corp)
+            if hasattr(self, full_name):
+                ans[param_name] = getattr(self, full_name)
+        return ans
 
-    def _restore_query_selector_types(self):
+    def _store_semi_persistent_attrs(self, attr_list):
         """
-        Restores query form's queryselector_* values using session data.
-        The 'queryselector' of the primary corpus can be overridden by
-        URL parameter 'queryselector'.
+        Stores the state of all semi-persistent parameters (i.e. the ones
+        with persistence flag Parameter.PERSISTENT) and also aligned
+        corpora form elements (they must be treated in a different way because
+        they cannot be hardcoded as Parameter instances due to their dynamic nature).
 
-        It is also OK if nothing is set for a particular query selector (primary
-        corpus, aligned corpora) either from URL or from session. In such case
-        the respective 'SELECT' HTML element will display its first 'OPTION'
-        which is 'iqueryrow' (= basic query type).
+        arguments:
+            explicit_list -- a list of attributes to store (the ones
+                             without Parameter.SEMI_PERSISTENT flag will be ignored)
+        """
+        semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
+
+        if 'semi_persistent_attrs' not in self._session:
+            self._session['semi_persistent_attrs'] = {}
+
+        for attr_name in attr_list:
+            if attr_name in semi_persist_attrs:
+                self._session['semi_persistent_attrs'][attr_name] = semi_persist_attrs[attr_name]
+
+        # aligned corpora forms inputs require different approach due to their dynamic nature
+        if 'aligned_forms' not in self._session:
+            self._session['aligned_forms'] = {}
+        for aligned_lang in self.sel_aligned:
+            self._session['aligned_forms'][aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
+
+    def _fetch_semi_peristent_attrs(self):
+        """
+        Restores the state of all semi-persistent parameters (i.e. the ones
+        with persistence flag Parameter.PERSISTENT) and also aligned
+        corpora form elements (they must be treated in a different way because
+        they cannot be hardcoded as Parameter instances due to their dynamic nature).
+
+        Please note that the original controller's attributes are not touched by this.
+
+        returns:
+        found attributes dict (attr_name => attr_value)
         """
         ans = {}
         if self.queryselector:
             ans['queryselector'] = self.queryselector
-        elif 'forms' in self._session:
-            ans.update(self._session['forms'])
+        elif 'semi_persistent_attrs' in self._session:
+            ans.update(self._session['semi_persistent_attrs'])
+        for form_lang, form_data in self._session.get('aligned_forms', {}).items():
+            for attr_name, attr_val in form_data.items():
+                ans['%s_%s' % (attr_name, form_lang)] = attr_val
         return ans
 
     def _canonical_corpname(self, c):

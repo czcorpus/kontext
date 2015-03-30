@@ -238,7 +238,8 @@ class Actions(Kontext):
                                     'menu-collocations', 'menu-conc-desc', 'menu-save', 'menu-concordance')
         out = {}
         self._reset_session_conc()
-        out.update(self._restore_query_selector_types())
+        out.update(self._fetch_semi_peristent_attrs())
+
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
@@ -798,6 +799,7 @@ class Actions(Kontext):
               fc_pos_wsize=0,
               fc_pos_type='',
               fc_pos=()):
+        self._store_semi_persistent_attrs(('queryselector',))
         self._set_first_query(fc_lemword_window_type,
                               fc_lemword_wsize,
                               fc_lemword_type,
@@ -810,16 +812,15 @@ class Actions(Kontext):
             self.align = ','.join(self.sel_aligned)
         if self.shuffle == 1 and 'f' not in self.q:
             self.q.append('f')
-        self._store_query_selector_types()
         return self.view()
 
     @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'))
     def filter_form(self, within=0):
         self.disabled_menu_items = ('menu-save',)
-
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
+        out.update(self._fetch_semi_peristent_attrs())
         if within and not self.error:
             out['message'] = ('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
@@ -831,6 +832,7 @@ class Actions(Kontext):
         """
         Positive/Negative filter
         """
+        self._store_semi_persistent_attrs(('queryselector', 'filfpos', 'filtpos'))
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
