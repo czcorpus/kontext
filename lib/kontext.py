@@ -1132,21 +1132,21 @@ class Kontext(Controller):
         arguments:
         src -- a dict or a dict-like object
         """
-        if 'conc' not in self._session:
-            self._session['conc'] = {}
+        conc_data = self._session.get('conc', {})
 
         curr_time = int(time.time())
         conc_info_ttl = settings.get_int('global', 'conc_persistence_time')
-        record_timestamp = lambda rec_key: self._session['conc'][rec_key]['__timestamp__']
+        record_timestamp = lambda rec_key: conc_data[rec_key]['__timestamp__']
         record_is_old = lambda rec_key: curr_time - record_timestamp(k) > conc_info_ttl
         # let's clean-up too old records to keep session data reasonably big
-        for k in self._session['conc'].keys():
-            if '__timestamp__' in self._session['conc'] or record_is_old(k):
-                self._session['conc'].pop(k)
-
+        for k in conc_data.keys():
+            if '__timestamp__' in conc_data or record_is_old(k):
+                conc_data.pop(k)
         data = dict([(k, src.get(k)) for k in Kontext.CONC_RESULT_ATTRS])
         data['__timestamp__'] = int(curr_time)
-        self._session['conc']['#'.join(self.q)] = data
+        conc_data['#'.join(self.q)] = data
+
+        self._session['conc'] = conc_data  # Werkzeug sets should_save thanks to this
 
     def _add_undefined(self, result, methodname, vars):
         result['methodname'] = methodname
