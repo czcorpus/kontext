@@ -43,6 +43,7 @@ class DefaultSessions(SessionStore):
         """
         Initialization according to the 'settings' object/module
         """
+        super(DefaultSessions, self).__init__(session_class=None)
         self.db = db
         self._cookie_name = settings.get('plugins', 'auth')['auth_cookie_name']
         self.ttl = int(settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL))
