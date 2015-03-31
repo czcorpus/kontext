@@ -215,12 +215,12 @@ export class WidgetMenu {
      */
     init(searchBox:Search, favoriteBox:Favorites):void {
         var self = this;
-        this.menuWrapper.append('<a data-func="search">search</a> | <a data-func="my-corpora">my favorite</a>');
+        this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
         this.funcMap['my-corpora'] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
         this.funcMap['search'] = this.searchBox;
-        this.setCurrent('search');
+        this.setCurrent('my-corpora');
 
         this.menuWrapper.find('a').on('click', function (e:any) {
             self.setCurrent(e.currentTarget);
@@ -409,6 +409,8 @@ export class Search implements WidgetTab {
  */
 export class Favorites implements WidgetTab {
 
+    pluginApi:model.PluginApi;
+
     widgetWrapper:HTMLElement;
 
     data:Array<CorplistItem>;
@@ -421,12 +423,14 @@ export class Favorites implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback:CorplistItemClick) {
+        this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.data = data;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('table');
-        $(this.wrapper).addClass('favorite-list');
+        $(this.wrapper).addClass('favorite-list')
+            .append('<tr><th colspan="2">' + this.pluginApi.translate('favorite items') + '</th></tr>');
         $(this.widgetWrapper).append(this.wrapper);
     }
 
@@ -634,7 +638,7 @@ export class Corplist {
         this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new Favorites(this.widgetWrapper, this.data, this.onItemClick);
+        this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data, this.onItemClick);
         this.favoritesBox.init();
 
         // menu initialization
