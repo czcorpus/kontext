@@ -151,6 +151,11 @@ export class WidgetMenu {
 
     currentBoxId:string;
 
+    static SEARCH_WIDGET_ID:string = 'search';
+    static MY_ITEMS_WIDGET_ID:string = 'my-corpora';
+
+    static TAB_KEY = 9;
+
     /**
      *
      * @param widgetWrapper
@@ -218,12 +223,20 @@ export class WidgetMenu {
         this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
-        this.funcMap['my-corpora'] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
-        this.funcMap['search'] = this.searchBox;
-        this.setCurrent('my-corpora');
+        this.funcMap[WidgetMenu.MY_ITEMS_WIDGET_ID] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
+        this.funcMap[WidgetMenu.SEARCH_WIDGET_ID] = this.searchBox;
+        this.setCurrent(WidgetMenu.MY_ITEMS_WIDGET_ID);
 
         this.menuWrapper.find('a').on('click', function (e:any) {
             self.setCurrent(e.currentTarget);
+        });
+
+        $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
+            console.log(e.keyCode);
+            if (self.currentBoxId === WidgetMenu.MY_ITEMS_WIDGET_ID
+                    && e.keyCode == WidgetMenu.TAB_KEY) {
+                self.setCurrent(WidgetMenu.SEARCH_WIDGET_ID);
+            }
         });
     }
 }
