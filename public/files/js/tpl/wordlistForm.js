@@ -21,11 +21,13 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function (win, $, layoutModel, treeComponent,
+define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win, $, layoutModel, corplistComponent,
     popupbox) {
     'use strict';
 
-    var lib = {},
+    var lib = {
+            corplistComponent : null
+        },
         selectOutputType,
         updForm;
 
@@ -128,6 +130,14 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
         });
     };
 
+    lib.createCorplistComponent = function () {
+        lib.corplistComponent = corplistComponent.create(
+            $('form[id="wordlist_form"] select[name="corpname"]'),
+            layoutModel.pluginApi(),
+            {formTarget: 'wordlist_form', submitMethod: 'GET'}
+        );
+    };
+
     /**
      *
      * @param conf
@@ -135,8 +145,7 @@ define(['win', 'jquery', 'tpl/document', 'treecomponent', 'popupbox'], function 
     lib.init = function (conf) {
         layoutModel.init(conf);
         lib.bindStaticElements();
-        treeComponent.createTreeComponent($('form[id="wordlist_form"] select[name="corpname"]'),
-            layoutModel.conf.messages, {clickableText: true, defaultButtonLabel : layoutModel.conf.corpname}, updForm);
+        lib.createCorplistComponent();
     };
 
     return lib;
