@@ -53,11 +53,11 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
 
     QUnit.asyncTest('Corpus tree widget pops-up on a respective button click', function () {
         QUnit.expect(1);
-        page.treeComponent.options.onSwitchVisibility = function (status) {
+        page.corplistComponent.options.onSwitchVisibility = function (status) {
             QUnit.equal(status, "show");
             QUnit.start();
         };
-        $(page.treeComponent.button).trigger('click');
+        $(page.corplistComponent.button).trigger('click');
     });
 
     QUnit.asyncTest('Corpus info box pops-up', function () {
