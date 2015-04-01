@@ -37,20 +37,18 @@ def import_from_json(obj):
     """
     item_type = obj.get('type', None)
     if item_type == 'corpus':
-        ans = CorpusItem(obj['id'], name=obj['name'])
+        ans = CorpusItem(name=obj['name'])
         ans.corpus_id = obj['corpus_id']
         ans.canonical_id = obj['canonical_id']
     elif item_type == 'subcorpus':
-        ans = SubcorpusItem(obj['id'], obj['name'])
+        ans = SubcorpusItem(obj['name'])
         ans.corpus_id = obj['corpus_id']
         ans.canonical_id = obj['canonical_id']
         ans.subcorpus_id = obj['subcorpus_id']
         ans.size = obj['size']
     elif item_type == 'aligned_corpora':
-        ans = AlignedCorporaItem(obj['id'], obj['name'])
-        ans.corpora = []
-        for item in obj['corpora']:
-            ans.corpora.append(item)
+        ans = AlignedCorporaItem(obj['name'])
+        ans.corpora = obj['corpora']
     else:
         raise UserItemException('Unknown/undefined item type: %s' % item_type)
     return ans

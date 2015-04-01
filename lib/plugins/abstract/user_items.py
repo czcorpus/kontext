@@ -18,9 +18,6 @@ user corpus list.
 Expected factory method signature: create_instance(config, db)
 """
 
-import uuid
-import hashlib
-
 
 class UserItemException(Exception):
     """
@@ -30,28 +27,38 @@ class UserItemException(Exception):
     pass
 
 
+def generate_item_key(obj):
+    if obj.type == 'corpus':
+        return obj.corpus_id
+    elif obj.type == 'subcorpus':
+        return '%s:%s' % (obj.corpus_id, obj.subcorpus_id)
+    elif obj.type == 'aligned_corpora':
+        ans = []
+        for corp in obj.corpora:
+            ans.append(generate_item_key(corp))
+        return '+'.join(ans)
+
+
 class GeneralItem(object):
     """
     General favorite/promoted/whatever item (corpus, subcorpus,...).
     This should be always extended.
     """
-    def __init__(self, item_id, name):
-        self._id = item_id if item_id is not None else self.generate_id()
+    def __init__(self, name):
         self.name = name
 
-    @staticmethod
-    def generate_id():
+    def generate_id(self):
         """
         ID generator should be the same for all implementations
         """
-        return hashlib.sha1(str(uuid.uuid1())).hexdigest()
+        raise NotImplementedError()
 
     @property
     def id(self):
         """
         An unique, read-only identifier of the item (see generate_id).
         """
-        return self._id
+        return self.generate_id()
 
     @property
     def type(self):
@@ -65,10 +72,13 @@ class CorpusItem(GeneralItem):
     """
     A reference to a corpus in user's list
     """
-    def __init__(self, item_id, name):
-        super(CorpusItem, self).__init__(item_id, name)
+    def __init__(self, name):
+        super(CorpusItem, self).__init__(name)
         self.corpus_id = None
         self.canonical_id = None
+
+    def generate_id(self):
+        return generate_item_key(self)
 
     @property
     def type(self):
@@ -79,10 +89,13 @@ class SubcorpusItem(CorpusItem):
     """
     A reference to a sub-corpus in user's list
     """
-    def __init__(self, item_id, name):
-        super(SubcorpusItem, self).__init__(item_id, name)
+    def __init__(self, name):
+        super(SubcorpusItem, self).__init__(name)
         self.subcorpus_id = None
         self.size = None
+
+    def generate_id(self):
+        return generate_item_key(self)
 
     @property
     def type(self):
@@ -94,9 +107,12 @@ class AlignedCorporaItem(GeneralItem):
     A reference to an n-tuple of aligned corpora
     (eg. (Intercorp_en, intercorp_cs, Intercorp_be).
     """
-    def __init__(self, item_id, name):
-        super(AlignedCorporaItem, self).__init__(item_id, name)
+    def __init__(self, name):
+        super(AlignedCorporaItem, self).__init__(name)
         self.corpora = []
+
+    def generate_id(self):
+        return generate_item_key(self)
 
     @property
     def type(self):

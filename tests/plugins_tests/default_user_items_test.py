@@ -21,7 +21,7 @@ import json
 
 
 def create_corpus_obj(name='korpus syn 2010', corpus_id='public/syn2010', canonical_id='syn2010'):
-    c = CorpusItem(item_id=None, name=name)
+    c = CorpusItem(name=name)
     c.corpus_id = corpus_id
     c.canonical_id = canonical_id
     return c
@@ -60,7 +60,7 @@ class TestCorpusItemSerialization(TestCommon):
 
 class TestCorpusItemDeserialization(TestCommon):
     def runTest(self):
-        src = """{"id": "baca979503e327bd46fc6172d101e70a7f581fb5", "canonical_id": "syn2010", "name":
+        src = """{"id": "public/syn2010", "canonical_id": "syn2010", "name":
                   "korpus syn 2010", "corpus_id": "public/syn2010", "type": "corpus"}"""
         d = json.loads(src)
         decoder = json.JSONDecoder(object_hook=import_from_json)
@@ -76,23 +76,24 @@ class TestCorpusItemDeserialization(TestCommon):
 class TestSubcorpusItemIdReadOnly(TestCommon):
     def runTest(self):
         with self.assertRaises(AttributeError):
-            c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+            c = SubcorpusItem(name='korpus syn 2010')
             c.id = 'foo'
 
 
 class TestSubcorpusItemTypeReadOnly(TestCommon):
     def runTest(self):
         with self.assertRaises(AttributeError):
-            c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+            c = SubcorpusItem(name='korpus syn 2010')
             c.type = 'foo'
 
 
 class TestSubcorpusItemSerialization(TestCommon):
     def runTest(self):
-        c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+        c = SubcorpusItem(name='korpus syn 2010')
         c.corpus_id = 'public/syn2010'
         c.canonical_id = 'syn2010'
         c.subcorpus_id = 'modern_poetry'
+
         c.size = 123000
         data = json.loads(json.dumps(c, cls=ItemEncoder))
         self.assertEqual(data['id'], c.id)
@@ -108,7 +109,7 @@ class TestSubcorpusItemDeserialization(TestCommon):
     def runTest(self):
         src = """{"name": "korpus syn 2010", "canonical_id": "syn2010", "corpus_id": "public/syn2010",
                   "subcorpus_id": "modern_poetry", "type": "subcorpus",
-                  "id": "0704568a3cb6fb4fd412eeef2c6d59618537e2b4", "size": 123000}"""
+                  "id": "public/syn2010:modern_poetry", "size": 123000}"""
         d = json.loads(src)
         decoder = json.JSONDecoder(object_hook=import_from_json)
         obj = decoder.decode(src)
@@ -138,7 +139,7 @@ class TestAlignedCorporaItemTypeReadOnly(TestCommon):
 
 class TestAlignmentCorporaItemSerialization(TestCommon):
     def runTest(self):
-        a = AlignedCorporaItem(item_id=None, name='Bunch of corpora')
+        a = AlignedCorporaItem(name='Bunch of corpora')
         c1 = create_corpus_obj()
         c2 = create_corpus_obj(name='BNC', corpus_id='limited/bnc', canonical_id='bnc')
         c3 = create_corpus_obj(name='InterCorp version 7', corpus_id='limited/intercorp', canonical_id='intercorp')
@@ -161,12 +162,12 @@ class TestAlignmentCorporaItemSerialization(TestCommon):
 class TestAlignmentCorporaItemDeserialization(TestCommon):
     def runTest(self):
         src = """{"corpora": [{"corpus_id": "public/syn2010", "canonical_id": "syn2010", "type": "corpus",
-                  "id": "54f79cf2064a3568c1910c208f30cff5f1238c18", "name": "korpus syn 2010"},
+                  "id": "public/syn2010", "name": "korpus syn 2010"},
                   {"corpus_id": "limited/bnc", "canonical_id": "bnc", "type": "corpus",
-                  "id": "f424bd8d3890fe485448b399d170f49c3f4c0373", "name": "BNC"}, {"corpus_id": "limited/intercorp",
-                  "canonical_id": "intercorp", "type": "corpus", "id": "e6d1c336d31f345bc961f4a6bcad2f35761a63eb",
+                  "id": "limited/bnc", "name": "BNC"}, {"corpus_id": "limited/intercorp",
+                  "canonical_id": "intercorp", "type": "corpus", "id": "limited/intercorp",
                   "name": "InterCorp version 7"}], "type": "aligned_corpora", "name": "Bunch of corpora",
-                  "id": "221cb321617f3219a4907a389f6ff18df2bbcc23"}"""
+                  "id": "public/syn2010+limited/bnc+limited/intercorp"}"""
         data = json.loads(src)
         decoder = json.JSONDecoder(object_hook=import_from_json)
         obj = decoder.decode(src)
