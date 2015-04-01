@@ -137,6 +137,7 @@ def setup_plugins():
     init_plugin('conc_persistence', (settings, plugins.db))  # TODO this is actually an optional plug-in
     init_plugin('conc_cache', (settings, plugins.db))
     init_plugin('export', (settings,), module=plugins.export)
+    init_plugin('user_items', (settings, plugins.db))
 
     # optional plugins
     optional_plugins = (
