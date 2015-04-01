@@ -322,7 +322,6 @@ class Kontext(Controller):
 
     subcnorm = Parameter('tokens')
 
-    favorite_corpora = Parameter([], persistent=True)
     keyword = Parameter([])
 
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
@@ -342,6 +341,7 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self._conc_args = ConcArgsMapping()
+        self._favorite_items = []
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -897,21 +897,8 @@ class Kontext(Controller):
         else:
             return fallback_corpus.EmptyCorpus()
 
-    def _load_fav_corplist(self):
-        user_corpora = self.cm.corplist_with_names(plugins.corptree.get(), settings.get_bool('corpora', 'use_db_whitelist'))
-        favorite_corpora = [fc for fc in user_corpora if fc['canonical_id'] in self.favorite_corpora]
-        if len(favorite_corpora) == 0:
-            favorite_corpora.append({
-                'id': self.corpname,
-                'canonical_id': self._canonical_corpname(self.corpname),
-                'name': self._human_readable_corpname(),
-                'size': self._corp().search_size(),
-                'desc': 'current corpus (you have no favorite corpora)',
-                'path': ''
-            })
-        for item in favorite_corpora:
-            item['size'] = simplify_num(item['size'])
-        return favorite_corpora
+    def _load_fav_items(self):
+        return plugins.user_items.get_user_items(self._session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, corpus):
         result['files_path'] = self._files_path
@@ -927,8 +914,7 @@ class Kontext(Controller):
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
-
-        result['CorplistFn'] = self._load_fav_corplist
+        result['CorplistFn'] = self._load_fav_items
         mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
         corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
 
