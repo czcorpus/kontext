@@ -31,7 +31,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
         clStorage = conclines.openStorage();
 
     lib.maxEncodedParamsLength = 1500;
-    lib.treeComponent = null;
+    lib.corplistComponent = null;
     lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
 
     /**
@@ -141,14 +141,11 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      * @todo rename/refactor this stuff
      */
     lib.misc = function () {
-        var tc;
-
-        tc = corplistComponent.create(
+        lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
             layoutModel.pluginApi(),
             {formTarget: 'first_form'}
         );
-        lib.treeComponent = tc[0]; // only one tree component is created for the page
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);
