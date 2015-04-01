@@ -24,7 +24,9 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
         $, layoutModel, corplistComponent, popupBox, liveAttributes) {
     'use strict';
 
-    var lib = {};
+    var lib = {
+        treeComponent : null
+    };
 
     /**
      *
@@ -73,7 +75,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
     };
 
     lib.initTreeComponent = function () {
-        corplistComponent.create(
+        lib.treeComponent = corplistComponent.create(
             $('form[action="subcorp"] select[name="corpname"]'),
             layoutModel.pluginApi(),
             {formTarget: 'subcorp_form', submitMethod: 'GET'}
