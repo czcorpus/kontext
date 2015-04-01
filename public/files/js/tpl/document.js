@@ -351,7 +351,7 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
             var rootElm = tooltipBox.getRootElement();
 
             lib.ajax({
-                url: 'ajax_get_corp_details?corpname=' + lib.conf.corpname,
+                url: lib.conf.rootPath + 'corpora/ajax_get_corp_details?corpname=' + lib.conf.corpname,
                 dataType: 'json',
                 method: 'get',
                 success: function (data) {

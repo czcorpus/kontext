@@ -336,7 +336,7 @@ export class QueryHistory {
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax('ajax_query_history?corpname=' + self.pluginApi.conf('corpname'), {
+            prom = $.ajax(self.pluginApi.conf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.conf('corpname'), {
                 dataType : 'json'
             });
 

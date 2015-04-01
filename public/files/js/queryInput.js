@@ -27,16 +27,14 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     var lib = {};
 
     /**
-     *
-     * @param {String} corpName
      * @param {jQuery|HTMLElement|String} inputElm
      * @param {jQuery|HTMLElement|String} triggerElm
      * @param {pluginApi} pluginApi
      */
-    function bindTagHelper(corpName, inputElm, triggerElm, pluginApi) {
+    function bindTagHelper(inputElm, triggerElm, pluginApi) {
 
         tagbuilder.bindTextInputHelper(
-            corpName,
+            pluginApi,
             triggerElm,
             {
                 inputElement: $(inputElm),
@@ -60,10 +58,9 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     /**
      *
      * @param {jQuery} jqLinkElement
-     * @param {string} corpusName
      * @param {pluginApi} pluginApi
      */
-    function bindWithinHelper(jqLinkElement, corpusName, pluginApi) {
+    function bindWithinHelper(jqLinkElement, pluginApi) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
             clickAction,
             buttonEnterAction;
@@ -116,7 +113,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                     loaderGIF = pluginApi.appendLoader(box.getRootElement());
 
                     pluginApi.ajax({
-                        url: 'ajax_get_structs_details?corpname=' + corpusName,
+                        url: pluginApi.conf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
+                                + pluginApi.conf('corpname'),
                         data: {},
                         method: 'get',
                         dataType: 'json',
@@ -168,19 +166,10 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      */
     lib.bindQueryHelpers = function (pluginApi) {
         $('input.cql-input').each(function () {
-            var corpName,
-                cqlInputId = $(this).attr('id'),
-                blockWrapper = $(this).closest('td');
+            var blockWrapper = $(this).closest('td');
 
-            if (cqlInputId === 'cql') {
-                corpName = conf.corpname;
-
-            } else {
-                corpName = cqlInputId.substring(4);
-            }
-
-            bindTagHelper(corpName, $(this), blockWrapper.find('.insert-tag a'), pluginApi);
-            bindWithinHelper(blockWrapper.find('li.within a'), corpName, pluginApi);
+            bindTagHelper($(this), blockWrapper.find('.insert-tag a'), pluginApi);
+            bindWithinHelper(blockWrapper.find('li.within a'), pluginApi);
         });
 
         lib.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));

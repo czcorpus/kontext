@@ -95,18 +95,20 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
 
     /**
      *
-     * @param {string} corpusName
+     * @param {PluginApi} pluginApi
      * @param {MultiSelect} multiSelectComponent
      * @param {HTMLElement} hiddenElm
      * @param {HTMLElement} tagDisplay
      * @constructor
      */
-    function TagLoader(corpusName, multiSelectComponent, hiddenElm, tagDisplay) {
+    function TagLoader(pluginApi, multiSelectComponent, hiddenElm, tagDisplay) {
+
+        this.pluginApi = pluginApi;
 
         /**
          * Holds a corpus name for which this object is configured.
          */
-        this.corpusName = corpusName;
+        this.corpusName = pluginApi.conf('corpname');
 
         /**
          *
@@ -437,7 +439,8 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param {Function} [errorCallback]
      */
     TagLoader.prototype.loadInitialVariants = function (box, callback, errorCallback) {
-        var url = 'ajax_get_tag_variants?corpname=' + this.corpusName,
+        var url = this.pluginApi.conf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
+                    + this.corpusName,
             params = {},
             self = this;
 
@@ -477,7 +480,8 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param callback
      */
     TagLoader.prototype.loadPatternVariants = function (pattern, callback) {
-        var url = 'ajax_get_tag_variants?corpname=' + this.corpusName + '&pattern=' + pattern,
+        var url = this.pluginApi.conf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
+                    + this.corpusName + '&pattern=' + pattern,
             params = {};
 
         $.ajax({
@@ -523,7 +527,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * A helper method that does whole 'create a tag loader for me' job.
      *
      * @param {TooltipBox} box
-     * @param {string} corpusName identifier of a corpus to be used along with this tag loader
+     * @param {PluginApi} pluginApi identifier of a corpus to be used along with this tag loader
      * @param multiSelectComponent
      * @param opt a dictionary with following keys:
      *     resetButton    : ID or element itself for the "reset" button
@@ -534,7 +538,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      *     widgetElement : HTMLElement where the widget is rendered
      * @return {TagLoader}
      */
-    lib.attachTagLoader = function (box, corpusName, multiSelectComponent, opt) {
+    lib.attachTagLoader = function (box, pluginApi, multiSelectComponent, opt) {
         var tagLoader,
             hiddenElm,
             tagDisplay,
@@ -558,7 +562,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         hiddenElm = $(opt.hiddenElm).get(0);
         tagDisplay = $(opt.tagDisplay).get(0);
 
-        tagLoader = new TagLoader(corpusName, multiSelectComponent, hiddenElm, tagDisplay);
+        tagLoader = new TagLoader(pluginApi, multiSelectComponent, hiddenElm, tagDisplay);
 
         $(tagLoader.tagDisplay).attr('class', 'tag-display-box');
         $(tagLoader.tagDisplay).empty().append('.*');
@@ -593,7 +597,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
     };
 
     /**
-     * @param corpusName {string}
+     * @param {layoutModel.PLuginApi} pluginApi
      * @param triggerElement
      * @param opt {Object}
      * @param opt.inputElement - text input element to be enriched by this function
@@ -605,8 +609,9 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param multiSelectOpts {Object}
      * @param {function} errorCallback
      */
-    lib.bindTextInputHelper = function (corpusName, triggerElement, opt, multiSelectOpts, errorCallback) {
-        var prop;
+    lib.bindTextInputHelper = function (pluginApi, triggerElement, opt, multiSelectOpts, errorCallback) {
+        var prop,
+            corpname = pluginApi.conf('corpname');
 
         for (prop in opt) {
             if (opt.hasOwnProperty(prop)
@@ -671,7 +676,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
                     }
                 }
 
-                lib.attachTagLoader(box, corpusName, msComponent, {
+                lib.attachTagLoader(box, pluginApi, msComponent, {
                     tagDisplay : $(opt.tagDisplayElement),
                     resetButton : $(opt.resetButtonElement),
                     errorCallback : errorCallback,

@@ -81,7 +81,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
                 actionCell = $('table.query-history .expand-line td'),
                 loaderImg;
 
-            prom = $.ajax('ajax_query_history?' + getAjaxParams(), {
+            prom = $.ajax(layoutModel.conf.rootPath + 'user/ajax_query_history?' + getAjaxParams(), {
                 dataType : 'json'
             }).promise();
 
