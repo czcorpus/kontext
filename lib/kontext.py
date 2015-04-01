@@ -320,6 +320,8 @@ class Kontext(Controller):
     shuffle = Parameter(0, persistent=Parameter.PERSISTENT)
     SubcorpList = Parameter([])
 
+    subcnorm = Parameter('tokens')
+
     favorite_corpora = Parameter([], persistent=True)
     keyword = Parameter([])
 
