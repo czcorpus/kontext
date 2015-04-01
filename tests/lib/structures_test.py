@@ -58,7 +58,8 @@ class FixedDictTest(unittest.TestCase):
 
         d = XDict()
         d.a = 'test'
+        d.b = 'hit'
         x = dict(d)
-        print(x)
-        self.assertEquals(x['foo'], 'foo')
-        self.assertEquals(x['bar'], 'bar')
+
+        self.assertEquals(x['a'], 'test')
+        self.assertEquals(x['b'], 'hit')
