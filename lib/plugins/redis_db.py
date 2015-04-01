@@ -105,6 +105,16 @@ class RedisDb(KeyValueStorage):
         """
         self.redis.hset(key, field, value)
 
+    def hash_del(self, key, *fields):
+        """
+        Removes one or more fields from a hash item
+
+        arguments:
+        key -- hash item access key
+        *fields -- one or more fields to be deleted
+        """
+        self.redis.hdel(key, *fields)
+
     def hash_get_all(self, key):
         """
         Returns complete hash object stored under the passed key.
