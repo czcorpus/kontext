@@ -1,0 +1,186 @@
+# Copyright (c) 2015 Institute of the Czech National Corpus
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+import unittest
+
+
+from plugins.default_user_items import create_instance
+from mocks.storage import TestingKeyValueStorage
+from plugins.abstract.user_items import CorpusItem, SubcorpusItem, AlignedCorporaItem
+from plugins.default_user_items import ItemEncoder, import_from_json
+import json
+
+
+def create_corpus_obj(name='korpus syn 2010', corpus_id='public/syn2010', canonical_id='syn2010'):
+    c = CorpusItem(item_id=None, name=name)
+    c.corpus_id = corpus_id
+    c.canonical_id = canonical_id
+    return c
+
+
+class TestCommon(unittest.TestCase):
+    def setUp(self):
+        self._db = TestingKeyValueStorage({})
+        self._plugin = create_instance({}, self._db)
+
+
+class TestCorpusItemIdReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = create_corpus_obj()
+            c.id = 'foo'
+
+
+class TestCorpusItemTypeReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = create_corpus_obj()
+            c.type = 'foo'
+
+
+class TestCorpusItemSerialization(TestCommon):
+    def runTest(self):
+        c = create_corpus_obj()
+        data = json.loads(json.dumps(c, cls=ItemEncoder))
+        self.assertEqual(data['id'], c.id)
+        self.assertEqual(data['name'], c.name)
+        self.assertEqual(data['corpus_id'], c.corpus_id)
+        self.assertEqual(data['canonical_id'], c.canonical_id)
+        self.assertEqual(data['type'], c.type)
+
+
+class TestCorpusItemDeserialization(TestCommon):
+    def runTest(self):
+        src = """{"id": "baca979503e327bd46fc6172d101e70a7f581fb5", "canonical_id": "syn2010", "name":
+                  "korpus syn 2010", "corpus_id": "public/syn2010", "type": "corpus"}"""
+        d = json.loads(src)
+        decoder = json.JSONDecoder(object_hook=import_from_json)
+        obj = decoder.decode(src)
+        self.assertEqual(obj.id, d['id'])
+        self.assertEqual(obj.type, d['type'])
+        self.assertEqual(obj.name, d['name'])
+        self.assertEqual(obj.corpus_id, d['corpus_id'])
+        self.assertEqual(obj.canonical_id, d['canonical_id'])
+        self.assertTrue(isinstance(obj, CorpusItem))
+
+
+class TestSubcorpusItemIdReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+            c.id = 'foo'
+
+
+class TestSubcorpusItemTypeReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+            c.type = 'foo'
+
+
+class TestSubcorpusItemSerialization(TestCommon):
+    def runTest(self):
+        c = SubcorpusItem(item_id=None, name='korpus syn 2010')
+        c.corpus_id = 'public/syn2010'
+        c.canonical_id = 'syn2010'
+        c.subcorpus_id = 'modern_poetry'
+        c.size = 123000
+        data = json.loads(json.dumps(c, cls=ItemEncoder))
+        self.assertEqual(data['id'], c.id)
+        self.assertEqual(data['type'], c.type)
+        self.assertEqual(data['name'], c.name)
+        self.assertEqual(data['corpus_id'], c.corpus_id)
+        self.assertEqual(data['canonical_id'], c.canonical_id)
+        self.assertEqual(data['subcorpus_id'], c.subcorpus_id)
+        self.assertEqual(data['size'], c.size)
+
+
+class TestSubcorpusItemDeserialization(TestCommon):
+    def runTest(self):
+        src = """{"name": "korpus syn 2010", "canonical_id": "syn2010", "corpus_id": "public/syn2010",
+                  "subcorpus_id": "modern_poetry", "type": "subcorpus",
+                  "id": "0704568a3cb6fb4fd412eeef2c6d59618537e2b4", "size": 123000}"""
+        d = json.loads(src)
+        decoder = json.JSONDecoder(object_hook=import_from_json)
+        obj = decoder.decode(src)
+        self.assertEqual(obj.id, d['id'])
+        self.assertEqual(obj.type, d['type'])
+        self.assertEqual(obj.name, d['name'])
+        self.assertEqual(obj.corpus_id, d['corpus_id'])
+        self.assertEqual(obj.canonical_id, d['canonical_id'])
+        self.assertEqual(obj.subcorpus_id, d['subcorpus_id'])
+        self.assertEqual(obj.size, d['size'])
+        self.assertTrue(isinstance(obj, SubcorpusItem))
+
+
+class TestAlignedCorporaItemIdReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = create_corpus_obj()
+            c.id = 'foo'
+
+
+class TestAlignedCorporaItemTypeReadOnly(TestCommon):
+    def runTest(self):
+        with self.assertRaises(AttributeError):
+            c = create_corpus_obj()
+            c.type = 'foo'
+
+
+class TestAlignmentCorporaItemSerialization(TestCommon):
+    def runTest(self):
+        a = AlignedCorporaItem(item_id=None, name='Bunch of corpora')
+        c1 = create_corpus_obj()
+        c2 = create_corpus_obj(name='BNC', corpus_id='limited/bnc', canonical_id='bnc')
+        c3 = create_corpus_obj(name='InterCorp version 7', corpus_id='limited/intercorp', canonical_id='intercorp')
+        a.corpora = [c1, c2, c3]
+        data = json.loads(json.dumps(a, cls=ItemEncoder))
+
+        self.assertEqual(data['id'], a.id)
+        self.assertEqual(data['name'], a.name)
+        self.assertEqual(data['type'], a.type)
+        self.assertEqual(len(data['corpora']), 3)
+
+        for i in range(3):
+            self.assertEqual(data['corpora'][i]['id'], a.corpora[i].id)
+            self.assertEqual(data['corpora'][i]['name'], a.corpora[i].name)
+            self.assertEqual(data['corpora'][i]['type'], a.corpora[i].type)
+            self.assertEqual(data['corpora'][i]['corpus_id'], a.corpora[i].corpus_id)
+            self.assertEqual(data['corpora'][i]['canonical_id'], a.corpora[i].canonical_id)
+
+
+class TestAlignmentCorporaItemDeserialization(TestCommon):
+    def runTest(self):
+        src = """{"corpora": [{"corpus_id": "public/syn2010", "canonical_id": "syn2010", "type": "corpus",
+                  "id": "54f79cf2064a3568c1910c208f30cff5f1238c18", "name": "korpus syn 2010"},
+                  {"corpus_id": "limited/bnc", "canonical_id": "bnc", "type": "corpus",
+                  "id": "f424bd8d3890fe485448b399d170f49c3f4c0373", "name": "BNC"}, {"corpus_id": "limited/intercorp",
+                  "canonical_id": "intercorp", "type": "corpus", "id": "e6d1c336d31f345bc961f4a6bcad2f35761a63eb",
+                  "name": "InterCorp version 7"}], "type": "aligned_corpora", "name": "Bunch of corpora",
+                  "id": "221cb321617f3219a4907a389f6ff18df2bbcc23"}"""
+        data = json.loads(src)
+        decoder = json.JSONDecoder(object_hook=import_from_json)
+        obj = decoder.decode(src)
+
+        self.assertEqual(obj.id, data['id'])
+        self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.type, data['type'])
+        self.assertEqual(len(obj.corpora), 3)
+        self.assertTrue(isinstance(obj, AlignedCorporaItem))
+
+        for i in range(3):
+            self.assertEqual(obj.corpora[i].id, data['corpora'][i]['id'])
+            self.assertEqual(obj.corpora[i].name, data['corpora'][i]['name'])
+            self.assertEqual(obj.corpora[i].type, data['corpora'][i]['type'])
+            self.assertEqual(obj.corpora[i].corpus_id, data['corpora'][i]['corpus_id'])
+            self.assertEqual(obj.corpora[i].canonical_id, data['corpora'][i]['canonical_id'])
+            self.assertTrue(isinstance(obj.corpora[i], CorpusItem))

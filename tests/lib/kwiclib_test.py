@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2014 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
@@ -23,7 +22,7 @@ import kwiclib
 
 class Tokens2StrClassTest(unittest.TestCase):
 
-    def run_test(self):
+    def test_tokens2strclass(self):
         # notes: class1..class2 (2 whitespaces), 'bar  ' (trailing whitespace)
         data = ('foo', '{class1  class2}', 'bar  ', '{class3 class4}', 'last one', '{class5}')
         output = kwiclib.tokens2strclass(data)
