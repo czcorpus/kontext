@@ -579,6 +579,9 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
         #end for
     </select>
+    <div class="starred">
+        <img src="$files_path/img/starred_24x24_grey.png" alt="$_('starred')" />
+    </div>
     #end if ## SubcorpList
 
 #end def  ## corp_sel

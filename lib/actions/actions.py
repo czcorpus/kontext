@@ -1901,7 +1901,7 @@ class Actions(Kontext):
                 ans.append(corp)
         return ans
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', legacy=True)  # TODO
     def set_favorite_corp(self, data=''):
         data = json.loads(data)
         remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])

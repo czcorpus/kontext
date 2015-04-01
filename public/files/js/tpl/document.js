@@ -1061,6 +1061,24 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
+     *
+     */
+    lib.initStarredSwitch = function () {
+        $('#mainform .starred img').on('click', function (e) {
+            var switchElm = $(e.target);
+
+            if (!switchElm.hasClass('starred')) {
+                switchElm.attr('src', lib.conf.staticUrl + 'img/starred_24x24.png');
+                switchElm.addClass('starred');
+
+            } else {
+                $(e.target).attr('src', lib.conf.staticUrl + 'img/starred_24x24_grey.png');
+                switchElm.removeClass('starred');
+            }
+        });
+    };
+
+    /**
      * @typedef {Object} pluginApi
      * @property {function} conf
      * @property {function} ajax
@@ -1318,7 +1336,8 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
             mouseOverImages : lib.mouseOverImages(),
             enhanceMessages : lib.enhanceMessages(),
             externalHelpLinks : lib.externalHelpLinks(),
-            applicationBar : applicationBar.createInstance(lib.pluginApi())
+            applicationBar : applicationBar.createInstance(lib.pluginApi()),
+            starredSwitch : lib.initStarredSwitch()
         });
 
         // init plug-ins
