@@ -26,7 +26,7 @@ class ItemEncoder(json.JSONEncoder):
         return dict(d)
 
 
-def import_from_json(obj):
+def import_from_json(obj, recursive=False):
     """
     Provides a consistent decoding of JSON-encoded GeneralItem objects.
     If a new GeneralItem implementation occurs then this method must
@@ -48,7 +48,12 @@ def import_from_json(obj):
         ans.size = obj['size']
     elif item_type == 'aligned_corpora':
         ans = AlignedCorporaItem(obj['name'])
-        ans.corpora = obj['corpora']
+        ans.corpus_id = obj['corpus_id']
+        ans.canonical_id = obj['canonical_id']
+        if not recursive:
+            ans.corpora = obj['corpora']
+        else:
+            ans.corpora = [import_from_json(c) for c in obj['corpora']]
     else:
         raise UserItemException('Unknown/undefined item type: %s' % item_type)
     return ans
@@ -74,14 +79,20 @@ class UserItems(AbstractUserItems):
     def _mk_key(user_id):
         return 'favitems:user:%d' % user_id
 
+    def from_dict(self, data):
+        return import_from_json(data, recursive=True)
+
+    def to_json(self, obj):
+        return json.dumps(obj, cls=ItemEncoder)
+
     def get_user_items(self, user_id):
         ans = []
-        for item in self._db.hash_get_all(self._mk_key(user_id)):
+        for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
             ans.append(self.decoder.decode(item))
         return ans
 
     def add_user_item(self, user_id, item):
-        data_json = json.dumps(item, cls=ItemEncoder)
+        data_json = self.to_json(item)
         self._db.hash_set(self._mk_key(user_id), item.id, data_json)
 
     def delete_user_item(self, user_id, item_id):

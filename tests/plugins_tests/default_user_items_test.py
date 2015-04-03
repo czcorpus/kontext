@@ -137,9 +137,20 @@ class TestAlignedCorporaItemTypeReadOnly(TestCommon):
             c.type = 'foo'
 
 
+class TestAlignmentCorporaNewItemId(TestCommon):
+    def runTest(self):
+        c = AlignedCorporaItem('foo and bar')
+        c.corpus_id = 'x/corpus1'
+        c.corpora = [create_corpus_obj(name='Corpus 2', corpus_id='x/corpus2', canonical_id='corpus2'),
+                     create_corpus_obj(name='Corpus 3', corpus_id='x/corpus3', canonical_id='corpus3')]
+        self.assertEqual(c.id, 'x/corpus1+x/corpus2+x/corpus3')
+
+
 class TestAlignmentCorporaItemSerialization(TestCommon):
     def runTest(self):
         a = AlignedCorporaItem(name='Bunch of corpora')
+        a.corpus_id = 'public/main_corpus'
+        a.canonical_id = 'main_corpus'
         c1 = create_corpus_obj()
         c2 = create_corpus_obj(name='BNC', corpus_id='limited/bnc', canonical_id='bnc')
         c3 = create_corpus_obj(name='InterCorp version 7', corpus_id='limited/intercorp', canonical_id='intercorp')
@@ -149,6 +160,8 @@ class TestAlignmentCorporaItemSerialization(TestCommon):
         self.assertEqual(data['id'], a.id)
         self.assertEqual(data['name'], a.name)
         self.assertEqual(data['type'], a.type)
+        self.assertEqual(data['corpus_id'], a.corpus_id)
+        self.assertEqual(data['canonical_id'], a.canonical_id)
         self.assertEqual(len(data['corpora']), 3)
 
         for i in range(3):
@@ -166,14 +179,18 @@ class TestAlignmentCorporaItemDeserialization(TestCommon):
                   {"corpus_id": "limited/bnc", "canonical_id": "bnc", "type": "corpus",
                   "id": "limited/bnc", "name": "BNC"}, {"corpus_id": "limited/intercorp",
                   "canonical_id": "intercorp", "type": "corpus", "id": "limited/intercorp",
-                  "name": "InterCorp version 7"}], "type": "aligned_corpora", "name": "Bunch of corpora",
-                  "id": "public/syn2010+limited/bnc+limited/intercorp"}"""
+                  "name": "InterCorp version 7"}], "corpus_id": "limited/main_corpus",
+                  "canonical_id": "main_corpus",
+                  "type": "aligned_corpora", "name": "Main Corpus",
+                  "id": "limited/main_corpus+public/syn2010+limited/bnc+limited/intercorp"}"""
         data = json.loads(src)
         decoder = json.JSONDecoder(object_hook=import_from_json)
         obj = decoder.decode(src)
 
         self.assertEqual(obj.id, data['id'])
         self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.corpus_id, data['corpus_id'])
+        self.assertEqual(obj.canonical_id, data['canonical_id'])
         self.assertEqual(obj.type, data['type'])
         self.assertEqual(len(obj.corpora), 3)
         self.assertTrue(isinstance(obj, AlignedCorporaItem))
