@@ -31,6 +31,8 @@ declare module model {
      */
     export interface PluginApi {
         conf(key:string):any;
+        createStaticUrl(path:string):string;
+        createActionUrl(path:string):string;
         ajax(...args:any[]);
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
@@ -64,6 +66,7 @@ declare module model {
     export interface Closeable {
         close(): void;
     }
+
 }
 
 
