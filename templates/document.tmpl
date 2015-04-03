@@ -563,14 +563,24 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 </html>
 
 ## ******** Common methods definitions ******** ##
+
+#def user_item_opt($item)
+#set $selected = ($item.corpus_id == $corpname) and 'selected="selected"' or ''
+<option
+    value="$item.corpus_id"
+    title="$item.name"
+    data-item="#filter $HtmlEscape#$jsonize_user_item($item)#end filter#"
+    $selected>$item.name
+</option>
+#end def
+
+
 #def corp_sel($corplist)
 
     <input type="hidden" name="reload" />
     <select name="corpname">
       #for $c in $corplist
-        #set $selected = ($c['id'] == $corpname) and 'selected="selected"' or ''
-        <option value="$c['id']" title="$c['desc']" data-size="$c['size']" data-path="$c['path']"
-            data-featured="#if $c.get('featured', None)#1#else#0#end if#" $selected>$c['name']</option>
+        #filter None#$user_item_opt($c)#end filter#
       #end for
     </select>
     #if $SubcorpList
@@ -579,10 +589,10 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
         <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
         #end for
     </select>
+    #end if ## SubcorpList
     <div class="starred">
         <img src="$files_path/img/starred_24x24_grey.png" alt="$_('starred')" />
     </div>
-    #end if ## SubcorpList
 
 #end def  ## corp_sel
 ## ***************************************** ##
