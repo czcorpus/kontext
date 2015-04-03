@@ -33,10 +33,7 @@ def generate_item_key(obj):
     elif obj.type == 'subcorpus':
         return '%s:%s' % (obj.corpus_id, obj.subcorpus_id)
     elif obj.type == 'aligned_corpora':
-        ans = []
-        for corp in obj.corpora:
-            ans.append(generate_item_key(corp))
-        return '+'.join(ans)
+        return '+'.join([obj.corpus_id] + [generate_item_key(corp) for corp in obj.corpora])
 
 
 class GeneralItem(object):
@@ -76,6 +73,7 @@ class CorpusItem(GeneralItem):
         super(CorpusItem, self).__init__(name)
         self.corpus_id = None
         self.canonical_id = None
+        self.size = None
 
     def generate_id(self):
         return generate_item_key(self)
@@ -83,6 +81,9 @@ class CorpusItem(GeneralItem):
     @property
     def type(self):
         return 'corpus'
+
+    def __repr__(self):
+        return 'CorpusItem(id: %s)' % (self.id,)
 
 
 class SubcorpusItem(CorpusItem):
@@ -92,7 +93,9 @@ class SubcorpusItem(CorpusItem):
     def __init__(self, name):
         super(SubcorpusItem, self).__init__(name)
         self.subcorpus_id = None
-        self.size = None
+
+    def __repr__(self):
+        return 'SubcorpusItem(id: %s)' % (self.id,)
 
     def generate_id(self):
         return generate_item_key(self)
@@ -102,7 +105,7 @@ class SubcorpusItem(CorpusItem):
         return 'subcorpus'
 
 
-class AlignedCorporaItem(GeneralItem):
+class AlignedCorporaItem(CorpusItem):
     """
     A reference to an n-tuple of aligned corpora
     (eg. (Intercorp_en, intercorp_cs, Intercorp_be).
@@ -110,6 +113,9 @@ class AlignedCorporaItem(GeneralItem):
     def __init__(self, name):
         super(AlignedCorporaItem, self).__init__(name)
         self.corpora = []
+
+    def __repr__(self):
+        return 'AlignedCorporaItem(id: %s)' % (self.id,)
 
     def generate_id(self):
         return generate_item_key(self)
@@ -123,6 +129,22 @@ class AbstractUserItems(object):
     """
     A plug-in interface
     """
+
+    def from_dict(self, data):
+        """
+        According to the provided data it returns a proper
+        implementation of GeneralItem.
+
+        arguments:
+        data -- a dict
+        """
+        raise NotImplementedError()
+
+    def to_json(self, obj):
+        """
+        Exports a GeneralItem implementation to JSON
+        """
+        raise NotImplementedError()
 
     def get_user_items(self, user_id):
         """
