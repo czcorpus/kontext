@@ -39,9 +39,14 @@ enum Visibility {
  */
 export interface CorplistItem {
     name: string;
+    type: string;
+    corpus_id: string;
+    canonical_id: string;
+    subcorpus_id: string;
+    corpora: Array<string>;
     description: string;
-    value: string;
     featured: number;
+    user_item: boolean;
     size: any;
 }
 
@@ -103,13 +108,8 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
         ans:Array<CorplistItem> = [];
 
     elm.find('option').each(function () {
-        ans.push({
-            name: $(this).text(),
-            description: $(this).attr('title'),
-            value: $(this).val(),
-            featured: $(this).data('featured'),
-            size: $(this).data('size')
-        });
+        var itemData = $(this).data('item');
+        ans.push(itemData);
     });
     return ans;
 }
@@ -232,7 +232,6 @@ export class WidgetMenu {
         });
 
         $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
-            console.log(e.keyCode);
             if (self.currentBoxId === WidgetMenu.MY_ITEMS_WIDGET_ID
                     && e.keyCode == WidgetMenu.TAB_KEY) {
                 self.setCurrent(WidgetMenu.SEARCH_WIDGET_ID);
@@ -447,6 +446,21 @@ export class Favorites implements WidgetTab {
         $(this.widgetWrapper).append(this.wrapper);
     }
 
+    generateItemUrl(itemData):string {
+        var rootPath = this.pluginApi.createActionUrl('/first_form'),
+            params = ['corpname=' + itemData.corpus_id];
+
+        if (itemData.type === 'subcorpus') {
+            params.push('usesubcorp=' + itemData.subcorpus_id);
+        }
+        if (itemData.type === 'aligned_corpora') {
+            for (var i = 0; i < itemData.corpora.length; i++) {
+                params.push('sel_aligned=' + itemData.corpora[i].corpus_id);
+            }
+        }
+        return rootPath + '?' + params.join('&');
+    }
+
     /**
      *
      */
@@ -455,10 +469,11 @@ export class Favorites implements WidgetTab {
             self = this;
 
         $.each(this.data, function (i, item) {
-            var isFeatured = item.featured;
+            var isFeatured = false; //item.featured; TODO
             jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
                 + ' title="' + item.description + '"'
-                + ' href="/first_form?corpname=' + item.value + '" data-id="' + item.value + '">' + item.name + '</a></td>'
+                + ' href="' + self.generateItemUrl(item)
+                + '" data-id="' + item.corpus_id + '">' + item.name + '</a></td>'
                 + '<td class="num">~' + item.size + '</td></tr>'); // TODO translate
         });
 
@@ -479,6 +494,99 @@ export class Favorites implements WidgetTab {
         $(this.wrapper).hide();
     }
 }
+
+
+export class StarComponent {
+
+    pageModel:model.PluginApi;
+
+    constructor(pageModel:model.PluginApi) {
+        this.pageModel = pageModel;
+    }
+
+    setFavorite(flag) {
+        var self = this,
+            prom,
+            item;
+
+        item = this.fetchItemData(flag);
+        prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
+            {method: 'POST', data: item, dataType: 'json'});
+
+        prom.then(
+            function (data) {
+                console.log(data);
+                self.pageModel.showMessage('info', 'item added to favorites');
+            },
+            function (err) {
+                console.log('error', err);
+                self.pageModel.showMessage('error', 'failed to add the item to favorites');
+            }
+        );
+    }
+
+    fetchItemData(userItemFlag:boolean):CorplistItem {
+        var corpName:string,
+            subcorpName:string = null,
+            alignedCorpora:Array<string> = [],
+            item:CorplistItem;
+
+        corpName = this.pageModel.conf('corpname');
+        if ($('#subcorp-selector').length > 0) {
+            subcorpName = $('#subcorp-selector').val();
+        }
+        $('fieldset.parallel .parallel-corp-lang:visible').each(function () {
+            alignedCorpora.push($(this).find('input[type="hidden"][name="sel_aligned"]').val());
+        });
+
+        item = {
+            name: corpName,
+            type: 'corpus', // TODO
+            corpus_id: corpName,
+            canonical_id: corpName, // TODO canonical
+            subcorpus_id: subcorpName ? subcorpName : null,
+            corpora: null,
+            description: null, // TODO remove
+            featured: null, // TODO ???
+            size: null,
+            user_item: userItemFlag
+        };
+
+        if (alignedCorpora.length > 0) {
+            item.name = item.name + '+' + alignedCorpora.join('+');
+            item.type = 'aligned_corpora';
+            item.corpora = alignedCorpora;
+
+        } else if (subcorpName) {
+            item.name = item.name + ':' + item.subcorpus_id;
+            item.type = 'subcorpus';
+        }
+        return item;
+    }
+
+    /**
+     *
+     */
+    init():void {
+        var self = this;
+
+        $('#mainform .starred img').on('click', function (e) {
+            var switchElm = $(e.target);
+
+            if (!switchElm.hasClass('starred')) {
+                switchElm.attr('src', self.pageModel.createStaticUrl('img/starred_24x24.png'));
+                switchElm.addClass('starred');
+                self.setFavorite(true);
+
+            } else {
+                $(e.target).attr('src', self.pageModel.createStaticUrl('img/starred_24x24_grey.png'));
+                switchElm.removeClass('starred');
+                self.setFavorite(false);
+            }
+        });
+    }
+}
+
 
 /**
  *
@@ -526,8 +634,7 @@ export class Corplist {
         $(this.hiddenInput).val(corpusId);
         this.setButtonLabel(corpusName);
 
-        if (this.options.itemClickAction) {        
-            console.log('calling with this as ', this);
+        if (this.options.itemClickAction) {
             this.options.itemClickAction.call(this, corpusId);
 
         } else {            
@@ -601,7 +708,6 @@ export class Corplist {
             this.mainMenu.getCurrent().show();
             if (typeof this.onShow === 'function') {
                 this.onShow.call(this, this);
-                console.log($(window.document).on);
             }
         }
     }
@@ -696,4 +802,13 @@ export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options
     corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
+}
+
+
+export function createStarComponent(pageModel:model.PluginApi):StarComponent {
+    var component:StarComponent;
+
+    component = new StarComponent(pageModel);
+    component.init();
+    return component;
 }

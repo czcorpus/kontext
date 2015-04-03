@@ -153,13 +153,38 @@ class User(Kontext):
         }
 
 
-    @exposed(return_type='json')  # TODO
-    def set_favorite_corp(self, request):
-        data = json.loads(request.form['data'])
-        remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
-        add_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is True])
-        self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
-        self._save_options(optlist=['favorite_corpora'])
+    @exposed(return_type='json')
+    def set_favorite_item(self, request):
+        """
+
+        """
+        aligned_corpnames = request.form.getlist('corpora[]')
+        aligned_data = []
+        for ac in aligned_corpnames:
+            aligned_data.append({
+                'name': ac,  # TODO fetch real name??
+                'corpus_id': ac,
+                'canonical_id': self._canonical_corpname(ac),
+                'type': 'corpus'
+            })
+
+
+        data = {
+            'corpora': aligned_data,
+            'canonical_id': request.form['canonical_id'],
+            'corpus_id': request.form['corpus_id'],
+            'subcorpus_id': request.form['subcorpus_id'],
+            'name': request.form['name'],
+            'size': request.form['size'],
+            'type': request.form['type']
+        }
+        item = plugins.user_items.from_dict(data)
+        # TODO
+        #remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
+        #add_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is True])
+        #self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
+        #self._save_options(optlist=['favorite_corpora'])
+        plugins.user_items.add_user_item(self._session_get('user', 'id'), item)
         return {}
 
     @exposed(return_type='json')

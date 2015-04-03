@@ -32,6 +32,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
     lib.maxEncodedParamsLength = 1500;
     lib.corplistComponent = null;
+    lib.starComponent = null;
     lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
 
     /**
@@ -146,6 +147,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             layoutModel.pluginApi(),
             {formTarget: 'first_form'}
         );
+
+        lib.starComponent = corplistComponent.createStarComponent(layoutModel.pluginApi());
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);

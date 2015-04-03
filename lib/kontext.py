@@ -1072,6 +1072,7 @@ class Kontext(Controller):
         # util functions
         result['format_number'] = partial(format_number)
         result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
+        result['jsonize_user_item'] = plugins.user_items.to_json
 
         result['error_report_url'] = self._get_error_reporting_url()
 
