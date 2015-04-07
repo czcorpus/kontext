@@ -158,6 +158,7 @@ define('conf', [], function () {
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.corporaLabels = ${corpora_labels};
     conf.uiStateTTL = ${ui_state_ttl};
+    conf.historyMaxQuerySize = ${history_max_query_size};
 
     conf.messages = {};
     #if $_anonymous

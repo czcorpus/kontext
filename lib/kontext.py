@@ -1071,6 +1071,8 @@ class Kontext(Controller):
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
 
+        result['history_max_query_size'] = settings.get_int('global', 'history_max_query_size')
+
         # util functions
         result['format_number'] = partial(format_number)
         result['join_params'] = join_params

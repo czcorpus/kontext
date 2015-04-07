@@ -422,7 +422,8 @@ export class QueryHistory {
 
             link = $(window.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(splitString(self.pluginApi.shortenText(v.query, 250), self.splitQueryIfSize));
+            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.conf('historyMaxQuerySize')),
+                self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
