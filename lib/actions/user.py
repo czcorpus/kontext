@@ -10,14 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import json
-
 from controller import exposed, UserActionException
 from kontext import Kontext
 from kontext import MainMenu
 from translation import ugettext as _
 import plugins
 import settings
+from templating.filters import Shortener
 
 
 class User(Kontext):
