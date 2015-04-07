@@ -38,6 +38,8 @@ class Actions(Kontext):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
 
+    WIDECTX_ATTRS = ('usesubcorp', 'attrs', 'attr_allpos', 'ctxattrs', 'structs', 'refs')
+
     cattr = Parameter('word')
     csortfn = Parameter('d')
     cbgrfns = Parameter(['m', 't', 'td'])
@@ -223,11 +225,7 @@ class Actions(Kontext):
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
                                                                                                      self.rightctx))
-
-        # version 0.7 contains a better solution of these hardcoded parameters
-        widectx_attrs = ('corpname', 'usesubcorp', 'maincorp', 'viewmode', 'pagesize', 'align', 'attrs',
-                         'attr_allpos', 'ctxattrs', 'structs', 'refs')
-        out['widectx_globals'] = self.urlencode(self._get_attrs(widectx_attrs,
+        out['widectx_globals'] = self.urlencode(self._get_attrs(self.WIDECTX_ATTRS,
                                                                 dict(structs=self._get_struct_opts())))
         self._store_conc_results(out)
         return out
@@ -1254,6 +1252,9 @@ class Actions(Kontext):
         data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
         data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < int(data['maxdetail'])
         data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
+
+        data['widectx_globals'] = self.urlencode(self._get_attrs(self.WIDECTX_ATTRS,
+                                                 dict(structs=self._get_struct_opts())))
         return data
 
     @exposed(access_level=0, return_type='json')

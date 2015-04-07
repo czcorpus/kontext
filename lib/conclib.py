@@ -573,10 +573,10 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
     refbase = 'pos=%i;' % pos
     if hitlen != 1:
         refbase += 'hitlen=%i;' % hitlen
-    data['leftlink'] = refbase + ('detail_left_ctx=%i;detail_right_ctx=%i'
+    data['leftlink'] = refbase + ('detail_left_ctx=%i&detail_right_ctx=%i'
                                   % (detail_left_ctx + detail_ctx_incr,
                                      detail_right_ctx))
-    data['rightlink'] = refbase + ('detail_left_ctx=%i;detail_right_ctx=%i'
+    data['rightlink'] = refbase + ('detail_left_ctx=%i&detail_right_ctx=%i'
                                    % (detail_left_ctx,
                                       detail_right_ctx + detail_ctx_incr))
     data['righttoleft'] = corp.get_conf('RIGHTTOLEFT')

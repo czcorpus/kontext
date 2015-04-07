@@ -111,12 +111,12 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td>
     <td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
-        data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&$widectx_globals">
+        data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname&$widectx_globals">
   #else
     #if not $l.Kwic
     <i class="note">$_('<--not translated-->')</i>
     #end if
-    <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&$widectx_globals">
+    <span class="no-kwic-text" data-url="widectx" data-params="pos=$l.toknum&hitlen=$l.hitlen&corpname=$longcorpname&$widectx_globals">
   #end if
   #for $k in $l.Kwic
 
