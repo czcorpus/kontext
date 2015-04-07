@@ -22,6 +22,7 @@ import json
 import urllib
 from datetime import datetime
 import time
+import re
 
 from l10n import format_number
 from l10n import datetime_formatting
@@ -62,13 +63,27 @@ class HtmlEscape(Filter):
 
 
 class Shortener(Filter):
+    """
+    arguments:
+    length -- the length of a resulting string (excluding suffix)
+    suffix -- a custom saffix to be used (default is '...')
+    nice -- if True then words are respected (and the length is not guaranteed to be exact)
+    """
     def filter(self, val, **kw):
         length = kw['length'] if 'length' in kw else 8
         if len(val) > length:
             suff = kw['suffix'] if 'suffix' in kw else '...'
         else:
             suff = ''
-        return '%s%s' % (val[:length], suff)
+
+        if kw.get('nice', False):
+            try:
+                s = re.split(r'\s+', val[length::-1], maxsplit=1)[1][::-1]
+            except IndexError:   # the string cannot be split into two strings
+                s = val[:length]
+        else:
+            s = val[:length]
+        return '%s%s' % (s, suff)
 
 
 class Jsonize(Filter):

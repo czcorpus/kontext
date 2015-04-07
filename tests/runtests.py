@@ -36,6 +36,10 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(FixedDictTest))
 from plugins_tests import default_user_items_test
 suites.append(unittest.TestLoader().loadTestsFromModule(default_user_items_test))
 
+# ############# templating/filters
+from templating_tests.filters_test import FiltersTest
+suites.append(unittest.TestLoader().loadTestsFromTestCase(FiltersTest))
+
 if __name__ == '__main__':
     verbosity = 2  # TODO
 
