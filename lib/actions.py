@@ -55,7 +55,7 @@ class Actions(Kontext):
     wlwords = Parameter([])
     blacklist = Parameter([])
 
-    include_nonwords = Parameter(1)
+    include_nonwords = Parameter(0)
     wltype = Parameter('simple')
     wlnums = Parameter('frq')
 
@@ -1443,7 +1443,6 @@ class Actions(Kontext):
             self.wlpage = 1
             self.wlmaxitems = 1000
         wlstart = (self.wlpage - 1) * self.wlmaxitems + line_offset
-
         self.wlmaxitems = self.wlmaxitems * self.wlpage + 1  # +1 = end detection
         result = {
             'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
