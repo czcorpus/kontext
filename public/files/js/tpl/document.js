@@ -138,6 +138,24 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
+     *
+     * @param s
+     */
+    lib.shortenText = function (s, length) {
+        var ans = s.substr(0, length),
+            items;
+
+        if (ans.length > length && !/\s.|.\s/.exec(s.substr(length - 1, 2))) {
+            items = ans.split(/\s+/);
+            ans = items.slice(0, items.length - 1).join(' ');
+        }
+        if (ans.length < s.length) {
+            ans += '...';
+        }
+        return ans;
+    };
+
+    /**
      * Normalizes error representation (sometimes it is a string,
      * sometimes it is an object) into an object with well defined
      * properties.
@@ -1162,6 +1180,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
 
             formChangeCorpus : function (event) {
                 return self.formChangeCorpus(event);
+            },
+
+            shortenText : function (s, length) {
+                return self.shortenText(s, length);
             }
         };
     };

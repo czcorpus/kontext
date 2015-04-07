@@ -44,6 +44,7 @@ declare module model {
         resetToHomepage(params:any); // TODO
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
+        shortenText(s:string, length:number);
     }
 
     /**
