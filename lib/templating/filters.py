@@ -76,7 +76,7 @@ class Shortener(Filter):
         else:
             suff = ''
 
-        if kw.get('nice', False):
+        if kw.get('nice', False) and length < len(val):
             try:
                 s = re.split(r'\s+', val[length::-1], maxsplit=1)[1][::-1]
             except IndexError:   # the string cannot be split into two strings

@@ -47,3 +47,15 @@ class FiltersTest(unittest.TestCase):
         s = 'loremipsumdolorsitamet'
         length = 12
         self.assertEqual(sh.filter(s, length=length, nice=True), '%s...' % s[:length])
+
+    def test_shortener_nice_no_shortening_expected(self):
+        sh = Shortener()
+        s = 'lorem ipsum dolor sit amet'
+        length = 100
+        self.assertEqual(sh.filter(s, length=length, nice=True), s)
+
+    def test_shortener_non_nice_no_shortening_expected(self):
+        sh = Shortener()
+        s = 'lorem ipsum dolor sit amet'
+        length = 100
+        self.assertEqual(sh.filter(s, length=length, nice=False), s)
