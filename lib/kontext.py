@@ -20,6 +20,9 @@ import logging
 import inspect
 import urllib
 
+import werkzeug.urls
+from werkzeug.datastructures import MultiDict
+
 import corplib
 import conclib
 from controller import Controller, UserActionException, convert_types, Parameter
@@ -29,11 +32,10 @@ import l10n
 from l10n import format_number, corpus_get_conf, export_string
 from translation import ugettext as _
 import scheduled
-from structures import Nicedict, FixedDict
+from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
-import werkzeug.urls
-from werkzeug.datastructures import MultiDict
+from argmapping import ConcArgsMapping
 
 
 def simplify_num(v):
@@ -46,33 +48,33 @@ def simplify_num(v):
     return '%d' % (round(v / 1e2, 0) * 100,)
 
 
+def join_params(*args):
+    """
+    This is a convenience function used by HTML templates.
+    It allows joining URL parameters in various formats
+    (strings, lists of (key,value) pairs, dicts).
+
+    returns:
+    a string of the form param1=value1&param2=value2&....
+    """
+    tmp = []
+    for a in args:
+        if a is None:
+            continue
+        elif type(a) in (tuple, list, dict):
+            if type(a) is dict:
+                a = a.items()
+            tmp.extend(['%s=%s' % (k, v) for k, v in a])
+        elif type(a) in (str, unicode):
+            tmp.append(a.strip())
+        else:
+            raise TypeError('Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (type(a)))
+    return '&'.join(tmp)
+
+
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
-
-
-class ConcArgsMapping(FixedDict):
-    """
-    This class covers all the attributes representing a concordance. I.e. the application should
-    be able to restore any concordance just by using these parameters.
-
-    Please note that this list does not include the 'q' parameter which collects currently built query
-    (it has been inherited from Bonito2).
-    """
-    corpname = None
-    usesubcorp = None
-    maincorp = None
-    viewmode = None
-    pagesize = None
-    align = None
-    attrs = None
-    attr_allpos = None
-    ctxattrs = None
-    structs = None
-    refs = None
-
-    def get_attrs(self):
-        return self.__dict__.keys()
 
 
 class LegacyForm(object):
@@ -1071,7 +1073,7 @@ class Kontext(Controller):
 
         # util functions
         result['format_number'] = partial(format_number)
-        result['join_params'] = lambda *args: '&'.join([s.strip() for s in args if s.strip()])
+        result['join_params'] = join_params
         result['jsonize_user_item'] = plugins.user_items.to_json
 
         result['error_report_url'] = self._get_error_reporting_url()

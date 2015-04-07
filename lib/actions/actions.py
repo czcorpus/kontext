@@ -28,6 +28,7 @@ from kwiclib import Kwic
 import l10n
 from l10n import import_string
 from translation import ugettext as _
+from argmapping import WidectxArgsMapping
 
 
 class Actions(Kontext):
@@ -81,6 +82,14 @@ class Actions(Kontext):
         This is required as it maps the controller to request URLs
         """
         return '/'
+
+    def _import_aligned_form_param_names(self, aligned_corp):
+        ans = {}
+        for param_name in ('filfpos', 'filtpos', 'queryselector'):  # TODO where to store this stuff?
+            full_name = '%s_%s' % (param_name, aligned_corp)
+            if hasattr(self, full_name):
+                ans[param_name] = getattr(self, full_name)
+        return ans
 
     def _store_semi_persistent_attrs(self, attr_list):
         """
@@ -207,8 +216,8 @@ class Actions(Kontext):
                                                                                                      self.rightctx))
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self.urlencode(self._get_attrs(self._conc_args.get_attrs(),
-                                                                dict(structs=self._get_struct_opts())))
+        out['widectx_globals'] = self._get_attrs(WidectxArgsMapping().get_attrs(),
+                                                 dict(structs=self._get_struct_opts()))
         self._store_conc_results(out)
         return out
 
@@ -1128,11 +1137,8 @@ class Actions(Kontext):
         data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
         data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < int(data['maxdetail'])
         data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
-        return data
-
-    @exposed(access_level=0, return_type='json', legacy=True)
-    def widectx_raw(self, pos=0):
-        data = conclib.get_detail_context(self._corp(), pos)
+        data['widectx_globals'] = self._get_attrs(WidectxArgsMapping().get_attrs(),
+                                                  dict(structs=self._get_struct_opts()))
         return data
 
     @exposed(access_level=0, return_type='json', legacy=True)
