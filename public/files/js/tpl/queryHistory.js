@@ -33,8 +33,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
         $.each(data.data, function () {
             $('table.query-history .expand-line').before('<tr class="data-item">'
                 + '<td class="query">' + this.query + '</td>'
-                + '<td class="corpname">' + this.humanCorpname + '</td>'
-                + '<td class="corpname">' + this.subcorpname + '</td>'
+                + '<td class="corpname">' + this.humanCorpname + (this.subcorpname ? '+' + this.subcorpname : '') + '</td>'
                 + '<td>' + this.query_type_translated + '</td>'
                 + '<td>' + this.details + '</td>'
                 + '<td class="date">' + this.created[1] + ' <strong>' + this.created[0] + '</strong></td>'

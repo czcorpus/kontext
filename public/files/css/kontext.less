@@ -1166,9 +1166,11 @@ table#multilevel-freq-params td.level {
 }
 
 .query-history .query {
-  font-size: 12pt;
+  overflow: hidden;
+  font-size: 10pt;
   padding: 15px 20px 5px 20px;
   font-family: @monospace-font-family;
+  max-width: 40em;
 }
 
 .query-history .options {
@@ -1197,7 +1199,8 @@ table#multilevel-freq-params td.level {
 
 .query-history .link,
 .query-history .date {
-  text-align: right;
+  text-align: left;
+  min-width: 15em;
 }
 
 .query-history .selectable {
