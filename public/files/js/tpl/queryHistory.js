@@ -32,7 +32,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     function appendData(data) {
         $.each(data.data, function () {
             $('table.query-history .expand-line').before('<tr class="data-item">'
-                + '<td class="query">' + layoutModel.shortenText(this.query, 250) + '</td>'
+                + '<td class="query">' + layoutModel.shortenText(this.query, layoutModel.conf.historyMaxQuerySize) + '</td>'
                 + '<td class="corpname">' + this.humanCorpname + (this.subcorpname ? '+' + this.subcorpname : '') + '</td>'
                 + '<td>' + this.query_type_translated + '</td>'
                 + '<td>' + this.details + '</td>'
