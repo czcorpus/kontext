@@ -53,7 +53,7 @@ class Actions(Kontext):
     wlwords = Parameter([])
     blacklist = Parameter([])
 
-    include_nonwords = Parameter(1)
+    include_nonwords = Parameter(0)
     wltype = Parameter('simple')
     wlnums = Parameter('frq')
 
