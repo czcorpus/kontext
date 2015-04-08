@@ -957,6 +957,7 @@ class Kontext(Controller):
                                               ('usesubcorp', self.usesubcorp),
                                               ])
         result['citation_info'] = corp_conf_info.get('citation_info', '')
+        result['aligned_corpora'] = self._request.args.getlist('sel_aligned')
 
     def _setup_optional_plugins_js(self, result):
         """

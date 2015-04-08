@@ -91,6 +91,13 @@ class Jsonize(Filter):
         return json.dumps(val)
 
 
+class Join(Filter):
+    def filter(self, val, **kw):
+        separ = kw.get('separator', ', ')
+        mask = kw.get('mask', '%s')
+        return separ.join([mask % v for v in val])
+
+
 class URLEncode(Filter):
     def filter(self, val, **kw):
         if type(val) is unicode:
