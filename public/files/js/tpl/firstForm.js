@@ -41,7 +41,15 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      * @return returns what callback returns
      */
     function callOnParallelCorporaList(callback) {
-        var itemList = layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
+        var itemList;
+
+        if (layoutModel.conf.alignedCorpora) {
+            itemList = layoutModel.conf.alignedCorpora;
+            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+
+        } else {
+            itemList = layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
+        }
 
         if (typeof itemList !== 'object') {
             itemList = itemList.split(',');
