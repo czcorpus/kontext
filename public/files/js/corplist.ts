@@ -435,7 +435,7 @@ export class Favorites implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.data = data;
@@ -479,9 +479,11 @@ export class Favorites implements WidgetTab {
 
         jqWrapper.find('a.corplist-item').each(function() {
             $(this).on('click', function (e:Event) {
-                self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
-                e.stopPropagation();
-                e.preventDefault();
+                if (typeof self.itemClickCallback === 'function') {
+                    self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
             });
         });
     }
@@ -637,7 +639,7 @@ export class Corplist {
         if (this.options.itemClickAction) {
             this.options.itemClickAction.call(this, corpusId);
 
-        } else {            
+        } else {
             if (this.options.formTarget) {
                 $(this.parentForm).attr('action', this.options.formTarget);
             }
@@ -757,7 +759,7 @@ export class Corplist {
         this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data, this.onItemClick);
+        this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data);
         this.favoritesBox.init();
 
         // menu initialization
