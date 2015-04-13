@@ -184,6 +184,11 @@ class User(Kontext):
         #self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
         #self._save_options(optlist=['favorite_corpora'])
         plugins.user_items.add_user_item(self._session_get('user', 'id'), item)
+        return {'id': item.id}
+
+    @exposed(return_type='json')
+    def unset_favorite_item(self, request):
+        plugins.user_items.delete_user_item(self._session_get('user', 'id'), request.form['id'])
         return {}
 
     @exposed(return_type='json')
