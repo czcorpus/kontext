@@ -11,6 +11,7 @@
 # GNU General Public License for more details.
 
 from structures import FixedDict
+from werkzeug.datastructures import MultiDict
 
 
 class GeneralAttrMapping(FixedDict):
@@ -26,8 +27,56 @@ class GeneralAttrMapping(FixedDict):
     Implementations are expected just to define arguments (i.e.
     no methods are needed).
     """
+
+    def __init__(self, data=None):
+        """
+        arguments:
+        data -- a werkzeug.datastructures.MultiDict compatible object
+        """
+        super(GeneralAttrMapping, self).__init__()
+        if data is not None:
+            for k in self.get_attrs():
+                if k in data:
+                    setattr(self, k, data[k])
+            self._data = data
+        else:
+            self._data = data if data is not None else MultiDict()
+
     def get_attrs(self):
         return self.__dict__.keys()
+
+    def getlist(self, item):
+        """
+        This function makes the class compatible with Werkzeug's 'request.args'
+        and 'request.form' objects
+        """
+        return self._data.getlist(item)
+
+    def to_dict(self, multivals=()):
+        """
+        Exports data into a dictionary. By default, all the values are scalar
+        even if respective MultiDict contains multiple values per the key.
+        To export a value as a list, the respective key must be specified
+        explicitly via 'multivals' parameter.
+        E.g.: if the original MultiDict is: [('foo', 'bar'), ('foo', 'baz'), ('name', 'jane')]
+        then:
+          to_dict() produces: {'foo': 'bar', 'name': 'jane'}.
+          to_dict(multivals=('foo',)) produces: {'foo': ['bar', 'baz'], 'name': 'jane'}
+
+        arguments:
+        multivals -- a list/tuple of keys that will have list-like values (even if there will
+                     be one or no respective value)
+
+        returns:
+        a dictionary
+        """
+        ans = {}
+        for k in self.get_attrs():
+            if k not in multivals:
+                ans[k] = getattr(self, k)
+            else:
+                ans[k] = self.getlist(k)
+        return ans
 
 
 class ConcArgsMapping(GeneralAttrMapping):
