@@ -66,7 +66,6 @@ class GeneralAttrMapping(FixedDict):
         arguments:
         multivals -- a list/tuple of keys that will have list-like values (even if there will
                      be one or no respective value)
-
         returns:
         a dictionary
         """
@@ -77,6 +76,9 @@ class GeneralAttrMapping(FixedDict):
             else:
                 ans[k] = self.getlist(k)
         return ans
+
+    def __repr__(self):
+        return self.to_dict().__repr__()
 
 
 class ConcArgsMapping(GeneralAttrMapping):
@@ -98,6 +100,7 @@ class ConcArgsMapping(GeneralAttrMapping):
     ctxattrs = None
     structs = None
     refs = None
+    sel_aligned = None
 
 
 class WidectxArgsMapping(GeneralAttrMapping):
