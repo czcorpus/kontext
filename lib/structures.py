@@ -122,9 +122,12 @@ class FixedDict(object):
     This class allows creating objects with predefined attributes
     (defined via static properties). Any attempt to set an attribute
     not present as a static property raises AttributeError.
+
+    Private-like attributes (i.e. the ones starting with underscore)
+    are ignored by FixedDict.
     """
     def __setattr__(self, key, value):
-        if key not in dict(inspect.getmembers(self.__class__)):
+        if key[0] != '_' and key not in dict(inspect.getmembers(self.__class__)):
             raise AttributeError('No such attribute: %s' % key)
         else:
             self.__dict__[key] = value
