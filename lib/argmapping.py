@@ -52,7 +52,7 @@ class GeneralAttrMapping(FixedDict):
         """
         return self._data.getlist(item)
 
-    def to_dict(self, multivals=()):
+    def to_dict(self, multivals=(), none_replac=None):
         """
         Exports data into a dictionary. By default, all the values are scalar
         even if respective MultiDict contains multiple values per the key.
@@ -66,13 +66,16 @@ class GeneralAttrMapping(FixedDict):
         arguments:
         multivals -- a list/tuple of keys that will have list-like values (even if there will
                      be one or no respective value)
+        none_replac -- a (primitive) value used to replace None values
+
         returns:
         a dictionary
         """
         ans = {}
         for k in self.get_attrs():
             if k not in multivals:
-                ans[k] = getattr(self, k)
+                v = getattr(self, k)
+                ans[k] = v if v is not None else none_replac
             else:
                 ans[k] = self.getlist(k)
         return ans
