@@ -38,6 +38,7 @@ enum Visibility {
  *
  */
 export interface CorplistItem {
+    id?: string;
     name: string;
     type: string;
     corpus_id: string;
@@ -497,32 +498,83 @@ export class Favorites implements WidgetTab {
     }
 }
 
+/**
+ * 
+ */
+export class StarSwitch {
 
+    triggerElm:HTMLElement;
+
+    itemId:string;
+
+    constructor(triggerElm:HTMLElement) {
+        this.triggerElm = triggerElm;
+        this.itemId = $(this.triggerElm).data('item-id');
+    }
+
+    setItemId(id:string):void {
+        this.itemId = id;
+        $(this.triggerElm).attr('data-item-id', id);
+    }
+
+    getItemId():string {
+        return this.itemId;
+    }
+}
+
+
+/**
+ *
+ */
 export class StarComponent {
 
     pageModel:model.PluginApi;
 
+    starSwitch:StarSwitch;
+
     constructor(pageModel:model.PluginApi) {
         this.pageModel = pageModel;
+        this.starSwitch = new StarSwitch($('#mainform div.starred img').get(0));
     }
 
     setFavorite(flag) {
         var self = this,
-            prom,
-            item;
+            prom:JQueryXHR,
+            newItem:CorplistItem,
+            message:string,
+            postDispatch:(data:any)=>void;
 
-        item = this.fetchItemData(flag);
-        prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
-            {method: 'POST', data: item, dataType: 'json'});
+
+        if (flag === true) {
+            newItem = this.fetchItemData(flag);
+            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
+                {method: 'POST', data: newItem, dataType: 'json'});
+            message = self.pageModel.translate('item added to favorites');
+            postDispatch = function (data) {
+                self.starSwitch.setItemId(data.id);
+            };
+
+        } else {
+            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/unset_favorite_item',
+                {method: 'POST', data: {id: self.starSwitch.getItemId()}, dataType: 'json'});
+            message = self.pageModel.translate('item removed from favorites');
+            postDispatch = function (data) {
+                self.starSwitch.setItemId(null);
+            };
+        }
 
         prom.then(
             function (data) {
-                console.log(data);
-                self.pageModel.showMessage('info', 'item added to favorites');
+                if (!data.error) {
+                    self.pageModel.showMessage('info', message);
+                    postDispatch(data);
+
+                } else {
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
+                }
             },
             function (err) {
-                console.log('error', err);
-                self.pageModel.showMessage('error', 'failed to add the item to favorites');
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
             }
         );
     }
@@ -531,7 +583,8 @@ export class StarComponent {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
-            item:CorplistItem;
+            item:CorplistItem,
+            self = this;
 
         corpName = this.pageModel.conf('corpname');
         if ($('#subcorp-selector').length > 0) {
@@ -542,6 +595,7 @@ export class StarComponent {
         });
 
         item = {
+            id: self.starSwitch.getItemId(),
             name: corpName,
             type: 'corpus', // TODO
             corpus_id: corpName,
