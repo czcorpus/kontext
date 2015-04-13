@@ -36,6 +36,18 @@ def generate_item_key(obj):
         return '+'.join([obj.corpus_id] + [generate_item_key(corp) for corp in obj.corpora])
 
 
+def infer_item_key(corpname, usesubcorp, aligned_corpora):
+    if corpname:
+        if usesubcorp:
+            return '%s:%s' % (corpname, usesubcorp)
+        elif aligned_corpora:
+            return '+'.join([corpname] + [infer_item_key(corp, None, None) for corp in aligned_corpora])
+        else:
+            return corpname
+    else:
+        return None
+
+
 class GeneralItem(object):
     """
     General favorite/promoted/whatever item (corpus, subcorpus,...).
@@ -175,5 +187,25 @@ class AbstractUserItems(object):
         arguments:
         user_id -- a databse ID of a user
         item_id -- an ID of GeneralItem instance
+        """
+        raise NotImplementedError()
+
+    def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
+        """
+        Infers a user_item key (~ id) from provided parameters
+        (e.g. if usesubcorp is empty and so is aligned_corpora we know
+        for sure that the unknown item is 'corpus' and the respective
+        key will consist only from corpname.
+
+        This is used to extract information about currently used (sub)corpus/aligned
+        corpus.
+
+        arguments:
+        corpname -- a canonical corpus name
+        usesubcorp -- a subcorpus name
+        aligned_corpora -- a list of canonical corpora names
+
+        returns:
+        a string identifier of guessed object type
         """
         raise NotImplementedError()

@@ -13,6 +13,7 @@
 import json
 
 from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
+from abstract.user_items import infer_item_key
 
 
 class ItemEncoder(json.JSONEncoder):
@@ -97,6 +98,9 @@ class UserItems(AbstractUserItems):
 
     def delete_user_item(self, user_id, item_id):
         self._db.hash_del(self._mk_key(user_id), item_id)
+
+    def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
+        return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
 
 def create_instance(settings, db):
