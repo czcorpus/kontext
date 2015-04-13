@@ -18,7 +18,7 @@ import sys
 import re
 
 from kontext import Kontext, ConcError, MainMenu
-from controller import UserActionException, exposed, Parameter
+from controller import UserActionException, exposed
 import settings
 import conclib
 import corplib
@@ -28,7 +28,7 @@ from kwiclib import Kwic
 import l10n
 from l10n import import_string
 from translation import ugettext as _
-from argmapping import WidectxArgsMapping
+from argmapping import WidectxArgsMapping, ConcArgsMapping, Parameter
 
 
 class Actions(Kontext):
@@ -221,7 +221,7 @@ class Actions(Kontext):
         self._store_conc_results(out)
         return out
 
-    @exposed(vars=('TextTypeSel',))
+    @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping,))
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)

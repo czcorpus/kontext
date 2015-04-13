@@ -578,12 +578,16 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #end def
 
 
-#def corp_sel($corplist)
+#def corp_sel($corplist, $curr_key)
 
     <input type="hidden" name="reload" />
+    #set $is_fav = False
     <select name="corpname">
       #for $c in $corplist
         #filter None#$user_item_opt($c)#end filter#
+        #if $c.id == $curr_key
+          #set $is_fav = True
+        #end if
       #end for
     </select>
     #if $SubcorpList
@@ -594,7 +598,11 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
     </select>
     #end if ## SubcorpList
     <div class="starred">
-        <img src="$files_path/img/starred_24x24_grey.png" alt="$_('starred')" />
+        #if $is_fav:
+          <img class="starred-object" src="$files_path/img/starred_24x24.png" alt="$_('starred')" />
+        #else
+          <img src="$files_path/img/starred_24x24_grey.png" alt="$_('not starred starred')" />
+        #end if
     </div>
 
 #end def  ## corp_sel
@@ -602,6 +610,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
 #def corp_sel_node
     ## Select corpus name
     #set $corplist = $CorplistFn()
+
     #set $corplist_size = $min($len($corplist), 20)
     #filter None
     <tbody>
@@ -609,7 +618,7 @@ require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None
-            $corp_sel($corplist)
+            $corp_sel($corplist, $curr_corpora_fav_key)
             #end filter
             </td>
         </tr>
