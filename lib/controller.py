@@ -34,6 +34,7 @@ import plugins
 import settings
 from plugins.abstract.auth import AuthException
 from translation import ugettext as _
+from argmapping import Parameter
 
 
 def replace_dot_error_handler(err):
@@ -169,48 +170,6 @@ class NotFoundException(UserActionException):
     """
     def __init__(self, message):
         super(NotFoundException, self).__init__(message, 404)
-
-
-class Parameter(object):
-    """
-    Setting an object of this type as a static property
-    of Controller causes Controller to create an object
-    property with wrapped value. This solves the attribute
-    mess in the original Bonito code.
-
-    arguments:
-    value -- a default value of the parameter (defines both value and type)
-    persistent -- bool value specifying whether we should save the value to user's settings
-    """
-
-    NON_PERSISTENT = 0b0000  # not stored at all
-    PERSISTENT = 0b0001  # stored in user's settings (and not elsewhere)
-    SEMI_PERSISTENT = 0b0010  # stored in user's session (and not elsewhere)
-
-    def __init__(self, value, persistent=NON_PERSISTENT):
-        """
-        arguments:
-        value -- wrapped value (primitive types, empty dict, empty list, tuple)
-        """
-        self.value = value
-        self.persistent = persistent
-
-    def unwrap(self):
-        if type(self.value) is list:
-            ans = self.value[:]
-        elif self.value == {}:
-            ans = {}
-        elif type(self.value) is dict:
-            raise TypeError('Cannot define static property as a non-empty dictionary: %s' % (self.value, ))
-        else:
-            ans = self.value
-        return ans
-
-    def is_array(self):
-        return type(self.value) is tuple or type(self.value) is list
-
-    def meets_persistence(self, p_level):
-        return self.persistent & p_level == p_level
 
 
 class Controller(object):

@@ -25,7 +25,7 @@ from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, UserActionException, convert_types, Parameter
+from controller import Controller, UserActionException, convert_types
 import plugins
 import settings
 import l10n
@@ -35,7 +35,7 @@ import scheduled
 from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
-from argmapping import ConcArgsMapping
+from argmapping import ConcArgsMapping, Parameter
 
 
 def simplify_num(v):
@@ -342,12 +342,49 @@ class Kontext(Controller):
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
-        self._conc_args = ConcArgsMapping()
+        self._args_mappings = {}
         self._favorite_items = []
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
         self._prev_q_data = None  # data of the previous operation are stored here
+
+    def get_args_mapping(self, clazz):
+        """
+        Returns an instance of a respective argsmapping.GeneralAttrMapping instance
+        along with initialized values (if the currently processed action method has
+        such mapping registered via @exposed decorator) or without such values in
+        case no such mapping is currently active (i.e. it is can be still used
+        e.g. to get parameter names of the mapping).
+
+        This method (and objects it returns) serves as a replacment for legacy
+        action method's approach where all the arguments were mapped to self.
+        """
+        if clazz in self._args_mappings:
+            return self._args_mappings[clazz]
+        else:
+            return clazz()
+
+    def _export_mapped_args(self):
+        """
+        This method exports currently registered argument mappings (see get_args_mapping())
+        into a dictionary. Please note that internal dictionary is always MultiDict dictionary
+        (i.e. a value is always a list) but this method exports only the first respective value.
+
+        If you want to export list values (e.g. in case the URL contains repeated parameter) you
+        can always export this manually within an action method
+        using:
+
+            self.get_args_mapping(ArgMappingClass).to_dict(multivals=(param1, ..., paramN))
+
+        where param1,...,paramN are keys of values you want to have as lists.
+
+        The automatic mapping is exported in _pre_dispatch (i.e. before an action method is invoked).
+        """
+        ans = {}
+        for v in self._args_mappings.values():
+            ans.update(v.to_dict(none_replac=''))
+        return ans
 
     def _log_request(self, user_settings, action_name, proc_time=None):
         """
@@ -555,7 +592,7 @@ class Kontext(Controller):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(self._conc_args.get_attrs())
+        args = self._get_attrs(self.get_args_mapping(ConcArgsMapping).get_attrs())
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -691,6 +728,8 @@ class Kontext(Controller):
                                     environ=self.environ, fp=self.environ['wsgi.input'])
         else:
             form = LegacyForm(self._request.form, self._request.args)
+            for arg_mapping in action_metadata.get('argmappings', []):
+                self._args_mappings[arg_mapping] = arg_mapping(self._request.args)  # TODO what about forms?
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
@@ -916,7 +955,6 @@ class Kontext(Controller):
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
-        result['CorplistFn'] = self._load_fav_items
         mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
         corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
 
@@ -1021,7 +1059,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
-        global_var_val = self._get_attrs(self._conc_args.get_attrs())
+        global_var_val = self._get_attrs(self.get_args_mapping(ConcArgsMapping).get_attrs())
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
@@ -1064,6 +1102,17 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
+        result['CorplistFn'] = self._load_fav_items
+        if action_metadata.get('legacy', False):
+            result['curr_corpora_fav_key'] = plugins.user_items.infer_item_key(self.corpname, self.usesubcorp,
+                                                                               self.sel_aligned)
+        else:
+            # new-style action methods do not use self.* arguments
+            result.update(self._export_mapped_args())
+            conc_args = self.get_args_mapping(ConcArgsMapping)
+            result['curr_corpora_fav_key'] = plugins.user_items.infer_item_key(conc_args.corpname,
+                                                                               conc_args.usesubcorp,
+                                                                               conc_args.getlist('sel_aligned'))
         result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).get('metadata', {})
 
         # avalilable languages
