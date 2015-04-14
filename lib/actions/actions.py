@@ -216,7 +216,7 @@ class Actions(Kontext):
                                                                                                      self.rightctx))
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self._get_attrs(WidectxArgsMapping().get_attrs(),
+        out['widectx_globals'] = self._get_attrs(self.get_args_mapping_keys(WidectxArgsMapping),
                                                  dict(structs=self._get_struct_opts()))
         self._store_conc_results(out)
         return out
@@ -1137,7 +1137,7 @@ class Actions(Kontext):
         data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
         data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < int(data['maxdetail'])
         data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
-        data['widectx_globals'] = self._get_attrs(WidectxArgsMapping().get_attrs(),
+        data['widectx_globals'] = self._get_attrs(self.get_args_mapping_keys(WidectxArgsMapping),
                                                   dict(structs=self._get_struct_opts()))
         return data
 

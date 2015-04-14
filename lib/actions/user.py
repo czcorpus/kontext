@@ -17,6 +17,7 @@ from translation import ugettext as _
 import plugins
 import settings
 from templating.filters import Shortener
+from argmapping import ConcArgsMapping
 
 
 class User(Kontext):
@@ -152,11 +153,12 @@ class User(Kontext):
         }
 
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', argmappings=(ConcArgsMapping,))
     def set_favorite_item(self, request):
         """
 
         """
+        main_corp = self.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])
         aligned_corpnames = request.form.getlist('corpora[]')
         aligned_data = []
         for ac in aligned_corpnames:
