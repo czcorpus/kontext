@@ -351,19 +351,34 @@ class Kontext(Controller):
 
     def get_args_mapping(self, clazz):
         """
-        Returns an instance of a respective argsmapping.GeneralAttrMapping instance
-        along with initialized values (if the currently processed action method has
-        such mapping registered via @exposed decorator) or without such values in
-        case no such mapping is currently active (i.e. it is can be still used
-        e.g. to get parameter names of the mapping).
+        If currently processed action function/method registers 'clazz' argument
+        mapper then this function returns an instance of that mapper along with initialized
+        values (as obtained from request). In case the current action has not the clazz
+        registered, None is returned.
 
-        This method (and objects it returns) serves as a replacment for legacy
+        This method (and objects it returns) serves as a replacement for legacy
         action method's approach where all the arguments were mapped to self.
+
+        returns:
+        an implementation of argsmapping.GeneralAttrMapping or None if clazz is not registered
         """
         if clazz in self._args_mappings:
             return self._args_mappings[clazz]
         else:
             return clazz()
+
+    def arg_args_mapping_keys(self, clazz):
+        """
+        Returns a list of parameter names defined by 'clazz' argument mapping.
+        Please note that it is independent on whether the current action registers
+        'clazz' or not (i.e. a list of keys is returned for any existing argument mapping
+        during any action dispatching).
+        """
+        ans = self.get_args_mapping(clazz)
+        if ans is not None:
+            return ans.get_names()
+        else:
+            return clazz().get_names()
 
     def _export_mapped_args(self):
         """
@@ -592,7 +607,7 @@ class Kontext(Controller):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(self.get_args_mapping(ConcArgsMapping).get_attrs())
+        args = self._get_attrs(self.arg_args_mapping_keys(ConcArgsMapping))
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -679,8 +694,7 @@ class Kontext(Controller):
                     elif param_types[key].is_array() and not type(val) is list:
                         # A Parameter object is expected to be a list but
                         # web framework returns a scalar value
-                        val = [val]
-                val = self.recode_input(val)
+                        val =dcode_input(val)
                 named_args[key] = val
         na = named_args.copy()
 
@@ -693,6 +707,10 @@ class Kontext(Controller):
         allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'id'))
         if self._requires_corpus_access(path[0]):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
+            if not action_metadata.get('legacy', False):
+                mapping = self.get_args_mapping(ConcArgsMapping)
+                if mapping is not None:
+                    mapping.corpname = self.corpname
             if fallback_url:
                 path = [Controller.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
@@ -1016,6 +1034,7 @@ class Kontext(Controller):
                     if js_file:
                         result[js_file_key] = js_file
 
+    # TODO this should be able to extract vals from both new style and old style args
     def _get_attrs(self, attr_names, force_values=None):
         if force_values is None:
             force_values = {}
@@ -1059,7 +1078,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
-        global_var_val = self._get_attrs(self.get_args_mapping(ConcArgsMapping).get_attrs())
+        global_var_val = self._get_attrs(self.arg_args_mapping_keys(ConcArgsMapping))
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 

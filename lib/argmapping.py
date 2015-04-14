@@ -83,7 +83,7 @@ class GeneralAttrMapping(object):
             else:
                 setattr(self, k, v.unwrap())
 
-    def get_attrs(self):
+    def get_names(self):
         return self.__dict__.keys()
 
     def getlist(self, item):
@@ -113,7 +113,7 @@ class GeneralAttrMapping(object):
         a dictionary
         """
         ans = {}
-        for k in self.get_attrs():
+        for k in self.get_names():
             if k not in multivals:
                 v = getattr(self, k)
                 ans[k] = v if v is not None else none_replac
