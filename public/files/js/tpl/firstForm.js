@@ -156,7 +156,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             {formTarget: 'first_form'}
         );
 
-        lib.starComponent = corplistComponent.createStarComponent(layoutModel.pluginApi());
+        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent, layoutModel.pluginApi());
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);

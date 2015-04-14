@@ -519,11 +519,14 @@ export class Favorites implements WidgetTab {
  */
 export class StarSwitch {
 
+    pageModel:model.PluginApi;
+
     triggerElm:HTMLElement;
 
     itemId:string;
 
-    constructor(triggerElm:HTMLElement) {
+    constructor(pageModel:model.PluginApi, triggerElm:HTMLElement) {
+        this.pageModel = pageModel;
         this.triggerElm = triggerElm;
         this.itemId = $(this.triggerElm).data('item-id');
     }
@@ -536,6 +539,23 @@ export class StarSwitch {
     getItemId():string {
         return this.itemId;
     }
+
+    setStarState(state:boolean):void {
+        if (state === true) {
+            $(this.triggerElm)
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .addClass('starred');
+
+        } else {
+            $(this.triggerElm)
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .removeClass('starred');
+        }
+    }
+
+    isStarred():boolean {
+        return $(this.triggerElm).hasClass('starred');
+    }
 }
 
 
@@ -544,16 +564,31 @@ export class StarSwitch {
  */
 export class StarComponent {
 
+    corplistWidget:Corplist;
+
     pageModel:model.PluginApi;
 
     starSwitch:StarSwitch;
 
-    constructor(pageModel:model.PluginApi) {
+    onAlignedCorporaChange = (event:JQueryEventObject) => {
+        console.log('StarComponent detected change in aligned corpora'); // TODO
+    };
+
+    onSubcorpChange = (event:JQueryEventObject) => {
+        var newItem:CorplistItem;
+
+        this.starSwitch.setStarState(false);
+        newItem = this.fetchItemData(1);
+    };
+
+
+    constructor(corplistWidget:Corplist, pageModel:model.PluginApi) {
+        this.corplistWidget = corplistWidget;
         this.pageModel = pageModel;
-        this.starSwitch = new StarSwitch($('#mainform div.starred img').get(0));
+        this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
 
-    setFavorite(flag) {
+    setFavorite(flag:number) {
         var self = this,
             prom:JQueryXHR,
             newItem:CorplistItem,
@@ -561,7 +596,7 @@ export class StarComponent {
             postDispatch:(data:any)=>void;
 
 
-        if (flag === true) {
+        if (flag === 1) {
             newItem = this.fetchItemData(flag);
             prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
@@ -595,12 +630,57 @@ export class StarComponent {
         );
     }
 
-    fetchItemData(userItemFlag:boolean):CorplistItem {
+    /**
+     * According to a state of the current query form, this method creates
+     * a new CorplistItem instance with proper type, id, etc. I.e. it is able
+     * to infer whether the current query form operates with a single corpus,
+     * subcorpus or aligned corpora.
+     *
+     * @param corpus_id regular identifier of a corpus
+     * @param subcorpus_id name of a subcorpus
+     * @param aligned_corpora list of aligned corpora
+     * @returns an initialized CorplistItem or null if no matching state is detected
+     */
+    private inferItemCore(corpus_id:string, subcorpus_id:string, aligned_corpora:Array<string>):CorplistItem {
+        var ans:CorplistItem;
+
+        if (corpus_id) {
+            ans = {
+                id: null, name: null, type: null, corpus_id: null, canonical_id: null,
+                subcorpus_id: null, corpora: null, description: null, featured: null,
+                size: null, user_item: null
+            };
+            ans.corpus_id = corpus_id; // TODO canonical vs. regular
+            ans.canonical_id = corpus_id;
+
+            if (subcorpus_id) {
+                ans.type = 'subcorpus';
+                ans.subcorpus_id = subcorpus_id;
+                ans.id = ans.corpus_id + ':' + ans.subcorpus_id;
+                ans.name = ans.id; // TODO
+
+            } else if (aligned_corpora.length > 0) {
+                ans.type = 'aligned_corpora';
+                ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
+                ans.name = ans.id; // TODO
+                ans.corpora = aligned_corpora;
+
+            } else {
+                ans.type = 'corpus';
+                ans.name = ans.canonical_id;
+            }
+            return ans;
+
+        } else {
+            return null;
+        }
+    }
+
+    fetchItemData(userItemFlag:number):CorplistItem {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
-            item:CorplistItem,
-            self = this;
+            item:CorplistItem;
 
         corpName = this.pageModel.conf('corpname');
         if ($('#subcorp-selector').length > 0) {
@@ -609,30 +689,8 @@ export class StarComponent {
         $('fieldset.parallel .parallel-corp-lang:visible').each(function () {
             alignedCorpora.push($(this).find('input[type="hidden"][name="sel_aligned"]').val());
         });
-
-        item = {
-            id: self.starSwitch.getItemId(),
-            name: corpName,
-            type: 'corpus', // TODO
-            corpus_id: corpName,
-            canonical_id: corpName, // TODO canonical
-            subcorpus_id: subcorpName ? subcorpName : null,
-            corpora: null,
-            description: null, // TODO remove
-            featured: null, // TODO ???
-            size: null,
-            user_item: userItemFlag
-        };
-
-        if (alignedCorpora.length > 0) {
-            item.name = item.name + '+' + alignedCorpora.join('+');
-            item.type = 'aligned_corpora';
-            item.corpora = alignedCorpora;
-
-        } else if (subcorpName) {
-            item.name = item.name + ':' + item.subcorpus_id;
-            item.type = 'subcorpus';
-        }
+        item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
+        item.featured = userItemFlag;
         return item;
     }
 
@@ -643,19 +701,17 @@ export class StarComponent {
         var self = this;
 
         $('#mainform .starred img').on('click', function (e) {
-            var switchElm = $(e.target);
-
-            if (!switchElm.hasClass('starred')) {
-                switchElm.attr('src', self.pageModel.createStaticUrl('img/starred_24x24.png'));
-                switchElm.addClass('starred');
-                self.setFavorite(true);
+            if (!self.starSwitch.isStarred()) {
+                self.starSwitch.setStarState(true);
+                self.setFavorite(1);
 
             } else {
-                $(e.target).attr('src', self.pageModel.createStaticUrl('img/starred_24x24_grey.png'));
-                switchElm.removeClass('starred');
-                self.setFavorite(false);
+                self.starSwitch.setStarState(false);
+                self.setFavorite(0);
             }
         });
+
+        $('#subcorp-selector').on('change', this.onSubcorpChange);
     }
 }
 
@@ -900,10 +956,10 @@ export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options
  * @param pageModel
  * @returns {StarComponent}
  */
-export function createStarComponent(pageModel:model.PluginApi):StarComponent {
+export function createStarComponent(corplistWidget:Corplist, pageModel:model.PluginApi):StarComponent {
     var component:StarComponent;
 
-    component = new StarComponent(pageModel);
+    component = new StarComponent(corplistWidget, pageModel);
     component.init();
     return component;
 }
