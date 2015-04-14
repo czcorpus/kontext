@@ -121,6 +121,7 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
 export interface WidgetTab {
     show():void;
     hide():void;
+    getFooter():JQuery;
 }
 
 
@@ -140,7 +141,7 @@ interface SearchResponse {
  */
 export class WidgetMenu {
 
-    widgetWrapper:JQuery;
+    widget:Corplist;
 
     menuWrapper:JQuery;
 
@@ -161,10 +162,10 @@ export class WidgetMenu {
      *
      * @param widgetWrapper
      */
-    constructor(widgetWrapper:JQuery) {
-        this.widgetWrapper = widgetWrapper;
+    constructor(widget:Corplist) {
+        this.widget = widget;
         this.menuWrapper = $('<div class="menu"></div>');
-        this.widgetWrapper.append(this.menuWrapper);
+        $(this.widget.getWrapperElm()).append(this.menuWrapper);
         this.funcMap = {};
     }
 
@@ -173,7 +174,7 @@ export class WidgetMenu {
      * @param ident
      * @returns {*}
      */
-    getFuncByIdent(ident:string):WidgetTab {
+    getTabByIdent(ident:string):WidgetTab {
         return this.funcMap[ident];
     }
 
@@ -184,7 +185,7 @@ export class WidgetMenu {
         var self = this;
         this.menuWrapper.find('a').each(function () {
             $(this).removeClass('current');
-            self.getFuncByIdent($(this).data('func')).hide();
+            self.getTabByIdent($(this).data('func')).hide();
         });
     }
 
@@ -195,7 +196,8 @@ export class WidgetMenu {
     setCurrent(trigger:HTMLElement):void;
     setCurrent(trigger:string):void;
     setCurrent(trigger:any) {
-        var triggerElm:HTMLElement;
+        var triggerElm:HTMLElement,
+            newActiveWidget:WidgetTab;
 
         if (typeof trigger === 'string') {
             triggerElm = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
@@ -206,12 +208,14 @@ export class WidgetMenu {
 
         this.reset();
         $(triggerElm).addClass('current');
-        this.getFuncByIdent($(triggerElm).data('func')).show();
+        newActiveWidget = this.getTabByIdent($(triggerElm).data('func'));
+        newActiveWidget.show();
+        this.widget.setFooter(newActiveWidget.getFooter());
         this.currentBoxId = $(triggerElm).data('func');
     }
 
     getCurrent():WidgetTab {
-        return this.getFuncByIdent(this.currentBoxId);
+        return this.getTabByIdent(this.currentBoxId);
     }
 
     /**
@@ -415,6 +419,14 @@ export class Search implements WidgetTab {
         this.initTypeahead();
         this.hide();
     }
+
+    /**
+     *
+     * @returns {}
+     */
+    getFooter():JQuery {
+        return $();
+    }
 }
 
 /**
@@ -496,10 +508,14 @@ export class Favorites implements WidgetTab {
     hide():void {
         $(this.wrapper).hide();
     }
+
+    getFooter():JQuery {
+        return $('<span>' + this.pluginApi.translate('hit [Tab] to start a search') + '</span>');
+    }
 }
 
 /**
- * 
+ *
  */
 export class StarSwitch {
 
@@ -681,6 +697,8 @@ export class Corplist {
 
     private favoritesBox:Favorites;
 
+    private footerElm:HTMLElement;
+
     onHide:(widget:Corplist)=>void;
 
     onShow:(widget:Corplist)=>void;
@@ -719,6 +737,14 @@ export class Corplist {
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
         this.onHide = this.options.onHide ? this.options.onHide : null;
         this.onShow = this.options.onShow ? this.options.onShow : null;
+    }
+
+    /**
+     *
+     * @param contents
+     */
+    setFooter(contents:JQuery) {
+        $(this.footerElm).empty().append(contents);
     }
 
     /**
@@ -807,7 +833,7 @@ export class Corplist {
         this.jqWrapper.addClass(this.widgetClass);
 
         // main menu
-        this.mainMenu = new WidgetMenu(this.jqWrapper);
+        this.mainMenu = new WidgetMenu(this);
 
         // search func
         this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
@@ -815,6 +841,10 @@ export class Corplist {
 
         this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data);
         this.favoritesBox.init();
+
+        this.footerElm = window.document.createElement('div');
+        $(this.footerElm).addClass('footer');
+        $(this.widgetWrapper).append(this.footerElm);
 
         // menu initialization
         this.mainMenu.init(this.searchBox, this.favoritesBox);
@@ -843,6 +873,10 @@ export class Corplist {
         this.selectElm = selectElm;
         this.buildWidget();
     }
+
+    getWrapperElm():HTMLElement {
+        return this.widgetWrapper;
+    }
 }
 
 /**
@@ -861,6 +895,11 @@ export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options
 }
 
 
+/**
+ *
+ * @param pageModel
+ * @returns {StarComponent}
+ */
 export function createStarComponent(pageModel:model.PluginApi):StarComponent {
     var component:StarComponent;
 
