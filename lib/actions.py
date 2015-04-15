@@ -38,7 +38,7 @@ class Actions(Kontext):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
 
-    WIDECTX_ATTRS = ('usesubcorp', 'attrs', 'attr_allpos', 'ctxattrs', 'structs', 'refs')
+    WIDECTX_ATTRS = ('attrs', 'attr_allpos', 'ctxattrs', 'structs', 'refs')
 
     cattr = Parameter('word')
     csortfn = Parameter('d')
