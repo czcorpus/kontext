@@ -581,30 +581,49 @@ export class StarComponent {
 
     starSwitch:StarSwitch;
 
+    /**
+     *
+     */
     onAlignedCorporaAdd = (corpname:string) => {
         var currPageItem = this.extractItemFromPage(0);
         console.log('StarComponent detected added aligned corpora: ', corpname); // TODO
     };
 
+    /**
+     *
+     */
     onAlignedCorporaRemove = (corpname:string) => {
         var currPageItem = this.extractItemFromPage(0);
         console.log('StarComponent detected removed aligned corpora: ', corpname); // TODO
     };
 
-    onSubcorpChange = (event:JQueryEventObject) => {
+    /**
+     *
+     */
+    onSubcorpChange = (subcname:string) => {
         var newItem:CorplistItem;
 
         this.starSwitch.setStarState(false);
         newItem = this.extractItemFromPage(1);
+        console.log('new subc: ', subcname);
+        console.log('new item: ', newItem);
     };
 
-
+    /**
+     *
+     * @param favoriteItemsTab
+     * @param pageModel
+     */
     constructor(favoriteItemsTab:Favorites, pageModel:model.FirstFormPage) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
 
+    /**
+     *
+     * @param flag
+     */
     setFavorite(flag:number) {
         var self = this,
             prom:JQueryXHR,
@@ -731,8 +750,7 @@ export class StarComponent {
             }
         });
 
-        $('#subcorp-selector').on('change', this.onSubcorpChange);
-
+        this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
         this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
         this.pageModel.registerOnRemoveParallelCorpAction(this.onAlignedCorporaRemove);
     }
