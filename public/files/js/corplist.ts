@@ -250,7 +250,7 @@ export class WidgetMenu {
  */
 export class Search implements WidgetTab {
 
-    pluginApi:model.PluginApi;
+    pageModel:model.FirstFormPage;
 
     widgetWrapper:HTMLElement;
 
@@ -266,8 +266,8 @@ export class Search implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
-        this.pluginApi = pluginApi;
+    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+        this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
@@ -317,7 +317,7 @@ export class Search implements WidgetTab {
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
-            'url' : self.pluginApi.conf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
+            'url' : self.pageModel.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
@@ -373,7 +373,7 @@ export class Search implements WidgetTab {
                             }
                             reqData[item.canonical_id] = favState;
 
-                            self.pluginApi.ajax('set_favorite_corp',
+                            self.pageModel.ajax('set_favorite_corp',
                                 {
                                     method : 'POST',
                                     data : {'data': JSON.stringify(reqData)},
@@ -383,7 +383,7 @@ export class Search implements WidgetTab {
                                     },
                                     error : function () {
                                         self.bloodhound.clearRemoteCache();
-                                        self.pluginApi.showMessage('error', 'Failed to (un)set item as favorite');
+                                        self.pageModel.showMessage('error', 'Failed to (un)set item as favorite');
                                     }
                                 }
                             );
@@ -434,7 +434,7 @@ export class Search implements WidgetTab {
  */
 export class Favorites implements WidgetTab {
 
-    pluginApi:model.PluginApi;
+    pageModel:model.FirstFormPage;
 
     widgetWrapper:HTMLElement;
 
@@ -448,19 +448,30 @@ export class Favorites implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
-        this.pluginApi = pluginApi;
+    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, data:Array<CorplistItem>,
+                itemClickCallback?:CorplistItemClick) {
+        this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.data = data;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('table');
         $(this.wrapper).addClass('favorite-list')
-            .append('<tr><th colspan="2">' + this.pluginApi.translate('favorite items') + '</th></tr>');
+            .append('<tr><th colspan="2">' + this.pageModel.translate('favorite items') + '</th></tr>');
         $(this.widgetWrapper).append(this.wrapper);
     }
 
+    containsItem(item:CorplistItem) {
+        for (var i = 0; i < this.data.length; i += 1) {
+            console.log(this.data[i]);
+            if (this.data[i].id == item.id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     generateItemUrl(itemData):string {
-        var rootPath = this.pluginApi.createActionUrl('/first_form'),
+        var rootPath = this.pageModel.createActionUrl('/first_form'),
             params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === 'subcorpus') {
@@ -510,7 +521,7 @@ export class Favorites implements WidgetTab {
     }
 
     getFooter():JQuery {
-        return $('<span>' + this.pluginApi.translate('hit [Tab] to start a search') + '</span>');
+        return $('<span>' + this.pageModel.translate('hit [Tab] to start a search') + '</span>');
     }
 }
 
@@ -519,13 +530,13 @@ export class Favorites implements WidgetTab {
  */
 export class StarSwitch {
 
-    pageModel:model.PluginApi;
+    pageModel:model.FirstFormPage;
 
     triggerElm:HTMLElement;
 
     itemId:string;
 
-    constructor(pageModel:model.PluginApi, triggerElm:HTMLElement) {
+    constructor(pageModel:model.FirstFormPage, triggerElm:HTMLElement) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
         this.itemId = $(this.triggerElm).data('item-id');
@@ -564,26 +575,32 @@ export class StarSwitch {
  */
 export class StarComponent {
 
-    corplistWidget:Corplist;
+    favoriteItemsTab:Favorites;
 
-    pageModel:model.PluginApi;
+    pageModel:model.FirstFormPage;
 
     starSwitch:StarSwitch;
 
-    onAlignedCorporaChange = (event:JQueryEventObject) => {
-        console.log('StarComponent detected change in aligned corpora'); // TODO
+    onAlignedCorporaAdd = (corpname:string) => {
+        var currPageItem = this.extractItemFromPage(0);
+        console.log('StarComponent detected added aligned corpora: ', corpname); // TODO
+    };
+
+    onAlignedCorporaRemove = (corpname:string) => {
+        var currPageItem = this.extractItemFromPage(0);
+        console.log('StarComponent detected removed aligned corpora: ', corpname); // TODO
     };
 
     onSubcorpChange = (event:JQueryEventObject) => {
         var newItem:CorplistItem;
 
         this.starSwitch.setStarState(false);
-        newItem = this.fetchItemData(1);
+        newItem = this.extractItemFromPage(1);
     };
 
 
-    constructor(corplistWidget:Corplist, pageModel:model.PluginApi) {
-        this.corplistWidget = corplistWidget;
+    constructor(favoriteItemsTab:Favorites, pageModel:model.FirstFormPage) {
+        this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
@@ -597,8 +614,8 @@ export class StarComponent {
 
 
         if (flag === 1) {
-            newItem = this.fetchItemData(flag);
-            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
+            newItem = this.extractItemFromPage(flag);
+            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
             message = self.pageModel.translate('item added to favorites');
             postDispatch = function (data) {
@@ -606,7 +623,7 @@ export class StarComponent {
             };
 
         } else {
-            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/unset_favorite_item',
+            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
                 {method: 'POST', data: {id: self.starSwitch.getItemId()}, dataType: 'json'});
             message = self.pageModel.translate('item removed from favorites');
             postDispatch = function (data) {
@@ -631,10 +648,8 @@ export class StarComponent {
     }
 
     /**
-     * According to a state of the current query form, this method creates
-     * a new CorplistItem instance with proper type, id, etc. I.e. it is able
-     * to infer whether the current query form operates with a single corpus,
-     * subcorpus or aligned corpora.
+     * Based on passed arguments, the method infers whether they match corpus user object, subcorpus
+     * user object or aligned corpora user object.
      *
      * @param corpus_id regular identifier of a corpus
      * @param subcorpus_id name of a subcorpus
@@ -667,6 +682,7 @@ export class StarComponent {
 
             } else {
                 ans.type = 'corpus';
+                ans.id = ans.canonical_id;
                 ans.name = ans.canonical_id;
             }
             return ans;
@@ -676,13 +692,17 @@ export class StarComponent {
         }
     }
 
-    fetchItemData(userItemFlag:number):CorplistItem {
+    /**
+     * According to the state of the current query form, this method creates
+     * a new CorplistItem instance with proper type, id, etc.
+     */
+    extractItemFromPage(userItemFlag:number):CorplistItem {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
             item:CorplistItem;
 
-        corpName = this.pageModel.conf('corpname');
+        corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
@@ -712,6 +732,9 @@ export class StarComponent {
         });
 
         $('#subcorp-selector').on('change', this.onSubcorpChange);
+
+        this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
+        this.pageModel.registerOnRemoveParallelCorpAction(this.onAlignedCorporaRemove);
     }
 }
 
@@ -733,7 +756,7 @@ export class Corplist {
 
     private data:Array<CorplistItem>;
 
-    private pluginApi:model.PluginApi;
+    private pageModel:model.FirstFormPage;
 
     private visible:Visibility;
 
@@ -749,9 +772,9 @@ export class Corplist {
 
     private mainMenu:WidgetMenu;
 
-    private searchBox:Search;
+    searchBox:Search;
 
-    private favoritesBox:Favorites;
+    favoritesBox:Favorites;
 
     private footerElm:HTMLElement;
 
@@ -782,13 +805,13 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, pluginApi:model.PluginApi, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pageModel:model.FirstFormPage, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
-        this.pluginApi = pluginApi;
+        this.pageModel = pageModel;
         this.parentForm = parentForm;
-        this.currCorpIdent = pluginApi.conf('corpname');
-        this.currCorpname = pluginApi.conf('humanCorpname');
+        this.currCorpIdent = pageModel.getConf('corpname');
+        this.currCorpname = pageModel.getConf('humanCorpname');
         this.visible = Visibility.HIDDEN;
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
         this.onHide = this.options.onHide ? this.options.onHide : null;
@@ -892,10 +915,10 @@ export class Corplist {
         this.mainMenu = new WidgetMenu(this);
 
         // search func
-        this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox = new Search(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data);
+        this.favoritesBox = new Favorites(this.pageModel, this.widgetWrapper, this.data);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -940,12 +963,12 @@ export class Corplist {
  * @param selectElm
  * @param options
  */
-export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options:Options):Corplist {
+export function create(selectElm:HTMLElement, pageModel:model.FirstFormPage, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
     data = fetchDataFromSelect(selectElm);
-    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
+    corplist = new Corplist(options, data, pageModel, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }
@@ -956,10 +979,10 @@ export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options
  * @param pageModel
  * @returns {StarComponent}
  */
-export function createStarComponent(corplistWidget:Corplist, pageModel:model.PluginApi):StarComponent {
+export function createStarComponent(corplistWidget:Corplist, pageModel:model.FirstFormPage):StarComponent {
     var component:StarComponent;
 
-    component = new StarComponent(corplistWidget, pageModel);
+    component = new StarComponent(corplistWidget.favoritesBox, pageModel);
     component.init();
     return component;
 }

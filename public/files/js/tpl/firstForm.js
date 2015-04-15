@@ -34,6 +34,44 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.corplistComponent = null;
     lib.starComponent = null;
     lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
+    lib.onAddParallelCorpActions = [];
+    lib.onRemoveParallelCorpActions = [];
+
+    lib.getConf = function (name) {
+        return layoutModel.getConf(name);
+    };
+
+    lib.translate = function (msg) {
+        return layoutModel.translate(msg);
+    };
+
+    lib.createActionUrl = function (path) {
+        return layoutModel.createActionUrl(path);
+    };
+
+    /**
+     * Registers a callback which is invoked after an aligned
+     * corpus is added to the query page (i.e. firstForm's
+     * internal actions are performed first then the list of
+     * registered callbacks).
+     *
+     * @param fn
+     */
+    lib.registerOnAddParallelCorpAction = function (fn) {
+        lib.onAddParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked after an aligned
+     * corpus is removed from the query page (i.e. firstForm's
+     * internal actions are performed first then the list of
+     * registered callbacks).
+     *
+     * @param fn
+     */
+    lib.registerOnRemoveParallelCorpAction = function (fn) {
+        lib.onRemoveParallelCorpActions.push(fn);
+    };
 
     /**
      *
@@ -80,6 +118,9 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
             }
         });
+        $.each(lib.onAddParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
+        });
     }
 
     /**
@@ -94,6 +135,9 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             if ($('div.parallel-corp-lang:visible').length === 0) {
                 $('#default-view-mode').remove();
             }
+        });
+        $.each(lib.onRemoveParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
         });
     }
 
@@ -152,11 +196,11 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.misc = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
-            layoutModel.pluginApi(),
+            lib,
             {formTarget: 'first_form'}
         );
 
-        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent, layoutModel.pluginApi());
+        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent, lib);
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);
