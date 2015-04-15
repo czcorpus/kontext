@@ -27,10 +27,26 @@
 declare module model {
 
     /**
-     * An interface used by KonText plug-ins
+     * A formal interface for page models as any TypeScript implemented
+     * functionality sees it. Currently when all the page logic libraries
+     * are implemented in pure JavaScript this means that the actual
+     * JavaScript object may often provide richer interface.
+     *
      */
-    export interface PluginApi {
+    export interface PageModel {
+        /**
+         * @deprecated
+         * @param key
+         */
         conf(key:string):any;
+
+        /**
+         * Returns a configuration value.
+         * This should be preferred over deprecated conf() method.
+         *
+         * @param key
+         */
+        getConf(key:string):any;
         createStaticUrl(path:string):string;
         createActionUrl(path:string):string;
         ajax(...args:any[]);
@@ -45,6 +61,23 @@ declare module model {
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
+    }
+
+    /**
+     * first_form action page logic
+     */
+    export interface FirstFormPage extends PageModel {
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
+        registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void);
+    }
+
+
+    /**
+     * An interface used by KonText plug-ins. It is in fact
+     * a more formalized version of page's logic defined in js/tpl/* files.
+     */
+    export interface PluginApi extends PageModel {
+
     }
 
     /**
@@ -118,6 +151,10 @@ declare module "tpl/document" {
 
         init(conf:Runtime.Conf):Promises;
 
+        getConf(name:string):any;
+
+        translate(message:string):string;
+
         registerPlugin(name:string, plugin:Plugin);
 
         getPlugin(name:string, plugin:Plugin);
@@ -187,6 +224,10 @@ declare module "tpl/document" {
         translate(msg:string):string;
 
         pluginApi():Plugin;
+
+        createActionUrl(path:string):string;
+
+        createStaticUrl(path:string);string;
     }
 }
 

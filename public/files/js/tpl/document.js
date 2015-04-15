@@ -65,6 +65,17 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     }
 
     /**
+     * Returns a value associated with the value in 'name'.
+     * This should be preferred over accessing lib.conf directly.
+     *
+     * @param name
+     * @returns {*}
+     */
+    lib.getConf = function (name) {
+        return this.conf[name];
+    };
+
+    /**
      * Adds a plug-in to the model. In general, it is not
      * required to do this on a page using some plug-in but
      * in that case it will not be possible to use plug-in
@@ -1079,7 +1090,47 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     };
 
     /**
-     * @typedef {Object} pluginApi
+     * Prepends a proper prefix to the provided static file path.
+     * If you pass an absolute path (e.g. /images/foo.png), it is still understood
+     * as a path relative to the static files URL. E.g. if the static
+     * files URL is http://localhost/kontext/static/ then the returned
+     * value will be http://localhost/kontext/static/images/foo.png (i.e. a
+     * possible double slash is fixed for you).
+     *
+     * @param path
+     * @returns {*}
+     */
+    lib.createStaticUrl = function (path) {
+        var staticPath = lib.conf.staticUrl;
+
+        if (path.indexOf('/') === 0) {
+            path = path.substr(1);
+        }
+        return staticPath + path;
+    };
+
+    /**
+     * Prepends a proper prefix to the provided action path.
+     * If you pass an absolute path (e.g. /user/login), it is still understood
+     * as a path relative to the actions URL. E.g. if the application
+     * URL is http://localhost/kontext/ then the result will be
+     * http://localhost/kontext/user/login (i.e. a possible double slash is
+     * fixed for you).
+     *
+     * @param path
+     * @returns {*}
+     */
+    lib.createActionUrl = function (path) {
+        var staticPath = lib.conf.rootPath;
+
+        if (path.indexOf('/') === 0) {
+            path = path.substr(1);
+        }
+        return staticPath + path;
+    };
+
+    /**
+     * @typedef {Object} PluginApi
      * @property {function} conf
      * @property {function} ajax
      * @property {function} ajaxAnim
@@ -1093,12 +1144,16 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
     /**
      * Generates an API object which provides essential functionality for client-side plugin code.
      *
-     * @return {pluginApi}
+     * @return {PluginApi}
      */
     lib.pluginApi = function () {
         var self = this;
 
         return {
+
+            /**
+             * @deprecated
+             */
             conf : function (key) {
                 if (self.conf.hasOwnProperty(key)) {
                     return self.conf[key];
@@ -1109,21 +1164,11 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
             },
 
             createStaticUrl : function (path) {
-                var staticPath = self.conf.staticUrl;
-
-                if (path.indexOf('/') === 0) {
-                    path = path.substr(1);
-                }
-                return staticPath + path;
+                return lib.createStaticUrl(path);
             },
 
             createActionUrl : function (path) {
-                var staticPath = self.conf.rootPath;
-
-                if (path.indexOf('/') === 0) {
-                    path = path.substr(1);
-                }
-                return staticPath + path;
+                return lib.createActionUrl(path);
             },
 
             ajax : function () {
