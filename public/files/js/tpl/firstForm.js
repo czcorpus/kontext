@@ -54,6 +54,10 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
         return layoutModel.createStaticUrl(path);
     };
 
+    lib.showMessage = function (type, message, callback) {
+        return layoutModel.showMessage(type, message, callback);
+    };
+
     /**
      * Registers a callback which is invoked after an aligned
      * corpus is added to the query page (i.e. firstForm's
