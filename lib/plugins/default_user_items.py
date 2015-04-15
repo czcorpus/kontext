@@ -15,6 +15,8 @@ import json
 from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
 from abstract.user_items import infer_item_key
 
+import l10n
+
 
 class ItemEncoder(json.JSONEncoder):
     """
@@ -73,8 +75,19 @@ class UserItems(AbstractUserItems):
     decoder = json.JSONDecoder(object_hook=import_from_json)
 
     def __init__(self, settings, db):
+        super(UserItems, self).__init__()
         self._settings = settings
         self._db = db
+
+    def setup(self, controller_obj):
+        """
+        Interface method expected by KonText if a module wants to be set-up by
+        some "late" information (like locales).
+
+        Please note that each request calls this method on the same instance
+        which means that any client-specific data must be thread-local.
+        """
+        self.setlocal('lang', getattr(controller_obj, 'ui_lang', None))
 
     @staticmethod
     def _mk_key(user_id):
@@ -90,6 +103,7 @@ class UserItems(AbstractUserItems):
         ans = []
         for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
             ans.append(self.decoder.decode(item))
+        ans = l10n.sort(ans, self.getlocal('lang'), key=lambda itm: itm.name, reverse=False)
         return ans
 
     def add_user_item(self, user_id, item):
