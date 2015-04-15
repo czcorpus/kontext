@@ -237,7 +237,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                         corpusSelector,
                         self.layoutModel.pluginApi(), {
                             itemClickAction: function (id) {
-                                this.hide(); // this == Search widget
+                                this.hide(); // this == SearchTab widget
                             },
                             onHide: function (widget) {
                                 tooltipBox.suppressKeys(false);

@@ -34,6 +34,11 @@ enum Visibility {
     VISIBLE, HIDDEN
 }
 
+export enum Favorite {
+    NOT_FAVORITE = 0,
+    FAVORITE = 1
+}
+
 /**
  *
  */
@@ -46,7 +51,7 @@ export interface CorplistItem {
     subcorpus_id: string;
     corpora: Array<string>;
     description: string;
-    featured: number;
+    featured: Favorite;
     user_item: boolean;
     size: any;
 }
@@ -100,9 +105,11 @@ export interface Options {
 }
 
 /**
- *
+ * Extracts user items encoded using JSON in data-item attributes of OPTION HTML elements.
+ * This is expected to be filled in on server.
+ *class Favo
  * @param select
- * @returns {Array<CorplistItem>}
+ * @returns list of user items related to individual OPTION elements
  */
 function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
     var elm:JQuery = $(select),
@@ -116,7 +123,8 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
 }
 
 /**
- *
+ * General widget tab. All the future additions to Corplist tabs
+ * must implement this.
  */
 export interface WidgetTab {
     show():void;
@@ -124,7 +132,11 @@ export interface WidgetTab {
     getFooter():JQuery;
 }
 
-
+/**
+ * This is used when the SearchTab tab asks server
+ * for matching corpora according to the pattern
+ * user has written to the search input.
+ */
 interface SearchResponse {
     name: string;
     favorite: boolean;
@@ -137,17 +149,17 @@ interface SearchResponse {
 }
 
 /**
- *
+ * This represents the menu for switching between tabs.
  */
-export class WidgetMenu {
+class WidgetMenu {
 
     widget:Corplist;
 
     menuWrapper:JQuery;
 
-    searchBox:Search;
+    searchBox:SearchTab;
 
-    favoriteBox:Favorites;
+    favoriteBox:FavoritesTab;
 
     funcMap:{[name:string]: WidgetTab};
 
@@ -160,7 +172,7 @@ export class WidgetMenu {
 
     /**
      *
-     * @param widgetWrapper
+     * @param widget
      */
     constructor(widget:Corplist) {
         this.widget = widget;
@@ -214,6 +226,10 @@ export class WidgetMenu {
         this.currentBoxId = $(triggerElm).data('func');
     }
 
+    /**
+     *
+     * @returns {WidgetTab}
+     */
     getCurrent():WidgetTab {
         return this.getTabByIdent(this.currentBoxId);
     }
@@ -223,7 +239,7 @@ export class WidgetMenu {
      * @param searchBox
      * @param favoriteBox
      */
-    init(searchBox:Search, favoriteBox:Favorites):void {
+    init(searchBox:SearchTab, favoriteBox:FavoritesTab):void {
         var self = this;
         this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
         this.favoriteBox = favoriteBox;
@@ -246,9 +262,9 @@ export class WidgetMenu {
 }
 
 /**
- *
+ * This class represents the SearchTab tab
  */
-export class Search implements WidgetTab {
+export class SearchTab implements WidgetTab {
 
     pageModel:model.FirstFormPage;
 
@@ -260,7 +276,7 @@ export class Search implements WidgetTab {
 
     srchField:HTMLElement;
 
-    bloodhound:Bloodhound<string>;  // Typeahead's suggestion engine
+    bloodhound:Bloodhound<string>; // Typeahead's suggestion engine
 
     /**
      *
@@ -430,9 +446,9 @@ export class Search implements WidgetTab {
 }
 
 /**
- *
+ * This class represents the FavoritesTab (= user item) tab
  */
-export class Favorites implements WidgetTab {
+class FavoritesTab implements WidgetTab {
 
     pageModel:model.FirstFormPage;
 
@@ -460,9 +476,15 @@ export class Favorites implements WidgetTab {
         $(this.widgetWrapper).append(this.wrapper);
     }
 
-    containsItem(item:CorplistItem) {
+    /**
+     * Tests whether the passed item matches (by its 'id' attribute) with
+     * any of user's current items (= this.data).
+     *
+     * @param item
+     * @returns true on success else false
+     */
+    containsItem(item:CorplistItem):boolean {
         for (var i = 0; i < this.data.length; i += 1) {
-            console.log(this.data[i]);
             if (this.data[i].id == item.id) {
                 return true;
             }
@@ -470,6 +492,13 @@ export class Favorites implements WidgetTab {
         return false;
     }
 
+    /**
+     * Generates first_form's URL along with all the necessary parameters
+     * (depends on type of item - corpus vs. subcorpus vs. aligned corpora).
+     *
+     * @param itemData
+     * @returns {string}
+     */
     generateItemUrl(itemData):string {
         var rootPath = this.pageModel.createActionUrl('/first_form'),
             params = ['corpname=' + itemData.corpus_id];
@@ -488,7 +517,7 @@ export class Favorites implements WidgetTab {
     /**
      *
      */
-    init() {
+    init():void {
         var jqWrapper = $(this.wrapper),
             self = this;
 
@@ -526,9 +555,8 @@ export class Favorites implements WidgetTab {
 }
 
 /**
- *
  */
-export class StarSwitch {
+class StarSwitch {
 
     pageModel:model.FirstFormPage;
 
@@ -571,42 +599,50 @@ export class StarSwitch {
 
 
 /**
- *
+ * A class handling star icon switch (sets fav. on and off)
  */
-export class StarComponent {
+class StarComponent {
 
-    favoriteItemsTab:Favorites;
+    private favoriteItemsTab:FavoritesTab;
 
-    pageModel:model.FirstFormPage;
+    private pageModel:model.FirstFormPage;
 
-    starSwitch:StarSwitch;
+    private starSwitch:StarSwitch;
 
     /**
-     *
+     * Once user adds an aligned corpus we must
+     * test whether the new corpora combinations is already
+     * in favorites or not.
      */
     onAlignedCorporaAdd = (corpname:string) => {
-        var currPageItem = this.extractItemFromPage(0);
-        console.log('StarComponent detected added aligned corpora: ', corpname); // TODO
+        var newItem:CorplistItem;
+
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
 
     /**
-     *
+     * Once user removes an aligned corpus we must
+     * test whether the new corpora combinations is already
+     * in favorites or not.
      */
     onAlignedCorporaRemove = (corpname:string) => {
-        var currPageItem = this.extractItemFromPage(0);
-        console.log('StarComponent detected removed aligned corpora: ', corpname); // TODO
+        var newItem:CorplistItem;
+
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
 
     /**
-     *
+     * Once user changes a subcorpus we must test
+     * whether the new corpus:subcorpus combination is
+     * already in favorites.
      */
     onSubcorpChange = (subcname:string) => {
         var newItem:CorplistItem;
 
-        this.starSwitch.setStarState(false);
-        newItem = this.extractItemFromPage(1);
-        console.log('new subc: ', subcname);
-        console.log('new item: ', newItem);
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
 
     /**
@@ -614,17 +650,18 @@ export class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:Favorites, pageModel:model.FirstFormPage) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:model.FirstFormPage) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
 
     /**
+     * Sets a favorite item via a server call
      *
      * @param flag
      */
-    setFavorite(flag:number) {
+    setFavorite(flag:Favorite) {
         var self = this,
             prom:JQueryXHR,
             newItem:CorplistItem,
@@ -632,7 +669,7 @@ export class StarComponent {
             postDispatch:(data:any)=>void;
 
 
-        if (flag === 1) {
+        if (flag === Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
@@ -715,18 +752,22 @@ export class StarComponent {
      * According to the state of the current query form, this method creates
      * a new CorplistItem instance with proper type, id, etc.
      */
-    extractItemFromPage(userItemFlag:number):CorplistItem {
+    extractItemFromPage(userItemFlag?:Favorite):CorplistItem {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
             item:CorplistItem;
 
+        if (userItemFlag === undefined) {
+            userItemFlag = Favorite.NOT_FAVORITE;
+        }
+
         corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
-        $('fieldset.parallel .parallel-corp-lang:visible').each(function () {
-            alignedCorpora.push($(this).find('input[type="hidden"][name="sel_aligned"]').val());
+        $('div.parallel-corp-lang:visible').each(function () {
+            alignedCorpora.push($(this).data('corpus-id'));
         });
         item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
         item.featured = userItemFlag;
@@ -742,23 +783,24 @@ export class StarComponent {
         $('#mainform .starred img').on('click', function (e) {
             if (!self.starSwitch.isStarred()) {
                 self.starSwitch.setStarState(true);
-                self.setFavorite(1);
+                self.setFavorite(Favorite.FAVORITE);
 
             } else {
                 self.starSwitch.setStarState(false);
-                self.setFavorite(0);
+                self.setFavorite(Favorite.NOT_FAVORITE);
             }
         });
 
         this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
         this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
-        this.pageModel.registerOnRemoveParallelCorpAction(this.onAlignedCorporaRemove);
+        this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
     }
 }
 
 
 /**
- *
+ * Corplist widget class. In most situations it is easier
+ * to instantiate this via an exported function create().
  */
 export class Corplist {
 
@@ -790,9 +832,11 @@ export class Corplist {
 
     private mainMenu:WidgetMenu;
 
-    searchBox:Search;
+    private starComponent:StarComponent;
 
-    favoritesBox:Favorites;
+    searchBox:SearchTab;
+
+    private favoritesBox:FavoritesTab;
 
     private footerElm:HTMLElement;
 
@@ -933,10 +977,10 @@ export class Corplist {
         this.mainMenu = new WidgetMenu(this);
 
         // search func
-        this.searchBox = new Search(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new Favorites(this.pageModel, this.widgetWrapper, this.data);
+        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -952,6 +996,10 @@ export class Corplist {
 
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
+
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel);
+        this.starComponent.init();
+
         this.switchComponentVisibility(Visibility.HIDDEN);
     }
 
@@ -977,9 +1025,12 @@ export class Corplist {
 }
 
 /**
+ * Creates a corplist widget which is a box containing two tabs
+ *  1) user's favorite items
+ *  2) corpus search tool
  *
- * @param selectElm
- * @param options
+ * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
+ * @param options A configuration for the widget
  */
 export function create(selectElm:HTMLElement, pageModel:model.FirstFormPage, options:Options):Corplist {
     var corplist:Corplist,
@@ -989,18 +1040,4 @@ export function create(selectElm:HTMLElement, pageModel:model.FirstFormPage, opt
     corplist = new Corplist(options, data, pageModel, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
-}
-
-
-/**
- *
- * @param pageModel
- * @returns {StarComponent}
- */
-export function createStarComponent(corplistWidget:Corplist, pageModel:model.FirstFormPage):StarComponent {
-    var component:StarComponent;
-
-    component = new StarComponent(corplistWidget.favoritesBox, pageModel);
-    component.init();
-    return component;
 }

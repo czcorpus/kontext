@@ -36,6 +36,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
     lib.onAddParallelCorpActions = [];
     lib.onRemoveParallelCorpActions = [];
+    lib.onBeforeRemoveParallelCorpActions = [];
     lib.onSubcorpChangeActions = [];
 
     lib.getConf = function (name) {
@@ -71,7 +72,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     };
 
     /**
-     * Registers a callback which is invoked after an aligned
+     * Registers a callback which is invoked AFTER an aligned
      * corpus is removed from the query page (i.e. firstForm's
      * internal actions are performed first then the list of
      * registered callbacks).
@@ -80,6 +81,17 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      */
     lib.registerOnRemoveParallelCorpAction = function (fn) {
         lib.onRemoveParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked BEFORE an aligned
+     * corpus is removed from the query page (i.e. firstForm's
+     * internal actions are performed this actions).
+     *
+     * @param fn
+     */
+    lib.registerOnBeforeRemoveParallelCorpAction = function (fn) {
+        lib.onBeforeRemoveParallelCorpActions.push(fn);
     };
 
     /**
@@ -148,6 +160,9 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      * @param {string} corpusName
      */
     function removeActiveParallelCorpus(corpusName) {
+        $.each(lib.onBeforeRemoveParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
+        });
         callOnParallelCorporaList(function (itemList) {
             if ($.inArray(corpusName, itemList) >= 0) {
                 itemList.splice($.inArray(corpusName, itemList), 1);
@@ -220,8 +235,6 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             lib,
             {formTarget: 'first_form'}
         );
-
-        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent, lib);
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);

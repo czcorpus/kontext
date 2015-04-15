@@ -69,6 +69,7 @@ declare module model {
     export interface FirstFormPage extends PageModel {
         registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
         registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void);
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
         registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
     }
 
