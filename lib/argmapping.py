@@ -151,7 +151,6 @@ class WidectxArgsMapping(GeneralAttrMapping):
     """
     Attributes needed to open correct detailed KWIC context.
     """
-    usesubcorp = Parameter(u'')
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
