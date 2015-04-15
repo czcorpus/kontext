@@ -36,6 +36,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
     lib.onAddParallelCorpActions = [];
     lib.onRemoveParallelCorpActions = [];
+    lib.onSubcorpChangeActions = [];
 
     lib.getConf = function (name) {
         return layoutModel.getConf(name);
@@ -49,13 +50,17 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
         return layoutModel.createActionUrl(path);
     };
 
+    lib.createStaticUrl = function (path) {
+        return layoutModel.createStaticUrl(path);
+    };
+
     /**
      * Registers a callback which is invoked after an aligned
      * corpus is added to the query page (i.e. firstForm's
      * internal actions are performed first then the list of
      * registered callbacks).
      *
-     * @param fn
+     * @param fn:(corpname:string)=>void
      */
     lib.registerOnAddParallelCorpAction = function (fn) {
         lib.onAddParallelCorpActions.push(fn);
@@ -67,10 +72,22 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      * internal actions are performed first then the list of
      * registered callbacks).
      *
-     * @param fn
+     * @param fn:(corpname:string)=>void
      */
     lib.registerOnRemoveParallelCorpAction = function (fn) {
         lib.onRemoveParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked after the subcorpus
+     * selection element is changed. It guarantees that all the
+     * firstForm's internal actions are performed before this
+     * externally registered ones.
+     *
+     * @param fn:(subcname:string)=>void
+     */
+    lib.registerOnSubcorpChangeAction = function (fn) {
+        lib.onSubcorpChangeActions.push(fn);
     };
 
     /**
@@ -316,6 +333,18 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
     /**
      *
+     */
+    lib.registerSubcorpChange = function () {
+        $('#subcorp-selector').on('change', function (e) {
+            // following code must be always the last action performed on the event
+            $.each(lib.onSubcorpChangeActions, function (i, fn) {
+                fn.call(lib, $(e.currentTarget).val());
+            });
+        });
+    };
+
+    /**
+     *
      * @param {object} conf
      * @return {{}} a simple object containing promises returned
      * by some of
@@ -340,7 +369,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-                '.text-type-params')
+                '.text-type-params'),
+            registerSubcorpChange : lib.registerSubcorpChange()
         });
 
         layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
