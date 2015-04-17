@@ -14,32 +14,33 @@ Features
 --------
 
 * code-level changes
-    * improved Python code and software architecture
-    * completely refactored/rewritten JavaScript code (based on the RequireJS library)
+    * rewritten as a WSGI application (Bonito2 is CGI-based)
+    * modular code design with dynamically loadable plug-ins providing custom functionality implementation
+    * background concordance calculation based on Python's high-level *multiprocessing* package
+    * completely rewritten client-side code (AMD modules, code separated from templates)
     * improved logging, error processing and debugging support
     * improved code documentation
-* general changes
-    * rewritten as a WSGI application (original version runs as a CGI script)
-    * added support for spoken corpora
-    * installation-specific functions (database backend, sessions, query history,...) are written as replaceable plugins
-    * simplified installation and configuration
+* new features
+    * added support for spoken corpora - defined segments can be played back as audio
+    * persistent links for large queries - you can send a link to someone even if the query was in megabytes
+    * access to previous queries
+    * interactive subcorpus selection - you can select text types and see how other attributes' available values changed
+    * interactive PoS tag tool - in case of positional PoS tag formats an interactive tool can be used to write tag queries
+    * a concordance can be saved in Excel format (xlsx)
 * enhanced user interface
     * improved user interface and design
-    * access to previous queries
-    * hierarchical corpora organization
-    * extended corpora information (size, structures, attributes)
-    * concordance results contain also the Average Reduced Frequency (see for example http://lrec.elra.info/proceedings/lrec2006/pdf/11_pdf.pdf for the explanation)
+    * extended corpora information (size, structures, attributes, citation information)
+    * concordance results contain also the [Average Reduced Frequency](http://lrec.elra.info/proceedings/lrec2006/pdf/11_pdf.pdf)
     * sub-corpus can be created by a custom CQL expression
     * on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
-    * interactive "tag" and "within condition" building widget in CQL query mode
     * result shuffling can be pre-set
 
 
 Requirements
 ------------
 
-* Apache 2.x web server
-    * enabled WSGI module (e.g. [mod_wsgi](https://code.google.com/p/modwsgi/))
+* a WSGI-compatible server
+    * (e.g. Apache2 with [mod_wsgi](https://code.google.com/p/modwsgi/), or [Gunicorn](http://gunicorn.org/) + [Nginx](http://nginx.org/))
 * Python *2.6* or *2.7*
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
@@ -48,10 +49,10 @@ Requirements
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
 * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske), version *2.83.x* (2.107.1 is not supported yet)
 * a key-value storage
-    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available) 
+    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default) 
 
 
 Installation
 ------------
 
-Please refer to the *INSTALL.md* file.
+Please refer to the [INSTALL.md](INSTALL.md) file.
