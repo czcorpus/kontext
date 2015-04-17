@@ -121,8 +121,7 @@ Additional notes:
 * Available 3rd party libraries include *jQuery*, *jQuery-cookies plug-in*, *soundmanager2*, *typeahead*, *virtual-keyboard*.
 * JavaScript code related to a concrete page can be found in *public/files/js/tpl/page_name*.
 * Plug-ins are located in *public/files/js/plugins/pluginNameCamelCase*
-* New client-side libraries and plug-ins are written in [TypeScript](http://www.typescriptlang.org/) and located in 
-  *public/files/ts*.
+* New client-side libraries and plug-ins are written in [TypeScript](http://www.typescriptlang.org/).
 * Currently there is no solution for additional CSS files (i.e. adding a new plug-in with some UI representation requires
 you to edit existing CSS/LESS file *widgets.less*).
 
@@ -152,8 +151,25 @@ of the controller are already set and available.
 But there is an important difference between *setup()* and *create_instance()*. Please recall the fact that there
 is always a single instance of a plug-in serving all the requests (within a single process). But in case of the *setup()*
 method, each request may pass different parameters and in a concurrent way. It means that all the request-specific data 
-(e.g. the language a client uses) must be thread-local (you can inherit for such purpose from *structures.ThreadLocalData*
-which provides convenience methods like *setlocal*, *getlocal*, *haslocal*).
+(e.g. the language a client uses) must be thread-local. To accomplish that you can inherit for such purpose from *structures.ThreadLocalData*
+which provides convenience methods like *setlocal*, *getlocal*, *haslocal*:
+
+```python
+class ExtendedTutorialPlugin(structures.ThreadLocalData):
+  def __init__(self):
+    super(MyPlugin, self).__init__(('prefetch_job',))  # we have to specify thread-local value(s) explicitly here
+
+  def setup(self, controller_obj):
+    self.setlocal('prefetch_job', self.preload_user_tutorial(controller_obj.session_get('user', 'id')))
+
+  def get_tutorial_info(self, chapter_id):
+    job = self.getlocal('prefetch_job')
+    job.join()
+    return job.value
+```
+
+It should be noted that in case of KonText core plug-ins, a stateless solution (i.e. the one without need for calling
+plugin.setup()) can be usually found.
 
 ### Notes for developers
 
@@ -196,9 +212,9 @@ are passed as arguments to your *factory function*. The only thing to be aware o
 in *optional_plugins* (file *app.py*) must be specified using strings (i.e. you cannot directly use the package *plugins*)
 because when Python interpreter executes the optional plug-ins configuration no optional plug-in is instantiated yet.
 
-In the following example where we define *my_plugin* where *settings* is a required plug-in (i.e. already loaded and 
-passed directly as a module *settings*) and *some_optional_plugin* is an optional plug-in which cannot be guaranteed to 
-be loaded yet (i.e. defined using a string).
+In the following example we define *my_plugin* with two dependencies:
+ 1. *settings* is a required plug-in (=> it is already instantiated and we can refer it as any other module)
+ 2. *some_optional_plugin* is an optional plug-in (=> it cannot be guaranteed to be loaded yet and must refer it via a string).
 
 ```python
 optional_plugins = (
@@ -267,7 +283,7 @@ The plug-ins KonText passes *db* to are:
 * conc_persistence
 * query_storage
 
-<a name="plugin_auth"><a/>
+<a name="plugin_auth"></a>
 
 ### The "auth" plug-in
 
@@ -355,7 +371,7 @@ KonText currently supports log-in/log-out in two different ways:
 2. outside KonText application (log-in/log-out pages and user session validation are defined outside KonText)
 
 Because of that, all the *auth* plug-ins must implement methods which tell the KonText where log-in/log-out 
-pages are. In case if internal authentication this is simple:
+pages are. In case of internal authentication this is simple:
 
 ```python
 def get_login_url(self):
@@ -400,14 +416,13 @@ allow the plug-in custom parameter processing.
 ### The "sessions" plug-in
 
 The *sessions* plug-in is expected to handle web sessions where users are identified by some cookie
-*(key, value)* pair.
+*(key, value)* pair. It is defined to be compatible with *Werkzeug's* sessions. It means you can
+take *Werkzeug's* *werkzeug.contrib.sessions.FilesystemSessionStore* (see [documentation](http://werkzeug.pocoo.org/docs/0.10/contrib/sessions/)) and it will work with KonText.
 
 ```python
-def start_new(self, data=None):
+def generate_key(self, salt=None):
     """
-    starts a new session
-
-    returns a dictionary {'id': session_id, 'data': data}
+    returns: string
     """
     pass
 
@@ -417,25 +432,39 @@ def delete(self, session_id):
     """
     pass
 
-def load(self, session_id, data=None):
+def get(self, session_id):
     """
     Loads existing session from a storage
 
-    returns  {'id': session_id, 'data': ...}
+    returns:  werkzeug.contrib.Session
     """
     pass
 
-def save(self, session_id, data):
+def is_valid_key(self, key):
     """
-    Saves session data to a storage
+    returns: bool
     """
     pass
 
-def delete_old_sessions(self):
+def new(self):
     """
-    This function should provide some cleaning mechanism for old/unused sessions.
-    It is called by KonText from time to time.
+    returns:  werkzeug.contrib.Session
     """
+	pass
+
+def save(self, session):
+    """
+    arguments:
+    session -- werkzeug.contrib.Session
+    """    
+    pass
+
+def save_if_modified(self, session):
+    """
+    arguments:
+    session -- werkzeug.contrib.Session
+    """
+    pass
 ```
 
 <a name="plugin_settings_storage"></a>
@@ -443,7 +472,7 @@ def delete_old_sessions(self):
 ### The "settings_storage" plug-in
 
 This plug-in allows users to store their concordance view settings. In general, it does not matter what kind of storage
-is used here but KonText always provides a database connection plug-in (if defined). ::
+is used here but KonText always passes a database connection plug-in (if defined) to the factory function *create_instance*.
 
 ```python
 def __init__(self, conf, db):
@@ -499,7 +528,7 @@ by exported formats:
 </export>
 ```
 
-Currently we recommend to use default configuration and modules. Buto in case you want to implement a custom format 
+Currently we recommend to use default configuration and modules. But in case you want to implement a custom format 
 please note that KonText currently does not offer automatic menu and respective page forms update based on the *export* 
 element. In other words, current export formats are hardcoded in main menu and page forms.
 
@@ -536,7 +565,7 @@ Attributes for the **corpus** element:
 
 | attr. name      | description                                                        |
 |-----------------|--------------------------------------------------------------------|
-| id              | name of the corpus (as used within registry files)                 |
+| ident           | name of the corpus (as used within registry files)                 |
 | sentence_struct | structure delimiting sentences                                     |
 | tagset          | (optional) tagset used by this corpus                              |
 | web             | (optional) external link containing information about the corpus   |
@@ -680,7 +709,7 @@ All the required tasks are configured to be performed by [Grunt](http://gruntjs.
 
 ### Debugging mode
 
-This can be set in *config.xml*'s */kontext/global/debug* by putting *true*.
+This can be set in *config.xml*'s */kontext/global/debug* by putting *true* or *1* or *2* (which adds app profiling).
 
 * file post-processing:
     * \*.tmpl files must be compiled by Cheetah templating compiler
@@ -699,7 +728,13 @@ This can be set in *config.xml*'s */kontext/global/debug* by setting the value *
     * optionally, JavaScript can be minimized
 
 If you have a working node.js and Grunt (grunt-cli package) installation, you can prepare KonText for deployment just by
-running *grunt* command in application's root directory.
+running *grunt* command in application's root directory. E.g.:
+
+```bash
+grunt production-optimized
+```
+
+generates files required for the production mode along with some additional RequireJS optimizations (merged libraries).
 
 
 KonText configuration
@@ -790,11 +825,17 @@ Sample configuration file **config.sample.xml** provides more examples.
 |------------------------------------------------|-------------------------------------------------------------------|
 | /kontext/global/manatee_path                   | If you want to use some non-default path to be searched by Python when looking for manatee library, you can define it here       |
 | /kontext/global/debug                          | true/false (true => detailed error info is visible etc.)          |
-| /kontext/global/log_path                       | Path to the logging file (webserver must have write access)       |
+| /kontext/global/log_path                       | Path to a logging file (webserver must have write access)         |
+| /kontext/global/logged_values                  | a list of values to be logged |
+| /kontext/global/logged_values/item             | a concrete value to be logged; possible values are {date, action, user_id, user, params, settings, proc_time} and environ:\* where \* can be any value WSGI environ dict contains (e.g. REMOTE_ADDR, HTTP_USER_AGENT,...) 
+| /kontext/global/profile_log_path               | Path to a file where profiling information will be written to (if debug == 2) |
+| /kontext/global/maintenance                    | If true then a simple static page is displayed on any request (currently, all the plugins must be still initiable even in this case) |
 | /kontext/global/administrators                 | List of usernames with administrative rights; this is deprecated  |
 | /kontext/global/fonts                          | list of custom CSS fonts to be loaded within HTML document        |
-| /kontext/global/translations                   | list of supported languages for user interface (this requires proper *\*.mo* file and also enabled support in your OS)   |
+| /kontext/global/translations                   | list of supported languages for user interface (this requires proper *\*.mo* file and also enabled support in your OS); a language code must have format xx_YY   |
 | /kontext/global/translations/language          | language item - besides language code, it may contain *label* attribute - if defined then the label is shown to user    |
+| /kontext/global/max_attr_list_size             | if the number of possible values for a struct. attribute is higher then this number then KonText shows just an empty input box for manual entry (instead of a list of all values) |
+| /kontext/global/anonymous_user_id              | a numeric ID of the *public* (aka *anonymous*) user which has limited privileges |
 
 
 ### Plug-ins configuration
