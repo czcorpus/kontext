@@ -367,7 +367,7 @@ class Kontext(Controller):
         else:
             return clazz()
 
-    def arg_args_mapping_keys(self, clazz):
+    def get_args_mapping_keys(self, clazz):
         """
         Returns a list of parameter names defined by 'clazz' argument mapping.
         Please note that it is independent on whether the current action registers
@@ -607,7 +607,7 @@ class Kontext(Controller):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(self.arg_args_mapping_keys(ConcArgsMapping))
+        args = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -694,7 +694,7 @@ class Kontext(Controller):
                     elif param_types[key].is_array() and not type(val) is list:
                         # A Parameter object is expected to be a list but
                         # web framework returns a scalar value
-                        val =dcode_input(val)
+                        val = [val]
                 named_args[key] = val
         na = named_args.copy()
 
@@ -1078,7 +1078,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.corpname
-        global_var_val = self._get_attrs(self.arg_args_mapping_keys(ConcArgsMapping))
+        global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
 
