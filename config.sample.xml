@@ -85,13 +85,6 @@
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
         </corptree>
-        <featured_corpora>
-            <module>default_featured_corpora</module>
-            <list>
-                <item>bnc</item>
-                <item>my_corpus</item>
-            </list>
-        </featured_corpora>
         <export>
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>
