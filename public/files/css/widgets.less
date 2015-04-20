@@ -157,33 +157,6 @@ ul.multiselect li td.checkbox-cell {
     color: #ababab;
 }
 
-.corplist-widget .featured-corpora ul {
-  margin-left: 0;
-  padding-left: 0;
-  list-style-type: none;
-}
-
-.corplist-widget .featured-corpora ul li {
-  background-image: url('../img/dot.png');
-  .ping-dot-item;
-}
-
-.corplist-widget .featured-corpora h3 {
-  margin-bottom: 7pt;
-  font-size: 11pt;
-  border-width: 0 0 1pt 0;
-  border-style: solid;
-  border-color: @color-logo-blue;
-}
-
-.corplist-widget .featured-corpora h3 {
-  margin-top: 3pt;
-}
-
-.corplist-widget .featured-corpora ul {
-  margin-top: 0;
-}
-
 .corplist-widget .archive,
 .corplist-widget .archive a {
   color: @color-light-text;
@@ -277,6 +250,21 @@ ul.multiselect li td.checkbox-cell {
   background-position: 5px 2px;
   background-repeat: no-repeat;
   padding-left: 23px;
+}
+
+.corplist-widget table.favorite-list,
+.corplist-widget table.featured-list {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.corplist-widget table.featured-list {
+  margin-left: 30pt;
+}
+
+.corplist-widget div.tables > table th {
+  text-align: center;
+  color: @color-logo-pink;
 }
 
 // -------------------------- tag hints -------

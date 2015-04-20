@@ -468,9 +468,15 @@ class FavoritesTab implements WidgetTab {
 
     widgetWrapper:HTMLElement;
 
-    data:Array<CorplistItem>;
+    tablesWrapper:HTMLElement;
 
-    wrapper:HTMLElement;
+    dataFav:Array<CorplistItem>;
+
+    private wrapperFav:HTMLElement;
+
+    dataFeat:Array<CorplistItem>;
+
+    private wrapperFeat:HTMLElement;
 
     itemClickCallback:CorplistItemClick;
 
@@ -478,16 +484,25 @@ class FavoritesTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, data:Array<CorplistItem>,
+    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
                 itemClickCallback?:CorplistItemClick) {
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
-        this.data = data;
+        this.dataFav = dataFav;
         this.itemClickCallback = itemClickCallback;
-        this.wrapper = window.document.createElement('table');
-        $(this.wrapper).addClass('favorite-list')
+        this.tablesWrapper = window.document.createElement('div');
+        $(this.tablesWrapper).addClass('tables');
+        $(this.widgetWrapper).append(this.tablesWrapper);
+
+        this.wrapperFav = window.document.createElement('table');
+        $(this.wrapperFav).addClass('favorite-list')
             .append('<tr><th colspan="2">' + this.pageModel.translate('favorite items') + '</th></tr>');
-        $(this.widgetWrapper).append(this.wrapper);
+        $(this.tablesWrapper).append(this.wrapperFav);
+
+        this.wrapperFeat = window.document.createElement('table');
+        $(this.wrapperFeat).addClass('featured-list')
+            .append('<tr><th colspan="2">' + this.pageModel.translate('featured items') + '</th></tr>');
+        $(this.tablesWrapper).append(this.wrapperFeat);
     }
 
     /**
@@ -498,8 +513,8 @@ class FavoritesTab implements WidgetTab {
      * @returns true on success else false
      */
     containsItem(item:CorplistItem):boolean {
-        for (var i = 0; i < this.data.length; i += 1) {
-            if (this.data[i].id == item.id) {
+        for (var i = 0; i < this.dataFav.length; i += 1) {
+            if (this.dataFav[i].id == item.id) {
                 return true;
             }
         }
@@ -532,10 +547,10 @@ class FavoritesTab implements WidgetTab {
      *
      */
     init():void {
-        var jqWrapper = $(this.wrapper),
+        var jqWrapper = $(this.wrapperFav),
             self = this;
 
-        $.each(this.data, function (i, item) {
+        $.each(this.dataFav, function (i, item) {
             var isFeatured = false; //item.featured; TODO
             jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
                 + ' title="' + item.description + '"'
@@ -556,17 +571,17 @@ class FavoritesTab implements WidgetTab {
     }
 
     reinit(newData:Array<CorplistItem>):void {
-        $(this.wrapper).find('tr').remove();
-        this.data = newData;
+        $(this.wrapperFav).find('tr').remove();
+        this.dataFav = newData;
         this.init();
     }
 
     show():void {
-        $(this.wrapper).show();
+        $(this.tablesWrapper).show();
     }
 
     hide():void {
-        $(this.wrapper).hide();
+        $(this.tablesWrapper).hide();
     }
 
     getFooter():JQuery {
