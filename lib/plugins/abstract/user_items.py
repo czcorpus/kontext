@@ -88,6 +88,7 @@ class CorpusItem(GeneralItem):
         self.corpus_id = None
         self.canonical_id = None
         self.size = None
+        self.size_info = None
 
     def generate_id(self):
         return generate_item_key(self)

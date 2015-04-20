@@ -38,21 +38,23 @@ def import_from_json(obj, recursive=False):
     arguments:
     obj -- a dict representing decoded JSON
     """
+    def set_common(item_obj, src_data):
+        item_obj.corpus_id = src_data['corpus_id']
+        item_obj.canonical_id = src_data['canonical_id']
+        item_obj.size = src_data.get('size', None)   # can be None in case item_obj is an aligned corp.
+        item_obj.size_info = src_data.get('size_info', None)  # can be None in case item_obj is an aligned corp.
+
     item_type = obj.get('type', None)
     if item_type == 'corpus':
         ans = CorpusItem(name=obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
     elif item_type == 'subcorpus':
         ans = SubcorpusItem(obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
         ans.subcorpus_id = obj['subcorpus_id']
-        ans.size = obj['size']
     elif item_type == 'aligned_corpora':
         ans = AlignedCorporaItem(obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
         if not recursive:
             ans.corpora = obj['corpora']
         else:

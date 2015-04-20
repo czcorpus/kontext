@@ -53,7 +53,12 @@ export interface CorplistItem {
     description: string;
     featured: Favorite;
     user_item: boolean;
-    size: any;
+    size: number;
+    /**
+     * A simplified/human readable version of size.
+     * E.g. if the size is 1,200,000 then the size_info is '1M'
+     */
+    size_info: string;
 }
 
 /**
@@ -527,7 +532,7 @@ class FavoritesTab implements WidgetTab {
                 + ' title="' + item.description + '"'
                 + ' href="' + self.generateItemUrl(item)
                 + '" data-id="' + item.corpus_id + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size + '</td></tr>'); // TODO translate
+                + '<td class="num">~' + item.size_info + '</td></tr>');
         });
 
         jqWrapper.find('a.corplist-item').each(function() {
@@ -719,7 +724,7 @@ class StarComponent {
             ans = {
                 id: null, name: null, type: null, corpus_id: null, canonical_id: null,
                 subcorpus_id: null, corpora: null, description: null, featured: null,
-                size: null, user_item: null
+                size: null, size_info: null, user_item: null
             };
             ans.corpus_id = corpus_id; // TODO canonical vs. regular
             ans.canonical_id = corpus_id;

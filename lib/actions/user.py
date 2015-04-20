@@ -13,6 +13,7 @@
 from controller import exposed, UserActionException
 from kontext import Kontext
 from kontext import MainMenu
+from kontext import simplify_num
 from translation import ugettext as _
 import plugins
 import settings
@@ -152,33 +153,32 @@ class User(Kontext):
             'limit': limit
         }
 
-
     @exposed(return_type='json', argmappings=(ConcArgsMapping,))
     def set_favorite_item(self, request):
         """
-
         """
         main_corp = self.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])
+        corp_size = main_corp.search_size()
+        data = {
+            'corpora': [],
+            'canonical_id': request.form['canonical_id'],
+            'corpus_id': request.form['corpus_id'],
+            'subcorpus_id': request.form['subcorpus_id'],
+            'name': request.form['name'],
+            'size': corp_size,
+            'size_info': simplify_num(corp_size),
+            'type': request.form['type']
+        }
+
         aligned_corpnames = request.form.getlist('corpora[]')
-        aligned_data = []
         for ac in aligned_corpnames:
-            aligned_data.append({
+            data['corpora'].append({
                 'name': ac,  # TODO fetch real name??
                 'corpus_id': ac,
                 'canonical_id': self._canonical_corpname(ac),
                 'type': 'corpus'
             })
 
-
-        data = {
-            'corpora': aligned_data,
-            'canonical_id': request.form['canonical_id'],
-            'corpus_id': request.form['corpus_id'],
-            'subcorpus_id': request.form['subcorpus_id'],
-            'name': request.form['name'],
-            'size': request.form['size'],
-            'type': request.form['type']
-        }
         item = plugins.user_items.from_dict(data)
         # TODO
         #remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
