@@ -914,8 +914,11 @@ class Controller(object):
         Renders a response body
         """
         from Cheetah.Template import Template
-        # JSON
-        if action_metadata.get('return_type') == 'json':
+        # any result with custom serialization
+        if callable(result):
+            outf.write(result())
+        # JSON with simple serialization (dict -> string)
+        elif action_metadata.get('return_type') == 'json':
             json.dump(result, outf)
         # Template
         elif type(result) is DictType:
