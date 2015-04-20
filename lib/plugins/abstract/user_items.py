@@ -169,7 +169,8 @@ class AbstractUserItems(ThreadLocalData):
 
     def to_json(self, obj):
         """
-        Exports a GeneralItem implementation to JSON
+        Exports a GeneralItem instance or a list of GeneralItem instances (both variants
+         must be supported) to JSON
         """
         raise NotImplementedError()
 

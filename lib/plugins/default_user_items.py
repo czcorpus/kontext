@@ -21,12 +21,21 @@ import l10n
 class ItemEncoder(json.JSONEncoder):
     """
     Provides a consistent encoding of GeneralItem objects into the JSON format.
+    In accordance with plug-in's 'to_json' required signature also a list of
+    GeneralItem instances is supported.
     """
-    def default(self, obj):
+    @staticmethod
+    def _convert_single(obj):
         d = [(k, v) for k, v in obj.__dict__.items() if not k.startswith('_')]
         d.append(('id', obj.id))
         d.append(('type', obj.type))
         return dict(d)
+
+    def default(self, obj):
+        if hasattr(obj, '__iter__'):
+            return [self._convert_single(item) for item in obj]
+        else:
+            return self._convert_single(obj)
 
 
 def import_from_json(obj, recursive=False):
