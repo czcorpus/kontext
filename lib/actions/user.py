@@ -194,5 +194,5 @@ class User(Kontext):
         return {}
 
     @exposed(return_type='json')
-    def ajax_get_favorite_corpora(self, request):
-        return self._load_fav_corplist()
+    def get_favorite_corpora(self, request):
+        return lambda: plugins.user_items.to_json(self._load_fav_items())

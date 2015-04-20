@@ -546,6 +546,12 @@ class FavoritesTab implements WidgetTab {
         });
     }
 
+    reinit(newData:Array<CorplistItem>):void {
+        $(this.wrapper).find('tr').remove();
+        this.data = newData;
+        this.init();
+    }
+
     show():void {
         $(this.wrapper).show();
     }
@@ -697,6 +703,7 @@ class StarComponent {
                 if (!data.error) {
                     self.pageModel.showMessage('info', message);
                     postDispatch(data);
+                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
 
                 } else {
                     self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
@@ -704,6 +711,18 @@ class StarComponent {
             },
             function (err) {
                 self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
+            }
+        ).then(
+            function (favItems) {
+                if (!favItems.error) {
+                    self.favoriteItemsTab.reinit(favItems);
+
+                } else {
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                }
+            },
+            function (err) {
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
             }
         );
     }
