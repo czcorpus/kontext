@@ -210,25 +210,28 @@ class WidgetMenu {
      *
      * @param trigger
      */
-    setCurrent(trigger:HTMLElement):void;
-    setCurrent(trigger:string):void;
-    setCurrent(trigger:any) {
-        var triggerElm:HTMLElement,
+    setCurrent(trigger:EventTarget):void;
+    setCurrent(trigger:string):void
+    setCurrent(trigger):void {
+        var newTabId:string,
+            menuLink:HTMLElement,
             newActiveWidget:WidgetTab;
 
         if (typeof trigger === 'string') {
-            triggerElm = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
+            newTabId = trigger;
+            menuLink = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
 
-        } else {
-            triggerElm = trigger;
+        } else if (typeof trigger === 'object') {
+            newTabId = $(trigger).data('func');
+            menuLink = $(trigger).get(0);
         }
 
         this.reset();
-        $(triggerElm).addClass('current');
-        newActiveWidget = this.getTabByIdent($(triggerElm).data('func'));
+        $(menuLink).addClass('current');
+        newActiveWidget = this.getTabByIdent(newTabId);
         newActiveWidget.show();
         this.widget.setFooter(newActiveWidget.getFooter());
-        this.currentBoxId = $(triggerElm).data('func');
+        this.currentBoxId = newTabId;
     }
 
     /**
@@ -253,14 +256,20 @@ class WidgetMenu {
         this.funcMap[WidgetMenu.SEARCH_WIDGET_ID] = this.searchBox;
         this.setCurrent(WidgetMenu.MY_ITEMS_WIDGET_ID);
 
-        this.menuWrapper.find('a').on('click', function (e:any) {
+        this.menuWrapper.find('a').on('click', function (e:JQueryEventObject) {
             self.setCurrent(e.currentTarget);
         });
 
         $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
-            if (self.currentBoxId === WidgetMenu.MY_ITEMS_WIDGET_ID
-                    && e.keyCode == WidgetMenu.TAB_KEY) {
-                self.setCurrent(WidgetMenu.SEARCH_WIDGET_ID);
+            var cycle;
+
+            if (self.widget.isVisible()) {
+                cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
+                if (e.keyCode == WidgetMenu.TAB_KEY) {
+                    self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
         });
     }
@@ -445,9 +454,9 @@ export class SearchTab implements WidgetTab {
      *
      * @returns {}
      */
-    getFooter():JQuery {
-        return $();
-    }
+     getFooter():JQuery {
+        return $('<span>' + this.pageModel.translate('hit [Tab] to see your favorite items') + '</span>');
+     }
 }
 
 /**
@@ -957,6 +966,10 @@ export class Corplist {
                 this.onShow.call(this, this);
             }
         }
+    }
+
+    public isVisible():boolean {
+        return this.visible === Visibility.VISIBLE;
     }
 
     /**
