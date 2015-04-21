@@ -784,7 +784,7 @@ class Kontext(Controller):
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
         # plugins setup
-        for p in plugins.list_plugins():
+        for p in plugins.get_plugins().values():
             if callable(getattr(p, 'setup', None)):
                 p.setup(self)
 
