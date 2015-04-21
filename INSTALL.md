@@ -171,6 +171,22 @@ class ExtendedTutorialPlugin(structures.ThreadLocalData):
 It should be noted that in case of KonText core plug-ins, a stateless solution (i.e. the one without need for calling
 plugin.setup()) can be usually found.
 
+```python
+def export(self):
+    return { '...JSON serializable data...'}
+```
+
+The optional *export* method is called by KonText after an action is processed. It is expected
+to return a JSON-serializable data which are then passed to the current template's client-side
+model:
+
+```js
+require(['tpl/layoutModel', 'tpl/myPage'], function (layoutModel, pageModel) {
+    pageModel.doSomething(layoutModel.getConf('pluginData')['my_plugin']);
+});
+```
+
+
 ### Notes for developers
 
 Plug-ins are configured in *config.xml* under */kontext/global/plugins*. Although three different names for different

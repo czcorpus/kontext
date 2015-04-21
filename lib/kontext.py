@@ -1167,6 +1167,13 @@ class Kontext(Controller):
         cached_values = Nicedict(empty_val='')
         self._restore_conc_results(cached_values)
         result['cached'] = cached_values
+
+        # we export plug-ins data KonText core does not care about (it is used
+        # by a respective plug-in client-side code)
+        result['plugin_data'] = {}
+        for plg_name, plg in plugins.get_plugins().items():
+            if hasattr(plg, 'export'):
+                result['plugin_data'][plg_name] = plg.export()
         return result
 
     def _restore_conc_results(self, storage):
