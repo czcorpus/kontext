@@ -29,4 +29,4 @@ def get_plugins():
     m = sys.modules[__name__]
     is_plugin = lambda name: not callable(getattr(m, name)) and not name.startswith('__') \
         and name not in sys.builtin_module_names
-    return dict([(m, getattr(m, item)) for item in dir(m) if is_plugin(item)])
+    return dict([(item, getattr(m, item)) for item in dir(m) if is_plugin(item)])
