@@ -21,13 +21,15 @@
  * This module contains functionality related directly to the document.tmpl template
  *
  */
-define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
-        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox, applicationBar) {
+define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar', 'vendor/Dispatcher',
+        'vendor/jquery.cookie'], function (win, $, queryInput, popupbox, applicationBar, Dispatcher) {
     'use strict';
 
     var lib = {};
 
     lib.conf = {};
+
+    lib.dispatcher = new Dispatcher();
     lib.plugins = {
         applicationBar : applicationBar
     };
@@ -1184,6 +1186,10 @@ define(['win', 'jquery', 'queryInput', 'popupbox', 'plugins/applicationBar',
 
             shortenText : function (s, length) {
                 return self.shortenText(s, length);
+            },
+
+            dispatcher : function () {
+                return lib.dispatcher;
             }
         };
     };
