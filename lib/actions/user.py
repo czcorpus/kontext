@@ -180,11 +180,6 @@ class User(Kontext):
             })
 
         item = plugins.user_items.from_dict(data)
-        # TODO
-        #remove_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is False])
-        #add_corp = set([self._canonical_corpname(x[0]) for x in data.items() if x[1] is True])
-        #self.favorite_corpora = tuple((set(self.favorite_corpora) - remove_corp).union(add_corp))
-        #self._save_options(optlist=['favorite_corpora'])
         plugins.user_items.add_user_item(self._session_get('user', 'id'), item)
         return {'id': item.id}
 
