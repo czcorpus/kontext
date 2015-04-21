@@ -211,7 +211,7 @@ class WidgetMenu {
      * @param trigger
      */
     setCurrent(trigger:EventTarget):void;
-    setCurrent(trigger:string):void
+    setCurrent(trigger:string):void;
     setCurrent(trigger):void {
         var newTabId:string,
             menuLink:HTMLElement,
@@ -386,7 +386,7 @@ export class SearchTab implements WidgetTab {
                     }
                     $(link)
                         .attr('title', 'In my favorites? (click to change)') // TODO translate
-                        .append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />')
+                        .append('<img src="' + self.pageModel.createStaticUrl('img/transparent_16x16.gif') + '" />')
                         .on('click', function (event:JQueryEventObject) {
                             var reqData:any = {},
                                 favState:boolean;
@@ -480,12 +480,19 @@ class FavoritesTab implements WidgetTab {
 
     itemClickCallback:CorplistItemClick;
 
+    editMode:boolean;
+
+    onListChange:Array<(trigger:FavoritesTab)=>void>;  // list of registered callbacks
+
     /**
      *
      * @param widgetWrapper
      */
     constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
                 itemClickCallback?:CorplistItemClick) {
+        var self = this;
+        this.editMode = false;
+        this.onListChange = [];
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.dataFav = dataFav;
@@ -496,13 +503,27 @@ class FavoritesTab implements WidgetTab {
 
         this.wrapperFav = window.document.createElement('table');
         $(this.wrapperFav).addClass('favorite-list')
-            .append('<tr><th colspan="2">' + this.pageModel.translate('favorite items') + '</th></tr>');
+            .append('<tr><th colspan="2">'
+                    + '<img class="config" '
+                    + 'title="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
+                    + 'alt="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
+                    + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') +  '" />'
+                    + this.pageModel.translate('favorite items') + '</th>'
+                    + '<th></th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
+
+        $(this.tablesWrapper).find('img.config').on('click', function () {
+            self.switchItemEditMode();
+        });
 
         this.wrapperFeat = window.document.createElement('table');
         $(this.wrapperFeat).addClass('featured-list')
             .append('<tr><th colspan="2">' + this.pageModel.translate('featured items') + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFeat);
+    }
+
+    registerChangeListener(fn:(trigger:FavoritesTab)=>void) {
+        this.onListChange.push(fn);
     }
 
     /**
@@ -519,6 +540,16 @@ class FavoritesTab implements WidgetTab {
             }
         }
         return false;
+    }
+
+    switchItemEditMode() {
+        if (this.editMode === false) {
+            $(this.wrapperFav).find('img.remove').removeClass('disabled');
+
+        } else {
+            $(this.wrapperFav).find('img.remove').addClass('disabled');
+        }
+        this.editMode = !this.editMode;
     }
 
     /**
@@ -545,18 +576,70 @@ class FavoritesTab implements WidgetTab {
 
     /**
      *
+     * @param itemId
+     */
+    private removeFromList(itemId:string) {
+        var self = this;
+        var prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
+                          {method: 'POST', data: {id: itemId}, dataType: 'json'});
+
+        prom.then(
+            function (data) {
+                if (!data.error) {
+                    self.pageModel.showMessage('info', self.pageModel.translate('item removed from favorites'));
+                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+
+                } else {
+                    self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+                }
+
+            },
+            function (err) {
+                self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+            }
+        ).then(
+            function (favItems) {
+                if (!favItems.error) {
+                    self.reinit(favItems);
+                    $.each(self.onListChange, function (i, fn:(trigger:FavoritesTab)=>void) {
+                        fn.call(self, self);
+                    });
+
+                } else {
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                }
+            },
+            function (err) {
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+            }
+        );
+    }
+
+    /**
+     *
      */
     init():void {
         var jqWrapper = $(this.wrapperFav),
             self = this;
 
+        this.editMode = false;
+
         $.each(this.dataFav, function (i, item) {
-            var isFeatured = false; //item.featured; TODO
-            jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
+            jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
                 + ' title="' + item.description + '"'
                 + ' href="' + self.generateItemUrl(item)
-                + '" data-id="' + item.corpus_id + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size_info + '</td></tr>');
+                + '" data-id="' + item.id + '">' + item.name + '</a></td>'
+                + '<td class="num">~' + item.size_info + '</td>'
+                + '<td class="tools"><img class="remove disabled" '
+                + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" /></td></tr>');
+        });
+
+        jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {
+            if (!$(e.currentTarget).hasClass('disabled')) {
+                self.removeFromList($(e.currentTarget).closest('tr').find('a.corplist-item').data('id'));
+            }
         });
 
         jqWrapper.find('a.corplist-item').each(function() {
@@ -571,7 +654,7 @@ class FavoritesTab implements WidgetTab {
     }
 
     reinit(newData:Array<CorplistItem>):void {
-        $(this.wrapperFav).find('tr').remove();
+        $(this.wrapperFav).find('tr.data-item').remove();
         this.dataFav = newData;
         this.init();
     }
@@ -678,6 +761,18 @@ class StarComponent {
 
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
+    };
+
+    /**
+     *
+     * @param trigger
+     */
+    onFavTabListChange = (trigger:FavoritesTab) => {
+        var curr = this.extractItemFromPage();
+
+        if (!trigger.containsItem(curr)) {
+            this.starSwitch.setStarState(false);
+        }
     };
 
     /**
@@ -842,6 +937,8 @@ class StarComponent {
         this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
         this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
         this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
+
+        this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
     }
 }
 

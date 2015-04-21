@@ -131,24 +131,6 @@ ul.multiselect li td.checkbox-cell {
   line-height: 2em;
 }
 
-.corplist-widget ul.root-list {
-    margin: 5px 0 0 0;
-    padding-left: 0;
-}
-
-.corplist-widget a.tree-expand {
-    color: #E2007A;
-}
-
-.corplist-widget a.node-link {
-    text-decoration: none;
-    color: inherit;
-}
-
-.corplist-widget a.node-link:hover {
-    color: #E2007A;
-}
-
 .corplist-widget .srch-field {
     color: inherit;
 }
@@ -157,26 +139,21 @@ ul.multiselect li td.checkbox-cell {
     color: #ababab;
 }
 
-.corplist-widget .archive,
-.corplist-widget .archive a {
-  color: @color-light-text;
+.corplist-widget table td {
+  padding: 3pt 8pt;
 }
 
-.corplist-widget .archive a {
-  text-decoration: none;
+.corplist-widget table td.tools {
+  padding: 3pt 0;
 }
 
-.corplist-widget .archive a:hover {
-  color: @color-logo-pink;
+.corplist-widget table td > img {
+  vertical-align: middle;
 }
 
 .corplist-widget tr td a {
   color: @color-default-text;
   text-decoration: none;
-}
-
-.corplist-widget tr td a.featured {
-  font-weight: bold;
 }
 
 .tt-suggestions .tt-suggestion span.num,
@@ -187,6 +164,11 @@ ul.multiselect li td.checkbox-cell {
 .corplist-widget tr td a:hover {
   color: @color-logo-pink;
   text-decoration: underline;
+}
+
+.corplist-widget img.config {
+  float: left;
+  cursor: pointer;
 }
 
 .corplist-widget .menu {
@@ -256,6 +238,20 @@ ul.multiselect li td.checkbox-cell {
 .corplist-widget table.featured-list {
   display: inline-block;
   vertical-align: top;
+}
+
+.corplist-widget table.favorite-list img.remove {
+  display: inline-block;
+  padding: 0;
+  cursor: pointer;
+}
+
+.corplist-widget table.favorite-list img.remove {
+
+}
+
+.corplist-widget table.favorite-list img.remove.disabled {
+  display: none;
 }
 
 .corplist-widget table.featured-list {
