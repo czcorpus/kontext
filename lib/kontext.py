@@ -784,7 +784,7 @@ class Kontext(Controller):
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
         # plugins setup
-        for p in plugins.list_plugins():
+        for p in plugins.get_plugins().values():
             if callable(getattr(p, 'setup', None)):
                 p.setup(self)
 
@@ -1167,6 +1167,14 @@ class Kontext(Controller):
         cached_values = Nicedict(empty_val='')
         self._restore_conc_results(cached_values)
         result['cached'] = cached_values
+
+        # we export plug-ins data KonText core does not care about (it is used
+        # by a respective plug-in client-side code)
+        result['plugin_data'] = {}
+        for plg_name, plg in plugins.get_plugins().items():
+            if hasattr(plg, 'export'):
+                result['plugin_data'][plg_name] = plg.export(self._session_get('user', 'id'),
+                                                             self.ui_lang)
         return result
 
     def _restore_conc_results(self, storage):

@@ -160,6 +160,7 @@ define('conf', [], function () {
     conf.uiStateTTL = ${ui_state_ttl};
     conf.historyMaxQuerySize = ${history_max_query_size};
     conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
+    conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
 
     conf.messages = {};
     #if $_anonymous

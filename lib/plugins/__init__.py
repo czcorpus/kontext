@@ -21,8 +21,12 @@ def load_plugin(name):
     return module
 
 
-def list_plugins():
+def get_plugins():
+    """
+    returns:
+    a dict (plugin_name, plugin_object)
+    """
     m = sys.modules[__name__]
-    return [getattr(m, item) for item in dir(m) if not callable(getattr(m, item))
-            and not item.startswith('__')
-            and not item in sys.builtin_module_names]
+    is_plugin = lambda name: not callable(getattr(m, name)) and not name.startswith('__') \
+        and name not in sys.builtin_module_names
+    return dict([(item, getattr(m, item)) for item in dir(m) if is_plugin(item)])

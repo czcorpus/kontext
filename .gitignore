@@ -13,9 +13,8 @@ lib/plugins/devel_*
 node_modules/
 
 # default app installation
-config.xml
-corplist.xml
-tagsets.xml
+*.xml
+!config.sample.xml
 public/files/js/min/
 public/files/js/compiled/
 public/files/css/kontext.min.css
