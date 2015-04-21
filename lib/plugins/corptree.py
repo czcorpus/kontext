@@ -317,6 +317,10 @@ class CorpTree(AbstractCorporaArchive):
         """
         self._lang(getattr(controller_obj, 'ui_lang', None))
 
+    def export(self, *args):
+        is_featured = lambda o: CorpTree.DEFAULT_FEATURED_KEY in o['metadata'].get('keywords', {})
+        return {'featured': [(x['id'], x.get('name', x['id'])) for x in self.get() if is_featured(x)]}
+
 
 def create_instance(conf):
     """

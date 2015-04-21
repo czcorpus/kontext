@@ -112,7 +112,7 @@ export interface Options {
 /**
  * Extracts user items encoded using JSON in data-item attributes of OPTION HTML elements.
  * This is expected to be filled in on server.
- *class Favo
+ *
  * @param select
  * @returns list of user items related to individual OPTION elements
  */
@@ -489,13 +489,14 @@ class FavoritesTab implements WidgetTab {
      * @param widgetWrapper
      */
     constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
-                itemClickCallback?:CorplistItemClick) {
+                dataFeat:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.dataFav = dataFav;
+        this.dataFeat = dataFeat;
         this.itemClickCallback = itemClickCallback;
         this.tablesWrapper = window.document.createElement('div');
         $(this.tablesWrapper).addClass('tables');
@@ -518,7 +519,7 @@ class FavoritesTab implements WidgetTab {
 
         this.wrapperFeat = window.document.createElement('table');
         $(this.wrapperFeat).addClass('featured-list')
-            .append('<tr><th colspan="2">' + this.pageModel.translate('featured items') + '</th></tr>');
+            .append('<tr><th colspan="2">' + this.pageModel.translate('featured corpora') + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFeat);
     }
 
@@ -650,6 +651,12 @@ class FavoritesTab implements WidgetTab {
                     e.preventDefault();
                 }
             });
+        });
+
+        $.each(this.dataFeat, function (i, item) {
+            $(self.wrapperFeat).append('<tr><td><a href="'
+                + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
+                + item[1] + '</a></td><td></td></tr>');
         });
     }
 
@@ -1129,7 +1136,8 @@ export class Corplist {
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data);
+        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
+            this.pageModel.getConf('pluginData')['corptree']['featured']);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
