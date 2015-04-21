@@ -33,7 +33,7 @@ except ImportError:
     markdown = lambda s: s
 from lxml import etree
 
-from structures import ThreadLocalData
+from plugins.abstract.corpora import AbstractCorporaArchive
 
 DEFAULT_LANG = 'en'
 
@@ -51,7 +51,7 @@ def call_controller(controller_obj, method, *args, **kwargs):
     return apply(getattr(controller_obj, method), args, kwargs)
 
 
-class CorpTree(ThreadLocalData):
+class CorpTree(AbstractCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -70,7 +70,7 @@ class CorpTree(ThreadLocalData):
         self._featured_keyword = None  # a keyword representing "featured" corpora
         self._favorite_keyword = None  # a keyword representing user's "favorite" corpora
 
-    def get_corplist_title(self, elm):
+    def _get_corplist_title(self, elm):
         """
         Returns locale-correct title of a corpus group (= CORPLIST XML element)
         """
@@ -147,16 +147,8 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def get_all_corpus_keywords(self):
-        """
-        returns:
-        list of 2-tuples (localized_label, spec_prop)
-        where spec_prop is int such as that:
-        0 - no special property
-        1 - featured label
-        2 - favorite label
-        """
         def encode_prop(l_key):
-            if self.keyword_is_featured(l_key, localized=False):
+            if self._keyword_is_featured(l_key, localized=False):
                 return 1
             elif self.keyword_is_favorite(l_key, localized=False):
                 return 2
@@ -174,7 +166,7 @@ class CorpTree(ThreadLocalData):
         """
         if not hasattr(root, 'tag') or not root.tag == 'corplist':
             return data
-        title = self.get_corplist_title(root)
+        title = self._get_corplist_title(root)
         if title:
             path = "%s%s/" % (path, title)
         for item in root:
@@ -219,7 +211,7 @@ class CorpTree(ThreadLocalData):
                     ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
                 data.append(ans)
 
-    def keyword_is_featured(self, keyword_ident, localized=False):
+    def _keyword_is_featured(self, keyword_ident, localized=False):
         if not localized:
             return keyword_ident == self._featured_keyword
         return self._keywords[self._featured_keyword][self._get_iso639lang()] == keyword_ident
@@ -229,10 +221,8 @@ class CorpTree(ThreadLocalData):
             return keyword_ident == self._favorite_keyword
         return self._keywords[self._favorite_keyword][self._get_iso639lang()] == keyword_ident
 
-    def keyword_is_special(self, keyword_ident, localized=False):
-        return self.keyword_is_favorite(keyword_ident, localized) or self.keyword_is_featured(keyword_ident, localized)
-
-    def _localize_corpus_info(self, data, lang_code):
+    @staticmethod
+    def _localize_corpus_info(data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -256,25 +246,6 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def get_corpus_info(self, corp_name, language=None):
-        """
-        Returns an information related to provided corpus name and contained within
-        the configuration XML file (i.e. not the data from the registry file). It is
-        able to handle names containing the '/' character.
-
-        arguments:
-        corp_name -- name of the corpus
-        language -- a language to export localized data to; both xx_YY and xx variants are
-                    accepted (in case there is no match for xx_YY xx is used).
-                    If None then all the variants are returned (=> slightly different structure
-                    of returned dictionary; typically - instead of a str value there is a dict
-                    where keys correspond to language codes).
-
-        returns:
-        a dictionary containing corpus information as defined in config.xml (i.e. <corpus> tag
-        and its attributes and also its subtree (e.g. <metadata> tag).
-        See self._parse_corplist_node method for the information how data is organized in the
-        dictionary.
-        """
         if corp_name != '':
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
