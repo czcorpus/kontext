@@ -5,8 +5,8 @@ log/
 tmp/
 *.db
 *.pyc
-config.xml
-corplist.xml
+*.xml
+!config.sample.xml
 .directory
 node_modules/
 public/files/js/min/

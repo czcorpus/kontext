@@ -56,3 +56,9 @@ Installation
 ------------
 
 Please refer to the [INSTALL.md](INSTALL.md) file.
+
+
+Customization and contribution
+------------------------------
+
+Please refer to the [DEVELOPMENT.md](DEVELOPMENT.md) file.
