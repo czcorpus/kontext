@@ -28,6 +28,9 @@ import applicationBar = require('plugins/applicationBar');
 import flux = require('vendor/Dispatcher');
 
 
+/**
+ *
+ */
 class NullStorage implements Storage {
     key(idx:number):string {return null}
     getItem(key:string) {}
@@ -41,6 +44,11 @@ class NullStorage implements Storage {
 }
 
 
+/**
+ *
+ * A local storage factory. If a respective
+ * API is not supported then @link{NullStorage} is returned.
+ */
 function getLocalStorage():Storage {
     if (typeof win.localStorage === 'object') {
         return win.localStorage;
@@ -50,22 +58,50 @@ function getLocalStorage():Storage {
     }
 }
 
+/**
+ */
+export interface InitCallbackObject {
+    plugin:string;
+    method:string;
+    args?:Array<any>;
+}
+
+/**
+ * Either a function or an object
+ */
+export type InitCallback = InitCallbackObject|(()=>void);
+
 
 /**
  *
  */
 export class PageModel implements Kontext.PluginProvider {
 
-
+    /**
+     * KonText configuration (per-page dynamic object)
+     */
     conf:Kontext.Conf;
 
+    /**
+     * Flux Dispatcher (currently not used across the app)
+     */
     dispatcher:flux.Dispatcher<any>;
 
+    /**
+     * Custom client-side plug-ins implementations
+     */
     plugins:{[name:string]:any}; // TODO type
 
+    /**
+     * Registered callbacks for plug-ins reinitialization
+     */
     pluginResets:Array<()=>void> = []; // TODO
 
-    initCallbacks = []; // TODO
+    /**
+     *
+     * @type {Array}
+     */
+    initCallbacks:Array<()=>void>;
 
     corpusInfoBox;
 
@@ -75,11 +111,16 @@ export class PageModel implements Kontext.PluginProvider {
 
     userSettings:UserSettings;
 
-    constructor(conf:{[item:string]:any}) {
+    /**
+     *
+     * @param conf
+     */
+    constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher();
         this.plugins = {};
         this.plugins['applicationBar'] = applicationBar;
+        this.initCallbacks = [];
         this.corpusInfoBox = new CorpusInfoBox(this);
         this.mainMenu = new MainMenu();
         this.promises = new Promises();
@@ -89,10 +130,10 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
-     * @param {HTMLElement} selectAllElm
-     * @param {String} [forceStatus]
+     * @param selectAllElm
+     * @param forceStatus
      */
-    private toggleSelectAllTrigger(selectAllElm, forceStatus?) {
+    private toggleSelectAllTrigger(selectAllElm:HTMLInputElement, forceStatus?:string) {
         var currValue,
             newValue;
 
@@ -127,16 +168,14 @@ export class PageModel implements Kontext.PluginProvider {
      * @param name
      * @param plugin
      */
-    registerPlugin(name, plugin) {
+    registerPlugin(name:string, plugin:Kontext.Plugin) {
         this.plugins[name] = plugin;
     }
 
     /**
-     *
      * @param name
-     * @returns {*}
      */
-    getPlugin(name) {
+    getPlugin(name:string):Kontext.Plugin {
         return this.plugins[name];
     }
 
@@ -149,7 +188,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param {string} [args]
      * @return the same value as called plug-in method
      */
-    callPlugin(name, fn, args) {
+    callPlugin(name:string, fn:string, args?:any[]) {
         if (typeof this.plugins[name] === 'object'
             && typeof this.plugins[name][fn] === 'function') {
             return this.plugins[name][fn].apply(this.plugins[name][fn], args);
@@ -163,9 +202,11 @@ export class PageModel implements Kontext.PluginProvider {
      * Registers a callback called during model initialization.
      * It can be either a function or an object specifying plug-in's function
      * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
-     * @param {function|object} fn
+     * @param fn
      */
-    registerInitCallback(fn) {
+    registerInitCallback(fn:InitCallback):void;
+    registerInitCallback(fn:()=>void):void;
+    registerInitCallback(fn):void {
         var self = this;
 
         if (typeof fn === 'function') {
@@ -184,8 +225,7 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * Escapes general string containing HTML elements and entities
      *
-     * @param {String} html
-     * @returns {string}
+     * @param html
      */
     escapeHTML(html:string):string {
         var elm = document.createElement('div');
@@ -194,8 +234,12 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
+     * Cuts an end of a text. If a non-empty string is detected
+     * at the end then additional characters up to the next whitespace
+     * are removed.
      *
      * @param s
+     * @param length
      */
     shortenText(s:string, length:number):string {
         var ans = s.substr(0, length),
@@ -216,8 +260,7 @@ export class PageModel implements Kontext.PluginProvider {
      * sometimes it is an object) into an object with well defined
      * properties.
      *
-     * @param {object|string} obj
-     * @return {{}}
+     * @param obj
      */
     unpackError(obj):{message:string; error:Error; reset:boolean} {
         var ans:{message:string; error:Error; reset:boolean} = {message:null, error:null, reset:null};
@@ -236,14 +279,14 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
-     * @param {HTMLElement|string|jQuery} elm
-     * @param {{*}} [options]
+     * @param elm
+     * @param options
      * @return
      */
-    appendLoader(elm, options) {
+    appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}) {
         var jImage = $('<img />');
 
-        options = options || {};
+        options = options || {domId:null, htmlClass:null};
         jImage.attr('src', '../files/img/ajax-loader.gif');
         if (options.domId) {
             jImage.addClass(options.domId);
@@ -264,7 +307,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param options
      * @deprecated promise-based solutions should be preferred
      */
-    ajax = (url, options) => {
+    ajax = (url:string, options:JQueryAjaxSettings) => {
         var self = this,
             succWrapper,
             origSucc;
@@ -308,16 +351,16 @@ export class PageModel implements Kontext.PluginProvider {
     };
 
     /**
-     * @param {String} type one of 'info', 'warning', 'error'
-     * @param {String} message text of the message
-     * @param {Function} [callback] do something after message is rendered
+     * @param msgType - one of 'info', 'warning', 'error', 'plain'
+     * @param message - text of the message
+     * @param callback - do something after message is rendered
      */
-    showMessage = (msgType, message, callback?) => {
-        var innerHTML,
-            messageListElm,
-            messageElm,
-            timeout,
-            typeIconMap;
+    showMessage = (msgType:string, message:string, callback?:(msgElm:HTMLElement)=>void) => {
+        var innerHTML:string,
+            messageListElm:HTMLElement,
+            messageElm:HTMLElement,
+            timeout:number,
+            typeIconMap:{[t:string]:string};
 
         typeIconMap = {
             info: '../files/img/info-icon.png',
@@ -365,10 +408,10 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * Transforms an existing element into a context help link with bound pop-up message.
      *
-     * @param {HTMLElement} triggerElm an element to be transformed into a context help link
-     * @param text text of the help
+     * @param triggerElm - an element to be transformed into a context help link
+     * @param text - a text of the help message
      */
-    contextHelp(triggerElm, text) {
+    contextHelp(triggerElm:HTMLElement, text:string):void {
         var image = win.document.createElement('img');
 
         $(triggerElm).addClass('context-help');
@@ -385,9 +428,9 @@ export class PageModel implements Kontext.PluginProvider {
      * normal circumstances, the form submits to the concordance
      * view page via POST method.
      *
-     * @param {Event} event
+     * @param event
      */
-    formChangeCorpus(event) {
+    formChangeCorpus(event:JQueryEventObject):void {
         var jqFormElm = $(event.target).closest('form'),
             subcorpSelect = $('#subcorp-selector');
 
@@ -404,22 +447,24 @@ export class PageModel implements Kontext.PluginProvider {
      * all empty/unused form fields. This is used to reduce number of passed parameters,
      * especially in case of parallel corpora.
      *
-     * @param state {boolean}
+     * @param state
      */
-    setAlignedCorporaFieldsDisabledState(state) {
+    setAlignedCorporaFieldsDisabledState(state:boolean):void {
+        var stateStr:string = state.toString();
+
         $('#mainform input[name="sel_aligned"]').each(function () {
             var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
                 queryType;
 
             // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
             if (!$(this).val()) {
-                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', state);
-                $('select[name="queryselector_' + corpn + '"]').attr('disabled', state);
-                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', state);
-                $(this).attr('disabled', state);
+                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', stateStr);
+                $('select[name="queryselector_' + corpn + '"]').attr('disabled', stateStr);
+                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', stateStr);
+                $(this).attr('disabled', stateStr);
 
                 $(this).parent().find('input[type="text"]').each(function () {
-                    $(this).attr('disabled', state);
+                    $(this).attr('disabled', stateStr);
                 });
 
             } else {
@@ -427,7 +472,7 @@ export class PageModel implements Kontext.PluginProvider {
                 queryType = queryType.substring(0, queryType.length - 3);
                 $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
                     if (!$(this).hasClass(queryType + '-input')) {
-                        $(this).attr('disabled', state);
+                        $(this).attr('disabled', stateStr);
                     }
                 });
             }
@@ -435,19 +480,18 @@ export class PageModel implements Kontext.PluginProvider {
         // now let's disable unused corpora completely
         $('.parallel-corp-lang').each(function () {
             if ($(this).css('display') === 'none') {
-                $(this).find('input,select').attr('disabled', state);
+                $(this).find('input,select').attr('disabled', stateStr);
             }
         });
     }
 
     /**
      *
-     * @param value {number|string}
-     * @param {string} groupSepar separator character for thousands groups
-     * @param {string} radixSepar separator character for integer and fractional parts
-     * @returns {string}
+     * @param value
+     * @param groupSepar - separator character for thousands groups
+     * @param radixSepar - separator character for integer and fractional parts
      */
-    formatNum(value, groupSepar, radixSepar):string {
+    formatNum(value:number|string, groupSepar:string, radixSepar:string):string {
         var i,
             offset = 0,
             len,
@@ -471,7 +515,7 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * @todo rewrite/refactor
      */
-    misc() {
+    misc():void {
         var self = this;
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
@@ -500,7 +544,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param data
      * @param {TooltipBox} tooltipBox
      */
-    renderOverview = function (data, tooltipBox) {
+    renderOverview = function (data, tooltipBox):void {
         var self = this,
             url,
             html = '<h3>' + self.conf.messages.query_overview + '</h3><table border="1">',
@@ -888,10 +932,8 @@ export class PageModel implements Kontext.PluginProvider {
 
     /**
      *
-     * @param {{}} conf
-     * @return {Promises}
      */
-    init(conf):Promises {
+    init():Promises {
         var self = this;
         this.userSettings.init();
 
@@ -910,9 +952,9 @@ export class PageModel implements Kontext.PluginProvider {
         });
 
         // init plug-ins
-        this.registerPlugin('applicationBar', this.promises.get('applicationBar'));
+        this.registerPlugin('applicationBar', this.promises.get<Kontext.Plugin>('applicationBar'));
 
-        $.each(this.initCallbacks, function (i, fn) {
+        $.each(this.initCallbacks, function (i, fn:()=>void) {
             fn();
         });
 
@@ -922,8 +964,6 @@ export class PageModel implements Kontext.PluginProvider {
 
 /**
  * Handles modal box displaying information about current corpus.
- *
- * @type {{}}
  */
 class CorpusInfoBox {
 
@@ -1055,10 +1095,11 @@ class CorpusInfoBox {
             }
         );
     }
-
 }
 
-
+/**
+ * KonText main menu
+ */
 export class MainMenu {
 
     /**
@@ -1120,9 +1161,9 @@ export class MainMenu {
 
     /**
      *
-     * @param {jQuery|HTMLElement} activeLi active main menu item LI
+     * @param activeLi - active main menu item LI
      */
-    openSubmenu(activeLi) {
+    openSubmenu(activeLi:HTMLElement|JQuery) {
         var menuLeftPos,
             jqSubMenuUl,
             jqActiveLi = $(activeLi);
@@ -1149,7 +1190,7 @@ export class MainMenu {
     /**
      * Initializes main menu logic
      */
-    init() {
+    init():void {
         var self = this;
 
         $('#menu-level-1 li.disabled a').each(function () {
@@ -1281,7 +1322,9 @@ export class PluginApi {
     }
 }
 
-
+/**
+ * @todo this should be either finished (and respected by action pages) or rewritten in some way
+ */
 export class Promises {
 
     prom:{[k:string]:any};
@@ -1324,7 +1367,7 @@ export class Promises {
      * Gets a promise of the specified name. In case
      * no such promise exists, error is thrown.
      */
-    get(key):Promises {
+    get<T>(key):T {
         if (this.prom[key]) {
             return this.prom[key];
 
@@ -1361,6 +1404,9 @@ export class Promises {
     }
 }
 
+/**
+ * Local user settings
+ */
 export class UserSettings {
 
 
