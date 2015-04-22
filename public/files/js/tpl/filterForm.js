@@ -22,32 +22,35 @@
  *
  */
 define(['tpl/document', 'queryInput', 'plugins/queryStorage', 'plugins/liveAttributes'], function (
-    layoutModel, queryInput, queryStorage, liveAttributes) {
+    documentModule, queryInput, queryStorage, liveAttributes) {
     'use strict';
 
     var lib = {};
-
-    lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
+    lib.layoutModel = null;
+    lib.extendedApi = null;
 
     /**
      *
      * @param conf page configuration data
      */
     lib.init = function (conf) {
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
+        lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
 
-        var promises = layoutModel.init(conf).add({
+        var promises = lib.layoutModel.init(conf).add({
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
-                lib.extendedApi, layoutModel.userSettings),
+                lib.extendedApi, lib.layoutModel.userSettings),
             bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
-                $('#mainform input.submit'), layoutModel),
+                $('#mainform input.submit'), lib.layoutModel),
             updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
-                lib.extendedApi, layoutModel.userSettings),
+                lib.extendedApi, lib.layoutModel.userSettings),
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });
 
-        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
+        lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
     };
 
     return lib;

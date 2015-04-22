@@ -1,0 +1,1421 @@
+/*
+ * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2003-2009  Pavel Rychly
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+/// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../../ts/declarations/flux.d.ts" />
+
+import win = require('win');
+import $ = require('jquery');
+import queryInput = require('queryInput');
+import popupbox = require('popupbox');
+import applicationBar = require('plugins/applicationBar');
+import flux = require('vendor/Dispatcher');
+
+
+class NullStorage implements Storage {
+    key(idx:number):string {return null}
+    getItem(key:string) {}
+    setItem(key:string, value:string) {}
+    removeItem(key:string) {}
+    clear():void {}
+    length:number = 0;
+    remainingSpace:number = 0;
+    [key: string]: any;
+    [index: number]: any;
+}
+
+
+function getLocalStorage():Storage {
+    if (typeof win.localStorage === 'object') {
+        return win.localStorage;
+
+    } else {
+        new NullStorage();
+    }
+}
+
+
+/**
+ *
+ */
+export class PageModel implements Kontext.PluginProvider {
+
+
+    conf:Kontext.Conf;
+
+    dispatcher:flux.Dispatcher<any>;
+
+    plugins:{[name:string]:any}; // TODO type
+
+    pluginResets:Array<()=>void> = []; // TODO
+
+    initCallbacks = []; // TODO
+
+    corpusInfoBox;
+
+    mainMenu:MainMenu;
+
+    promises:Promises;
+
+    userSettings:UserSettings;
+
+    constructor(conf:{[item:string]:any}) {
+        this.conf = conf;
+        this.dispatcher = new flux.Dispatcher();
+        this.plugins = {};
+        this.plugins['applicationBar'] = applicationBar;
+        this.corpusInfoBox = new CorpusInfoBox(this);
+        this.mainMenu = new MainMenu();
+        this.promises = new Promises();
+        this.promises = new Promises();
+        this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
+            this.conf['uiStateTTL']);
+    }
+
+    /**
+     * @param {HTMLElement} selectAllElm
+     * @param {String} [forceStatus]
+     */
+    private toggleSelectAllTrigger(selectAllElm, forceStatus?) {
+        var currValue,
+            newValue;
+
+        if (!$(selectAllElm).attr('data-status')) {
+            $(selectAllElm).attr('data-status', '1');
+        }
+        currValue = $(selectAllElm).attr('data-status');
+        if (forceStatus) {
+            newValue = forceStatus;
+
+        } else if (currValue === '1') {
+            newValue = '2';
+
+        } else if (currValue === '2') {
+            newValue = '1';
+        }
+
+        if (currValue !== newValue) {
+            $(selectAllElm).attr('data-status', newValue);
+            if (newValue === '1') {
+                selectAllElm.checked = false;
+            }
+        }
+    }
+
+    /**
+     * Adds a plug-in to the model. In general, it is not
+     * required to do this on a page using some plug-in but
+     * in that case it will not be possible to use plug-in
+     * related methods of document.js model.
+     *
+     * @param name
+     * @param plugin
+     */
+    registerPlugin(name, plugin) {
+        this.plugins[name] = plugin;
+    }
+
+    /**
+     *
+     * @param name
+     * @returns {*}
+     */
+    getPlugin(name) {
+        return this.plugins[name];
+    }
+
+    /**
+     * Calls a function on a registered plug-in with some additional
+     * testing of target's callability.
+     *
+     * @param {string} name
+     * @param {string} fn
+     * @param {string} [args]
+     * @return the same value as called plug-in method
+     */
+    callPlugin(name, fn, args) {
+        if (typeof this.plugins[name] === 'object'
+            && typeof this.plugins[name][fn] === 'function') {
+            return this.plugins[name][fn].apply(this.plugins[name][fn], args);
+
+        } else {
+            throw new Error("Failed to call method " + fn + " on plug-in " + name);
+        }
+    }
+
+    /**
+     * Registers a callback called during model initialization.
+     * It can be either a function or an object specifying plug-in's function
+     * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
+     * @param {function|object} fn
+     */
+    registerInitCallback(fn) {
+        var self = this;
+
+        if (typeof fn === 'function') {
+            this.initCallbacks.push(fn);
+
+        } else if (typeof fn === 'object' && fn['plugin'] && fn['method']) {
+            this.initCallbacks.push(function () {
+                self.callPlugin(fn['plugin'], fn['method'], fn['args']);
+            });
+
+        } else {
+            throw new Error('Registered invalid callback');
+        }
+    }
+
+    /**
+     * Escapes general string containing HTML elements and entities
+     *
+     * @param {String} html
+     * @returns {string}
+     */
+    escapeHTML(html:string):string {
+        var elm = document.createElement('div');
+        elm.appendChild(document.createTextNode(html));
+        return elm.innerHTML;
+    }
+
+    /**
+     *
+     * @param s
+     */
+    shortenText(s:string, length:number):string {
+        var ans = s.substr(0, length),
+            items;
+
+        if (ans.length > length && !/\s.|.\s/.exec(s.substr(length - 1, 2))) {
+            items = ans.split(/\s+/);
+            ans = items.slice(0, items.length - 1).join(' ');
+        }
+        if (ans.length < s.length) {
+            ans += '...';
+        }
+        return ans;
+    }
+
+    /**
+     * Normalizes error representation (sometimes it is a string,
+     * sometimes it is an object) into an object with well defined
+     * properties.
+     *
+     * @param {object|string} obj
+     * @return {{}}
+     */
+    unpackError(obj):{message:string; error:Error; reset:boolean} {
+        var ans:{message:string; error:Error; reset:boolean} = {message:null, error:null, reset:null};
+
+        if (typeof obj === 'object') {
+            ans.message = obj.message;
+            ans.error = obj.error;
+            ans.reset = obj.reset || false;
+
+        } else {
+            ans.message = obj;
+            ans.error = null;
+            ans.reset = false;
+        }
+        return ans;
+    }
+
+    /**
+     * @param {HTMLElement|string|jQuery} elm
+     * @param {{*}} [options]
+     * @return
+     */
+    appendLoader(elm, options) {
+        var jImage = $('<img />');
+
+        options = options || {};
+        jImage.attr('src', '../files/img/ajax-loader.gif');
+        if (options.domId) {
+            jImage.addClass(options.domId);
+        }
+        if (options.htmlClass) {
+            jImage.addClass(options.htmlClass);
+        }
+        $(elm).append(jImage);
+        return jImage;
+    }
+
+    /**
+     * Wrapper for jQuery's $.ajax function which is able
+     * to handle error states using client's capabilities
+     * (error messages, page reload etc.).
+     *
+     * @param url
+     * @param options
+     * @deprecated promise-based solutions should be preferred
+     */
+    ajax = (url, options) => {
+        var self = this,
+            succWrapper,
+            origSucc;
+
+        if (arguments.length === 1) {
+            options = url;
+        }
+
+        if (!options.error) {
+            options.error = function (jqXHR, textStatus, errorThrown) {
+                self.showMessage('error', errorThrown);
+            };
+        }
+
+        origSucc = options.success;
+        succWrapper = function (data, textStatus, jqXHR) {
+            var error;
+
+            if (data.hasOwnProperty('error')) {
+                error = self.unpackError(data.error);
+
+                if (error.reset === true) {
+                    win.location = self.createActionUrl('first_form');
+
+                } else {
+                    options.error(null, null, error.message || 'error');
+                }
+
+            } else {
+                origSucc(data, textStatus, jqXHR);
+            }
+        };
+        options.success = succWrapper;
+
+        if (arguments.length === 1) {
+            $.ajax(options);
+
+        } else {
+            $.ajax(url, options);
+        }
+    };
+
+    /**
+     * @param {String} type one of 'info', 'warning', 'error'
+     * @param {String} message text of the message
+     * @param {Function} [callback] do something after message is rendered
+     */
+    showMessage = (msgType, message, callback?) => {
+        var innerHTML,
+            messageListElm,
+            messageElm,
+            timeout,
+            typeIconMap;
+
+        typeIconMap = {
+            info: '../files/img/info-icon.png',
+            warning: '../files/img/warning-icon.png',
+            error: '../files/img/error-icon.png'
+        };
+
+        if (typeof message === 'object' && msgType === 'error') {
+            message = message['message'];
+        }
+
+        innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[msgType] + '">'
+            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
+
+        if ($('#content .messages').length === 0) {
+            messageListElm = win.document.createElement('div');
+            $(messageListElm).addClass('messages');
+            $('#content').prepend(messageListElm);
+
+        } else {
+            messageListElm = $('#content .messages').get(0);
+        }
+        messageElm = win.document.createElement('div');
+        $(messageElm).addClass('message').addClass(msgType);
+        $(messageElm).html(innerHTML);
+        $(messageListElm).append(messageElm);
+
+
+        $(messageElm).find('a.close-icon').bind('click', function () {
+            $(messageElm).hide(200);
+        });
+
+        if (this.conf['messageAutoHideInterval']) {
+            timeout = win.setTimeout(function () {
+                $(messageElm).hide(200);
+                win.clearTimeout(timeout);
+            }, this.conf['messageAutoHideInterval']);
+        }
+
+        if (typeof callback === 'function') {
+            callback(messageElm);
+        }
+    };
+
+    /**
+     * Transforms an existing element into a context help link with bound pop-up message.
+     *
+     * @param {HTMLElement} triggerElm an element to be transformed into a context help link
+     * @param text text of the help
+     */
+    contextHelp(triggerElm, text) {
+        var image = win.document.createElement('img');
+
+        $(triggerElm).addClass('context-help');
+        $(image).attr('data-alt-img', '../files/img/question-mark_s.png')
+            .attr('src', '../files/img/question-mark.png')
+            .addClass('over-img');
+        $(triggerElm).append(image);
+        popupbox.bind(triggerElm, text, {width: 'nice'});
+    }
+
+    /**
+     * Modifies form (actually, it is always the #mainform)
+     * in a way that only current corpus is changed. Under
+     * normal circumstances, the form submits to the concordance
+     * view page via POST method.
+     *
+     * @param {Event} event
+     */
+    formChangeCorpus(event) {
+        var jqFormElm = $(event.target).closest('form'),
+            subcorpSelect = $('#subcorp-selector');
+
+        jqFormElm.attr('action', 'first_form');
+        jqFormElm.attr('method', 'GET');
+        if (subcorpSelect.val()) {
+            subcorpSelect.val(null);
+        }
+        jqFormElm.submit();
+    }
+
+    /**
+     * Disables (if state === true) or enables (if state === false)
+     * all empty/unused form fields. This is used to reduce number of passed parameters,
+     * especially in case of parallel corpora.
+     *
+     * @param state {boolean}
+     */
+    setAlignedCorporaFieldsDisabledState(state) {
+        $('#mainform input[name="sel_aligned"]').each(function () {
+            var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
+                queryType;
+
+            // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
+            if (!$(this).val()) {
+                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', state);
+                $('select[name="queryselector_' + corpn + '"]').attr('disabled', state);
+                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', state);
+                $(this).attr('disabled', state);
+
+                $(this).parent().find('input[type="text"]').each(function () {
+                    $(this).attr('disabled', state);
+                });
+
+            } else {
+                queryType = $(this).parent().find('[id="queryselector_' + corpn + '"]').val();
+                queryType = queryType.substring(0, queryType.length - 3);
+                $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
+                    if (!$(this).hasClass(queryType + '-input')) {
+                        $(this).attr('disabled', state);
+                    }
+                });
+            }
+        });
+        // now let's disable unused corpora completely
+        $('.parallel-corp-lang').each(function () {
+            if ($(this).css('display') === 'none') {
+                $(this).find('input,select').attr('disabled', state);
+            }
+        });
+    }
+
+    /**
+     *
+     * @param value {number|string}
+     * @param {string} groupSepar separator character for thousands groups
+     * @param {string} radixSepar separator character for integer and fractional parts
+     * @returns {string}
+     */
+    formatNum(value, groupSepar, radixSepar):string {
+        var i,
+            offset = 0,
+            len,
+            numParts,
+            s;
+
+        numParts = value.toString().split('.');
+        s = numParts[0].split('').reverse();
+        len = s.length;
+        for (i = 3; i < len; i += 3) {
+            s.splice(i + offset, 0, groupSepar);
+            offset += 1;
+        }
+        s = s.reverse().join('');
+        if (numParts[1] !== undefined) {
+            s += radixSepar + numParts[1];
+        }
+        return s;
+    }
+
+    /**
+     * @todo rewrite/refactor
+     */
+    misc() {
+        var self = this;
+        $('select.qselector').each(function () {
+            $(this).on('change', function (event) {
+                queryInput.cmdSwitchQuery(self, event, self.conf['queryTypesHints']);
+            });
+
+            // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
+            if ($(this).val() !== 'iqueryrow') {
+                queryInput.cmdSwitchQuery(self, $(this).get(0), self.conf['queryTypesHints']);
+            }
+        });
+
+        // remove empty and unused parameters from URL before mainform submit
+        $('form').submit(function () { // run before submit
+            self.setAlignedCorporaFieldsDisabledState(true);
+            $(win).on('unload', function () {
+                self.setAlignedCorporaFieldsDisabledState(false);
+            });
+        });
+    }
+
+    /**
+     * Renders a query overview within tooltipBox
+     * instance based on provided data
+     *
+     * @param data
+     * @param {TooltipBox} tooltipBox
+     */
+    renderOverview = function (data, tooltipBox) {
+        var self = this,
+            url,
+            html = '<h3>' + self.conf.messages.query_overview + '</h3><table border="1">',
+            parentElm = tooltipBox.getRootElement();
+
+        html += '<tr><th>' + self.conf.messages.operation + '</th>';
+        html += '<th>' + self.conf.messages.parameters + '</th>';
+        html += '<th>' + self.conf.messages.num_of_hits + '</th><th></th></tr>';
+
+        $.each(data.Desc, function (i, item:{op:string; arg:string; size:number; tourl:string}) {
+            html += '<tr><td>' + self.escapeHTML(item.op) + '</td>';
+            html += '<td>' + self.escapeHTML(item.arg) + '</td>';
+            html += '<td>' + self.escapeHTML(item.size) + '</td>';
+            html += '<td>';
+            if (item.tourl) {
+                url = 'view?' + item.tourl;
+                html += '<a href="' + url + '">' + self.conf.messages.view_result + '</a>';
+            }
+            html += '</td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+        $(parentElm).html(html);
+    }
+
+    /**
+     *
+     */
+    queryOverview() {
+        var escKeyEventHandlerFunc,
+            self = this;
+
+        escKeyEventHandlerFunc = function (boxInstance) {
+            return function (event) {
+                if (event.keyCode === 27) {
+                    $('#conclines tr.active').removeClass('active');
+                    if (boxInstance) {
+                        boxInstance.close();
+                    }
+                    $(document).off('keyup.query_overview');
+                }
+            };
+        };
+
+        // query overview
+        $('#query-overview-trigger').on('click', function (event) {
+            var reqUrl = $(event.target).data('json-href');
+
+            $.ajax(reqUrl, {
+                dataType: 'json',
+                success: function (data) {
+                    var box,
+                        leftPos;
+
+                    if (data.Desc) {
+                        box = popupbox.open(
+                            function (box2, finalize) {
+                                self.renderOverview(data, box2);
+                                finalize();
+                            },
+                            null,
+                            {
+                                type: 'plain',
+                                domId: 'query-overview',
+                                htmlClass: 'query-overview',
+                                closeIcon: true,
+                                calculatePosition: false,
+                                timeout: null,
+                                messages: self.conf['messages'] // TODO
+                            }
+                        );
+                        leftPos = $(window).width() / 2 - box.getPosition().width / 2;
+                        box.setCss('left', leftPos + 'px');
+
+                        $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
+
+                    } else {
+                        self.showMessage('error', self.translate('failed_to_load_query_overview'));
+                    }
+                },
+                error: function () {
+                    self.showMessage('error', self.translate('failed_to_load_query_overview'));
+                }
+            });
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        });
+    }
+
+    /**
+     * @param {HTMLElement|String|jQuery} elm
+     * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
+     */
+    applySelectAll = function (elm, context) {
+        var self = this,
+            jqElm = $(elm),
+            jqContext = $(context),
+            jqCheckboxes,
+            updateButtonStatus;
+
+        if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
+            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all)');
+
+        } else {
+            jqCheckboxes = jqContext;
+        }
+
+        updateButtonStatus = function () {
+            var numChecked = jqCheckboxes.filter(':checked').length;
+
+            if (jqCheckboxes.length > numChecked) {
+                self.toggleSelectAllTrigger(elm, '1');
+
+            } else {
+                self.toggleSelectAllTrigger(elm, '2');
+            }
+        };
+
+        jqCheckboxes.on('click', updateButtonStatus);
+        updateButtonStatus();
+
+        jqElm.off('click');
+        jqElm.on('click', function (event) {
+            var evtTarget = event.target;
+
+            if ($(evtTarget).attr('data-status') === '1') {
+                jqCheckboxes.each(function () {
+                    this.checked = true;
+                });
+                self.toggleSelectAllTrigger(evtTarget);
+
+            } else if ($(evtTarget).attr('data-status') === '2') {
+                jqCheckboxes.each(function () {
+                    this.checked = false;
+                });
+                self.toggleSelectAllTrigger(evtTarget);
+            }
+        });
+    }
+
+    /**
+     * @returns {$.Deferred.Promise}
+     */
+    bindCorpusDescAction() {
+        var self = this,
+            jqDescLink = $('#corpus-desc-link'),
+            defer = $.Deferred();
+
+        popupbox.bind(jqDescLink,
+            function (box, finalize) {
+                self.corpusInfoBox.createCorpusInfoBox(box, finalize);
+            },
+            {
+                width: 'auto',
+                closeIcon: true,
+                messages: self.conf['messages'],
+                beforeOpen: function () {
+                    var ajaxLoader = self.createAjaxLoader();
+
+                    $(win.document.body).append(ajaxLoader);
+                    ajaxLoader.css({
+                        'left': (jqDescLink.offset().left - 20) + 'px',
+                        'top': (jqDescLink.offset().top + 30) + 'px'
+                    });
+                    return ajaxLoader;
+                },
+                onShow: function (loader:JQuery) {
+                    loader.remove();
+                    defer.resolve();
+                },
+                onError: function (loader:JQuery) {
+                    loader.remove();
+                    defer.resolve();
+                }
+            });
+
+        return defer.promise();
+    }
+
+    /**
+     *
+     */
+    bindStaticElements() {
+        var self = this,
+            citationHtml = $('#corpus-citation-box').html();
+
+        popupbox.bind($('#positions-help-link'), self.conf['messages']['msg1'],
+            {messages: self.conf['messages'], width: '30%'});
+
+        popupbox.bind('#corpus-citation-link a',
+            function (box, finalizeCallback) {
+                $(box.getRootElement()).html(citationHtml).find('a').attr('target', '_blank');
+                $('#corpus-citation-box').empty();
+                finalizeCallback();
+            },
+            {
+                type: 'plain',
+                domId: 'citation-information',
+                closeIcon: true,
+                calculatePosition: true,
+                timeout: null,
+                messages: self.conf['messages']
+                ,
+                width: '40%',
+                onClose: function () {
+                    $('#corpus-citation-box').html(citationHtml);
+                }
+            });
+
+        // 'Select all' buttons for structural attribute lists
+        $('table.envelope input[class="select-all"]').each(function () {
+            self.applySelectAll(this, $(this).closest('table.envelope'));
+        });
+
+        // Click which removes the 'error box'
+        $('.message a.close-icon').bind('click', function (event) {
+            var nextUrl,
+                parentElm;
+
+            parentElm = $(event.target).closest('.message').get(0);
+            nextUrl = $(parentElm).data('next-url');
+
+            $(parentElm).hide(200, function () {
+                if (nextUrl) {
+                    win.location = nextUrl;
+                }
+            });
+        });
+
+        // Footer's language switch
+        $('#switch-language-box a').each(function () {
+            $(this).bind('click', function () {
+                self.userSettings.set('set_uilang', $(this).data('lang'));
+                win.location.reload();
+            });
+        });
+    }
+
+    timeoutMessages() {
+        var timeout,
+            jqMessage = $('.message');
+
+        if (jqMessage.length > 0 && this.conf['messageAutoHideInterval']) {
+            timeout = win.setTimeout(function () {
+                jqMessage.hide(200);
+                win.clearTimeout(timeout);
+                if (jqMessage.data('next-url')) {
+                    win.location = jqMessage.data('next-url');
+                }
+            }, this.conf['messageAutoHideInterval']);
+        }
+    }
+
+    mouseOverImages(context?) {
+        context = context || win.document;
+
+        $(context).find('.over-img').each(function () {
+            var tmp,
+                wrappingLink,
+                activeElm,
+                img = this;
+
+            wrappingLink = $(img).closest('a');
+            if (wrappingLink.length > 0) {
+                activeElm = wrappingLink.get(0);
+
+            } else {
+                activeElm = img;
+            }
+            if ($(img).attr('data-alt-img')) {
+                $(activeElm).off('mouseover.overimg');
+                $(activeElm).on('mouseover.overimg', function () {
+                    tmp = $(img).attr('src');
+                    $(img).attr('src', $(img).attr('data-alt-img'));
+                });
+                $(activeElm).off('mouseout.overimg');
+                $(activeElm).on('mouseout.overimg', function () {
+                    $(img).attr('src', tmp);
+                });
+            }
+        });
+    }
+
+    /**
+     * @todo this is currently a Czech National Corpus specific solution
+     */
+    enhanceMessages() {
+        $('.message .sign-in').each(function () {
+            var text = $(this).text(),
+                findSignInUrl;
+
+            findSignInUrl = function () {
+                return $('#cnc-toolbar-user a:nth-child(1)').attr('href');
+            };
+
+            $(this).replaceWith('<a href="' + findSignInUrl() + '">' + text + '</a>');
+        });
+    }
+
+    /**
+     *
+     */
+    externalHelpLinks() {
+        var self = this;
+
+        $('a.external-help').each(function () {
+            var href = $(this).attr('href'),
+                message = self.translate('more_information_at')
+                    + ' <a href="' + href + '" target="_blank">' + href + '</a>';
+            popupbox.bind(this, message, {});
+        });
+    }
+
+    /**
+     *
+     */
+    reload():void {
+        win.document.location.reload();
+    }
+
+    /**
+     * Creates unbound HTML tree containing message 'loading...'
+     *
+     * @returns {jQuery}
+     */
+    createAjaxLoader():JQuery {
+        return $('<div class="ajax-loading-msg"><span>' + this.translate('loading') + '</span></div>');
+    }
+
+    /**
+     *
+     * @param msg
+     * @returns {*}
+     */
+    translate(msg:string):string {
+        msg = msg || '';
+        return this.conf['messages'][msg] ? this.conf['messages'][msg] : msg;
+    }
+
+    /**
+     * note: must preserve 'this'
+     */
+    createSmallAjaxLoader:()=>JQuery = () => {
+        return $('<img src="../files/img/ajax-loader.gif" '
+            + 'alt="' + this.translate('loading') + '" '
+            + 'title="' + this.translate('loading') + '" '
+            + 'style="width: 24px; height: 24px" />');
+    };
+
+    /**
+     *
+     */
+    resetPlugins():void {
+        for (var i = 0; i < this.pluginResets.length; i += 1) {
+            this.pluginResets[i]();
+        }
+    }
+
+    createStaticUrl(path) {
+        var staticPath = this.conf['staticUrl'];
+
+        if (path.indexOf('/') === 0) {
+            path = path.substr(1);
+        }
+        return staticPath + path;
+    }
+
+    createActionUrl(path) {
+        var staticPath = this.conf['rootPath'];
+
+        if (path.indexOf('/') === 0) {
+            path = path.substr(1);
+        }
+        return staticPath + path;
+    }
+
+    getConf(item:string):any {
+        return this.conf[item];
+    }
+
+    pluginApi():PluginApi {
+        return new PluginApi(this.conf, this);
+    }
+
+    /**
+     *
+     * @param {{}} conf
+     * @return {Promises}
+     */
+    init(conf):Promises {
+        var self = this;
+        this.userSettings.init();
+
+        this.promises.add({
+            misc: self.misc(),
+            bindQueryHelpers: queryInput.bindQueryHelpers(self.pluginApi()),
+            bindStaticElements: self.bindStaticElements(),
+            bindCorpusDescAction: self.bindCorpusDescAction(),
+            queryOverview: self.queryOverview(),
+            mainMenuInit: self.mainMenu.init(),
+            timeoutMessages: self.timeoutMessages(),
+            mouseOverImages: self.mouseOverImages(),
+            enhanceMessages: self.enhanceMessages(),
+            externalHelpLinks: self.externalHelpLinks(),
+            applicationBar: applicationBar.createInstance(self.pluginApi())
+        });
+
+        // init plug-ins
+        this.registerPlugin('applicationBar', this.promises.get('applicationBar'));
+
+        $.each(this.initCallbacks, function (i, fn) {
+            fn();
+        });
+
+        return this.promises;
+    }
+}
+
+/**
+ * Handles modal box displaying information about current corpus.
+ *
+ * @type {{}}
+ */
+class CorpusInfoBox {
+
+    pageModel:PageModel;
+
+    constructor(pageModel:PageModel) {
+        this.pageModel = pageModel;
+    }
+
+    /**
+     *
+     * @param attribListData
+     * @param jqAttribList
+     */
+    appendAttribList(attribListData, jqAttribList) {
+        $.each(attribListData, function (i, item) {
+            var newRow;
+
+            if (!item.error) {
+                newRow = jqAttribList.find('.item').clone();
+                newRow.removeClass('item');
+                newRow.addClass('dynamic');
+                newRow.find('th').text(item.name);
+                newRow.find('td').text(item.size);
+
+            } else {
+                newRow = jqAttribList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
+            }
+            jqAttribList.append(newRow);
+        });
+    }
+
+    /**
+     *
+     * @param structListData
+     * @param jqStructList
+     */
+    private appendStructList(structListData, jqStructList) {
+        var numCol,
+            i,
+            repeatStr,
+            updateRow;
+
+        repeatStr = function (str, num) {
+            var k,
+                ans = '';
+
+            for (k = 0; k < num; k += 1) {
+                ans += str;
+            }
+            return ans;
+        };
+
+        updateRow = function (data, idx, rootElm) {
+            var newRow = rootElm.find('.item').clone();
+
+            newRow.removeClass('item');
+            newRow.addClass('dynamic');
+            newRow.find('th').each(function (j) {
+                var value = data[idx + j];
+
+                if (value) {
+                    $(this).text('<' + value.name + '>');
+                }
+            });
+            newRow.find('td').each(function (j) {
+                var value = data[idx + j];
+
+                if (value) {
+                    $(this).text(value.size);
+                }
+            });
+            rootElm.append(newRow);
+        };
+
+        numCol = Math.min(4, Math.ceil(structListData.length / 10));
+        jqStructList.find('.item').empty().html(repeatStr('<th></th><td class="numeric"></td>', numCol));
+        jqStructList.find('.attrib-heading').attr('colspan', 2 * numCol);
+
+        for (i = 0; i < structListData.length; i += numCol) {
+            updateRow(structListData, i, jqStructList);
+        }
+    }
+
+    /**
+     * @param {TooltipBox} tooltipBox
+     * @param {Function} doneCallback called when all is loaded and set
+     */
+    createCorpusInfoBox(tooltipBox, doneCallback) {
+        var self = this,
+            rootElm = tooltipBox.getRootElement();
+
+        this.pageModel.ajax(
+            self.pageModel.createActionUrl('corpora/ajax_get_corp_details?corpname='
+                + self.pageModel.getConf('corpname')),
+            {
+                dataType: 'json',
+                method: 'get',
+                success: function (data) {
+                    var jqInfoBox = $(rootElm),
+                        jqAttribList,
+                        jqStructList;
+
+                    jqInfoBox.html(data.template);
+                    jqAttribList = $('#corpus-details-box .attrib-list');
+                    jqStructList = $('#corpus-details-box .struct-list');
+
+                    jqInfoBox.find('.corpus-name').text(data.corpname);
+                    jqInfoBox.find('.corpus-description').text(data.description);
+                    jqInfoBox.find('.size').text(data.size);
+                    if (data.web_url) {
+                        jqInfoBox.find('span.web_url').html('<a href="' + data.web_url + '">' + data.web_url + '</a>');
+
+                    } else {
+                        jqInfoBox.find('.web_url').remove();
+                    }
+
+                    self.appendAttribList(data.attrlist, jqAttribList);
+                    self.appendStructList(data.structlist, jqStructList);
+                    doneCallback();
+                },
+                error: function () {
+                    if (typeof tooltipBox.onError === 'function') {
+                        tooltipBox.onError();
+                    }
+                    tooltipBox.close();
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed_to_load_corpus_info'));
+                }
+            }
+        );
+    }
+
+}
+
+
+export class MainMenu {
+
+    /**
+     * Wrapping element for whole main-menu
+     */
+    jqMenuBar:JQuery;
+
+    /**
+     * Wrapper where sub-menu is rendered
+     */
+    jqMenuLevel2:JQuery;
+
+    constructor() {
+        this.jqMenuBar = $('#menu-bar');
+        this.jqMenuLevel2 = $('#menu-level-2');
+    }
+
+    /**
+     *
+     * @returns {*}
+     */
+    getActiveSubmenuId() {
+        return this.jqMenuLevel2.attr('data-current-menu');
+    }
+
+    /**
+     *
+     * @param {string} id
+     */
+    setActiveSubmenuId(id) {
+        this.jqMenuLevel2.attr('data-current-menu', id);
+    }
+
+    /**
+     * @param {string} [menuId]
+     */
+    closeSubmenu(menuId?) {
+        var jqPrevMenuUl = this.jqMenuLevel2.find('ul');
+
+        if (!menuId) {
+            menuId = this.getActiveSubmenuId();
+        }
+
+        if (menuId) {
+            $('#' + menuId).removeClass('active').append(jqPrevMenuUl);
+            jqPrevMenuUl.css('display', 'none');
+            this.setActiveSubmenuId(null);
+        }
+    }
+
+    /**
+     *
+     * @param li
+     * @returns {*}
+     */
+    getHiddenSubmenu(li):JQuery {
+        return $(li).find('ul');
+    }
+
+    /**
+     *
+     * @param {jQuery|HTMLElement} activeLi active main menu item LI
+     */
+    openSubmenu(activeLi) {
+        var menuLeftPos,
+            jqSubMenuUl,
+            jqActiveLi = $(activeLi);
+
+        jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
+        if (jqSubMenuUl.length > 0) {
+            jqActiveLi.addClass('active');
+            jqSubMenuUl.css('display', 'block');
+            this.jqMenuLevel2.addClass('active').empty().append(jqSubMenuUl);
+            menuLeftPos = jqActiveLi.offset().left + jqActiveLi.width() / 2 - jqSubMenuUl.width() / 2;
+            if (menuLeftPos < this.jqMenuBar.offset().left) {
+                menuLeftPos = this.jqMenuBar.offset().left;
+
+            } else if (menuLeftPos + jqSubMenuUl.width() > this.jqMenuBar.offset().left + this.jqMenuBar.width()) {
+                menuLeftPos = this.jqMenuBar.offset().left + this.jqMenuBar.width() - jqSubMenuUl.width();
+            }
+            jqSubMenuUl.css('left', menuLeftPos);
+
+        } else {
+            this.jqMenuLevel2.removeClass('active');
+        }
+    }
+
+    /**
+     * Initializes main menu logic
+     */
+    init() {
+        var self = this;
+
+        $('#menu-level-1 li.disabled a').each(function () {
+            $(this).attr('href', '#');
+        });
+
+        $('#menu-level-1 a.trigger').each(function () {
+            $(this).on('mouseover', function (event) {
+                var jqMenuLi = $(event.target).closest('li'),
+                    prevMenuId,
+                    newMenuId = jqMenuLi.attr('id');
+
+                prevMenuId = self.getActiveSubmenuId();
+                if (prevMenuId !== newMenuId) {
+                    self.closeSubmenu(prevMenuId);
+
+                    if (!jqMenuLi.hasClass('disabled')) {
+                        self.setActiveSubmenuId(jqMenuLi.attr('id'));
+                        self.openSubmenu(jqMenuLi);
+                    }
+                }
+            });
+        });
+
+        self.jqMenuBar.on('mouseleave', function (event) {
+            self.closeSubmenu(self.getActiveSubmenuId());
+        });
+
+        $(win).on('resize', function () {
+            self.closeSubmenu();
+        });
+
+        popupbox.abbr();
+    }
+
+}
+
+
+export class PluginApi {
+
+    _conf:any; // TODO type
+
+    pageModel:PageModel;
+
+    constructor(conf:any, pageModel:PageModel) {
+        this._conf = conf;
+        this.pageModel = pageModel;
+    }
+
+    conf(key) {
+        if (this._conf.hasOwnProperty(key)) {
+            return this._conf[key];
+
+        } else {
+            throw new Error('Unknown configuration key requested: ' + key);
+        }
+    }
+
+    createStaticUrl(path) {
+        return this.pageModel.createStaticUrl(path);
+    }
+
+    createActionUrl(path) {
+        return this.pageModel.createActionUrl(path);
+    }
+
+    ajax() {
+        return this.pageModel.ajax.apply(self, arguments);
+    }
+
+    ajaxAnim() {
+        return this.pageModel.createAjaxLoader.apply(self, arguments);
+    }
+
+    ajaxAnimSmall() {
+        return this.pageModel.createSmallAjaxLoader.apply(self, arguments);
+    }
+
+    appendLoader() {
+        return this.pageModel.appendLoader.apply(self, arguments);
+    }
+
+    showMessage() {
+        return this.pageModel.showMessage.apply(self, arguments);
+    }
+
+    translate(msg) {
+        return this.pageModel.translate(msg);
+    }
+
+    applySelectAll(elm, context) {
+        this.pageModel.applySelectAll(elm, context);
+    }
+
+    registerReset(fn) {
+        this.pageModel.pluginResets.push(fn);
+    }
+
+    resetToHomepage(params) {
+        var p,
+            ans = [];
+
+        for (p in params) {
+            if (params.hasOwnProperty(p)) {
+                ans.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+            }
+        }
+        win.location = this.pageModel.createActionUrl('first_form?' + ans.join('&'));
+    }
+
+    userIsAnonymous() {
+        return this.conf['anonymousUser'];
+    }
+
+    contextHelp(triggerElm, text) {
+        return this.pageModel.contextHelp(triggerElm, text);
+    }
+
+    formChangeCorpus(event) {
+        return this.pageModel.formChangeCorpus(event);
+    }
+
+    shortenText(s, length) {
+        return this.pageModel.shortenText(s, length);
+    }
+
+    dispatcher() {
+        return this.pageModel.dispatcher;
+    }
+}
+
+
+export class Promises {
+
+    prom:{[k:string]:any};
+
+    constructor() {
+        this.prom = {};
+    }
+
+    /**
+     * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
+     * Returns self.
+     */
+    add(arg0:string, arg1:any):Promises;  // TODO promise type
+    add(arg0:{[name:string]:any}, arg1?):Promises;
+    add(arg0, arg1):Promises {
+        var prop;
+
+        if (typeof arg0 === 'object' && arg1 === undefined) {
+            for (prop in arg0) {
+                if (arg0.hasOwnProperty(prop)) {
+                    this.add(prop, arg0[prop]);
+                }
+            }
+
+        } else if (typeof arg0 === 'string' && arg1) {
+            this.prom[arg0] = arg1;
+        }
+        return this;
+    }
+
+    /**
+     * Tests whether there is a promise with the 'key'
+     *
+     */
+    contains(key):boolean {
+        return this.prom.hasOwnProperty(key);
+    }
+
+    /**
+     * Gets a promise of the specified name. In case
+     * no such promise exists, error is thrown.
+     */
+    get(key):Promises {
+        if (this.prom[key]) {
+            return this.prom[key];
+
+        } else {
+            throw new Error('No such promise: ' + key);
+        }
+    }
+
+    /**
+     * Binds a function to be run after the promise
+     * identified by 'promiseId' is fulfilled. In case
+     * there is no promise under the 'promiseId' key then
+     * ad-hoc one is created and immediately resolved.
+     *
+     * @param {string} promiseId an identifier of the promise as defined in
+     * the init() function
+     * @param {function} fn a function to be run after the promise is resolved;
+     * the signature is: function (value)
+     */
+    doAfter = function (promiseId, fn):JQueryDeferred<any> {
+        var prom2;
+
+        promiseId = this.get(promiseId);
+
+        if (!promiseId) {
+            promiseId = $.Deferred();
+            prom2 = promiseId.then(fn);
+            promiseId.resolve();
+
+        } else {
+            prom2 = promiseId.then(fn);
+        }
+        return prom2;
+    }
+}
+
+export class UserSettings {
+
+
+    storage:Storage;
+
+    storageKey:string;
+
+    timestampKey:string;
+
+    uiStateTTL:number;
+
+    data:{[k:string]:any};
+
+    constructor(storage:Storage, storageKey:string, timestampKey:string, uiStateTTL:number) {
+        this.storage = storage;
+        this.storageKey = storageKey;
+        this.timestampKey = timestampKey;
+        this.uiStateTTL = uiStateTTL;
+        this.data = {};
+    }
+
+
+    getTimstamp():number {
+        return new Date().getTime() / 1000;
+    }
+
+    dataIsRecent(data) {
+        return !data[this.timestampKey] || data[this.timestampKey]
+            && ( (new Date().getTime() / 1000 - data[this.timestampKey]) < this.uiStateTTL);
+    }
+
+    dumpToStorage() {
+        this.data[this.timestampKey] = this.getTimstamp();
+        this.storage.setItem(this.storageKey, JSON.stringify(this.data));
+    }
+
+    get(key) {
+        return this.data[key];
+    }
+
+    set(key, value) {
+        this.data[key] = value;
+        this.dumpToStorage();
+    }
+
+    init() {
+        var tmp;
+        if (this.storage.getItem(this.storageKey)) {
+            tmp = JSON.parse(this.storage.getItem(this.storageKey));
+            if (this.dataIsRecent(tmp)) {
+                this.data = tmp;
+            }
+
+        } else {
+            this.data[this.timestampKey] = this.getTimstamp();
+        }
+    }
+}

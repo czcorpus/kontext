@@ -245,5 +245,5 @@ define(['vendor/invariant'], function (invariant) {
         this.$Dispatcher_isDispatching = false;
     };
 
-    return Dispatcher;
+    return {Dispatcher: Dispatcher};
 });

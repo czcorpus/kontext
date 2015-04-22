@@ -18,13 +18,10 @@
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/typeahead.d.ts" />
-/// <reference path="../ts/declarations/dynamic.d.ts" />
-/// <reference path="../ts/declarations/document.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 
 import $ = require('jquery');
-import conf = require('conf');
 
 
 /**
@@ -250,7 +247,7 @@ export class WidgetMenu {
  */
 export class Search implements WidgetTab {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     widgetWrapper:HTMLElement;
 
@@ -266,7 +263,7 @@ export class Search implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
@@ -289,7 +286,7 @@ export class Search implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
-        $.each(conf.corporaLabels, function (i, item) {
+        $.each(this.pluginApi.conf('corporaLabels'), function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).append(item[0]).addClass('keyword');
@@ -308,7 +305,7 @@ export class Search implements WidgetTab {
                 $(self.srchField).trigger('input');
                 $(self.srchField).focus();
             });
-            if (i < conf.corporaLabels.length - 1) {
+            if (i < self.pluginApi.conf('corporaLabels')['length'] - 1) {
                 $(div).append(' ');
             }
         });
@@ -356,7 +353,7 @@ export class Search implements WidgetTab {
                     }
                     $(link)
                         .attr('title', 'In my favorites? (click to change)') // TODO translate
-                        .append('<img src="' + conf.staticUrl + 'img/transparent_16x16.gif" />')
+                        .append('<img src="' + self.pluginApi.createStaticUrl('img/transparent_16x16.gif') + '" />')
                         .on('click', function (event:JQueryEventObject) {
                             var reqData:any = {},
                                 favState:boolean;
@@ -434,7 +431,7 @@ export class Search implements WidgetTab {
  */
 export class Favorites implements WidgetTab {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     widgetWrapper:HTMLElement;
 
@@ -448,7 +445,7 @@ export class Favorites implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:model.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
+    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.data = data;
@@ -519,13 +516,13 @@ export class Favorites implements WidgetTab {
  */
 export class StarSwitch {
 
-    pageModel:model.PluginApi;
+    pageModel:Kontext.PluginApi;
 
     triggerElm:HTMLElement;
 
     itemId:string;
 
-    constructor(pageModel:model.PluginApi, triggerElm:HTMLElement) {
+    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
         this.itemId = $(this.triggerElm).data('item-id');
@@ -566,7 +563,7 @@ export class StarComponent {
 
     corplistWidget:Corplist;
 
-    pageModel:model.PluginApi;
+    pageModel:Kontext.PluginApi;
 
     starSwitch:StarSwitch;
 
@@ -582,7 +579,7 @@ export class StarComponent {
     };
 
 
-    constructor(corplistWidget:Corplist, pageModel:model.PluginApi) {
+    constructor(corplistWidget:Corplist, pageModel:Kontext.PluginApi) {
         this.corplistWidget = corplistWidget;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
@@ -733,7 +730,7 @@ export class Corplist {
 
     private data:Array<CorplistItem>;
 
-    private pluginApi:model.PluginApi;
+    private pluginApi:Kontext.PluginApi;
 
     private visible:Visibility;
 
@@ -782,7 +779,7 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, pluginApi:model.PluginApi, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pluginApi:Kontext.PluginApi, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
         this.pluginApi = pluginApi;
@@ -940,7 +937,7 @@ export class Corplist {
  * @param selectElm
  * @param options
  */
-export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options:Options):Corplist {
+export function create(selectElm:HTMLElement, pluginApi:Kontext.PluginApi, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
@@ -956,7 +953,7 @@ export function create(selectElm:HTMLElement, pluginApi:model.PluginApi, options
  * @param pageModel
  * @returns {StarComponent}
  */
-export function createStarComponent(corplistWidget:Corplist, pageModel:model.PluginApi):StarComponent {
+export function createStarComponent(corplistWidget:Corplist, pageModel:Kontext.PluginApi):StarComponent {
     var component:StarComponent;
 
     component = new StarComponent(corplistWidget, pageModel);

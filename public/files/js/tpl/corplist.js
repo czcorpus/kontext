@@ -20,13 +20,16 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutModel, popupBox) {
+define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, documentModule, popupBox) {
     'use strict';
 
     var lib = {};
 
+    lib.layoutModel = null;
+
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         $('table.corplist tr').each(function (i, row) {
             var trigger = $(row).find('a.detail');
 
@@ -48,7 +51,7 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutMo
                 data[jqClickedElm.attr('value')] = jqClickedElm.is(':checked');
 
 
-                layoutModel.ajax('set_favorite_corp',
+                lib.layoutModel.ajax('set_favorite_corp',
                     {
                         method : 'POST',
                         data : {'data': JSON.stringify(data)},
@@ -61,7 +64,7 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, layoutMo
                         }
                     }
                 );
-                console.log('checked', $(event.currentTarget).is(':checked'));
+
             });
         });
     };

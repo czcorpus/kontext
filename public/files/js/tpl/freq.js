@@ -18,12 +18,13 @@
  */
 
 
-define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupbox, $, kwicAlignUtils) {
+define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (documentModule, popupbox, $, kwicAlignUtils) {
 
     'use strict';
 
     var lib = {};
 
+    lib.layoutModel = null;
     lib.messages = {};
 
     /**
@@ -82,7 +83,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
         // close icon
         newLine.find('td:last').empty().append('<a class="remove-level" title="' + lib.messages.remove_item + '">' +
             '<img class="over-img" src="../files/img/close-icon.png" alt="' + lib.messages.remove_item + '" data-alt-img="../files/img/close-icon_s.png" /></a>');
-        layoutModel.mouseOverImages(newLine);
+        lib.layoutModel.mouseOverImages(newLine);
 
         newLine.find('td:last a.remove-level').on('click', function (event) {
             lib.removeLevel($(event.target).closest('tr'));
@@ -121,18 +122,19 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
     lib.init = function (conf) {
         var i;
 
-        layoutModel.init(conf);
-        lib.messages = layoutModel.conf.messages;
-        lib.maxNumLevels = layoutModel.conf.multilevel_freq_dist_max_levels;
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
+        lib.messages = lib.layoutModel.conf.messages;
+        lib.maxNumLevels = lib.layoutModel.conf.multilevel_freq_dist_max_levels;
         kwicAlignUtils.fix();
-        if (layoutModel.conf.lastNumLevels) {
-            for (i = 1; i < layoutModel.conf.lastNumLevels; i += 1) {
+        if (lib.layoutModel.conf.lastNumLevels) {
+            for (i = 1; i < lib.layoutModel.conf.lastNumLevels; i += 1) {
                 lib.addLevel();
             }
         }
 
         $('a.kwic-alignment-help').each(function () {
-            popupbox.bind($(this), layoutModel.conf.messages.msg, {
+            popupbox.bind($(this), lib.layoutModel.translate(msg), {
                 'top': 'attached-bottom',
                 'width': 'auto',
                 'height': 'auto'

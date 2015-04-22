@@ -19,7 +19,8 @@
 /**
  * This module contains functionality related directly to the wordlist.tmpl template
  */
-define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'popupbox'], function (win, $, jqueryPeriodic, layoutModel, popupBox) {
+define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'popupbox'], function (win,
+        $, jqueryPeriodic, documentModule, popupBox) {
     'use strict';
 
     var lib = {};
@@ -61,11 +62,12 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'popupbox'], 
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         lib.setupContextHelp(conf.messages.calculating_info);
         lib.startWatching = function () {
-            lib.updateProcessBar(layoutModel.conf.corpnameUrl, layoutModel.conf.subcName,
-                layoutModel.conf.attrName, layoutModel.conf.reloadUrl);
+            lib.updateProcessBar(lib.layoutModel.conf.corpnameUrl, lib.layoutModel.conf.subcName,
+                lib.layoutModel.conf.attrName, lib.layoutModel.conf.reloadUrl);
         };
     };
 

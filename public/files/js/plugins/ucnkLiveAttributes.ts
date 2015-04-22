@@ -17,8 +17,6 @@
  */
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/document.d.ts" />
-/// <reference path="../../ts/declarations/dynamic.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 
 import popupBox = require("popupbox");
@@ -80,7 +78,7 @@ interface AjaxAnimation {
  */
 class LiveData {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     attrFieldsetWrapper:JQuery;
 
@@ -89,7 +87,7 @@ class LiveData {
      * @param attrFieldsetWrapper parent element of all the attribute selectors
      * @constructor
      */
-    constructor(pluginApi:model.PluginApi, attrFieldsetWrapper:HTMLElement) {
+    constructor(pluginApi:Kontext.PluginApi, attrFieldsetWrapper:HTMLElement) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
     }
@@ -297,13 +295,13 @@ class LiveData {
  */
 class Checkboxes {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     attrFieldsetWrapper:JQuery;
 
     /**
      */
-    constructor(pluginApi:model.PluginApi, attrFieldsetWrapper:JQuery) {
+    constructor(pluginApi:Kontext.PluginApi, attrFieldsetWrapper:JQuery) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
@@ -428,7 +426,7 @@ class Checkboxes {
  */
 class SelectionSteps {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     jqSteps:JQuery;
 
@@ -436,7 +434,7 @@ class SelectionSteps {
      *
      * @param pluginApi
      */
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
         this.jqSteps = $('.live-attributes div.steps');
     }
@@ -629,13 +627,13 @@ class StructTables {
  */
 class AlignedCorpora {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     /**
      *
      * @param pluginApi
      */
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
@@ -690,7 +688,7 @@ class AlignedCorpora {
  */
 class Plugin {
 
-    pluginApi:model.QueryPagePluginApi;
+    pluginApi:Kontext.QueryPagePluginApi;
 
     attrFieldsetWrapper:JQuery;
 
@@ -715,7 +713,7 @@ class Plugin {
      * @param updateButton
      * @param resetButton
      */
-    constructor(pluginApi:model.QueryPagePluginApi, attrFieldsetWrapper:HTMLElement,
+    constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:HTMLElement,
                 updateButton:HTMLElement, resetButton:HTMLElement) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
@@ -916,7 +914,7 @@ class Plugin {
  * @param resetButton
  * @param attrFieldsetWrapper
  */
-export function init(pluginApi:model.QueryPagePluginApi,
+export function init(pluginApi:Kontext.QueryPagePluginApi,
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement) {
     var plugin = new Plugin(pluginApi, attrFieldsetWrapper, updateButton, resetButton);

@@ -19,10 +19,12 @@
 /**
  * This module contains functionality related directly to the saveconc_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, layoutModel) {
+define(['jquery', 'tpl/document'], function ($, documentModule) {
     'use strict';
 
     var lib = {};
+
+    lib.layoutModel = null;
 
     /**
      * @param {jquery} jqForm jquery object representing parent form of the radio buttons
@@ -64,11 +66,12 @@ define(['jquery', 'tpl/document'], function ($, layoutModel) {
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = documentModule.PageModel(conf);
+        lib.layoutModel.init();
 
         $('input[type="submit"]').focus();
-        if (layoutModel.userSettings.get('concdesc_view') === 'show') {
-            $('#concdescplusminus').attr('src', layoutModel.conf.files_path + '/img/minus.png');
+        if (lib.layoutModel.userSettings.get('concdesc_view') === 'show') {
+            $('#concdescplusminus').attr('src', lib.layoutModel.conf.files_path + '/img/minus.png');
         }
 
         (function () {

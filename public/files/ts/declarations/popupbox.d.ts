@@ -26,7 +26,7 @@ declare module "popupbox" {
     }
 
     export interface Options {
-        width?: number;
+        width?: number|string;
         height?: number;
         fontSize?: number;
         timeout?: number;
@@ -34,8 +34,8 @@ declare module "popupbox" {
         closeIcon?: boolean;
         onClose?: (e: Event) => void;
         beforeOpen?: (e: Event) => void;
-        onShow?: (e: Event) => void;
-        onError?: (e: Event) => void;
+        onShow?: (obj:JQuery) => void;
+        onError?: (obj:JQuery) => void;
         domId?: string;
         htmlClass?: string;
         calculatePosition?: boolean;
@@ -75,8 +75,10 @@ declare module "popupbox" {
     export function open(contents: any, position: Position, options: Options);
 
     export function bind(elm: HTMLElement, contents: any, options: Options);
+    export function bind(query: string, contents: any, options: Options);
+    export function bind(query: JQuery, contents: any, options: Options);
 
-    export function abbr(context: any); // TODO type
+    export function abbr(context?: any); // TODO type
 
     export function hasAttachedPopupBox(elm: any); // TODO type
 

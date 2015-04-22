@@ -20,10 +20,12 @@
  * This module contains functionality related directly to the query_history.tmpl template
  *
  */
-define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
+define(['jquery', 'tpl/document', 'win'], function ($, documentModule, win) {
     'use strict';
 
     var lib = {};
+
+    lib.layoutModel = null;
 
     function calcCurrNumberRows() {
         return $('table.query-history tr.data-item').length;
@@ -32,12 +34,14 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     function appendData(data) {
         $.each(data.data, function () {
             $('table.query-history .expand-line').before('<tr class="data-item">'
-                + '<td class="query">' + layoutModel.shortenText(this.query, layoutModel.conf.historyMaxQuerySize) + '</td>'
+                + '<td class="query">'
+                + lib.layoutModel.shortenText(this.query, lib.layoutModel.conf.historyMaxQuerySize)
+                + '</td>'
                 + '<td class="corpname">' + this.humanCorpname + (this.subcorpname ? '+' + this.subcorpname : '') + '</td>'
                 + '<td>' + this.query_type_translated + '</td>'
                 + '<td>' + this.details + '</td>'
                 + '<td class="date">' + this.created[1] + ' <strong>' + this.created[0] + '</strong></td>'
-                + '<td><a href="' + this.query_form_url + '">' + layoutModel.translate('use_query') + '</a></td>'
+                + '<td><a href="' + this.query_form_url + '">' + lib.layoutModel.translate('use_query') + '</a></td>'
                 );
         });
     }
@@ -72,7 +76,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
 
     function addExpandLink() {
         $('table.query-history').append('<tr class="expand-line"><td colspan="7"><a class="expand-list">'
-            + layoutModel.translate('Load more') + '</a></td></tr>');
+            + lib.layoutModel.translate('Load more') + '</a></td></tr>');
 
         $('table.query-history').find('a.expand-list').on('click', function () {
             var prom,
@@ -80,12 +84,12 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
                 actionCell = $('table.query-history .expand-line td'),
                 loaderImg;
 
-            prom = $.ajax(layoutModel.conf.rootPath + 'user/ajax_query_history?' + getAjaxParams(), {
+            prom = $.ajax(lib.layoutModel.createActionUrl( 'user/ajax_query_history?' + getAjaxParams()), {
                 dataType : 'json'
             }).promise();
 
             linkElm = actionCell.find('a').detach();
-            loaderImg = layoutModel.appendLoader(actionCell);
+            loaderImg = lib.layoutModel.appendLoader(actionCell);
 
             function cleanUpLoader(fn) {
                 loaderImg.remove();
@@ -112,7 +116,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
 
                         } else {
                             cleanUpLoader(function () {
-                                actionCell.append('[' + layoutModel.translate('No more lines') + ']');
+                                actionCell.append('[' + lib.layoutModel.translate('No more lines') + ']');
                             });
                         }
                         appendData(data);
@@ -127,7 +131,8 @@ define(['jquery', 'tpl/document', 'win'], function ($, layoutModel, win) {
     }
 
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         lib.conf = conf;
         addExpandLink();
         dynamizeFormControls();

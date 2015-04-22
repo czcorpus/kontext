@@ -22,7 +22,7 @@
  *
  */
 define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/queryStorage',
-    'plugins/liveAttributes', 'conclines'], function (win, $, corplistComponent, layoutModel, queryInput, queryStorage,
+    'plugins/liveAttributes', 'conclines'], function (win, $, corplistComponent, layoutModule, queryInput, queryStorage,
                                                       liveAttributes, conclines) {
     'use strict';
 
@@ -33,7 +33,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.maxEncodedParamsLength = 1500;
     lib.corplistComponent = null;
     lib.starComponent = null;
-    lib.extendedApi = queryInput.extendedApi(layoutModel.pluginApi());
+    lib.extendedApi = null;
+    lib.layoutModel = null;
 
     /**
      *
@@ -43,12 +44,12 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     function callOnParallelCorporaList(callback) {
         var itemList;
 
-        if (layoutModel.conf.alignedCorpora) {
-            itemList = layoutModel.conf.alignedCorpora;
-            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+        if (lib.layoutModel.conf.alignedCorpora) {
+            itemList = lib.layoutModel.conf.alignedCorpora;
+            lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
 
         } else {
-            itemList = layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
+            itemList = lib.layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
         }
 
         if (typeof itemList !== 'object') {
@@ -74,7 +75,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             if (corpusName && $.inArray(corpusName, itemList) === -1) {
                 itemList.push(corpusName);
             }
-            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
             if ($('div.parallel-corp-lang:visible').length > 0) {
                 $('#default-view-mode').remove();
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
@@ -90,7 +91,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             if ($.inArray(corpusName, itemList) >= 0) {
                 itemList.splice($.inArray(corpusName, itemList), 1);
             }
-            layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
+           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
             if ($('div.parallel-corp-lang:visible').length === 0) {
                 $('#default-view-mode').remove();
             }
@@ -131,7 +132,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                         jqHiddenStatus.val('');
                         removeActiveParallelCorpus(corpusId);
                         $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
-                        layoutModel.resetPlugins();
+                       lib.layoutModel.resetPlugins();
                     });
 
                     queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
@@ -141,7 +142,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                         $('#content').css('overflow', 'visible').css('overflow', 'auto');
                     }
                 }
-                layoutModel.resetPlugins();
+               lib.layoutModel.resetPlugins();
             }
         };
     }
@@ -152,14 +153,14 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.misc = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
-            layoutModel.pluginApi(),
+           lib.layoutModel.pluginApi(),
             {formTarget: 'first_form'}
         );
 
-        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent, layoutModel.pluginApi());
+        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent,lib.layoutModel.pluginApi());
 
         // initial query selector setting (just like when user changes it manually)
-        queryInput.cmdSwitchQuery(layoutModel, $('#queryselector').get(0), layoutModel.conf.queryTypesHints);
+        queryInput.cmdSwitchQuery(lib.layoutModel, $('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -181,7 +182,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
         jqLink.each(function () {
             jqFieldset = $(this).closest('fieldset');
-            elmStatus = layoutModel.userSettings.get($(this).data('box-id'));
+            elmStatus = lib.layoutModel.userSettings.get($(this).data('box-id'));
 
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
@@ -189,19 +190,19 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                 jqFieldset.find('div.desc').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', layoutModel.conf.messages.click_to_hide);
-                jqLink.attr('title', layoutModel.conf.messages.click_to_hide);
+                    .attr('alt', lib.layoutModel.conf.messages.click_to_hide);
+                jqLink.attr('title', lib.layoutModel.conf.messages.click_to_hide);
 
             } else {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('div.desc').show();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', layoutModel.conf.messages.click_to_expand);
-                jqLink.attr('title', layoutModel.conf.messages.click_to_expand);
+                    .attr('alt', lib.layoutModel.conf.messages.click_to_expand);
+                jqLink.attr('title', lib.layoutModel.conf.messages.click_to_expand);
             }
         });
-        layoutModel.mouseOverImages();
+        lib.layoutModel.mouseOverImages();
         defer.resolve();
         return defer.promise();
     };
@@ -210,17 +211,17 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
         // context-switch TODO
 
         $('#switch_err_stand').on('click', function () {
-            if ($(this).text() === layoutModel.conf.labelStdQuery) {
+            if ($(this).text() === lib.layoutModel.conf.labelStdQuery) {
                 $('#qnode').show();
                 $('#cup_err_menu').hide();
-                $(this).text(layoutModel.conf.labelErrorQuery);
-                layoutModel.userSettings.set("errstdq", "std");
+                $(this).text(lib.layoutModel.conf.labelErrorQuery);
+                lib.layoutModel.userSettings.set("errstdq", "std");
 
             } else {
                 $('#qnode').hide();
                 $('#cup_err_menu').show();
-                $(this).text(layoutModel.conf.labelStdQuery);
-                layoutModel.userSettings.set("errstdq", "err");
+                $(this).text(lib.layoutModel.conf.labelStdQuery);
+                lib.layoutModel.userSettings.set("errstdq", "err");
             }
         });
     };
@@ -244,9 +245,9 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
      *
      */
     lib.showCupMenu = function () {
-        if (layoutModel.userSettings.get('errstdq') === 'std') {
+        if (lib.layoutModel.userSettings.get('errstdq') === 'std') {
             $('#cup_err_menu').hide();
-            $('#switch_err_stand').text(layoutModel.conf.messages.labelErrorQuery);
+            $('#switch_err_stand').text(lib.layoutModel.conf.messages.labelErrorQuery);
 
         } else {
             $('#qnode').hide();
@@ -261,7 +262,7 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                 jqCurrPrimaryCorpInput = queryForm.find('input[type="hidden"][name="corpname"]'),
                 newPrimary = $(linkElm).attr('data-corpus-id');
 
-            queryForm.attr('action', 'first_form?' + layoutModel.conf.stateParams);
+            queryForm.attr('action', 'first_form?' + lib.layoutModel.conf.stateParams);
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
             $('#mainform input[type="hidden"][name="corpname"]').val(newPrimary);
@@ -281,26 +282,29 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
         clStorage.clear();
 
-        promises = layoutModel.init(conf).add({
+        lib.layoutModel = new layoutModule.PageModel(conf);
+        lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+
+        promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(),
             bindStaticElements : lib.bindStaticElements(),
             bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
-                $('#make-concordance-button'), layoutModel),
+                $('#make-concordance-button'), lib.layoutModel),
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
                 lib.extendedApi,
-                layoutModel.userSettings),
+                lib.layoutModel.userSettings),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
             updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
                 lib.extendedApi,
-                layoutModel.userSettings),
+                lib.layoutModel.userSettings),
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params')
         });
 
-        layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
-		layoutModel.mouseOverImages();
+        lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
+        lib.layoutModel.mouseOverImages();
         return promises;
     };
 
