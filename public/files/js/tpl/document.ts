@@ -1383,7 +1383,7 @@ export class InitActions {
      * no such init action exists, error is thrown.
      */
     get<T>(key):RSVP.Promise<T> {
-        if (this.prom.hasOwnProperty(key)) {
+        if (this.contains(key)) {
             return this.prom[key];
 
         } else {
@@ -1393,19 +1393,22 @@ export class InitActions {
 
     /**
      * Binds a function to be run after the promise
-     * identified by 'promiseId' is fulfilled. In case
-     * there is no promise under the 'promiseId' key then
+     * identified by 'actionId' is fulfilled. In case
+     * there is no promise under the 'actionId' key (please
+     * note that the key must be still present) then
      * ad-hoc one is created and immediately resolved.
      *
-     * @param {string} promiseId an identifier of the promise as defined in
-     * the init() function
-     * @param {function} fn a function to be run after the promise is resolved;
-     * the signature is: function (value)
+     * type T specifies a value returned by actionId action
+     * type U specifies a value function fn is producing
+     *
+     * @param actionId - an identifier of an action (= any function initializing
+     * a part of a page and registered via the add() method)
+     * @param fn - a function to be run after the action 'actionId' is finished
      */
-    doAfter<T, U>(promiseId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
+    doAfter<T, U>(actionId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
         var prom1:RSVP.Promise<T>;
 
-        prom1 = this.get(promiseId);
+        prom1 = this.get(actionId);
 
         if (!prom1) {
             return new RSVP.Promise(function (fulfill, reject) {
