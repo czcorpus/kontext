@@ -12,6 +12,7 @@
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-typescript');
         grunt.loadNpmTasks('grunt-requirejs');
+        grunt.loadNpmTasks('grunt-react');
 
         grunt.initConfig({
             clean: {
@@ -159,6 +160,19 @@
                     }
                 }
             },
+            "react": {
+                all: {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: 'public/files/js',
+                            src: ["**/*.jsx"],
+                            dest: "public/files/js/compiled",
+                            ext: ".js"
+                        }
+                    ]
+                }
+            },
             requirejs: {
                 compile: {
                     options: {
@@ -183,17 +197,17 @@
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'typescript', 'copy:devel', 'clean:cleanup', 'exec']);
+        grunt.registerTask('devel', ['clean:all', 'typescript', 'react', 'copy:devel', 'clean:cleanup', 'exec']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:javascript', 'typescript', 'copy:devel', 'clean:cleanup']);
+        grunt.registerTask('develjs', ['clean:javascript', 'typescript', 'react', 'copy:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files (RequireJS optimizer)
-        grunt.registerTask('production-optimized', ['clean:all', 'less', 'typescript', 'copy:prepare', 'requirejs:compile',
+        grunt.registerTask('production-optimized', ['clean:all', 'less', 'typescript', 'react', 'copy:prepare', 'requirejs:compile',
             'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
 
         // generates production-ready project where all JavaScript modules are loaded individually
-        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'copy:prepare',
+        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react', 'copy:prepare',
             'copy:finishNonOptimized', 'uglify:nonOptimized', 'clean:cleanup', 'exec']);
 
         // generates production-like project with RequireJS optimization but without minimization
