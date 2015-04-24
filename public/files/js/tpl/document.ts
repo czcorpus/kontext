@@ -26,6 +26,7 @@ import queryInput = require('queryInput');
 import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar');
 import flux = require('vendor/Dispatcher');
+import documentViews = require('views/document');
 
 
 /**
@@ -103,12 +104,24 @@ export class PageModel implements Kontext.PluginProvider {
      */
     initCallbacks:Array<()=>void>;
 
-    corpusInfoBox;
+    /**
+     *
+     */
+    corpusInfoBox:CorpusInfoBox;
 
+    /**
+     *
+     */
     mainMenu:MainMenu;
 
+    /**
+     * Results of partial page initializations
+     */
     promises:Promises;
 
+    /**
+     * Local user settings
+     */
     userSettings:UserSettings;
 
     /**
@@ -119,7 +132,6 @@ export class PageModel implements Kontext.PluginProvider {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher();
         this.plugins = {};
-        this.plugins['applicationBar'] = applicationBar;
         this.initCallbacks = [];
         this.corpusInfoBox = new CorpusInfoBox(this);
         this.mainMenu = new MainMenu();
@@ -134,8 +146,8 @@ export class PageModel implements Kontext.PluginProvider {
      * @param forceStatus
      */
     private toggleSelectAllTrigger(selectAllElm:HTMLInputElement, forceStatus?:string) {
-        var currValue,
-            newValue;
+        var currValue:string,
+            newValue:string;
 
         if (!$(selectAllElm).attr('data-status')) {
             $(selectAllElm).attr('data-status', '1');
@@ -547,7 +559,7 @@ export class PageModel implements Kontext.PluginProvider {
     renderOverview = function (data, tooltipBox):void {
         var self = this,
             url,
-            html = '<h3>' + self.conf.messages.query_overview + '</h3><table border="1">',
+            html = '<h3>' + this.translate('query_overview') + '</h3><table border="1">',
             parentElm = tooltipBox.getRootElement();
 
         html += '<tr><th>' + self.conf.messages.operation + '</th>';
@@ -947,12 +959,11 @@ export class PageModel implements Kontext.PluginProvider {
             timeoutMessages: self.timeoutMessages(),
             mouseOverImages: self.mouseOverImages(),
             enhanceMessages: self.enhanceMessages(),
-            externalHelpLinks: self.externalHelpLinks(),
-            applicationBar: applicationBar.createInstance(self.pluginApi())
+            externalHelpLinks: self.externalHelpLinks()
         });
 
         // init plug-ins
-        this.registerPlugin('applicationBar', this.promises.get<Kontext.Plugin>('applicationBar'));
+        this.registerPlugin('applicationBar', applicationBar.createInstance(self.pluginApi()));
 
         $.each(this.initCallbacks, function (i, fn:()=>void) {
             fn();
@@ -965,7 +976,7 @@ export class PageModel implements Kontext.PluginProvider {
 /**
  * Handles modal box displaying information about current corpus.
  */
-class CorpusInfoBox {
+export class CorpusInfoBox {
 
     pageModel:PageModel;
 
