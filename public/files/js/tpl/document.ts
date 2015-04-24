@@ -19,6 +19,7 @@
 
 /// <reference path="../../ts/declarations/common.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -27,6 +28,7 @@ import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar');
 import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
+import RSVP = require('vendor/rsvp');
 
 
 /**
@@ -115,9 +117,9 @@ export class PageModel implements Kontext.PluginProvider {
     mainMenu:MainMenu;
 
     /**
-     * Results of partial page initializations
+     * Results of partial page initializations.
      */
-    promises:Promises;
+    initActions:InitActions;
 
     /**
      * Local user settings
@@ -135,8 +137,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.initCallbacks = [];
         this.corpusInfoBox = new CorpusInfoBox(this);
         this.mainMenu = new MainMenu();
-        this.promises = new Promises();
-        this.promises = new Promises();
+        this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
     }
@@ -945,11 +946,11 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    init():Promises {
+    init():InitActions {
         var self = this;
         this.userSettings.init();
 
-        this.promises.add({
+        this.initActions.add({
             misc: self.misc(),
             bindQueryHelpers: queryInput.bindQueryHelpers(self.pluginApi()),
             bindStaticElements: self.bindStaticElements(),
@@ -969,7 +970,7 @@ export class PageModel implements Kontext.PluginProvider {
             fn();
         });
 
-        return this.promises;
+        return this.initActions;
     }
 }
 
@@ -1334,9 +1335,12 @@ export class PluginApi {
 }
 
 /**
+ * This object stores all the initialization actions performed on page when
+ * it loads. These actions may be asynchronous in general which is why a Promise
+ * objects are required here. If an action si synchronous then it may return null/undefined
  * @todo this should be either finished (and respected by action pages) or rewritten in some way
  */
-export class Promises {
+export class InitActions {
 
     prom:{[k:string]:any};
 
@@ -1348,9 +1352,9 @@ export class Promises {
      * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
      * Returns self.
      */
-    add(arg0:string, arg1:any):Promises;  // TODO promise type
-    add(arg0:{[name:string]:any}, arg1?):Promises;
-    add(arg0, arg1):Promises {
+    add(arg0:string, arg1:Kontext.Promise):InitActions;
+    add(arg0:{[name:string]:any}, arg1?):InitActions;
+    add(arg0, arg1):InitActions {
         var prop;
 
         if (typeof arg0 === 'object' && arg1 === undefined) {
@@ -1360,7 +1364,7 @@ export class Promises {
                 }
             }
 
-        } else if (typeof arg0 === 'string' && arg1) {
+        } else if (typeof arg0 === 'string' && arg1 !== undefined) {
             this.prom[arg0] = arg1;
         }
         return this;
@@ -1376,14 +1380,14 @@ export class Promises {
 
     /**
      * Gets a promise of the specified name. In case
-     * no such promise exists, error is thrown.
+     * no such init action exists, error is thrown.
      */
-    get<T>(key):T {
-        if (this.prom[key]) {
+    get<T>(key):RSVP.Promise<T> {
+        if (this.prom.hasOwnProperty(key)) {
             return this.prom[key];
 
         } else {
-            throw new Error('No such promise: ' + key);
+            throw new Error('No such init action: ' + key);
         }
     }
 
@@ -1398,20 +1402,37 @@ export class Promises {
      * @param {function} fn a function to be run after the promise is resolved;
      * the signature is: function (value)
      */
-    doAfter = function (promiseId, fn):JQueryDeferred<any> {
-        var prom2;
+    doAfter<T, U>(promiseId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
+        var prom1:RSVP.Promise<T>;
 
-        promiseId = this.get(promiseId);
+        prom1 = this.get(promiseId);
 
-        if (!promiseId) {
-            promiseId = $.Deferred();
-            prom2 = promiseId.then(fn);
-            promiseId.resolve();
+        if (!prom1) {
+            return new RSVP.Promise(function (fulfill, reject) {
+                try {
+                    fulfill(fn());
+
+                } catch (err) {
+                    reject(err);
+                }
+            });
 
         } else {
-            prom2 = promiseId.then(fn);
+            return prom1.then(
+                function (v:T) {
+                    var prom2:RSVP.Promise<U> = new RSVP.Promise(function (resolve, reject) {
+                        try {
+                            resolve(fn(v));
+
+                        } catch (err) {
+                            reject(err);
+                        }
+                    });
+                    return prom2;
+                }
+                // TODO on reject?
+            );
         }
-        return prom2;
     }
 }
 
