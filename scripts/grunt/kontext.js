@@ -48,7 +48,9 @@
             pluginMap = {
                 'win' : 'empty:',
                 'conf' : 'empty:',
-                'jquery' : 'empty:',
+                'jquery' : 'vendor/jquery.min',
+                'vendor/rsvp' : 'vendor/rsvp.min',
+                'vendor/react': 'vendor/react.min',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
             },
@@ -61,19 +63,36 @@
             if (elms[0]) {
                 jsElm = elms[0].getElementsByTagName('js_module');
                 pluginMap['plugins/' + jsModules[p]] = 'plugins/' + jsElm[0].textContent;
+
+            } else {
+                pluginMap['plugins/' + jsModules[p]] = 'empty:';
             }
-        };
+        }
         return pluginMap;
     };
 
     /**
-     * Generates a list of modules representing models of individual pages.
+     * Generates a list of modules representing models of individual pages
+     * and also a special module "vendor/common" which contains all the 3rd
+     * party libs merged into a single file.
      *
      * @param {string} path to a directory where models reside
      * @return Array<string>
      */
-    module.exports.listPageModules = function (tplDir) {
-        var ans = [];            
+    module.exports.listAppModules = function (tplDir) {
+        var ans = [
+            {
+                'name': 'vendor/common',
+                'include': [
+                    'jquery',
+                    'vendor/rsvp',
+                    'vendor/react',
+                    'vendor/Dispatcher',
+                    'SoundManager',
+                    'vendor/typeahead'
+                ]
+            }
+        ];
 
         function isExcluded(p) {
             return ['document.js'].indexOf(p) > -1;
@@ -83,7 +102,10 @@
             listDir.forEach(function (item) {
                 var srch = /^(.+)\.js$/.exec(item);
                 if (srch && !isExcluded(item)) {
-                    ans.push({name: 'tpl/' + srch[1]});
+                    ans.push({
+                        name: 'tpl/' + srch[1],
+                        exclude: ['vendor/common'] // we do not want to include vendor stuff in page code
+                    });
                 }
             });
         });
