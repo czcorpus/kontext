@@ -1352,7 +1352,7 @@ export class InitActions {
      * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
      * Returns self.
      */
-    add(arg0:string, arg1:Kontext.Promise):InitActions;
+    add<T>(arg0:string, arg1:RSVP.Promise<T>):InitActions;
     add(arg0:{[name:string]:any}, arg1?):InitActions;
     add(arg0, arg1):InitActions {
         var prop;
@@ -1392,7 +1392,7 @@ export class InitActions {
     }
 
     /**
-     * Binds a function to be run after the promise
+     * Binds a function to be run after a promise
      * identified by 'actionId' is fulfilled. In case
      * there is no promise under the 'actionId' key (please
      * note that the key must be still present) then
