@@ -1173,7 +1173,8 @@ class Kontext(Controller):
         result['plugin_data'] = {}
         for plg_name, plg in plugins.get_plugins().items():
             if hasattr(plg, 'export'):
-                result['plugin_data'][plg_name] = plg.export()
+                result['plugin_data'][plg_name] = plg.export(self._session_get('user', 'id'),
+                                                             self.ui_lang)
         return result
 
     def _restore_conc_results(self, storage):

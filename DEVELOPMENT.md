@@ -120,7 +120,12 @@ It should be noted that in case of KonText core plug-ins, a stateless solution (
 plugin.setup()) can be usually found.
 
 ```python
-def export(self):
+def export(self, user_id, lang):
+    """
+    arguments:
+    user_id -- a database ID of a user
+    lang -- xx_YY (country and region)
+    """
     return { '...JSON serializable data...'}
 ```
 
