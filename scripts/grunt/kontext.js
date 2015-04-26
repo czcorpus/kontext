@@ -72,15 +72,11 @@
     };
 
     /**
-     * Generates a list of modules representing models of individual pages
-     * and also a special module "vendor/common" which contains all the 3rd
-     * party libs merged into a single file.
-     *
-     * @param {string} path to a directory where models reside
-     * @return Array<string>
+     * Configures a special module "vendor/common" which contains all the 3rd
+     * party libs merged into a single file
      */
-    module.exports.listAppModules = function (tplDir) {
-        var ans = [
+    module.exports.listVendorModules = function () {
+        return [
             {
                 'name': 'vendor/common',
                 'include': [
@@ -93,6 +89,16 @@
                 ]
             }
         ];
+    };
+
+    /**
+     * Generates a list of modules representing models of individual pages.
+     *
+     * @param {string} path to a directory where models reside
+     * @return Array<string>
+     */
+    module.exports.listAppModules = function (tplDir, production) {
+        var ans = [];
 
         function isExcluded(p) {
             return ['document.js'].indexOf(p) > -1;

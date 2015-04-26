@@ -191,6 +191,7 @@
                         optimize: 'none',
                         paths: kontext.loadPluginMap('./config.xml'),
                         modules: kontext.listAppModules('./public/files/js/tpl')
+                            .concat(kontext.listVendorModules())
                     }
                 }
             }
