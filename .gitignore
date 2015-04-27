@@ -1,0 +1,17 @@
+*.*~
+.idea/
+doc/
+log/
+tmp/
+*.db
+*.pyc
+*.xml
+!config.sample.xml
+.directory
+node_modules/
+public/files/js/min/
+public/files/js/compiled/
+public/files/css/kontext.min.css
+lib/plugins/devel_*
+cmpltmpl/*
+!cmpltmpl/__init__.py
