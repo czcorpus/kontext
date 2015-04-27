@@ -99,7 +99,13 @@ class CacheMapping(object):
             pidfile = pid_dir + ret + '.pid',
             already_present = True
         else:
-            ret = _uniqname(key, [r for (r, s) in kmap.values()])
+            try:  # TODO - the 'except' is here temporarily to monitor invalid cache map entries
+                ret = _uniqname(key, [r for (r, s) in kmap.values()])
+            except Exception as e:
+                logging.getLogger(__name__).error('Failed to unpack value from cache map: %s, entry: %s' %
+                                                  (e, filter(lambda x: type(x) is not tuple, kmap.values()), ))
+                tmp = map(lambda x: x if type(x) is tuple else (x, 0), kmap.values())
+                ret = _uniqname(key, [r for (r, s) in tmp])
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)
