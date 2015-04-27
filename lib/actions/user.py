@@ -48,7 +48,7 @@ class User(Kontext):
             self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
                                         MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
                                         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-            ans['message'] = ('error', _('Incorrect username or password'))
+            self.add_system_message('error', _('Incorrect username or password'))
         return ans
 
     @exposed(access_level=1, template='user/login.tmpl')
