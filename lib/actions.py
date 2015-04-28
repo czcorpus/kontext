@@ -1757,15 +1757,18 @@ class Actions(Kontext):
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
 
-        out = {}
-        out['SubcorpList'] = ()
+        out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
             out['checked_sca'] = {}
             for p in self._url_parameters:
                 if p.startswith('sca_'):
-                    for checked_value in getattr(self, p):
-                        out['checked_sca'][checked_value] = True
-
+                    tmp = getattr(self, p)
+                    p = p[4:]
+                    out['checked_sca'][p] = set()
+                    if hasattr(tmp, '__iter__'):  # multi-value form items may appear here
+                        out['checked_sca'][p] = out['checked_sca'][p].union(tmp)
+                    else:
+                        out['checked_sca'][p].add(tmp)
         if 'error' in tt_sel:
             out.update({
                 'message': ('error', tt_sel['error']),
