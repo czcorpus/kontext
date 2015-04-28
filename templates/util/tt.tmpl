@@ -104,7 +104,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                 #set $checked = ''
                                 #if $varExists('checked_sca') ## 4
                                 #set $item_value = $v['v']
-                                #if $item_value in $checked_sca ## 5
+                                #if $item_value in $checked_sca.get($l['label'], []) ## 5
                                 #set $checked = 'checked="checked"'
                                 #end if ## -5
                                 #end if ## -4
