@@ -27,10 +27,20 @@ import hashlib
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
 
-def _uniqname(subchash, key):
+def _uniqname(subchash, query):
+    """
+    Returns an unique hash based on subcorpus identifier/hash and a CQL query
+
+    arguments:
+    subchash -- a unique identifier of a corpus (actually any unique string is ok here); can be None too
+    query -- a list/tuple containing CQL query elements (base query, filters, aligned corpora etc.)
+
+    returns:
+    an md5 hexadecimal digest of passed data
+    """
     if subchash is None:
         subchash = ''
-    return hashlib.md5('#'.join([k.encode('utf-8') for k in key]) + subchash).hexdigest()
+    return hashlib.md5('#'.join([q.encode('utf-8') for q in query]) + subchash).hexdigest()
 
 
 class CacheMapping(object):
