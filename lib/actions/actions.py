@@ -201,7 +201,7 @@ class Actions(Kontext):
         if self.align and not self.maincorp:
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
-            out['message'] = ('info', _('No result. Please make sure the query and selected query type are correct.'))
+            self.add_system_message('info', _('No result. Please make sure the query and selected query type are correct.'))
             out['next_url'] = '%sfirst_form' % self.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
@@ -306,7 +306,7 @@ class Actions(Kontext):
                 query_desc = plugins.query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
             else:
-                out['message'] = ('error', _('Cannot access recorded query.'))
+                self.add_system_message('error', _('Cannot access recorded query.'))
                 query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
         conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname,
@@ -703,7 +703,7 @@ class Actions(Kontext):
         out = {'within': within}
         out.update(self._fetch_semi_peristent_attrs())
         if within and not self.error:
-            out['message'] = ('error', _('Please specify positive filter to switch'))
+            self.add_system_message('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
         return out
@@ -1464,7 +1464,7 @@ class Actions(Kontext):
             'to_line': to_line,
         }
         if to_line == 0:
-            ans['message'] = ('error', _('Empty result cannot be saved.'))
+            self.add_system_message('error', _('Empty result cannot be saved.'))
         return ans
 
     @exposed(access_level=1, legacy=True)
