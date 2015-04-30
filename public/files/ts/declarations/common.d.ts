@@ -106,5 +106,5 @@ declare module "queryInput" {
  *
  */
 declare module "views/document" {
-    var CorpusInfoBox:any;
+    var corpusInfoBoxFactory:any;
 }

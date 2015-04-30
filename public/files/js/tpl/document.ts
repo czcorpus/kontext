@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
@@ -28,6 +29,7 @@ import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar');
 import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
+import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
 
 
@@ -44,6 +46,32 @@ class NullStorage implements Storage {
     remainingSpace:number = 0;
     [key: string]: any;
     [index: number]: any;
+}
+
+/**
+ * Dispatcher payload
+ */
+class Action {
+
+    /**
+     * An object which invoked the action; optional
+     */
+    source:any;
+
+    /**
+     * App-wide action identification
+     */
+    actionType:string;
+
+    /**
+     * Optional message
+     */
+    message:{msgType:string; message:string};
+
+    /***
+     * Action specific data
+     */
+    data:{[k:string]:any};
 }
 
 
@@ -73,6 +101,25 @@ export interface InitCallbackObject {
  * Either a function or an object
  */
 export type InitCallback = InitCallbackObject|(()=>void);
+
+
+/**
+ * Functions required by KonText's React components
+ */
+export interface ComponentCoreMixins {
+
+    /**
+     *
+     * @param s
+     */
+    translate(s:string):string;
+
+    /**
+     *
+     * @param k
+     */
+    getConf(k:string):any;
+}
 
 
 /**
@@ -109,11 +156,6 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    corpusInfoBox:CorpusInfoBox;
-
-    /**
-     *
-     */
     mainMenu:MainMenu;
 
     /**
@@ -135,11 +177,41 @@ export class PageModel implements Kontext.PluginProvider {
         this.dispatcher = new flux.Dispatcher();
         this.plugins = {};
         this.initCallbacks = [];
-        this.corpusInfoBox = new CorpusInfoBox(this);
         this.mainMenu = new MainMenu();
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
+    }
+
+    /**
+     * Creates an instance of React component using passed factory function
+     * (= function a 'view' module provides).
+     *
+     * @param factory A view factory function
+     * @param mixins Additional mixins
+     * @returns React component
+     */
+    initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any { // TODO type?
+        var self = this;
+        var componentTools:ComponentCoreMixins = {
+            translate(s:string):string {
+                return self.translate(s);
+            },
+            getConf(k:string):any {
+                return self.getConf(k);
+            }
+        };
+        return factory.call(factory, this.dispatcher, mixins ? mixins.concat([componentTools]) : [componentTools]);
+    }
+
+    /**
+     * Renders provided React component with specified mount element.
+     *
+     * @param reactClass
+     * @param target An element whose content will be replaced by rendered React component
+     */
+    renderReactComponent(reactClass, target:HTMLElement):void {
+        React.render(React.createElement(reactClass), target);
     }
 
     /**
@@ -704,38 +776,32 @@ export class PageModel implements Kontext.PluginProvider {
      */
     bindCorpusDescAction() {
         var self = this,
-            jqDescLink = $('#corpus-desc-link'),
-            defer = $.Deferred();
+            jqDescLink = $('#corpus-desc-link');
 
         popupbox.bind(jqDescLink,
             function (box, finalize) {
-                self.corpusInfoBox.createCorpusInfoBox(box, finalize);
+                var actionRegId;
+
+                // TODO this combination of popupbox.bind and dispatcher.register,
+                // dispatcher.unregister is not very clean in terms of app desing
+                actionRegId = self.dispatcher.register(function (payload:Action) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        self.dispatcher.unregister(actionRegId);
+                    }
+                });
+
+                self.renderReactComponent(self.initReactComponent(documentViews.corpusInfoBoxFactory),
+                    box.getRootElement());
+                finalize();
             },
             {
                 width: 'auto',
                 closeIcon: true,
                 messages: self.conf['messages'],
-                beforeOpen: function () {
-                    var ajaxLoader = self.createAjaxLoader();
-
-                    $(win.document.body).append(ajaxLoader);
-                    ajaxLoader.css({
-                        'left': (jqDescLink.offset().left - 20) + 'px',
-                        'top': (jqDescLink.offset().top + 30) + 'px'
-                    });
-                    return ajaxLoader;
-                },
-                onShow: function (loader:JQuery) {
-                    loader.remove();
-                    defer.resolve();
-                },
-                onError: function (loader:JQuery) {
-                    loader.remove();
-                    defer.resolve();
-                }
-            });
-
-        return defer.promise();
+                type: 'plain'
+            }
+        );
     }
 
     /**
@@ -943,6 +1009,17 @@ export class PageModel implements Kontext.PluginProvider {
         return new PluginApi(this.conf, this);
     }
 
+
+    private registerCoreEvents():void {
+        var self = this;
+
+        this.dispatcher.register(function (payload:Action) {
+            if (payload.message && payload.message.hasOwnProperty('msgType')) {
+                self.showMessage(payload.message.msgType, payload.message.message);
+            }
+        });
+    }
+
     /**
      *
      */
@@ -970,144 +1047,12 @@ export class PageModel implements Kontext.PluginProvider {
             fn();
         });
 
+        this.registerCoreEvents();
+
         return this.initActions;
     }
 }
 
-/**
- * Handles modal box displaying information about current corpus.
- */
-export class CorpusInfoBox {
-
-    pageModel:PageModel;
-
-    constructor(pageModel:PageModel) {
-        this.pageModel = pageModel;
-    }
-
-    /**
-     *
-     * @param attribListData
-     * @param jqAttribList
-     */
-    appendAttribList(attribListData, jqAttribList) {
-        $.each(attribListData, function (i, item) {
-            var newRow;
-
-            if (!item.error) {
-                newRow = jqAttribList.find('.item').clone();
-                newRow.removeClass('item');
-                newRow.addClass('dynamic');
-                newRow.find('th').text(item.name);
-                newRow.find('td').text(item.size);
-
-            } else {
-                newRow = jqAttribList.append('<tr class="dynamic"><td colspan="2">' + item.error + '</td></tr>');
-            }
-            jqAttribList.append(newRow);
-        });
-    }
-
-    /**
-     *
-     * @param structListData
-     * @param jqStructList
-     */
-    private appendStructList(structListData, jqStructList) {
-        var numCol,
-            i,
-            repeatStr,
-            updateRow;
-
-        repeatStr = function (str, num) {
-            var k,
-                ans = '';
-
-            for (k = 0; k < num; k += 1) {
-                ans += str;
-            }
-            return ans;
-        };
-
-        updateRow = function (data, idx, rootElm) {
-            var newRow = rootElm.find('.item').clone();
-
-            newRow.removeClass('item');
-            newRow.addClass('dynamic');
-            newRow.find('th').each(function (j) {
-                var value = data[idx + j];
-
-                if (value) {
-                    $(this).text('<' + value.name + '>');
-                }
-            });
-            newRow.find('td').each(function (j) {
-                var value = data[idx + j];
-
-                if (value) {
-                    $(this).text(value.size);
-                }
-            });
-            rootElm.append(newRow);
-        };
-
-        numCol = Math.min(4, Math.ceil(structListData.length / 10));
-        jqStructList.find('.item').empty().html(repeatStr('<th></th><td class="numeric"></td>', numCol));
-        jqStructList.find('.attrib-heading').attr('colspan', 2 * numCol);
-
-        for (i = 0; i < structListData.length; i += numCol) {
-            updateRow(structListData, i, jqStructList);
-        }
-    }
-
-    /**
-     * @param {TooltipBox} tooltipBox
-     * @param {Function} doneCallback called when all is loaded and set
-     */
-    createCorpusInfoBox(tooltipBox, doneCallback) {
-        var self = this,
-            rootElm = tooltipBox.getRootElement();
-
-        this.pageModel.ajax(
-            self.pageModel.createActionUrl('corpora/ajax_get_corp_details?corpname='
-                + self.pageModel.getConf('corpname')),
-            {
-                dataType: 'json',
-                method: 'get',
-                success: function (data) {
-                    var jqInfoBox = $(rootElm),
-                        jqAttribList,
-                        jqStructList;
-
-                    jqInfoBox.html(data.template);
-                    jqAttribList = $('#corpus-details-box .attrib-list');
-                    jqStructList = $('#corpus-details-box .struct-list');
-
-                    jqInfoBox.find('.corpus-name').text(data.corpname);
-                    jqInfoBox.find('.corpus-description').text(data.description);
-                    jqInfoBox.find('.size').text(data.size);
-                    if (data.web_url) {
-                        jqInfoBox.find('span.web_url').html('<a href="' + data.web_url + '">' + data.web_url + '</a>');
-
-                    } else {
-                        jqInfoBox.find('.web_url').remove();
-                    }
-
-                    self.appendAttribList(data.attrlist, jqAttribList);
-                    self.appendStructList(data.structlist, jqStructList);
-                    doneCallback();
-                },
-                error: function () {
-                    if (typeof tooltipBox.onError === 'function') {
-                        tooltipBox.onError();
-                    }
-                    tooltipBox.close();
-                    self.pageModel.showMessage('error', self.pageModel.translate('failed_to_load_corpus_info'));
-                }
-            }
-        );
-    }
-}
 
 /**
  * KonText main menu

@@ -108,8 +108,6 @@ class Corpora(Kontext):
         """
         """
         corp_conf_info = plugins.corptree.get_corpus_info(self._corp().corpname)
-        template_class = self._get_template_class('corpora/corpus_detail')
-        template = unicode(template_class(searchList=[]))
 
         ans = {
             'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
@@ -117,15 +115,14 @@ class Corpora(Kontext):
             'size': l10n.format_number(int(self._corp().size())),
             'attrlist': [],
             'structlist': [],
-            'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
-            'template': template
+            'web_url': corp_conf_info['web'] if corp_conf_info is not None else ''
         }
         try:
             ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_attr(item).id_range()))}
                                for item in self._corp().get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
-            ans['attrlist'] = [{'message': ('error', _('Failed to load'))}]
+            ans['attrlist'] = {'error': _('Failed to load')}
         ans['structlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_struct(item).size()))}
                              for item in self._corp().get_conf('STRUCTLIST').split(',')]
         return ans
