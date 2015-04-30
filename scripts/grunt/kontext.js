@@ -50,7 +50,7 @@
                 'conf' : 'empty:',
                 'jquery' : 'vendor/jquery.min',
                 'vendor/rsvp' : 'vendor/rsvp.min',
-                'vendor/react': 'vendor/react.min',
+                'vendor/react': 'vendor/react',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
             },
@@ -97,24 +97,23 @@
      * @param {string} path to a directory where models reside
      * @return Array<string>
      */
-    module.exports.listAppModules = function (tplDir, production) {
+    module.exports.listAppModules = function (tplDir) {
         var ans = [];
 
         function isExcluded(p) {
             return ['document.js'].indexOf(p) > -1;
         }
 
-        fs.readdir(tplDir, function (err, listDir) {
-            listDir.forEach(function (item) {
-                var srch = /^(.+)\.js$/.exec(item);
-                if (srch && !isExcluded(item)) {
-                    ans.push({
-                        name: 'tpl/' + srch[1],
-                        exclude: ['vendor/common'] // we do not want to include vendor stuff in page code
-                    });
-                }
-            });
+        fs.readdirSync(tplDir).forEach(function (item) {
+            var srch = /^(.+)\.js$/.exec(item);
+            if (srch && !isExcluded(item)) {
+                ans.push({
+                    name: 'tpl/' + srch[1],
+                    exclude: ['vendor/common'] // we do not want to include vendor stuff in page code
+                });
+            }
         });
+        console.log('item: ', ans);
         return ans;
     };
 
