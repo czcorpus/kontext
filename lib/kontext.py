@@ -678,7 +678,7 @@ class Kontext(Controller):
             json_data = json.loads(form.getvalue('json'))
             named_args.update(json_data)
         for k in form.keys():
-            # must remove empty values, thi   s should be achieved by
+            # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
             if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
                 key = str(k)
@@ -741,11 +741,8 @@ class Kontext(Controller):
             action_metadata = {}
         is_legacy_method = action_metadata.get('legacy', False)
 
-        if is_legacy_method:
-            form = cgi.FieldStorage(keep_blank_values=self._keep_blank_values,
-                                    environ=self.environ, fp=self.environ['wsgi.input'])
-        else:
-            form = LegacyForm(self._request.form, self._request.args)
+        form = LegacyForm(self._request.form, self._request.args)
+        if not is_legacy_method:
             for arg_mapping in action_metadata.get('argmappings', []):
                 self._args_mappings[arg_mapping] = arg_mapping(self._request.args)  # TODO what about forms?
 

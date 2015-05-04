@@ -19,10 +19,12 @@
 /**
  * This module contains functionality related directly to the subcorp_list.tmpl template
  */
-define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutModel, corplist, popupBox) {
+define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, documentModule, corplist, popupBox) {
     'use strict';
 
     var lib = {};
+
+    lib.layoutModel = null;
 
     function hasDefinedSubcorpus(elm) {
         return $(elm).attr('data-condition') && $(elm).attr('data-struct_name');
@@ -86,10 +88,10 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
         fieldset1 = $(window.document.createElement('fieldset'));
         fieldset1.addClass('subcorp-action-field');
-        fieldset1.append('<legend>' + layoutModel.translate('undelete') + '</legend>');
-        fieldset1.append('<p>' + layoutModel.translate('The subcorpus will be created again using the original query.') + '</p>');
+        fieldset1.append('<legend>' + lib.layoutModel.translate('undelete') + '</legend>');
+        fieldset1.append('<p>' + lib.layoutModel.translate('The subcorpus will be created again using the original query.') + '</p>');
         fieldset1Submit = $(window.document.createElement('button'));
-        fieldset1Submit.text(layoutModel.translate('undelete'));
+        fieldset1Submit.text(lib.layoutModel.translate('undelete'));
         fieldset1.append(fieldset1Submit);
         wrappingElm.append(fieldset1);
 
@@ -118,7 +120,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
             self = this;
 
         $(actionButton)
-            .text(layoutModel.translate('delete forever'))
+            .text(lib.layoutModel.translate('delete forever'))
             .on('click', function () {
                 var prom;
 
@@ -141,8 +143,8 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
 
         jqFieldset.addClass('subcorp-action-field');
-        jqFieldset.append('<legend>' + layoutModel.translate('wipe') + '</legend>');
-        jqFieldset.append('<p>' + layoutModel.translate('All the remaining information regarding this subcorpus will be deleted. It will be impossible to restore the subcorpus.') + '</p>');
+        jqFieldset.append('<legend>' + lib.layoutModel.translate('wipe') + '</legend>');
+        jqFieldset.append('<p>' + lib.layoutModel.translate('All the remaining information regarding this subcorpus will be deleted. It will be impossible to restore the subcorpus.') + '</p>');
         jqFieldset.append(actionButton);
         wrappingElm.append(jqFieldset);
     };
@@ -229,8 +231,8 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                     jqFieldset
                         .prepend('<br />')
                         .prepend(corpusSelector)
-                        .prepend(layoutModel.translate('Corpus name') + ':&nbsp;')
-                        .prepend('<p>' + layoutModel.translate(
+                        .prepend(lib.layoutModel.translate('Corpus name') + ':&nbsp;')
+                        .prepend('<p>' + lib.layoutModel.translate(
                             'The original query will be applied on a selected corpus. ' + 'Please note that the corpus must contain all the structures and attributes from the query.') + '</p>');
 
                     corplist.create(
@@ -260,7 +262,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
 
                 },
                 function () {
-                    layoutModel.showMessage('error', self.layoutModel.translate('Failed to load corpora'));
+                    lib.layoutModel.showMessage('error', self.layoutModel.translate('Failed to load corpora'));
                 });
 
         wrappingElm.append(jqFieldset);
@@ -282,7 +284,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                         var divElm = $(window.document.createElement('div')),
                             triggerElm = tooltipBox.getTriggerElm(),
                             component = new SubcorpActions(
-                                layoutModel,
+                                lib.layoutModel,
                                 tooltipBox,
                                 $(triggerElm).closest('tr').get(0),
                                 $(triggerElm).data('corpname'),
@@ -316,7 +318,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
                 );
 
             } else {
-                popupBox.bind($(self), layoutModel.translate('No backup data available.'), {
+                popupBox.bind($(self), lib.layoutModel.translate('No backup data available.'), {
                     expandLeft: true
                 });
             }
@@ -329,10 +331,10 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
     function initList() {
         $('section input.show-deleted').on('change', function (e) {
             if ($(e.currentTarget).is(':checked')) {
-                window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=1';
+                window.location = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=1';
 
             } else {
-                window.location = layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=0';
+                window.location = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=0';
             }
         });
     }
@@ -342,7 +344,8 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox'], function ($, layoutMo
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         subcInfo();
         initList();
     };

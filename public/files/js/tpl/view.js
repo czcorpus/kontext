@@ -21,12 +21,14 @@
  * This module contains functionality related directly to the first_form.tmpl template
  */
 define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines',
-        'SoundManager', 'vendor/jscrollpane'], function (win, $, jqueryPeriodic, layoutModel, detail,
+        'SoundManager', 'vendor/jscrollpane'], function (win, $, jqueryPeriodic, documentModule, detail,
                                                                 popupBox, conclines, SoundManager) {
     'use strict';
 
     var lib = {},
         clStorage = conclines.openStorage();
+
+    lib.layoutModel = null;
 
 
     /**
@@ -77,7 +79,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
 
                 } else {
                     pnfilter = filterCodeMapping[action];
-                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + layoutModel.conf.stateParams,
+                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + lib.layoutModel.conf.stateParams,
                         {
                             dataType : 'json',
                             type : 'POST',
@@ -93,12 +95,12 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                                 win.location = data.next_url;
 
                             } else {
-                                layoutModel.showMessage('error', data.error);
+                                lib.layoutModel.showMessage('error', data.error);
                             }
                         },
                         function (jqXHR, textStatus) {
                             box.close();
-                            layoutModel.showMessage('error', textStatus);
+                            lib.layoutModel.showMessage('error', textStatus);
                         }
                     );
                 }
@@ -107,7 +109,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             finalize();
         };
 
-        linesSelection.text(layoutModel.translate('selected lines') + ': ' + numSelected);
+        linesSelection.text(lib.layoutModel.translate('selected lines') + ': ' + numSelected);
         if (!popupBox.hasAttachedPopupBox(linesSelection)) {
             popupBox.bind(linesSelection, createContent, {
                 type : 'plain',
@@ -159,7 +161,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     function onBeforeUnloadAsk() {
         $(win).on('beforeunload.alert_unsaved', function (event) {
             if (clStorage.size() > 0) {
-                event.returnValue = layoutModel.translate('are_you_sure_to_leave');
+                event.returnValue = lib.layoutModel.translate('are_you_sure_to_leave');
                 return event.returnValue;
             }
             return undefined; // !! any other value will cause the dialog window to be shown
@@ -187,7 +189,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             box,
             top;
 
-        box = popupBox.open(layoutModel.conf.messages.anonymous_user_warning,
+        box = popupBox.open(lib.layoutModel.conf.messages.anonymous_user_warning,
             {top: 0, left: 0}, {type: 'warning'});
         left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
@@ -250,8 +252,8 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      * @todo refactor this
      */
     function misc() {
-        $('#groupmenu').attr('corpname', layoutModel.conf.corpname);
-        $('#groupmenu').attr('queryparams', layoutModel.conf.q);
+        $('#groupmenu').attr('corpname', lib.layoutModel.conf.corpname);
+        $('#groupmenu').attr('queryparams', lib.layoutModel.conf.q);
         $('#groupmenu').mouseleave(lib.close_menu);
 
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
@@ -269,10 +271,10 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
                 function (jqXHR, textStatus, error) {
-                    layoutModel.showMessage('error', error);
+                    lib.layoutModel.showMessage('error', error);
                 },
                 lib.viewDetailDoneCallback,
-                layoutModel.createAjaxLoader()
+                lib.layoutModel.createAjaxLoader()
             );
             event.stopPropagation();
         });
@@ -284,9 +286,9 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    layoutModel.showMessage('error', errorThrown);
+                    lib.layoutModel.showMessage('error', errorThrown);
                 },
-                layoutModel.createAjaxLoader()
+                lib.layoutModel.createAjaxLoader()
             );
             event.stopPropagation();
         });
@@ -304,7 +306,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
 
         popupBox.bind(
             $('.calc-warning'),
-            layoutModel.conf.messages.calc_warning,
+            lib.layoutModel.conf.messages.calc_warning,
             {
                 type: 'warning',
                 width: 'nice'
@@ -333,17 +335,17 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     $(this).data('url'),
                     $(this).data('params'),
                     function (jqXHR, textStatus, errorThrown) {
-                        layoutModel.showMessage('error', errorThrown);
+                        lib.layoutModel.showMessage('error', errorThrown);
                     },
                     // Expand link, when clicked, must bind the same event handler
                     // for the new expand link. That's why this 'callback recursion' is present.
                     lib.viewDetailDoneCallback,
-                    layoutModel.createAjaxLoader()
+                    lib.layoutModel.createAjaxLoader()
                 );
                 event.preventDefault();
             });
         });
-        layoutModel.mouseOverImages(boxInst.getRootElement());
+        lib.layoutModel.mouseOverImages(boxInst.getRootElement());
     };
 
     /**
@@ -353,16 +355,16 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         var freq = 500;
 
         $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
-            + layoutModel.conf.messages.calculating + '" title="' + layoutModel.conf.messages.calculating
+            + lib.layoutModel.conf.messages.calculating + '" title="' + lib.layoutModel.conf.messages.calculating
             + '" style="width: 24px; height: 24px" />');
-        $('#arf').empty().html(layoutModel.conf.messages.calculating);
+        $('#arf').empty().html(lib.layoutModel.conf.messages.calculating);
 
         /*
          * Checks periodically for the current state of a concordance calculation
          */
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
-                url: 'get_cached_conc_sizes?' + layoutModel.conf.q + ';' + layoutModel.conf.globals,
+                url: 'get_cached_conc_sizes?' + lib.layoutModel.conf.q + ';' + lib.layoutModel.conf.globals,
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
@@ -370,7 +372,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                         num2Str;
 
                     num2Str = function (n) {
-                        return layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
+                        return lib.layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
                     };
 
                     if (data.end) {
@@ -378,7 +380,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     }
 
                     $('#result-info span.ipm').html(num2Str(data.relconcsize.toFixed(2)));
-                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / layoutModel.conf.numLines)));
+                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / lib.layoutModel.conf.numLines)));
 
                     if (data.fullsize > 0) {
                         $('#fullsize').html(num2Str(data.fullsize));
@@ -389,13 +391,13 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                         $('#toolbar-hits').html(num2Str(data.concsize));
                     }
 
-                    if (data.fullsize > 0 && layoutModel.conf.q2 !== "R") {
+                    if (data.fullsize > 0 && lib.layoutModel.conf.q2 !== "R") {
                         l = addCommas(data.concsize);
-                        $('#conc-calc-info').html(layoutModel.conf.messages.using_first + ' ' + l +
-                            layoutModel.conf.messages.lines_only + ' <a href="view?' +
-                            'q=R' + layoutModel.conf.q2toEnd + ';' + layoutModel.conf.globals + '">'
-                            + layoutModel.conf.messages.use_random + ' ' +
-                            l + ' ' + layoutModel.conf.messages.instead + '.</a>');
+                        $('#conc-calc-info').html(lib.layoutModel.conf.messages.using_first + ' ' + l +
+                            lib.layoutModel.conf.messages.lines_only + ' <a href="view?' +
+                            'q=R' + lib.layoutModel.conf.q2toEnd + ';' + lib.layoutModel.conf.globals + '">'
+                            + lib.layoutModel.conf.messages.use_random + ' ' +
+                            l + ' ' + lib.layoutModel.conf.messages.instead + '.</a>');
                     }
 
                     if (data.finished) {
@@ -431,7 +433,8 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         misc();
         initConcViewScrollbar();
         if (conf.anonymousUser) {

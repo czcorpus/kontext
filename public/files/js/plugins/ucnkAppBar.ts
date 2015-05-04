@@ -17,14 +17,13 @@
  */
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/document.d.ts" />
-/// <reference path="../../ts/declarations/dynamic.d.ts" />
+/// <reference path="../../ts/declarations/common.d.ts" />
 
-export class AppBar implements model.Plugin {
+export class AppBar implements Kontext.Plugin {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
@@ -74,7 +73,7 @@ export class AppBar implements model.Plugin {
     }
 }
 
-export function createInstance(pluginApi:model.PluginApi) {
+export function createInstance(pluginApi:Kontext.PluginApi) {
     var appBar = new AppBar(pluginApi);
     appBar.init();
     return appBar;

@@ -19,11 +19,11 @@
 /**
  * This module contains functionality related directly to the viewopts template
  */
-define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
+define(['win', 'jquery', 'tpl/document'], function (win, $, documentModule) {
     'use strict';
 
     var lib = {};
-
+    lib.layoutModel = null;
     lib.changed = false;
 
     function blockUnsaved() {
@@ -33,7 +33,7 @@ define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
 
         $(win).on('beforeunload', function (event) {
             if (lib.changed) {
-                event.returnValue = layoutModel.translate('there_are_unsaved_changes');
+                event.returnValue = lib.layoutModel.translate('there_are_unsaved_changes');
                 return event.returnValue;
             }
             return undefined;
@@ -49,7 +49,8 @@ define(['win', 'jquery', 'tpl/document'], function (win, $, layoutModel) {
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         blockUnsaved();
     };
 

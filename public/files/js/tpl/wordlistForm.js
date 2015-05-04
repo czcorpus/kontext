@@ -21,11 +21,12 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win, $, layoutModel, corplistComponent,
+define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win, $, documentModule, corplistComponent,
     popupbox) {
     'use strict';
 
     var lib = {
+            layoutModel: null,
             corplistComponent : null
         },
         selectOutputType,
@@ -109,14 +110,14 @@ define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win,
      *
      */
     lib.misc = function () {
-        selectOutputType(layoutModel.conf.wltype);
+        selectOutputType(lib.layoutModel.conf.wltype);
     };
 
     /**
      *
      */
     lib.bindStaticElements = function () {
-        popupbox.bind($('#show-help-format-link'), layoutModel.conf.messages.whiteLists, {
+        popupbox.bind($('#show-help-format-link'), lib.layoutModel.conf.messages.whiteLists, {
             width: '300px'
         });
         $('#select-output-type-simple').on('click', function () {
@@ -133,7 +134,7 @@ define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win,
     lib.createCorplistComponent = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[id="wordlist_form"] select[name="corpname"]'),
-            layoutModel.pluginApi(),
+            lib.layoutModel.pluginApi(),
             {formTarget: 'wordlist_form', submitMethod: 'GET'}
         );
     };
@@ -143,7 +144,8 @@ define(['win', 'jquery', 'tpl/document', 'corplist', 'popupbox'], function (win,
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         lib.bindStaticElements();
         lib.createCorplistComponent();
     };

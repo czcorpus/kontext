@@ -20,10 +20,12 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, layoutModel) {
+define(['jquery', 'tpl/document'], function ($, documentModule) {
     'use strict';
 
     var lib = {};
+
+    lib.layoutModel = null;
 
 
     /**
@@ -48,7 +50,8 @@ define(['jquery', 'tpl/document'], function ($, layoutModel) {
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         $('#subcname').focus();
         $('#subcname').on('change', lib.showSubcorpInfo);
     };
