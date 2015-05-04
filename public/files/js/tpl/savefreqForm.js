@@ -19,11 +19,12 @@
 /**
  * This module contains functionality related directly to the savefreq_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, layoutModel) {
+define(['jquery', 'tpl/document'], function ($, documentModule) {
     'use strict';
 
     var lib = {};
 
+    lib.layoutModel = null;
 
     /**
      * @param {jquery} jqForm jquery object representing parent form of the radio buttons
@@ -65,7 +66,8 @@ define(['jquery', 'tpl/document'], function ($, layoutModel) {
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         lib.bindStaticElements();
 
         // obtain current state of the form and update

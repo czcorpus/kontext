@@ -17,8 +17,6 @@
  */
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/document.d.ts" />
-/// <reference path="../../ts/declarations/dynamic.d.ts" />
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
@@ -86,9 +84,9 @@ export class QueryHistory {
 
     data: Array<any>;
 
-    dependencies: Array<model.Closeable>;
+    dependencies: Array<Kontext.Closeable>;
 
-    pluginApi: model.PluginApi;
+    pluginApi: Kontext.PluginApi;
 
     splitQueryIfSize: number = 60;
 
@@ -97,7 +95,7 @@ export class QueryHistory {
      * @param inputElm
      * @param parentElm
      */
-    constructor(inputElm: HTMLElement, parentElm: HTMLElement, pluginApi: model.PluginApi) {
+    constructor(inputElm: HTMLElement, parentElm: HTMLElement, pluginApi: Kontext.PluginApi) {
         this.inputElm = $(inputElm);
         this.parentElm = $(parentElm);
         this.pluginApi = pluginApi;
@@ -197,14 +195,14 @@ export class QueryHistory {
         this.boxElm.find('.filter-checkbox').on('click', function (event) {
             if ($(event.currentTarget).is(':checked')) {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')) {
+                    if ($(this).data('corpname') !== self.pluginApi.getConf('corpname')) {
                         $(this).hide();
                     }
                 });
 
             } else {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')
+                    if ($(this).data('corpname') !== self.pluginApi.getConf('corpname')
                         && !$(this).is(':visible')) {
                         $(this).show();
                     }
@@ -296,7 +294,7 @@ export class QueryHistory {
     /**
      * @param {Closeable} dep
      */
-    registerDependency(dep:model.Closeable): void {
+    registerDependency(dep:Kontext.Closeable): void {
         if (typeof dep.close !== 'function') {
             throw new Error('Registered dependency must implement close() method');
         }
@@ -328,15 +326,15 @@ export class QueryHistory {
                 this.data.push({
                     query : this.inputElm.val(),
                     query_type : $('#queryselector option:selected').data('type'),
-                    corpname : self.pluginApi.conf('corpname'),
+                    corpname : self.pluginApi.getConf('corpname'),
                     subcorpname : self.getCurrentSubcorpname(),
-                    humanCorpname : self.pluginApi.conf('humanCorpname')
+                    humanCorpname : self.pluginApi.getConf('humanCorpname')
                 });
             }
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax(self.pluginApi.conf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.conf('corpname'), {
+            prom = $.ajax(self.pluginApi.getConf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.getConf('corpname'), {
                 dataType : 'json'
             });
 
@@ -422,7 +420,7 @@ export class QueryHistory {
 
             link = $(window.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.conf('historyMaxQuerySize')),
+            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.getConf('historyMaxQuerySize')),
                 self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
@@ -489,15 +487,15 @@ export class QueryHistory {
 }
 
 
-export class QueryStoragePlugin implements model.Plugin {
+export class QueryStoragePlugin implements Kontext.Plugin {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     /**
      *
      * @param pluginApi
      */
-    init(pluginApi:model.PluginApi):void {
+    init(pluginApi:Kontext.PluginApi):void {
         this.pluginApi = pluginApi;
         this.reset();
     }
@@ -586,7 +584,7 @@ export class QueryStoragePlugin implements model.Plugin {
  *
  * @returns {QueryStoragePlugin}
  */
-export function createInstance(pluginApi:model.PluginApi):QueryStoragePlugin {
+export function createInstance(pluginApi:Kontext.PluginApi):QueryStoragePlugin {
     var plugin = new QueryStoragePlugin();
 
     plugin.init(pluginApi);

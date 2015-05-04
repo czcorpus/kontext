@@ -60,17 +60,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #if $debug
 <script type="text/javascript" src="$files_path/js/vendor/less.js" ></script>
 #end if
-<script type="text/javascript" src="$files_path/js/vendor/requirejs.min.js"></script>
+<script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
+<script type="text/javascript" src="$files_path/js/min/vendor/common.js"></script>
 #block headers
 #end block
-#if $getVar('ca_headers', '')
-$ca_headers
-#else
+
 <script type="text/javascript">
 var missingPlugins = [],
     paths = {
         'jquery' : './vendor/jquery.min',
+        'vendor/react' : './vendor/react.min',
         'vendor/jscrollpane' : './vendor/jscrollpane.min',
+        'vendor/rsvp' : './vendor/rsvp.min',
         'plugins' : './plugins',
         'SoundManager' : './vendor/soundmanager2.min'
     };
@@ -101,9 +102,6 @@ requirejs.config({
         'vendor/jscrollpane' : {
             deps: ['jquery']
         },
-        'typeahead' : {
-            deps: ['jquery']
-        }
         #if $qunit_test
         , 'vendor/QUnit' : {
             exports : 'QUnit',
@@ -190,6 +188,12 @@ define('conf', [], function () {
     conf.messages['select_all'] = "$_('Select all')";
     conf.messages['query_type_mismatch'] = "$_('Possible query type mismatch. Do you want to continue?')";
     conf.messages['there_are_unsaved_changes'] = "$_('There are unsaved changes on the page. Do you want to continue without saving them?')";
+    conf.messages['size'] = "$_('size')";
+    conf.messages['positions'] = "$_('positions')";
+    conf.messages['website'] = "$_('website')";
+    conf.messages['Attributes'] = "$_('Attributes')";
+    conf.messages['Structures'] = "$_('Structures')";
+    conf.messages['Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.'] = "$_('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')";
 
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
@@ -200,7 +204,6 @@ define('conf', [], function () {
     return conf;
 });
 </script>
-#end if
 </head>
 <body>
 #if $qunit_test

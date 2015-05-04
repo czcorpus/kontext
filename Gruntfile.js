@@ -12,6 +12,7 @@
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-typescript');
         grunt.loadNpmTasks('grunt-requirejs');
+        grunt.loadNpmTasks('grunt-react');
 
         grunt.initConfig({
             clean: {
@@ -100,12 +101,12 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!compiled/**'],
+                            src: ['**/*.js', '!compiled/**', '!vendor/**'],
                             dest: 'public/files/js/min'
                         },
                         {
                             expand: true,
-                            cwd: 'public/files/js/compiled',
+                            cwd: 'public/files/js/compiled', // typescript is always compiled
                             src: ['**/*.js'],
                             dest: 'public/files/js/min'
                         }
@@ -159,8 +160,21 @@
                     }
                 }
             },
+            "react": {
+                all: {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: 'public/files/js',
+                            src: ["**/*.jsx"],
+                            dest: "public/files/js/compiled",
+                            ext: ".js"
+                        }
+                    ]
+                }
+            },
             requirejs: {
-                compile: {
+                production: {
                     options: {
                         appDir: "public/files/js/compiled",
                         baseUrl: ".",
@@ -176,30 +190,53 @@
                         wrapShim: true,
                         optimize: 'none',
                         paths: kontext.loadPluginMap('./config.xml'),
-                        modules: kontext.listPageModules('./public/files/js/tpl')
+                        modules: kontext.listAppModules('./public/files/js/tpl')
+                            .concat(kontext.listVendorModules())
+                    }
+                },
+                vendor: {
+                    options: {
+                        appDir: "public/files/js",
+                        baseUrl: ".",
+                        dir: "public/files/js/min",
+                        shim: {
+                            'vendor/jscrollpane': {
+                                deps: ['jquery']
+                            }
+                        },
+                        wrapShim: true,
+                        optimize: 'none',
+                        paths: kontext.loadPluginMap('./config.xml'),
+                        modules: kontext.listVendorModules()
                     }
                 }
             }
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'typescript', 'copy:devel', 'clean:cleanup', 'exec']);
+        grunt.registerTask('devel', ['clean:all', 'typescript', 'react', 'requirejs:vendor',
+            'copy:devel', 'clean:cleanup', 'exec']);
 
-        // regenerates JavaScript files for development-ready project (i.e. no min./optimizations and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:javascript', 'typescript', 'copy:devel', 'clean:cleanup']);
+        // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
+        // and no Cheetah templates compiled)
+        grunt.registerTask('develjs', ['clean:javascript', 'typescript', 'react',
+            'requirejs:vendor', 'copy:devel', 'clean:cleanup']);
 
-        // generates production-ready project with additional optimization of JavaScript files (RequireJS optimizer)
-        grunt.registerTask('production-optimized', ['clean:all', 'less', 'typescript', 'copy:prepare', 'requirejs:compile',
+        // generates production-ready project with additional optimization of JavaScript files
+        // (RequireJS optimizer)
+        grunt.registerTask('production-optimized', ['clean:all', 'less', 'typescript', 'react',
+            'copy:prepare', 'requirejs:production',
             'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
 
         // generates production-ready project where all JavaScript modules are loaded individually
-        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'copy:prepare',
+        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react', 'copy:prepare',
             'copy:finishNonOptimized', 'uglify:nonOptimized', 'clean:cleanup', 'exec']);
 
         // generates production-like project with RequireJS optimization but without minimization
-        grunt.registerTask('production-debug', ['clean:all', 'less', 'typescript', 'copy:prepare', 'requirejs:compile',
-            'copy:finishOptimized', 'clean:cleanup', 'exec']);
+        grunt.registerTask('production-debug', ['clean:all', 'less', 'typescript', 'copy:prepare',
+            'requirejs:production', 'copy:finishOptimized', 'clean:cleanup', 'exec']);
 
+        // just compiles Cheetah templates
         grunt.registerTask('templates', ['clean:templates', 'exec:compile_html_templates']);
     };
 }(module));

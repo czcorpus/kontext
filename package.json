@@ -1,6 +1,14 @@
 {
   "name": "KonText",
+  "description": "An alternative web front-end for the Manatee corpus search engine",
+  "license": "GPL-2.0",
   "version": "0.7.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomachalek/kontext.git"
+  },
+  "bugs": "https://github.com/czcorpus/kontext/issues",
+  "homepage": "https://github.com/czcorpus/kontext",
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-cli": "~0.1.13",
@@ -12,7 +20,8 @@
     "grunt-typescript": "~0.6.1",
     "requirejs": "~2.1.15",
     "grunt-requirejs": "~0.4.2",
-    "xmldom": "~0.1.19"
+    "xmldom": "~0.1.19",
+    "grunt-react": "~0.12.2"
   },
   "repository": {
     "type": "hg",

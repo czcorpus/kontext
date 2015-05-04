@@ -17,8 +17,6 @@
  */
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/document.d.ts" />
-/// <reference path="../../ts/declarations/dynamic.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 
 import popupBox = require("popupbox");
@@ -80,7 +78,7 @@ interface AjaxAnimation {
  */
 class LiveData {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     attrFieldsetWrapper:JQuery;
 
@@ -89,7 +87,7 @@ class LiveData {
      * @param attrFieldsetWrapper parent element of all the attribute selectors
      * @constructor
      */
-    constructor(pluginApi:model.PluginApi, attrFieldsetWrapper:HTMLElement) {
+    constructor(pluginApi:Kontext.PluginApi, attrFieldsetWrapper:HTMLElement) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
     }
@@ -202,7 +200,7 @@ class LiveData {
                     }
                 });
 
-                self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf('corpname')
+                self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.getConf('corpname')
                     + '&id=' + $(target).attr('data-bib-id'),
                     {
                         dataType: 'json',
@@ -255,7 +253,7 @@ class LiveData {
 
             if ($.isArray(dataItem)) {
                 attrTable.find('.metadata').empty();
-                dataTable = self.createDataTable(dataItem, ident, self.pluginApi.conf('bibConf'), checkedItems);
+                dataTable = self.createDataTable(dataItem, ident, self.pluginApi.getConf('bibConf'), checkedItems);
 
                 $(inputElm).after(dataTable);
                 $(dataTable).find('.bib-info').each(function () {
@@ -297,13 +295,13 @@ class LiveData {
  */
 class Checkboxes {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     attrFieldsetWrapper:JQuery;
 
     /**
      */
-    constructor(pluginApi:model.PluginApi, attrFieldsetWrapper:JQuery) {
+    constructor(pluginApi:Kontext.PluginApi, attrFieldsetWrapper:JQuery) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
     }
@@ -345,7 +343,7 @@ class Checkboxes {
             var id,
                 trElm = $(this).closest('tr'),
                 labelElm = $(this).closest('label'),
-                inputVal = $(this).val() !== self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
+                inputVal = $(this).val() !== self.pluginApi.getConf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
 
             if ($(this).attr('data-virt-name')) {
@@ -428,7 +426,7 @@ class Checkboxes {
  */
 class SelectionSteps {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     jqSteps:JQuery;
 
@@ -436,7 +434,7 @@ class SelectionSteps {
      *
      * @param pluginApi
      */
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
         this.jqSteps = $('.live-attributes div.steps');
     }
@@ -480,7 +478,7 @@ class SelectionSteps {
             innerHTML;
 
         if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-            innerHTML = '<strong>' + this.pluginApi.conf('corpname') + '</strong> <br />&amp; '
+            innerHTML = '<strong>' + this.pluginApi.getConf('corpname') + '</strong> <br />&amp; '
             + alignedCorpnames.join('<br />&amp;');
             this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
             this.numSteps(this.numSteps() + 1);
@@ -629,13 +627,13 @@ class StructTables {
  */
 class AlignedCorpora {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
     /**
      *
      * @param pluginApi
      */
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
@@ -690,7 +688,7 @@ class AlignedCorpora {
  */
 class Plugin {
 
-    pluginApi:model.QueryPagePluginApi;
+    pluginApi:Kontext.QueryPagePluginApi;
 
     attrFieldsetWrapper:JQuery;
 
@@ -715,7 +713,7 @@ class Plugin {
      * @param updateButton
      * @param resetButton
      */
-    constructor(pluginApi:model.QueryPagePluginApi, attrFieldsetWrapper:HTMLElement,
+    constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:HTMLElement,
                 updateButton:HTMLElement, resetButton:HTMLElement) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
@@ -781,9 +779,9 @@ class Plugin {
             requestURL:string,
             alignedCorpnames;
 
-        requestURL = self.pluginApi.conf('rootURL')
+        requestURL = self.pluginApi.getConf('rootURL')
                 + 'filter_attributes?corpname='
-                + this.pluginApi.conf('corpname');
+                + this.pluginApi.getConf('corpname');
 
         alignedCorpnames = this.alignedCorpora.findSelected();
         if (alignedCorpnames) {
@@ -916,7 +914,7 @@ class Plugin {
  * @param resetButton
  * @param attrFieldsetWrapper
  */
-export function init(pluginApi:model.QueryPagePluginApi,
+export function init(pluginApi:Kontext.QueryPagePluginApi,
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement) {
     var plugin = new Plugin(pluginApi, attrFieldsetWrapper, updateButton, resetButton);

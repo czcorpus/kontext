@@ -17,14 +17,13 @@
  */
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/document.d.ts" />
-/// <reference path="../../ts/declarations/dynamic.d.ts" />
+/// <reference path="../../ts/declarations/common.d.ts" />
 
-export class AppBar implements model.Plugin {
+export class AppBar implements Kontext.Plugin {
 
-    pluginApi:model.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
-    constructor(pluginApi:model.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
@@ -33,7 +32,7 @@ export class AppBar implements model.Plugin {
      */
     toolbarReloader = () => {
         var self = this,
-            promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
+            promise = $.ajax(this.pluginApi.getConf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);
@@ -56,7 +55,7 @@ export class AppBar implements model.Plugin {
                 ans = confirm(this.pluginApi.translate('you have been logged out'));
 
                 if (ans === true) {
-                    window.location = this.pluginApi.conf('loginUrl');
+                    window.location = this.pluginApi.getConf('loginUrl');
 
                 } else {
                     this.pluginApi.resetToHomepage({remote: 1});
@@ -67,14 +66,14 @@ export class AppBar implements model.Plugin {
             }
 
         } catch (e) {
-            if (this.pluginApi.conf('isDebug')) {
+            if (this.pluginApi.getConf('isDebug')) {
                 console.error(e);
             }
         }
     }
 }
 
-export function createInstance(pluginApi:model.PluginApi) {
+export function createInstance(pluginApi:Kontext.PluginApi) {
     var appBar = new AppBar(pluginApi);
     appBar.init();
     return appBar;

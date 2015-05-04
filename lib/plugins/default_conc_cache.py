@@ -22,7 +22,7 @@ and filename containing respective saved concordances.
 import os
 import logging
 import time
-from hashlib import sha1
+from hashlib import md5, sha1
 
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
@@ -31,18 +31,20 @@ def fspath_hash(path):
     return sha1(path).hexdigest()
 
 
-def _uniqname(key, used):
-    name = '#'.join([''.join([c for c in w if c.isalnum()]) for w in key])
-    name = name[1:15].encode('UTF-8')  # UTF-8 because os.path manipulations
-    if not name:
-        name = 'noalnums'
-    if name in used:
-        used = [w[len(name):] for w in used if w.startswith(name)]
-        i = 0
-        while str(i) in used:
-            i += 1
-        name += str(i)
-    return name
+def _uniqname(subchash, query):
+    """
+    Returns an unique hash based on subcorpus identifier/hash and a CQL query
+
+    arguments:
+    subchash -- a unique identifier of a corpus (actually any unique string is ok here); can be None too
+    query -- a list/tuple containing CQL query elements (base query, filters, aligned corpora etc.)
+
+    returns:
+    an md5 hexadecimal digest of passed data
+    """
+    if subchash is None:
+        subchash = ''
+    return md5('#'.join([q.encode('utf-8') for q in query]) + subchash).hexdigest()
 
 
 class DummyMetadata(object):
@@ -207,7 +209,7 @@ class CacheMapping(object):
             pidfile = pid_dir + ret + '.pid',
             already_present = True
         else:
-            ret = _uniqname(key, [r[0] for r in kmap.values()])
+            ret = _uniqname(subchash, key)
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)

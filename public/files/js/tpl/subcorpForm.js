@@ -21,11 +21,12 @@
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
 define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttributes'], function (
-        $, layoutModel, corplistComponent, popupBox, liveAttributes) {
+        $, documentModule, corplistComponent, popupBox, liveAttributes) {
     'use strict';
 
     var lib = {
-        corplistComponent : null
+        corplistComponent : null,
+        layoutModel: null
     };
 
     /**
@@ -77,7 +78,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
     lib.initTreeComponent = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="subcorp"] select[name="corpname"]'),
-            layoutModel.pluginApi(),
+            lib.layoutModel.pluginApi(),
             {formTarget: 'subcorp_form', submitMethod: 'GET'}
         );
     };
@@ -87,7 +88,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
             var v;
 
             v = $('#within-struct-selector').find('option[value="' + $('#within-struct-selector').val() + '"]').attr('title');
-            $(tooltipBox.getRootElement()).append('<strong>' + layoutModel.conf.messages.available_attributes + '</strong>: ');
+            $(tooltipBox.getRootElement()).append('<strong>' + lib.layoutModel.conf.messages.available_attributes + '</strong>: ');
             $(tooltipBox.getRootElement()).append(v);
             finalize();
         }, {width : 'nice'});
@@ -111,7 +112,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
      */
     lib.sizeUnitsSafeSwitch = function () {
         $('.text-type-top-bar a').on('click', function (event) {
-            var ans = confirm(layoutModel.conf.messages['this_action_resets_current_selection']);
+            var ans = confirm(lib.layoutModel.conf.messages['this_action_resets_current_selection']);
 
             if (!ans) {
                 event.preventDefault();
@@ -125,12 +126,14 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
      * @param conf
      */
     lib.init = function (conf) {
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
 
         var ExtendedApi = function () {
             this.queryFieldsetToggleEvents = [];
         };
 
-        ExtendedApi.prototype = layoutModel.pluginApi();
+        ExtendedApi.prototype = lib.layoutModel.pluginApi();
 
         ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
             this.queryFieldsetToggleEvents.push(fn);
@@ -138,7 +141,6 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
 
         lib.extendedApi = new ExtendedApi();
 
-        layoutModel.init(conf);
         lib.initTreeComponent();
         lib.initSubcCreationVariantSwitch();
         lib.initAttributeHints();

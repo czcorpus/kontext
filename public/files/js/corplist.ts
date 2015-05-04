@@ -18,13 +18,10 @@
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/typeahead.d.ts" />
-/// <reference path="../ts/declarations/dynamic.d.ts" />
-/// <reference path="../ts/declarations/document.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 
 import $ = require('jquery');
-import conf = require('conf');
 
 
 /**
@@ -280,7 +277,7 @@ class WidgetMenu {
  */
 export class SearchTab implements WidgetTab {
 
-    pageModel:model.FirstFormPage;
+    pluginApi:Kontext.PluginApi;
 
     widgetWrapper:HTMLElement;
 
@@ -296,8 +293,8 @@ export class SearchTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
-        this.pageModel = pageModel;
+    constructor(pluginApi:Kontext.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+        this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
@@ -319,7 +316,7 @@ export class SearchTab implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
-        $.each(conf.corporaLabels, function (i, item) {
+        $.each(this.pluginApi.getConf('corporaLabels'), function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).append(item[0]).addClass('keyword');
@@ -338,7 +335,7 @@ export class SearchTab implements WidgetTab {
                 $(self.srchField).trigger('input');
                 $(self.srchField).focus();
             });
-            if (i < conf.corporaLabels.length - 1) {
+            if (i < self.pluginApi.getConf('corporaLabels')['length'] - 1) {
                 $(div).append(' ');
             }
         });
@@ -347,7 +344,7 @@ export class SearchTab implements WidgetTab {
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
-            'url' : self.pageModel.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
+            'url' : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
@@ -386,7 +383,7 @@ export class SearchTab implements WidgetTab {
                     }
                     $(link)
                         .attr('title', 'In my favorites? (click to change)') // TODO translate
-                        .append('<img src="' + self.pageModel.createStaticUrl('img/transparent_16x16.gif') + '" />')
+                        .append('<img src="' + self.pluginApi.createStaticUrl('img/transparent_16x16.gif') + '" />')
                         .on('click', function (event:JQueryEventObject) {
                             var reqData:any = {},
                                 favState:boolean;
@@ -403,7 +400,7 @@ export class SearchTab implements WidgetTab {
                             }
                             reqData[item.canonical_id] = favState;
 
-                            self.pageModel.ajax('set_favorite_corp',
+                            self.pluginApi.ajax('set_favorite_corp',
                                 {
                                     method : 'POST',
                                     data : {'data': JSON.stringify(reqData)},
@@ -413,7 +410,7 @@ export class SearchTab implements WidgetTab {
                                     },
                                     error : function () {
                                         self.bloodhound.clearRemoteCache();
-                                        self.pageModel.showMessage('error', 'Failed to (un)set item as favorite');
+                                        self.pluginApi.showMessage('error', 'Failed to (un)set item as favorite');
                                     }
                                 }
                             );
@@ -455,7 +452,7 @@ export class SearchTab implements WidgetTab {
      * @returns {}
      */
      getFooter():JQuery {
-        return $('<span>' + this.pageModel.translate('hit [Tab] to see your favorite items') + '</span>');
+        return $('<span>' + this.pluginApi.translate('hit [Tab] to see your favorite items') + '</span>');
      }
 }
 
@@ -464,7 +461,7 @@ export class SearchTab implements WidgetTab {
  */
 class FavoritesTab implements WidgetTab {
 
-    pageModel:model.FirstFormPage;
+    pageModel:Kontext.PluginApi;
 
     widgetWrapper:HTMLElement;
 
@@ -488,7 +485,7 @@ class FavoritesTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pageModel:model.FirstFormPage, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
+    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
                 dataFeat:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
         var self = this;
         this.editMode = false;
@@ -683,13 +680,13 @@ class FavoritesTab implements WidgetTab {
  */
 class StarSwitch {
 
-    pageModel:model.FirstFormPage;
+    pageModel:Kontext.PluginApi;
 
     triggerElm:HTMLElement;
 
     itemId:string;
 
-    constructor(pageModel:model.FirstFormPage, triggerElm:HTMLElement) {
+    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
         this.itemId = $(this.triggerElm).data('item-id');
@@ -730,7 +727,7 @@ class StarComponent {
 
     private favoriteItemsTab:FavoritesTab;
 
-    private pageModel:model.FirstFormPage;
+    private pageModel:Kontext.FirstFormPage;
 
     private starSwitch:StarSwitch;
 
@@ -787,7 +784,7 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:model.FirstFormPage) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
@@ -968,7 +965,7 @@ export class Corplist {
 
     private data:Array<CorplistItem>;
 
-    private pageModel:model.FirstFormPage;
+    private pageModel:Kontext.FirstFormPage;
 
     private visible:Visibility;
 
@@ -1019,7 +1016,7 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, pageModel:model.FirstFormPage, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pageModel:Kontext.FirstFormPage, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
@@ -1137,7 +1134,7 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corptree']['featured']);
+            this.pageModel.getConf('pluginData')['corptree']['feaPluginApitured']);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -1189,12 +1186,12 @@ export class Corplist {
  * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
  * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, pageModel:model.FirstFormPage, options:Options):Corplist {
+export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
     data = fetchDataFromSelect(selectElm);
-    corplist = new Corplist(options, data, pageModel, $(selectElm).closest('form').get(0));
+    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }

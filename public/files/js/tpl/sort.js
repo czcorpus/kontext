@@ -17,10 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layoutModel, popupBox, $, kwicAlignUtils) {
+define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (documentModule, popupBox, $, kwicAlignUtils) {
     'use strict';
 
     var lib = {};
+
+    lib.layoutModel = null;
 
     function showLevelForm(elm, btn) {
         var closeLink;
@@ -76,7 +78,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
                 btn = $(document.createElement('button'));
                 btn.attr('type', 'button');
                 btn.addClass('add-level-button');
-                btn.attr('title', layoutModel.translate('add_level'));
+                btn.attr('title', lib.layoutModel.translate('add_level'));
                 btn.text(i + 1);
                 $(v).hide();
                 $(v).closest('td').append(btn);
@@ -101,10 +103,11 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (layou
      * @param conf
      */
     lib.init = function (conf) {
-        layoutModel.init(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
+        lib.layoutModel.init();
         kwicAlignUtils.fix();
         $('a.kwic-alignment-help').each(function () {
-            popupBox.bind($(this), layoutModel.conf.messages.msg, {
+            popupBox.bind($(this), lib.layoutModel.conf.messages.msg, {
                 'top': 'attached-bottom',
                 'width': 'auto',
                 'height': 'auto'
