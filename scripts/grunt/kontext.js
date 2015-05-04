@@ -113,7 +113,6 @@
                 });
             }
         });
-        console.log('item: ', ans);
         return ans;
     };
 
