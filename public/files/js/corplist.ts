@@ -492,8 +492,8 @@ class FavoritesTab implements WidgetTab {
         this.onListChange = [];
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
-        this.dataFav = dataFav;
-        this.dataFeat = dataFeat;
+        this.dataFav = dataFav ? dataFav : [];
+        this.dataFeat = dataFeat ? dataFeat : [];
         this.itemClickCallback = itemClickCallback;
         this.tablesWrapper = window.document.createElement('div');
         $(this.tablesWrapper).addClass('tables');
@@ -1134,7 +1134,7 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corptree']['feaPluginApitured']);
+            this.pageModel.getConf('pluginData')['corptree']['featured']);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
