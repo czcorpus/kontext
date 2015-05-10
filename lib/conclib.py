@@ -452,7 +452,15 @@ def conc_is_sorted(q):
     return ans
 
 
-def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
+def get_conc_desc(corpus, q=None, subchash=None, translate=True):
+    """
+    arguments:
+
+    corpus -- a manatee.Corpus instance
+    q -- list/tuple of query elements
+    subchash -- subcorpus hash (see corplib.CorpusManager)
+    translate -- translate description ?
+    """
     if q is None:
         q = []
     if translate:
@@ -484,7 +492,7 @@ def get_conc_desc(q=None, corpname='', subchash=None, translate=True):
              't': ('', ''),
              }
     desc = []
-    cache_map = cache_factory.get_mapping(CACHE_ROOT_DIR + '/' + corpname + '/')
+    cache_map = cache_factory.get_mapping(CACHE_ROOT_DIR + '/' + corpus.get_conf('NAME') + '/')
     q = tuple(q)
 
     for i in range(len(q)):

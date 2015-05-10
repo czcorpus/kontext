@@ -114,7 +114,8 @@ class DefaultDb(KeyValueStorage):
 
     def hash_get_all(self, key):
         """
-        Returns complete hash object stored under the passed key.
+        Returns a complete hash object (= Python dict) stored under the passed
+        key. If the provided key is not present then an empty dict is returned.
 
         arguments:
         key -- data access key
@@ -122,7 +123,7 @@ class DefaultDb(KeyValueStorage):
         data = self.get(key)
         if type(data) is not dict:
             raise TypeError('hash_get_all - required value "%s" is not a dict' % key)
-        return data
+        return data if data is not None else {}
 
     def get(self, key, default=None):
         """

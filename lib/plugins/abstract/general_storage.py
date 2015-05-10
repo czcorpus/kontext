@@ -95,8 +95,9 @@ class KeyValueStorage(object):
 
     def hash_get_all(self, key):
         """
-        Returns complete hash object stored under the passed key.
-        (in some implementations this may be the same as simple get())
+        Returns a complete hash object (= Python dict) stored under the passed
+        key. If the provided key is not present then an empty dict should be
+        returned.
 
         arguments:
         key -- data access key

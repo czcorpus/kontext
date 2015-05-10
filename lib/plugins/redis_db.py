@@ -117,7 +117,8 @@ class RedisDb(KeyValueStorage):
 
     def hash_get_all(self, key):
         """
-        Returns complete hash object stored under the passed key.
+        Returns a complete hash object (= Python dict) stored under the passed
+        key. If the provided key is not present then an empty dict is returned.
 
         arguments:
         key -- data access key
