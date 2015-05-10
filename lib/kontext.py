@@ -1228,8 +1228,8 @@ class Kontext(Controller):
             result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
                                'tourl': self.urlencode(u2), 'size': s}
                               for o, a, u1, u2, s in
-                              conclib.get_conc_desc(self.q,
-                                                    corpname=self.corpname,
+                              conclib.get_conc_desc(corpus=self._corp(),
+                                                    q=self.q,
                                                     subchash=getattr(self._corp(), "subchash", None),
                                                     translate=translate)]
 
@@ -1244,8 +1244,8 @@ class Kontext(Controller):
             result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
 
         if 'orig_query' in vars:
-            conc_desc = conclib.get_conc_desc(self.q,
-                                              corpname=self.corpname,
+            conc_desc = conclib.get_conc_desc(corpus=self._corp(),
+                                              q=self.q,
                                               subchash=getattr(self._corp(), "subchash", None))
             if len(conc_desc) > 1:
                 result['tourl'] = self.urlencode(conc_desc[0][3])

@@ -309,7 +309,7 @@ class Actions(Kontext):
                 self.add_system_message('error', _('Cannot access recorded query.'))
                 query_id = None  # we have to invalidate the query_id (to render HTML properly)
 
-        conc_desc = conclib.get_conc_desc(self.q, corpname=self.corpname,
+        conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.q,
                                           subchash=getattr(self._corp(), "subchash", None))
 
         out['Desc'] = []
