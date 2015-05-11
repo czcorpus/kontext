@@ -27,7 +27,7 @@ import uuid
 
 import manatee
 import settings
-from butils import flck_sh_lock, flck_unlock, setproctitle
+from butils import flck_sh_lock, flck_unlock
 from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
@@ -99,25 +99,6 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
     return ans
 
 
-def _create_pid_file():
-    pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
-                                              uuid.uuid1()))
-    with open(pidfile, 'wb') as pf:
-        cPickle.dump(
-            {
-                'pid': os.getpid(),
-                'last_check': int(time.time()),
-                # in case we check status before any calculation (represented by the
-                # BackgroundCalc class) starts (the calculation updates curr_wait as it
-                # runs), we want to be sure the limit is big enough for BackgroundCalc to
-                # be considered alive
-                'curr_wait': 100,
-                'error': None
-            },
-            pf)
-    return pidfile
-
-
 def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     """
     Called by webserver process (i.e. not by the background worker).
@@ -151,8 +132,9 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
         i += 1
     if not os.path.isfile(cachefile):
         if i >= hard_limit:
-            logging.getLogger(__name__).warning('Hardcoded limit %01.2f sec. for intermediate concordance exceeded.'
-                                                % (hard_limit / 10.))
+            logging.getLogger(__name__).warning(
+                'Hardcoded limit %01.2f sec. for intermediate concordance exceeded.' %
+                (hard_limit / 10.))
         cache_map.del_full_entry((subchash, q))
         raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
@@ -251,8 +233,8 @@ def _compute_conc(corp, q, samplesize):
         ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
     else:
         raise NotImplementedError('Function "online sample" is not supported')
-    logging.getLogger(__name__).debug('compute_conc(%s, [%s]) -> %01.4f' % (corp.corpname, ','.join(q),
-                                                                            time.time() - start_time))
+    logging.getLogger(__name__).debug('compute_conc(%s, [%s]) -> %01.4f' %
+                                      (corp.corpname, ','.join(q), time.time() - start_time))
     return ans_conc
 
 
@@ -273,10 +255,11 @@ class BackgroundCalc(object):
     def __init__(self, sending_pipe, corpus, pid_dir, subchash, q):
         """
         arguments:
-        sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its parent
+        sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its
+                        parent
         corpus -- a manatee.Corpus instance
-        pid_dir -- a directory where "pidfile" (= file containing information about background calculation) will be
-                   temporarily stored
+        pid_dir -- a directory where "pidfile" (= file containing information about background
+                   calculation) will be temporarily stored
         subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
         q -- a tuple/list containing current query
         """
@@ -286,11 +269,30 @@ class BackgroundCalc(object):
         self._subchash = subchash
         self._q = q
 
+    @staticmethod
+    def _create_pid_file():
+        pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
+                                                  uuid.uuid1()))
+        with open(pidfile, 'wb') as pf:
+            cPickle.dump(
+                {
+                    'pid': os.getpid(),
+                    'last_check': int(time.time()),
+                    # in case we check status before any calculation (represented by the
+                    # BackgroundCalc class) starts (the calculation updates curr_wait as it
+                    # runs), we want to be sure the limit is big enough for BackgroundCalc to
+                    # be considered alive
+                    'curr_wait': 100,
+                    'error': None
+                },
+                pf)
+        return pidfile
+
     def __call__(self, samplesize, fullsize):
         sleeptime = None
         try:
             cache_map = cache_factory.get_mapping(self._corpus)
-            pidfile = _create_pid_file()
+            pidfile = self._create_pid_file()
             cachefile, stored_pidfile = cache_map.add_to_map(self._subchash, self._q, 0, pidfile)
 
             if not stored_pidfile:
@@ -324,10 +326,12 @@ class BackgroundCalc(object):
 
 def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, minsize):
     """
-    Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is currently not used
+    Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
+    currently not used
     """
     parent_conn, child_conn = Pipe(duplex=False)
-    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, pid_dir=pid_dir, subchash=subchash, q=q)
+    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, pid_dir=pid_dir, subchash=subchash,
+                          q=q)
     proc = Process(target=calc, args=(samplesize, fullsize))
     proc.start()
 
@@ -336,7 +340,8 @@ def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, mins
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                        cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)
         if not os.path.exists(cachefile):
-            raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' % (cachefile, pidfile))
+            raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' %
+                               (cachefile, pidfile))
     except Exception as e:
         if os.path.exists(pidfile):
             os.remove(pidfile)
