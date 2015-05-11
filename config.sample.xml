@@ -49,6 +49,7 @@
         </conc_persistence>
         <conc_cache>
             <module>default_conc_cache</module>
+            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <settings_storage>
             <module>default_settings_storage</module>
@@ -86,6 +87,7 @@
         <!-- freqs_cache_dir is optional; if omitted then cache_dir value is used -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
+        <calc_pid_dir>/tmp/kontext-calc</calc_pid_dir>
         <wseval_dir></wseval_dir>
         <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
         <default_corpora>
