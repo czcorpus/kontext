@@ -112,7 +112,7 @@ class CorpusManager(object):
                     subc.corpname = str(corpname)  # never unicode (paths)
                     subc.subcname = subcname
                     subc.cm = self
-                    subc.subchash = md5(open(spath).read()).digest()
+                    subc.subchash = md5(open(spath).read()).hexdigest()
                     subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
                     return subc
             raise RuntimeError(_('Subcorpus "%s" not found') % subcname)

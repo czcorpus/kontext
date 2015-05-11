@@ -22,22 +22,25 @@ and filename containing respective saved concordances.
 import os
 import logging
 import time
+import hashlib
 
 from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
 
-def _uniqname(key, used):
-    name = '#'.join([''.join([c for c in w if c.isalnum()]) for w in key])
-    name = name[1:15].encode('UTF-8')  # UTF-8 because os.path manipulations
-    if not name:
-        name = 'noalnums'
-    if name in used:
-        used = [w[len(name):] for w in used if w.startswith(name)]
-        i = 0
-        while str(i) in used:
-            i += 1
-        name += str(i)
-    return name
+def _uniqname(subchash, query):
+    """
+    Returns an unique hash based on subcorpus identifier/hash and a CQL query
+
+    arguments:
+    subchash -- a unique identifier of a corpus (actually any unique string is ok here); can be None too
+    query -- a list/tuple containing CQL query elements (base query, filters, aligned corpora etc.)
+
+    returns:
+    an md5 hexadecimal digest of passed data
+    """
+    if subchash is None:
+        subchash = ''
+    return hashlib.md5('#'.join([q.encode('utf-8') for q in query]) + subchash).hexdigest()
 
 
 class CacheMapping(object):
@@ -99,13 +102,7 @@ class CacheMapping(object):
             pidfile = pid_dir + ret + '.pid',
             already_present = True
         else:
-            try:  # TODO - the 'except' is here temporarily to monitor invalid cache map entries
-                ret = _uniqname(key, [r for (r, s) in kmap.values()])
-            except Exception as e:
-                logging.getLogger(__name__).error('Failed to unpack value from cache map: %s, entry: %s' %
-                                                  (e, filter(lambda x: type(x) is not tuple, kmap.values()), ))
-                tmp = map(lambda x: x if type(x) is tuple else (x, 0), kmap.values())
-                ret = _uniqname(key, [r for (r, s) in tmp])
+            ret = _uniqname(subchash, key)
             kmap[subchash, key] = (ret, size)
             f.seek(0)
             cPickle.dump(kmap, f)
