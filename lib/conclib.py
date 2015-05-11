@@ -23,6 +23,7 @@ import logging
 from multiprocessing import Process, Pipe
 import cPickle
 import math
+import uuid
 
 import manatee
 import settings
@@ -98,6 +99,25 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
     return ans
 
 
+def _create_pid_file():
+    pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
+                                              uuid.uuid1()))
+    with open(pidfile, 'wb') as pf:
+        cPickle.dump(
+            {
+                'pid': os.getpid(),
+                'last_check': int(time.time()),
+                # in case we check status before any calculation (represented by the
+                # BackgroundCalc class) starts (the calculation updates curr_wait as it
+                # runs), we want to be sure the limit is big enough for BackgroundCalc to
+                # be considered alive
+                'curr_wait': 100,
+                'error': None
+            },
+            pf)
+    return pidfile
+
+
 def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     """
     Called by webserver process (i.e. not by the background worker).
@@ -115,11 +135,6 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     pidfile -- a running worker information file path
     minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
     """
-    if type(pidfile) is tuple:  # TODO: this is just a temporary fix (a cause should be found)
-        logging.getLogger(__name__).warning('Incorrect pidfile argument format. Params: q=%s, cachefile=%s, pidfile=%s' %
-                                            (q, cachefile, pidfile[0]))
-        pidfile = pidfile[0]
-    pidfile = os.path.realpath(pidfile)
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
     i = 1
     while _is_conc_alive(pidfile) and i < hard_limit:
@@ -143,7 +158,7 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
 
 
 def _is_conc_alive(pidfile):
-    if os.path.exists(pidfile):
+    if pidfile is not None and os.path.exists(os.path.realpath(pidfile)):
         with open(pidfile, 'r') as f:
             data = cPickle.load(f)
             # TODO: still not bullet-proof solution
@@ -193,7 +208,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
         if cachefile:
-            pidfile = os.path.realpath(pid_dir + cache_map[(subchash, q[:i])][0] + '.pid')
+            pidfile = cache_map[(subchash, q[:i])][2]
             _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                            cache_map=cache_map, pidfile=pidfile, minsize=minsize)
             if not os.path.exists(cachefile):  # broken cache
@@ -229,31 +244,13 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     return ans
 
 
-def _compute_conc(corp, q, subchash, samplesize, fullsize, pid_dir):
+def _compute_conc(corp, q, samplesize):
     start_time = time.time()
     q = tuple(q)
-    if q[0][0] == 'R':  # online sample
-        if fullsize == -1:  # need to compute original conc first
-            q_copy = list(q)
-            q_copy[0] = q[0][1:]
-            q_copy = tuple(q_copy)
-            cache_map = cache_factory.get_mapping(corp)
-            cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q_copy, 0)
-            if in_progress:  # computation got started meanwhile
-                _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile, cache_map=cache_map,
-                               pidfile=pidfile, minsize=-1)
-                fullsize = PyConc(corp, 'l', cachefile).fullsize()
-            else:
-                conc = PyConc(corp, q[0][1], q[0][2:], samplesize)
-                conc.sync()
-                conc.save(cachefile)
-                # update size in map file
-                cache_map.add_to_map(pid_dir, subchash, q_copy, conc.size())
-                fullsize = conc.fullsize()
-                os.remove(pidfile)
-        ans_conc = PyConc(corp, q[0][1], q[0][2:], samplesize, fullsize)
-    else:
+    if q[0][0] != 'R':
         ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
+    else:
+        raise NotImplementedError('Function "online sample" is not supported')
     logging.getLogger(__name__).debug('compute_conc(%s, [%s]) -> %01.4f' % (corp.corpname, ','.join(q),
                                                                             time.time() - start_time))
     return ans_conc
@@ -293,15 +290,14 @@ class BackgroundCalc(object):
         sleeptime = None
         try:
             cache_map = cache_factory.get_mapping(self._corpus)
-            cachefile, pidfile, in_progress = cache_map.add_to_map(self._pid_dir, self._subchash,
-                                                                   self._q, 0)
+            pidfile = _create_pid_file()
+            cachefile, stored_pidfile = cache_map.add_to_map(self._subchash, self._q, 0, pidfile)
 
-            if not in_progress:
+            if not stored_pidfile:
                 self._pipe.send(cachefile + '\n' + pidfile)
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
-                conc = _compute_conc(self._corpus, self._q, self._subchash, samplesize,
-                                     fullsize, self._pid_dir)
+                conc = _compute_conc(self._corpus, self._q, samplesize)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
                 conc.save(cachefile, False, True)  # partial
@@ -314,7 +310,7 @@ class BackgroundCalc(object):
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, cachefile)
                 # update size in map file
-                cache_map.add_to_map(self._pid_dir, self._subchash, self._q, conc.size())
+                cache_map.add_to_map(self._subchash, self._q, conc.size())
                 os.remove(pidfile)
         except Exception as e:
             # Please note that there is no need to clean any mess (pidfile of failed calculation,
@@ -349,16 +345,15 @@ def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, mins
 
 
 def _get_sync_conc(corp, q, save, subchash, samplesize, fullsize, pid_dir):
-    conc = _compute_conc(corp, q, subchash, samplesize, fullsize, pid_dir)
+    conc = _compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
         cache_map = cache_factory.get_mapping(corp)
-        cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
+        cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
-        cache_map.add_to_map(pid_dir, subchash, q[:1], conc.size())
-        os.remove(pidfile)
+        cache_map.add_to_map(subchash, q[:1], conc.size())
     return conc
 
 
@@ -408,13 +403,12 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, s
             save = 0
         if save:
             cache_map = cache_factory.get_mapping(corp)
-            cachefile, pidfile, in_progress = cache_map.add_to_map(pid_dir, subchash, q[:act + 1], conc.size())
-            if in_progress:
+            cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:act + 1], conc.size())
+            if stored_pidfile:
                 _wait_for_conc(corp=corp, q=q[:act + 1], subchash=subchash, cachefile=cachefile,
-                               cache_map=cache_map, pidfile=pidfile, minsize=-1)
+                               cache_map=cache_map, pidfile=stored_pidfile, minsize=-1)
             else:
                 conc.save(cachefile)
-                os.remove(pidfile)
     return conc
 
 

@@ -105,13 +105,23 @@ class CacheMapping(object):
     def cache_map_path(self):
         return os.path.normpath('%s/%s' % (self.cache_dir_path(), self.CACHE_FILENAME))
 
-    def add_to_map(self, pid_dir, subchash, key, size):
+    def add_to_map(self, subchash, query, size, pid_file=None):
         """
+        adds or updates cache map entry
+
+        arguments:
+        subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_Corpus)
+        query -- a list/tuple of query elements
+        size -- current size of a respective concordance (the one defined by corpus, subchash
+                and query)
+        pid_file -- any value passed here is stored to cache if and only if there
+                    is no matching entry present in cache (i.e. a new entry is created)
+                    - default is None
         returns:
-        3-tuple
-            cache_file_path -- path to a cache file
-            pidfile_path -- path to a pidfile
-            already_present -- True if the record already exists
+        2-tuple
+            cache_file_path -- path to a respective cache file
+            stored_pidfile -- path to a file storing calculation details; it may be present
+                              even if the calculation already finished
         """
         import cPickle
         kmap = None
@@ -123,38 +133,20 @@ class CacheMapping(object):
         flck_ex_lock(f)
         if kmap is None:
             kmap = cPickle.load(f)
-        if (subchash, key) in kmap:
-            ret, storedsize = kmap[subchash, key]
+        if (subchash, query) in kmap:
+            ret, storedsize, stored_pidfile = kmap[subchash, query]
             if storedsize < size:
-                kmap[subchash, key] = (ret, size)
+                kmap[subchash, query] = (ret, size, stored_pidfile)
                 f.seek(0)
                 cPickle.dump(kmap, f)
-            pidfile = pid_dir + ret + '.pid',
-            already_present = True
         else:
-            ret = _uniqname(subchash, key)
-            kmap[subchash, key] = (ret, size)
+            stored_pidfile = None
+            ret = _uniqname(subchash, query)
+            kmap[subchash, query] = (ret, size, pid_file)
             f.seek(0)
             cPickle.dump(kmap, f)
-            pidfile = pid_dir + ret + '.pid'
-            with open(pidfile, 'wb') as pf:
-                cPickle.dump(
-                    {
-                        'pid': os.getpid(),
-                        'last_check': int(time.time()),
-                        # in case we check status before any calculation (represented by the
-                        # BackgroundCalc class) starts (the calculation updates curr_wait as it
-                        # runs), we want to be sure the limit is big enough for BackgroundCalc to
-                        # be considered alive
-                        'curr_wait': 100,
-                        'error': None
-                    },
-                    pf)
-            already_present = False
         f.close()  # also automatically flck_unlock (f)
-        return os.path.normpath('%s/%s.conc' % (self.cache_dir_path(), ret)), \
-               pidfile, \
-               already_present
+        return os.path.normpath('%s/%s.conc' % (self.cache_dir_path(), ret)), stored_pidfile
 
     def _del_from_map(self, tuple_key):
         subchash, key = tuple_key
