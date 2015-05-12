@@ -168,6 +168,26 @@ class RedisDb(KeyValueStorage):
         """
         return self.redis.exists(key)
 
+    def setnx(self, key, value):
+        """
+        An atomic operation "set if not exists".
+
+        returns:
+        1 if the key was set
+        0 if the key was not set
+        """
+        return self.redis.setnx(key, value)
+
+    def getset(self, key, value):
+        """
+        An atomic operation which obtains current key first and then
+        sets a new value under that key
+
+        returns:
+        previous key if any or None
+        """
+        return self.redis.getset(key, value)
+
 
 def create_instance(conf):
     """
