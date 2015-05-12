@@ -35,6 +35,9 @@
             <module>default_getlang</module>
             <cookie extension-by="ucnk">kontext_toolbar_lang</cookie>
         </getlang>
+        <locking>
+            <module>redis_locking</module>
+        </locking>
         <query_storage>
             <module>default_query_storage</module>
             <js_module>ucnkQueryStorage</js_module>
