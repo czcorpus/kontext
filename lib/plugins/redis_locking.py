@@ -74,9 +74,11 @@ class LockFactory(object):
         return RedisLock(self._db, key, ttl=self._ttl, num_attempts=self._num_attempts)
 
 
-def create_instance(db):
+def create_instance(settings, db):
     if not hasattr(db, 'setnx') or not hasattr(db, 'getset'):
         from plugins.abstract import PluginDependencyException
         raise PluginDependencyException(
             'redis_locking requires a key-value storage with "setnx" and "getset" methods')
-    return LockFactory(db=db, ttl=60, num_attempts=10)
+    ttl = int(settings.get('plugins', 'locking').get('default:ttl', 20))
+    num_attempts = int(settings.get('plugins', 'locking').get('default:num_attempts', 10))
+    return LockFactory(db=db, ttl=ttl, num_attempts=num_attempts)

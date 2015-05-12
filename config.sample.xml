@@ -63,6 +63,11 @@
             <ttl_days extension-by="default">100</ttl_days>
             <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
         </conc_persistence>
+        <locking>
+            <module>redis_locking</module>
+            <ttl extension-by="default">20</ttl>
+            <num_attempts extension-by="default">10</num_attempts>
+        </locking>
         <conc_cache>
             <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
