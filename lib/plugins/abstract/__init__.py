@@ -25,3 +25,7 @@ class CorpusDependentPlugin(object):
 
 class PluginException(Exception):
     pass
+
+
+class PluginDependencyException(PluginException):
+    pass

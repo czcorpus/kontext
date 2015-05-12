@@ -41,6 +41,7 @@ CONF_PATH = '%s/../config.xml' % os.path.dirname(__file__)
 
 import plugins
 import plugins.export
+from plugins.abstract import PluginException
 import settings
 import translation
 import l10n
@@ -89,6 +90,8 @@ def init_plugin(name, dependencies, module=None):
     """
     try:
         if module is None:
+            if not settings.contains('plugins', name):
+                raise PluginException('Missing configuration for the "%s" plugin' % name)
             plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
         else:
             plugin_module = module
@@ -103,7 +106,7 @@ def init_plugin(name, dependencies, module=None):
     except ImportError as e:
         logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                          % (settings.get('plugins', 'getlang')['module'], e))
-    except Exception as e:
+    except (PluginException, Exception) as e:
         logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
         raise e
 
@@ -135,7 +138,8 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.db, plugins.sessions))
     init_plugin('conc_persistence', (settings, plugins.db))  # TODO this is actually an optional plug-in
-    init_plugin('conc_cache', (settings, plugins.db))
+    init_plugin('locking', (settings, plugins.db,))
+    init_plugin('conc_cache', (settings, plugins.db, plugins.locking))
     init_plugin('export', (settings,), module=plugins.export)
     init_plugin('user_items', (settings, plugins.db))
 
