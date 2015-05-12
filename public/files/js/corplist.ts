@@ -651,7 +651,7 @@ class FavoritesTab implements WidgetTab {
         });
 
         $.each(this.dataFeat, function (i, item) {
-            $(self.wrapperFeat).append('<tr><td><a href="'
+            $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
                 + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
                 + item[1] + '</a></td><td></td></tr>');
         });
@@ -660,6 +660,7 @@ class FavoritesTab implements WidgetTab {
     reinit(newData:Array<CorplistItem>):void {
         $(this.wrapperFav).find('tr.data-item').remove();
         this.dataFav = newData;
+        $(this.wrapperFeat).find('tr.data-item').remove();
         this.init();
     }
 
