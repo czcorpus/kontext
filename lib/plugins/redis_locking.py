@@ -44,8 +44,6 @@ class RedisLock(AbstractLock):
         return lk and float(lk) < time.time()
 
     def __enter__(self):
-        import logging
-        logging.getLogger(__name__).debug('locking %s' % self._key)
         for i in range(self._num_attempts):
             expires = time.time() + self._ttl + 1
             if self._db.setnx(self._key, expires):  # success entering critical section
