@@ -802,7 +802,6 @@ class StarComponent {
             message:string,
             postDispatch:(data:any)=>void;
 
-
         if (flag === Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
@@ -851,6 +850,31 @@ class StarComponent {
     }
 
     /**
+     * Determines currently selected subcorpus.
+     * This depends only on the state of a respective selection element.
+     */
+    private getCurrentSubcorpus():string {
+        return $('#subcorp-selector').val();
+    }
+
+    /**
+     * Returns a name (the value defined in a respective Manatee registry file)
+     * of a corpus identified by 'corpusId'
+     *
+     * @param canonicalCorpusId
+     */
+    private getAlignedCorpusName(canonicalCorpusId:string):string {
+        var ans = null;
+        $('#add-searched-lang-widget option').each(function (i, item) {
+            if ($(item).val() === canonicalCorpusId) {
+                ans = $(item).text();
+                return false;
+            }
+        });
+        return ans;
+    }
+
+    /**
      * Based on passed arguments, the method infers whether they match corpus user object, subcorpus
      * user object or aligned corpora user object.
      *
@@ -860,7 +884,8 @@ class StarComponent {
      * @returns an initialized CorplistItem or null if no matching state is detected
      */
     private inferItemCore(corpus_id:string, subcorpus_id:string, aligned_corpora:Array<string>):CorplistItem {
-        var ans:CorplistItem;
+        var ans:CorplistItem,
+            self = this;
 
         if (corpus_id) {
             ans = {
@@ -871,22 +896,25 @@ class StarComponent {
             ans.corpus_id = corpus_id; // TODO canonical vs. regular
             ans.canonical_id = corpus_id;
 
+
+
             if (subcorpus_id) {
                 ans.type = 'subcorpus';
                 ans.subcorpus_id = subcorpus_id;
                 ans.id = ans.corpus_id + ':' + ans.subcorpus_id;
-                ans.name = ans.id; // TODO
+                ans.name = this.pageModel.getConf('humanCorpname') + ':' + this.getCurrentSubcorpus();
 
             } else if (aligned_corpora.length > 0) {
                 ans.type = 'aligned_corpora';
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
-                ans.name = ans.id; // TODO
+                ans.name = this.pageModel.getConf('humanCorpname') + '+'
+                                + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
                 ans.type = 'corpus';
                 ans.id = ans.canonical_id;
-                ans.name = ans.canonical_id;
+                ans.name = this.pageModel.getConf('humanCorpname');
             }
             return ans;
 
@@ -916,6 +944,7 @@ class StarComponent {
         $('div.parallel-corp-lang:visible').each(function () {
             alignedCorpora.push($(this).data('corpus-id'));
         });
+
         item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
         item.featured = userItemFlag;
         return item;
