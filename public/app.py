@@ -121,7 +121,8 @@ def setup_plugins():
     init_plugin('settings_storage', (settings, plugins.db))
     init_plugin('auth', (settings, plugins.db, plugins.sessions))
     init_plugin('conc_persistence', (settings, plugins.db))
-    init_plugin('conc_cache', (settings, plugins.db))
+    init_plugin('locking', (plugins.db,))
+    init_plugin('conc_cache', (settings, plugins.db, plugins.locking))
     init_plugin('export', (settings,), module=plugins.export)
 
     # optional plugins

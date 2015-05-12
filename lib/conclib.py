@@ -27,7 +27,6 @@ import uuid
 
 import manatee
 import settings
-from butils import flck_sh_lock, flck_unlock
 from translation import ugettext as _
 from pyconc import PyConc
 from kwiclib import tokens2strclass
@@ -35,6 +34,7 @@ from l10n import import_string
 import plugins
 
 cache_factory = plugins.conc_cache
+lock_factory = plugins.locking
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
@@ -78,14 +78,13 @@ def get_cached_conc_sizes(corp, q=None, cachefile=None):
         cachefile = cache_map.cache_file_path(subchash, q)
 
     if cachefile and os.path.isfile(cachefile):
-        cache = open(cachefile, 'rb')
-        flck_sh_lock(cache)
-        cache.seek(15)
-        finished = bool(ord(cache.read(1)))
-        (fullsize,) = struct.unpack('q', cache.read(8))
-        cache.seek(32)
-        (concsize,) = struct.unpack('i', cache.read(4))
-        flck_unlock(cache)
+        with lock_factory.create(cachefile):
+            cache = open(cachefile, 'rb')
+            cache.seek(15)
+            finished = bool(ord(cache.read(1)))
+            (fullsize,) = struct.unpack('q', cache.read(8))
+            cache.seek(32)
+            (concsize,) = struct.unpack('i', cache.read(4))
 
         if fullsize > 0:
             relconcsize = 1000000.0 * fullsize / corp.search_size()

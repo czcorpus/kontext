@@ -21,10 +21,7 @@ and filename containing respective saved concordances.
 """
 import os
 import logging
-import time
 import hashlib
-
-from butils import flck_sh_lock, flck_ex_lock, flck_unlock
 
 
 def _uniqname(subchash, query):
@@ -47,9 +44,10 @@ class CacheMapping(object):
 
     CACHE_FILENAME = '00CONCS.map'
 
-    def __init__(self, cache_dir, corpus):
+    def __init__(self, cache_dir, corpus, lock_factory):
         self._cache_root_dir = cache_dir
         self._corpus = corpus
+        self._lock_factory = lock_factory
         self._data = None
 
     def __getitem__(self, item):
@@ -83,12 +81,10 @@ class CacheMapping(object):
         import cPickle
         ans = {}
         try:
-            f = open(self.cache_map_path(), 'rb')
-            flck_sh_lock(f)
-            ans = cPickle.load(f)
-            flck_unlock(f)
-            f.close()
-        except (ValueError, IOError, EOFError, cPickle.UnpicklingError) as ex:
+            with self._lock_factory.create(self.cache_map_path()):
+                with open(self.cache_map_path(), 'rb') as f:
+                    ans = cPickle.load(f)
+        except (ValueError, IOError, EOFError,    cPickle.UnpicklingError) as ex:
             logging.getLogger(__name__).warning('Failed to load/unpickle cache mapping file: %s' % ex)
             self._clear_cache()
         return ans if ans is not None else {}
@@ -125,47 +121,40 @@ class CacheMapping(object):
         """
         import cPickle
         kmap = None
-        if os.path.exists(self.cache_map_path()):
-            f = open(self.cache_map_path(), 'r+b')
-        else:
-            f = open(self.cache_map_path(), 'wb')
-            kmap = {}
-        flck_ex_lock(f)
-        if kmap is None:
-            kmap = cPickle.load(f)
-        if (subchash, query) in kmap:
-            ret, storedsize, stored_pidfile = kmap[subchash, query]
-            if storedsize < size:
-                kmap[subchash, query] = (ret, size, stored_pidfile)
-                f.seek(0)
-                cPickle.dump(kmap, f)
-        else:
-            stored_pidfile = None
-            ret = _uniqname(subchash, query)
-            kmap[subchash, query] = (ret, size, pid_file)
-            f.seek(0)
-            cPickle.dump(kmap, f)
-        f.close()  # also automatically flck_unlock (f)
-        return os.path.normpath('%s/%s.conc' % (self.cache_dir_path(), ret)), stored_pidfile
+        with self._lock_factory.create(self.cache_map_path()):
+            file_mode = 'r+b' if os.path.exists(self.cache_map_path()) else 'wb'
+            with open(self.cache_map_path(), file_mode) as f:
+                if not os.path.exists(self.cache_map_path()):
+                    kmap = {}
+                if kmap is None:
+                    kmap = cPickle.load(f)
+                if (subchash, query) in kmap:
+                    ret, storedsize, stored_pidfile = kmap[subchash, query]
+                    if storedsize < size:
+                        kmap[subchash, query] = (ret, size, stored_pidfile)
+                        f.seek(0)
+                        cPickle.dump(kmap, f)
+                else:
+                    stored_pidfile = None
+                    ret = _uniqname(subchash, query)
+                    kmap[subchash, query] = (ret, size, pid_file)
+                    f.seek(0)
+                    cPickle.dump(kmap, f)
+                return os.path.normpath('%s/%s.conc' % (self.cache_dir_path(), ret)), stored_pidfile
 
     def _del_from_map(self, tuple_key):
         subchash, key = tuple_key
         import cPickle
-        try:
-            f = open(self.cache_map_path(), 'r+b')
-        except IOError as e:
-            logging.getLogger(__name__).warning('Failed to delete map file %s due to: %s' %
-                                                self.cache_map_path(), e)
-            return
-        flck_ex_lock(f)
-        kmap = cPickle.load(f)
-        try:
-            del kmap[subchash, key]
-            f.seek(0)
-            cPickle.dump(kmap, f)
-        except KeyError:
-            pass
-        f.close()  # also automatically flck_unlock (f)
+
+        with self._lock_factory.create(self.cache_map_path()):
+            with open(self.cache_map_path(), 'r+b') as f:
+                kmap = cPickle.load(f)
+                try:
+                    del kmap[subchash, key]
+                    f.seek(0)
+                    cPickle.dump(kmap, f)
+                except KeyError:
+                    pass
 
     def del_full_entry(self, entry_key):
         """
@@ -183,12 +172,14 @@ class CacheMapping(object):
 
 class CacheMappingFactory(object):
 
-    def __init__(self, cache_dir):
+    def __init__(self, cache_dir, lock_factory):
         self._cache_dir = cache_dir
+        self._lock_factory = lock_factory
 
     def get_mapping(self, corpus):
-        return CacheMapping(self._cache_dir, corpus)
+        return CacheMapping(self._cache_dir, corpus, self._lock_factory)
 
 
-def create_instance(settings, db):
-    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'])
+def create_instance(settings, db, lock_factory):
+    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'],
+                               lock_factory=lock_factory)
