@@ -76,6 +76,12 @@ class AbstractCorporaArchive(ThreadLocalData):
         """
         raise NotImplementedError()
 
+
+class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
+    """
+    An extended version supporting search by user query
+    """
+
     def search(self, corplist, query):
         """
         Returns a list of
