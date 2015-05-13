@@ -88,6 +88,7 @@
             <module>corptree</module>
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
+            <tag_prefix extension-by="default">+</tag_prefix>
         </corptree>
         <export>
             <csv>default_csv</csv>
