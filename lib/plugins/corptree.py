@@ -26,6 +26,7 @@ Required config.xml/plugins entries:
 
 from collections import OrderedDict
 import copy
+import re
 
 try:
     from markdown import markdown
@@ -33,8 +34,8 @@ except ImportError:
     markdown = lambda s: s
 from lxml import etree
 
-from plugins.abstract.corpora import AbstractCorporaArchive
-from l10n import import_string
+from plugins.abstract.corpora import AbstractSearchableCorporaArchive
+import l10n
 import manatee
 
 DEFAULT_LANG = 'en'
@@ -53,7 +54,7 @@ def call_controller(controller_obj, method, *args, **kwargs):
     return apply(getattr(controller_obj, method), args, kwargs)
 
 
-class CorpTree(AbstractCorporaArchive):
+class CorpTree(AbstractSearchableCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -62,11 +63,12 @@ class CorpTree(AbstractCorporaArchive):
     DEFAULT_FEATURED_KEY = 'featured'
     DEFAULT_FAVORITE_KEY = 'favorite'
 
-    def __init__(self, file_path, root_xpath):
+    def __init__(self, file_path, root_xpath, tag_prefix):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
+        self._tag_prefix = tag_prefix
         self._messages = {}
         self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
         self._featured_keyword = None  # a keyword representing "featured" corpora
@@ -150,12 +152,7 @@ class CorpTree(AbstractCorporaArchive):
 
     def get_all_corpus_keywords(self):
         def encode_prop(l_key):
-            if self._keyword_is_featured(l_key, localized=False):
-                return 1
-            elif self.keyword_is_favorite(l_key, localized=False):
-                return 2
-            else:
-                return 0
+            return 0   # TODO no need to mark keywords
         ans = []
         lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
@@ -212,16 +209,6 @@ class CorpTree(AbstractCorporaArchive):
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
                     ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
                 data.append(ans)
-
-    def _keyword_is_featured(self, keyword_ident, localized=False):
-        if not localized:
-            return keyword_ident == self._featured_keyword
-        return self._keywords[self._featured_keyword][self._get_iso639lang()] == keyword_ident
-
-    def keyword_is_favorite(self, keyword_ident, localized=False):
-        if not localized:
-            return keyword_ident == self._favorite_keyword
-        return self._keywords[self._favorite_keyword][self._get_iso639lang()] == keyword_ident
 
     @staticmethod
     def _localize_corpus_info(data, lang_code):
@@ -324,8 +311,8 @@ class CorpTree(AbstractCorporaArchive):
 
                     cl.append({'id': corp_id,
                                'canonical_id': canonical_id,
-                               'name': import_string(corp_name, from_encoding=corp_encoding),
-                               'desc': import_string(corp_info, from_encoding=corp_encoding),
+                               'name': l10n.import_string(corp_name, from_encoding=corp_encoding),
+                               'desc': l10n.import_string(corp_info, from_encoding=corp_encoding),
                                'size': corp.size(),
                                'path': path
                                })
@@ -357,8 +344,31 @@ class CorpTree(AbstractCorporaArchive):
         return {
             'featured': [(x['id'], x.get('name', x['id']))
                          for x in self._raw_list().values() if is_featured(x)],
-            'corpora_labels': corp_labels
+            'corpora_labels': corp_labels,
+            'tag_prefix': self._tag_prefix
         }
+
+    def search(self, corplist, query):
+        ans = []
+        tokens = re.split(r'\s+', query)
+
+        query_keywords = []
+        for t in tokens:
+            if len(t) > 0 and t[0] == self._tag_prefix:
+                query_keywords.append(t[1:].replace('_', ' ').lower())
+
+        query_substrs = [t for t in tokens if len(t) > 0 and t[0] != self._tag_prefix]
+        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
+
+        for corp in corplist:
+            full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
+            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
+            if matches_all([k in keywords for k in query_keywords]
+                           + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
+                corp['raw_size'] = l10n.simplify_num(corp['size'])
+                corp['favorite'] = False  # TODO
+                ans.append(corp)
+        return ans
 
 
 def create_instance(conf):
@@ -366,4 +376,5 @@ def create_instance(conf):
     Interface function called by KonText creates new plugin instance
     """
     return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],
-                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'])
+                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
+                    tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'])

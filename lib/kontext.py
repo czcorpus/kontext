@@ -332,7 +332,6 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self._args_mappings = {}
-        self._favorite_items = []
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database

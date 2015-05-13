@@ -289,6 +289,8 @@ export class SearchTab implements WidgetTab {
 
     bloodhound:Bloodhound<string>; // Typeahead's suggestion engine
 
+    private tagPrefix:string;
+
     /**
      *
      * @param widgetWrapper
@@ -299,6 +301,7 @@ export class SearchTab implements WidgetTab {
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
         $(this.widgetWrapper).append(this.wrapper);
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix']
     }
 
     show():void {
@@ -330,7 +333,7 @@ export class SearchTab implements WidgetTab {
             }
             $(link).attr('data-srchkey', item[1]);
             $(link).on('click', function () {
-                $(self.srchField).val('#' + $(link).data('srchkey'));
+                $(self.srchField).val(self.tagPrefix + $(link).data('srchkey'));
                 // this forces Typeahead to act like if user changed input manually
                 $(self.srchField).trigger('input');
                 $(self.srchField).focus();
@@ -440,7 +443,7 @@ export class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', '#label or name');
+            .attr('placeholder', this.tagPrefix + this.pluginApi.translate('label or name'));
         jqWrapper.append(inputWrapper);
         $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.initTypeahead();

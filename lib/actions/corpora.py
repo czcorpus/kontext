@@ -74,34 +74,7 @@ class Corpora(Kontext):
     @exposed(return_type='json', legacy=True)
     def ajax_list_corpora(self, query=''):
         corplist = plugins.corptree.get_list(self.permitted_corpora())
-        ans = []
-        tokens = re.split(r'\s+', query)
-
-        fav_srch = False
-        query_keywords = []
-        for t in tokens:
-            if len(t) > 0 and t[0] == '#':
-                v = t[1:].replace('_', ' ').lower()
-                if plugins.corptree.keyword_is_favorite(v, localized=True):
-                    fav_srch = True
-                else:
-                    query_keywords.append(v)
-
-        query_substrs = ' '.join([t for t in tokens if len(t) > 0 and t[0] != '#'])
-
-        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
-        is_fav = lambda d: d['canonical_id'] in self.favorite_corpora
-        passes_fav = lambda d: fav_srch is False or is_fav(d)
-
-        for corp in corplist:
-            full_data = plugins.corptree.get_corpus_info(corp['id'], self.ui_lang)
-            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
-            if matches_all([k in keywords for k in query_keywords]) \
-                    and passes_fav(corp) and query_substrs in corp['name']:
-                corp['raw_size'] = l10n.simplify_num(corp['size'])
-                corp['favorite'] = True if is_fav(corp) else False
-                ans.append(corp)
-        return ans
+        return plugins.corptree.search(corplist, query)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):
