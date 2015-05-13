@@ -41,7 +41,7 @@ class Corpora(Kontext):
                     return False
             return True
 
-        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        corplist = plugins.corptree.get_list(self.permitted_corpora())
         keywords = set()
 
         for item in corplist:
@@ -65,15 +65,15 @@ class Corpora(Kontext):
             },
             'corplist': corplist,
             'keywords_labels': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0]),
-            'keywords': self.keyword,  # singular vs. plural - singular used because of 'keyword=k1&keyword=k2&...
-            'max_size': max_size,
+            'keywords': self.keyword,  # singular vs. plural in the attribute name - singular
+            'max_size': max_size,      # used because of 'keyword=k1&keyword=k2&...
             'min_size': min_size
         }
         return ans
 
     @exposed(return_type='json', legacy=True)
     def ajax_list_corpora(self, query=''):
-        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        corplist = plugins.corptree.get_list(self.permitted_corpora())
         ans = []
         tokens = re.split(r'\s+', query)
 

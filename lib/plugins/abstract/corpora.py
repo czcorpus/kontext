@@ -65,15 +65,19 @@ class AbstractCorporaArchive(ThreadLocalData):
         """
         raise NotImplementedError()
 
-    def corplist(self):
-        """
-        Returns OrderedDict containing pairs (corpus_id, corpus_info)
-        """
-        raise NotImplementedError()
-
-    def get(self):
+    def get_list(self, user_allowed_corpora):
         """
         Returns a list of dicts containing information about individual corpora.
         (it should be equal to self.corplist().values())
+
+        arguments:
+        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) of corpora ids the current
+                                user can access
+        """
+        raise NotImplementedError()
+
+    def search(self, corplist, query):
+        """
+        Returns a list of
         """
         raise NotImplementedError()

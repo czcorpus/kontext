@@ -34,6 +34,8 @@ except ImportError:
 from lxml import etree
 
 from plugins.abstract.corpora import AbstractCorporaArchive
+from l10n import import_string
+import manatee
 
 DEFAULT_LANG = 'en'
 
@@ -249,11 +251,11 @@ class CorpTree(AbstractCorporaArchive):
         if corp_name != '':
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
-            if corp_name in self.corplist():
+            if corp_name in self._raw_list():
                 if language is not None:
-                    return self._localize_corpus_info(self.corplist()[corp_name], lang_code=language)
+                    return self._localize_corpus_info(self._raw_list()[corp_name], lang_code=language)
                 else:
-                    return self.corplist()[corp_name]
+                    return self._raw_list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly
@@ -270,7 +272,7 @@ class CorpTree(AbstractCorporaArchive):
                 self._parse_corplist_node(root, data, path='/')
         self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
 
-    def corplist(self):
+    def _raw_list(self):
         """
         Returns list of all defined corpora including all lang. variants of labels etc.
         """
@@ -301,11 +303,41 @@ class CorpTree(AbstractCorporaArchive):
     def _get_iso639lang(self):
         return self._lang().split('_')[0]
 
-    def get(self):
+    def get_list(self, user_allowed_corpora):
         """
-        Returns corpus tree data
+        arguments:
+        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
+                                accessible by the current user
         """
-        return self.corplist().values()
+        simple_names = set(user_allowed_corpora.keys())
+        cl = []
+        for item in self._raw_list().values():
+            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if canonical_id in simple_names:
+                corp_name = None
+                try:
+                    corp_id = user_allowed_corpora[canonical_id]
+                    corp = manatee.Corpus(corp_id)
+                    corp_name = corp.get_conf('NAME') if corp.get_conf('NAME') else canonical_id
+                    corp_info = corp.get_info()
+                    corp_encoding = corp.get_conf('ENCODING')
+
+                    cl.append({'id': corp_id,
+                               'canonical_id': canonical_id,
+                               'name': import_string(corp_name, from_encoding=corp_encoding),
+                               'desc': import_string(corp_info, from_encoding=corp_encoding),
+                               'size': corp.size(),
+                               'path': path
+                               })
+                except Exception, e:
+                    import logging
+                    logging.getLogger(__name__).warn(
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_name,
+                                                                               type(e).__name__, e))
+                    cl.append({
+                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
+        return cl
 
     def setup(self, controller_obj):
         """
@@ -319,7 +351,8 @@ class CorpTree(AbstractCorporaArchive):
 
     def export(self, *args):
         is_featured = lambda o: CorpTree.DEFAULT_FEATURED_KEY in o['metadata'].get('keywords', {})
-        return {'featured': [(x['id'], x.get('name', x['id'])) for x in self.get() if is_featured(x)]}
+        return {'featured': [(x['id'], x.get('name', x['id']))
+                             for x in self._raw_list().values() if is_featured(x)]}
 
 
 def create_instance(conf):

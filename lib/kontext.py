@@ -12,7 +12,6 @@
 # GNU General Public License for more details.
 
 from types import ListType
-import cgi
 import json
 import time
 from functools import partial
@@ -762,8 +761,7 @@ class Kontext(Controller):
         # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
         if is_legacy_method:
             self._map_args_to_attrs(form, selectorname, named_args)
-        logging.getLogger(__name__)
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'id')), self.subcpath)
+        self.cm = corplib.CorpusManager(self.subcpath)
         if getattr(self, 'refs') is None:
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
@@ -952,6 +950,16 @@ class Kontext(Controller):
                 return fallback_corpus.ErrorCorpus(e)
         else:
             return fallback_corpus.EmptyCorpus()
+
+    def permitted_corpora(self):
+        """
+        Returns corpora identifiers accessible by the current user.
+
+        returns:
+        a dict (canonical_id, id)
+        """
+        clist = plugins.auth.get_corplist(self._session_get('user', 'id'))
+        return dict([(self._canonical_corpname(c), c) for c in clist])
 
     def _load_fav_items(self):
         return plugins.user_items.get_user_items(self._session_get('user', 'id'))

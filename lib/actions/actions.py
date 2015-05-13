@@ -1246,12 +1246,8 @@ class Actions(Kontext):
         if not ref_corpname:
             ref_corpname = self.corpname
         if hasattr(self, 'compatible_corpora'):
-            refcm = corplib.CorpusManager(
-                [str(c) for c in self.compatible_corpora], self.subcpath)
-            out['CompatibleCorpora'] = refcm.corplist_with_names(plugins.corptree.get(),
-                                                                 settings.get_bool('corpora', 'use_db_whitelist'))
-        else:
-            refcm = corplib.CorpusManager([ref_corpname], self.subcpath)
+            out['CompatibleCorpora'] = plugins.corptree.get_list(self.permitted_corpora())
+        refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
         out['freq_figures'] = self.FREQ_FIGURES
