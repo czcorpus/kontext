@@ -15,9 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-'corptree' plug-in related interfaces.
+'corptree' plug-in interfaces
 """
-
 
 from structures import ThreadLocalData
 
@@ -84,6 +83,11 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
     def search(self, corplist, query):
         """
-        Returns a list of
+        Returns a subset of corplist matching provided query.
+
+        arguments:
+        corplist -- a list of dicts containing corpora information
+        query -- any search query the concrete plug-in implementation can understand
+                 (KonText itself just passes it around).
         """
         raise NotImplementedError()

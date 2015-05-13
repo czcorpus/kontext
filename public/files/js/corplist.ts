@@ -316,7 +316,7 @@ export class SearchTab implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
-        $.each(this.pluginApi.getConf('corporaLabels'), function (i, item) {
+        $.each(this.pluginApi.getConf('pluginData')['corptree']['corpora_labels'], function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).append(item[0]).addClass('keyword');
@@ -335,7 +335,7 @@ export class SearchTab implements WidgetTab {
                 $(self.srchField).trigger('input');
                 $(self.srchField).focus();
             });
-            if (i < self.pluginApi.getConf('corporaLabels')['length'] - 1) {
+            if (i < self.pluginApi.getConf('pluginData')['corptree']['corpora_labels']['length'] - 1) {
                 $(div).append(' ');
             }
         });

@@ -978,10 +978,6 @@ class Kontext(Controller):
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
-        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
-        corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
-
-        result['corpora_labels'] = json.dumps(corp_labels)
         if self.usesubcorp:
             result['subcorp_size'] = format_number(self._corp().search_size())
         else:

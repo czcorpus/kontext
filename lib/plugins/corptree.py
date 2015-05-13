@@ -351,8 +351,14 @@ class CorpTree(AbstractCorporaArchive):
 
     def export(self, *args):
         is_featured = lambda o: CorpTree.DEFAULT_FEATURED_KEY in o['metadata'].get('keywords', {})
-        return {'featured': [(x['id'], x.get('name', x['id']))
-                             for x in self._raw_list().values() if is_featured(x)]}
+        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
+        corp_labels = [mkitem(item) for item in self.get_all_corpus_keywords()]
+
+        return {
+            'featured': [(x['id'], x.get('name', x['id']))
+                         for x in self._raw_list().values() if is_featured(x)],
+            'corpora_labels': corp_labels
+        }
 
 
 def create_instance(conf):
