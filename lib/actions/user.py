@@ -13,12 +13,11 @@
 from controller import exposed, UserActionException
 from kontext import Kontext
 from kontext import MainMenu
-from kontext import simplify_num
 from translation import ugettext as _
 import plugins
 import settings
-from templating.filters import Shortener
 from argmapping import ConcArgsMapping
+import l10n
 
 
 class User(Kontext):
@@ -166,7 +165,7 @@ class User(Kontext):
             'subcorpus_id': request.form['subcorpus_id'],
             'name': request.form['name'],
             'size': corp_size,
-            'size_info': simplify_num(corp_size),
+            'size_info': l10n.simplify_num(corp_size),
             'type': request.form['type']
         }
 

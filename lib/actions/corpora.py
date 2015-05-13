@@ -15,7 +15,7 @@ import logging
 
 from controller import exposed
 from kontext import Kontext
-from kontext import simplify_num, UserActionException
+from kontext import UserActionException
 import plugins
 import l10n
 from translation import ugettext as _
@@ -98,7 +98,7 @@ class Corpora(Kontext):
             keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
             if matches_all([k in keywords for k in query_keywords]) \
                     and passes_fav(corp) and query_substrs in corp['name']:
-                corp['raw_size'] = simplify_num(corp['size'])
+                corp['raw_size'] = l10n.simplify_num(corp['size'])
                 corp['favorite'] = True if is_fav(corp) else False
                 ans.append(corp)
         return ans
