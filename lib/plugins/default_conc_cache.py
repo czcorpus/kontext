@@ -120,14 +120,12 @@ class CacheMapping(object):
                               even if the calculation already finished
         """
         import cPickle
-        kmap = None
         with self._lock_factory.create(self.cache_map_path()):
-            file_mode = 'r+b' if os.path.exists(self.cache_map_path()) else 'wb'
-            with open(self.cache_map_path(), file_mode) as f:
-                if not os.path.exists(self.cache_map_path()):
-                    kmap = {}
-                if kmap is None:
-                    kmap = cPickle.load(f)
+            if not os.path.exists(self.cache_map_path()):
+                with open(self.cache_map_path(), 'wb') as f_new:
+                    cPickle.dump({}, f_new)
+            with open(self.cache_map_path(), 'r+b') as f:
+                kmap = cPickle.load(f)
                 if (subchash, query) in kmap:
                     ret, storedsize, stored_pidfile = kmap[subchash, query]
                     if storedsize < size:
