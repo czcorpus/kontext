@@ -458,10 +458,12 @@ class FavoritesTab implements WidgetTab {
         this.wrapperFav = window.document.createElement('table');
         $(this.wrapperFav).addClass('favorite-list')
             .append('<tr><th colspan="2">'
-                    + '<img class="config" '
+                    + '<img class="config over-img" '
                     + 'title="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
                     + 'alt="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
-                    + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') +  '" />'
+                    + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
+                    + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
+                    + ' />'
                     + this.pageModel.translate('favorite items') + '</th>'
                     + '<th></th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
@@ -584,10 +586,12 @@ class FavoritesTab implements WidgetTab {
                 + ' href="' + self.generateItemUrl(item)
                 + '" data-id="' + item.id + '">' + item.name + '</a></td>'
                 + '<td class="num">~' + item.size_info + '</td>'
-                + '<td class="tools"><img class="remove disabled" '
+                + '<td class="tools"><img class="remove over-img disabled" '
                 + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
                 + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
-                + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" /></td></tr>');
+                + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
+                + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                + '</td></tr>');
         });
 
         jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {

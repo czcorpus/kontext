@@ -2137,6 +2137,12 @@ msgstr "Subkorpus %s byl permanentně odstraněn."
 msgid "unknown size"
 msgstr "neznámá velikost"
 
+msgid "click to remove the item from favorites"
+msgstr "klikněte pro vyřazení položky z oblíbených"
+
+msgid "click to (un)lock items for removal"
+msgstr "klikněte pro odemčení/uzamčení režimu odebírání položek ze seznamu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
