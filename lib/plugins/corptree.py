@@ -15,13 +15,39 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
+A plug-in providing user's favorite and global featured corpora lists. The data
+are passed through via the 'export' method which is recognized by KonText and then
+interpreted via a custom JavaScript (which is an integral part of the plug-in).
+
+
 Required config.xml/plugins entries:
 
 <corptree>
     <module>corptree</module>
     <file>[a path to a configuration XML file]</file>
-    <root_elm_path>[an XPath query leading to a root element where configuration can be found]</root_elm_path>
+    <root_elm_path>
+        [an XPath query leading to a root element where configuration can be found]
+    </root_elm_path>
+    <tag_prefix extension-by="default">
+        [a spec. character specifying that the following string is a tag/label]
+    </tag_prefix>
 </corptree>
+
+How does the corpus list specification XML entry looks like:
+
+<a_root_elm>
+  <corpus sentence_struct="p" ident="SUSANNE">
+    <metadata>
+      <featured />
+      <keywords>
+        <item>foreign_language_corpora</item>
+        <item>written_corpora</item>
+      </keywords>
+    </metadata>
+  </corpus>
+   ...
+</a_root_elm>
+
 """
 
 from collections import OrderedDict
@@ -60,8 +86,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
     defined in XML format
     """
 
-    DEFAULT_FEATURED_KEY = 'featured'
-    DEFAULT_FAVORITE_KEY = 'favorite'
+    FEATURED_KEY = 'featured'
+    FAVORITE_KEY = 'favorite'
 
     def __init__(self, file_path, root_xpath, tag_prefix):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
@@ -71,8 +97,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._tag_prefix = tag_prefix
         self._messages = {}
         self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
-        self._featured_keyword = None  # a keyword representing "featured" corpora
-        self._favorite_keyword = None  # a keyword representing user's "favorite" corpora
 
     def _get_corplist_title(self, elm):
         """
@@ -117,16 +141,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
         return ans
 
     def _parse_keywords(self, root):
-        if self.DEFAULT_FEATURED_KEY in root.attrib:
-            self._featured_keyword = root.attrib[self.DEFAULT_FEATURED_KEY]
-        else:
-            self._featured_keyword = self.DEFAULT_FEATURED_KEY
-
-        if self.DEFAULT_FAVORITE_KEY in root.attrib:
-            self._favorite_keyword = root.attrib[self.DEFAULT_FAVORITE_KEY]
-        else:
-            self._favorite_keyword = self.DEFAULT_FAVORITE_KEY
-
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
@@ -208,6 +222,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
                     ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
+                    ans['metadata']['featured'] = True if \
+                        meta_elm.find(self.FEATURED_KEY) is not None else False
                 data.append(ans)
 
     @staticmethod
@@ -337,7 +353,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._lang(getattr(controller_obj, 'ui_lang', None))
 
     def export(self, *args):
-        is_featured = lambda o: CorpTree.DEFAULT_FEATURED_KEY in o['metadata'].get('keywords', {})
+        is_featured = lambda o: o['metadata'].get('featured', False)
         mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
         corp_labels = [mkitem(item) for item in self.get_all_corpus_keywords()]
 
