@@ -1,15 +1,20 @@
 import sys
 import os
 import argparse
-import math
 import logging
 import time
+import cPickle
+import collections
 
 sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
 
 import autoconf
-from plugins import default_conc_cache
+
+from plugins import redis_locking
 from plugins import redis_db
+from plugins import default_conc_cache
+
+DEFAULT_TTL = 60  # in minutes
 
 
 def shorten_path(p):
@@ -19,25 +24,12 @@ def shorten_path(p):
     return '/'.join(p.rsplit('/', 2)[-2:])
 
 
-def calc_health_decrement(filesize, num_used):
-    """
-    Determines about how much an item's health should be decreased.
-    In general this depends on item's size and how often it was used.
-
-    arguments:
-    filesize -- size of a respective file in bytes
-    num_used -- a number how many times the item was used (= read)
-    """
-    return math.log(filesize, 10) / float(num_used)
-
-
 class CacheFiles(object):
 
-    def __init__(self, db, root_path, partition_prefix, corpus):
-        self._db = db
+    def __init__(self, root_path, corpus):
         self._root_path = root_path
-        self._partition_prefix = partition_prefix
         self._corpus = corpus
+        self._curr_time = time.time()
 
     def list_dir(self, path):
         """
@@ -66,160 +58,85 @@ class CacheFiles(object):
                 continue
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = '%s/%s' % (corp_full_path, cache_file)
-                if os.path.isdir(cache_full_path) or cache_file in ('run', '00CONCS.map'):  # TODO check
+                if os.path.isdir(cache_full_path) \
+                        or cache_file in ('run', default_conc_cache.CacheMapping.CACHE_FILENAME):
                     continue
-                h = default_conc_cache.fspath_hash(cache_full_path)
-                if not self._partition_prefix or h.find(self._partition_prefix) == 0:
-                    yield cache_full_path, h, os.path.getsize(cache_full_path)
-
-    def load_item(self, path_hash):
-        return self._db.load_item(path_hash)
+                yield (cache_full_path,
+                       self._curr_time - os.path.getmtime(cache_full_path),
+                       os.path.getsize(cache_full_path))
 
 
 class CacheCleanup(CacheFiles):
 
-    def __init__(self, root_path, partition_prefix, corpus, cache_metadata, ttl):
-        super(CacheCleanup, self).__init__(cache_metadata, root_path, partition_prefix, corpus)
+    def __init__(self, root_path, corpus, ttl, lock_fact):
+        super(CacheCleanup, self).__init__(root_path, corpus)
         self._root_path = root_path
-        self._partition_prefix = partition_prefix
         self._ttl = ttl
         self._num_processed = 0
         self._num_removed = 0
+        self._lock_factory = lock_fact
 
-    def analyze_item(self, item):
-        self._num_processed += 1
-        path, path_hash, filesize = item
-        data = self.load_item(path_hash)
-        if len(data) > 0:
-            if 'health' not in data or data['health'] is None:
-                autoconf.logger.warn('Property "health" initialized incorrectly')
-            old_health = data['health']
-            data['health'] -= calc_health_decrement(filesize, data['counter'])
-            autoconf.logger.debug('%s: health %01.2f -> %01.2f' % (shorten_path(item[0]), old_health, data['health']))
-            if data['health'] <= 0:
-                self._db.remove_item(path_hash)
-                os.unlink(path)
-                self._num_removed += 1
+    def run(self, dry_run=False):
+        ans = collections.defaultdict(list)
+        num_deleted = 0
+        num_processed = 0
+        for item in self.list_dir(self._root_path):
+            ans[os.path.dirname(item[0])].append(item)
+
+        for base_path, corpus_cache_entries in ans.items():
+            map_path = os.path.normpath('%s/%s' % (base_path,
+                                                   default_conc_cache.CacheMapping.CACHE_FILENAME))
+            if os.path.isfile(map_path):
+                to_del = {}
+                real_file_hashes = set()  # we have to check map entries against real files too
+                for cache_entry in corpus_cache_entries:
+                    num_processed += 1
+                    item_key = os.path.basename(cache_entry[0]).rsplit('.conc')[0]
+                    real_file_hashes.add(item_key)
+                    if self._ttl < cache_entry[1] / 60.:
+                        to_del[item_key] = cache_entry[0]
+                if len(to_del) > 0:
+                    with self._lock_factory.create(map_path):
+                        cache_map = cPickle.load(open(map_path, 'rb'))
+                        for k, v in cache_map.items():
+                            item_hash = v[0]
+                            if item_hash in to_del:
+                                if not dry_run:
+                                    os.unlink(to_del[item_hash])
+                                    del cache_map[k]
+                                else:
+                                    autoconf.logger.info('delete: %s (key: %s)' %
+                                                         (to_del[item_hash], k))
+                                num_deleted += 1
+                            elif item_hash not in real_file_hashes:
+                                if not dry_run:
+                                    del cache_map[k]
+                                autoconf.logger.warn('Unbound cache file! Directory: %s, '
+                                                     'hash: %s' % (base_path, item_hash))
+                        if not dry_run:
+                            cPickle.dump(cache_map, open(map_path, 'wb'))
             else:
-                self._db.save_item(path_hash, data)
-        else:
-            autoconf.logger.debug('no metadata for %s' % (shorten_path(item[0]),))
+                autoconf.logger.error('Cache map file %s not found' % map_path)
+        autoconf.logger.info('Processed files: %d, deleted: %d' % (num_processed, num_deleted))
 
-    def run(self):
-        """
-        Runs an analysis
-        """
-        map(self.analyze_item, self.list_dir(self._root_path))
-        return self._num_processed, self._num_removed
-
-
-class CacheInfo(CacheFiles):
-
-    def __init__(self, db, root_path, partition_prefix, corpus):
-        super(CacheInfo, self).__init__(db, root_path, partition_prefix, corpus)
-
-    @staticmethod
-    def _sec_to_hms(s):
-        h = s / 3600
-        tmp = s % 3600
-        m = tmp / 60
-        s = tmp % 60
-        return '%02d:%02d:%02d' % (h, m, s)
-
-    def run(self):
-        total_bytes = 0
-        total_items = 0
-        avg_used = 0
-        avg_health = 0
-        avg_age = 0
-        total_unregistered = 0
-        t = time.time()
-        for entry in self.list_dir(self._root_path):
-            db_item = self.load_item(entry[1])
-            if len(db_item) > 0:
-                avg_used += db_item['counter']
-                avg_health += db_item['health']
-                avg_age += (t - db_item['created'])
-            else:
-                total_unregistered += 1
-            total_bytes += entry[2]
-            total_items += 1
-
-        if total_items > 0:
-            ans = [
-                '',
-                'global info',
-                '-----------',
-                '    number of files: %s' % total_items,
-                '    number of unregistered files: %s (%01.1f%%)' % (total_unregistered,
-                                                                     100 * total_unregistered / float(total_items)),
-                '    total data size: %s MB' % (total_bytes / 1000,),
-                '',
-                'registered files',
-                '----------------'
-            ]
-            registered_num = float(total_items - total_unregistered)
-            if registered_num > 0:
-                avg_used /= registered_num
-                avg_health /= registered_num
-                avg_age /= registered_num
-                ans += [
-                    '    average use: %01.1f' % avg_used,
-                    '    average health: %01.1f' % avg_health,
-                    '    average age: %s' % self._sec_to_hms(avg_age),
-                    ''
-                ]
-            else:
-                ans += ['    no registered files']
-            print('\n'.join(ans))
-        else:
-            print('no cached data found in %s' % self._root_path)
-
-
-class MetadataCleanup(object):
-
-    def __init__(self, metadata):
-        self._metadata = metadata
-
-    def run(self):
-        self._metadata.apply_on_entries(lambda db, key: db.set_ttl(key, 0))
 
 if __name__ == '__main__':
-    ACTIONS = ('status', 'process', 'clean_cache')
     autoconf.setup_logger(logger_name='conc_cache_cleanup', logging_level=logging.DEBUG)
-
     parser = argparse.ArgumentParser(description='A script to control UCNK metadata cache')
-    parser.add_argument('action', metavar='ACTION', help='one of {%s}' % ', '.join(ACTIONS))
-    parser.add_argument('--partition-prefix', '-p', type=str, default=None,
-                        help='Process only items with specific first character (when hashed)')
-    parser.add_argument('--corpus', '-c', type=str, help='A concrete corpus to be processed '
-                        '(this can be combined with --partition-prefix)')
-    parser.add_argument('--subdir', '-s', type=str, default='',
-                        help='Process a specified subdirectory of configured cache directory')
+    parser.add_argument('--dry-run', '-d', action='store_true',
+                        help='Just analyze, do not modify anything')
+    parser.add_argument('--exclude', '-x', type=str, default=None,
+                        help='Do not analyze/clean specified subdirectories')
+    parser.add_argument('--corpus', '-c', type=str, help='A concrete corpus to be processed')
+    parser.add_argument('--ttl', '-t', type=int, default=DEFAULT_TTL,
+                        help='How old files (in minutes) will be preserved yet. Default is %s min.'
+                             % DEFAULT_TTL)
     args = parser.parse_args()
 
-    root_dir = autoconf.settings.get('corpora', 'cache_dir')
-    if args.subdir:
-        root_dir = '%s/%s' % (root_dir, args.subdir)
-    factory = default_conc_cache.create_instance(autoconf.settings,
-                                                 redis_db.create_instance(autoconf.settings.get('plugins', 'db')))
+    root_dir = autoconf.settings.get('plugins', 'conc_cache')['default:cache_dir']
 
-    if isinstance(factory.metadb, default_conc_cache.DummyMetadata):
-        raise Exception('The script cannot work with %s. Please set other metadata db in config.xml.'
-                        % (default_conc_cache.DummyMetadata.__name__,))
+    db = redis_db.create_instance(autoconf.settings.get('plugins', 'db'))
+    lock_factory = redis_locking.create_instance(autoconf.settings, db)
+    proc = CacheCleanup(root_dir, args.corpus, args.ttl, lock_factory)
+    proc.run(dry_run=args.dry_run)
 
-    if args.action == 'status':
-        status = CacheInfo(db=factory.metadb, root_path=root_dir, partition_prefix=args.partition_prefix,
-                           corpus=args.corpus)
-        status.run()
-    elif args.action == 'process':
-        cleanup = CacheCleanup(root_dir, partition_prefix=args.partition_prefix, corpus=args.corpus,
-                               cache_metadata=factory.metadb, ttl=3600 * 24)
-        num_proc, num_removed = cleanup.run()
-        autoconf.logger.info('processed: %d, removed: %d' % (num_proc, num_removed))
-    elif args.action == 'clean_cache':
-        mc = MetadataCleanup(factory.metadb)
-        mc.run()
-    else:
-        print('Unknown action %s, one of {%s} is expected.' % (args.action, ', '.join(ACTIONS)))
-        sys.exit(1)
