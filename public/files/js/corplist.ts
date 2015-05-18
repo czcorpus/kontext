@@ -607,10 +607,15 @@ class FavoritesTab implements WidgetTab {
         });
 
         if (this.dataFeat.length > 0) {
-            $.each(this.dataFeat, function (i, item) {
+            $.each(this.dataFeat, function (i, item:Array<string>) { // item = (id, name, size)
                 $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
                     + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
-                    + item[1] + '</a></td><td></td></tr>');
+                    + item[1] + '</a></td>'
+                    + '<td class="num">'
+                    + (parseInt(item[2]) > 0 ? '~' + item[2] : '<span title="'
+                            + self.pageModel.translate('unknown size') + '">?</span>')
+                    + '</td>'
+                    + '</tr>');
             });
 
         } else {

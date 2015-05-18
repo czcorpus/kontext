@@ -2134,6 +2134,9 @@ msgstr "Subkorpus byl vytvořen, ale nepodařilo se uložit záložní kopii."
 msgid "Subcorpus %s has been deleted permanently."
 msgstr "Subkorpus %s byl permanentně odstraněn."
 
+msgid "unknown size"
+msgstr "neznámá velikost"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

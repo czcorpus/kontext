@@ -63,6 +63,7 @@ from lxml import etree
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 import l10n
 import manatee
+from fallback_corpus import EmptyCorpus
 
 DEFAULT_LANG = 'en'
 
@@ -78,6 +79,29 @@ def translate_markup(s):
 
 def call_controller(controller_obj, method, *args, **kwargs):
     return apply(getattr(controller_obj, method), args, kwargs)
+
+
+class ManateeCorpusInfo(object):
+    def __init__(self, corpus, canonical_id):
+        self.name = corpus.get_conf('NAME') if corpus.get_conf('NAME') else canonical_id
+        self.description = corpus.get_info()
+        self.encoding = corpus.get_conf('ENCODING')
+        self.size = corpus.size()
+
+
+class ManateeCorpora(object):
+    def __init__(self):
+        self._cache = {}
+
+    def get_info(self, canonical_corpus_id):
+        try:
+            if canonical_corpus_id not in self._cache:
+                self._cache[canonical_corpus_id] = ManateeCorpusInfo(
+                    manatee.Corpus(canonical_corpus_id), canonical_corpus_id)
+            return self._cache[canonical_corpus_id]
+        except:
+            # refactoring warning: we do not want non-existent/fault items to be cached
+            return ManateeCorpusInfo(EmptyCorpus(), None)
 
 
 class CorpTree(AbstractSearchableCorporaArchive):
@@ -97,6 +121,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._tag_prefix = tag_prefix
         self._messages = {}
         self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
+        self._manatee_corpora = ManateeCorpora()
 
     def _get_corplist_title(self, elm):
         """
@@ -317,25 +342,23 @@ class CorpTree(AbstractSearchableCorporaArchive):
         for item in self._raw_list().values():
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
             if canonical_id in simple_names:
-                corp_name = None
                 try:
                     corp_id = user_allowed_corpora[canonical_id]
-                    corp = manatee.Corpus(corp_id)
-                    corp_name = corp.get_conf('NAME') if corp.get_conf('NAME') else canonical_id
-                    corp_info = corp.get_info()
-                    corp_encoding = corp.get_conf('ENCODING')
+                    corp_info = self._manatee_corpora.get_info(corp_id)
 
                     cl.append({'id': corp_id,
                                'canonical_id': canonical_id,
-                               'name': l10n.import_string(corp_name, from_encoding=corp_encoding),
-                               'desc': l10n.import_string(corp_info, from_encoding=corp_encoding),
-                               'size': corp.size(),
+                               'name': l10n.import_string(corp_info.name,
+                                                          from_encoding=corp_info.encoding),
+                               'desc': l10n.import_string(corp_info.description,
+                                                          from_encoding=corp_info.encoding),
+                               'size': corp_info.size,
                                'path': path
                                })
                 except Exception, e:
                     import logging
                     logging.getLogger(__name__).warn(
-                        u'Failed to fetch info about %s with error %s (%r)' % (corp_name,
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
                                                                                type(e).__name__, e))
                     cl.append({
                         'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
@@ -356,9 +379,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
         is_featured = lambda o: o['metadata'].get('featured', False)
         mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
         corp_labels = [mkitem(item) for item in self.get_all_corpus_keywords()]
-
         return {
-            'featured': [(x['id'], x.get('name', x['id']))
+            'featured': [(x['id'], x.get('name', x['id']),
+                          l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size))
                          for x in self._raw_list().values() if is_featured(x)],
             'corpora_labels': corp_labels,
             'tag_prefix': self._tag_prefix
