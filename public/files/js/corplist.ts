@@ -653,11 +653,16 @@ class FavoritesTab implements WidgetTab {
             });
         });
 
-        $.each(this.dataFeat, function (i, item) {
-            $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
-                + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
-                + item[1] + '</a></td><td></td></tr>');
-        });
+        if (this.dataFeat.length > 0) {
+            $.each(this.dataFeat, function (i, item) {
+                $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
+                    + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
+                    + item[1] + '</a></td><td></td></tr>');
+            });
+
+        } else {
+            $(this.wrapperFeat).hide();
+        }
     }
 
     reinit(newData:Array<CorplistItem>):void {
