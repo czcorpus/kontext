@@ -111,7 +111,7 @@ ul.multiselect li td.checkbox-cell {
 /* corpus tree */
 
 .corplist-widget {
-    width: 400pt;
+    max-width: 70%;
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
@@ -131,24 +131,6 @@ ul.multiselect li td.checkbox-cell {
   line-height: 2em;
 }
 
-.corplist-widget ul.root-list {
-    margin: 5px 0 0 0;
-    padding-left: 0;
-}
-
-.corplist-widget a.tree-expand {
-    color: #E2007A;
-}
-
-.corplist-widget a.node-link {
-    text-decoration: none;
-    color: inherit;
-}
-
-.corplist-widget a.node-link:hover {
-    color: #E2007A;
-}
-
 .corplist-widget .srch-field {
     color: inherit;
 }
@@ -157,53 +139,21 @@ ul.multiselect li td.checkbox-cell {
     color: #ababab;
 }
 
-.corplist-widget .featured-corpora ul {
-  margin-left: 0;
-  padding-left: 0;
-  list-style-type: none;
+.corplist-widget table td {
+  padding: 3pt 8pt;
 }
 
-.corplist-widget .featured-corpora ul li {
-  background-image: url('../img/dot.png');
-  .ping-dot-item;
+.corplist-widget table td.tools {
+  padding: 3pt 0;
 }
 
-.corplist-widget .featured-corpora h3 {
-  margin-bottom: 7pt;
-  font-size: 11pt;
-  border-width: 0 0 1pt 0;
-  border-style: solid;
-  border-color: @color-logo-blue;
-}
-
-.corplist-widget .featured-corpora h3 {
-  margin-top: 3pt;
-}
-
-.corplist-widget .featured-corpora ul {
-  margin-top: 0;
-}
-
-.corplist-widget .archive,
-.corplist-widget .archive a {
-  color: @color-light-text;
-}
-
-.corplist-widget .archive a {
-  text-decoration: none;
-}
-
-.corplist-widget .archive a:hover {
-  color: @color-logo-pink;
+.corplist-widget table td > img {
+  vertical-align: middle;
 }
 
 .corplist-widget tr td a {
   color: @color-default-text;
   text-decoration: none;
-}
-
-.corplist-widget tr td a.featured {
-  font-weight: bold;
 }
 
 .tt-suggestions .tt-suggestion span.num,
@@ -214,6 +164,11 @@ ul.multiselect li td.checkbox-cell {
 .corplist-widget tr td a:hover {
   color: @color-logo-pink;
   text-decoration: underline;
+}
+
+.corplist-widget img.config {
+  float: left;
+  cursor: pointer;
 }
 
 .corplist-widget .menu {
@@ -272,11 +227,33 @@ ul.multiselect li td.checkbox-cell {
   padding-left: 23px;
 }
 
-.corplist-widget .keyword.favorite {
-  background-image: url(../img/favorite_12x12.png);
-  background-position: 5px 2px;
-  background-repeat: no-repeat;
-  padding-left: 23px;
+.corplist-widget table.favorite-list,
+.corplist-widget table.featured-list {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.corplist-widget table.favorite-list img.remove {
+  display: inline-block;
+  padding: 0;
+  cursor: pointer;
+}
+
+.corplist-widget table.favorite-list img.remove {
+
+}
+
+.corplist-widget table.favorite-list img.remove.disabled {
+  display: none;
+}
+
+.corplist-widget table.featured-list {
+  margin-left: 30pt;
+}
+
+.corplist-widget div.tables > table th {
+  text-align: center;
+  color: @color-logo-pink;
 }
 
 // -------------------------- tag hints -------
@@ -403,23 +380,6 @@ button#reset-tag-button {
 
 .tt-suggestions .tt-suggestion span.num {
   font-size: 80%;
-}
-
-.tt-suggestions .tt-suggestion a.is-fav,
-.tt-suggestions .tt-suggestion a.not-fav {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: 0 50%;
-  text-decoration: none;
-  padding-margin: 10pt;
-}
-
-.tt-suggestions .tt-suggestion a.is-fav {
-  background-image: url('../img/favorite_12x12.png');
-}
-
-.tt-suggestions .tt-suggestion a.not-fav {
-  background-image: url('../img/favorite_12x12_grey.png');
 }
 
 .tt-suggestions .tt-suggestion p {

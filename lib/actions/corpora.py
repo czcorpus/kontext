@@ -15,7 +15,7 @@ import logging
 
 from controller import exposed
 from kontext import Kontext
-from kontext import simplify_num, UserActionException
+from kontext import UserActionException
 import plugins
 import l10n
 from translation import ugettext as _
@@ -41,7 +41,7 @@ class Corpora(Kontext):
                     return False
             return True
 
-        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
+        corplist = plugins.corptree.get_list(self.permitted_corpora())
         keywords = set()
 
         for item in corplist:
@@ -65,43 +65,16 @@ class Corpora(Kontext):
             },
             'corplist': corplist,
             'keywords_labels': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0]),
-            'keywords': self.keyword,  # singular vs. plural - singular used because of 'keyword=k1&keyword=k2&...
-            'max_size': max_size,
+            'keywords': self.keyword,  # singular vs. plural in the attribute name - singular
+            'max_size': max_size,      # used because of 'keyword=k1&keyword=k2&...
             'min_size': min_size
         }
         return ans
 
     @exposed(return_type='json', legacy=True)
     def ajax_list_corpora(self, query=''):
-        corplist = self.cm.corplist_with_names(plugins.corptree.get(), self.ui_lang)
-        ans = []
-        tokens = re.split(r'\s+', query)
-
-        fav_srch = False
-        query_keywords = []
-        for t in tokens:
-            if len(t) > 0 and t[0] == '#':
-                v = t[1:].replace('_', ' ').lower()
-                if plugins.corptree.keyword_is_favorite(v, localized=True):
-                    fav_srch = True
-                else:
-                    query_keywords.append(v)
-
-        query_substrs = ' '.join([t for t in tokens if len(t) > 0 and t[0] != '#'])
-
-        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
-        is_fav = lambda d: d['canonical_id'] in self.favorite_corpora
-        passes_fav = lambda d: fav_srch is False or is_fav(d)
-
-        for corp in corplist:
-            full_data = plugins.corptree.get_corpus_info(corp['id'], self.ui_lang)
-            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
-            if matches_all([k in keywords for k in query_keywords]) \
-                    and passes_fav(corp) and query_substrs in corp['name']:
-                corp['raw_size'] = simplify_num(corp['size'])
-                corp['favorite'] = True if is_fav(corp) else False
-                ans.append(corp)
-        return ans
+        corplist = plugins.corptree.get_list(self.permitted_corpora())
+        return plugins.corptree.search(corplist, query)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):

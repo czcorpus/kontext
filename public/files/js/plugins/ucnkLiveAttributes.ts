@@ -200,7 +200,7 @@ class LiveData {
                     }
                 });
 
-                self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.conf('corpname')
+                self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.getConf('corpname')
                     + '&id=' + $(target).attr('data-bib-id'),
                     {
                         dataType: 'json',
@@ -253,7 +253,7 @@ class LiveData {
 
             if ($.isArray(dataItem)) {
                 attrTable.find('.metadata').empty();
-                dataTable = self.createDataTable(dataItem, ident, self.pluginApi.conf('bibConf'), checkedItems);
+                dataTable = self.createDataTable(dataItem, ident, self.pluginApi.getConf('bibConf'), checkedItems);
 
                 $(inputElm).after(dataTable);
                 $(dataTable).find('.bib-info').each(function () {
@@ -343,7 +343,7 @@ class Checkboxes {
             var id,
                 trElm = $(this).closest('tr'),
                 labelElm = $(this).closest('label'),
-                inputVal = $(this).val() !== self.pluginApi.conf('emptyAttrValuePlaceholder') ? $(this).val() : '';
+                inputVal = $(this).val() !== self.pluginApi.getConf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
 
             if ($(this).attr('data-virt-name')) {
@@ -478,7 +478,7 @@ class SelectionSteps {
             innerHTML;
 
         if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-            innerHTML = '<strong>' + this.pluginApi.conf('corpname') + '</strong> <br />&amp; '
+            innerHTML = '<strong>' + this.pluginApi.getConf('corpname') + '</strong> <br />&amp; '
             + alignedCorpnames.join('<br />&amp;');
             this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
             this.numSteps(this.numSteps() + 1);
@@ -779,9 +779,9 @@ class Plugin {
             requestURL:string,
             alignedCorpnames;
 
-        requestURL = self.pluginApi.conf('rootURL')
+        requestURL = self.pluginApi.getConf('rootURL')
                 + 'filter_attributes?corpname='
-                + this.pluginApi.conf('corpname');
+                + this.pluginApi.getConf('corpname');
 
         alignedCorpnames = this.alignedCorpora.findSelected();
         if (alignedCorpnames) {

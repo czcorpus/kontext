@@ -33,8 +33,83 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.maxEncodedParamsLength = 1500;
     lib.corplistComponent = null;
     lib.starComponent = null;
+    lib.layoutModel = null;
+    lib.extendedApi = null;
+    lib.onAddParallelCorpActions = [];
+    lib.onRemoveParallelCorpActions = [];
+    lib.onBeforeRemoveParallelCorpActions = [];
+    lib.onSubcorpChangeActions = [];
+
+    lib.getConf = function (name) {
+        return lib.layoutModel.getConf(name);
+    };
+
+    lib.translate = function (msg) {
+        return lib.layoutModel.translate(msg);
+    };
+
+    lib.createActionUrl = function (path) {
+        return lib.layoutModel.createActionUrl(path);
+    };
+
+    lib.createStaticUrl = function (path) {
+        return lib.layoutModel.createStaticUrl(path);
+    };
+
+    lib.showMessage = function (type, message, callback) {
+        return lib.layoutModel.showMessage(type, message, callback);
+    };
+
+    /**
+     * Registers a callback which is invoked after an aligned
+     * corpus is added to the query page (i.e. firstForm's
+     * internal actions are performed first then the list of
+     * registered callbacks).
+     *
+     * @param fn:(corpname:string)=>void
+     */
+    lib.registerOnAddParallelCorpAction = function (fn) {
+        lib.onAddParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked AFTER an aligned
+     * corpus is removed from the query page (i.e. firstForm's
+     * internal actions are performed first then the list of
+     * registered callbacks).
+     *
+     * @param fn:(corpname:string)=>void
+     */
+    lib.registerOnRemoveParallelCorpAction = function (fn) {
+        lib.onRemoveParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked BEFORE an aligned
+     * corpus is removed from the query page (i.e. firstForm's
+     * internal actions are performed this actions).
+     *
+     * @param fn
+     */
+    lib.registerOnBeforeRemoveParallelCorpAction = function (fn) {
+        lib.onBeforeRemoveParallelCorpActions.push(fn);
+    };
+
+    /**
+     * Registers a callback which is invoked after the subcorpus
+     * selection element is changed. It guarantees that all the
+     * firstForm's internal actions are performed before this
+     * externally registered ones.
+     *
+     * @param fn:(subcname:string)=>void
+     */
+    lib.registerOnSubcorpChangeAction = function (fn) {
+        lib.onSubcorpChangeActions.push(fn);
+    };
+
     lib.extendedApi = null;
     lib.layoutModel = null;
+
 
     /**
      *
@@ -81,12 +156,18 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
                 $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
             }
         });
+        $.each(lib.onAddParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
+        });
     }
 
     /**
      * @param {string} corpusName
      */
     function removeActiveParallelCorpus(corpusName) {
+        $.each(lib.onBeforeRemoveParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
+        });
         callOnParallelCorporaList(function (itemList) {
             if ($.inArray(corpusName, itemList) >= 0) {
                 itemList.splice($.inArray(corpusName, itemList), 1);
@@ -95,6 +176,9 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             if ($('div.parallel-corp-lang:visible').length === 0) {
                 $('#default-view-mode').remove();
             }
+        });
+        $.each(lib.onRemoveParallelCorpActions, function (i, fn) {
+            fn.call(lib, corpusName);
         });
     }
 
@@ -153,11 +237,10 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
     lib.misc = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]'),
-           lib.layoutModel.pluginApi(),
+            lib,
             {formTarget: 'first_form'}
         );
 
-        lib.starComponent = corplistComponent.createStarComponent(lib.corplistComponent,lib.layoutModel.pluginApi());
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(lib.layoutModel, $('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
@@ -273,6 +356,18 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
 
     /**
      *
+     */
+    lib.registerSubcorpChange = function () {
+        $('#subcorp-selector').on('change', function (e) {
+            // following code must be always the last action performed on the event
+            $.each(lib.onSubcorpChangeActions, function (i, fn) {
+                fn.call(lib, $(e.currentTarget).val());
+            });
+        });
+    };
+
+    /**
+     *
      * @param {object} conf
      * @return {{}} a simple object containing promises returned
      * by some of
@@ -300,7 +395,8 @@ define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/quer
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-                '.text-type-params')
+                '.text-type-params'),
+            registerSubcorpChange : lib.registerSubcorpChange()
         });
 
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));

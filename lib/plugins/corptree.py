@@ -15,17 +15,44 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
+A plug-in providing user's favorite and global featured corpora lists. The data
+are passed through via the 'export' method which is recognized by KonText and then
+interpreted via a custom JavaScript (which is an integral part of the plug-in).
+
+
 Required config.xml/plugins entries:
 
 <corptree>
     <module>corptree</module>
     <file>[a path to a configuration XML file]</file>
-    <root_elm_path>[an XPath query leading to a root element where configuration can be found]</root_elm_path>
+    <root_elm_path>
+        [an XPath query leading to a root element where configuration can be found]
+    </root_elm_path>
+    <tag_prefix extension-by="default">
+        [a spec. character specifying that the following string is a tag/label]
+    </tag_prefix>
 </corptree>
+
+How does the corpus list specification XML entry looks like:
+
+<a_root_elm>
+  <corpus sentence_struct="p" ident="SUSANNE">
+    <metadata>
+      <featured />
+      <keywords>
+        <item>foreign_language_corpora</item>
+        <item>written_corpora</item>
+      </keywords>
+    </metadata>
+  </corpus>
+   ...
+</a_root_elm>
+
 """
 
 from collections import OrderedDict
 import copy
+import re
 
 try:
     from markdown import markdown
@@ -33,7 +60,10 @@ except ImportError:
     markdown = lambda s: s
 from lxml import etree
 
-from structures import ThreadLocalData
+from plugins.abstract.corpora import AbstractSearchableCorporaArchive
+import l10n
+import manatee
+from fallback_corpus import EmptyCorpus
 
 DEFAULT_LANG = 'en'
 
@@ -51,26 +81,49 @@ def call_controller(controller_obj, method, *args, **kwargs):
     return apply(getattr(controller_obj, method), args, kwargs)
 
 
-class CorpTree(ThreadLocalData):
+class ManateeCorpusInfo(object):
+    def __init__(self, corpus, canonical_id):
+        self.name = corpus.get_conf('NAME') if corpus.get_conf('NAME') else canonical_id
+        self.description = corpus.get_info()
+        self.encoding = corpus.get_conf('ENCODING')
+        self.size = corpus.size()
+
+
+class ManateeCorpora(object):
+    def __init__(self):
+        self._cache = {}
+
+    def get_info(self, canonical_corpus_id):
+        try:
+            if canonical_corpus_id not in self._cache:
+                self._cache[canonical_corpus_id] = ManateeCorpusInfo(
+                    manatee.Corpus(canonical_corpus_id), canonical_corpus_id)
+            return self._cache[canonical_corpus_id]
+        except:
+            # refactoring warning: we do not want non-existent/fault items to be cached
+            return ManateeCorpusInfo(EmptyCorpus(), None)
+
+
+class CorpTree(AbstractSearchableCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
     """
 
-    DEFAULT_FEATURED_KEY = 'featured'
-    DEFAULT_FAVORITE_KEY = 'favorite'
+    FEATURED_KEY = 'featured'
+    FAVORITE_KEY = 'favorite'
 
-    def __init__(self, file_path, root_xpath):
+    def __init__(self, file_path, root_xpath, tag_prefix):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
+        self._tag_prefix = tag_prefix
         self._messages = {}
         self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
-        self._featured_keyword = None  # a keyword representing "featured" corpora
-        self._favorite_keyword = None  # a keyword representing user's "favorite" corpora
+        self._manatee_corpora = ManateeCorpora()
 
-    def get_corplist_title(self, elm):
+    def _get_corplist_title(self, elm):
         """
         Returns locale-correct title of a corpus group (= CORPLIST XML element)
         """
@@ -113,16 +166,6 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def _parse_keywords(self, root):
-        if self.DEFAULT_FEATURED_KEY in root.attrib:
-            self._featured_keyword = root.attrib[self.DEFAULT_FEATURED_KEY]
-        else:
-            self._featured_keyword = self.DEFAULT_FEATURED_KEY
-
-        if self.DEFAULT_FAVORITE_KEY in root.attrib:
-            self._favorite_keyword = root.attrib[self.DEFAULT_FAVORITE_KEY]
-        else:
-            self._favorite_keyword = self.DEFAULT_FAVORITE_KEY
-
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
@@ -147,21 +190,8 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def get_all_corpus_keywords(self):
-        """
-        returns:
-        list of 2-tuples (localized_label, spec_prop)
-        where spec_prop is int such as that:
-        0 - no special property
-        1 - featured label
-        2 - favorite label
-        """
         def encode_prop(l_key):
-            if self.keyword_is_featured(l_key, localized=False):
-                return 1
-            elif self.keyword_is_favorite(l_key, localized=False):
-                return 2
-            else:
-                return 0
+            return 0   # TODO no need to mark keywords
         ans = []
         lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
@@ -174,7 +204,7 @@ class CorpTree(ThreadLocalData):
         """
         if not hasattr(root, 'tag') or not root.tag == 'corplist':
             return data
-        title = self.get_corplist_title(root)
+        title = self._get_corplist_title(root)
         if title:
             path = "%s%s/" % (path, title)
         for item in root:
@@ -217,22 +247,12 @@ class CorpTree(ThreadLocalData):
                     ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
                     ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
                     ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
+                    ans['metadata']['featured'] = True if \
+                        meta_elm.find(self.FEATURED_KEY) is not None else False
                 data.append(ans)
 
-    def keyword_is_featured(self, keyword_ident, localized=False):
-        if not localized:
-            return keyword_ident == self._featured_keyword
-        return self._keywords[self._featured_keyword][self._get_iso639lang()] == keyword_ident
-
-    def keyword_is_favorite(self, keyword_ident, localized=False):
-        if not localized:
-            return keyword_ident == self._favorite_keyword
-        return self._keywords[self._favorite_keyword][self._get_iso639lang()] == keyword_ident
-
-    def keyword_is_special(self, keyword_ident, localized=False):
-        return self.keyword_is_favorite(keyword_ident, localized) or self.keyword_is_featured(keyword_ident, localized)
-
-    def _localize_corpus_info(self, data, lang_code):
+    @staticmethod
+    def _localize_corpus_info(data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -256,33 +276,14 @@ class CorpTree(ThreadLocalData):
         return ans
 
     def get_corpus_info(self, corp_name, language=None):
-        """
-        Returns an information related to provided corpus name and contained within
-        the configuration XML file (i.e. not the data from the registry file). It is
-        able to handle names containing the '/' character.
-
-        arguments:
-        corp_name -- name of the corpus
-        language -- a language to export localized data to; both xx_YY and xx variants are
-                    accepted (in case there is no match for xx_YY xx is used).
-                    If None then all the variants are returned (=> slightly different structure
-                    of returned dictionary; typically - instead of a str value there is a dict
-                    where keys correspond to language codes).
-
-        returns:
-        a dictionary containing corpus information as defined in config.xml (i.e. <corpus> tag
-        and its attributes and also its subtree (e.g. <metadata> tag).
-        See self._parse_corplist_node method for the information how data is organized in the
-        dictionary.
-        """
         if corp_name != '':
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
-            if corp_name in self.corplist():
+            if corp_name in self._raw_list():
                 if language is not None:
-                    return self._localize_corpus_info(self.corplist()[corp_name], lang_code=language)
+                    return self._localize_corpus_info(self._raw_list()[corp_name], lang_code=language)
                 else:
-                    return self.corplist()[corp_name]
+                    return self._raw_list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
             return {'metadata': {}}  # for 'empty' corpus to work properly
@@ -299,7 +300,7 @@ class CorpTree(ThreadLocalData):
                 self._parse_corplist_node(root, data, path='/')
         self._corplist = OrderedDict([(item['id'].lower(), item) for item in data])
 
-    def corplist(self):
+    def _raw_list(self):
         """
         Returns list of all defined corpora including all lang. variants of labels etc.
         """
@@ -330,11 +331,39 @@ class CorpTree(ThreadLocalData):
     def _get_iso639lang(self):
         return self._lang().split('_')[0]
 
-    def get(self):
+    def get_list(self, user_allowed_corpora):
         """
-        Returns corpus tree data
+        arguments:
+        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
+                                accessible by the current user
         """
-        return self.corplist().values()
+        simple_names = set(user_allowed_corpora.keys())
+        cl = []
+        for item in self._raw_list().values():
+            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if canonical_id in simple_names:
+                try:
+                    corp_id = user_allowed_corpora[canonical_id]
+                    corp_info = self._manatee_corpora.get_info(corp_id)
+
+                    cl.append({'id': corp_id,
+                               'canonical_id': canonical_id,
+                               'name': l10n.import_string(corp_info.name,
+                                                          from_encoding=corp_info.encoding),
+                               'desc': l10n.import_string(corp_info.description,
+                                                          from_encoding=corp_info.encoding),
+                               'size': corp_info.size,
+                               'path': path
+                               })
+                except Exception, e:
+                    import logging
+                    logging.getLogger(__name__).warn(
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
+                                                                               type(e).__name__, e))
+                    cl.append({
+                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
+        return cl
 
     def setup(self, controller_obj):
         """
@@ -346,10 +375,44 @@ class CorpTree(ThreadLocalData):
         """
         self._lang(getattr(controller_obj, 'ui_lang', None))
 
+    def export(self, *args):
+        is_featured = lambda o: o['metadata'].get('featured', False)
+        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
+        corp_labels = [mkitem(item) for item in self.get_all_corpus_keywords()]
+        return {
+            'featured': [(x['id'], x.get('name', x['id']),
+                          l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size))
+                         for x in self._raw_list().values() if is_featured(x)],
+            'corpora_labels': corp_labels,
+            'tag_prefix': self._tag_prefix
+        }
+
+    def search(self, corplist, query):
+        ans = []
+        tokens = re.split(r'\s+', query)
+
+        query_keywords = []
+        for t in tokens:
+            if len(t) > 0 and t[0] == self._tag_prefix:
+                query_keywords.append(t[1:].replace('_', ' ').lower())
+
+        query_substrs = [t for t in tokens if len(t) > 0 and t[0] != self._tag_prefix]
+        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
+
+        for corp in corplist:
+            full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
+            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
+            if matches_all([k in keywords for k in query_keywords]
+                           + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
+                corp['raw_size'] = l10n.simplify_num(corp['size'])
+                ans.append(corp)
+        return ans
+
 
 def create_instance(conf):
     """
     Interface function called by KonText creates new plugin instance
     """
     return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],
-                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'])
+                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
+                    tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'])

@@ -1,17 +1,26 @@
-*.*~
+# IDEs and editors
 .idea/
+**/*.sublime-project
+**/*.sublime-workspace
+*.*~
+**/tsconfig.json
+
+# local development 
 doc/
 log/
 tmp/
 *.db
-*.pyc
+lib/plugins/devel_*
+node_modules/
+
+# default app installation
 *.xml
 !config.sample.xml
-.directory
-node_modules/
 public/files/js/min/
 public/files/js/compiled/
 public/files/css/kontext.min.css
-lib/plugins/devel_*
 cmpltmpl/*
 !cmpltmpl/__init__.py
+
+# other
+*.pyc

@@ -267,3 +267,13 @@ def corpus_get_conf(corp, conf_key):
         return import_string(corp.get_conf(conf_key), from_encoding=corp.get_conf('ENCODING'))
     else:
         return corp.get_conf(conf_key)
+
+
+def simplify_num(v):
+    if v >= 1e9:
+        return '%dG' % (round(v / 1e9, 0))
+    if v >= 1e6:
+        return '%dM' % (round(v / 1e6, 0))
+    if v >= 1e3:
+        return '%dK' % (round(v / 1e3, 0))
+    return '%d' % (round(v / 1e2, 0) * 100,)

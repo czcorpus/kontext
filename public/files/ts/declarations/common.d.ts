@@ -32,7 +32,7 @@ declare module Kontext {
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
-        conf(key:string):any;
+        getConf(key:string):any;
         createStaticUrl(path:string):string;
         createActionUrl(path:string):string;
         ajax(...args:any[]);
@@ -47,6 +47,12 @@ declare module Kontext {
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
+    }
+
+    export interface FirstFormPage extends PluginApi {
+        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
     }
 
     /**

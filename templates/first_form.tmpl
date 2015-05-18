@@ -87,7 +87,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
 
         #set $sel_aln = $align.split(',')
         #for $a in $Aligned
-        <div id="qnode_$a.n" class="parallel-corp-lang" style="display: none">
+        <div id="qnode_$a.n" class="parallel-corp-lang" data-corpus-id="$a.n" style="display: none">
             <div class="heading">
                 <a class="make-primary" data-corpus-id="$a.n" title="$_('make corpus primary')"><img class="over-img" src="../files/img/go-up.png"
                                                                                data-alt-img="../files/img/go-up_s.png"

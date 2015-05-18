@@ -1186,7 +1186,7 @@ export class MainMenu {
 }
 
 
-export class PluginApi {
+export class PluginApi implements Kontext.PluginApi {
 
     _conf:any; // TODO type
 
@@ -1197,7 +1197,7 @@ export class PluginApi {
         this.pageModel = pageModel;
     }
 
-    conf(key) {
+    getConf(key) {
         if (this._conf.hasOwnProperty(key)) {
             return this._conf[key];
 
@@ -1259,7 +1259,7 @@ export class PluginApi {
     }
 
     userIsAnonymous() {
-        return this.conf['anonymousUser'];
+        return this.getConf('anonymousUser');
     }
 
     contextHelp(triggerElm, text) {

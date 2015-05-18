@@ -195,14 +195,14 @@ export class QueryHistory {
         this.boxElm.find('.filter-checkbox').on('click', function (event) {
             if ($(event.currentTarget).is(':checked')) {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')) {
+                    if ($(this).data('corpname') !== self.pluginApi.getConf('corpname')) {
                         $(this).hide();
                     }
                 });
 
             } else {
                 self.boxElm.find('.rows li').each(function () {
-                    if ($(this).data('corpname') !== self.pluginApi.conf('corpname')
+                    if ($(this).data('corpname') !== self.pluginApi.getConf('corpname')
                         && !$(this).is(':visible')) {
                         $(this).show();
                     }
@@ -326,15 +326,15 @@ export class QueryHistory {
                 this.data.push({
                     query : this.inputElm.val(),
                     query_type : $('#queryselector option:selected').data('type'),
-                    corpname : self.pluginApi.conf('corpname'),
+                    corpname : self.pluginApi.getConf('corpname'),
                     subcorpname : self.getCurrentSubcorpname(),
-                    humanCorpname : self.pluginApi.conf('humanCorpname')
+                    humanCorpname : self.pluginApi.getConf('humanCorpname')
                 });
             }
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax(self.pluginApi.conf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.conf('corpname'), {
+            prom = $.ajax(self.pluginApi.getConf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.getConf('corpname'), {
                 dataType : 'json'
             });
 
@@ -420,7 +420,7 @@ export class QueryHistory {
 
             link = $(window.document.createElement('em'));
             link.attr('href', v.url);
-            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.conf('historyMaxQuerySize')),
+            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.getConf('historyMaxQuerySize')),
                 self.splitQueryIfSize));
 
             listItem.on('click', function (event) {

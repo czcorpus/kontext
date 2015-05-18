@@ -15,16 +15,27 @@ import json
 from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
 from abstract.user_items import infer_item_key
 
+import l10n
+
 
 class ItemEncoder(json.JSONEncoder):
     """
     Provides a consistent encoding of GeneralItem objects into the JSON format.
+    In accordance with plug-in's 'to_json' required signature also a list of
+    GeneralItem instances is supported.
     """
-    def default(self, obj):
+    @staticmethod
+    def _convert_single(obj):
         d = [(k, v) for k, v in obj.__dict__.items() if not k.startswith('_')]
         d.append(('id', obj.id))
         d.append(('type', obj.type))
         return dict(d)
+
+    def default(self, obj):
+        if hasattr(obj, '__iter__'):
+            return [self._convert_single(item) for item in obj]
+        else:
+            return self._convert_single(obj)
 
 
 def import_from_json(obj, recursive=False):
@@ -36,21 +47,23 @@ def import_from_json(obj, recursive=False):
     arguments:
     obj -- a dict representing decoded JSON
     """
+    def set_common(item_obj, src_data):
+        item_obj.corpus_id = src_data['corpus_id']
+        item_obj.canonical_id = src_data['canonical_id']
+        item_obj.size = src_data.get('size', None)   # can be None in case item_obj is an aligned corp.
+        item_obj.size_info = src_data.get('size_info', None)  # can be None in case item_obj is an aligned corp.
+
     item_type = obj.get('type', None)
     if item_type == 'corpus':
         ans = CorpusItem(name=obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
     elif item_type == 'subcorpus':
         ans = SubcorpusItem(obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
         ans.subcorpus_id = obj['subcorpus_id']
-        ans.size = obj['size']
     elif item_type == 'aligned_corpora':
         ans = AlignedCorporaItem(obj['name'])
-        ans.corpus_id = obj['corpus_id']
-        ans.canonical_id = obj['canonical_id']
+        set_common(ans, obj)
         if not recursive:
             ans.corpora = obj['corpora']
         else:
@@ -73,8 +86,19 @@ class UserItems(AbstractUserItems):
     decoder = json.JSONDecoder(object_hook=import_from_json)
 
     def __init__(self, settings, db):
+        super(UserItems, self).__init__()
         self._settings = settings
         self._db = db
+
+    def setup(self, controller_obj):
+        """
+        Interface method expected by KonText if a module wants to be set-up by
+        some "late" information (like locales).
+
+        Please note that each request calls this method on the same instance
+        which means that any client-specific data must be thread-local.
+        """
+        self.setlocal('lang', getattr(controller_obj, 'ui_lang', None))
 
     @staticmethod
     def _mk_key(user_id):
@@ -90,6 +114,7 @@ class UserItems(AbstractUserItems):
         ans = []
         for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
             ans.append(self.decoder.decode(item))
+        ans = l10n.sort(ans, self.getlocal('lang'), key=lambda itm: itm.name, reverse=False)
         return ans
 
     def add_user_item(self, user_id, item):

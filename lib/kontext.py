@@ -12,7 +12,6 @@
 # GNU General Public License for more details.
 
 from types import ListType
-import cgi
 import json
 import time
 from functools import partial
@@ -36,16 +35,6 @@ from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter
-
-
-def simplify_num(v):
-    if v >= 1e9:
-        return '%dG' % (round(v / 1e9, 0))
-    if v >= 1e6:
-        return '%dM' % (round(v / 1e6, 0))
-    if v >= 1e3:
-        return '%dK' % (round(v / 1e3, 0))
-    return '%d' % (round(v / 1e2, 0) * 100,)
 
 
 def join_params(*args):
@@ -343,7 +332,6 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self._args_mappings = {}
-        self._favorite_items = []
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -762,8 +750,7 @@ class Kontext(Controller):
         # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
         if is_legacy_method:
             self._map_args_to_attrs(form, selectorname, named_args)
-        logging.getLogger(__name__)
-        self.cm = corplib.CorpusManager(plugins.auth.get_corplist(self._session_get('user', 'id')), self.subcpath)
+        self.cm = corplib.CorpusManager(self.subcpath)
         if getattr(self, 'refs') is None:
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
@@ -953,6 +940,16 @@ class Kontext(Controller):
         else:
             return fallback_corpus.EmptyCorpus()
 
+    def permitted_corpora(self):
+        """
+        Returns corpora identifiers accessible by the current user.
+
+        returns:
+        a dict (canonical_id, id)
+        """
+        clist = plugins.auth.get_corplist(self._session_get('user', 'id'))
+        return dict([(self._canonical_corpname(c), c) for c in clist])
+
     def _load_fav_items(self):
         return plugins.user_items.get_user_items(self._session_get('user', 'id'))
 
@@ -970,10 +967,6 @@ class Kontext(Controller):
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
-        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
-        corp_labels = [mkitem(item) for item in plugins.corptree.get_all_corpus_keywords()]
-
-        result['corpora_labels'] = json.dumps(corp_labels)
         if self.usesubcorp:
             result['subcorp_size'] = format_number(self._corp().search_size())
         else:

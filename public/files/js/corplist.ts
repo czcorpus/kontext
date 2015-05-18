@@ -31,6 +31,11 @@ enum Visibility {
     VISIBLE, HIDDEN
 }
 
+export enum Favorite {
+    NOT_FAVORITE = 0,
+    FAVORITE = 1
+}
+
 /**
  *
  */
@@ -43,9 +48,14 @@ export interface CorplistItem {
     subcorpus_id: string;
     corpora: Array<string>;
     description: string;
-    featured: number;
+    featured: Favorite;
     user_item: boolean;
-    size: any;
+    size: number;
+    /**
+     * A simplified/human readable version of size.
+     * E.g. if the size is 1,200,000 then the size_info is '1M'
+     */
+    size_info: string;
 }
 
 /**
@@ -97,9 +107,11 @@ export interface Options {
 }
 
 /**
+ * Extracts user items encoded using JSON in data-item attributes of OPTION HTML elements.
+ * This is expected to be filled in on server.
  *
  * @param select
- * @returns {Array<CorplistItem>}
+ * @returns list of user items related to individual OPTION elements
  */
 function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
     var elm:JQuery = $(select),
@@ -113,7 +125,8 @@ function fetchDataFromSelect(select:HTMLElement):Array<CorplistItem> {
 }
 
 /**
- *
+ * General widget tab. All the future additions to Corplist tabs
+ * must implement this.
  */
 export interface WidgetTab {
     show():void;
@@ -121,7 +134,11 @@ export interface WidgetTab {
     getFooter():JQuery;
 }
 
-
+/**
+ * This is used when the SearchTab tab asks server
+ * for matching corpora according to the pattern
+ * user has written to the search input.
+ */
 interface SearchResponse {
     name: string;
     favorite: boolean;
@@ -134,17 +151,17 @@ interface SearchResponse {
 }
 
 /**
- *
+ * This represents the menu for switching between tabs.
  */
-export class WidgetMenu {
+class WidgetMenu {
 
     widget:Corplist;
 
     menuWrapper:JQuery;
 
-    searchBox:Search;
+    searchBox:SearchTab;
 
-    favoriteBox:Favorites;
+    favoriteBox:FavoritesTab;
 
     funcMap:{[name:string]: WidgetTab};
 
@@ -157,7 +174,7 @@ export class WidgetMenu {
 
     /**
      *
-     * @param widgetWrapper
+     * @param widget
      */
     constructor(widget:Corplist) {
         this.widget = widget;
@@ -190,27 +207,34 @@ export class WidgetMenu {
      *
      * @param trigger
      */
-    setCurrent(trigger:HTMLElement):void;
+    setCurrent(trigger:EventTarget):void;
     setCurrent(trigger:string):void;
-    setCurrent(trigger:any) {
-        var triggerElm:HTMLElement,
+    setCurrent(trigger):void {
+        var newTabId:string,
+            menuLink:HTMLElement,
             newActiveWidget:WidgetTab;
 
         if (typeof trigger === 'string') {
-            triggerElm = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
+            newTabId = trigger;
+            menuLink = $(this.menuWrapper).find('a[data-func="' + trigger + '"]').get(0);
 
-        } else {
-            triggerElm = trigger;
+        } else if (typeof trigger === 'object') {
+            newTabId = $(trigger).data('func');
+            menuLink = $(trigger).get(0);
         }
 
         this.reset();
-        $(triggerElm).addClass('current');
-        newActiveWidget = this.getTabByIdent($(triggerElm).data('func'));
+        $(menuLink).addClass('current');
+        newActiveWidget = this.getTabByIdent(newTabId);
         newActiveWidget.show();
         this.widget.setFooter(newActiveWidget.getFooter());
-        this.currentBoxId = $(triggerElm).data('func');
+        this.currentBoxId = newTabId;
     }
 
+    /**
+     *
+     * @returns {WidgetTab}
+     */
     getCurrent():WidgetTab {
         return this.getTabByIdent(this.currentBoxId);
     }
@@ -220,7 +244,7 @@ export class WidgetMenu {
      * @param searchBox
      * @param favoriteBox
      */
-    init(searchBox:Search, favoriteBox:Favorites):void {
+    init(searchBox:SearchTab, favoriteBox:FavoritesTab):void {
         var self = this;
         this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
         this.favoriteBox = favoriteBox;
@@ -229,23 +253,29 @@ export class WidgetMenu {
         this.funcMap[WidgetMenu.SEARCH_WIDGET_ID] = this.searchBox;
         this.setCurrent(WidgetMenu.MY_ITEMS_WIDGET_ID);
 
-        this.menuWrapper.find('a').on('click', function (e:any) {
+        this.menuWrapper.find('a').on('click', function (e:JQueryEventObject) {
             self.setCurrent(e.currentTarget);
         });
 
         $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
-            if (self.currentBoxId === WidgetMenu.MY_ITEMS_WIDGET_ID
-                    && e.keyCode == WidgetMenu.TAB_KEY) {
-                self.setCurrent(WidgetMenu.SEARCH_WIDGET_ID);
+            var cycle;
+
+            if (self.widget.isVisible()) {
+                cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
+                if (e.keyCode == WidgetMenu.TAB_KEY) {
+                    self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
         });
     }
 }
 
 /**
- *
+ * This class represents the SearchTab tab
  */
-export class Search implements WidgetTab {
+export class SearchTab implements WidgetTab {
 
     pluginApi:Kontext.PluginApi;
 
@@ -257,18 +287,21 @@ export class Search implements WidgetTab {
 
     srchField:HTMLElement;
 
-    bloodhound:Bloodhound<string>;  // Typeahead's suggestion engine
+    bloodhound:Bloodhound<string>; // Typeahead's suggestion engine
+
+    private tagPrefix:string;
 
     /**
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:Kontext.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
         $(this.widgetWrapper).append(this.wrapper);
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix']
     }
 
     show():void {
@@ -286,7 +319,7 @@ export class Search implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
-        $.each(this.pluginApi.conf('corporaLabels'), function (i, item) {
+        $.each(this.pluginApi.getConf('pluginData')['corptree']['corpora_labels'], function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).append(item[0]).addClass('keyword');
@@ -300,12 +333,12 @@ export class Search implements WidgetTab {
             }
             $(link).attr('data-srchkey', item[1]);
             $(link).on('click', function () {
-                $(self.srchField).val('#' + $(link).data('srchkey'));
+                $(self.srchField).val(self.tagPrefix + $(link).data('srchkey'));
                 // this forces Typeahead to act like if user changed input manually
                 $(self.srchField).trigger('input');
                 $(self.srchField).focus();
             });
-            if (i < self.pluginApi.conf('corporaLabels')['length'] - 1) {
+            if (i < self.pluginApi.getConf('pluginData')['corptree']['corpora_labels']['length'] - 1) {
                 $(div).append(' ');
             }
         });
@@ -314,7 +347,7 @@ export class Search implements WidgetTab {
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
-            'url' : self.pluginApi.conf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
+            'url' : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
@@ -340,55 +373,8 @@ export class Search implements WidgetTab {
             source : this.bloodhound.ttAdapter(),
             templates: {
                 suggestion: function (item:SearchResponse) {
-                    var ans,
-                        link = window.document.createElement('a');
-
-                    ans = $('<p>' + item.name + ' <span class="num">(size: ~' + item.raw_size + ')</span> </p>'); // TODO translate
-
-                    if (item.favorite) {
-                        $(link).addClass('is-fav');
-
-                    } else {
-                        $(link).addClass('not-fav');
-                    }
-                    $(link)
-                        .attr('title', 'In my favorites? (click to change)') // TODO translate
-                        .append('<img src="' + self.pluginApi.createStaticUrl('img/transparent_16x16.gif') + '" />')
-                        .on('click', function (event:JQueryEventObject) {
-                            var reqData:any = {},
-                                favState:boolean;
-
-                            event.preventDefault();
-                            event.stopPropagation();
-                            if ($(link).hasClass('is-fav')) {
-                                $(link).removeClass('is-fav').addClass('not-fav');
-                                favState = false;
-
-                            } else {
-                                $(link).removeClass('not-fav').addClass('is-fav');
-                                favState = true;
-                            }
-                            reqData[item.canonical_id] = favState;
-
-                            self.pluginApi.ajax('set_favorite_corp',
-                                {
-                                    method : 'POST',
-                                    data : {'data': JSON.stringify(reqData)},
-                                    success : function () {
-                                        self.bloodhound.clearRemoteCache();
-
-                                    },
-                                    error : function () {
-                                        self.bloodhound.clearRemoteCache();
-                                        self.pluginApi.showMessage('error', 'Failed to (un)set item as favorite');
-                                    }
-                                }
-                            );
-
-                            return false;
-                        });
-                    ans.append(link);
-                    return ans;
+                    return $('<p>' + item.name
+                        + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
                 }
             }
         });
@@ -410,7 +396,7 @@ export class Search implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', '#label or name');
+            .attr('placeholder', this.tagPrefix + this.pluginApi.translate('label or name'));
         jqWrapper.append(inputWrapper);
         $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.initTypeahead();
@@ -421,43 +407,116 @@ export class Search implements WidgetTab {
      *
      * @returns {}
      */
-    getFooter():JQuery {
-        return $();
-    }
+     getFooter():JQuery {
+        return $('<span>' + this.pluginApi.translate('hit [Tab] to see your favorite items') + '</span>');
+     }
 }
 
 /**
- *
+ * This class represents the FavoritesTab (= user item) tab
  */
-export class Favorites implements WidgetTab {
+class FavoritesTab implements WidgetTab {
 
-    pluginApi:Kontext.PluginApi;
+    pageModel:Kontext.PluginApi;
 
     widgetWrapper:HTMLElement;
 
-    data:Array<CorplistItem>;
+    tablesWrapper:HTMLElement;
 
-    wrapper:HTMLElement;
+    dataFav:Array<CorplistItem>;
+
+    private wrapperFav:HTMLElement;
+
+    dataFeat:Array<CorplistItem>;
+
+    private wrapperFeat:HTMLElement;
 
     itemClickCallback:CorplistItemClick;
+
+    editMode:boolean;
+
+    onListChange:Array<(trigger:FavoritesTab)=>void>;  // list of registered callbacks
 
     /**
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, data:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
-        this.pluginApi = pluginApi;
+    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
+                dataFeat:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
+        var self = this;
+        this.editMode = false;
+        this.onListChange = [];
+        this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
-        this.data = data;
+        this.dataFav = dataFav ? dataFav : [];
+        this.dataFeat = dataFeat ? dataFeat : [];
         this.itemClickCallback = itemClickCallback;
-        this.wrapper = window.document.createElement('table');
-        $(this.wrapper).addClass('favorite-list')
-            .append('<tr><th colspan="2">' + this.pluginApi.translate('favorite items') + '</th></tr>');
-        $(this.widgetWrapper).append(this.wrapper);
+        this.tablesWrapper = window.document.createElement('div');
+        $(this.tablesWrapper).addClass('tables');
+        $(this.widgetWrapper).append(this.tablesWrapper);
+
+        this.wrapperFav = window.document.createElement('table');
+        $(this.wrapperFav).addClass('favorite-list')
+            .append('<tr><th colspan="2">'
+                    + '<img class="config over-img" '
+                    + 'title="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
+                    + 'alt="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
+                    + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
+                    + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
+                    + ' />'
+                    + this.pageModel.translate('favorite items') + '</th>'
+                    + '<th></th></tr>');
+        $(this.tablesWrapper).append(this.wrapperFav);
+
+        $(this.tablesWrapper).find('img.config').on('click', function () {
+            self.switchItemEditMode();
+        });
+
+        this.wrapperFeat = window.document.createElement('table');
+        $(this.wrapperFeat).addClass('featured-list')
+            .append('<tr><th colspan="2">' + this.pageModel.translate('featured corpora') + '</th></tr>');
+        $(this.tablesWrapper).append(this.wrapperFeat);
     }
 
+    registerChangeListener(fn:(trigger:FavoritesTab)=>void) {
+        this.onListChange.push(fn);
+    }
+
+    /**
+     * Tests whether the passed item matches (by its 'id' attribute) with
+     * any of user's current items (= this.data).
+     *
+     * @param item
+     * @returns true on success else false
+     */
+    containsItem(item:CorplistItem):boolean {
+        for (var i = 0; i < this.dataFav.length; i += 1) {
+            if (this.dataFav[i].id == item.id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    switchItemEditMode() {
+        if (this.editMode === false) {
+            $(this.wrapperFav).find('img.remove').removeClass('disabled');
+
+        } else {
+            $(this.wrapperFav).find('img.remove').addClass('disabled');
+        }
+        this.editMode = !this.editMode;
+    }
+
+    /**
+     * Generates first_form's URL along with all the necessary parameters
+     * (depends on type of item - corpus vs. subcorpus vs. aligned corpora).
+     *
+     * @param itemData
+     * @returns {string}
+     */
     generateItemUrl(itemData):string {
-        var rootPath = this.pluginApi.createActionUrl('/first_form'),
+        var rootPath = this.pageModel.createActionUrl('/first_form'),
             params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === 'subcorpus') {
@@ -473,18 +532,72 @@ export class Favorites implements WidgetTab {
 
     /**
      *
+     * @param itemId
      */
-    init() {
-        var jqWrapper = $(this.wrapper),
+    private removeFromList(itemId:string) {
+        var self = this;
+        var prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
+                          {method: 'POST', data: {id: itemId}, dataType: 'json'});
+
+        prom.then(
+            function (data) {
+                if (!data.error) {
+                    self.pageModel.showMessage('info', self.pageModel.translate('item removed from favorites'));
+                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+
+                } else {
+                    self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+                }
+
+            },
+            function (err) {
+                self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+            }
+        ).then(
+            function (favItems) {
+                if (!favItems.error) {
+                    self.reinit(favItems);
+                    $.each(self.onListChange, function (i, fn:(trigger:FavoritesTab)=>void) {
+                        fn.call(self, self);
+                    });
+
+                } else {
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                }
+            },
+            function (err) {
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+            }
+        );
+    }
+
+    /**
+     *
+     */
+    init():void {
+        var jqWrapper = $(this.wrapperFav),
             self = this;
 
-        $.each(this.data, function (i, item) {
-            var isFeatured = false; //item.featured; TODO
-            jqWrapper.append('<tr><td><a class="' + (isFeatured ? 'corplist-item featured' : 'corplist-item') + '"'
+        this.editMode = false;
+
+        $.each(this.dataFav, function (i, item) {
+            jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
                 + ' title="' + item.description + '"'
                 + ' href="' + self.generateItemUrl(item)
-                + '" data-id="' + item.corpus_id + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size + '</td></tr>'); // TODO translate
+                + '" data-id="' + item.id + '">' + item.name + '</a></td>'
+                + '<td class="num">~' + item.size_info + '</td>'
+                + '<td class="tools"><img class="remove over-img disabled" '
+                + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
+                + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                + '</td></tr>');
+        });
+
+        jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {
+            if (!$(e.currentTarget).hasClass('disabled')) {
+                self.removeFromList($(e.currentTarget).closest('tr').find('a.corplist-item').data('id'));
+            }
         });
 
         jqWrapper.find('a.corplist-item').each(function() {
@@ -496,25 +609,47 @@ export class Favorites implements WidgetTab {
                 }
             });
         });
+
+        if (this.dataFeat.length > 0) {
+            $.each(this.dataFeat, function (i, item:Array<string>) { // item = (id, name, size)
+                $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
+                    + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
+                    + item[1] + '</a></td>'
+                    + '<td class="num">'
+                    + (parseInt(item[2]) > 0 ? '~' + item[2] : '<span title="'
+                            + self.pageModel.translate('unknown size') + '">?</span>')
+                    + '</td>'
+                    + '</tr>');
+            });
+
+        } else {
+            $(this.wrapperFeat).hide();
+        }
+    }
+
+    reinit(newData:Array<CorplistItem>):void {
+        $(this.wrapperFav).find('tr.data-item').remove();
+        this.dataFav = newData;
+        $(this.wrapperFeat).find('tr.data-item').remove();
+        this.init();
     }
 
     show():void {
-        $(this.wrapper).show();
+        $(this.tablesWrapper).show();
     }
 
     hide():void {
-        $(this.wrapper).hide();
+        $(this.tablesWrapper).hide();
     }
 
     getFooter():JQuery {
-        return $('<span>' + this.pluginApi.translate('hit [Tab] to start a search') + '</span>');
+        return $('<span>' + this.pageModel.translate('hit [Tab] to start a search') + '</span>');
     }
 }
 
 /**
- *
  */
-export class StarSwitch {
+class StarSwitch {
 
     pageModel:Kontext.PluginApi;
 
@@ -557,45 +692,90 @@ export class StarSwitch {
 
 
 /**
- *
+ * A class handling star icon switch (sets fav. on and off)
  */
-export class StarComponent {
+class StarComponent {
 
-    corplistWidget:Corplist;
+    private favoriteItemsTab:FavoritesTab;
 
-    pageModel:Kontext.PluginApi;
+    private pageModel:Kontext.FirstFormPage;
 
-    starSwitch:StarSwitch;
+    private starSwitch:StarSwitch;
 
-    onAlignedCorporaChange = (event:JQueryEventObject) => {
-        console.log('StarComponent detected change in aligned corpora'); // TODO
-    };
-
-    onSubcorpChange = (event:JQueryEventObject) => {
+    /**
+     * Once user adds an aligned corpus we must
+     * test whether the new corpora combinations is already
+     * in favorites or not.
+     */
+    onAlignedCorporaAdd = (corpname:string) => {
         var newItem:CorplistItem;
 
-        this.starSwitch.setStarState(false);
-        newItem = this.fetchItemData(1);
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
 
+    /**
+     * Once user removes an aligned corpus we must
+     * test whether the new corpora combinations is already
+     * in favorites or not.
+     */
+    onAlignedCorporaRemove = (corpname:string) => {
+        var newItem:CorplistItem;
 
-    constructor(corplistWidget:Corplist, pageModel:Kontext.PluginApi) {
-        this.corplistWidget = corplistWidget;
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
+    };
+
+    /**
+     * Once user changes a subcorpus we must test
+     * whether the new corpus:subcorpus combination is
+     * already in favorites.
+     */
+    onSubcorpChange = (subcname:string) => {
+        var newItem:CorplistItem;
+
+        newItem = this.extractItemFromPage();
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
+    };
+
+    /**
+     *
+     * @param trigger
+     */
+    onFavTabListChange = (trigger:FavoritesTab) => {
+        var curr = this.extractItemFromPage();
+
+        if (!trigger.containsItem(curr)) {
+            this.starSwitch.setStarState(false);
+        }
+    };
+
+    /**
+     *
+     * @param favoriteItemsTab
+     * @param pageModel
+     */
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage) {
+        this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
 
-    setFavorite(flag:number) {
+    /**
+     * Sets a favorite item via a server call
+     *
+     * @param flag
+     */
+    setFavorite(flag:Favorite) {
         var self = this,
             prom:JQueryXHR,
             newItem:CorplistItem,
             message:string,
             postDispatch:(data:any)=>void;
 
-
-        if (flag === 1) {
-            newItem = this.fetchItemData(flag);
-            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/set_favorite_item',
+        if (flag === Favorite.FAVORITE) {
+            newItem = this.extractItemFromPage(flag);
+            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
             message = self.pageModel.translate('item added to favorites');
             postDispatch = function (data) {
@@ -603,7 +783,7 @@ export class StarComponent {
             };
 
         } else {
-            prom = $.ajax(this.pageModel.conf('rootPath') + 'user/unset_favorite_item',
+            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
                 {method: 'POST', data: {id: self.starSwitch.getItemId()}, dataType: 'json'});
             message = self.pageModel.translate('item removed from favorites');
             postDispatch = function (data) {
@@ -616,6 +796,7 @@ export class StarComponent {
                 if (!data.error) {
                     self.pageModel.showMessage('info', message);
                     postDispatch(data);
+                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
 
                 } else {
                     self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
@@ -624,14 +805,49 @@ export class StarComponent {
             function (err) {
                 self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
             }
+        ).then(
+            function (favItems) {
+                if (!favItems.error) {
+                    self.favoriteItemsTab.reinit(favItems);
+
+                } else {
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                }
+            },
+            function (err) {
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+            }
         );
     }
 
     /**
-     * According to a state of the current query form, this method creates
-     * a new CorplistItem instance with proper type, id, etc. I.e. it is able
-     * to infer whether the current query form operates with a single corpus,
-     * subcorpus or aligned corpora.
+     * Determines currently selected subcorpus.
+     * This depends only on the state of a respective selection element.
+     */
+    private getCurrentSubcorpus():string {
+        return $('#subcorp-selector').val();
+    }
+
+    /**
+     * Returns a name (the value defined in a respective Manatee registry file)
+     * of a corpus identified by 'corpusId'
+     *
+     * @param canonicalCorpusId
+     */
+    private getAlignedCorpusName(canonicalCorpusId:string):string {
+        var ans = null;
+        $('#add-searched-lang-widget option').each(function (i, item) {
+            if ($(item).val() === canonicalCorpusId) {
+                ans = $(item).text();
+                return false;
+            }
+        });
+        return ans;
+    }
+
+    /**
+     * Based on passed arguments, the method infers whether they match corpus user object, subcorpus
+     * user object or aligned corpora user object.
      *
      * @param corpus_id regular identifier of a corpus
      * @param subcorpus_id name of a subcorpus
@@ -639,32 +855,37 @@ export class StarComponent {
      * @returns an initialized CorplistItem or null if no matching state is detected
      */
     private inferItemCore(corpus_id:string, subcorpus_id:string, aligned_corpora:Array<string>):CorplistItem {
-        var ans:CorplistItem;
+        var ans:CorplistItem,
+            self = this;
 
         if (corpus_id) {
             ans = {
                 id: null, name: null, type: null, corpus_id: null, canonical_id: null,
                 subcorpus_id: null, corpora: null, description: null, featured: null,
-                size: null, user_item: null
+                size: null, size_info: null, user_item: null
             };
             ans.corpus_id = corpus_id; // TODO canonical vs. regular
             ans.canonical_id = corpus_id;
+
+
 
             if (subcorpus_id) {
                 ans.type = 'subcorpus';
                 ans.subcorpus_id = subcorpus_id;
                 ans.id = ans.corpus_id + ':' + ans.subcorpus_id;
-                ans.name = ans.id; // TODO
+                ans.name = this.pageModel.getConf('humanCorpname') + ':' + this.getCurrentSubcorpus();
 
             } else if (aligned_corpora.length > 0) {
                 ans.type = 'aligned_corpora';
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
-                ans.name = ans.id; // TODO
+                ans.name = this.pageModel.getConf('humanCorpname') + '+'
+                                + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
                 ans.type = 'corpus';
-                ans.name = ans.canonical_id;
+                ans.id = ans.canonical_id;
+                ans.name = this.pageModel.getConf('humanCorpname');
             }
             return ans;
 
@@ -673,19 +894,28 @@ export class StarComponent {
         }
     }
 
-    fetchItemData(userItemFlag:number):CorplistItem {
+    /**
+     * According to the state of the current query form, this method creates
+     * a new CorplistItem instance with proper type, id, etc.
+     */
+    extractItemFromPage(userItemFlag?:Favorite):CorplistItem {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
             item:CorplistItem;
 
-        corpName = this.pageModel.conf('corpname');
+        if (userItemFlag === undefined) {
+            userItemFlag = Favorite.NOT_FAVORITE;
+        }
+
+        corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
-        $('fieldset.parallel .parallel-corp-lang:visible').each(function () {
-            alignedCorpora.push($(this).find('input[type="hidden"][name="sel_aligned"]').val());
+        $('div.parallel-corp-lang:visible').each(function () {
+            alignedCorpora.push($(this).data('corpus-id'));
         });
+
         item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
         item.featured = userItemFlag;
         return item;
@@ -700,21 +930,26 @@ export class StarComponent {
         $('#mainform .starred img').on('click', function (e) {
             if (!self.starSwitch.isStarred()) {
                 self.starSwitch.setStarState(true);
-                self.setFavorite(1);
+                self.setFavorite(Favorite.FAVORITE);
 
             } else {
                 self.starSwitch.setStarState(false);
-                self.setFavorite(0);
+                self.setFavorite(Favorite.NOT_FAVORITE);
             }
         });
 
-        $('#subcorp-selector').on('change', this.onSubcorpChange);
+        this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
+        this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
+        this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
+
+        this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
     }
 }
 
 
 /**
- *
+ * Corplist widget class. In most situations it is easier
+ * to instantiate this via an exported function create().
  */
 export class Corplist {
 
@@ -730,7 +965,7 @@ export class Corplist {
 
     private data:Array<CorplistItem>;
 
-    private pluginApi:Kontext.PluginApi;
+    private pageModel:Kontext.FirstFormPage;
 
     private visible:Visibility;
 
@@ -746,9 +981,11 @@ export class Corplist {
 
     private mainMenu:WidgetMenu;
 
-    private searchBox:Search;
+    private starComponent:StarComponent;
 
-    private favoritesBox:Favorites;
+    searchBox:SearchTab;
+
+    private favoritesBox:FavoritesTab;
 
     private footerElm:HTMLElement;
 
@@ -779,13 +1016,13 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, pluginApi:Kontext.PluginApi, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pageModel:Kontext.FirstFormPage, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
-        this.pluginApi = pluginApi;
+        this.pageModel = pageModel;
         this.parentForm = parentForm;
-        this.currCorpIdent = pluginApi.conf('corpname');
-        this.currCorpname = pluginApi.conf('humanCorpname');
+        this.currCorpIdent = pageModel.getConf('corpname');
+        this.currCorpname = pageModel.getConf('humanCorpname');
         this.visible = Visibility.HIDDEN;
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
         this.onHide = this.options.onHide ? this.options.onHide : null;
@@ -847,6 +1084,10 @@ export class Corplist {
         }
     }
 
+    public isVisible():boolean {
+        return this.visible === Visibility.VISIBLE;
+    }
+
     /**
      *
      */
@@ -889,10 +1130,11 @@ export class Corplist {
         this.mainMenu = new WidgetMenu(this);
 
         // search func
-        this.searchBox = new Search(this.pluginApi, this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new Favorites(this.pluginApi, this.widgetWrapper, this.data);
+        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
+            this.pageModel.getConf('pluginData')['corptree']['featured']);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -908,6 +1150,10 @@ export class Corplist {
 
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
+
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel);
+        this.starComponent.init();
+
         this.switchComponentVisibility(Visibility.HIDDEN);
     }
 
@@ -933,11 +1179,14 @@ export class Corplist {
 }
 
 /**
+ * Creates a corplist widget which is a box containing two tabs
+ *  1) user's favorite items
+ *  2) corpus search tool
  *
- * @param selectElm
- * @param options
+ * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
+ * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, pluginApi:Kontext.PluginApi, options:Options):Corplist {
+export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage, options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
@@ -945,18 +1194,4 @@ export function create(selectElm:HTMLElement, pluginApi:Kontext.PluginApi, optio
     corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
-}
-
-
-/**
- *
- * @param pageModel
- * @returns {StarComponent}
- */
-export function createStarComponent(corplistWidget:Corplist, pageModel:Kontext.PluginApi):StarComponent {
-    var component:StarComponent;
-
-    component = new StarComponent(corplistWidget, pageModel);
-    component.init();
-    return component;
 }

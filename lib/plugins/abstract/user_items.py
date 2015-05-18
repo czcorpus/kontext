@@ -18,6 +18,8 @@ user corpus list.
 Expected factory method signature: create_instance(config, db)
 """
 
+from structures import ThreadLocalData
+
 
 class UserItemException(Exception):
     """
@@ -86,6 +88,7 @@ class CorpusItem(GeneralItem):
         self.corpus_id = None
         self.canonical_id = None
         self.size = None
+        self.size_info = None
 
     def generate_id(self):
         return generate_item_key(self)
@@ -137,10 +140,22 @@ class AlignedCorporaItem(CorpusItem):
         return 'aligned_corpora'
 
 
-class AbstractUserItems(object):
+class AbstractUserItems(ThreadLocalData):
     """
-    A plug-in interface
+    A 'user_items' (= favorite corpora, subcorpora, aligned corpora)
+    plug-in interface. It inherits from ThreadLocalData
+    as it is likely that at least language settings will
+    be required to keep lists etc. sorted according to user's
+    current settings.
+
+    Please note that to initiate the plug-in with request-specific
+    data the 'setup(controller)' method must be implemented. The controller
+    detects it automatically and calls it for all active plug-ins implementing
+    it.
     """
+
+    def __init__(self):
+        super(AbstractUserItems, self).__init__(('lang',))
 
     def from_dict(self, data):
         """
@@ -154,7 +169,8 @@ class AbstractUserItems(object):
 
     def to_json(self, obj):
         """
-        Exports a GeneralItem implementation to JSON
+        Exports a GeneralItem instance or a list of GeneralItem instances (both variants
+         must be supported) to JSON
         """
         raise NotImplementedError()
 

@@ -113,8 +113,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                     loaderGIF = pluginApi.appendLoader(box.getRootElement());
 
                     pluginApi.ajax({
-                        url: pluginApi.conf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
-                                + pluginApi.conf('corpname'),
+                        url: pluginApi.getConf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
+                                + pluginApi.getConf('corpname'),
                         data: {},
                         method: 'get',
                         dataType: 'json',

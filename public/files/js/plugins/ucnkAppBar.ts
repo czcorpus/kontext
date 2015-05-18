@@ -32,7 +32,7 @@ export class AppBar implements Kontext.Plugin {
      */
     toolbarReloader = () => {
         var self = this,
-            promise = $.ajax(this.pluginApi.conf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
+            promise = $.ajax(this.pluginApi.getConf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);
@@ -55,7 +55,7 @@ export class AppBar implements Kontext.Plugin {
                 ans = confirm(this.pluginApi.translate('you have been logged out'));
 
                 if (ans === true) {
-                    window.location = this.pluginApi.conf('loginUrl');
+                    window.location = this.pluginApi.getConf('loginUrl');
 
                 } else {
                     this.pluginApi.resetToHomepage({remote: 1});
@@ -66,7 +66,7 @@ export class AppBar implements Kontext.Plugin {
             }
 
         } catch (e) {
-            if (this.pluginApi.conf('isDebug')) {
+            if (this.pluginApi.getConf('isDebug')) {
                 console.error(e);
             }
         }

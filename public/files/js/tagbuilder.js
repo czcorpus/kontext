@@ -108,7 +108,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         /**
          * Holds a corpus name for which this object is configured.
          */
-        this.corpusName = pluginApi.conf('corpname');
+        this.corpusName = pluginApi.getgetConf('corpname');
 
         /**
          *
@@ -439,7 +439,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param {Function} [errorCallback]
      */
     TagLoader.prototype.loadInitialVariants = function (box, callback, errorCallback) {
-        var url = this.pluginApi.conf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
+        var url = this.pluginApi.getConf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
                     + this.corpusName,
             params = {},
             self = this;
@@ -480,7 +480,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      * @param callback
      */
     TagLoader.prototype.loadPatternVariants = function (pattern, callback) {
-        var url = this.pluginApi.conf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
+        var url = this.pluginApi.getConf('rootPath') + 'corpora/ajax_get_tag_variants?corpname='
                     + this.corpusName + '&pattern=' + pattern,
             params = {};
 
@@ -611,7 +611,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
      */
     lib.bindTextInputHelper = function (pluginApi, triggerElement, opt, multiSelectOpts, errorCallback) {
         var prop,
-            corpname = pluginApi.conf('corpname');
+            corpname = pluginApi.getConf('corpname');
 
         for (prop in opt) {
             if (opt.hasOwnProperty(prop)
