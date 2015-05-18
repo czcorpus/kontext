@@ -382,7 +382,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
             if matches_all([k in keywords for k in query_keywords]
                            + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
-                corp['favorite'] = False  # TODO
                 ans.append(corp)
         return ans
 

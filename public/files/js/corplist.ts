@@ -373,55 +373,8 @@ export class SearchTab implements WidgetTab {
             source : this.bloodhound.ttAdapter(),
             templates: {
                 suggestion: function (item:SearchResponse) {
-                    var ans,
-                        link = window.document.createElement('a');
-
-                    ans = $('<p>' + item.name + ' <span class="num">(size: ~' + item.raw_size + ')</span> </p>'); // TODO translate
-
-                    if (item.favorite) {
-                        $(link).addClass('is-fav');
-
-                    } else {
-                        $(link).addClass('not-fav');
-                    }
-                    $(link)
-                        .attr('title', 'In my favorites? (click to change)') // TODO translate
-                        .append('<img src="' + self.pluginApi.createStaticUrl('img/transparent_16x16.gif') + '" />')
-                        .on('click', function (event:JQueryEventObject) {
-                            var reqData:any = {},
-                                favState:boolean;
-
-                            event.preventDefault();
-                            event.stopPropagation();
-                            if ($(link).hasClass('is-fav')) {
-                                $(link).removeClass('is-fav').addClass('not-fav');
-                                favState = false;
-
-                            } else {
-                                $(link).removeClass('not-fav').addClass('is-fav');
-                                favState = true;
-                            }
-                            reqData[item.canonical_id] = favState;
-
-                            self.pluginApi.ajax('set_favorite_corp',
-                                {
-                                    method : 'POST',
-                                    data : {'data': JSON.stringify(reqData)},
-                                    success : function () {
-                                        self.bloodhound.clearRemoteCache();
-
-                                    },
-                                    error : function () {
-                                        self.bloodhound.clearRemoteCache();
-                                        self.pluginApi.showMessage('error', 'Failed to (un)set item as favorite');
-                                    }
-                                }
-                            );
-
-                            return false;
-                        });
-                    ans.append(link);
-                    return ans;
+                    return $('<p>' + item.name
+                        + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
                 }
             }
         });
