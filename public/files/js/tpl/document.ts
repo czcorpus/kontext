@@ -392,7 +392,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param options
      * @deprecated promise-based solutions should be preferred
      */
-    ajax = (url:string, options:JQueryAjaxSettings) => {
+    ajax(url:string, options:JQueryAjaxSettings):void {
         var self = this,
             succWrapper,
             origSucc;
@@ -433,7 +433,7 @@ export class PageModel implements Kontext.PluginProvider {
         } else {
             $.ajax(url, options);
         }
-    };
+    }
 
     /**
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
