@@ -26,6 +26,8 @@ must be configured first via setup_logger() function.
 import os
 import sys
 import logging
+import logging.handlers
+from collections import OrderedDict
 
 AUTOCONF_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/..' % AUTOCONF_PATH)
@@ -34,13 +36,21 @@ sys.path.insert(0, '%s/lib' % APP_PATH)
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
 
+# this specifies recommended argument values for setting logging level from command line
+LOG_LEVELS = OrderedDict(
+    [('debug', logging.DEBUG), ('info', logging.INFO), ('warning', logging.WARNING),
+     ('error', logging.ERROR), ('critical', logging.CRITICAL)]
+)
+
+DEFAULT_LOG_OUT = sys.stderr
+
 import settings
 settings.load('%s/config.xml' % APP_PATH)
 
 logger = logging.getLogger('kontext_script')
 
 
-def setup_logger(log_path=None, logger_name=None):
+def setup_logger(log_path=None, logger_name=None, logging_level=None):
     """
     Configures logging (= module's logger variable).
 
@@ -56,7 +66,9 @@ def setup_logger(log_path=None, logger_name=None):
                                                        maxBytes=DEFAULT_LOG_FILE_SIZE,
                                                        backupCount=DEFAULT_NUM_LOG_FILES)
     else:
-        handler = logging.StreamHandler(sys.stdout)
+        handler = logging.StreamHandler(DEFAULT_LOG_OUT)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
+    if logging_level is None:
+        logging_level = logging.INFO if not settings.is_debug_mode() else logging.DEBUG
+    logger.setLevel(logging_level)
