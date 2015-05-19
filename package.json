@@ -17,7 +17,7 @@
     "grunt-contrib-uglify": "~0.7.0",
     "grunt-contrib-copy": "~0.7.0",
     "grunt-contrib-clean": "~0.6.0",
-    "grunt-typescript": "~0.6.1",
+    "grunt-typescript": "~0.6.2",
     "requirejs": "~2.1.15",
     "grunt-requirejs": "~0.4.2",
     "xmldom": "~0.1.19",
