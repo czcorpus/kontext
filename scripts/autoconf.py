@@ -41,6 +41,8 @@ LOG_LEVELS = OrderedDict(
      ('error', logging.ERROR), ('critical', logging.CRITICAL)]
 )
 
+DEFAULT_LOG_OUT = sys.stderr
+
 import settings
 settings.load('%s/config.xml' % APP_PATH)
 
@@ -63,7 +65,7 @@ def setup_logger(log_path=None, logger_name=None, logging_level=None):
                                                        maxBytes=DEFAULT_LOG_FILE_SIZE,
                                                        backupCount=DEFAULT_NUM_LOG_FILES)
     else:
-        handler = logging.StreamHandler(sys.stdout)
+        handler = logging.StreamHandler(DEFAULT_LOG_OUT)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
     if logging_level is None:
