@@ -26,6 +26,7 @@ must be configured first via setup_logger() function.
 import os
 import sys
 import logging
+import logging.handlers
 from collections import OrderedDict
 
 AUTOCONF_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
