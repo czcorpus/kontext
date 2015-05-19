@@ -26,6 +26,7 @@ must be configured first via setup_logger() function.
 import os
 import sys
 import logging
+import logging.handlers
 from collections import OrderedDict
 
 AUTOCONF_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +41,8 @@ LOG_LEVELS = OrderedDict(
     [('debug', logging.DEBUG), ('info', logging.INFO), ('warning', logging.WARNING),
      ('error', logging.ERROR), ('critical', logging.CRITICAL)]
 )
+
+DEFAULT_LOG_OUT = sys.stderr
 
 import settings
 settings.load('%s/config.xml' % APP_PATH)
@@ -63,7 +66,7 @@ def setup_logger(log_path=None, logger_name=None, logging_level=None):
                                                        maxBytes=DEFAULT_LOG_FILE_SIZE,
                                                        backupCount=DEFAULT_NUM_LOG_FILES)
     else:
-        handler = logging.StreamHandler(sys.stdout)
+        handler = logging.StreamHandler(DEFAULT_LOG_OUT)
     handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
     if logging_level is None:
