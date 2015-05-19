@@ -154,7 +154,7 @@
                     options: {
                         module: 'amd',
                         target: 'es5',
-                        basePath: 'public/files/js',
+                        rootDir: 'public/files/js',
                         sourceMap: true,
                         declaration: true
                     }
