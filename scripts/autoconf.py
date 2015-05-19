@@ -26,6 +26,7 @@ must be configured first via setup_logger() function.
 import os
 import sys
 import logging
+from collections import OrderedDict
 
 AUTOCONF_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 APP_PATH = os.path.realpath('%s/..' % AUTOCONF_PATH)
@@ -33,6 +34,12 @@ sys.path.insert(0, '%s/lib' % APP_PATH)
 
 DEFAULT_LOG_FILE_SIZE = 1000000
 DEFAULT_NUM_LOG_FILES = 5
+
+# this specifies recommended argument values for setting logging level from command line
+LOG_LEVELS = OrderedDict(
+    [('debug', logging.DEBUG), ('info', logging.INFO), ('warning', logging.WARNING),
+     ('error', logging.ERROR), ('critical', logging.CRITICAL)]
+)
 
 import settings
 settings.load('%s/config.xml' % APP_PATH)
