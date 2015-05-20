@@ -77,7 +77,6 @@ class Export(object):
     def _action_url(self, row):
         url_params = {}
         url_params.update(row)
-        url_params['query'] = urllib.quote(url_params['query'].encode('utf-8'))
         args = {
             'corpname': url_params['corpname'],
             url_params['query_type']: url_params['query'],
