@@ -84,7 +84,7 @@ class GeneralAttrMapping(object):
                 setattr(self, k, v.unwrap())
 
     def get_names(self):
-        return self.__dict__.keys()   # TODO ommit _xxx
+        return [k for k in self.__dict__.keys() if not k.startswith('_')]
 
     def getlist(self, item):
         """
