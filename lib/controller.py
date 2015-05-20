@@ -69,7 +69,7 @@ def exposed(**kwargs):
 
 
 def function_defaults(fun):
-    """
+    """action_url
     """
     defs = {}
     if isclass(fun):

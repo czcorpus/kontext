@@ -32,15 +32,18 @@ class Export(object):
         'cql': 'CQL'
     }
 
-    def __init__(self, corpus_manager, corpname_canonizer):
+    def __init__(self, corpus_manager, corpname_canonizer, url_creator):
         """
         arguments:
         corpus_manager -- a corplib.CorpusManager instance
-        corpname_canonizer -- a function producing canonical corpus name from internal one (see kontext.py)
+        corpname_canonizer -- a function producing canonical corpus name from internal one
+                              (see kontext.py)
+        url_creator -- a function url_creator(action, args) producing valid URLs
 
         """
         self._cm = corpus_manager
         self._canonize_corpname = corpname_canonizer
+        self._url_creator = url_creator
         self._corp_cache = {}
 
     def _open_corpus(self, corpname):
@@ -71,19 +74,18 @@ class Export(object):
                 ans.append(_('default attr.') + ': %s' % data['default_attr'])
             return ', '.join(ans)
 
-    @staticmethod
-    def _action_url(row):
+    def _action_url(self, row):
         url_params = {}
         url_params.update(row)
         url_params['query'] = urllib.quote(url_params['query'].encode('utf-8'))
-        query_url = [('first_form?corpname=%(corpname)s&%(query_type)s=%(query)s&queryselector=%(query_type)srow'
-                      '&usesubcorp=%(subcorpname)s') % url_params]
-        params = url_params.get('params', None)
-        if not params:
-            params = {}
-        for k, v in params.items():
-            query_url.append('%s=%s' % (k, urllib.quote(str(v))))
-        return '&'.join(query_url)
+        args = {
+            'corpname': url_params['corpname'],
+            url_params['query_type']: url_params['query'],
+            'queryselector': '%srow' % url_params['query_type'],
+            'usesubcorp': url_params['subcorpname']
+        }
+        args.update(url_params.get('params', {}))
+        return self._url_creator('first_form', args)
 
     def export_row(self, row):
         out_row = {}
