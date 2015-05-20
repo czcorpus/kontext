@@ -103,8 +103,10 @@ class User(Kontext):
             else:
                 corpname = None
 
-            exporter = Export(corpus_manager=self.cm, corpname_canonizer=self._canonical_corpname)
-            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'), offset=offset, limit=limit,
+            exporter = Export(corpus_manager=self.cm, corpname_canonizer=self._canonical_corpname,
+                              url_creator=self.create_url)
+            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'),
+                                                          offset=offset, limit=limit,
                                                           query_type=query_type, corpname=corpname,
                                                           from_date=from_date, to_date=to_date)
             rows = [exporter.export_row(row) for row in rows]

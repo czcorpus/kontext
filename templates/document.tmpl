@@ -156,7 +156,9 @@ define('conf', [], function () {
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
     conf.historyMaxQuerySize = ${history_max_query_size};
+    #if $varExists('aligned_corpora')
     conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
+    #end if
     conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
 
     conf.messages = {};
@@ -559,8 +561,8 @@ define('conf', [], function () {
 
 <script type="text/javascript">
 #block bodyonload
-require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
-    pageself.init(conf);
+require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
+    new layoutModel.PageModel(conf).init();
 });
 #end block
 </script>
