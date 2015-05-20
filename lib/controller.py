@@ -839,9 +839,6 @@ class Controller(object):
                 x = x.decode('latin1')
         return x
 
-    def rec_recode(self, x, enc='', utf8_out=False):
-        raise NotImplementedError('This function has been removed')
-
     def urlencode(self, key_val_pairs):
         """
         Recodes values of key-value pairs and encodes them (by urllib.urlencode)

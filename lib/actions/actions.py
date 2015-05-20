@@ -16,6 +16,7 @@ import math
 import os
 import sys
 import re
+import urllib
 
 from kontext import Kontext, ConcError, MainMenu
 from controller import UserActionException, exposed
@@ -85,7 +86,7 @@ class Actions(Kontext):
 
     def _import_aligned_form_param_names(self, aligned_corp):
         ans = {}
-        for param_name in ('filfpos', 'filtpos', 'queryselector'):  # TODO where to store this stuff?
+        for param_name in ('filfpos', 'filtpos', 'queryselector'):  # TODO where to store this?
             full_name = '%s_%s' % (param_name, aligned_corp)
             if hasattr(self, full_name):
                 ans[param_name] = getattr(self, full_name)
@@ -107,7 +108,8 @@ class Actions(Kontext):
         for attr_name in attr_list:
             if attr_name in semi_persist_attrs:
                 tmp[attr_name] = semi_persist_attrs[attr_name]
-        self._session['semi_persistent_attrs'] = tmp  # this ensures Werkzeug sets 'should_save' attribute
+        # we have to ensure Werkzeug sets 'should_save' attribute
+        self._session['semi_persistent_attrs'] = tmp
 
         # aligned corpora forms inputs require different approach due to their dynamic nature
         tmp = self._session.get('aligned_forms', {})
@@ -182,7 +184,8 @@ class Actions(Kontext):
 
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
                                  labelmap=labelmap,
-                                 alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
+                                 alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',')
+                                            if c],
                                  tbl_template=self.tbl_template,
                                  structs=self._get_struct_opts())
 
@@ -201,7 +204,8 @@ class Actions(Kontext):
         if self.align and not self.maincorp:
             self.maincorp = os.path.basename(self.corpname)
         if len(out['Lines']) == 0:
-            self.add_system_message('info', _('No result. Please make sure the query and selected query type are correct.'))
+            msg = _('No result. Please make sure the query and selected query type are correct.')
+            self.add_system_message('info', msg)
             out['next_url'] = '%sfirst_form' % self.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
@@ -212,8 +216,8 @@ class Actions(Kontext):
         self._add_save_menu_item('XLSX', 'saveconc', params % 'xlsx')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
         self._add_save_menu_item('TXT', 'saveconc', params % 'text')
-        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form', 'leftctx=%s&rightctx=%s' % (self.leftctx,
-                                                                                                     self.rightctx))
+        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form',
+                                 'leftctx=%s&rightctx=%s' % (self.leftctx, self.rightctx))
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
         out['widectx_globals'] = self._get_attrs(self.get_args_mapping_keys(WidectxArgsMapping),
@@ -290,8 +294,8 @@ class Actions(Kontext):
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
         return dict(sampled_size=sampled_size, concsize=concsize,
-                    relconcsize=1000000.0 * fullsize / self._corp().search_size(), fullsize=fullsize,
-                    finished=conc.finished())
+                    relconcsize=1000000.0 * fullsize / self._corp().search_size(),
+                    fullsize=fullsize, finished=conc.finished())
 
     @exposed(return_type='json', legacy=True)
     def concdesc_json(self, query_id=''):
@@ -665,7 +669,8 @@ class Actions(Kontext):
                 self.q.append('p0 0 1 []')
                 self.q.append('x-%s' % self.corpname)
 
-    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view', legacy=True)
+    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view',
+             legacy=True)
     def first(self, fc_lemword_window_type='',
               fc_lemword_wsize=0,
               fc_lemword_type='',
@@ -710,7 +715,8 @@ class Actions(Kontext):
         self._attach_query_metadata(out)
         return out
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
+             legacy=True)
     def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
                inclkwic=False, within=0):
         """
@@ -756,7 +762,8 @@ class Actions(Kontext):
         self.disabled_menu_items = (MainMenu.SAVE,)
         return {}
 
-    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view',
+             legacy=True)
     def reduce(self, rlines='250'):
         """
         random sample
@@ -772,12 +779,13 @@ class Actions(Kontext):
         self.disabled_menu_items = (MainMenu.SAVE,)
         return {
             'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
-            'multilevel_freq_dist_max_levels': settings.get('corpora', 'multilevel_freq_dist_max_levels', 1),
+            'multilevel_freq_dist_max_levels': settings.get('corpora',
+                                                            'multilevel_freq_dist_max_levels', 1),
             'last_num_levels': self._session_get('last_freq_level')
         }
 
-    @exposed(access_level=1)
-    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, legacy=True):
+    @exposed(access_level=1, legacy=True)
+    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
         """
@@ -808,8 +816,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         result = {
-            'fcrit': self.urlencode([('fcrit', self.rec_recode(cr))  # TODO rec_recode!!!
-                                     for cr in fcrit]),
+            'fcrit': self.urlencode([('fcrit', cr) for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,
                                        self.ftt_include_empty, rel_mode) for cr in fcrit],
@@ -822,9 +829,8 @@ class Actions(Kontext):
 
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
-            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0, 'quick_from_line': None,
-                    'quick_to_line': None,
-                    'FCrit': []}
+            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0,
+                    'quick_from_line': None, 'quick_to_line': None, 'FCrit': []}
 
         if len(result['Blocks']) == 1:  # paging
             items_per_page = self.fmaxitems
@@ -836,7 +842,8 @@ class Actions(Kontext):
             else:
                 result['lastpage'] = 0
             result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
-            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total'] / float(items_per_page)))
+            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total'] /
+                                                              float(items_per_page)))
             result['Blocks'][0]['Items'] = result['Blocks'][0]['Items'][fstart:self.fmaxitems - 1]
 
         for b in result['Blocks']:
@@ -880,7 +887,7 @@ class Actions(Kontext):
                                     l10n.escape(item['Word'][0]['n']))
                     if not item['freq']:
                         continue
-                    efquery = self.urlencode(fquery)
+                    efquery = urllib.quote(fquery)
                     item['pfilter'] += ';q=p%s' % efquery
                     if len(attrs) == 1 and item['freq'] <= conc.size():
                         item['nfilter'] += ';q=n%s' % efquery
@@ -917,7 +924,8 @@ class Actions(Kontext):
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1, to_line=''):
+    def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1,
+                      to_line=''):
         """
         Displays a form to set-up the 'save frequencies' operation
         """
@@ -958,20 +966,24 @@ class Actions(Kontext):
         if self.wlattr:
             self._make_wl_query()  # multilevel wordlist
 
-        result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
+        # following piece of sh.t has hidden parameter dependencies
+        result = self.freqs(fcrit, flimit, freq_sort, ml)
         saved_filename = self._canonical_corpname(self.corpname)
 
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % \
+                                                   saved_filename
             output = result
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-freq-distrib.%s' % (self._canonical_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-freq-distrib.%s' % (
+                self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='freq')
             writer.set_col_types(int, unicode, int)
 
             self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
+                mkfilename(saveformat),)
 
             for block in result['Blocks']:
                 col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
@@ -981,10 +993,12 @@ class Actions(Kontext):
                     writer.add_block('')  # TODO block name
 
                 if colheaders or heading:
-                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]'])
+                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]]
+                                        + ['freq', 'freq [%]'])
                 i = 1
                 for item in block['Items']:
-                    writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']), str(item.get('rel', ''))])
+                    writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                         str(item.get('rel', ''))])
                     i += 1
             output = writer.raw_content()
         return output
@@ -994,9 +1008,12 @@ class Actions(Kontext):
         """
         multilevel frequency list
         """
-        fcrit = ' '.join([Kontext.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'),
-                                               kwargs.get('ml%dctx' % i, 0), kwargs.get('ml%dpos' % i, 1),
-                                               kwargs.get('ml%dfcode' % i, 'rc'), kwargs.get('ml%dicase' % i, ''), 'e')
+        fcrit = ' '.join([Kontext.onelevelcrit('',
+                                               kwargs.get('ml%dattr' % i, 'word'),
+                                               kwargs.get('ml%dctx' % i, 0),
+                                               kwargs.get('ml%dpos' % i, 1),
+                                               kwargs.get('ml%dfcode' % i, 'rc'),
+                                               kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
@@ -1043,8 +1060,8 @@ class Actions(Kontext):
 
         num_fetch_lines = num_lines if num_lines is not None else self.citemsperpage
         result = conc.collocs(cattr=self.cattr, csortfn=self.csortfn, cbgrfns=self.cbgrfns,
-                              cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq, cminbgr=self.cminbgr,
-                              from_idx=collstart, max_lines=num_fetch_lines)
+                              cfromw=self.cfromw, ctow=self.ctow, cminfreq=self.cminfreq,
+                              cminbgr=self.cminbgr, from_idx=collstart, max_lines=num_fetch_lines)
         if collstart + self.citemsperpage < result['Total']:
             result['lastpage'] = 0
         else:
@@ -1053,15 +1070,16 @@ class Actions(Kontext):
         for item in result['Items']:
             item['pfilter'] = 'q=' + self.urlencode(item['pfilter'])
             item['nfilter'] = 'q=' + self.urlencode(item['nfilter'])
-            item['str'] = import_string(item['str'], from_encoding=self._corp().get_conf('ENCODING'))
+            item['str'] = import_string(item['str'],
+                                        from_encoding=self._corp().get_conf('ENCODING'))
 
         result['cmaxitems'] = 10000
         result['to_line'] = 10000  # TODO
         return result
 
     @exposed(access_level=1, legacy=True)
-    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
-                      heading=0):
+    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'),
+                      saveformat='text', heading=0):
         """
         """
         self.disabled_menu_items = (MainMenu.SAVE, )
@@ -1077,7 +1095,7 @@ class Actions(Kontext):
         }
 
     @exposed(access_level=1, vars=('Desc', 'concsize',), legacy=True)
-    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=['t', 'm'], saveformat='text',
+    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'), saveformat='text',
                  heading=0, colheaders=0):
         """
         save collocations
@@ -1098,21 +1116,25 @@ class Actions(Kontext):
         saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
+                saved_filename,)
             out_data = result
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-collocations.%s' % (self._canonical_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-collocations.%s' % (
+                self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='coll')
             writer.set_col_types(int, unicode, *(8 * (float,)))
 
             self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
+                mkfilename(saveformat),)
 
             if colheaders or heading:
                 writer.writeheading([''] + [item['n'] for item in result['Head']])
             i = 1
             for item in result['Items']:
-                writer.writerow(i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+                writer.writerow(i, (item['str'], str(item['freq']))
+                                + tuple([str(stat['s']) for stat in item['Stats']]))
                 i += 1
             out_data = writer.raw_content()
         return out_data
@@ -1137,8 +1159,10 @@ class Actions(Kontext):
         display a hit in a wider context
         """
         data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
-        data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < int(data['maxdetail'])
-        data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < int(data['maxdetail'])
+        data['allow_left_expand'] = int(getattr(self, 'detail_left_ctx', 0)) < \
+                int(data['maxdetail'])
+        data['allow_right_expand'] = int(getattr(self, 'detail_right_ctx', 0)) < \
+                int(data['maxdetail'])
         data['widectx_globals'] = self._get_attrs(self.get_args_mapping_keys(WidectxArgsMapping),
                                                   dict(structs=self._get_struct_opts()))
         return data
@@ -1200,7 +1224,8 @@ class Actions(Kontext):
         if pid:
             try:
                 os.kill(int(pid), 9)
-                os.remove(os.path.join(self._tmp_dir, 'findx_upload.%s' % self._session_get('user', 'user')))
+                os.remove(os.path.join(self._tmp_dir, 'findx_upload.%s' % (
+                    self._session_get('user', 'user'),)))
             except OSError:
                 pass
         logfile_name = os.path.join(self.subcpath[-1], self.corpname,
@@ -1323,10 +1348,12 @@ class Actions(Kontext):
 
         self.wlmaxitems = self.wlmaxitems * self.wlpage + 1  # +1 = end detection
         result = {
-            'reload_url': ('wordlist?wlattr=%s&corpname=%s&usesubcorp=%s&wlpat=%s&wlminfreq=%s'
-                           '&include_nonwords=%s&wlsort=f&wlnums=%s') % (self.wlattr, self.corpname, self.usesubcorp,
-                                                                         self.wlpat, self.wlminfreq,
-                                                                         self.include_nonwords, self.wlnums)
+            'reload_url': self.create_url('wordlist', {
+                'corpname': self.corpname, 'usesubcorp': self.usesubcorp,
+                'wlattr': self.wlattr, 'wlpat': self.wlpat, 'wlminfreq': self.wlminfreq,
+                'include_nonwords': self.include_nonwords, 'wlsort': self.wlsort,
+                'wlnums': self.wlnums
+            })
         }
         try:
             self.wlwords, self.wlcache = self.get_wl_words()
@@ -1351,7 +1378,8 @@ class Actions(Kontext):
             else:  # ordinary list
                 if hasattr(self, 'wlfile') and self.wlpat == '.*':
                     self.wlsort = ''
-                result_list = self.call_function(corplib.wordlist, (self._corp(), self.wlwords))[wlstart:]
+                result_list = self.call_function(corplib.wordlist,
+                                                 (self._corp(), self.wlwords))[wlstart:]
                 if self.wlwords:
                     result['wlcache'] = self.wlcache
                 if self.blacklist:
@@ -1367,7 +1395,8 @@ class Actions(Kontext):
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
             try:
-                result['wlattr_label'] = self._corp().get_conf(self.wlattr + '.LABEL') or self.wlattr
+                result['wlattr_label'] = self._corp().get_conf(self.wlattr + '.LABEL') or \
+                                         self.wlattr
             except Exception as e:
                 result['wlattr_label'] = self.wlattr
                 logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
@@ -1381,6 +1410,8 @@ class Actions(Kontext):
                 'wlminfreq': self.wlminfreq,
                 'wlnums': self.wlnums
             }
+
+            # TODO use create_url
             params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
                       'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s&wlnums=%(wlnums)s') % params_values
 
@@ -1442,7 +1473,8 @@ class Actions(Kontext):
         if not self.wlstruct_attr2:
             level = 1
         if not self.wlpat and not self.wlwords:
-            raise ConcError(_('You must specify either a pattern or a file to get the multilevel wordlist'))
+            raise ConcError(
+                _('You must specify either a pattern or a file to get the multilevel wordlist'))
         self._make_wl_query()
         self.flimit = self.wlminfreq
         return self.freqml(flimit=self.wlminfreq, freqlevel=level,
@@ -1466,8 +1498,8 @@ class Actions(Kontext):
         return ans
 
     @exposed(access_level=1, legacy=True)
-    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='', ref_corpname='',
-               ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
+    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='',
+               ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
         """
@@ -1477,7 +1509,8 @@ class Actions(Kontext):
         self.wlmaxitems = sys.maxint  # TODO
         self.wlpage = 1
         ans = self.wordlist(wlpat=wlpat, wltype=wltype, usesubcorp=usesubcorp,
-                            ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp, line_offset=line_offset)
+                            ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp,
+                            line_offset=line_offset)
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
@@ -1486,15 +1519,18 @@ class Actions(Kontext):
         saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % saved_filename
+            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % (
+                saved_filename,)
             out_data = ans
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-word-list.%s' % (self._canonical_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-word-list.%s' % (
+                self._canonical_corpname(self.corpname), suffix)
             writer = plugins.export.load_plugin(saveformat, subtype='wordlist')
             writer.set_col_types(int, unicode, float)
 
             self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
+            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
+                mkfilename(saveformat),)
 
             # write the header first, if required
             if colheaders or heading:
@@ -1526,8 +1562,8 @@ class Actions(Kontext):
         return {'from_line': from_line, 'to_line': to_line}
 
     @exposed(access_level=1, vars=('Desc', 'concsize'), legacy=True)
-    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0, leftctx='40',
-                 rightctx='40'):
+    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0,
+                 leftctx='40', rightctx='40'):
 
         def merge_conc_line_parts(items):
             """
@@ -1575,20 +1611,26 @@ class Actions(Kontext):
             labelmap = {}
 
             data = self.call_function(kwic.kwicpage, (self._get_speech_segment(),),
-                                      fromp=fromp, pagesize=page_size, line_offset=line_offset, labelmap=labelmap,
-                                      align=(), alignlist=[self.cm.get_Corpus(c) for c in self.align.split(',') if c],
-                                      leftctx=leftctx, rightctx=rightctx, structs=self._get_struct_opts())
+                                      fromp=fromp, pagesize=page_size, line_offset=line_offset,
+                                      labelmap=labelmap, align=(),
+                                      alignlist=[self.cm.get_Corpus(c)
+                                                 for c in self.align.split(',') if c],
+                                      leftctx=leftctx, rightctx=rightctx,
+                                      structs=self._get_struct_opts())
 
-            mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
+            mkfilename = lambda suffix: '%s-concordance.%s' % (
+                self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
+                    mkfilename('txt'),)
                 output.update(data)
             elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.export.load_plugin(saveformat, subtype='concordance')
 
                 self._headers['Content-Type'] = writer.content_type()
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename(saveformat)
+                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
+                    mkfilename(saveformat),)
 
                 if len(data['Lines']) > 0:
                     if 'Left' in data['Lines'][0]:
@@ -1602,8 +1644,10 @@ class Actions(Kontext):
                     else:
                         raise ConcError(_('Invalid data'))
 
-                    aligned_corpora = [self._corp()] + [self.cm.get_Corpus(c) for c in self.align.split(',') if c]
-                    writer.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+                    aligned_corpora = [self._corp()] + \
+                                      [self.cm.get_Corpus(c) for c in self.align.split(',') if c]
+                    writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
+                                          for c in aligned_corpora])
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
