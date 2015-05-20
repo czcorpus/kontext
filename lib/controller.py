@@ -17,13 +17,12 @@
 
 import os
 import sys
-from types import MethodType, StringType, DictType, ListType, TupleType, UnicodeType
+from types import MethodType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
 import codecs
 import imp
-import urllib
-from urllib import quote_plus, unquote, quote
+from urllib import unquote, quote
 import json
 import logging
 import StringIO
