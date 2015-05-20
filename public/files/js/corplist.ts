@@ -104,6 +104,12 @@ export interface Options {
      * @param widget
      */
     onShow?:(widget:Corplist)=>void;
+
+    /**
+     * If false then the component does not accept any changes
+     * (i.e. user cannot add remove her favorite items).
+     */
+    editable?:boolean;
 }
 
 /**
@@ -702,6 +708,8 @@ class StarComponent {
 
     private starSwitch:StarSwitch;
 
+    private editable:boolean;
+
     /**
      * Once user adds an aligned corpus we must
      * test whether the new corpora combinations is already
@@ -755,9 +763,10 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
+        this.editable = editable;
         this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
     }
 
@@ -927,22 +936,24 @@ class StarComponent {
     init():void {
         var self = this;
 
-        $('#mainform .starred img').on('click', function (e) {
-            if (!self.starSwitch.isStarred()) {
-                self.starSwitch.setStarState(true);
-                self.setFavorite(Favorite.FAVORITE);
+        if (this.editable) {
+            $('#mainform .starred img').on('click', function (e) {
+                if (!self.starSwitch.isStarred()) {
+                    self.starSwitch.setStarState(true);
+                    self.setFavorite(Favorite.FAVORITE);
 
-            } else {
-                self.starSwitch.setStarState(false);
-                self.setFavorite(Favorite.NOT_FAVORITE);
-            }
-        });
+                } else {
+                    self.starSwitch.setStarState(false);
+                    self.setFavorite(Favorite.NOT_FAVORITE);
+                }
+            });
 
-        this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
-        this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
-        this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
+            this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
+            this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
+            this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
 
-        this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
+            this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
+        }
     }
 }
 
@@ -1151,7 +1162,7 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
 
-        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel);
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel, this.options.editable);
         this.starComponent.init();
 
         this.switchComponentVisibility(Visibility.HIDDEN);
@@ -1184,6 +1195,7 @@ export class Corplist {
  *  2) corpus search tool
  *
  * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
+ * @param pluginApi
  * @param options A configuration for the widget
  */
 export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage, options:Options):Corplist {
