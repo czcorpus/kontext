@@ -20,6 +20,7 @@ import plugins
 import l10n
 from l10n import export_string, import_string, format_number
 import corplib
+from argmapping import ConcArgsMapping
 
 
 class Subcorpus(Kontext):
@@ -96,7 +97,7 @@ class Subcorpus(Kontext):
             ans = self.subcorp_form(request)
         return ans
 
-    @exposed()
+    @exposed(access_level=1, argmappings=(ConcArgsMapping,))
     def subcorp_form(self, request):
         """
         Displays a form to create a new subcorpus

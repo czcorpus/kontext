@@ -79,7 +79,7 @@ define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttribute
         lib.corplistComponent = corplistComponent.create(
             $('form[action="subcorp"] select[name="corpname"]'),
             lib.layoutModel.pluginApi(),
-            {formTarget: 'subcorp_form', submitMethod: 'GET'}
+            {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
         );
     };
 
