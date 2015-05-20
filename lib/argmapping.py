@@ -84,7 +84,7 @@ class GeneralAttrMapping(object):
                 setattr(self, k, v.unwrap())
 
     def get_names(self):
-        return self.__dict__.keys()
+        return self.__dict__.keys()   # TODO ommit _xxx
 
     def getlist(self, item):
         """
@@ -145,6 +145,18 @@ class ConcArgsMapping(GeneralAttrMapping):
     structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
     sel_aligned = Parameter([])
+
+
+class QueryInputs(GeneralAttrMapping):
+    """
+    """
+    iquery = Parameter(u'')
+    lemma = Parameter(u'')
+    phrase = Parameter(u'')
+    word = Parameter(u'')
+    char = Parameter(u'')
+    cql = Parameter(u'')
+    queryselector = Parameter(u'')
 
 
 class WidectxArgsMapping(GeneralAttrMapping):

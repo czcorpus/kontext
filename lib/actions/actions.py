@@ -28,7 +28,7 @@ from kwiclib import Kwic
 import l10n
 from l10n import import_string
 from translation import ugettext as _
-from argmapping import WidectxArgsMapping, ConcArgsMapping, Parameter
+from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
 
 
 class Actions(Kontext):
@@ -221,17 +221,19 @@ class Actions(Kontext):
         self._store_conc_results(out)
         return out
 
-    @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping,))
+    @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping, QueryInputs))
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
+        out.update(self.get_args_mapping(QueryInputs).to_dict())
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
         else:
             self._store_checked_text_types(request.form, out)
         self._reset_session_conc()
         out.update(self._fetch_semi_peristent_attrs())
+
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
