@@ -561,8 +561,8 @@ define('conf', [], function () {
 
 <script type="text/javascript">
 #block bodyonload
-require(['${client_model_dir}/document', 'conf'], function (pageself, conf) {
-    pageself.init(conf);
+require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
+    new layoutModel.PageModel(conf).init();
 });
 #end block
 </script>
