@@ -156,7 +156,9 @@ define('conf', [], function () {
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
     conf.historyMaxQuerySize = ${history_max_query_size};
+    #if $varExists('aligned_corpora')
     conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
+    #end if
     conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
 
     conf.messages = {};

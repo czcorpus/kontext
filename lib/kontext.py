@@ -87,10 +87,8 @@ class LegacyForm(object):
     def getvalue(self, k):
         tmp = self._form.getlist(k)
         if len(tmp) == 0 and k in self._args:
-            return self._args[k]
-        elif len(tmp) == 1:
-            return tmp[0]
-        return tmp
+            tmp = self._args.getlist(k)
+        return tmp if len(tmp) > 1 else tmp[0]
 
 
 class MainMenuItem(object):
@@ -750,6 +748,7 @@ class Kontext(Controller):
         # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
         if is_legacy_method:
             self._map_args_to_attrs(form, selectorname, named_args)
+
         self.cm = corplib.CorpusManager(self.subcpath)
         if getattr(self, 'refs') is None:
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
@@ -954,7 +953,6 @@ class Kontext(Controller):
         return plugins.user_items.get_user_items(self._session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, corpus):
-        result['files_path'] = self._files_path
         result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
         result['corp_doc'] = corpus_get_conf(corpus, 'DOCUMENTATION')
         result['corp_full_name'] = (corpus_get_conf(corpus, 'NAME')
@@ -975,13 +973,16 @@ class Kontext(Controller):
         sref = corpus_get_conf(corpus, 'SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
-        poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
-        result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
-        if 'lempos' not in attrlist:
+
+        if self.cm:  # under normal circumstances (!= error), CorpusManager should be always set
             poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
-        result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        result['lpos_dict'] = dict([(y, x) for x, y in poslist])
+            result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
+            poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
+            if 'lempos' not in attrlist:
+                poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
+            result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
+            result['lpos_dict'] = dict([(y, x) for x, y in poslist])
+
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
         result['default_attr'] = corpus_get_conf(corpus, 'DEFAULTATTR')
@@ -1024,13 +1025,33 @@ class Kontext(Controller):
                     if js_file:
                         result[js_file_key] = js_file
 
-    # TODO this should be able to extract vals from both new style and old style args
     def _get_attrs(self, attr_names, force_values=None):
+        """
+        Returns required attributes (= passed attr_names) and their respective values found
+        in 'self'. Only attributes initiated via class attributes and the Parameter class
+        are considered valid.
+
+        Note: this should not be used with new-style actions.
+        """
         if force_values is None:
             force_values = {}
-        is_valid = lambda name, value: getattr(self.__class__, name, None) is not value and value != ''
-        get_val = lambda k: force_values[k] if k in force_values else getattr(self, k, None)
-        return [(n, val) for n in attr_names for val in [get_val(n)] if is_valid(n, val)]
+
+        def is_valid(name, value):
+            return isinstance(getattr(self.__class__, name, None), Parameter) and value != ''
+
+        def get_val(k):
+            return force_values[k] if k in force_values else getattr(self, k, None)
+
+        ans = []
+        for attr in attr_names:
+            v_tmp = get_val(attr)
+            if not is_valid(attr, v_tmp):
+                continue
+            if not hasattr(v_tmp, '__iter__'):
+                v_tmp = [v_tmp]
+            for v in v_tmp:
+                ans.append((attr, v))
+        return ans
 
     def _get_error_reporting_url(self):
         ans = None
@@ -1057,6 +1078,7 @@ class Kontext(Controller):
         Controller._add_globals(self, result, methodname, action_metadata)
 
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
+        result['files_path'] = self._files_path
         result['human_corpname'] = self._human_readable_corpname()
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
@@ -1076,10 +1098,8 @@ class Kontext(Controller):
             thecorp = corplib.open_corpus(self.maincorp)
         else:
             thecorp = self._corp()
-        try:
-            self._add_corpus_related_globals(result, thecorp)
-        except Exception as ex:
-            logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
+
+        self._add_corpus_related_globals(result, thecorp)
 
         result['supports_password_change'] = plugins.auth.uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])

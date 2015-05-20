@@ -806,7 +806,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         result = {
-            'fcrit': self.urlencode([('fcrit', self.rec_recode(cr))
+            'fcrit': self.urlencode([('fcrit', self.rec_recode(cr))  # TODO rec_recode!!!
                                      for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,

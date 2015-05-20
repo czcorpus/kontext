@@ -236,8 +236,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <form action="view" id="$navid">
             #if $prevlink
                 <div class="bonito-pagination-left">
-                <a href="view?$q;$firstlink;$globals"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                <a href="view?$q;$prevlink;$globals"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
                 </div>
             #end if
 
@@ -251,8 +251,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
             #if $nextlink
                 <div class="bonito-pagination-right">
-                <a href="view?$q;$nextlink;$globals" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
-                <a id="lastpage" href="view?$q;$lastlink;$globals"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
+                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
+                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
                 </div>
             #else
                 <a id="$nextid"></a>

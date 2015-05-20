@@ -22,13 +22,16 @@ from inspect import isclass
 import Cookie
 import codecs
 import imp
-from urllib import urlencode, quote_plus, unquote, quote
+import urllib
+from urllib import quote_plus, unquote, quote
 import json
 import logging
 import StringIO
 import inspect
 import time
 import re
+
+import werkzeug.urls
 
 import plugins
 import settings
@@ -647,6 +650,9 @@ class Controller(object):
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
 
+    def is_action(self, action_name):
+        return callable(getattr(self, action_name, None))
+
     @staticmethod
     def _analyze_error(err):
         """
@@ -709,11 +715,11 @@ class Controller(object):
         named_args = {}
         headers = []
         action_metadata = self._get_method_metadata(path[0])
-
         try:
             self._init_session()
-            if self._method_is_exposed(action_metadata):
-                path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args, action_metadata)
+            if self.is_action(path[0]) and self._method_is_exposed(action_metadata):
+                path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args,
+                                                                    action_metadata)
                 self._pre_action_validate()
                 methodname, tmpl, result = self.process_method(path[0], request, path, named_args)
                 # Let's test whether process_method used requested our method.
@@ -835,53 +841,13 @@ class Controller(object):
         return x
 
     def rec_recode(self, x, enc='', utf8_out=False):
-        """
-        Converts recursively an input object's string elements character
-        encoding.
-
-        Devel. note: this method should be avoided in future code as
-        it is not very clear whether it is able to handle any input
-        in a correct way. An explicit string conversion is preferable
-        over this.
-
-        arguments:
-        x -- an object to be converted
-        enc -- object's strings encoding (if none provided then self._encoding() is used)
-        utf8_out -- sets whether encoding to UTF-8 should be performed
-        (default False which causes the method to do nothing)
-        """
-        if not utf8_out:
-            return x
-        if not enc:
-            enc = self.self_encoding()
-        if isinstance(x, TupleType) or isinstance(x, ListType):
-            return [self.rec_recode(e, enc, utf8_out) for e in x]
-        if isinstance(x, DictType):
-            d = {}
-            for key, value in x.items():
-                if key in ('corp_full_name', 'Corplist'):
-                    d[key] = value
-                else:
-                    d[key] = self.rec_recode(value, enc, utf8_out)
-            return d
-        elif type(x) is StringType:
-            return unicode(x, enc, 'replace').encode('utf-8')
-        elif type(x) is UnicodeType:
-            return x.encode('utf-8')
-        return x
+        raise NotImplementedError('This function has been removed')
 
     def urlencode(self, key_val_pairs):
         """
         Recodes values of key-value pairs and encodes them (by urllib.urlencode)
         """
-        enc = self.self_encoding()
-        if type(key_val_pairs) is UnicodeType:  # urllib.quote does not support unicode
-            key_val_pairs = key_val_pairs.encode("utf-8")
-        if type(key_val_pairs) is StringType:
-            # mapping strings
-            return quote_plus(key_val_pairs)
-        return urlencode([(k, self.rec_recode(v, enc, utf8_out=True))
-                          for (k, v) in key_val_pairs])
+        return werkzeug.urls.url_encode(key_val_pairs)
 
     def output_headers(self, return_type='html'):
         """
