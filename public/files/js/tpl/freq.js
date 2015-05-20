@@ -134,7 +134,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         }
 
         $('a.kwic-alignment-help').each(function () {
-            popupbox.bind($(this), lib.layoutModel.translate(msg), {
+            popupbox.bind($(this), lib.layoutModel.translate('this_applies_only_for_mk'), {
                 'top': 'attached-bottom',
                 'width': 'auto',
                 'height': 'auto'
