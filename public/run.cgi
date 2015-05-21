@@ -22,6 +22,13 @@ import os
 import re
 import json
 
+_DEBUG = True
+_DEBUG = False
+if _DEBUG:
+    import pydevd
+    pydevd.settrace( "localhost", port=9998, suspend=False, stdoutToServer=False, stderrToServer=False, trace_only_current_thread=True, overwrite_prev_trace=False)
+
+
 sys.path.insert(0, '../lib')  # to be able to import application libraries
 sys.path.insert(0, '..')   # to be able to import compiled template modules
 
@@ -73,6 +80,22 @@ if settings.contains('plugins', 'appbar') and settings.get('plugins', 'appbar').
     except ImportError:
         pass
 
+if settings.contains('plugins', 'footbar') and settings.get('plugins', 'footbar').get('module', None):
+    try:
+        footbar_module = plugins.load_plugin(settings.get('plugins', 'footbar')['module'])
+        if footbar_module:
+            plugins.footer_bar = footbar_module.create_instance(settings, plugins.auth)
+    except ImportError:
+        pass
+
+if settings.contains('plugins', 'tracker') and settings.get('plugins', 'tracker').get('module', None):
+    try:
+        tracker_module = plugins.load_plugin(settings.get('plugins', 'tracker')['module'])
+        if tracker_module:
+            plugins.tracker = tracker_module.create_instance(settings)
+    except ImportError:
+        pass
+
 if settings.contains('plugins', 'getlang') and settings.get('plugins', 'getlang').get('module', None):
     try:
         getlang_module = plugins.load_plugin(settings.get('plugins', 'getlang')['module'])
@@ -98,3 +121,5 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
     Actions(environ=os.environ).run(selectorname='corpname')
+    if _DEBUG:
+        pydevd.stoptrace()

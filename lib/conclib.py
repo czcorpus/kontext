@@ -24,7 +24,9 @@ import math
 
 import manatee
 import settings
+import plugins
 from butils import *
+from languages import Languages
 
 try:
     import fcntl
@@ -1543,16 +1545,18 @@ def get_detail_context(corp, pos, hitlen=1,
     return data
 
 
-def fcs_search(corp, fcs_query, max_rec, start):
+def fcs_search(corpus, fcs_query, max_rec, start):
     "aux function for federated content search: operation=searchRetrieve"
+    corp, corpus_fullname = corpus
     if not fcs_query:
-        raise Exception(7, '', 'Mandatory parameter not supplied')
+        raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
     query = fcs_query.replace('+', ' ') # convert URL spaces
-    exact_match = False # attr=".*value.*"
+    exact_match = True # attr=".*value.*"
     if 'exact' in query.lower() and not '=' in query: # lemma EXACT "dog"
         pos = query.lower().index('exact') # first occurence of EXACT
         query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
         exact_match = True
+    attrs = corp.get_conf('ATTRLIST').split(',') # list of available attrs
     rq = '' # query for manatee
     try: # parse query
         if '=' in query: # lemma=word | lemma="word" | lemma="w1 w2" | word=""
@@ -1591,31 +1595,31 @@ def fcs_search(corp, fcs_query, max_rec, start):
                 rq = '[%s=".*%s.*"]' % (attr, term)
     except: # there was a problem when parsing
         raise Exception(10, query, 'Query syntax error')
-    if not attr in corp.get_conf('ATTRLIST'):
+    if not attr in attrs:
         raise Exception(16, attr, 'Unsupported index')
     try: # try to get concordance
         conc = get_conc(corp, q=['q' + rq])
     except Exception, e:
         raise Exception(10, repr(e), 'Query syntax error')
-    page = kwicpage(conc)  # convert concordance
+    page = kwicpage(corpus, conc)  # convert concordance
     if len(page['Lines']) < start:
-        raise Exception(61, '', 'First record position out of range')
+        raise Exception(61, 'startRecord', 'First record position out of range')
     return [(kwicline['Left'][0]['str'], kwicline['Kwic'][0]['str'],
              kwicline['Right'][0]['str'], kwicline['ref'])
             for kwicline in page['Lines']][start:][:max_rec]
 
 
-def fcs_scan(corpname, scan_query, max_ter, start):
+def fcs_scan(corpus, scan_query, max_ter, start):
     "aux function for federated content search: operation=scan"
+    corp, corpus_fullname = corpus
     if not scan_query:
-        raise Exception(7, '', 'Mandatory parameter not supplied')
+        raise Exception(7, 'scan_query', 'Mandatory parameter not supplied')
     query = scan_query.replace('+', ' ') # convert URL spaces
     exact_match = False
     if 'exact' in query.lower() and not '=' in query: # lemma ExacT "dog"
         pos = query.lower().index('exact') # first occurence of EXACT
         query = query[:pos] + '=' + query[pos+5:] # 1st exact > =
         exact_match = True
-    corp = manatee.Corpus(corpname)
     attrs = corp.get_conf('ATTRLIST').split(',') # list of available attrs
     try:
         if '=' in query:
@@ -1633,7 +1637,36 @@ def fcs_scan(corpname, scan_query, max_ter, start):
                 raise Exception
     except Exception, e:
         raise Exception(10, scan_query, 'Query syntax error')
-    if not attr in attrs:
+    if attr == 'fcs.resource':
+        resources = []
+        if value == 'root':
+            if plugins.has_plugin('corptree'):
+                corpora = plugins.corptree.list
+                i = 0
+                for item in corpora:
+                    if i >= max_ter:
+                        break
+                    resource_info = {}
+                    corpus_id = item['id']
+                    c = manatee.Corpus(corpus_id)
+                    corpus_title = c.get_conf('NAME')
+                    resource_info['title'] = c.get_conf('NAME')
+                    resource_info['landingPageURI'] = c.get_conf('INFOHREF')
+                    resource_info['language'] = Languages().get_iso_code(c.get_conf('LANGUAGE'))
+                    resource_info['description'] = c.get_conf('INFO')
+                    resources.append((corpus_id, corpus_title, resource_info))
+                    i += 1
+            else:
+                resource_info = {}
+                c = manatee.Corpus(corpus_fullname)
+                corpus_title = c.get_conf('NAME')
+                resource_info['title'] = c.get_conf('NAME')
+                resource_info['landingPageURI'] = c.get_conf('INFOHREF')
+                resource_info['language'] = Languages().get_iso_code(c.get_conf('LANGUAGE'))
+                resource_info['description'] = c.get_conf('INFO')
+                resources.append((corpus_fullname, corpus_title, resource_info))
+        return resources
+    elif not attr in attrs:
         raise Exception(16, attr, 'Unsupported index')
     import corplib
     if exact_match:

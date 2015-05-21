@@ -301,6 +301,31 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
     /**
      *
      */
+    lib.preSelectParallelCorpus = function () {
+
+        if($("#add-searched-lang-widget > select > option").size() == 1) {
+            $("#add-searched-lang-widget > button").click();
+        }
+
+    };
+
+    /**
+     *
+     */
+    lib.addToggleParallelCorpusButton = function () {
+        if($("#add-searched-lang-widget > select > option").size() == 1) {
+            var alignedCorpus = $('input[name="sel_aligned"]').val();
+            if(alignedCorpus) {
+                var href = location.pathname+'?corpname='+alignedCorpus;
+                $('#mainform > table > tbody:first-child > tr:first-child.required > td > div').append('<a class="icon-link" href="'+href+'"><i class="glyphicon glyphicon-retweet"></i></a></button>');
+            }
+        }
+    };
+
+
+    /**
+     *
+     */
     lib.showCupMenu = function () {
         if (layoutModel.userSettings.get('errstdq') === 'std') {
             $('#cup_err_menu').hide();
@@ -321,6 +346,8 @@ define(['win', 'jquery', 'treecomponent', 'tpl/document', 'hideelem'], function 
         lib.bindStaticElements();
         lib.bindParallelCorporaCheckBoxes();
         lib.updateFieldsets();
+        lib.preSelectParallelCorpus();
+        lib.addToggleParallelCorpusButton();
     };
 
     return lib;

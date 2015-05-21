@@ -17,6 +17,12 @@ module.exports = function (grunt) {
         exec: {
             compile_html_templates: {
                 cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'cheetah compile --odir cmpltmpl --idir templates "$(basename {})"\' \\;'
+            },
+            make_themes_dir: {
+                cmd: 'mkdir -p themes'
+            },
+            update_lindat_theme: {
+                cmd: 'dir="themes/lindat"; if [ -d $dir/.git ]; then git -C $dir pull; else git clone -b bootstrap3 https://redmine.ms.mff.cuni.cz/lindat/lindat-common.git $dir ; fi'
             }
         },
         "less": {

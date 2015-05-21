@@ -1,0 +1,172 @@
+#encoding UTF-8
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+$_("Available corpora")#slurp
+#end def
+
+#def main
+<div class="corpus-list">
+    <div class="row tab-nav">
+        <div class="col-xs-9">
+            <ul class="nav nav-tabs">
+              #for $name, $item in $Corpgroups.items()
+                  <li role="presentation"><a href="#$item['id']" title="Jump to group $name">$name</a></li>
+              #end for
+            </ul>
+        </div>
+        <div class="col-xs-3 clickable btnlike" style="margin-top:10px">
+            <span class="glyphicon glyphicon-sort-by-attributes"> </span>
+            <span id="for-corpus-list-sizes" class="corplist-tabs"
+                title="$_("Show by size")">$_("Show by size")</span>
+            <span id="for-corpus-list-default" class="corplist-tabs" style="display:none"
+                title="$_("Show by category")">$_("Show by category")</span>
+        </div>
+    </div>
+
+  <div id="corpus-list-default">
+  #for $name, $groupitem in $Corpgroups.items()
+    <div class="corpus-wrapper-outer">
+        <div class="header" id="$groupitem['id']">
+            $name
+        </div>
+
+        <div class="corpus-wrapper-inner">
+
+          ## Indicate depth level so we can collapse it
+          ## paths start and end with '/'
+          #set $level_prev = -1
+          #set $level = -1
+          #set $collapse_end_tags = ""
+
+          #for $item in $groupitem["items"]
+
+            #set $level_prev = $level
+            #set $level = $item['path'].count('/')
+
+            #if 2 == $level_prev and 3 == $level and 3 < len($groupitem["items"])
+                ## we got deeper
+                <div class="corpora-set-header toggle-below clickable">
+                    <a href="javascript:;">
+                        <div class="corpus-details">
+                            $_("Multiple corpora")
+                        </div>
+                        <div class="header-text">
+                            <span class="glyphicon glyphicon-plus-sign icon toggle-plus"> </span>
+                            #set $path_arr = $item['path'].split('/')
+                            $path_arr[2]
+                        </div>
+                    </a>
+                    <div class="to-toggle">
+                #set $collapse_end_tags = "\n\t</div>\n\t\t</div>"
+            #end if
+            #if 3 == $level_prev and 2 == $level
+                ## we got higher
+                #filter None
+                $collapse_end_tags
+                #end filter
+                #set $collapse_end_tags = ""
+            #end if
+
+            #if 'complement' != $item.get('parallel', '')
+            <div class="corpus"
+                data-features="$item.get('features','')"
+                data-lang="$item['lang']"
+            >
+		<div class="row">
+                <div class="corpus-details col-xs-4">
+                    $_("Features"):
+                    #for $feature in $item.get('features','').split(',')
+                        <span class="corpus-details-info corplist-search clickable underline-hover" data-search="features">
+                            $feature.strip()
+                        </span>
+                    #end for
+                    $_("Language(s)"):
+                    #for $lang in $item['lang'].split(',')
+                        <span class="corpus-details-info corplist-search clickable underline-hover" data-search="lang">
+                            $lang.strip()
+                        </span>
+                    #end for
+                </div>
+                </div>
+                <div class="row">
+                    <a class="corpus-main-info col-xs-9 col-md-10"
+                        href="first_form?corpname=$item['id']"
+                        title="$_("Search") in $item['name']"
+                    >
+                    <div class="row">
+                        <div class="col-xs-3 tokens">
+                            $_("Size")
+                            <div class="corpus-details-info">
+                                $item['size']
+                            </div>
+                        </div>
+
+                        <div class="col-xs-9 details">
+                            <h3 class="title">
+                                $item['name']
+                            </h3>
+                            <div class="desc">
+                                $item['desc']
+                            </div>
+                        </div>
+                    </div>
+                    </a>
+
+                    <div class="col-xs-3 col-md-2 actions text-right">
+                    #if $item.has_key('pmltq')
+                        <a href="$item['pmltq']" class="md-transparent" title="$_("Inspect") $item['name'] $_("in") PMLTQ">
+                            <span class="glyphicon lindat-pmltq-logo">&nbsp;</span>
+                        </a>
+                    #end if
+                    #if $item.has_key('repo')
+                        <a href="$item['repo']" class="md-transparent" title="$_("Download") $item['name']">
+                            <span class="glyphicon glyphicon-save"> </span>
+                        </a>
+                    #end if
+                    </div>
+                </div>
+            </div>
+            #end if
+          #end for
+        </div>
+    </div>
+  #end for
+  </div>
+
+  <div id="corpus-list-sizes" style="display:none">
+    <div class="corpus-wrapper-inner">
+  #for $item in sorted($Corplist, key=lambda k: k['size_num'], reverse=True)
+            <div class="corpus">
+                <div class="row">
+                    <a class="corpus-main-info col-xs-9"
+                        href="first_form?corpname=$item['id']"
+                        title="$_("Search") in $item['name']"
+                    >
+                    <div class="row">
+                        <div class="col-xs-3 tokens">
+                            $_("Size")
+                            <div class="corpus-details-info">
+                                $item['size']
+                            </div>
+                        </div>
+
+                        <div class="col-xs-9 details">
+                            <h3 class="title">
+                                $item['name']
+                            </h3>
+                            <div class="desc">
+                                $item['desc']
+                            </div>
+                        </div>
+                    </div>
+                    </a>
+                </div>
+            </div>
+   #end for
+    </div>
+  </div>
+
+</div>
+#end def

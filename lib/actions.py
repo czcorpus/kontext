@@ -106,6 +106,12 @@ class Actions(ConcCGI):
             'user': plugins.auth.anonymous_user()  # just to keep rendering ok
         }
         self._user = None
+        self._anonymous = 1
+        try:
+            if plugins.auth.uses_aai():
+                self._redirect('%sfirst_form' % (settings.get_root_url(), ))
+        except AttributeError:
+            pass
         return {
             'message': ('info', _('You have been logged out'))
         }
@@ -220,9 +226,13 @@ class Actions(ConcCGI):
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
             for al in self._corp().get_conf('ALIGNED').split(','):
+                if plugins.has_plugin('corptree'):
+                    keyboard_lang = plugins.corptree.get_corpus_info(al)['keyboard_lang']
+                else:
+                    keyboard_lang
                 alcorp = conclib.manatee.Corpus(al)
                 out['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
-                                       'n': al})
+                                       'n': al, 'keyboard_lang': keyboard_lang or ''})
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
                 poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
                 out['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
@@ -233,6 +243,11 @@ class Actions(ConcCGI):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
+        if plugins.has_plugin('corptree'):
+            keyboard_lang = plugins.corptree.get_corpus_info(self.corpname)['keyboard_lang']
+        else:
+            keyboard_lang
+        out['keyboard_lang'] = keyboard_lang or ''
         self._enable_subcorpora_list(out)
         self.last_corpname = self.corpname
         self._save_options(['last_corpname'])
@@ -241,7 +256,7 @@ class Actions(ConcCGI):
     ConcCGI.add_vars['first_form'] = ['TextTypeSel', 'LastSubcorp']
 
     def get_cached_conc_sizes(self):
-        self._headers['Content-Type'] = 'text/plain'
+        self._headers['Content-Type'] = 'text/plain; charset=utf-8'
         cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
 
         return {
@@ -1054,13 +1069,13 @@ class Actions(ConcCGI):
         result = self.freqs(fcrit, flimit, freq_sort, ml)  # this piece of sh.. has hidden parameter dependencies
         saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
+            self._headers['Content-Type'] = 'text/xml; charset=utf-8'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.xml"' % saved_filename
             for b in result['Blocks']:
                 b['blockname'] = b['Head'][0]['n']
             tpl_data = result
         elif saveformat == 'text':
-            self._headers['Content-Type'] = 'application/text'
+            self._headers['Content-Type'] = 'text/plain; charset=utf-8/'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
@@ -1216,12 +1231,12 @@ class Actions(ConcCGI):
         result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
+            self._headers['Content-Type'] = 'text/xml; charset=utf-8'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.xml"' % saved_filename
             result['Scores'] = result['Head'][2:]
             tpl_data = result
         elif saveformat == 'text':
-            self._headers['Content-Type'] = 'application/text'
+            self._headers['Content-Type'] = 'text/plain; charset=utf-8/'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % saved_filename
             tpl_data = result
         elif saveformat == 'csv':
@@ -1653,7 +1668,7 @@ class Actions(ConcCGI):
 
         saved_filename = self._canonical_corpname(self.corpname)
         if saveformat == 'xml':
-            self._headers['Content-Type'] = 'application/XML'
+            self._headers['Content-Type'] = 'text/xml; charset=utf-8'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.xml"' % saved_filename
             tpl_data = ans
         elif saveformat == 'text':
@@ -1684,7 +1699,7 @@ class Actions(ConcCGI):
     savewl.access_level = 1
 
     def wordlist_process(self, attrname=''):
-        self._headers['Content-Type'] = 'text/plain'
+        self._headers['Content-Type'] = 'text/plain; charset=utf-8'
         return corplib.build_arf_db_status(self._corp(), attrname)[1]
 
     subcnorm = 'tokens'
@@ -2069,11 +2084,11 @@ class Actions(ConcCGI):
 
             mkfilename = lambda suffix: '%s-concordance.%s' % (self._canonical_corpname(self.corpname), suffix)
             if saveformat == 'xml':
-                self._headers['Content-Type'] = 'application/xml'
+                self._headers['Content-Type'] = 'text/xml; charset=utf-8'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('xml')
                 tpl_data.update(data)
             elif saveformat == 'text':
-                self._headers['Content-Type'] = 'text/plain'
+                self._headers['Content-Type'] = 'text/plain; charset=utf-8'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % mkfilename('txt')
                 tpl_data.update(data)
             elif saveformat == 'csv':
@@ -2215,12 +2230,14 @@ class Actions(ConcCGI):
 
     def fcs(self, operation='explain', version='', recordPacking='xml',
             extraRequestData='', query='', startRecord='', responsePosition='',
-            recordSchema='', maximumRecords='', scanClause='', maximumTerms=''):
+            recordSchema='', maximumRecords='', scanClause='', maximumTerms='', **kwargs):
         "Federated content search API function (www.clarin.eu/fcs)"
 
         # default values
-        self._headers['Content-Type'] = 'application/XML'
-        corpname = 'brown'
+        self._headers['Content-Type'] = 'text/xml; charset=utf-8'
+        corpname = settings.get('corpora', 'fcs_default_corpus') or 'suzanne'
+        self.corpname = corpname
+        self._curr_corpus = self.cm.get_Corpus(self.corpname)
         numberOfRecords = 0
         current_version = 1.2
         # supported parameters for all operations
@@ -2229,9 +2246,9 @@ class Actions(ConcCGI):
         out = {'operation': operation, 'version': current_version,
                'recordPacking': recordPacking, 'result': [],
                'numberOfRecords': numberOfRecords,
-               'server_name': self.environ.get('SERVER_NAME', ''),
-               'server_port': self.environ.get('SERVER_PORT', '80'),
-               'database': self.environ.get('SCRIPT_NAME', '')[1:] + '/fcs'}
+               'server_name': settings.get('global', 'root_url_host'),
+               'server_port': settings.get('global', 'root_url_port'),
+               'database': settings.get('global', 'root_url_path')[1:] + 'fcs'}
         try:
             # check version
             if version and current_version < float(version):
@@ -2241,8 +2258,10 @@ class Actions(ConcCGI):
             if maximumRecords != '':
                 try:
                     maximumRecords = int(maximumRecords)
+                    if maximumRecords <= 0:
+                        raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
                 except:
-                    raise Exception(6, '', 'Unsupported parameter value')
+                    raise Exception(6, 'maximumRecords', 'Unsupported parameter value')
             else:
                 maximumRecords = 250
             out['maximumRecords'] = maximumRecords
@@ -2250,15 +2269,17 @@ class Actions(ConcCGI):
                 try:
                     maximumTerms = int(maximumTerms)
                 except:
-                    raise Exception(6, '', 'Unsupported parameter value')
+                    raise Exception(6, 'maximumTerms', 'Unsupported parameter value')
             else:
                 maximumTerms = 100
             out['maximumTerms'] = maximumTerms
             if startRecord != '':
                 try:
                     startRecord = int(startRecord)
+                    if startRecord <= 0:
+                        raise Exception(6, 'startRecord', 'Unsupported parameter value')
                 except:
-                    raise Exception(6, '', 'Unsupported parameter value')
+                    raise Exception(6, 'startRecord', 'Unsupported parameter value')
             else:
                 startRecord = 0
             out['startRecord'] = startRecord
@@ -2266,55 +2287,60 @@ class Actions(ConcCGI):
                 try:
                     responsePosition = int(responsePosition)
                 except:
-                    raise Exception(6, '', 'Unsupported parameter value')
+                    raise Exception(6, 'responsePosition', 'Unsupported parameter value')
             else:
                 responsePosition = 0
             out['responsePosition'] = responsePosition
 
             # set content-type in HTTP header
             if recordPacking == 'string':
-                self._headers['Content-Type'] = 'text/plain'
+                self._headers['Content-Type'] = 'text/plain; charset=utf-8'
             elif recordPacking == 'xml':
-                self._headers['Content-Type'] = 'application/XML'
+                self._headers['Content-Type'] = 'text/xml; charset=utf-8'
             else:
-                raise Exception(71, 'Unsupported record packing')
+                raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
             # provide info about service
             if operation == 'explain' or not operation:
                 sup_pars.append('recordPacking') # other supported parameters
+                sup_pars.append('x-fcs-endpoint-description') # other supported parameters
                 unsup_pars = list(set(self._url_parameters) - set(sup_pars))
                 if unsup_pars:
                     raise Exception(8, unsup_pars[0], 'Unsupported parameter')
                     #if extraRequestData:
                 #    corpname = extraRequestData
-                corp = conclib.manatee.Corpus(corpname)
-                out['result'] = corp.get_conf('ATTRLIST').split(',')
+                out['result'] = self._corp().get_conf('ATTRLIST').split(',')
                 out['numberOfRecords'] = len(out['result'])
 
             # wordlist for a given attribute
             elif operation == 'scan':
             # check supported parameters
                 sup_pars.extend(['scanClause', 'responsePosition',
-                                 'maximumTerms'])
+                                 'maximumTerms', 'x-cmd-resource-info'])
                 unsup_pars = list(set(self._url_parameters) - set(sup_pars))
                 if unsup_pars:
                     raise Exception(8, unsup_pars[0], 'Unsupported parameter')
                     #if extraRequestData:
                 #    corpname = extraRequestData
-                out['result'] = conclib.fcs_scan(corpname, scanClause,
+		out['resourceInfoRequest'] = 'x-cmd-resource-info' in kwargs and kwargs['x-cmd-resource-info'] == 'true'
+                out['result'] = conclib.fcs_scan((self._corp(), self.corpname), scanClause,
                                                  maximumTerms, responsePosition)
 
             # simple concordancer
             elif operation == 'searchRetrieve':
             # check supported parameters
                 sup_pars.extend(['query', 'startRecord', 'maximumRecords',
-                                 'recordPacking', 'recordSchema', 'resultSetTTL'])
+                                 'recordPacking', 'recordSchema', 'resultSetTTL','x-cmd-context'])
                 unsup_pars = list(set(self._url_parameters) - set(sup_pars))
                 if unsup_pars:
                     raise Exception(8, unsup_pars[0], 'Unsupported parameter')
-                cm = corplib.CorpusManager(corplist=[corpname])
-                corp = cm.get_Corpus(corpname)
-                out['result'] = conclib.fcs_search(corp, query,
+		if hasattr(self, 'x-cmd-context'):
+		    corpname = getattr(self, 'x-cmd-context')
+                    corplist = plugins.auth.get_corplist(self._user)
+		    if corpname in corplist:
+		        self._curr_corpus = None
+		    	self.corpname = corpname
+                out['result'] = conclib.fcs_search((self._corp(), self.corpname), query,
                                                    maximumRecords, startRecord)
                 out['numberOfRecords'] = len(out['result'])
 
@@ -2333,6 +2359,9 @@ class Actions(ConcCGI):
                 out['code'], out['details'] = 1, repr(e)
                 out['msg'] = 'General system error'
             return out
+
+    fcs.template = 'fcs.tmpl'
+    fcs.accept_kwargs = True
 
     def stats(self, from_date='', to_date='', min_occur=''):
 
@@ -2445,3 +2474,22 @@ class Actions(ConcCGI):
             return None
 
     audio.access_level = 0
+
+    def corplist(self):
+        """
+        Displays information page with the list of available corpora
+        """
+        out = {}
+        return out
+
+    corplist.template = 'corplist.tmpl'
+
+    def fcs2html(self):
+        """
+        Returns XSL template for rendering FCS XML.
+        """
+        self._headers['Content-Type'] = 'text/xsl; charset=utf-8'
+        out = {}
+        return out
+
+    fcs2html.template = 'fcs2html.tmpl'

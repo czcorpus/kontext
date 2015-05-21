@@ -5,11 +5,15 @@ syntax: glob
 doc
 log
 *.pyc
-config.xml
+*.bak
+config.xml*
 .directory
 node_modules
 public/files/js/min
 public/files/css/kontext.min.css
+public/files/js/aai_config.js
+themes/*
+*.sh
 
 syntax: regexp
 

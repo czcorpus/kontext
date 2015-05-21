@@ -50,6 +50,12 @@ $text
 #if $app_bar_css
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
 #end if
+#if $app_bar_css1
+<link rel="stylesheet" type="text/css" href="$app_bar_css1" />
+#end if
+#if $foot_bar_css
+<link rel="stylesheet" type="text/css" href="$foot_bar_css" />
+#end if
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
 <!--[if lte IE 7]>
 <link rel="stylesheet" type="text/css" href="$app_bar_css_ie" media="all">
@@ -62,6 +68,10 @@ $text
 <script type="text/javascript" src="$files_path/js/less.js" ></script>
 #end if
 <script type="text/javascript" src="$files_path/js/requirejs.min.js"></script>
+#if $uses_aai
+<link rel="stylesheet" type="text/css" href="//static.discojuice.org/css/discojuice.css" />
+#end if
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}lindat.css" />
 #block headers
 #end block
 #if $getVar('ca_headers', '')
@@ -73,10 +83,14 @@ requirejs.config({
     paths: {
         'domReady' : './domReady.min',
         'jquery': './jquery.min',
+        'bootstrap': './bootstrap.min',
         'jqueryui' :  './jquery-ui.custom.min',
         'jscrollpane' : './jscrollpane.min'
     },
     shim : {
+        'bootstrap' : {
+            deps: ['jquery']
+        },
         'jqueryui' : {
             deps: ['jquery']
         },
@@ -88,10 +102,12 @@ requirejs.config({
 
 define('win', [], function () { return window; });
 
-define('conf', [], function () {
+define('conf', ['locale'], function () {
     var conf = {};
     conf.menuAutoHideInterval = 1500;
     conf.messageAutoHideInterval = 15000;
+    conf.rootURLHost = "$root_url_host";
+    conf.rootURLPath = "$root_url_path";
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_path";
     conf.corpname = "$corpname";
@@ -102,7 +118,7 @@ define('conf', [], function () {
 
     conf.messages = {};
     #if $_anonymous
-    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
+    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\" class=\\"signon\\" onclick=\\"return false;\\">sign-in</a> to unlock all the functions.') % $login_url)";
     #end if
     conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
     conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
@@ -127,6 +143,18 @@ define('conf', [], function () {
     return conf;
 });
 
+#if $uses_aai
+require(['aai_config'], function(aai_config) {
+	aai_config.init();
+});
+#end if
+
+#if $app_bar
+require(['lindat'], function(lindat) {
+	lindat.init();
+});
+#end if
+
 #block bodyonload
 require(['tpl/document', 'conf', 'domReady!'], function (pageself, conf) {
     pageself.init(conf);
@@ -147,8 +175,16 @@ _gaq.push(['_trackPageview']);
 #end if
 </script>
 #end if
+
+#if $app_bar_js
+<script src="$app_bar_js"></script>
+#end if
+#if $foot_bar_js
+<script src="$app_bar_js"></script>
+#end if
+
 </head>
-<body>
+<body id="lindat-services">
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else
@@ -163,7 +199,7 @@ $_ca_topbar
 <div id="common-bar">
 #if $app_bar
 #filter None
-    $app_bar
+    #include source=$app_bar
 #end filter
 #else
 <span class="user">$_("User"):
@@ -274,9 +310,9 @@ $_ca_topbar
 
             <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                 <ul class="submenu">
-                    <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/manual:uvod" target="_blank">$_('User manual')&#8230;</a></li>
-                    <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms')&#8230;</a></li>
-                    <li><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/cnk:uvod" target="_blank">$_('Available corpora')&#8230;</a></li>
+                    <li class="separ"><a href="http://wiki.korpus.cz/doku.php/manualy:kontext:index" target="_blank">$_('User manual (by ICNC)')&#8230;</a></li>
+                    <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms (by ICNC)')&#8230;</a></li>
+                    <li><a href="corplist" target="_blank">$_('Available corpora')&#8230;</a></li>
                 </ul>
             </li>
         </ul>
@@ -285,10 +321,13 @@ $_ca_topbar
         </div>
     </div>
 
+#if $methodname != 'corplist'
     <div id="active-corpus">
         #if $corp_full_name
-            $_('corpus')
+            <div id="corpus-desc">
+            <strong>$_('info'):</strong>
             <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+            </div>
             <div id="corp-size-information">
             #if $usesubcorp
                 <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
@@ -299,6 +338,16 @@ $_ca_topbar
                 #end filter
             #end if
             </div>
+            #if $corp_repo
+                <div>
+                <strong class="repo_url">$_('download'):</strong> <a href="$corp_repo">$corp_repo</a>
+                </div>
+            #end if
+            #if $corp_pmltq
+                <div>
+                <strong class="pmltq_url">$_('treebank'):</strong> <a href="$corp_pmltq">$corp_pmltq</a>
+                </div>
+            #end if
             #if 'default_ref' in $citation_info and $citation_info.default_ref
             <div id="corpus-citation-link">
                 <a href="#">$_('How to cite the corpus')</a>
@@ -306,6 +355,7 @@ $_ca_topbar
             #end if
         #end if
     </div>
+#end if
 
     #if 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
@@ -328,6 +378,7 @@ $_ca_topbar
         #end if
     </div>
     #end if
+    <div class="clear"></div>
 </header>
 #end filter
 #end if
@@ -393,6 +444,11 @@ $_ca_topbar
     #end filter
 </div>
 <footer>
+    #if $foot_bar
+    #filter None
+    $foot_bar
+    #end filter
+    #else
     #if $len($avail_languages) > 0
     <div id="switch-language-box">$_("user interface languages"):
         #set $i = 0
@@ -419,6 +475,7 @@ $_ca_topbar
         <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
         #end if
     </div>
+    #end if
 </footer>
 
 #end filter
@@ -629,7 +686,7 @@ $corp_full_name</b><br>
   </div>
 #end def
 
-#def query_node($suff='',$filter=False)
+#def query_node($suff='',$filter=False,$keyboard_lang='')
 ## basic query node form
 <tbody>
 
@@ -682,7 +739,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" id="iquery$suff" class="spec-chars iquery-input" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+        <input type="text" id="iquery$suff" class="spec-chars iquery-input" lang="$keyboard_lang" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
       </td>
 </tr>
 
@@ -695,9 +752,9 @@ $corp_full_name</b><br>
                 <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
             </ul>
             #if $q
-            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" />
+            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="search lemma-input" lang="$keyboard_lang"/>
             #else
-            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input" />
+            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff" class="spec-chars lemma-input" lang="$keyboard_lang"/>
             #end if
 
             #if $Lposlist
@@ -722,7 +779,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input" />
+        <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff" class="spec-chars phrase-input" lang="$keyboard_lang"/>
     </td>
 </tr>
 
@@ -733,7 +790,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input" />
+        <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff" class="spec-chars word-input" lang="$keyboard_lang"/>
         #if $Wposlist
         <span class="no-wrap">
             $_("PoS"):
@@ -760,7 +817,7 @@ $corp_full_name</b><br>
         <ul class="query-toolbox">
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="spec-chars char-input" />
+        <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff" class="spec-chars char-input" lang="$keyboard_lang"/>
     </td>
 </tr>
 
@@ -792,7 +849,7 @@ $corp_full_name</b><br>
             <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
             <li><a class="virtual-keyboard-trigger" href=#">$_('keyboard')</a></li>
         </ul>
-        <input id="cql$suff" class="spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+        <input id="cql$suff" class="spec-chars cql-input" lang="$keyboard_lang" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
 
         #if not $suff
         <span class="no-wrap">

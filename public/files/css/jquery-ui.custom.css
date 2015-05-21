@@ -440,7 +440,7 @@ button.ui-button::-moz-focus-inner {
 /* Component containers
 ----------------------------------*/
 .ui-widget {
-    font-family: "Roboto",Verdana,Arial,sans-serif;
+    font-family: "Open Sans",Verdana,Arial,sans-serif;
 	font-size: 1em;
 }
 .ui-widget .ui-widget {
@@ -450,7 +450,7 @@ button.ui-button::-moz-focus-inner {
 .ui-widget select,
 .ui-widget textarea,
 .ui-widget button {
-	font-family: "Roboto",Verdana,Arial,sans-serif;
+	font-family: "Open Sans",Verdana,Arial,sans-serif;
 	font-size: 1em;
 }
 .ui-widget-content {

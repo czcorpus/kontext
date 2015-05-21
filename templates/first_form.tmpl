@@ -67,8 +67,8 @@ require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
     #end if
     <table class="form">
     #filter None
-      $corp_sel_node
-      $query_node
+      $corp_sel_node      
+      $query_node('', False, $keyboard_lang)
     </table>
     #if $getVar('show_cup_menu', '')
         $cup_err_menu
@@ -210,7 +210,7 @@ require(['tpl/firstForm', 'conf', 'domReady!'], function (firstForm, conf) {
                     alt="close icon" /></a></h3>
             </div>
             <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
-            <table class="form">$query_node('_'+$a.n)</table>
+            <table class="form">$query_node('_'+$a.n, False, $a.keyboard_lang)</table>
         </div>
         #end for
     </fieldset>

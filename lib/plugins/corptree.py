@@ -145,19 +145,26 @@ class CorpTree(object):
             elif item.tag == 'corplist':
                 self._parse_corplist_node(item, data, path)
             elif item.tag == 'corpus':
-                web_url = item.attrib['web'] if 'web' in item.attrib else None
-                sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
-                num_tag_pos = int(item.attrib['num_tag_pos']) if 'num_tag_pos' in item.attrib else 16
-
                 ans = {
                     'id': item.attrib['id'].lower(),
                     'path': path,
-                    'web': web_url,
-                    'sentence_struct': sentence_struct,
-                    'num_tag_pos': num_tag_pos,
-                    'speech_segment': item.attrib.get('speech_segment', None),
-                    'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None}
+                    'sentence_struct': None,
+                    # found 16 as default used before
+                    'num_tag_pos': 16,
+                    'speech_segment': None,
+                    'citation_info': {
+                        'default_ref': None,
+                        'article_ref': None,
+                        'other_bibliography': None
+                    },
+                    'keyboard_lang': None
                 }
+
+                for k, v in item.attrib.items():
+                    if k in ('num_tag_pos', ):
+                        ans[k] = int(v)
+                    else:
+                        ans[k] = v
 
                 ref_elm = item.find('reference')
                 if ref_elm is not None:

@@ -1,0 +1,255 @@
+#common-bar {
+    min-height: 86px;
+    border-bottom: 1px solid #E0E0E0;
+    height: auto !important;
+}
+
+#common-bar a {
+    color: #000000;
+}
+
+body {
+    background-image: none;
+}
+
+.lindat-auth-bar {
+    padding: 0.5em 1em;
+    color: #000000;
+    background-color: #FFFFFF;
+    height: 36px;
+}
+
+form {
+	padding: 20px;
+}
+
+fieldset {
+	padding: 10px;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 6px;
+	border-color: #DBE2D9;
+}
+
+legend {
+	border-bottom: 0;
+	width: auto;
+}
+
+input {
+	width: auto;
+}
+
+.navbar {
+	position: static;
+}
+
+a.icon-link {
+    margin: 0.5em 1em;
+}
+
+#logo-wrapper {
+    float: left;
+    min-height: 68px;
+}
+
+#menu-bar {
+    float: left;
+    min-height: 68px;
+}
+
+#active-corpus {
+    float: right;
+}
+
+#active-corpus a {
+    text-decoration: underline;
+}
+
+#active-corpus a:hover {
+    text-decoration: none;
+}
+
+#corpus-citation-box {
+    float: left;
+}
+
+.clear {
+    clear: both;
+}
+
+#corpus-details-box h4.corpus-name {
+    float: none;
+    margin-bottom: 10px;
+}
+
+#corpus-details-box .metadata {
+    float: none;
+}
+
+#corpus-details-box table.structs-and-attrs {
+    margin-top: 0;
+}
+
+
+/*******************************************
+/* corplist */
+/*******************************************/
+
+.corpus-list {
+    padding: 30px;
+}
+
+.corpus-list .corpus-wrapper-outer{
+	border-radius: 5px 20px 5px 20px;
+	background-color: #00a1db;
+	padding-left: 2px;
+	margin-bottom: 20px;
+}
+
+.corpus-list .corpus-wrapper-outer .header {
+	font-size: 16px;
+	padding-left: 20px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	position: relative;
+	color: #FFF;
+}
+
+.corpus-list .corpus-wrapper-inner {
+	position: relative;
+	border-radius: 0px 0px 5px 20px;
+	background-color: #FFF;
+	border: 1px solid #C0C0C0;
+	bottom: -1px;
+}
+
+.corpus-list .corpus, .corpus-list .corpora-set-header {
+	position: relative;
+	padding: 10px;
+	color: #545454;
+	border-bottom: 1px solid #C0C0C0;
+}
+
+.corpus-list .corpus .corpus-details,
+.corpus-list .corpora-set-header .corpus-details {
+	margin-bottom: 5px;
+	padding-left: 20px;
+}
+
+.corpus-list .corpus .corpus-details-info {
+	color: #e92381;
+	margin-right: 5px;
+}
+
+.corpus-list .corpus .tokens {
+	padding-top: 0px;
+	text-align: right;
+	border-right: 1px solid #00a1db;
+        min-height: 70px;
+}
+
+.corpus-list .tokens a {
+	font-size: 90%;
+	color: #e92381;
+}
+
+.corpus-list .corpus .title {
+	color: #545454;
+        margin-top: 10px;
+}
+
+.corpus-list .corpus .desc {
+	font-size: 80%;
+	color: #343434;
+}
+
+.corpus-list .corpus-wrapper-inner div.corpus:last-of-type {
+	border-bottom: none;
+	border-radius: 0px 0px 5px 20px;
+}
+
+.corpus-list .corpus .actions {
+}
+
+.corpus-list .corpus .actions {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.lindat-pmltq-logo {
+    background: url('../img/lindat.pmltq.logo.png');
+    background-size: 36px;
+    border-bottom: 2px dashed transparent;
+}
+
+.lindat-pmltq-logo:hover {
+    border-bottom: 2px dotted #00a1db;
+}
+
+.corpus-hover {
+    background-color: #d8eff7;
+}
+
+.actions a:hover {
+    text-decoration: none;
+    -khtml-opacity: 1.0;
+    opacity: 1.0;
+}
+
+.corpora-set-header .header-text {
+    font-size:22px;
+}
+
+.corpora-set-header .icon {
+    font-size: 24px;
+    vertical-align: text-top;
+}
+
+.corpora-set-header .to-toggle {
+    display: none;
+    padding-left: 40px;
+    box-shadow: #00a1db -1px 1px 2px;
+}
+
+.btnlike {
+    color: #00a1db;
+}
+
+.clickable:hover {
+    cursor: pointer;
+}
+
+.underline-hover:hover {
+    text-decoration: underline;
+}
+
+.md-transparent {
+  /* IE 8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+
+  /* IE 5-7 */
+  filter: alpha(opacity=50);
+
+  /* Netscape */
+  -moz-opacity: 0.5;
+
+  /* Safari 1.x */
+  -khtml-opacity: 0.5;
+
+  /* Good browsers */
+  opacity: 0.5;
+}
+
+.corpus .search-selected {
+    color: #e92381;
+}
+
+.corpus-list ul.nav {
+    border: 0;
+}
+
+.corpus-list .tab-nav {
+    border-bottom: solid 1px #eeeeee;
+    margin-bottom: 10px;
+}

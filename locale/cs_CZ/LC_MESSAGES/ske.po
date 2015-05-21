@@ -1518,12 +1518,12 @@ msgid "Help"
 msgstr "Nápověda"
 
 #: cmpltmpl/document.py:2499
-msgid "User manual"
-msgstr "Uživatelská příručka"
+msgid "User manual (by ICNC)"
+msgstr "Uživatelská příručka (z ÚČNK)"
 
 #: cmpltmpl/document.py:2505
-msgid "Linguistic terms"
-msgstr "Lingvistické pojmy"
+msgid "Linguistic terms (by ICNC)"
+msgstr "Lingvistické pojmy (z ÚČNK)"
 
 #: cmpltmpl/document.py:2511
 msgid "Available corpora"
@@ -1984,6 +1984,54 @@ msgstr "klávesnice"
 
 msgid "Report an error"
 msgstr "Ohlásit chybu"
+
+msgid "Website"
+msgstr "Webová stránka"
+
+msgid "treebank"
+msgstr "treebank"
+
+msgid "Repository"
+msgstr "Repozitář"
+
+msgid "repository"
+msgstr "repozitář"
+
+msgid "Download"
+msgstr "Ke stažení"
+
+msgid "download"
+msgstr "ke stažení"
+
+msgid "Group"
+msgstr "Skupina"
+
+msgid "Name"
+msgstr "Název"
+
+#: cmpltmpl/corplist.py:164
+msgid "Features"
+msgstr "Vlastnosti"
+
+#: cmpltmpl/corplist.py:169
+msgid "Language(s)"
+msgstr "Jazyk(y)"
+
+#: cmpltmpl/corplist.py:166
+msgid "Size"
+msgstr "Velikost"
+
+#: cmpltmpl/corplist.py:142 cmpltmpl/corplist.py:147
+msgid "Show by size"
+msgstr "Zobrazit dle velikosti"
+
+#: cmpltmpl/corplist.py:154 cmpltmpl/corplist.py:159
+msgid "Show by category"
+msgstr "Zobrazit dle kategorie"
+
+#: cmpltmpl/corplist.py:204
+msgid "Multiple corpora"
+msgstr "Více korpusů"
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"

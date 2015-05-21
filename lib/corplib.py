@@ -123,7 +123,7 @@ class CorpusManager(object):
         # corpora with different encodings...
         orig_encoding = manatee.getEncoding()
         for item in paths:
-            c, path, web = item['id'], item['path'], item['sentence_struct']
+            c = item['id']
             if c in simple_names or not use_db_whitelist:
                 id_prefix = subdir_map[c] if c in subdir_map else ''
                 corp_name = '?'
@@ -133,14 +133,25 @@ class CorpusManager(object):
                     corp_name = corp.get_conf('NAME') or c
                     size = _('%s positions') % locale.format('%d', corp.size(), grouping=True).decode('utf-8')
                     corp_info = corp.get_info()
+                    lang = corp.get_conf("LANGUAGE")
+                    try:
+                        base_path = item['path'].split("/")[1]
+                    except:
+                        base_path = "all"
 
-
-                    cl.append({'id': '%s%s' % (id_prefix, c),
-                               'name': corp_name,
-                               'desc': corp_info,
-                               'size': size,
-                               'path': path
-                    })
+                    corp_info_d = item.copy()
+                    corp_info_d.update(
+                        {
+                            'id': '%s%s' % (id_prefix, c),
+                            'name': corp_name,
+                            'desc': corp_info,
+                            'lang': lang,
+                            'size': size,
+                            'size_num': corp.size(),
+                            'base_path': base_path,
+                        }
+                    )
+                    cl.append(corp_info_d)
                 except Exception, e:
                     manatee.setEncoding(orig_encoding)
                     import logging

@@ -271,7 +271,7 @@ class ConcCGI(CGIPublisher):
         import json
         import datetime
 
-        params = dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING').split('&') if x]])
+        params = dict([item.split('=', 1) for item in [x for x in os.getenv('QUERY_STRING','').split('&') if x]])
 
         ans = {
             'date': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
@@ -291,7 +291,7 @@ class ConcCGI(CGIPublisher):
                 'gdexconf', 'refs_up', 'shuffle', 'kwicleftctx', 'kwicrightctx', 'ctxunit', 'cup_hl')
 
     def _requires_corpus_access(self, action):
-        return action not in ('login', 'loginx', 'logoutx')
+        return action not in ('login', 'loginx', 'logoutx', 'fcs', 'fcs2html', 'corplist')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -456,6 +456,10 @@ class ConcCGI(CGIPublisher):
             self.disabled_menu_items = tuple(disabled_set)
         super(ConcCGI, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_persistent_items(), '%s' % methodname)
+ 
+        if plugins.has_plugin('tracker'):
+            plugins.tracker.track(methodname, tmpl, result)
+
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -619,6 +623,15 @@ class ConcCGI(CGIPublisher):
         result['corp_doc'] = thecorp.get_conf('DOCUMENTATION')
         result['Corplist'] = self.cm.corplist_with_names(plugins.corptree.get(),
                                                          settings.get_bool('corpora', 'use_db_whitelist'))
+        result['Corpgroups'] = {}
+        for corp in result['Corplist']:
+            base_path = corp["base_path"]
+            if base_path not in result['Corpgroups']:
+                result['Corpgroups'][base_path] = {
+                    "id": re.sub(r'[^a-zA-Z]', '-', base_path).lower(),
+                    "items": []
+                }
+            result["Corpgroups"][base_path]["items"].append(corp)
         result['corplist_size'] = min(len(result['Corplist']), 20)
         result['corp_full_name'] = (thecorp.get_conf('NAME')
                                     or self.corpname)
@@ -629,8 +642,12 @@ class ConcCGI(CGIPublisher):
         corp_conf_info = plugins.corptree.get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
+            result['corp_pmltq'] = corp_conf_info.get('pmltq', None)
+            result['corp_repo'] = corp_conf_info.get('repo', None)
         else:
             result['corp_web'] = ''
+            result['corp_pmltq'] = ''
+            result['corp_repo'] = ''
         if self.usesubcorp:
             sc = self.cm.get_Corpus('%s:%s' % (self.corpname.split(':')[0], self.usesubcorp))
             result['subcorp_size'] = locale.format('%d', sc.search_size(), True).decode('utf-8')
@@ -681,6 +698,10 @@ class ConcCGI(CGIPublisher):
         result['citation_info'] = corp_conf_info.get('citation_info', '')
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
+        result['root_url_protocol'] = settings.get('global', 'root_url_protocol')
+        result['root_url_host'] = settings.get('global', 'root_url_host')
+        result['root_url_port'] = settings.get('global', 'root_url_port')
+        result['root_url_path'] = settings.get('global', 'root_url_path')
         result['root_url'] = settings.get_root_url()
 
         if self._corp().get_conf('NAME'):
@@ -699,20 +720,42 @@ class ConcCGI(CGIPublisher):
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.auth.get_login_url()
             result['logout_url'] = plugins.auth.get_logout_url()
+            try:
+                result['uses_aai'] = plugins.auth.uses_aai()
+            except AttributeError:
+                result['uses_aai'] = False
         else:
             result['login_url'] = 'login'
             result['logout_url'] = 'login'
+            result['uses_aai'] = False
 
         if plugins.has_plugin('application_bar'):
             result['app_bar'] = plugins.application_bar.get_contents(cookies=self._cookies,
                                                                      curr_lang=os.environ['LANG'],
                                                                      return_url=self.return_url)
             result['app_bar_css'] = plugins.application_bar.css_url
+            result['app_bar_css1'] = plugins.application_bar.css_url1 \
+                if hasattr(plugins.application_bar, "css_url1") else None
             result['app_bar_css_ie'] = plugins.application_bar.css_url_ie
+            result['app_bar_js'] = plugins.application_bar.js_url
         else:
             result['app_bar'] = None
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
+            result['app_bar_js'] = None
+
+        if plugins.has_plugin('footer_bar'):
+            result['foot_bar'] = plugins.footer_bar.get_contents(cookies=self._cookies,
+                                                                     curr_lang=os.environ['LANG'],
+                                                                     return_url=self.return_url)
+            result['foot_bar_css'] = plugins.footer_bar.css_url
+            result['foot_bar_css_ie'] = plugins.footer_bar.css_url_ie
+            result['foot_bar_js'] = plugins.footer_bar.js_url
+        else:
+            result['foot_bar'] = None
+            result['foot_bar_css'] = None
+            result['foot_bar_css_ie'] = None
+            result['foot_bar_js'] = None
 
         # avalilable languages
         if plugins.has_plugin('getlang'):

@@ -20,6 +20,7 @@ methods.
 """
 import os
 import sys
+import re
 from lxml import etree
 
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
@@ -260,16 +261,23 @@ def get_root_url():
     """
     Returns root URL of the application
     """
-    if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in('80', '443'):
-        port_s = ':%s' % os.getenv('SERVER_PORT')
+    if get('global', 'root_url_protocol') is not None and get('global', 'root_url_host') is not None\
+        and get('global', 'root_url_port') is not None and get('global', 'root_url_path') is not None:
+        url = '%s%s:%s%s' % (get('global', 'root_url_protocol'), get('global', 'root_url_host'),\
+                             get('global', 'root_url_port'), get('global', 'root_url_path'))
+        url = re.sub(':(80|443)/', '/', url)
+        return url
     else:
-        port_s = ''
-    return '%(protocol)s://%(server)s%(port)s%(script)s/' % {
-        'protocol': get_uri_scheme_name(),
-        'port': port_s,
-        'server': os.getenv('HTTP_HOST'),
-        'script': os.getenv('SCRIPT_NAME')
-    }
+        if os.getenv('SERVER_PORT') and os.getenv('SERVER_PORT') not in('80', '443'):
+            port_s = ':%s' % os.getenv('SERVER_PORT')
+        else:
+            port_s = ''
+        return '%(protocol)s://%(server)s%(port)s%(script)s/' % {
+            'protocol': get_uri_scheme_name(),
+            'port': port_s,
+            'server': os.getenv('HTTP_HOST'),
+            'script': os.getenv('SCRIPT_NAME')
+        }
 
 
 def supports_password_change():
