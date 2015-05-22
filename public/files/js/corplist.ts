@@ -20,6 +20,7 @@
 /// <reference path="../ts/declarations/typeahead.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
+/// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
 
 import $ = require('jquery');
 
@@ -353,6 +354,7 @@ export class SearchTab implements WidgetTab {
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
+            'wildcard': '%QUERY',
             'url' : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
@@ -372,7 +374,6 @@ export class SearchTab implements WidgetTab {
             highlight: true,
             minLength: 2
         };
-
 
         $(this.srchField).typeahead(options, {
             displayKey : 'name',
