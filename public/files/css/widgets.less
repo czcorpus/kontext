@@ -156,7 +156,7 @@ ul.multiselect li td.checkbox-cell {
   text-decoration: none;
 }
 
-.tt-suggestions .tt-suggestion span.num,
+.tt-menu .tt-suggestion span.num,
 .corplist-widget tr td.num {
   color: @color-light-text;
 }
@@ -368,21 +368,23 @@ button#reset-tag-button {
 
 // ---------------- typeahead plugin --------------------
 
-.tt-suggestions  {
+.tt-menu  {
   background-color: #FFFFFF;
-  padding: 5px 5px 0 10px;
+  padding: 5px 10px;
   border-style: @input-border-style;
-  border: @input-border-radius;
+  border-radius: @input-border-radius;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.tt-suggestions .tt-suggestion {
+.tt-menu .tt-suggestion {
 }
 
-.tt-suggestions .tt-suggestion span.num {
+.tt-menu .tt-suggestion span.num {
   font-size: 80%;
 }
 
-.tt-suggestions .tt-suggestion p {
+.tt-menu .tt-suggestion {
   margin: 0;
   padding-bottom: 6px;
   .ping-dot-item;
@@ -391,7 +393,7 @@ button#reset-tag-button {
   text-align: left;
 }
 
-.tt-suggestions .tt-suggestion p:hover {
+.tt-menu .tt-suggestion:hover {
   background-color: #FFF9ED;
 }
 
