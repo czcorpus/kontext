@@ -1,0 +1,24 @@
+{
+    "menu-help": [
+        {
+            "en_US": {
+                "url": "https://wiki.korpus.cz/doku.php/manualy:kontext:index",
+                "label": "User manual (in Czech)"
+            } ,
+            "cs_CZ": {
+                "url": "https://wiki.korpus.cz/doku.php/manualy:kontext:index",
+                "label": "Uživatelská příručka"
+            }
+        },
+        {
+            "en_US": {
+                "url": "https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu",
+                "label": "Linguistic terms (in Czech)"
+            } ,
+            "cs_CZ": {
+                "url": "https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu",
+                "label": "Lingvistické pojmy"
+            }
+        }        
+    ]
+}

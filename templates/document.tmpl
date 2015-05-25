@@ -338,9 +338,7 @@ define('conf', [], function () {
 
             <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                 <ul class="submenu">
-                    <li class="separ"><a href="https://wiki.korpus.cz/doku.php/manualy:kontext:index" target="_blank">$_('User manual')&#8230;</a></li>
-                    <li class="separ"><a href="https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms')&#8230;</a></li>
-                    <li><a href="https://wiki.korpus.cz/doku.php/cnk:uvod" target="_blank">$_('Available corpora')&#8230;</a></li>
+                #filter None#$render_custom_menu_items('menu-help')#end filter#
                 </ul>
             </li>
         </ul>
@@ -681,4 +679,12 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #for $item in $disabled_menu_items
     #if $item.matches($id)#disabled#end if#
     #end for
+#end def
+## ***************************************** ##
+#def render_custom_menu_items($section_id)
+    #if $section_id in $custom_menu_items
+    #for $menu_item in $custom_menu[$section_id]
+    <li class="separ"><a href="$menu_item.url">$menu_item.label</a></li>
+    #end for
+    #end if
 #end def

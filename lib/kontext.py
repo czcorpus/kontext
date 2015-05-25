@@ -35,6 +35,7 @@ from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter
+from main_menu import MainMenu, MainMenuItem
 
 
 def join_params(*args):
@@ -89,59 +90,6 @@ class LegacyForm(object):
         if len(tmp) == 0 and k in self._args:
             tmp = self._args.getlist(k)
         return tmp if len(tmp) > 1 else tmp[0]
-
-
-class MainMenuItem(object):
-    def __init__(self, name):
-        self.name = name
-        self.items = []
-
-    def __call__(self, *items):
-        self.items.extend(items)
-        return self
-
-    def __repr__(self):
-        if len(self.items) > 0:
-            return ', '.join(['%s:%s' % (self.name, item) for item in self.items])
-        else:
-            return self.name
-
-    def matches(self, s):
-        """
-        Tests whether a provided template menu identifier
-        (based on convention main_menu_item:submenu_item)
-        matches this one.
-
-        arguments:
-        s -- (sub)menu item string identifier
-        """
-        s2 = s.split(':')
-        if len(s2) == 2:
-            return self.name == s2[0] and s2[1] in self.items
-        else:
-            return self.name == s2[0] and len(self.items) == 0
-
-
-class MainMenu(object):
-    """
-    Specifies main menu items on KonText page. Items themselves are used
-    to disable parts of the menu (whole sections or individual submenu items).
-
-    Examples:
-    1) to disable whole FILTER section just add MainMenu.FILTER to the list of
-       disabled menu items (see kontext.Kontext).
-    2) to disable the 'word list' and 'history' functionalities in 'new query' section
-       just add MainMenu.NEW_QUERY('wordlist', 'history')
-    """
-    NEW_QUERY = MainMenuItem('menu-new-query')
-    VIEW = MainMenuItem('menu-view')
-    SAVE = MainMenuItem('menu-save')
-    CORPORA = MainMenuItem('menu-corpora')
-    CONCORDANCE = MainMenuItem('menu-concordance')
-    FILTER = MainMenuItem('menu-filter')
-    FREQUENCY = MainMenuItem('menu-frequency')
-    COLLOCATIONS = MainMenuItem('menu-collocations')
-    HELP = MainMenuItem('menu-help')
 
 
 class Kontext(Controller):
@@ -783,6 +731,7 @@ class Kontext(Controller):
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
+        self._init_custom_menu_items(result)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -1542,3 +1491,9 @@ class Kontext(Controller):
         for p in src_obj.keys():
             if p.startswith('sca_'):
                 out['checked_sca'][p[4:]] = get_list(src_obj, p)
+
+    def _init_custom_menu_items(self, out):
+        out['custom_menu_items'] = {}
+        menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
+        for item in [x[1] for x in menu_items]:
+            out['custom_menu_items'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)
