@@ -635,7 +635,7 @@ class Controller(object):
         """
         return path, selectorname, args
 
-    def _post_dispatch(self, methodname, tmpl, result):
+    def _post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -756,7 +756,7 @@ class Controller(object):
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
-        self._post_dispatch(methodname, tmpl, result)
+        self._post_dispatch(methodname, action_metadata, tmpl, result)
 
         # response rendering
         resp_time = time.time()

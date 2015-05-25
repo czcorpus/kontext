@@ -1163,7 +1163,8 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
 
-        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel, this.options.editable);
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
+            this.options.editable !== undefined ? this.options.editable : true);
         this.starComponent.init();
 
         this.switchComponentVisibility(Visibility.HIDDEN);

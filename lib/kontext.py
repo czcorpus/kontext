@@ -721,17 +721,18 @@ class Kontext(Controller):
 
         return path, selectorname, named_args
 
-    def _post_dispatch(self, methodname, tmpl, result):
+    def _post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
         if self._user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
-        super(Kontext, self)._post_dispatch(methodname, tmpl, result)
+        super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
-        self._init_custom_menu_items(result)
+        if action_metadata.get('return_type') == 'html':
+            self._init_custom_menu_items(result)
 
     def _attach_tag_builder(self, tpl_out):
         """
