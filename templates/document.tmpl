@@ -683,7 +683,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 ## ***************************************** ##
 #def render_custom_menu_items($section_id)
     #if $section_id in $custom_menu_items
-    #for $menu_item in $custom_menu[$section_id]
+    #for $menu_item in $custom_menu_items[$section_id]
     <li class="separ"><a href="$menu_item.url">$menu_item.label</a></li>
     #end for
     #end if
