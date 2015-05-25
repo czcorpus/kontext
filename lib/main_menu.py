@@ -14,29 +14,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from collections import OrderedDict
-
-
-class MenuItemNotFoundException(Exception):
-    pass
-
 
 class MainMenuItem(object):
     def __init__(self, name):
         self.name = name
-        self.items = OrderedDict()
+        self.items = []
 
     def __call__(self, *items):
-        for item in items:
-            if type(item) is tuple:
-                self.items[item[0]] = item[1]
-            else:
-                self.items[item] = None
+        self.items = items
         return self
 
     def __repr__(self):
         if len(self.items) > 0:
-            return ', '.join(['%s:%s' % (self.name, item) for item in self.items.keys()])
+            return ', '.join(['%s:%s' % (self.name, item) for item in self.items])
         else:
             return self.name
 
@@ -54,12 +44,6 @@ class MainMenuItem(object):
             return self.name == s2[0] and s2[1] in self.items
         else:
             return self.name == s2[0] and len(self.items) == 0
-
-    def get_link(self, s):
-        if s in self.items:
-            return self.items[s]
-        else:
-            raise MenuItemNotFoundException('Menu item %s not found' % (s,))
 
 
 class MainMenu(object):
@@ -82,3 +66,7 @@ class MainMenu(object):
     FREQUENCY = MainMenuItem('menu-frequency')
     COLLOCATIONS = MainMenuItem('menu-collocations')
     HELP = MainMenuItem('menu-help')
+
+
+def create_item(item_prototype):
+    return MainMenuItem(item_prototype.name)

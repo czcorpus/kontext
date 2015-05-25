@@ -17,7 +17,7 @@
 
 import unittest
 
-from main_menu import MainMenuItem, MainMenu, MenuItemNotFoundException
+from main_menu import MainMenuItem, MainMenu
 
 
 class MainMenuTest(unittest.TestCase):
@@ -60,17 +60,6 @@ class MainMenuTest(unittest.TestCase):
         self.assertFalse(m.matches('menu-frequency'))  # 'm' does not represent whole menu block
         self.assertFalse(m.matches('menu-frequency:'))  # format strictness
         self.assertFalse(m.matches('menu-frequency:xxx'))  # non-existing sub-menu
-
-    def test_menu_item_init_and_match_with_links(self):
-        url = 'http://localhost'
-        m = MainMenuItem('menu-frequency')('foo', ('bar', url))
-        self.assertIsNone(m.get_link('foo'))
-        self.assertEqual(url, m.get_link('bar'))
-
-    def test_url_from_non_existing_iem(self):
-        m = MainMenuItem('menu-frequency')('foo')
-        with self.assertRaises(MenuItemNotFoundException):
-            m.get_link('bar')
 
     def test_item_name(self):
         m = MainMenuItem('menu-frequency')('foo')
