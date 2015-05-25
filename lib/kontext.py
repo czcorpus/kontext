@@ -1496,4 +1496,4 @@ class Kontext(Controller):
         out['custom_menu_items'] = {}
         menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
         for item in [x[1] for x in menu_items]:
-            out['custom_menu'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)
+            out['custom_menu_items'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)

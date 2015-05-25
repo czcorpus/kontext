@@ -17,6 +17,40 @@
 A default menu_items plug-in implementation. Please note that
 KonText currently understands only "menu-help" section.
 
+required XML structure:
+
+<plugins>
+...
+  <menu_items>
+     <module>default_menu_items</module>
+     <data_path extension-by="default">/path/to/a/json/file/containing/menu_items.json</data_path>
+  </menu_items>
+...
+</plugins>
+
+
+required menu data format (JSON):
+
+{
+ "menu-help": [
+    {
+        "en_US": {
+            "url": "http://wiki.korpus.cz/manual/en",
+            "label": "User manual"
+        } ,
+        "de_DE": {
+            "url": "http://wiki.korpus.cz/de/manual",
+            "label": "das Benutzerhandbuch"
+        }
+    },
+    ...
+ ],
+ "menu-new-query": [
+   ...
+]
+
+Note: currently only "menu-help" is supported.
+
 """
 
 import json
@@ -27,7 +61,7 @@ from plugins.abstract.menu_items import AbstractMenuItems, MenuItem
 class MenuItems(AbstractMenuItems):
 
     def __init__(self, conf):
-        with open(conf['data_path'], 'rb') as f:
+        with open(conf['default:data_path'], 'rb') as f:
             self._data = json.load(f)
 
     def get_items(self, menu_section, lang):
