@@ -35,7 +35,7 @@ from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter
-from main_menu import MainMenu
+from main_menu import MainMenu, MainMenuItem
 
 
 def join_params(*args):
@@ -731,6 +731,7 @@ class Kontext(Controller):
         super(Kontext, self)._post_dispatch(methodname, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
+        self._init_custom_menu_items(result)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -1491,3 +1492,8 @@ class Kontext(Controller):
             if p.startswith('sca_'):
                 out['checked_sca'][p[4:]] = get_list(src_obj, p)
 
+    def _init_custom_menu_items(self, out):
+        out['custom_menu_items'] = {}
+        menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
+        for item in [x[1] for x in menu_items]:
+            out['custom_menu'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)
