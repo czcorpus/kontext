@@ -40,6 +40,10 @@ suites.append(unittest.TestLoader().loadTestsFromModule(default_user_items_test)
 from templating_tests.filters_test import FiltersTest
 suites.append(unittest.TestLoader().loadTestsFromTestCase(FiltersTest))
 
+# ############# main_menu
+from lib import main_menu_test
+suites.append(unittest.TestLoader().loadTestsFromModule(main_menu_test))
+
 if __name__ == '__main__':
     verbosity = 2  # TODO
 
