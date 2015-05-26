@@ -85,7 +85,8 @@
                     'vendor/react',
                     'vendor/Dispatcher',
                     'SoundManager',
-                    'vendor/typeahead'
+                    'vendor/typeahead',
+                    'vendor/bloodhound'
                 ]
             }
         ];
