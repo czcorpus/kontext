@@ -389,8 +389,12 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
     def search(self, corplist, query):
         ans = []
-        tokens = re.split(r'\s+', query)
+        query = query.strip()
 
+        if not query:
+            return []
+
+        tokens = re.split(r'\s+', query)
         query_keywords = []
         for t in tokens:
             if len(t) > 0 and t[0] == self._tag_prefix:
