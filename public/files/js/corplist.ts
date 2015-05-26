@@ -298,6 +298,8 @@ export class SearchTab implements WidgetTab {
 
     private tagPrefix:string;
 
+    private selectedTags:{[key:string]:HTMLElement};
+
     /**
      *
      * @param widgetWrapper
@@ -308,7 +310,8 @@ export class SearchTab implements WidgetTab {
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
         $(this.widgetWrapper).append(this.wrapper);
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix']
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
+        this.selectedTags = {};
     }
 
     show():void {
@@ -320,6 +323,69 @@ export class SearchTab implements WidgetTab {
         $(this.wrapper).hide();
     }
 
+    /**
+     *
+     */
+    private getTagQuery():string {
+        var ans = [];
+
+        for (var p in this.selectedTags) {
+            if (this.selectedTags.hasOwnProperty(p)) {
+                ans.push(this.tagPrefix + p);
+            }
+        }
+
+        return ans.join(' ');
+    }
+
+    /**
+     *
+     * @param id
+     */
+    private toggleTagSelection(link:HTMLElement, ctrlPressed:boolean):void {
+        var id = $(link).data('srchkey'),
+            toReset;
+
+        if (!ctrlPressed) {
+            toReset = [];
+            for (var p in this.selectedTags) {
+                if (this.selectedTags.hasOwnProperty(p)
+                        && this.selectedTags[p]
+                        && p !== id) {
+                    toReset.push(p);
+                }
+            }
+            for (var i = 0; i < toReset.length; i += 1) {
+                $(this.selectedTags[toReset[i]]).removeClass('selected');
+                delete this.selectedTags[toReset[i]];
+            }
+        }
+
+        if (!this.selectedTags[id]) {
+            this.selectedTags[id] = link;
+            $(link).addClass('selected');
+
+        } else {
+            delete this.selectedTags[id];
+            $(link).removeClass('selected');
+        }
+    }
+
+    /**
+     * This initiates a Typeahead search no matter the provided
+     * query meets required properties (e.g. min. length).
+     */
+    private triggerTypeaheadSearch():void {
+        $(this.srchField).trigger('input'); // we make Typeahead think
+        $(this.srchField).focus();          // that the input actually changed
+        this.bloodhound.clear();
+        $(this.srchField).data('ttTypeahead').menu.datasets[0].update($(this.srchField).val());
+
+    }
+
+    /**
+     *
+     */
     private initLabels():void {
         var div = window.document.createElement('div'),
             self = this;
@@ -339,23 +405,25 @@ export class SearchTab implements WidgetTab {
                 $(link).attr('title', 'favorite'); // TODO translation
             }
             $(link).attr('data-srchkey', item[1]);
-            $(link).on('click', function () {
-                $(self.srchField).val(self.tagPrefix + $(link).data('srchkey'));
-                // this forces Typeahead to act like if user changed input manually
-                $(self.srchField).trigger('input');
-                $(self.srchField).focus();
+            $(link).on('click', function (e:JQueryEventObject) {
+                self.toggleTagSelection(link, e.ctrlKey);
+                self.triggerTypeaheadSearch();
             });
             if (i < self.pluginApi.getConf('pluginData')['corptree']['corpora_labels']['length'] - 1) {
                 $(div).append(' ');
             }
         });
+        $(div).append('<span class="labels-hint">(' + this.pluginApi.translate('hold_ctrl') + ')</span>');
     }
 
     private initTypeahead():void {
         var self = this;
         var remoteOptions:Bloodhound.RemoteOptions<string> = {
-            'wildcard': '%QUERY',
-            'url' : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora?query=%QUERY'
+            url : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora',
+            prepare: function (query, settings) {
+                settings.url += '?query=' + encodeURIComponent(self.getTagQuery() + ' ' + query);
+                return settings;
+            }
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
@@ -399,13 +467,15 @@ export class SearchTab implements WidgetTab {
             inputWrapper = window.document.createElement('div');
 
         this.initLabels();
+        jqWrapper.append(inputWrapper);
+
         this.srchField = window.document.createElement('input');
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
             .attr('placeholder', this.tagPrefix + this.pluginApi.translate('label or name'));
-        jqWrapper.append(inputWrapper);
         $(inputWrapper).append(this.srchField).addClass('srch-box');
+
         this.initTypeahead();
         this.hide();
     }

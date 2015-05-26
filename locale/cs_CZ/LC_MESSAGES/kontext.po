@@ -2143,6 +2143,9 @@ msgstr "klikněte pro vyřazení položky z oblíbených"
 msgid "click to (un)lock items for removal"
 msgstr "klikněte pro odemčení/uzamčení režimu odebírání položek ze seznamu"
 
+msgid "Hold CTRL to select multiple items"
+msgstr "Přidržte klávesu CTRL, chcete-li vybrat více položek"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

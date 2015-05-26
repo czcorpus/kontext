@@ -220,11 +220,9 @@ ul.multiselect li td.checkbox-cell {
   line-height: 18pt;
 }
 
-.corplist-widget .keyword.featured {
-  background-image: url(../img/starred_12x12.png);
-  background-position: 5px 0;
-  background-repeat: no-repeat;
-  padding-left: 23px;
+.corplist-widget .keyword.selected {
+  color: @color-bg-light-blue;
+  background-color: @color-logo-blue;
 }
 
 .corplist-widget table.favorite-list,
@@ -254,6 +252,10 @@ ul.multiselect li td.checkbox-cell {
 .corplist-widget div.tables > table th {
   text-align: center;
   color: @color-logo-pink;
+}
+
+.corplist-widget .labels-hint {
+  padding-left: 10pt;
 }
 
 // -------------------------- tag hints -------
