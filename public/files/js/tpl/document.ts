@@ -184,8 +184,8 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
-     * Creates an instance of React component using passed factory function
-     * (= function a 'view' module provides).
+     * Creates an instance of a React component using passed factory function
+     * (= function a KonText JSX view AMD module should provide).
      *
      * @param factory A view factory function
      * @param mixins Additional mixins
@@ -209,9 +209,10 @@ export class PageModel implements Kontext.PluginProvider {
      *
      * @param reactClass
      * @param target An element whose content will be replaced by rendered React component
+     * @param props Properties used by created component
      */
-    renderReactComponent(reactClass, target:HTMLElement):void {
-        React.render(React.createElement(reactClass), target);
+    renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}=null):void {
+        React.render(React.createElement(reactClass, props), target);
     }
 
     /**
@@ -1276,6 +1277,14 @@ export class PluginApi implements Kontext.PluginApi {
 
     dispatcher() {
         return this.pageModel.dispatcher;
+    }
+
+    initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any {
+        return this.pageModel.initReactComponent(factory, mixins);
+    }
+
+    renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}=null):void {
+        this.pageModel.renderReactComponent(reactClass, target, props);
     }
 }
 
