@@ -18,6 +18,7 @@ from functools import partial
 import logging
 import inspect
 import urllib
+import os.path
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -731,8 +732,6 @@ class Kontext(Controller):
         super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
-        if action_metadata.get('return_type') == 'html':
-            self._init_custom_menu_items(result)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -1019,6 +1018,50 @@ class Kontext(Controller):
                 ans = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
         return ans
 
+    def _apply_theme(self, data):
+        theme_name = settings.get('theme', 'name')
+
+        theme_css = settings.get('theme', 'css', None)
+        if theme_css is None:
+            theme_css = []
+        elif not hasattr(theme_css, '__iter__'):
+            theme_css = [theme_css]
+
+        logo_img = settings.get('theme', 'logo_path')
+        if settings.contains('theme', 'logo_mouseover_path'):
+            logo_alt_img = settings.get('theme', 'logo_mouseover_path')
+        else:
+            logo_alt_img = logo_img
+
+        if settings.contains('theme', 'logo_url'):
+            logo_url = settings.get('theme', 'logo_url')
+        else:
+            logo_url = self.get_root_url() + 'first_form'
+
+        if theme_name == 'default':
+            logo_title = _('Click to enter a new query')
+        else:
+            logo_title = logo_url
+
+        fonts = settings.get('theme', 'fonts', None)
+        if fonts is None:
+            fonts = []
+        elif not hasattr(fonts, '__iter__'):
+            fonts = [fonts]
+
+        data['theme'] = {
+            'name': settings.get('theme', 'name'),
+            'css': [os.path.normpath('../files/themes/%s/%s' % (theme_name, p))
+                    for p in theme_css],
+            'logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
+            'logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
+                                                                               logo_alt_img)),
+            'logo_url': logo_url,
+            'logo_title': logo_title,
+            'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
+            'fonts': fonts
+        }
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1027,7 +1070,6 @@ class Kontext(Controller):
         """
         Controller._add_globals(self, result, methodname, action_metadata)
 
-        result['css_fonts'] = settings.get('global', 'fonts') if settings.get('global', 'fonts') else []
         result['files_path'] = self._files_path
         result['human_corpname'] = self._human_readable_corpname()
         result['debug'] = settings.is_debug_mode()
@@ -1077,6 +1119,9 @@ class Kontext(Controller):
             result['app_bar'] = None
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
+
+        self._apply_theme(result)
+        self._init_custom_menu_items(result)
 
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)

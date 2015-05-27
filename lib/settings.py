@@ -28,11 +28,11 @@ import json
 class ConfState(object):
     conf_path = None
 
-_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_* functions)
+_conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
 _meta = {}  # contains data of attributes of XML elements representing configuration values
 _state = ConfState()
 
-SECTIONS = ('global', 'external_links', 'plugins', 'cache', 'corpora')
+SECTIONS = ('global', 'theme', 'external_links', 'plugins', 'cache', 'corpora')
 
 
 def contains(section, key=None):
