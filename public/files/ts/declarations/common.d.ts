@@ -47,6 +47,8 @@ declare module Kontext {
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
+        initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any;
+        renderReactComponent(reactClass, target:HTMLElement):void;
     }
 
     export interface FirstFormPage extends PluginApi {
