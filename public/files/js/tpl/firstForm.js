@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'corplist', 'tpl/document', 'queryInput', 'plugins/queryStorage',
+define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plugins/queryStorage',
     'plugins/liveAttributes', 'conclines'], function (win, $, corplistComponent, layoutModule, queryInput, queryStorage,
                                                       liveAttributes, conclines) {
     'use strict';
