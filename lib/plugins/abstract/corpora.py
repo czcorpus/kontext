@@ -33,17 +33,6 @@ class AbstractCorporaArchive(ThreadLocalData):
     def setup(self, controller_obj):
         pass
 
-    def get_all_corpus_keywords(self):
-        """
-        returns:
-        a list of 2-tuples (localized_label, spec_prop)
-        where spec_prop is int such as that:
-        0 - no special property
-        1 - featured label
-        2 - favorite label
-        """
-        raise NotImplementedError()
-
     def get_corpus_info(self, corp_id, language=None):
         """
         Returns an information related to the provided corpus ID as defined in
