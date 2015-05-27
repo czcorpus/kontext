@@ -20,7 +20,7 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'corplist', 'popupbox', 'plugins/liveAttributes'], function (
+define(['jquery', 'tpl/document', 'plugins/corplist', 'popupbox', 'plugins/liveAttributes'], function (
         $, documentModule, corplistComponent, popupBox, liveAttributes) {
     'use strict';
 

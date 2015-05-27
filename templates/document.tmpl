@@ -91,6 +91,11 @@ paths['plugins/applicationBar'] = './plugins/$application_bar_js';
 #else
 missingPlugins.push('plugins/applicationBar');
 #end if
+#if $corptree_js
+paths['plugins/corplist'] = './plugins/$corptree_js';
+#else
+throw new Error('Plug-in corptree not configured properly - missing JS module');
+#end if
 #if $qunit_test
 paths['vendor/QUnit'] = './vendor/qunit'
 #end if
