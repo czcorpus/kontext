@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #encoding UTF-8
 #from translation import ugettext as _
 #from cmpltmpl.document import document
+#from templating.filters import *
 #extends document
 
 #def title
@@ -26,7 +27,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-    pageSelf.init(conf);
+    var keywords = #filter $Jsonize#$keywords#end filter#,
+        keywordLabels = #filter $Jsonize#$keywords_labels#end filter#;
+    pageSelf.init(conf, keywords, keywordLabels);
 });
 #end def
 
@@ -37,27 +40,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
 
     <form class="filter" action="corplist">
 
-        <fieldset class="keywords">
-            <legend>$_('Labels')</legend>
-            <a class="keyword reset" href="corplist">- $_('none') -</a>
-            #for $c in $keywords_labels
-              #if $c[0] in $keywords
-              <span class="keyword current" data-keyword-id="$c[0]">$c[1]</span>
-              #else
-              <a class="keyword" href="corplist?keyword=$c[0]" data-keyword-id="$c[0]">$c[1]</a>
-              #end if
-            #end for
-        </fieldset>
-
-        <fieldset>
-            #for $k in $keywords
-                <input type="hidden" name="keyword" value="$k" />
-            #end for
-            <legend>$_('Filter')</legend>
-            $_('size from'): <input class="min-max" type="text" name="min_size" value="$form.min_size" />
-            $_('to'): <input class="min-max" type="text" name="max_size" value="$form.max_size" />
-            <button type="submit" class="default-button">$_('Apply filter')</button>
-        </fieldset>
 
     </form>
 

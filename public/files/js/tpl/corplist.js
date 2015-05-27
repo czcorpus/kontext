@@ -20,14 +20,15 @@
  * This module contains functionality related directly to the first_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, documentModule, popupBox) {
+define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist'], function (win, $, documentModule,
+                                                                                    popupBox, corplist) {
     'use strict';
 
     var lib = {};
 
     lib.layoutModel = null;
 
-    lib.init = function (conf) {
+    lib.init = function (conf, keywords, keywordLabels) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         $('table.corplist tr').each(function (i, row) {
@@ -67,6 +68,9 @@ define(['win', 'jquery', 'tpl/document', 'popupbox'], function (win, $, document
 
             });
         });
+
+
+        corplist.createFilter(lib.layoutModel.pluginApi(), $('form.filter').get(0));
     };
 
     return lib;
