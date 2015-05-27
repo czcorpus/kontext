@@ -29,8 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <title>$title</title>
 <meta charset="utf-8" />
 <link rel="icon" type="image/x-icon" href="$files_path/img/favicon.ico" />
-#for $css_font in $css_fonts
-<link href='$css_font' rel='stylesheet' type='text/css'>
+#for $font in $theme.fonts
+<link href='$font' rel='stylesheet' type='text/css'>
 #end for
 #end filter
 
@@ -41,6 +41,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #else
 <link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css" />
 #end if
+#for $theme_css in $theme.css
+<link rel="stylesheet" type="text/css" href="$theme_css" />
+#end for
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
@@ -58,7 +61,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <script type="text/javascript" src="$files_path/js/vendor/modernizr.custom.min.js"></script>
 <script type="text/javascript" src="$files_path/js/vendor/virtual-keyboard.js" charset="UTF-8"></script>
 #if $debug
-<script type="text/javascript" src="$files_path/js/vendor/less.js" ></script>
+<script type="text/javascript" src="$files_path/js/vendor/less.js"></script>
 #end if
 <script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
 <script type="text/javascript" src="$files_path/js/min/vendor/common.js"></script>
@@ -238,7 +241,12 @@ define('conf', [], function () {
 </div>
 
 <header id="topbar">
-    <a id="logo-wrapper" href="${root_url}first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 208px;height: 68px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
+    <a id="logo-wrapper" href="$theme.logo_url"><img id="logo-image" class="over-img"
+        src="$theme.logo_path"
+        alt="Kontext logo"
+        title="$theme.logo_title"
+        style="$theme.logo_inline_css"
+        data-alt-img="$theme.logo_mouseover_path" /></a>
     <div id="menu-bar">
         <ul id="menu-level-1">
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>

@@ -1,4 +1,29 @@
 <kontext>
+    <theme>
+        <!--
+        paths are relative to the theme directory (which must be equal to the
+        value in <name> element)
+        -->
+        <name>autumn_mood</name>
+        <!--
+        <css> is optional and can have also a list form:
+        <css><item>...</item><item>...</item>...</css>
+        -->
+        <css>style.css</css>
+        <logo_path>logo.png</logo_path>
+        <!--
+        <logo_mouseover_path> is optional (logo_path is used here by default)
+        -->
+        <logo_mouseover_path>logo_s.png</logo_mouseover_path>
+        <logo_url>http://our.kontext.localhost</logo_url>
+        <logo_inline_css>width: 300px;height: 150px</logo_inline_css>
+        <!--
+        <fonts> are optional and can be both single value or a list of values
+        -->
+        <fonts>
+            <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
+        </fonts>
+    </theme>
     <global>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
         <log_path>/var/log/bonito/application.log</log_path>
@@ -12,9 +37,6 @@
             <user>johndoe</user>
             <user>janedoe</user>
         </administrators>
-        <fonts>
-            <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
-        </fonts>
         <translations>
             <language label="česky">cs_CZ</language>
             <language label="English">en_US</language>
