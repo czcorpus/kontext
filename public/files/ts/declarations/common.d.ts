@@ -48,7 +48,7 @@ declare module Kontext {
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
         initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any;
-        renderReactComponent(reactClass, target:HTMLElement):void;
+        renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}):void;
     }
 
     export interface FirstFormPage extends PluginApi {
