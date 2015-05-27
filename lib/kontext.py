@@ -731,8 +731,6 @@ class Kontext(Controller):
         super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
-        if action_metadata.get('return_type') == 'html':
-            self._init_custom_menu_items(result)
 
     def _attach_tag_builder(self, tpl_out):
         """
@@ -1077,6 +1075,8 @@ class Kontext(Controller):
             result['app_bar'] = None
             result['app_bar_css'] = None
             result['app_bar_css_ie'] = None
+
+        self._init_custom_menu_items(result)
 
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
