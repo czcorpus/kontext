@@ -70,7 +70,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, corplist, query):
+    def search(self, corplist, query, filter_dict=None):
         """
         Returns a subset of corplist matching provided query.
 
@@ -78,5 +78,10 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         corplist -- a list of dicts containing corpora information
         query -- any search query the concrete plug-in implementation can understand
                  (KonText itself just passes it around).
+        filter_dict -- a dict or werkzeug.datastructures.MultiDict containing additional
+                       arguments of the search request; KonText just passes Request.args here
+
+        returns:
+        a JSON-serializable dictionary a concrete plug-in implementation understands
         """
         raise NotImplementedError()

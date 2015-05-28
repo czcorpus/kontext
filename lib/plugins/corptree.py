@@ -387,9 +387,10 @@ class CorpTree(AbstractSearchableCorporaArchive):
             'tag_prefix': self._tag_prefix
         }
 
-    def search(self, corplist, query):
-        ans = []
+    def search(self, corplist, query, filter_dict=None):
+        ans = {'rows': []}
         query = query.strip()
+        all_keywords = set()
 
         if not query:
             return []
@@ -409,7 +410,10 @@ class CorpTree(AbstractSearchableCorporaArchive):
             if matches_all([k in keywords for k in query_keywords]
                            + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
-                ans.append(corp)
+                ans['rows'].append(corp)
+                all_keywords.update(keywords)
+        ans['rows'] = l10n.sort(ans['rows'], loc=self._lang(), key=lambda v: v['name'])
+        ans['keywords'] = l10n.sort(all_keywords, loc=self._lang())
         return ans
 
 
