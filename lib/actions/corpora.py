@@ -71,10 +71,10 @@ class Corpora(Kontext):
         }
         return ans
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_list_corpora(self, query=''):
+    @exposed(return_type='json')
+    def ajax_list_corpora(self, request):
         corplist = plugins.corptree.get_list(self.permitted_corpora())
-        return plugins.corptree.search(corplist, query)
+        return plugins.corptree.search(corplist, request.args['query'], request.args)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):

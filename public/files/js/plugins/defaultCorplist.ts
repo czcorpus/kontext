@@ -18,6 +18,7 @@
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/typeahead.d.ts" />
+/// <reference path="../../ts/declarations/common.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
@@ -423,6 +424,9 @@ export class SearchTab implements WidgetTab {
             prepare: function (query, settings) {
                 settings.url += '?query=' + encodeURIComponent(self.getTagQuery() + ' ' + query);
                 return settings;
+            },
+            transform: function (response) {
+                return response.rows;
             }
         };
         var bhOptions:Bloodhound.BloodhoundOptions<string> = {
