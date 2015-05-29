@@ -168,7 +168,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
             handleClick: function (e) {
                 e.preventDefault();
                 dispatcher.dispatch({
-                    actionType: 'KEYWORD_RESET_CLICKED'
+                    actionType: 'KEYWORD_RESET_CLICKED',
+                    props: {}
                 });
             },
             render: function () {
