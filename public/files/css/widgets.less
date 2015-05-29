@@ -108,7 +108,7 @@ ul.multiselect li td.checkbox-cell {
     color: #000000;
 }
 
-/* corpus tree */
+/* corpus tree/list */
 
 .corplist-widget {
     max-width: 70%;
@@ -256,6 +256,40 @@ ul.multiselect li td.checkbox-cell {
 
 .corplist-widget .labels-hint {
   padding-left: 10pt;
+}
+
+#corplist .dataset-loading td,
+#corplist .dataset-loading th {
+  background-color: transparent;
+}
+
+#corplist .dataset-loading {
+  background: linear-gradient(270deg, #d2edc0, #f3fbed);
+  background-size: 400% 400%;
+  -webkit-animation: Loading 0.5s ease infinite;
+  -moz-animation: Loading 0.5s ease infinite;
+  -o-animation: Loading 0.5s ease infinite;
+  animation: Loading 0.5s ease infinite;
+  @-webkit-keyframes Loading {
+    0%{background-position:0% 51%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 51%}
+  }
+  @-moz-keyframes Loading {
+    0%{background-position:0% 51%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 51%}
+  }
+  @-o-keyframes Loading {
+    0%{background-position:0% 51%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 51%}
+  }
+  @keyframes Loading {
+    0%{background-position:0% 51%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 51%}
+  }
 }
 
 // -------------------------- tag hints -------
