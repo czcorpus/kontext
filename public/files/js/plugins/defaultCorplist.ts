@@ -19,11 +19,15 @@
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../../ts/declarations/flux.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
+/// <amd-dependency path="./defaultCorplistView" name="views" />
 
 import $ = require('jquery');
+import util = require('../util');
+declare var views:any;
 
 
 /**
@@ -1265,6 +1269,175 @@ export class Corplist {
     }
 }
 
+// ---------------------------------------------------------------------------
+// ------------------------------ corplist page logic ------------------------
+// ---------------------------------------------------------------------------
+
+/**
+ *
+ */
+export class CorplistFormStore extends util.SimplePageStore {
+
+    private pluginApi:Kontext.PluginApi;
+
+    private dispatcher:Dispatcher.Dispatcher<any>;
+
+    private selectedKeywords:{[key:string]:boolean};
+
+    private tagPrefix:string;
+
+    private data:any;
+
+    static DispatchToken:string;
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        super();
+        var self = this;
+        this.pluginApi = pluginApi;
+        this.dispatcher = pluginApi.dispatcher();
+        this.selectedKeywords = {};
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
+
+        CorplistFormStore.DispatchToken = this.dispatcher.register(
+            function (payload:Kontext.DispatcherPayload) {
+                switch (payload.actionType) {
+                    case 'KEYWORD_CLICKED':
+                        if (!payload.props['ctrlKey']) {
+                            self.selectedKeywords = {};
+                        }
+                        self.selectedKeywords[payload.props['keyword']] =
+                                !self.selectedKeywords[payload.props['keyword']];
+                        CorplistPage.CorplistTableStore.loadData(self.exportQuery());
+                        break;
+                    case 'KEYWORD_RESET_CLICKED':
+                        self.selectedKeywords = {};
+                        CorplistPage.CorplistTableStore.loadData(self.exportQuery());
+                        break;
+                }
+                self.notifyChangeListeners();
+                return true;
+            });
+    }
+
+    setData(data:any):void {
+        this.data = data;
+    }
+
+    exportQuery():string {
+        var q = [];
+        for (var p in this.selectedKeywords) {
+            if (this.selectedKeywords[p] === true) {
+                q.push(this.tagPrefix + p);
+            }
+        }
+        return q.join(' ');
+    }
+
+    getKeywordState(keyword:string):boolean {
+        return this.selectedKeywords[keyword];
+    }
+
+}
+
+/**
+ *
+ */
+export class CorplistTableStore extends util.SimplePageStore {
+
+    pluginApi:Kontext.PluginApi;
+
+    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>; // TODO
+
+    private data:any;
+
+    static DispatchToken:string;
+
+    /**
+     *
+     * @param pluginApi
+     */
+    constructor(pluginApi:Kontext.PluginApi) {
+        super();
+        var self = this;
+        this.pluginApi = pluginApi;
+        this.dispatcher = pluginApi.dispatcher();
+
+        CorplistTableStore.DispatchToken = this.dispatcher.register(
+                function (payload:Kontext.DispatcherPayload) {
+            switch (payload.actionType) {
+                case 'RELOAD_DATA':
+                    self.loadData(payload.props['query']);
+                    break;
+            }
+        });
+
+    }
+
+    public loadData(query:string):void {
+        var self = this;
+
+        var prom = $.ajax(
+            this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
+            + '?query=' + encodeURIComponent(query));
+        prom.then(
+            function (data) {
+                self.setData(data);
+                self.notifyChangeListeners();
+            },
+            function (err) {
+                // TODO error
+                console.error(err);
+            }
+        )
+    }
+
+    setData(data:any):void {
+        this.data = data;
+    }
+
+    getData():any {
+        return this.data;
+    }
+}
+
+
+class CorplistPage implements Customized.CorplistPage {
+
+    components:any;
+
+    pluginApi:Kontext.PluginApi;
+
+    static CorplistFormStore:CorplistFormStore;
+
+    static CorplistTableStore:CorplistTableStore;
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        CorplistPage.CorplistFormStore = new CorplistFormStore(pluginApi);
+        CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
+        this.components = views.init(pluginApi.dispatcher(),
+                pluginApi.exportMixins(), CorplistPage.CorplistFormStore,
+                CorplistPage.CorplistTableStore);
+        this.pluginApi = pluginApi;
+    }
+
+    createForm(targetElm:HTMLElement, properties:any):void {
+        this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
+    }
+
+    createList(targetElm:HTMLElement, properties:any):void {
+        this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
+    }
+}
+
+/**
+ *
+ * @param pluginApi
+ * @returns {CorplistPage}
+ */
+export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
+    return new CorplistPage(pluginApi);
+}
+
 /**
  * Creates a corplist widget which is a box containing two tabs
  *  1) user's favorite items
@@ -1283,3 +1456,5 @@ export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage, o
     corplist.bind(selectElm);
     return corplist;
 }
+
+

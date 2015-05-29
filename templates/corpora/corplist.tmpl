@@ -27,9 +27,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-    var keywords = #filter $Jsonize#$keywords#end filter#,
-        keywordLabels = #filter $Jsonize#$keywords_labels#end filter#;
-    pageSelf.init(conf, keywords, keywordLabels);
+    pageSelf.init(conf,
+        #filter $Jsonize#$corplist_params#end filter#,
+        #filter $Jsonize#$corplist_data#end filter#);
 });
 #end def
 
@@ -39,41 +39,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
     <h2>$_('Available corpora')</h2>
 
     <form class="filter" action="corplist">
-
-
     </form>
 
-    <table class="data corplist" border="0">
-        <tr>
-            <th>$_('Name')</th>
-            <th>$_('Size (in positions)')</th>
-            <th>$_('Labels')</th>
-            <th>$_('In favorites')</th>
-            <th>$_('Actions')</th>
-        </tr>
-        #for $row in $corplist
-        <tr>
-            <td class="corpname"><a href="first_form?corpname=$row.name">$row.name</a></td>
-            <td class="num">$row.size</td>
-            <td>
-            #for $keyword, $k_label in $row.metadata.keywords.items()
-            <a class="keyword" href="corplist?keyword=$keyword">$k_label</a>
-            #end for
-            </td>
-            <td>
-                <input class="set-favorite" type="checkbox" value="$row.id" #if $row.id in $favorite_corpora#checked="checked"#end if# />
-            </td>
-            <td>
-                <p class="desc" style="display: none">
-                <strong>${row.name}:</strong><br />
-                $row.desc
-                </p>
-                <a class="detail">$_('description')</a> |
-                <a href="first_form?corpname=$row.id">$_('use now')</a>
-            </td>
-        </tr>
-        #end for
-    </table>
+    <div id="corplist"></div>
 
 </section>
 #end block

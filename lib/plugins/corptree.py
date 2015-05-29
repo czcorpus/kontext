@@ -190,13 +190,11 @@ class CorpTree(AbstractSearchableCorporaArchive):
         return ans
 
     def get_all_corpus_keywords(self):
-        def encode_prop(l_key):
-            return 0   # TODO no need to mark keywords
         ans = []
         lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
             if lang_key in item:
-                ans.append((item[lang_key], encode_prop(label_key)))
+                ans.append((label_key, item[lang_key]))
         return ans
 
     def _parse_corplist_node(self, root, data, path='/'):
@@ -387,34 +385,51 @@ class CorpTree(AbstractSearchableCorporaArchive):
             'tag_prefix': self._tag_prefix
         }
 
+    def _parse_query(self, query):
+        if query is not None:
+            tokens = re.split(r'\s+', query.strip())
+        else:
+            tokens = []
+        query_keywords = []
+        substrs = []
+        for t in tokens:
+            if len(t) > 0:
+                if t[0] == self._tag_prefix:
+                    query_keywords.append(t[1:])
+                else:
+                    substrs.append(t)
+        return substrs, query_keywords
+
     def search(self, corplist, query, filter_dict=None):
         ans = {'rows': []}
-        query = query.strip()
-        all_keywords = set()
+        used_keywords = set()
+        all_keywords_map = dict(self.get_all_corpus_keywords())
 
-        if not query:
-            return []
-
-        tokens = re.split(r'\s+', query)
-        query_keywords = []
-        for t in tokens:
-            if len(t) > 0 and t[0] == self._tag_prefix:
-                query_keywords.append(t[1:].replace('_', ' ').lower())
-
-        query_substrs = [t for t in tokens if len(t) > 0 and t[0] != self._tag_prefix]
+        query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
 
         for corp in corplist:
             full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
-            keywords = [k.lower() for k in full_data['metadata']['keywords'].values()]
+            keywords = [k for k in full_data['metadata']['keywords'].keys()]
             if matches_all([k in keywords for k in query_keywords]
                            + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
+                corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                 ans['rows'].append(corp)
-                all_keywords.update(keywords)
+                used_keywords.update(keywords)
         ans['rows'] = l10n.sort(ans['rows'], loc=self._lang(), key=lambda v: v['name'])
-        ans['keywords'] = l10n.sort(all_keywords, loc=self._lang())
+        ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
         return ans
+
+    def search_params(self, query, filter_dict=None):
+        query_substrs, query_keywords = self._parse_query(query)
+        all_keywords = self.get_all_corpus_keywords()
+        exp_keywords = [(k, lab, k in query_keywords) for k, lab in all_keywords]
+        return dict(
+            keywords=exp_keywords,
+            keywordsFieldLabel='Available keywords',   # TODO
+            currKeywords=[]  # TODO
+        )
 
 
 def create_instance(conf):

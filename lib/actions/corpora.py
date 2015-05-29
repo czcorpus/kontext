@@ -26,50 +26,13 @@ class Corpora(Kontext):
     def get_mapping_url_prefix(self):
         return '/corpora/'
 
-    # uses also self.keyword (TODO: cannot define Parameter() here)
-    @exposed(legacy=True)
-    def corplist(self, max_size='', min_size='', category=''):
-        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-
-        def corp_filter(item):
-            if max_size and item['size'] > float(max_size):
-                return False
-            if min_size and item['size'] < float(min_size):
-                return False
-            for k in self.keyword:
-                if k not in item['metadata']['keywords'].keys():
-                    return False
-            return True
-
+    @exposed()
+    def corplist(self, request):
         corplist = plugins.corptree.get_list(self.permitted_corpora())
-        keywords = set()
-
-        for item in corplist:
-            full_data = plugins.corptree.get_corpus_info(item['id'], self.ui_lang)
-            item['metadata'] = full_data['metadata']
-            keywords.update(set(full_data['metadata']['keywords'].items()))
-
-        corplist = filter(corp_filter, corplist)
-
-        for c in corplist:
-            c['size'] = l10n.format_number(c['size'])
-            c['fullpath'] = '%s%s' % (c['path'], c['id'])
-
-        corplist = sorted(corplist, key=lambda x: x['name'])
-
-        ans = {
-            'form': {
-                'max_size': max_size,
-                'min_size': min_size,
-                'category': category
-            },
-            'corplist': corplist,
-            'keywords_labels': l10n.sort(keywords, self.ui_lang, key=lambda elm: elm[0]),
-            'keywords': self.keyword,  # singular vs. plural in the attribute name - singular
-            'max_size': max_size,      # used because of 'keyword=k1&keyword=k2&...
-            'min_size': min_size
-        }
-        return ans
+        return dict(
+            corplist_params=plugins.corptree.search_params(request.args.get('query'), request.args),
+            corplist_data=plugins.corptree.search(corplist, request.args.get('query'), request.args)
+        )
 
     @exposed(return_type='json')
     def ajax_list_corpora(self, request):
