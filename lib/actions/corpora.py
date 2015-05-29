@@ -30,7 +30,7 @@ class Corpora(Kontext):
     def corplist(self, request):
         corplist = plugins.corptree.get_list(self.permitted_corpora())
         return dict(
-            corplist_params=plugins.corptree.search_params(request.args.get('query'), request.args),
+            corplist_params=plugins.corptree.initial_search_params(request.args.get('query'), request.args),
             corplist_data=plugins.corptree.search(corplist, request.args.get('query'), request.args)
         )
 

@@ -86,5 +86,5 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         raise NotImplementedError()
 
-    def search_params(self, user_id, lang):
+    def initial_search_params(self, user_id, lang):
         raise NotImplementedError()

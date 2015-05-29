@@ -32,7 +32,6 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <th>{this.translate('Name')}</th>
                     <th>{this.translate('Size (in positions)')}</th>
                     <th>{this.translate('Labels')}</th>
-                    <th>{this.translate('In favorites')}</th>
                     <th>{this.translate('Actions')}</th>
                 </tr>);
             }
@@ -44,16 +43,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 var keywords = this.props.row.keywords.map(function (k, i) {
                     return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
                 });
+
                 return (
                     <tr>
                         <td className="corpname"><a
                             href="first_form?corpname=$row.name">{this.props.row.name}</a></td>
-                        <td className="num">{this.props.size}</td>
+                        <td className="num">{this.props.row.raw_size}</td>
                         <td>
                             {keywords}
-                        </td>
-                        <td>
-                            <input className="set-favorite" type="checkbox" value={this.props.row.id} />
                         </td>
                         <td>
                             <p className="desc" style={{display: 'none'}}>
@@ -198,20 +195,50 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        var MinSizeInput = React.createClass({
+            changeHandler: function (e) {
+                dispatcher.dispatch({
+                    actionType: 'FILTER_CHANGED',
+                    props: {minSize: e.target.value}
+                });
+            },
+            render: function () {
+                return <input className="min-max" type="text"
+                              defaultValue={this.props.minSize}
+                              onChange={this.changeHandler} />;
+            }
+        });
+
+        var MaxSizeInput = React.createClass({
+            changeHandler: function (e) {
+                dispatcher.dispatch({
+                    actionType: 'FILTER_CHANGED',
+                    props: {maxSize: e.target.value}
+                });
+            },
+            render : function () {
+                return <input className="min-max" type="text"
+                              defaultValue={this.props.maxSize}
+                              onChange={this.changeHandler} />;
+            }
+        });
+
         var FilterInputFieldset = React.createClass({
             mixins: mixins,
+
             render: function () {
                 var hiddenInputs = this.props.currKeywords.map(function (v, i) {
                     return <input key={i} type="hidden" name="keyword" value={v} />;
                 });
+
                 return (
                     <fieldset>
                         <legend>{this.props.label}</legend>
                         {hiddenInputs}
                         {this.translate('size from')}:
-                        <input className="min-max" type="text" name="min_size" value={this.minSize} />
-                        {this.translate('to')}: <input className="min-max" type="text" name="max_size" value={this.maxSize} />
-                        <button type="submit" className="default-button">{this.translate('Apply filter')}</button>
+                        <MinSizeInput minSize={this.props.filters.minSize[0]} />
+                        {this.translate('to')}:
+                        <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                     </fieldset>
                 );
             }
@@ -225,7 +252,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             keywords={this.props.keywords}
                             label={this.props.keywordsFieldLabel} />
                         <FilterInputFieldset
-                            currKeywords={this.props.currKeywords} />
+                            currKeywords={this.props.currKeywords}
+                            filters={this.props.filters} />
                     </div>
                 )
             }

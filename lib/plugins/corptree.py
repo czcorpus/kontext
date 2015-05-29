@@ -404,32 +404,42 @@ class CorpTree(AbstractSearchableCorporaArchive):
         ans = {'rows': []}
         used_keywords = set()
         all_keywords_map = dict(self.get_all_corpus_keywords())
+        min_size = filter_dict.get('minSize', 0)
+        max_size = filter_dict.get('maxSize')
 
         query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
+        matches_size = lambda d: ((not min_size or int(d.get('size', 0)) >= int(min_size))
+                                  and (not max_size or int(d.get('size', 0)) <= int(max_size)))
 
         for corp in corplist:
             full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
             keywords = [k for k in full_data['metadata']['keywords'].keys()]
             if matches_all([k in keywords for k in query_keywords]
-                           + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]):
+                           + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]
+                           + [matches_size(corp)]):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
                 corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                 ans['rows'].append(corp)
                 used_keywords.update(keywords)
         ans['rows'] = l10n.sort(ans['rows'], loc=self._lang(), key=lambda v: v['name'])
         ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
+        ans['filters'] = dict(filter_dict)
         return ans
 
-    def search_params(self, query, filter_dict=None):
+    def initial_search_params(self, query, filter_dict=None):
         query_substrs, query_keywords = self._parse_query(query)
         all_keywords = self.get_all_corpus_keywords()
         exp_keywords = [(k, lab, k in query_keywords) for k, lab in all_keywords]
-        return dict(
-            keywords=exp_keywords,
-            keywordsFieldLabel='Available keywords',   # TODO
-            currKeywords=[]  # TODO
-        )
+        return {
+            'keywords': exp_keywords,
+            'keywordsFieldLabel': 'Available keywords',   # TODO
+            'currKeywords': [],  # TODO
+            'filters': {
+                'maxSize': filter_dict.getlist('maxSize'),
+                'minSize': filter_dict.getlist('minSize')
+            }
+        }
 
 
 def create_instance(conf):
