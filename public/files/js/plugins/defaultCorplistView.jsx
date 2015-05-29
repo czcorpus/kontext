@@ -27,8 +27,20 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
         var CorplistHeader = React.createClass({
             mixins: mixins,
+            componentDidMount: function () {
+                var self = this;
+                listStore.addChangeListener(function () {
+                    self.setState({htmlClasses: []});
+                });
+                formStore.addChangeListener(function () {
+                    self.setState({htmlClasses: ["dataset-loading"]});
+                });
+            },
+            getInitialState: function () {
+                return {htmlClasses: []};
+            },
             render: function () {
-                return (<tr>
+                return (<tr className={this.state.htmlClasses.join(' ')}>
                     <th>{this.translate('Name')}</th>
                     <th>{this.translate('Size (in positions)')}</th>
                     <th>{this.translate('Labels')}</th>
