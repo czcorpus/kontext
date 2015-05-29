@@ -85,3 +85,6 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         a JSON-serializable dictionary a concrete plug-in implementation understands
         """
         raise NotImplementedError()
+
+    def initial_search_params(self, user_id, lang):
+        raise NotImplementedError()

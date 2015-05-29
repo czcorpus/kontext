@@ -3,8 +3,7 @@
 // Definitions by: Steve Baker <https://github.com/stkb/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-declare module 'vendor/Dispatcher' {
-
+declare module Dispatcher {
     /**
      * Dispatcher class
      * Create an instance to use throughout the application.
@@ -60,4 +59,9 @@ declare module 'vendor/Dispatcher' {
          */
         isDispatching(): boolean;
     }
+}
+
+
+declare module 'vendor/Dispatcher' {
+    export = Dispatcher;
 }

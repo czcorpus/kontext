@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="./react.d.ts" />
+/// <reference path="./flux.d.ts" />
+
 /**
  *
  */
@@ -47,10 +50,16 @@ declare module Kontext {
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
-        initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any;
-        renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}):void;
+        dispatcher():Dispatcher.Dispatcher<any>; // TODO type
+        exportMixins(...mixins:any[]):any[];
+        renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
+                             target:HTMLElement, props?:React.Props):void;
+        unmountReactComponent(element:HTMLElement):boolean;
     }
 
+    /**
+     *
+     */
     export interface FirstFormPage extends PluginApi {
         registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
         registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
@@ -87,8 +96,64 @@ declare module Kontext {
         close(): void;
     }
 
+    /**
+     * A Flux Store. Please note that only Flux Views are expected
+     * to (un)register store's events.
+     */
+    export interface PageStore {
+
+        addChangeListener(fn:()=>void):void;
+
+        removeChangeListener(fn:()=>void):void;
+
+        notifyChangeListeners():void;
+    }
+
+    /**
+     *
+     */
+    export interface DispatcherPayload {
+        actionType:string;
+        props:{[name:string]:any};
+    }
+
+    /**
+     *
+     */
+    export interface LayoutViews {
+        CorpusInfoBox:React.ReactClass;
+    }
+
+    export interface LayoutStores {
+        corpusInfoStore:PageStore
+    }
 }
 
+
+/**
+ * This module contains types for customizable parts of KonText
+ * client-side code.
+ */
+declare module Customized {
+
+    /**
+     * A factory class for generating corplist page. The page is expected
+     * to contain two blocks
+     *  - a form (typically a filter)
+     *  - a dataset (= list of matching corpora)
+     *
+     */
+    export interface CorplistPage {
+
+        createForm(targetElm:HTMLElement, properties:any):void;
+
+        createList(targetElm:HTMLElement, properties:any):void;
+    }
+}
+
+/**
+ *
+ */
 declare module "plugins/applicationBar" {
     export function createInstance(pluginApi:Kontext.PluginApi);
 }
@@ -114,5 +179,7 @@ declare module "queryInput" {
  *
  */
 declare module "views/document" {
-    var corpusInfoBoxFactory:any;
+    export function init(...args:any[]):Kontext.LayoutViews;
 }
+
+

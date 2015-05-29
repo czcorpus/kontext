@@ -17,7 +17,7 @@
  */
 
 /**
- * This module contains functionality related directly to the first_form.tmpl template
+ * A corplist.tmpl page model.
  *
  */
 define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist'], function (win, $, documentModule,
@@ -28,7 +28,7 @@ define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist'], functi
 
     lib.layoutModel = null;
 
-    lib.init = function (conf, keywords, keywordLabels) {
+    lib.init = function (conf, corplistParams, corplistData) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         $('table.corplist tr').each(function (i, row) {
@@ -69,8 +69,10 @@ define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist'], functi
             });
         });
 
+        var page = corplist.initCorplistPageComponents(lib.layoutModel.pluginApi());
 
-        corplist.createFilter(lib.layoutModel.pluginApi(), $('form.filter').get(0));
+        page.createForm($('#content form.filter').get(0), corplistParams);
+        page.createList($('#corplist').get(0), corplistData);
     };
 
     return lib;

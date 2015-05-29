@@ -31,49 +31,34 @@ import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
 import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
+import util = require('util');
 
 
 /**
  *
  */
 class NullStorage implements Storage {
-    key(idx:number):string {return null}
-    getItem(key:string) {}
-    setItem(key:string, value:string) {}
-    removeItem(key:string) {}
-    clear():void {}
+    key(idx:number):string {
+        return null
+    }
+
+    getItem(key:string) {
+    }
+
+    setItem(key:string, value:string) {
+    }
+
+    removeItem(key:string) {
+    }
+
+    clear():void {
+    }
+
     length:number = 0;
     remainingSpace:number = 0;
     [key: string]: any;
     [index: number]: any;
 }
-
-/**
- * Dispatcher payload
- */
-class Action {
-
-    /**
-     * An object which invoked the action; optional
-     */
-    source:any;
-
-    /**
-     * App-wide action identification
-     */
-    actionType:string;
-
-    /**
-     * Optional message
-     */
-    message:{msgType:string; message:string};
-
-    /***
-     * Action specific data
-     */
-    data:{[k:string]:any};
-}
-
 
 /**
  *
@@ -121,6 +106,58 @@ export interface ComponentCoreMixins {
     getConf(k:string):any;
 }
 
+/**
+ *
+ */
+export class CorpusInfoStore extends util.SimplePageStore {
+
+    pageModel:PageModel;
+
+    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
+
+    data:any;
+
+    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+        super();
+        var self = this;
+        this.pageModel = pageModel;
+        this.dispatcher = dispatcher;
+
+        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+            switch (payload.actionType) {
+                case 'CORPUS_INFO_REQUIRED':
+                    self.loadData();
+                    break;
+            }
+        });
+    }
+
+    getData():any {
+        return this.data;
+    }
+
+    loadData():void {
+        var self = this,
+            url = this.pageModel.createActionUrl('corpora/ajax_get_corp_details');
+
+        $.get(url + '?corpname=' + this.pageModel.getConf('corpname')).then(
+            function (data) {
+                self.data = data;
+                self.notifyChangeListeners();
+            },
+            function (jqXHR, textStatus, errorThrown) {
+                self.dispatcher.dispatch({
+                    actionType: 'ERROR',
+                    props: {
+                        msgType: 'error',
+                        message: textStatus + ', ' + errorThrown
+                    }
+                });
+            }
+        );
+    }
+}
+
 
 /**
  *
@@ -135,7 +172,7 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * Flux Dispatcher (currently not used across the app)
      */
-    dispatcher:flux.Dispatcher<any>;
+    dispatcher:flux.Dispatcher<Kontext.DispatcherPayload>;
 
     /**
      * Custom client-side plug-ins implementations
@@ -169,29 +206,49 @@ export class PageModel implements Kontext.PluginProvider {
     userSettings:UserSettings;
 
     /**
+     * React component classes
+     */
+    layoutViews:Kontext.LayoutViews;
+
+    /**
+     *
+     */
+    corpusInfoStore:CorpusInfoStore;
+
+    /**
      *
      * @param conf
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
-        this.dispatcher = new flux.Dispatcher();
+        this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
         this.plugins = {};
         this.initCallbacks = [];
         this.mainMenu = new MainMenu();
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
+        this.corpusInfoStore = new CorpusInfoStore(this, this.dispatcher);
     }
 
     /**
-     * Creates an instance of a React component using passed factory function
-     * (= function a KonText JSX view AMD module should provide).
      *
-     * @param factory A view factory function
-     * @param mixins Additional mixins
-     * @returns React component
+     * @returns
      */
-    initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any { // TODO type?
+    getStores():Kontext.LayoutStores {
+        return {
+            corpusInfoStore: this.corpusInfoStore
+        };
+    }
+
+    /**
+     * Exports a list of default + (optional custom) mixins
+     * for a React component.
+     *
+     * @param mixins Additional mixins
+     * @returns a list of mixins
+     */
+    exportMixins(...mixins:any[]):any[] {
         var self = this;
         var componentTools:ComponentCoreMixins = {
             translate(s:string):string {
@@ -201,7 +258,7 @@ export class PageModel implements Kontext.PluginProvider {
                 return self.getConf(k);
             }
         };
-        return factory.call(factory, this.dispatcher, mixins ? mixins.concat([componentTools]) : [componentTools]);
+        return mixins ? mixins.concat([componentTools]) : [componentTools];
     }
 
     /**
@@ -211,8 +268,13 @@ export class PageModel implements Kontext.PluginProvider {
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}=null):void {
+    renderReactComponent(reactClass:React.ReactClass,
+            target:HTMLElement, props?:React.Props):void {
         React.render(React.createElement(reactClass, props), target);
+    }
+
+    unmountReactComponent(element:HTMLElement):boolean {
+        return React.unmountComponentAtNode(element);
     }
 
     /**
@@ -783,24 +845,25 @@ export class PageModel implements Kontext.PluginProvider {
             function (box, finalize) {
                 var actionRegId;
 
-                // TODO this combination of popupbox.bind and dispatcher.register,
-                // dispatcher.unregister is not very clean in terms of app desing
-                actionRegId = self.dispatcher.register(function (payload:Action) {
+                // TODO - please note this is not Flux pattern at all; it will be fixed
+                actionRegId = self.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
                     if (payload.actionType === 'ERROR') {
                         box.close();
                         self.dispatcher.unregister(actionRegId);
                     }
                 });
-
-                self.renderReactComponent(self.initReactComponent(documentViews.corpusInfoBoxFactory),
-                    box.getRootElement());
+                self.renderReactComponent(self.layoutViews.CorpusInfoBox,
+                        box.getRootElement());
                 finalize();
             },
             {
                 width: 'auto',
                 closeIcon: true,
                 messages: self.conf['messages'],
-                type: 'plain'
+                type: 'plain',
+                onClose: function () {
+                    self.unmountReactComponent(this.getRootElement());
+                }
             }
         );
     }
@@ -1011,12 +1074,13 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
 
+    // TODO dispatcher misuse (this should conform Flux pattern)
     private registerCoreEvents():void {
         var self = this;
 
-        this.dispatcher.register(function (payload:Action) {
-            if (payload.message && payload.message.hasOwnProperty('msgType')) {
-                self.showMessage(payload.message.msgType, payload.message.message);
+        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+            if (payload.props['message']) {
+                self.showMessage(payload.props['msgType'], payload.props['message']);
             }
         });
     }
@@ -1026,6 +1090,10 @@ export class PageModel implements Kontext.PluginProvider {
      */
     init():InitActions {
         var self = this;
+
+        this.layoutViews = documentViews.init(this.dispatcher, this.exportMixins(),
+                this.getStores());
+
         this.userSettings.init();
 
         this.initActions.add({
@@ -1279,12 +1347,17 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.dispatcher;
     }
 
-    initReactComponent(factory:(mixins:Array<{}>)=>any, ...mixins:any[]):any {
-        return this.pageModel.initReactComponent(factory, mixins);
+    exportMixins(...mixins:any[]):any[] {
+        return this.pageModel.exportMixins(...mixins);
     }
 
-    renderReactComponent(reactClass, target:HTMLElement, props:{[key:string]:any}=null):void {
+    renderReactComponent(reactClass:React.ReactClass,
+            target:HTMLElement, props?:React.Props):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
+    }
+
+    unmountReactComponent(element:HTMLElement):boolean {
+        return this.pageModel.unmountReactComponent(element);
     }
 }
 
