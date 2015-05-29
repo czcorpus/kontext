@@ -70,17 +70,23 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
 
         var CorplistTable = React.createClass({
+
+            changeHandler: function () {
+                this.setState(listStore.getData());
+            },
+
             getInitialState: function () {
                 return this.props;
             },
+
             componentDidMount: function () {
-                var self = this;
-
-                listStore.addChangeListener(function () {
-                    self.setState(listStore.getData());
-                });
-
+                listStore.addChangeListener(this.changeHandler);
             },
+
+            componentWillUnmount: function () {
+                listStore.removeChangeListener(this.changeHandler);
+            },
+
             render: function () {
 
                 var rows = this.state.rows.map(function (row, i) {
@@ -111,15 +117,17 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
         var KeywordLink = React.createClass({
             mixins: mixins,
+            changeHandler: function () {
+                this.setState({active: formStore.getKeywordState(this.props.keyword)});
+            },
             getInitialState: function () {
                 return {active: Boolean(this.props.isActive)};
             },
             componentDidMount: function () {
-                var self = this;
-
-                formStore.addChangeListener(function () {
-                    self.setState({active: formStore.getKeywordState(self.props.keyword)});
-                });
+                formStore.addChangeListener(this.changeHandler);
+            },
+            componentWillUnmount: function () {
+                formStore.removeChangeListener(this.changeHandler);
             },
             handleClick: function (active) {
                 var self = this;

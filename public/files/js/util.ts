@@ -30,9 +30,11 @@ export class SimplePageStore implements Kontext.PageStore {
     };
 
     removeChangeListener = (fn:()=>void) => {
+        console.log('___remove change listener');
         for (var i = 0; i < this.changeListeners.length; i += 1) {
             if (this.changeListeners[i] === fn) {
                 this.changeListeners.splice(i, 1);
+                console.log('___remove chang');
                 break;
             }
         }
