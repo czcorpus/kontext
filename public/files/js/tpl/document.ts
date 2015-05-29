@@ -31,6 +31,7 @@ import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
 import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
+import util = require('util');
 
 
 /**
@@ -105,6 +106,58 @@ export interface ComponentCoreMixins {
     getConf(k:string):any;
 }
 
+/**
+ *
+ */
+export class CorpusInfoStore extends util.SimplePageStore {
+
+    pageModel:PageModel;
+
+    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
+
+    data:any;
+
+    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+        super();
+        var self = this;
+        this.pageModel = pageModel;
+        this.dispatcher = dispatcher;
+
+        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+            switch (payload.actionType) {
+                case 'CORPUS_INFO_REQUIRED':
+                    self.loadData();
+                    break;
+            }
+        });
+    }
+
+    getData():any {
+        return this.data;
+    }
+
+    loadData():void {
+        var self = this,
+            url = this.pageModel.createActionUrl('corpora/ajax_get_corp_details');
+
+        $.get(url + '?corpname=' + this.pageModel.getConf('corpname')).then(
+            function (data) {
+                self.data = data;
+                self.notifyChangeListeners();
+            },
+            function (jqXHR, textStatus, errorThrown) {
+                self.dispatcher.dispatch({
+                    actionType: 'ERROR',
+                    props: {
+                        msgType: 'error',
+                        message: textStatus + ', ' + errorThrown
+                    }
+                });
+            }
+        );
+    }
+}
+
 
 /**
  *
@@ -153,6 +206,16 @@ export class PageModel implements Kontext.PluginProvider {
     userSettings:UserSettings;
 
     /**
+     * React component classes
+     */
+    layoutViews:Kontext.LayoutViews;
+
+    /**
+     *
+     */
+    corpusInfoStore:CorpusInfoStore;
+
+    /**
      *
      * @param conf
      */
@@ -165,6 +228,17 @@ export class PageModel implements Kontext.PluginProvider {
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
+        this.corpusInfoStore = new CorpusInfoStore(this, this.dispatcher);
+    }
+
+    /**
+     *
+     * @returns
+     */
+    getStores():Kontext.LayoutStores {
+        return {
+            corpusInfoStore: this.corpusInfoStore
+        };
     }
 
     /**
@@ -197,6 +271,10 @@ export class PageModel implements Kontext.PluginProvider {
     renderReactComponent(reactClass:React.ReactClass,
             target:HTMLElement, props?:React.Props):void {
         React.render(React.createElement(reactClass, props), target);
+    }
+
+    unmountReactComponent(element:HTMLElement):boolean {
+        return React.unmountComponentAtNode(element);
     }
 
     /**
@@ -774,8 +852,7 @@ export class PageModel implements Kontext.PluginProvider {
                         self.dispatcher.unregister(actionRegId);
                     }
                 });
-
-                self.renderReactComponent(documentViews.corpusInfoBoxFactory,
+                self.renderReactComponent(self.layoutViews.CorpusInfoBox,
                         box.getRootElement());
                 finalize();
             },
@@ -783,7 +860,10 @@ export class PageModel implements Kontext.PluginProvider {
                 width: 'auto',
                 closeIcon: true,
                 messages: self.conf['messages'],
-                type: 'plain'
+                type: 'plain',
+                onClose: function () {
+                    self.unmountReactComponent(this.getRootElement());
+                }
             }
         );
     }
@@ -999,8 +1079,8 @@ export class PageModel implements Kontext.PluginProvider {
         var self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            if (payload.props['message'] && payload.props['message'].hasOwnProperty('msgType')) {
-                self.showMessage(payload.props['message'].msgType, payload.props['message'].message);
+            if (payload.props['message']) {
+                self.showMessage(payload.props['msgType'], payload.props['message']);
             }
         });
     }
@@ -1010,6 +1090,10 @@ export class PageModel implements Kontext.PluginProvider {
      */
     init():InitActions {
         var self = this;
+
+        this.layoutViews = documentViews.init(this.dispatcher, this.exportMixins(),
+                this.getStores());
+
         this.userSettings.init();
 
         this.initActions.add({
@@ -1270,6 +1354,10 @@ export class PluginApi implements Kontext.PluginApi {
     renderReactComponent(reactClass:React.ReactClass,
             target:HTMLElement, props?:React.Props):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
+    }
+
+    unmountReactComponent(element:HTMLElement):boolean {
+        return this.pageModel.unmountReactComponent(element);
     }
 }
 

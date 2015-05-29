@@ -67,6 +67,10 @@ define(['win', 'jquery'], function (win, $) {
 
         this.rootElm = null;
 
+        this.headerElm = null;
+
+        this.contentElm = null;
+
         this.timeout = 25000;
 
         this.onClose = null;
@@ -91,11 +95,18 @@ define(['win', 'jquery'], function (win, $) {
     }
 
     /**
-     *
-     * @returns {HTMLElement}
+     * @deprecated use getContentElement instead
      */
     TooltipBox.prototype.getRootElement = function () {
-        return this.rootElm;
+        return this.headerElm;
+    };
+
+    /**
+     *
+     * @returns {null|Element|*}
+     */
+    TooltipBox.prototype.getContentElement = function () {
+        return this.headerElm;
     };
 
     /**
@@ -156,6 +167,9 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.close = function () {
         if (this.rootElm) {
+            if (typeof this.onClose === 'function') {
+                this.onClose.call(this, this.onShowVal);
+            }
             if (this.importedElement) {
                 this.importedElement.css('display', 'none');
                 this.origContentParent.append(this.importedElement);
@@ -166,9 +180,6 @@ define(['win', 'jquery'], function (win, $) {
             if (this.timer) {
                 clearInterval(this.timer);
             }
-        }
-        if (typeof this.onClose === 'function') {
-            this.onClose.call(this, this.onShowVal);
         }
     };
 
@@ -302,6 +313,12 @@ define(['win', 'jquery'], function (win, $) {
         this.rootElm = win.document.createElement('div');
         $(this.rootElm).addClass('tooltip-box').hide();
 
+        this.headerElm = win.document.createElement('div');
+        $(this.rootElm).append(this.headerElm);
+
+        this.contentElm = win.document.createElement('div');
+        $(this.rootElm).append(this.contentElm);
+
         if (fetchOption('closeIcon', false)) {
             this.jqCloseIcon = $('<a class="close-link" title="' + this.messages.close + '"></a>');
             $(this.rootElm).addClass('framed');
@@ -317,7 +334,7 @@ define(['win', 'jquery'], function (win, $) {
         if (typeof contents === 'function') {
             contents(this, function () {
                 if (self.jqCloseIcon) {
-                    $(self.rootElm).prepend(self.jqCloseIcon);
+                    $(self.headerElm).append(self.jqCloseIcon);
                 }
                 if (calculatePosition) {
                     self.calcPosition(opts);
@@ -329,9 +346,9 @@ define(['win', 'jquery'], function (win, $) {
             });
 
         } else {
-            $(this.rootElm).append(contents);
+            $(this.headerElm).append(contents);
             if (this.jqCloseIcon) {
-                $(this.rootElm).prepend(this.jqCloseIcon);
+                $(this.headerElm).append(this.jqCloseIcon);
             }
             if (calculatePosition) {
                 this.calcPosition(opts);

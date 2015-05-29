@@ -36,6 +36,8 @@ declare module React {
                                   ...children:any[]):ReactElement;
 
     export function render(element:ReactElement, container:HTMLElement, callback?:()=>void);
+
+    export function unmountComponentAtNode(element:HTMLElement):boolean;
 }
 
 /**

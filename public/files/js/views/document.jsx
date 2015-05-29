@@ -21,7 +21,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     var lib = {};
 
-    lib.corpusInfoBoxFactory = function (dispatcher, mixins) {
+    lib.init = function (dispatcher, mixins, storeProvider) {
 
         /**
          * A single struct/attr row
@@ -102,35 +102,35 @@ define(['vendor/react', 'jquery'], function (React, $) {
         /**
          * Corpus information box
          */
-        return React.createClass({
+        var CorpusInfoBox = React.createClass({
+
             mixins: mixins,
+            
+            changeHandler: function () {
+                this.setState(storeProvider.corpusInfoStore.getData());
+            },
 
             getInitialState : function () {
-                return {data: {attrlist: [], structlist: [], size: null, description: null, url: null}};
+                return {attrlist: [], structlist: [], size: null, description: null, url: null};
             },
 
             componentDidMount : function () {
-                var self = this;
-                $.get('corpora/ajax_get_corp_details?corpname=' + this.getConf('corpname')).then(
-                    function (data) {
-                        if (self.isMounted()) {
-                            self.setState({data: data});
-                        }
-                    },
-                    function (jqXHR, textStatus, errorThrown) {
-                        dispatcher.dispatch({
-                            actionType: 'ERROR',
-                            message: {msgType: 'error', message: textStatus + ', ' + errorThrown}
-                        });
-                    }
-                );
+                storeProvider.corpusInfoStore.addChangeListener(this.changeHandler);
+                dispatcher.dispatch({
+                    actionType: 'CORPUS_INFO_REQUIRED',
+                    props: {}
+                });
+            },
+
+            componentWillUnmount : function () {
+                storeProvider.corpusInfoStore.removeChangeListener(this.changeHandler);
             },
 
             render: function () {
                 var webLink;
 
-                if (this.state.data.web_url) {
-                    webLink = <a href={this.state.data.web_url}>{this.state.data.web_url}</a>;
+                if (this.state.web_url) {
+                    webLink = <a href={this.state.web_url}>{this.state.web_url}</a>;
 
                 } else {
                     webLink = '-';
@@ -139,11 +139,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                     <div id="corpus-details-box">
                         <div className="top">
-                            <h4 className="corpus-name">{this.state.data.corpname}</h4>
+                            <h4 className="corpus-name">{this.state.corpname}</h4>
 
                             <p className="metadata">
                                 <strong>{this.translate('size')}: </strong>
-                                <span className="size">{this.state.data.size}</span> {this.translate('positions')}<br />
+                                <span className="size">{this.state.size}</span> {this.translate('positions')}<br />
 
                                 <strong className="web_url">{this.translate('website')}: </strong>
                                 {webLink}
@@ -152,19 +152,23 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <table className="structs-and-attrs" border="0">
                             <tr>
                                 <td>
-                                    <AttributeList rows={this.state.data.attrlist} />
+                                    <AttributeList rows={this.state.attrlist} />
                                 </td>
                                 <td style={{paddingLeft: '4em'}}>
-                                    <StructureList rows={this.state.data.structlist} />
+                                    <StructureList rows={this.state.structlist} />
                                 </td>
                             </tr>
                         </table>
                         <p className="note">{this.translate('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')}</p>
-                        <p className="corpus-description">{this.state.data.description}</p>
+                        <p className="corpus-description">{this.state.description}</p>
                     </div>
                 );
             }
         });
+
+        return {
+            CorpusInfoBox: CorpusInfoBox
+        };
 
     };
 

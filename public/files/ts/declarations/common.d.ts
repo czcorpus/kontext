@@ -54,6 +54,7 @@ declare module Kontext {
         exportMixins(...mixins:any[]):any[];
         renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
+        unmountReactComponent(element:HTMLElement):boolean;
     }
 
     /**
@@ -115,6 +116,17 @@ declare module Kontext {
         actionType:string;
         props:{[name:string]:any};
     }
+
+    /**
+     *
+     */
+    export interface LayoutViews {
+        CorpusInfoBox:React.ReactClass;
+    }
+
+    export interface LayoutStores {
+        corpusInfoStore:PageStore
+    }
 }
 
 
@@ -167,7 +179,7 @@ declare module "queryInput" {
  *
  */
 declare module "views/document" {
-    var corpusInfoBoxFactory:any;
+    export function init(...args:any[]):Kontext.LayoutViews;
 }
 
 
