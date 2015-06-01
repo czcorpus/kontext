@@ -164,7 +164,12 @@ class CentralAuth(AbstractAuth):
             # when the auto-update failed from unknown reason. So just to be sure this won't happen again.
             session.modified = True
 
-    def get_corplist(self, user):
+    def canonical_corpname(self, corpname):
+        """
+        """
+        return corpname.rsplit('/', 1)[-1]
+
+    def permitted_corpora(self, user_id):
         """
         Fetches list of corpora available to the current user
 
@@ -174,13 +179,10 @@ class CentralAuth(AbstractAuth):
         returns:
         a list of corpora names (sorted alphabetically)
         """
-        corpora = self.redis_db.get(self._mk_list_key(user))
-        if corpora:
-            if not IMPLICIT_CORPUS in corpora:
-                corpora.append(IMPLICIT_CORPUS)
-            return corpora
-        else:
-            return [IMPLICIT_CORPUS]
+        corpora = self.db.get(self._mk_list_key(user_id), [])
+        if IMPLICIT_CORPUS not in corpora:
+            corpora.append(IMPLICIT_CORPUS)
+        return dict([(self.canonical_corpname(c), c) for c in corpora])
 
     def is_administrator(self):
         """

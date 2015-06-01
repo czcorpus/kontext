@@ -175,8 +175,7 @@ class Subcorpus(Kontext):
             self._delete_subcorpora(selected_subc)
 
         data = []
-        corplist = plugins.auth.get_corplist(self._session_get('user', 'id'))
-        for corp in corplist:
+        for corp in plugins.auth.permitted_corpora(self._session_get('user', 'id')).values():
             try:
                 self.cm.get_Corpus(corp)
                 basecorpname = corp.split(':')[0]

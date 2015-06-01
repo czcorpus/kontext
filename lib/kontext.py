@@ -639,7 +639,7 @@ class Kontext(Controller):
         self.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.auth.get_corplist(self._session_get('user', 'id'))
+        allowed_corpora = plugins.auth.permitted_corpora(self._session_get('user', 'id'))
         if self._requires_corpus_access(path[0]):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if not action_metadata.get('legacy', False):
@@ -800,15 +800,13 @@ class Kontext(Controller):
 
         Parameters:
         form -- currently processed HTML form (if any)
-        corp_list -- list of all the corpora user can access
+        corp_list -- a dict (canonical_id => full_id) representing all the corpora user can access
 
         Return:
         2-tuple containing a corpus name and a fallback URL where application
         may be redirected (if not None)
         """
         cn = ''
-        fallback = None
-
         if 'json' in form:
             import json
             cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
@@ -827,26 +825,23 @@ class Kontext(Controller):
                 cn = self.last_corpname
             else:
                 cn = settings.get_default_corpus(corp_list)
-                fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
 
         # in this phase we should have some non-empty corpus selected
         # but we do not know whether user has access to it
 
         # automatic restricted/unrestricted corpus name selection
         # according to user rights
-        if cn == self._canonical_corpname(cn) and cn not in corp_list \
-                and plugins.auth.get_restricted_corp_variant(cn) in corp_list:
-            # user wants a canonical variant, has no access to it and restricted variant exists
-            cn = plugins.auth.get_restricted_corp_variant(cn)
-            fallback = self._updated_current_url({'corpname': cn})
-        elif cn != self._canonical_corpname(cn) and cn not in corp_list:
-            cn = self._canonical_corpname(cn)
-            fallback = self._updated_current_url({'corpname': cn})
-
-        # last resort solution (this shouldn't happen in properly configured production installation)
-        if not cn in corp_list:
-            cn = Kontext.DEFAULT_CORPUS
-            fallback = '%sfirst_form?corpname=%s' % (self.get_root_url(), cn)
+        canonical_name = self._canonical_corpname(cn)
+        if canonical_name in corp_list:  # user has "some" access to the corpus
+            if corp_list[canonical_name] != cn:  # user has access to a variant of the corpus
+                cn = canonical_name
+                fallback = self._updated_current_url({'corpname': corp_list[canonical_name]})
+            else:
+                cn = corp_list[canonical_name]
+                fallback = None
+        else:
+            cn = ''
+            fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
         return cn, fallback
 
     def self_encoding(self):
@@ -895,8 +890,7 @@ class Kontext(Controller):
         returns:
         a dict (canonical_id, id)
         """
-        clist = plugins.auth.get_corplist(self._session_get('user', 'id'))
-        return dict([(self._canonical_corpname(c), c) for c in clist])
+        return plugins.auth.permitted_corpora(self._session_get('user', 'id'))
 
     def _load_fav_items(self):
         return plugins.user_items.get_user_items(self._session_get('user', 'id'))
@@ -1267,7 +1261,7 @@ class Kontext(Controller):
         to support multiple configurations per single corpus.
         (e.g. 'public/bnc' will transform into just 'bnc')
         """
-        return corplib.canonical_corpname(c)
+        return plugins.auth.canonical_corpname(c)
 
     def _human_readable_corpname(self):
         """

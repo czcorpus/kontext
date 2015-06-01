@@ -37,19 +37,6 @@ def manatee_version():
     return manatee.version()
 
 
-def canonical_corpname(corpname):
-    """
-    Internally we sometimes use path-like corpora names to distinguish between
-    two access levels (this is achieved by two different registry files).
-    E.g. you have 'syn2010' corpus and 'spec/syn2010' corpus which means that somewhere
-    there is a registry file called 'syn2010' and also a directory 'spec' with
-    another registry file 'syn2010'. But this should be transparent to users so that
-    they see 'syn2010' in both cases. This method solves the problem by converting
-    path-like names to basename ones.
-    """
-    return corpname.rsplit('/', 1)[-1]
-
-
 def open_corpus(*args, **kwargs):
     """
     Creates a manatee.Corpus instance

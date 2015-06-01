@@ -100,23 +100,27 @@ class DefaultAuthHandler(AbstractAuth):
         else:
             raise AuthException(_('User %s not found.') % user_id)
 
-    def get_corplist(self, user_id):
+    def canonical_corpname(self, corpname):
         """
-        Fetches list of corpora available to the current user
+        KonText introduces a convention that corpus_id can have a path-like prefix
+        which represents a different Manatee registry file. This allows attaching
+        a specially configured corpus to a user according to his access rights.
 
-        arguments:
-        user_id -- an ID of a user
+        Example: let's say we have 'syn2010' and 'spec/syn2010' corpora where the latter
+        has some limitations (e.g. user can explore only a small KWIC range). These two
+        corpora are internally represented by two distinct Manatee registry files:
+        (/path/to/registry/syn2010 and /path/to/registry/spec/syn2010).
+        User cannot see the string 'spec/syn2010' anywhere in the interface (only in URL).
 
-        returns:
-        a list of corpora names (sorted alphabetically)
+        By the term 'canonical' we mean the original id (= Manatee registry file name).
         """
-        corpora = self.db.get(self._mk_list_key(user_id))
-        if corpora:
-            if IMPLICIT_CORPUS not in corpora:
-                corpora.append(IMPLICIT_CORPUS)
-            return corpora
-        else:
-            return [IMPLICIT_CORPUS]
+        return corpname.rsplit('/', 1)[-1]
+
+    def permitted_corpora(self, user_id):
+        corpora = self.db.get(self._mk_list_key(user_id), [])
+        if IMPLICIT_CORPUS not in corpora:
+            corpora.append(IMPLICIT_CORPUS)
+        return dict([(self.canonical_corpname(c), c) for c in corpora])
 
     def is_administrator(self):
         """
@@ -128,6 +132,7 @@ class DefaultAuthHandler(AbstractAuth):
         """
         Tests whether provided password matches user's current password
         """
+        pass
 
     def validate_new_password(self, password):
         """
