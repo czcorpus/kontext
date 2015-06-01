@@ -456,16 +456,6 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
                 'e': _t('GDEX'),
                 'x': _t('Switch KWIC'),
                 }
-    forms = {'q': ('first_form', 'cql'),
-             'a': ('first_form', 'cql'),
-             'r': ('reduce_form', 'rlines'),
-             's': ('sort', ''),
-             'n': ('first_form', ''),
-             'p': ('first_form', ''),
-             'f': ('', ''),
-             'w': ('', ''),
-             't': ('', ''),
-             }
     desc = []
     cache_map = cache_factory.get_mapping(corpus)
     q = tuple(q)
@@ -478,12 +468,9 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
             size = None
         opid = q[i][0]
         args = q[i][1:]
-        url1p = [('q', qi) for qi in q[:i]]
+        url1 = [('q', qi) for qi in q[:i]]
         url2 = [('q', qi) for qi in q[:i + 1]]
         op = desctext.get(opid)
-        formname = forms.get(opid, ('', ''))
-        if formname[1]:
-            url1p.append((formname[1], args))
 
         if opid == 's' and args[0] != '*' and i > 0:
             sortopt = {'-1<0': 'left context',
@@ -494,15 +481,11 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
                 op = 'Multilevel Sort'
             args = '%s in %s' % (sortattrs[0].split('/')[0],
                                  sortopt.get(sortattrs[1][:4], sortattrs[1]))
-            url1p.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}.get(sortattrs[1][:2], '')))
+            url1.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}.get(sortattrs[1][:2], '')))
         elif opid == 'f':
             size = ''
             args = _('enabled')
         if op:
-            if formname[0]:
-                url1 = '%s?%s' % (formname[0], url1p)
-            else:
-                url1 = ''
             desc.append((op, args, url1, url2, size))
     return desc
 
