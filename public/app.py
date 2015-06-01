@@ -145,10 +145,14 @@ def setup_plugins():
     init_plugin('user_items', (settings, plugins.db))
     init_plugin('menu_items', (settings, plugins.db))
 
-    # optional plugins
+    # Optional plugins
+    #
+    # Please note that KonText currently does not support dynamic dependency configuration
+    # (e.g. like some DI-based Java frameworks do). It means we have to (in a sense) foresee
+    # what is possibly needed for individual plug-ins here.
     optional_plugins = (
         ('getlang', (settings,)),
-        ('corptree', (settings,)),
+        ('corptree', (settings, plugins.db, plugins.auth)),
         ('query_storage', (settings, plugins.db)),
         ('application_bar', (settings, plugins.auth)),
         ('live_attributes', ('corptree', settings)),

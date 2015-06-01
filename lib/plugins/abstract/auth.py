@@ -61,21 +61,6 @@ class AbstractAuth(object):
         """
         return False
 
-    def get_restricted_corp_variant(self, corpus_name):
-        """
-        To allow restricted and unrestricted variants of a corpus (manatee requires
-        separate registry files for this), KonText uses specific convention - different
-        variants of the registry file are located in different directories (the
-        filename must be the same). Typically, restricted registry files reside
-        in some subdirectory of a main registry directory. Internal name of a corpus
-        is then composed of a relative path to that main directory and canonical corpus
-        name (e.g. bnc vs. public/bnc, where latter is the restricted variant).
-
-        arguments:
-        corpus_name -- both canonical and restricted variants can be passed
-        """
-        return corpus_name
-
     def uses_internal_user_pages(self):
         """
         If True then actions like 'user_password', 'user_password_form' etc. are enabled
@@ -83,6 +68,18 @@ class AbstractAuth(object):
         This should be fixed during module life-cycle (i.e. hardcoded).
         """
         return True
+
+    def canonical_corpname(self, corpname):
+        """
+        Internally we sometimes use path-like corpora names to distinguish between
+        two access levels (this is achieved by two different registry files).
+        E.g. you have 'syn2010' corpus and 'spec/syn2010' corpus which means that somewhere
+        there is a registry file called 'syn2010' and also a directory 'spec' with
+        another registry file 'syn2010'. But this should be transparent to users so that
+        they see 'syn2010' in both cases. This method solves the problem by converting
+        path-like names to basename ones.
+        """
+        return corpname
 
 
 class AuthException(Exception):

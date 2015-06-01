@@ -49,7 +49,8 @@ def load_translations(languages):
     languages = tuple([x for x in languages if x != 'en_US'])  # english translation is implicit
     for lang in languages:
         try:
-            _translations[lang] = gettext.translation('kontext', localedir='%s/../locale' % os.path.dirname(__file__),
+            _translations[lang] = gettext.translation('kontext',
+                                                      localedir='%s/../locale' % os.path.dirname(__file__),
                                                       languages=[lang])
         except IOError as e:
             logging.getLogger(__name__).warning('Failed to load translations for %s with error: %r' % (lang, e))

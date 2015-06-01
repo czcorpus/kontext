@@ -113,14 +113,15 @@ class CorpTree(AbstractSearchableCorporaArchive):
     FEATURED_KEY = 'featured'
     FAVORITE_KEY = 'favorite'
 
-    def __init__(self, file_path, root_xpath, tag_prefix):
+    def __init__(self, auth, file_path, root_xpath, tag_prefix):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
+        self._auth = auth
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._tag_prefix = tag_prefix
         self._messages = {}
-        self._keywords = OrderedDict()  # keyword (aka tags) database for corpora
+        self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._manatee_corpora = ManateeCorpora()
 
     def _get_corplist_title(self, elm):
@@ -189,8 +190,11 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     ans[keyword] = keyword
         return ans
 
-    def get_all_corpus_keywords(self):
+    @property
+    def all_keywords(self):
         ans = []
+        if self._keywords is None:
+            self._load()
         lang_key = self._get_iso639lang()
         for label_key, item in self._keywords.items():
             if lang_key in item:
@@ -291,6 +295,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         Loads data from a configuration file
         """
         data = []
+        self._keywords = OrderedDict()
         with open(self.file_path) as f:
             xml = etree.parse(f)
             root = xml.find(self.root_xpath)
@@ -373,15 +378,22 @@ class CorpTree(AbstractSearchableCorporaArchive):
         """
         self._lang(getattr(controller_obj, 'ui_lang', None))
 
-    def export(self, *args):
+    def _export_featured(self, user_id):
+        permitted_corpora = self._auth.permitted_corpora(user_id)
         is_featured = lambda o: o['metadata'].get('featured', False)
-        mkitem = lambda x: (x[0], x[0].replace(' ', '_'), x[1])
-        corp_labels = [mkitem(item) for item in self.get_all_corpus_keywords()]
+        featured = []
+        for x in self._raw_list().values():
+            if x['id'] in permitted_corpora and is_featured(x):
+                featured.append((
+                    permitted_corpora[x['id']],
+                    self._manatee_corpora.get_info(x['id']).name,
+                    l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size)))
+        return featured
+
+    def export(self, user_id, *args):
         return {
-            'featured': [(x['id'], x.get('name', x['id']),
-                          l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size))
-                         for x in self._raw_list().values() if is_featured(x)],
-            'corpora_labels': corp_labels,
+            'featured': self._export_featured(user_id),
+            'corpora_labels': self.all_keywords,
             'tag_prefix': self._tag_prefix
         }
 
@@ -403,7 +415,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
     def search(self, permitted_corpora, query, filter_dict=None):
         ans = {'rows': []}
         used_keywords = set()
-        all_keywords_map = dict(self.get_all_corpus_keywords())
+        all_keywords_map = dict(self.all_keywords)
         min_size = filter_dict.get('minSize', 0)
         max_size = filter_dict.get('maxSize')
         corplist = self.get_list(permitted_corpora)
@@ -430,7 +442,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
     def initial_search_params(self, query, filter_dict=None):
         query_substrs, query_keywords = self._parse_query(query)
-        all_keywords = self.get_all_corpus_keywords()
+        all_keywords = self.all_keywords
         exp_keywords = [(k, lab, k in query_keywords) for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
@@ -443,10 +455,11 @@ class CorpTree(AbstractSearchableCorporaArchive):
         }
 
 
-def create_instance(conf):
+def create_instance(conf, db, auth):
     """
     Interface function called by KonText creates new plugin instance
     """
-    return CorpTree(file_path=conf.get('plugins', 'corptree')['file'],
+    return CorpTree(auth=auth,
+                    file_path=conf.get('plugins', 'corptree')['file'],
                     root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
                     tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'])
