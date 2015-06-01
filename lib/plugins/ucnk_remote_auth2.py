@@ -179,7 +179,7 @@ class CentralAuth(AbstractAuth):
         returns:
         a list of corpora names (sorted alphabetically)
         """
-        corpora = self.db.get(self._mk_list_key(user_id), [])
+        corpora = self.redis_db.get(self._mk_list_key(user_id), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
