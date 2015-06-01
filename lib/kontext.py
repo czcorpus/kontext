@@ -663,14 +663,14 @@ class Kontext(Controller):
         """
         Runs before main action is processed
         """
+        super(Kontext, self)._pre_dispatch(path, selectorname, named_args, action_metadata)
+
         def validate_corpus():
             c = self._corp()
             if isinstance(c, fallback_corpus.ErrorCorpus):
                 return c.get_error()
             return None
         self.add_validator(validate_corpus)
-
-        super(Kontext, self)._pre_dispatch(path, selectorname, named_args)
 
         if not action_metadata:
             action_metadata = {}
