@@ -28,16 +28,17 @@ class Corpora(Kontext):
 
     @exposed()
     def corplist(self, request):
-        corplist = plugins.corptree.get_list(self.permitted_corpora())
         return dict(
-            corplist_params=plugins.corptree.initial_search_params(request.args.get('query'), request.args),
-            corplist_data=plugins.corptree.search(corplist, request.args.get('query'), request.args)
+            corplist_params=plugins.corptree.initial_search_params(request.args.get('query'),
+                                                                   request.args),
+            corplist_data=plugins.corptree.search(self.permitted_corpora(),
+                                                  request.args.get('query'), request.args)
         )
 
     @exposed(return_type='json')
     def ajax_list_corpora(self, request):
-        corplist = plugins.corptree.get_list(self.permitted_corpora())
-        return plugins.corptree.search(corplist, request.args['query'], request.args)
+        return plugins.corptree.search(self.permitted_corpora(), request.args['query'],
+                                       request.args)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):
