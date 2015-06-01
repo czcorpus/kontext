@@ -44,6 +44,7 @@ import urllib
 LOG = logging.getLogger(__name__).debug
 
 from sqlalchemy import create_engine
+import werkzeug.urls
 
 from abstract.subc_restore import AbstractSubcRestore
 import datetime
@@ -116,6 +117,8 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             deleted_keys = []
 
+        escape_subcname = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
+
         deleted_items = []
         for dk in deleted_keys:
             deleted_items.append({
@@ -124,7 +127,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
                 'size': None,
                 'created': datetime.datetime.fromtimestamp(subc_queries_map[dk]['timestamp']),
                 'corpname': subc_queries_map[dk]['corpname'],
-                'usesubcorp': subc_queries_map[dk]['subcname'],
+                'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
                 'struct_name': subc_queries_map[dk]['struct_name'],
                 'condition': urllib.quote(subc_queries_map[dk]['condition'].encode('utf-8')),
                 'deleted': True
@@ -137,6 +140,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
             else:
                 subc['struct_name'] = None
                 subc['condition'] = None
+            subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
 
         return sorted(subc_list + deleted_items, key=lambda t: t['n'])
 
