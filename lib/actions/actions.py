@@ -318,7 +318,6 @@ class Actions(Kontext):
         conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.q,
                                           subchash=getattr(self._corp(), "subchash", None))
 
-        out['Desc'] = []
         for o, a, u1, u2, s in conc_desc:
             u2.append(('corpname', self.corpname))
             out['Desc'].append({
@@ -945,7 +944,7 @@ class Actions(Kontext):
             'is_multiblock': is_multiblock
         }
 
-    @exposed(access_level=1, vars=('Desc',), legacy=True)
+    @exposed(access_level=1, legacy=True)
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1094,7 +1093,7 @@ class Actions(Kontext):
             'saveformat': saveformat
         }
 
-    @exposed(access_level=1, vars=('Desc', 'concsize',), legacy=True)
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'), saveformat='text',
                  heading=0, colheaders=0):
         """
@@ -1561,7 +1560,7 @@ class Actions(Kontext):
             # TODO Save menu should be active here
         return {'from_line': from_line, 'to_line': to_line}
 
-    @exposed(access_level=1, vars=('Desc', 'concsize'), legacy=True)
+    @exposed(access_level=1, vars=('concsize',), legacy=True)
     def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0,
                  leftctx='40', rightctx='40'):
 

@@ -1222,19 +1222,6 @@ class Kontext(Controller):
         if len(vars) == 0:
             return
 
-        if 'Desc' in vars:
-            if methodname in ('savecoll', 'savewl', 'savefreq', 'saveconc'):
-                translate = False
-            else:
-                translate = True
-            result['Desc'] = [{'op': o, 'arg': a, 'churl': self.urlencode(u1),
-                               'tourl': self.urlencode(u2), 'size': s}
-                              for o, a, u1, u2, s in
-                              conclib.get_conc_desc(corpus=self._corp(),
-                                                    q=self.q,
-                                                    subchash=getattr(self._corp(), "subchash", None),
-                                                    translate=translate)]
-
         if 'TextTypeSel' in vars:
             result['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
         if 'LastSubcorp' in vars:

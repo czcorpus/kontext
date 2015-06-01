@@ -83,7 +83,8 @@ class Export(object):
             'queryselector': '%srow' % url_params['query_type'],
             'usesubcorp': url_params['subcorpname']
         }
-        args.update(url_params.get('params', {}))
+        params = url_params.get('params', None)
+        args.update(params if params is not None else {})
         return self._url_creator('first_form', args)
 
     def export_row(self, row):
