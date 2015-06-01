@@ -14,13 +14,16 @@ lib/plugins/devel_*
 node_modules/
 
 # default app installation
-*.xml
-!config.sample.xml
+conf/
+!conf/config.sample.xml
+!conf/main-menu.sample.json
 public/files/js/min/
 public/files/js/compiled/
 public/files/css/kontext.min.css
 cmpltmpl/*
 !cmpltmpl/__init__.py
+public/files/themes
+!public/files/themes/default/**
 
 # other
 *.pyc
