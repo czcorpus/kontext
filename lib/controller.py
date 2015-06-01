@@ -29,6 +29,7 @@ import StringIO
 import inspect
 import time
 import re
+from functools import partial
 
 import werkzeug.urls
 
@@ -453,6 +454,11 @@ class Controller(object):
         else:
             return '%s%s' % (root, action)
 
+    def _validate_http_method(self, action_metadata):
+        if 'http_method' in action_metadata and (self.get_http_method().lower() !=
+                                                 action_metadata['http_method'].lower()):
+            raise UserActionException(_('Incorrect HTTP method used'), code=500)
+
     def _pre_action_validate(self):
         """
         Runs defined validators before action itself is performed
@@ -633,6 +639,9 @@ class Controller(object):
         """
         Allows specific operations to be performed before the action itself is processed.
         """
+        if action_metadata is None:
+            action_metadata = {}
+        self.add_validator(partial(self._validate_http_method, action_metadata))
         return path, selectorname, args
 
     def _post_dispatch(self, methodname, action_metadata, tmpl, result):
