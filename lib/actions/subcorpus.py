@@ -13,6 +13,8 @@
 import os
 import logging
 
+import werkzeug.urls
+
 from controller import exposed
 from kontext import Kontext, ConcError, MainMenu, UserActionException
 from translation import ugettext as _
@@ -192,7 +194,11 @@ class Subcorpus(Kontext):
                         'deleted': False
                     })
             except Exception as e:
-                logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
+                for d in data:
+                    # permitted_corpora does this
+                    d['usesubcorp'] = werkzeug.urls.url_quote(d['usesubcorp'], unsafe='+')
+                logging.getLogger(__name__).warn(
+                    'Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
 
         if plugins.has_plugin('subc_restore'):
             try:
