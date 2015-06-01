@@ -400,12 +400,13 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     substrs.append(t)
         return substrs, query_keywords
 
-    def search(self, corplist, query, filter_dict=None):
+    def search(self, permitted_corpora, query, filter_dict=None):
         ans = {'rows': []}
         used_keywords = set()
         all_keywords_map = dict(self.get_all_corpus_keywords())
         min_size = filter_dict.get('minSize', 0)
         max_size = filter_dict.get('maxSize')
+        corplist = self.get_list(permitted_corpora)
 
         query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
