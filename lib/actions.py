@@ -18,6 +18,8 @@ import sys
 import re
 import urllib
 
+import werkzeug.urls
+
 from kontext import Kontext, ConcError
 from controller import JsonEncodedData, UserActionException, exposed, Parameter
 import settings
@@ -1929,7 +1931,7 @@ class Actions(Kontext):
                         'size': sc.search_size(),
                         'created': sc.created,
                         'corpname': corp,
-                        'usesubcorp': item['n']
+                        'usesubcorp': werkzeug.urls.url_quote_plus(item['n'])
                     })
             except Exception as e:
                 logging.getLogger(__name__).warn('Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
