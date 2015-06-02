@@ -1310,19 +1310,21 @@ export class CorplistFormStore extends util.SimplePageStore {
                                 !self.selectedKeywords[payload.props['keyword']];
                         CorplistPage.CorplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter());
+                        self.notifyChangeListeners();
                         break;
                     case 'KEYWORD_RESET_CLICKED':
                         self.selectedKeywords = {};
                         CorplistPage.CorplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter());
+                        self.notifyChangeListeners();
                         break;
                     case 'FILTER_CHANGED':
                         self.updateFilter(payload.props);
                         CorplistPage.CorplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter());
+                        self.notifyChangeListeners();
                         break;
                 }
-                self.notifyChangeListeners();
                 return true;
             });
     }
@@ -1435,8 +1437,8 @@ class CorplistPage implements Customized.CorplistPage {
     constructor(pluginApi:Kontext.PluginApi) {
         CorplistPage.CorplistFormStore = new CorplistFormStore(pluginApi);
         CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
-        this.components = views.init(pluginApi.dispatcher(),
-                pluginApi.exportMixins(), CorplistPage.CorplistFormStore,
+        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+                pluginApi.getViews(), CorplistPage.CorplistFormStore,
                 CorplistPage.CorplistTableStore);
         this.pluginApi = pluginApi;
     }

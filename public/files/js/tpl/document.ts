@@ -93,17 +93,46 @@ export type InitCallback = InitCallbackObject|(()=>void);
  */
 export interface ComponentCoreMixins {
 
-    /**
-     *
-     * @param s
-     */
     translate(s:string):string;
 
-    /**
-     *
-     * @param k
-     */
     getConf(k:string):any;
+
+    createActionLink(path:string):string;
+}
+
+/**
+ *
+ */
+export class MessageStore extends util.SimplePageStore implements Kontext.MessagePageStore {
+
+    pageModel:PageModel;
+
+    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
+
+    messageType:string;
+
+    messageText:string;
+
+    addMessage(messageType:string, messageText:string) {
+        this.messageType = messageType;
+        this.messageText = messageText;
+        this.notifyChangeListeners();
+    }
+
+    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+        super();
+        var self = this;
+        this.pageModel = pageModel;
+        this.dispatcher = dispatcher;
+
+        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+            switch (payload.actionType) {
+                case 'SHOW_MESSAGE':
+                    self.addMessage(payload.props['messageType'], payload.props['messageText']);
+                    break;
+            }
+        });
+    }
 }
 
 /**
@@ -126,7 +155,17 @@ export class CorpusInfoStore extends util.SimplePageStore {
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'CORPUS_INFO_REQUIRED':
-                    self.loadData();
+                    self.loadData(payload.props['corpusId']).then(
+                        function (data) {
+                            self.data = data;
+                            self.notifyChangeListeners();
+                        },
+                        function (jqXHR, textStatus, errorThrown) {
+                            self.notifyChangeListeners('error', errorThrown);
+                            self.pageModel.getStores().messageStore.addMessage(
+                                'error', errorThrown);
+                        }
+                    );
                     break;
             }
         });
@@ -136,25 +175,13 @@ export class CorpusInfoStore extends util.SimplePageStore {
         return this.data;
     }
 
-    loadData():void {
-        var self = this,
-            url = this.pageModel.createActionUrl('corpora/ajax_get_corp_details');
+    loadData(corpusId?:string):JQueryXHR {
+        var url = this.pageModel.createActionUrl('corpora/ajax_get_corp_details');
 
-        $.get(url + '?corpname=' + this.pageModel.getConf('corpname')).then(
-            function (data) {
-                self.data = data;
-                self.notifyChangeListeners();
-            },
-            function (jqXHR, textStatus, errorThrown) {
-                self.dispatcher.dispatch({
-                    actionType: 'ERROR',
-                    props: {
-                        msgType: 'error',
-                        message: textStatus + ', ' + errorThrown
-                    }
-                });
-            }
-        );
+        if (!corpusId) {
+            corpusId = this.pageModel.getConf('corpname');
+        }
+        return $.get(url + '?corpname=' + corpusId);
     }
 }
 
@@ -217,6 +244,11 @@ export class PageModel implements Kontext.PluginProvider {
 
     /**
      *
+     */
+    messageStore:MessageStore;
+
+    /**
+     *
      * @param conf
      */
     constructor(conf:Kontext.Conf) {
@@ -229,6 +261,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
         this.corpusInfoStore = new CorpusInfoStore(this, this.dispatcher);
+        this.messageStore = new MessageStore(this, this.dispatcher);
     }
 
     /**
@@ -237,7 +270,8 @@ export class PageModel implements Kontext.PluginProvider {
      */
     getStores():Kontext.LayoutStores {
         return {
-            corpusInfoStore: this.corpusInfoStore
+            corpusInfoStore: this.corpusInfoStore,
+            messageStore: this.messageStore
         };
     }
 
@@ -256,6 +290,14 @@ export class PageModel implements Kontext.PluginProvider {
             },
             getConf(k:string):any {
                 return self.getConf(k);
+            },
+            createActionLink(path:string):string {
+                return self.createActionUrl(path);
+            },
+            getPosition(component:React.ReactElement) {
+                var elm:HTMLElement = React.findDOMNode(component);
+
+                return $(elm).position();
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
@@ -1358,6 +1400,14 @@ export class PluginApi implements Kontext.PluginApi {
 
     unmountReactComponent(element:HTMLElement):boolean {
         return this.pageModel.unmountReactComponent(element);
+    }
+
+    getStores():Kontext.LayoutStores {
+        return this.pageModel.getStores();
+    }
+
+    getViews():Kontext.LayoutViews {
+        return this.pageModel.layoutViews;
     }
 }
 

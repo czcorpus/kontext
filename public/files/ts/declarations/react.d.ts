@@ -38,6 +38,8 @@ declare module React {
     export function render(element:ReactElement, container:HTMLElement, callback?:()=>void);
 
     export function unmountComponentAtNode(element:HTMLElement):boolean;
+
+    export function findDOMNode(component:ReactElement):HTMLElement;
 }
 
 /**

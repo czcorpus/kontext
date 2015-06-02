@@ -21,7 +21,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     var lib = {};
 
-    lib.init = function (dispatcher, mixins, formStore, listStore) {
+    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
         // -------------------------- dataset components -----------------------
 
@@ -50,27 +50,60 @@ define(['vendor/react', 'jquery'], function (React, $) {
         });
 
         var CorplistRow = React.createClass({
+
             mixins: mixins,
+
+            detailClickHandler: function (evt) {
+                evt.preventDefault();
+                var state = this.state;
+                state.detail = true;
+                this.setState(state);
+            },
+
+            getInitialState: function () {
+                return {detail: false};
+            },
+
+            detailCloseHandler: function () {
+                var state = this.state;
+                state.detail = false;
+                this.setState(state);
+            },
+
             render: function () {
                 var keywords = this.props.row.keywords.map(function (k, i) {
                     return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
                 });
 
+                var detailBox;
+
+                if (this.state.detail) {
+                    detailBox = <layoutViews.PopupBox
+                        onCloseClick={this.detailCloseHandler}
+                        customStyle={{position: 'absolute', left: '80pt', marginTop: '25pt'}}>
+                        <layoutViews.CorpusInfoBox corpusId={this.props.row.id}   />
+                    </layoutViews.PopupBox>;
+
+                } else {
+                    detailBox = null;
+                }
+
+                var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+
                 return (
                     <tr>
                         <td className="corpname"><a
-                            href="first_form?corpname=$row.name">{this.props.row.name}</a></td>
+                            href={link}>{this.props.row.name}</a></td>
                         <td className="num">{this.props.row.raw_size}</td>
                         <td>
                             {keywords}
                         </td>
                         <td>
-                            <p className="desc" style={{display: 'none'}}>
-                                <strong>${this.props.row.name}:</strong><br />
-                                {this.props.row.desc}
+                            {detailBox}
+                            <p className="desc">
                             </p>
-                            <a className="detail">{this.translate('description')}</a> |
-                            <a href="first_form?corpname=$row.id">{this.translate('use now')}</a>
+                            <a className="detail"
+                               onClick={this.detailClickHandler}>{this.translate('details')}</a>
                         </td>
                     </tr>
                 );
@@ -85,7 +118,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             getInitialState: function () {
-                return this.props;
+                return {
+                    filters: this.props.filters,
+                    keywords: this.props.keywords,
+                    rows: this.props.rows
+                };
             },
 
             componentDidMount: function () {
@@ -97,26 +134,30 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             render: function () {
-
                 var rows = this.state.rows.map(function (row, i) {
                     return <CorplistRow key={i} row={row} />;
                 });
-
                 return (
-                    <table className="data corplist" border="0">
-                        <tbody>
-                            <CorplistHeader />
-                            {rows}
-                        </tbody>
-                    </table>
+                    <div>
+                        <table className="data corplist" border="0">
+                            <tbody>
+                                <CorplistHeader />
+                                {rows}
+                            </tbody>
+                        </table>
+                    </div>
                 );
             }
         });
 
         var CorpKeywordLink = React.createClass({
+
+            mixins: mixins,
+
             render: function () {
+                var link = this.createActionLink("corplist?keyword="+this.props.keyword);
                 return (
-                    <a className="keyword" href={"corplist?keyword="+this.props.keyword}
+                    <a className="keyword" href={link}
                        data-keyword-id={this.props.keyword}>{this.props.label}</a>
                 );
             }
@@ -154,9 +195,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 };
             },
             render: function () {
+                var link;
+
                 if (!this.state.active) {
+                    link = this.createActionLink("corplist?keyword="+this.props.keyword);
                     return (
-                        <a className="keyword" href={"corplist?keyword="+this.props.keyword}
+                        <a className="keyword" href={link}
                            data-keyword-id={this.props.keyword}
                             onClick={this.handleClick(true)}>{this.props.label}</a>
                     );
@@ -182,8 +226,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 });
             },
             render: function () {
-                return <a className="keyword reset" href="corplist"
-                    onClick={this.handleClick}>{this.translate('None')}</a>;
+                return <a className="keyword reset"
+                          onClick={this.handleClick}>{this.translate('None')}</a>;
             }
         });
 
