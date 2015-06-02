@@ -53,6 +53,7 @@ How does the corpus list specification XML entry looks like:
 from collections import OrderedDict
 import copy
 import re
+from functools import partial
 
 try:
     from markdown import markdown
@@ -83,9 +84,11 @@ def call_controller(controller_obj, method, *args, **kwargs):
 
 class ManateeCorpusInfo(object):
     def __init__(self, corpus, canonical_id):
-        self.name = corpus.get_conf('NAME') if corpus.get_conf('NAME') else canonical_id
-        self.description = corpus.get_info()
         self.encoding = corpus.get_conf('ENCODING')
+        import_string = partial(l10n.import_string, from_encoding=self.encoding)
+        self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
+                                  else canonical_id)
+        self.description = import_string(corpus.get_info())
         self.size = corpus.size()
 
 

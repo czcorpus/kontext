@@ -106,8 +106,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             mixins: mixins,
             
-            changeHandler: function () {
-                this.setState(storeProvider.corpusInfoStore.getData());
+            changeHandler: function (store, status) {
+                if (status !== 'error') {
+                    this.setState(storeProvider.corpusInfoStore.getData());
+                }
             },
 
             getInitialState : function () {

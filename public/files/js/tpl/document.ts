@@ -100,6 +100,29 @@ export interface ComponentCoreMixins {
     createActionLink(path:string):string;
 }
 
+
+export class StatusStore extends util.SimplePageStore implements Kontext.StatusStore {
+
+    pageModel:PageModel;
+
+    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
+
+    status:string;
+
+    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+        super();
+        this.pageModel = pageModel;
+        this.dispatcher = dispatcher;
+        this.status = 'ok';
+    }
+
+    updateStatus(status:string) {
+        this.status = status;
+        this.notifyChangeListeners(this.status);
+    }
+}
+
+
 /**
  *
  */
@@ -164,6 +187,7 @@ export class CorpusInfoStore extends util.SimplePageStore {
                             self.notifyChangeListeners('error', errorThrown);
                             self.pageModel.getStores().messageStore.addMessage(
                                 'error', errorThrown);
+                            pageModel.getStores().statusStore.updateStatus('error');
                         }
                     );
                     break;
@@ -249,6 +273,11 @@ export class PageModel implements Kontext.PluginProvider {
 
     /**
      *
+     */
+    statusStore:StatusStore;
+
+    /**
+     *
      * @param conf
      */
     constructor(conf:Kontext.Conf) {
@@ -262,6 +291,7 @@ export class PageModel implements Kontext.PluginProvider {
             this.conf['uiStateTTL']);
         this.corpusInfoStore = new CorpusInfoStore(this, this.dispatcher);
         this.messageStore = new MessageStore(this, this.dispatcher);
+        this.statusStore = new StatusStore(this, this.dispatcher);
     }
 
     /**
@@ -271,7 +301,8 @@ export class PageModel implements Kontext.PluginProvider {
     getStores():Kontext.LayoutStores {
         return {
             corpusInfoStore: this.corpusInfoStore,
-            messageStore: this.messageStore
+            messageStore: this.messageStore,
+            statusStore: this.statusStore
         };
     }
 

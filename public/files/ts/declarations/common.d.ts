@@ -121,6 +121,13 @@ declare module Kontext {
     /**
      *
      */
+    export interface StatusStore extends PageStore {
+        updateStatus(status:string);
+    }
+
+    /**
+     *
+     */
     export interface StoreListener{
         (store:Kontext.PageStore, eventType:string, err?:Error):void;
     }
@@ -143,7 +150,8 @@ declare module Kontext {
 
     export interface LayoutStores {
         corpusInfoStore:PageStore,
-        messageStore:MessagePageStore
+        messageStore:MessagePageStore,
+        statusStore:StatusStore
     }
 }
 
