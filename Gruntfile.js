@@ -189,7 +189,7 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./config.xml'),
+                        paths: kontext.loadPluginMap('./conf/config.xml'),
                         modules: kontext.listAppModules('./public/files/js/tpl')
                             .concat(kontext.listVendorModules())
                     }
@@ -206,7 +206,7 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./config.xml'),
+                        paths: kontext.loadPluginMap('./conf/config.xml'),
                         modules: kontext.listVendorModules()
                     }
                 }

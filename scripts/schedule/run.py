@@ -87,7 +87,7 @@ if __name__ == '__main__':
                            help="force a single recipient (no matter what JSON conf contains)")
     args = argparser.parse_args()
 
-    settings.load('%s/config.xml' % app_path)
+    settings.load('%s/conf/config.xml' % app_path)
     db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')['module'], fromlist=['create_instance'])
     db = db_adapter.create_instance(settings.get('plugins', 'db'))
 

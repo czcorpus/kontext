@@ -45,7 +45,7 @@ LOG_LEVELS = OrderedDict(
 DEFAULT_LOG_OUT = sys.stderr
 
 import settings
-settings.load('%s/config.xml' % APP_PATH)
+settings.load('%s/conf/config.xml' % APP_PATH)
 
 logger = logging.getLogger('kontext_script')
 

@@ -199,7 +199,7 @@ class DbSync(object):
 if __name__ == '__main__':
     import time
 
-    settings.load('%s/config.xml' % APP_PATH)
+    settings.load('%s/conf/config.xml' % APP_PATH)
     conf = load_conf()
     setup_logger(conf)
     parser = argparse.ArgumentParser(description='Check for changes in UCNK database and synchronize with KonText')
