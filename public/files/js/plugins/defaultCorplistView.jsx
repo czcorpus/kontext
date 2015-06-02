@@ -21,7 +21,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     var lib = {};
 
-    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
+    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore, statusStore) {
 
         // -------------------------- dataset components -----------------------
 
@@ -52,6 +52,23 @@ define(['vendor/react', 'jquery'], function (React, $) {
         var CorplistRow = React.createClass({
 
             mixins: mixins,
+
+            errorHandler: function (store, statusType) {
+                if (statusType === 'error' && this.state.detail) {
+                    var state = this.state;
+                    state.detail = false;
+                    this.setState(state);
+                }
+            },
+
+            componentDidMount: function () {
+                // TODO this is not very effective - a single component should listen for corpinfo error
+                statusStore.addChangeListener(this.errorHandler);
+            },
+
+            componentWillUnmount: function () {
+                statusStore.removeChangeListener(this.errorHandler);
+            },
 
             detailClickHandler: function (evt) {
                 evt.preventDefault();

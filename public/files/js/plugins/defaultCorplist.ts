@@ -1431,7 +1431,7 @@ class CorplistPage implements Customized.CorplistPage {
         CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
         this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
                 pluginApi.getViews(), CorplistPage.CorplistFormStore,
-                CorplistPage.CorplistTableStore);
+                CorplistPage.CorplistTableStore, pluginApi.getStores().statusStore);
         this.pluginApi = pluginApi;
     }
 
