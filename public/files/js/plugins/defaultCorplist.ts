@@ -400,16 +400,8 @@ export class SearchTab implements WidgetTab {
         $.each(this.pluginApi.getConf('pluginData')['corptree']['corpora_labels'], function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
-            $(link).append(item[0]).addClass('keyword');
-            if (item[2] === 1) {
-                $(link).addClass('featured');
-                $(link).attr('title', 'featured'); // TODO translation
-
-            } else if (item[2] === 2) {
-                $(link).addClass('favorite');
-                $(link).attr('title', 'favorite'); // TODO translation
-            }
-            $(link).attr('data-srchkey', item[1]);
+            $(link).text(item[1]).addClass('keyword');
+            $(link).attr('data-srchkey', item[0]);
             $(link).on('click', function (e:JQueryEventObject) {
                 self.toggleTagSelection(link, e.ctrlKey);
                 self.triggerTypeaheadSearch();
@@ -481,7 +473,7 @@ export class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', this.tagPrefix + this.pluginApi.translate('label or name'));
+            .attr('placeholder', this.tagPrefix + this.pluginApi.translate('name or description'));
         $(inputWrapper).append(this.srchField).addClass('srch-box');
 
         this.initTypeahead();

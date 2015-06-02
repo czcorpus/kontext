@@ -425,11 +425,14 @@ class CorpTree(AbstractSearchableCorporaArchive):
         matches_size = lambda d: ((not min_size or int(d.get('size', 0)) >= int(min_size))
                                   and (not max_size or int(d.get('size', 0)) <= int(max_size)))
 
+        normalized_query_substrs = [s.lower() for s in query_substrs]
+
         for corp in corplist:
             full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
             keywords = [k for k in full_data['metadata']['keywords'].keys()]
             if matches_all([k in keywords for k in query_keywords]
-                           + [(s in corp['name'] or s in corp['desc']) for s in query_substrs]
+                           + [(s in corp['name'].lower() or s in corp['desc'].lower())
+                              for s in normalized_query_substrs]
                            + [matches_size(corp)]):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
                 corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
