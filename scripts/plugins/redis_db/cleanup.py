@@ -30,7 +30,7 @@ if __name__ == '__main__':
     if not args.clean_what in patterns:
         raise ValueError('Unknown action: %s' % args.clean_what)
 
-    settings.load('%s/config.xml' % app_path)
+    settings.load('%s/conf/config.xml' % app_path)
     db = get_db(settings.get('plugins', 'db'))
     keys = db.keys(patterns[args.clean_what])
     i = 0

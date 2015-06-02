@@ -29,7 +29,7 @@ sys.path.insert(0, '%s/lib' % APP_PATH)
 
 import corplib
 import settings
-settings.load('%s/config.xml' % APP_PATH)
+settings.load('%s/conf/config.xml' % APP_PATH)
 
 if settings.contains('global', 'manatee_path'):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
