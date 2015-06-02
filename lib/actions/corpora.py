@@ -10,7 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import re
 import logging
 
 from controller import exposed
@@ -45,10 +44,12 @@ class Corpora(Kontext):
         """
         """
         corp_conf_info = plugins.corptree.get_corpus_info(self._corp().corpname)
+        encoding = self._corp().get_conf('ENCODING')
 
         ans = {
-            'corpname': self._canonical_corpname(self._corp().get_conf('NAME')),
-            'description': self._corp().get_info(),
+            'corpname': l10n.import_string(self._canonical_corpname(self._corp().get_conf('NAME')),
+                                           from_encoding=encoding),
+            'description': l10n.import_string(self._corp().get_info(), from_encoding=encoding),
             'size': l10n.format_number(int(self._corp().size())),
             'attrlist': [],
             'structlist': [],
