@@ -118,7 +118,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 storeProvider.corpusInfoStore.addChangeListener(this.changeHandler);
                 dispatcher.dispatch({
                     actionType: 'CORPUS_INFO_REQUIRED',
-                    props: {}
+                    props: {
+                        corpusId: this.props.corpusId
+                    }
                 });
             },
 
@@ -166,8 +168,35 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // ------------------------------ general pop-up box -----------------------------
+
+        var PopupBox = React.createClass({
+
+            getInitialState: function () {
+                return {visible: false};
+            },
+
+            closeClickHandler: function () {
+                if (typeof this.props.onCloseClick === 'function') {
+                    this.props.onCloseClick.call(this);
+                }
+            },
+
+            render: function () {
+                return (
+                    <div className="tooltip-box framed" style={this.props.customStyle}>
+                        <div className="header">
+                            <a className="close-link" onClick={this.closeClickHandler}></a>
+                        </div>
+                        {this.props.children}
+                    </div>
+                );
+            }
+        });
+
         return {
-            CorpusInfoBox: CorpusInfoBox
+            CorpusInfoBox: CorpusInfoBox,
+            PopupBox: PopupBox
         };
 
     };

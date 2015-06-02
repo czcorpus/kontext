@@ -55,6 +55,8 @@ declare module Kontext {
         renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
+        getStores():Kontext.LayoutStores;
+        getViews():Kontext.LayoutViews;
     }
 
     /**
@@ -112,6 +114,20 @@ declare module Kontext {
     /**
      *
      */
+    export interface MessagePageStore extends PageStore {
+        addMessage(messageType:string, messageText:string);
+    }
+
+    /**
+     *
+     */
+    export interface StoreListener{
+        (store:Kontext.PageStore, eventType:string, err?:Error):void;
+    }
+
+    /**
+     *
+     */
     export interface DispatcherPayload {
         actionType:string;
         props:{[name:string]:any};
@@ -122,10 +138,12 @@ declare module Kontext {
      */
     export interface LayoutViews {
         CorpusInfoBox:React.ReactClass;
+        PopupBox:React.ReactClass;
     }
 
     export interface LayoutStores {
-        corpusInfoStore:PageStore
+        corpusInfoStore:PageStore,
+        messageStore:MessagePageStore
     }
 }
 

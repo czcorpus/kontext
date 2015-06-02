@@ -23,13 +23,17 @@
  */
 export class SimplePageStore implements Kontext.PageStore {
 
-    private changeListeners:Array<()=>void>;
+    private changeListeners:Array<Kontext.StoreListener>;
 
-    addChangeListener = (fn:()=>void) => {
+    public static CHANGE_EVENT:string = 'change';
+
+    public static ERROR_EVENT:string = 'error';
+
+    addChangeListener = (fn:Kontext.StoreListener) => {
         this.changeListeners.push(fn);
     };
 
-    removeChangeListener = (fn:()=>void) => {
+    removeChangeListener = (fn:Kontext.StoreListener) => {
         for (var i = 0; i < this.changeListeners.length; i += 1) {
             if (this.changeListeners[i] === fn) {
                 this.changeListeners.splice(i, 1);
@@ -38,9 +42,9 @@ export class SimplePageStore implements Kontext.PageStore {
         }
     };
 
-    notifyChangeListeners():void {
+    notifyChangeListeners(eventType:string=SimplePageStore.CHANGE_EVENT, error:Error=null):void {
         for (var i = 0; i < this.changeListeners.length; i += 1) {
-            this.changeListeners[i].call(this);
+            this.changeListeners[i].call(this, this, eventType, error);
         }
     }
 
