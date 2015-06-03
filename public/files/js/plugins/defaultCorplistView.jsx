@@ -249,6 +249,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
         });
 
         var KeywordsField = React.createClass({
+            mixins: mixins,
             getInitialState: function () {
                 return {};
             },
@@ -263,6 +264,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <legend>{this.props.label}</legend>
                         <ResetLink />
                         {links}
+                        <span className="inline-label">({this.translate('hold_ctrl')})</span>
                     </fieldset>
                 );
             }
@@ -310,10 +312,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         {hiddenInputs}
                         {this.translate('size from')}:
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                        {this.translate('to')}:
+                        <span className="inline-label">{this.translate('to')}:</span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
-                        <span>{'(' +
-                        this.translate('You can use suffixes to specify a rough size (e.g. 100M, 1G, 1T)') + ')'}</span>
+                        <span className="inline-label">{'(' +
+                        this.translate('You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T') + ')'}</span>
                     </fieldset>
                 );
             }

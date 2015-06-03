@@ -303,6 +303,8 @@ export class SearchTab implements WidgetTab {
 
     private tagPrefix:string;
 
+    private maxNumHints:number;
+
     private selectedTags:{[key:string]:HTMLElement};
 
     /**
@@ -316,6 +318,7 @@ export class SearchTab implements WidgetTab {
         this.wrapper = window.document.createElement('div');
         $(this.widgetWrapper).append(this.wrapper);
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
+        this.maxNumHints = this.pluginApi.getConf('pluginData')['corptree']['max_num_hints'];
         this.selectedTags = {};
     }
 
@@ -430,8 +433,7 @@ export class SearchTab implements WidgetTab {
                 return Bloodhound.tokenizers.whitespace(d.name);
             },
             queryTokenizer: Bloodhound.tokenizers.whitespace,
-            remote: remoteOptions,
-            limit: 100 // TODO configurable
+            remote: remoteOptions
         };
         this.bloodhound = new Bloodhound(bhOptions);
         this.bloodhound.initialize();
@@ -446,6 +448,7 @@ export class SearchTab implements WidgetTab {
         $(this.srchField).typeahead(options, {
             displayKey : 'name',
             source : this.bloodhound.ttAdapter(),
+            limit : self.maxNumHints,
             templates: {
                 suggestion: function (item:SearchResponse) {
                     return $('<p>' + item.name
