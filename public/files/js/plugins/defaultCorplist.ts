@@ -473,7 +473,7 @@ export class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', this.tagPrefix + this.pluginApi.translate('name or description'));
+            .attr('placeholder', this.pluginApi.translate('name or description'));
         $(inputWrapper).append(this.srchField).addClass('srch-box');
 
         this.initTypeahead();
