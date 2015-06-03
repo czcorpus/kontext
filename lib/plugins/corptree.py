@@ -419,7 +419,10 @@ class CorpTree(AbstractSearchableCorporaArchive):
         ans = {'rows': []}
         used_keywords = set()
         all_keywords_map = dict(self.all_keywords)
-        min_size = l10n.desimplify_num(filter_dict.get('minSize', 0), strict=False)
+        if filter_dict.get('minSize'):
+            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        else:
+            min_size = 0
         if filter_dict.get('maxSize'):
             max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
         else:
