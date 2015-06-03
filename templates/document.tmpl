@@ -345,8 +345,8 @@ define('conf', [], function () {
                         #end if
                     #end if
                     </li>
-                    <li class="separ"><a href="${root_url}options/viewattrs?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
-                    <li><a href="${root_url}options/viewopts?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("General view options")&#8230;</a></li>
+                    <li class="separ $menu_status('menu-view:viewattrs')"><a href="${root_url}options/viewattrs?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
+                    <li class="$menu_status('menu-view:viewopts')"><a href="${root_url}options/viewopts?$join_params($q, $globals, 'fromp='+$str($cached['fromp']))">$_("General view options")&#8230;</a></li>
                 </ul>
             </li>
 
