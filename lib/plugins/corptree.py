@@ -31,6 +31,10 @@ Required config.xml/plugins entries:
     <tag_prefix extension-by="default">
         [a spec. character specifying that the following string is a tag/label]
     </tag_prefix>
+    <max_num_hints>
+        [the maximum number of hints corpus selection widget shows (even if there are more results
+         available]
+    </max_num_hints>
 </corptree>
 
 How does the corpus list specification XML entry looks like:
@@ -116,13 +120,14 @@ class CorpTree(AbstractSearchableCorporaArchive):
     FEATURED_KEY = 'featured'
     FAVORITE_KEY = 'favorite'
 
-    def __init__(self, auth, file_path, root_xpath, tag_prefix):
+    def __init__(self, auth, file_path, root_xpath, tag_prefix, max_num_hints):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._auth = auth
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._tag_prefix = tag_prefix
+        self._max_num_hints = int(max_num_hints)
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._manatee_corpora = ManateeCorpora()
@@ -397,7 +402,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
         return {
             'featured': self._export_featured(user_id),
             'corpora_labels': self.all_keywords,
-            'tag_prefix': self._tag_prefix
+            'tag_prefix': self._tag_prefix,
+            'max_num_hints': self._max_num_hints
         }
 
     def _parse_query(self, query):
@@ -474,4 +480,5 @@ def create_instance(conf, db, auth):
     return CorpTree(auth=auth,
                     file_path=conf.get('plugins', 'corptree')['file'],
                     root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
-                    tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'])
+                    tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'],
+                    max_num_hints=conf.get('plugins', 'corptree')['default:max_num_hints'])
