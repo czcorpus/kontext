@@ -492,8 +492,8 @@ define(['win', 'jquery'], function (win, $) {
             if (typeof beforeOpen === 'function') {
                 beforeOpenValue = beforeOpen.call(self);
             }
-
-            if (typeof $(elm).data('popupBox') === '[object TooltipBox]') {
+            if ($(elm).data('popupBox')
+                        && $(elm).data('popupBox').toString() === '[object TooltipBox]') {
                 box = $(elm).data('popupBox');
                 box.close();
                 $(elm).data('popupBox', true);
