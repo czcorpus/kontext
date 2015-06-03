@@ -21,8 +21,9 @@ class MainMenuItem(object):
         self.items = []
 
     def __call__(self, *items):
-        self.items = items
-        return self
+        new_obj = MainMenuItem(name=self.name)
+        new_obj.items = items
+        return new_obj
 
     def __repr__(self):
         if len(self.items) > 0:
