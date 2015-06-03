@@ -312,6 +312,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
                         {this.translate('to')}:
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
+                        <span>{'(' +
+                        this.translate('You can use suffixes to specify a rough size (e.g. 100M, 1G, 1T)') + ')'}</span>
                     </fieldset>
                 );
             }

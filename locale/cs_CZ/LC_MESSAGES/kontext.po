@@ -2146,6 +2146,12 @@ msgstr "klikněte pro odemčení/uzamčení režimu odebírání položek ze sez
 msgid "Hold CTRL to select multiple items"
 msgstr "Přidržte klávesu CTRL, chcete-li vybrat více položek"
 
+msgid "You can use suffixes to specify a rough size (e.g. 50k, 100M, 7G, 1T)"
+msgstr "Pro zápis přibližné velikosti lze použít přípony (např. 50k, 100M, 7G, 1T)"
+
+msgid "size from"
+msgstr "velikost od"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

@@ -163,47 +163,54 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
  */
 export class CorpusInfoStore extends util.SimplePageStore {
 
-    pageModel:PageModel;
+    pluginApi:Kontext.PluginApi;
 
     dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
 
-    data:any;
+    data:{[corpusId:string]:any};
 
-    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+
+    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
         super();
         var self = this;
-        this.pageModel = pageModel;
+        this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
+        this.data = {};
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'CORPUS_INFO_REQUIRED':
-                    self.loadData(payload.props['corpusId']).then(
-                        function (data) {
-                            self.data = data;
-                            self.notifyChangeListeners();
-                        },
-                        function (jqXHR, textStatus, errorThrown) {
-                            self.notifyChangeListeners('error', errorThrown);
-                            self.pageModel.getStores().messageStore.addMessage(
-                                'error', errorThrown);
-                            pageModel.getStores().statusStore.updateStatus('error');
-                        }
-                    );
+                    if (self.data.hasOwnProperty(payload.props['corpusId'])) {
+                        self.notifyChangeListeners();
+
+                    } else {
+                        self.loadData(payload.props['corpusId']).then(
+                            function (data) {
+                                self.data[payload.props['corpusId']] = data;
+                                self.notifyChangeListeners();
+                            },
+                            function (jqXHR, textStatus, errorThrown) {
+                                self.notifyChangeListeners('error', errorThrown);
+                                self.pluginApi.getStores().messageStore.addMessage(
+                                    'error', errorThrown);
+                                self.pluginApi.getStores().statusStore.updateStatus('error');
+                            }
+                        );
+                    }
                     break;
             }
         });
     }
 
-    getData():any {
-        return this.data;
+    getData(corpusId):any {
+        return this.data[corpusId];
     }
 
     loadData(corpusId?:string):JQueryXHR {
-        var url = this.pageModel.createActionUrl('corpora/ajax_get_corp_details');
+        var url = this.pluginApi.createActionUrl('corpora/ajax_get_corp_details');
 
         if (!corpusId) {
-            corpusId = this.pageModel.getConf('corpname');
+            corpusId = this.pluginApi.getConf('corpname');
         }
         return $.get(url + '?corpname=' + corpusId);
     }
@@ -289,7 +296,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
-        this.corpusInfoStore = new CorpusInfoStore(this, this.dispatcher);
+        this.corpusInfoStore = new CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new MessageStore(this, this.dispatcher);
         this.statusStore = new StatusStore(this, this.dispatcher);
     }

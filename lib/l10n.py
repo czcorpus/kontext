@@ -270,10 +270,24 @@ def corpus_get_conf(corp, conf_key):
 
 
 def simplify_num(v):
+    if v >= 1e12:
+        return '%sT' % (round(v / 1e12, 0))
     if v >= 1e9:
         return '%dG' % (round(v / 1e9, 0))
     if v >= 1e6:
         return '%dM' % (round(v / 1e6, 0))
     if v >= 1e3:
-        return '%dK' % (round(v / 1e3, 0))
+        return '%dk' % (round(v / 1e3, 0))
     return '%d' % (round(v / 1e2, 0) * 100,)
+
+
+def desimplify_num(v, strict=True):
+    v = str(v)
+    correct_suffs = ('k', 'M', 'G', 'T')
+    if v[-1].isalpha():
+        if strict and v[-1] not in correct_suffs:
+            raise Exception('Unknown number suffix: %s' % v[-1])
+        x = {'k': 1e3, 'm': 1e6, 'g': 1e9, 't': 1e12}.get(v[-1].lower(), None)
+        if x is None:
+            x = 1
+        return int(v[:-1]) * x
