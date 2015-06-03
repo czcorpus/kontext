@@ -108,7 +108,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             
             changeHandler: function (store, status) {
                 if (status !== 'error') {
-                    this.setState(storeProvider.corpusInfoStore.getData());
+                    this.setState(storeProvider.corpusInfoStore.getData(this.props.corpusId));
                 }
             },
 

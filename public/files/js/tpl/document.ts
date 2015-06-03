@@ -167,36 +167,43 @@ export class CorpusInfoStore extends util.SimplePageStore {
 
     dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
 
-    data:any;
+    data:{[corpusId:string]:any};
+
 
     constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
         super();
         var self = this;
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
+        this.data = {};
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'CORPUS_INFO_REQUIRED':
-                    self.loadData(payload.props['corpusId']).then(
-                        function (data) {
-                            self.data = data;
-                            self.notifyChangeListeners();
-                        },
-                        function (jqXHR, textStatus, errorThrown) {
-                            self.notifyChangeListeners('error', errorThrown);
-                            self.pluginApi.getStores().messageStore.addMessage(
-                                'error', errorThrown);
-                            self.pluginApi.getStores().statusStore.updateStatus('error');
-                        }
-                    );
+                    if (self.data.hasOwnProperty(payload.props['corpusId'])) {
+                        self.notifyChangeListeners();
+
+                    } else {
+                        self.loadData(payload.props['corpusId']).then(
+                            function (data) {
+                                self.data[payload.props['corpusId']] = data;
+                                self.notifyChangeListeners();
+                            },
+                            function (jqXHR, textStatus, errorThrown) {
+                                self.notifyChangeListeners('error', errorThrown);
+                                self.pluginApi.getStores().messageStore.addMessage(
+                                    'error', errorThrown);
+                                self.pluginApi.getStores().statusStore.updateStatus('error');
+                            }
+                        );
+                    }
                     break;
             }
         });
     }
 
-    getData():any {
-        return this.data;
+    getData(corpusId):any {
+        return this.data[corpusId];
     }
 
     loadData(corpusId?:string):JQueryXHR {
