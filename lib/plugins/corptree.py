@@ -66,6 +66,7 @@ except ImportError:
 from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
+from plugins.abstract.corpora import CorpusInfo
 import l10n
 import manatee
 from fallback_corpus import EmptyCorpus
@@ -229,36 +230,32 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 web_url = item.attrib['web'] if 'web' in item.attrib else None
                 sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
 
-                ans = {
-                    'id': corpus_id,
-                    'path': path,
-                    'web': web_url,
-                    'sentence_struct': sentence_struct,
-                    'tagset': item.attrib.get('tagset', None),
-                    'speech_segment': item.attrib.get('speech_segment', None),
-                    'bib_struct': item.attrib.get('bib_struct', None),
-                    'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
-                    'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}, 'keywords': {}}
-                }
+                ans = CorpusInfo()
+                ans.id = corpus_id
+                ans.path = path
+                ans.web = web_url
+                ans.sentence_struct = sentence_struct
+                ans.tagset = item.attrib.get('tagset', None)
+                ans.speech_segment = item.attrib.get('speech_segment', None)
+                ans.bib_struct = item.attrib.get('bib_struct', None)
 
                 ref_elm = item.find('reference')
                 if ref_elm is not None:
-                    ans['citation_info']['default_ref'] = translate_markup(getattr(ref_elm.find('default'),
-                                                                                   'text', None))
+                    ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
+                                                                             'text', None))
                     articles = [translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
-                    ans['citation_info']['article_ref'] = articles
-                    ans['citation_info']['other_bibliography'] = translate_markup(
+                    ans.citation_info.article_ref = articles
+                    ans.citation_info.other_bibliography = translate_markup(
                         getattr(ref_elm.find('other_bibliography'), 'text', None))
 
                 meta_elm = item.find('metadata')
                 if meta_elm is not None:
-                    ans['metadata']['database'] = getattr(meta_elm.find('database'), 'text', None)
-                    ans['metadata']['label_attr'] = getattr(meta_elm.find('label_attr'), 'text', None)
-                    ans['metadata']['id_attr'] = getattr(meta_elm.find('id_attr'), 'text', None)
-                    ans['metadata']['desc'] = self._parse_meta_desc(meta_elm)
-                    ans['metadata']['keywords'] = self._get_corpus_keywords(meta_elm)
-                    ans['metadata']['featured'] = True if \
-                        meta_elm.find(self.FEATURED_KEY) is not None else False
+                    ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
+                    ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
+                    ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
+                    ans.metadata.desc = self._parse_meta_desc(meta_elm)
+                    ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
+                    ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
                 data.append(ans)
 
     @staticmethod
@@ -270,19 +267,19 @@ class CorpTree(AbstractSearchableCorporaArchive):
         """
         ans = copy.deepcopy(data)
         lang_code = lang_code.split('_')[0]
-        desc = ans['metadata']['desc']
+        desc = ans.metadata.desc
         if lang_code in desc:
-            ans['metadata']['desc'] = desc[lang_code]
+            ans.metadata.desc = desc[lang_code]
         else:
-            ans['metadata']['desc'] = ''
+            ans.metadata.desc = ''
 
         translated_k = OrderedDict()
-        for keyword, label in ans['metadata']['keywords'].items():
+        for keyword, label in ans.metadata.keywords.items():
             if type(label) is dict and lang_code in label:
                 translated_k[keyword] = label[lang_code]
             elif type(label) is str:
                 translated_k[keyword] = label
-        ans['metadata']['keywords'] = translated_k
+        ans.metadata.keywords = translated_k
         return ans
 
     def get_corpus_info(self, corp_name, language=None):
@@ -296,7 +293,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     return self._raw_list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
-            return {'metadata': {}}  # for 'empty' corpus to work properly
+            return CorpusInfo()
 
     def _load(self):
         """

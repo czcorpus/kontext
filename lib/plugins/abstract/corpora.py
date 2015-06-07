@@ -18,7 +18,64 @@
 'corptree' plug-in interfaces
 """
 
+import json
+
 from structures import ThreadLocalData
+
+
+class DictLike(object):
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __contains__(self, item):
+        return hasattr(self, item)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
+    def to_json(self):
+        return json.dumps(self, cls=CorpInfoEncoder)
+
+
+class CorpusMetadata(DictLike):
+    def __init__(self):
+        self.database = None
+        self.label_attr = None
+        self.id_attr = None
+        self.desc = {}
+        self.keywords = {}
+
+
+class CitationInfo(DictLike):
+    def __init__(self):
+        self.default_ref = None
+        self.article_ref = None
+        self.other_bibliography = None
+
+
+class CorpusInfo(DictLike):
+    def __init__(self):
+        self.id = None
+        self.path = None
+        self.web = None
+        self.sentence_struct = None
+        self.tagset = None
+        self.speech_segment = None
+        self.bib_struct = None
+        self.citation_info = CitationInfo()
+        self.metadata = CorpusMetadata()
+
+
+class CorpInfoEncoder(json.JSONEncoder):
+    def default(self, o):
+        ans = {}
+        for key, val in o.__dict__.items():
+            if isinstance(val, DictLike):
+                ans[key] = val.__dict__
+            else:
+                ans[key] = val
+        return ans
+
 
 
 class AbstractCorporaArchive(ThreadLocalData):
