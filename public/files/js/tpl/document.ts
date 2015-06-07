@@ -1364,23 +1364,23 @@ export class PluginApi implements Kontext.PluginApi {
     }
 
     ajax() {
-        return this.pageModel.ajax.apply(self, arguments);
+        return this.pageModel.ajax.apply(this.pageModel, arguments);
     }
 
     ajaxAnim() {
-        return this.pageModel.createAjaxLoader.apply(self, arguments);
+        return this.pageModel.createAjaxLoader.apply(this.pageModel, arguments);
     }
 
     ajaxAnimSmall() {
-        return this.pageModel.createSmallAjaxLoader.apply(self, arguments);
+        return this.pageModel.createSmallAjaxLoader.apply(this.pageModel, arguments);
     }
 
     appendLoader() {
-        return this.pageModel.appendLoader.apply(self, arguments);
+        return this.pageModel.appendLoader.apply(this.pageModel, arguments);
     }
 
     showMessage() {
-        return this.pageModel.showMessage.apply(self, arguments);
+        return this.pageModel.showMessage.apply(this.pageModel, arguments);
     }
 
     translate(msg) {
