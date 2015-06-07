@@ -383,7 +383,7 @@ class Kontext(Controller):
     @staticmethod
     def _requires_corpus_access(action):
         # TODO this is a flawed solution - method metadata (access_level should be used instead)
-        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar')
+        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar', 'corplist')
 
     @staticmethod
     def _init_default_settings(options):
@@ -1131,7 +1131,7 @@ class Kontext(Controller):
             result['curr_corpora_fav_key'] = plugins.user_items.infer_item_key(conc_args.corpname,
                                                                                conc_args.usesubcorp,
                                                                                conc_args.getlist('sel_aligned'))
-        result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).get('metadata', {})
+        result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).metadata
 
         # avalilable languages
         if plugins.has_plugin('getlang'):

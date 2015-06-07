@@ -159,7 +159,7 @@ define('conf', [], function () {
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
-    conf.bibConf = #filter $Jsonize#$bib_conf#end filter#;
+    conf.bibConf = $bib_conf.to_json();
     conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
