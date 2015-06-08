@@ -300,7 +300,7 @@ class Actions(Kontext):
     @exposed(return_type='json', legacy=True)
     def concdesc_json(self, query_id=''):
         self.disabled_menu_items = (MainMenu.SAVE,)
-        out = {}
+        out = {'Desc': []}
 
         query_desc = ''
         query_desc_raw = ''
@@ -320,6 +320,8 @@ class Actions(Kontext):
 
         for o, a, u1, u2, s in conc_desc:
             u2.append(('corpname', self.corpname))
+            if self.usesubcorp:
+                u2.append(('usesubcorp', self.usesubcorp))
             out['Desc'].append({
                 'op': o,
                 'arg': a,
