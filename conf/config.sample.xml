@@ -10,13 +10,13 @@
         <css><item>...</item><item>...</item>...</css>
         -->
         <css>style.css</css>
-        <logo_path>logo.png</logo_path>
+        <logo>logo.png</logo>
         <!--
-        <logo_mouseover_path> is optional (logo_path is used here by default)
+        <logo_mouseover> is optional ('logo' is used here by default)
         -->
-        <logo_mouseover_path>logo_s.png</logo_mouseover_path>
-        <logo_url>http://our.kontext.localhost</logo_url>
-        <logo_inline_css>width: 300px;height: 150px</logo_inline_css>
+        <logo_mouseover>logo_s.png</logo_mouseover>
+        <logo_href>http://our.kontext.localhost</logo_href>
+        <logo_style>width: 300px;height: 150px</logo_style>
         <!--
         <fonts> are optional and can be both single value or a list of values
         -->

@@ -1021,21 +1021,21 @@ class Kontext(Controller):
         elif not hasattr(theme_css, '__iter__'):
             theme_css = [theme_css]
 
-        logo_img = settings.get('theme', 'logo_path')
-        if settings.contains('theme', 'logo_mouseover_path'):
-            logo_alt_img = settings.get('theme', 'logo_mouseover_path')
+        logo_img = settings.get('theme', 'logo')
+        if settings.contains('theme', 'logo_mouseover'):
+            logo_alt_img = settings.get('theme', 'logo_mouseover')
         else:
             logo_alt_img = logo_img
 
-        if settings.contains('theme', 'logo_url'):
-            logo_url = settings.get('theme', 'logo_url')
+        if settings.contains('theme', 'logo_href'):
+            logo_href = settings.get('theme', 'logo_href')
         else:
-            logo_url = self.get_root_url() + 'first_form'
+            logo_href = self.get_root_url() + 'first_form'
 
         if theme_name == 'default':
             logo_title = _('Click to enter a new query')
         else:
-            logo_title = logo_url
+            logo_title = logo_href
 
         fonts = settings.get('theme', 'fonts', None)
         if fonts is None:
@@ -1050,7 +1050,7 @@ class Kontext(Controller):
             'logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
             'logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
                                                                                logo_alt_img)),
-            'logo_url': logo_url,
+            'logo_href': logo_href,
             'logo_title': logo_title,
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
             'fonts': fonts
