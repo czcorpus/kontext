@@ -628,7 +628,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
         lib.pluginApi.ajax(requestURL, {
             type : 'POST',
             dataType : 'json',
-            data : 'attrs=' + JSON.stringify(selectedAttrs),
+            data : {attrs : JSON.stringify(selectedAttrs)},
             success : function (data) {
                 successAction(data, selectedAttrs);
                 ajaxAnimation.stop();
