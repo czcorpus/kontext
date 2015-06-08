@@ -322,6 +322,8 @@ class Actions(Kontext):
         out['Desc'] = []
         for o, a, u1, u2, s in conc_desc:
             u2.append(('corpname', self.corpname))
+            if self.usesubcorp:
+                u2.append(('usesubcorp', self.usesubcorp))
             out['Desc'].append({
                 'op': o,
                 'arg': a,
