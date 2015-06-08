@@ -250,8 +250,8 @@ define('conf', [], function () {
                     <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="reduce_form?$q;$globals">$_('Sample')&#8230;</a></li>
                     <li class="separ"><a id="query-overview-trigger"
                         title="$_('Details about current query and related operations')"
-                        href="concdesc?$corpname_url;usesubcorp=$usesubcorp;$q"
-                        data-json-href="concdesc_json?$corpname_url;usesubcorp=$usesubcorp;$q">$_('Query overview')&#8230;</a></li>
+                        href="concdesc?$corpname_url&usesubcorp=$usesubcorp&$q"
+                        data-json-href="concdesc_json?$corpname_url&usesubcorp=$usesubcorp&$q">$_('Query overview')&#8230;</a></li>
                     <li>
                     #if len($undo_q) > 0
                     <a title="$_('Revert last operation on current concordance')" href="view?$globals;$undo_q">$_('Undo')</a>
