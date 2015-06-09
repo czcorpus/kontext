@@ -18,6 +18,8 @@ import sys
 import re
 import urllib
 
+import werkzeug
+
 from kontext import Kontext, ConcError, MainMenu
 from controller import UserActionException, exposed
 import settings
@@ -888,7 +890,7 @@ class Actions(Kontext):
                                     l10n.escape(item['Word'][0]['n']))
                     if not item['freq']:
                         continue
-                    efquery = urllib.quote(fquery)
+                    efquery = werkzeug.urls.url_quote(fquery)
                     item['pfilter'] += ';q=p%s' % efquery
                     if len(attrs) == 1 and item['freq'] <= conc.size():
                         item['nfilter'] += ';q=n%s' % efquery
