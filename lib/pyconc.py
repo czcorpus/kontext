@@ -315,7 +315,7 @@ class PyConc(manatee.Concordance):
                 if v in used_vals:
                     continue
                 lines.append({
-                    'Word': [{'n': v}],
+                    'Word': [{'n': self.import_string(v)}],
                     'freq': 0,
                     'rel': 0,
                     'norm': 0,
