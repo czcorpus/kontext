@@ -37,6 +37,7 @@ from templating import StateGlobals
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter
 from main_menu import MainMenu, MainMenuItem
+from plugins.abstract.auth import AbstractInternalAuth
 
 
 def join_params(*args):
@@ -1087,7 +1088,7 @@ class Kontext(Controller):
 
         self._add_corpus_related_globals(result, thecorp)
 
-        result['supports_password_change'] = plugins.auth.uses_internal_user_pages()
+        result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
@@ -1524,3 +1525,6 @@ class Kontext(Controller):
         menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
         for item in [x[1] for x in menu_items]:
             out['custom_menu_items'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)
+
+    def _uses_internal_user_pages(self):
+        return isinstance(plugins.auth, AbstractInternalAuth)

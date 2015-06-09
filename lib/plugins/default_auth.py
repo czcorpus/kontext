@@ -17,14 +17,14 @@ It relies on default_db module which requires no database backend.
 import hashlib
 import urllib
 
-from abstract.auth import AbstractAuth, AuthException
+from abstract.auth import AbstractInternalAuth, AuthException
 from translation import ugettext as _
 
 
 IMPLICIT_CORPUS = 'susanne'
 
 
-class DefaultAuthHandler(AbstractAuth):
+class DefaultAuthHandler(AbstractInternalAuth):
     """
     Sample authentication handler
     """
@@ -48,15 +48,7 @@ class DefaultAuthHandler(AbstractAuth):
         return 'corplist:user:%s' % user_id
 
     def validate_user(self, username, password):
-        """
-        arguments:
-        username -- user's login username
-        password -- user's password
-
-        returns
-        True on success, False on failure.
-        """
-        user_data = self.find_user(username)
+        user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
             if len(user_data['pwd_hash']) == 32:
@@ -128,12 +120,6 @@ class DefaultAuthHandler(AbstractAuth):
         """
         return True
 
-    def validate_password(self, password):
-        """
-        Tests whether provided password matches user's current password
-        """
-        pass
-
     def validate_new_password(self, password):
         """
         Tests whether the password candidate matches required password properties
@@ -162,7 +148,7 @@ class DefaultAuthHandler(AbstractAuth):
         else:
             return '/user/logoutx'
 
-    def find_user(self, username):
+    def _find_user(self, username):
         """
         Searches for user's data by his username. We assume that username is unique.
 
