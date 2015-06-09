@@ -121,6 +121,8 @@ button, input[type='button'], input[type='submit'] {
 
 .messages {
   display: block;
+  position: absolute;
+  left: 50%;
 }
 
 .message {
@@ -129,45 +131,33 @@ button, input[type='button'], input[type='submit'] {
   border-radius: @border-radius-default;
   box-shadow: 2px 2px 3px #aaa;
   color: @color-default-text;
-  display: inline-block;
   font-weight: 700;
-  margin: 0 0 1.5em;
-  padding: 1em 5px 1em 1em;
+  margin: 5pt;
+  padding: 1em;
+  position: relative;
+  left: -50%;
 }
 
 .message.info {
   color: @color-default-text;
 }
 
-.message a.close-icon {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 10px;
-}
-
-a.close-icon img {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-#contextel a.close-icon {
-  float: right;
-  margin: 0 3px 0 0;
-  position: relative;
-  top: -10px;
-}
-
-.message img.icon {
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 7px;
+.message .icon-box {
+  float: left;
+  width: 10%;
 }
 
 .message .message-text {
   display: inline-block;
   vertical-align: middle;
-  margin: 0 1em 0 1em;
-  max-width: 700px;
+  width: 76%;
+  padding: 0 2%;
+}
+
+.message .button-box {
+  float: right;
+  width: 10%;
+  text-align: right;
 }
 
 footer {
@@ -1660,4 +1650,22 @@ section.my-subcorpora label.show-deleted {
 
 .inline-label {
   padding-left: 0.5em;
+}
+
+.msganim-enter {
+  opacity: 0.01;
+  transition: opacity .3s ease-in;
+}
+
+.msganim-enter.msganim-enter-active {
+  opacity: 1;
+}
+
+.msganim-leave {
+  opacity: 1;
+  transition: opacity .3s ease-in;
+}
+
+.msganim-leave.msganim-leave-active {
+  opacity: 0.01;
 }

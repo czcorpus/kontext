@@ -168,6 +168,7 @@ define('conf', [], function () {
     conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
     #end if
     conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
+    conf.notifications = #filter $Jsonize#$messages#end filter#;
 
     conf.messages = {};
     #if $_anonymous
@@ -409,19 +410,7 @@ define('conf', [], function () {
 
 #filter WebSafe
 <div id="content">
-    #if $messages
-    <div class="messages">
-        #for $message in $messages
-        <div class="message $message[0]" #if $varExists('next_url')#data-next-url="$next_url"#end if#>
-            <img class="icon" alt="$message[0]" src="../files/img/${message[0]}-icon.png">
-            <div class="message-text">#filter None#$message[1]#end filter#</div>
-            <a class="close-icon">
-                <img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />
-            </a>
-        </div>
-        #end for
-    </div>
-    #end if
+    <div class="messages-mount"></div>
 
     #filter None
     #block concordance

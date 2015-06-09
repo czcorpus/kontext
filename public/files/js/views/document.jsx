@@ -19,7 +19,8 @@
 define(['vendor/react', 'jquery'], function (React, $) {
     'use strict';
 
-    var lib = {};
+    var lib = {},
+        ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
     lib.init = function (dispatcher, mixins, storeProvider) {
 
@@ -196,9 +197,90 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+
+        // ----------------------------- info/error/warning message box ----------------------
+
+        var Message = React.createClass({
+            _handleCloseClick : function (e) {
+                e.preventDefault();
+                dispatcher.dispatch({
+                    actionType: 'MESSAGE_CLOSED',
+                    sender: this,
+                    props: {
+                        messageId: this.props.messageId
+                    }
+                });
+            },
+
+            render : function () {
+                var typeIconMap = {
+                    info: '../files/img/info-icon.png',
+                    warning: '../files/img/warning-icon.png',
+                    error: '../files/img/error-icon.png'
+                },
+                classes = 'message ' + this.props.messageType;
+
+                return (
+                    <div className={classes}>
+                        <div className="icon-box">
+                            <img className="icon" alt="message"
+                                 src={ typeIconMap[this.props.messageType] } />
+                        </div>
+                        <div className="message-text">
+                            <span>{ this.props.messageText }</span>
+                        </div>
+                        <div className="button-box">
+                            <a className="close-icon">
+                                <img src="../files/img/close-icon.png"
+                                    onClick={this._handleCloseClick } />
+                            </a>
+                        </div>
+                    </div>
+                );
+            }
+        });
+
+        var Messages = React.createClass({
+
+            getInitialState : function () {
+                return {messages: []};
+            },
+
+            componentDidMount : function () {
+                var self = this;
+                storeProvider.messageStore.addChangeListener(function (store) {
+                    self.setState({messages: store.getMessages()});
+                });
+            },
+
+            render: function () {
+                var messages = this.state.messages.map(function (item, i) {
+                    return <Message key={i} messageType={item.messageType}
+                                    messageText={item.messageText}
+                                    messageId={item.messageId} />;
+                });
+                if (messages) {
+                    return (
+                        <div className="messages">
+                            <ReactCSSTransitionGroup transitionName="msganim">
+                            {messages}
+                            </ReactCSSTransitionGroup>
+                        </div>
+                    );
+
+                } else {
+                    return null;
+                }
+            }
+        });
+
+
+        // ------------------------------------------------------------------------------------
+
         return {
             CorpusInfoBox: CorpusInfoBox,
-            PopupBox: PopupBox
+            PopupBox: PopupBox,
+            Messages: Messages
         };
 
     };

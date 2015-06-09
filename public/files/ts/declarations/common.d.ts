@@ -146,6 +146,7 @@ declare module Kontext {
     export interface LayoutViews {
         CorpusInfoBox:React.ReactClass;
         PopupBox:React.ReactClass;
+        Messages:React.ReactClass;
     }
 
     export interface LayoutStores {
