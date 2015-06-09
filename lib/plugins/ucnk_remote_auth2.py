@@ -32,7 +32,7 @@ import urllib
 import random
 import logging
 
-from abstract.auth import AbstractAuth
+from abstract.auth import AbstractRemoteAuth
 
 import MySQLdb
 
@@ -66,7 +66,7 @@ def _toss():
     return random.random() < REVALIDATION_PROBABILITY
 
 
-class CentralAuth(AbstractAuth):
+class CentralAuth(AbstractRemoteAuth):
     """
     A custom authentication class for the Institute of the Czech National Corpus
     """
@@ -103,7 +103,8 @@ class CentralAuth(AbstractAuth):
 
     def get_ticket(self, cookies):
         """
-        Returns authentication ticket
+        Returns authentication ticket. Please note that this
+        is not a part of AbstractAuth interface.
 
         arguments:
         cookies -- a Cookie.BaseCookie compatible instance
@@ -118,16 +119,6 @@ class CentralAuth(AbstractAuth):
         return ticket_id
 
     def revalidate(self, cookies, session, query_string):
-        """
-        Re-validates user authentication against external database with central
-        authentication ticket. using cookie and session data (in general).
-        Resulting user data is written to session. No value is returned.
-
-        arguments:
-        cookies -- a Cookie.BaseCookie compatible instance
-        session -- dictionary like session data
-        query_string -- the portion of the request URL that follows '?' (see environmental variable QUERY_STRING)
-        """
         if 'remote=1' in query_string.split('&'):
             session.clear()
 
@@ -200,8 +191,6 @@ class CentralAuth(AbstractAuth):
     def get_logout_url(self, return_url):
         return self.logout_url % (urllib.quote(return_url))
 
-    def uses_internal_user_pages(self):
-        return False
 
 
 def create_instance(conf, db_provider, sessions):

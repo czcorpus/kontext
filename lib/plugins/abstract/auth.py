@@ -61,14 +61,6 @@ class AbstractAuth(object):
         """
         return False
 
-    def uses_internal_user_pages(self):
-        """
-        If True then actions like 'user_password', 'user_password_form' etc. are enabled
-        (if False then KonText raises an exception in case user tries to access them).
-        This should be fixed during module life-cycle (i.e. hardcoded).
-        """
-        return True
-
     def canonical_corpname(self, corpname):
         """
         Internally we sometimes use path-like corpora names to distinguish between
@@ -80,6 +72,91 @@ class AbstractAuth(object):
         path-like names to basename ones.
         """
         return corpname
+
+    def permitted_corpora(self, user_id):
+        """
+        Returns a dictionary containing corpora IDs user can access.
+
+        arguments:
+        user_id -- database user ID
+
+        returns:
+        a dict canonical_corpus_id=>corpus_id
+        """
+        raise NotImplementedError()
+
+
+class AbstractInternalAuth(AbstractAuth):
+    """
+    A general authentication running within KonText.
+    """
+
+    def update_user_password(self, user_id, password):
+        """
+        Changes a password of provided user.
+        """
+        raise NotImplementedError()
+
+    def logout(self, session_id):
+        """
+        Logs-out current user (identified by session_id).
+        """
+        raise NotImplementedError()
+
+    def get_required_password_properties(self):
+        """
+        Returns a text description of required password
+        properties (e.g.: "at least 5 characters long, at least one digit)
+        This should be consistent with validate_new_password().
+        """
+        raise NotImplementedError()
+
+    def validate_new_password(self, password):
+        """
+        Tests whether the provided password matches all the
+        required properties. This should be consistent with
+        get_required_password_properties().
+        """
+        raise NotImplementedError()
+
+    def validate_user(self, username, password):
+        """
+        Tries to find a user with matching 'username' and 'password'.
+        If a match is found then proper credentials of the user are
+        returned. Otherwise an anonymous user's credentials should be
+        returned.
+
+        arguments:
+        username -- login username
+        password -- login password
+
+        returns
+        a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
+        actually 'username'.
+        """
+        raise NotImplementedError()
+
+
+class AbstractRemoteAuth(AbstractAuth):
+    """
+    A general authentication based on an external authentication service.
+    """
+
+    def revalidate(self, cookies, session, query_string):
+        """
+        Re-validates user authentication against external database with central
+        authentication ticket (expected to be found in cookies) and session data.
+        Resulting user data is written to the session (typically - if a remote
+        service marks auth. cookie as invalid we store an anonymous user into
+        the session. The method return no value.
+
+        arguments:
+        cookies -- a Cookie.BaseCookie compatible instance
+        session -- dictionary like session data
+        query_string -- the portion of the request URL that follows '?'
+        (see environmental variable QUERY_STRING)
+        """
+        raise NotImplementedError()
 
 
 class AuthException(Exception):

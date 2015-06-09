@@ -63,10 +63,9 @@ class User(Kontext):
             'message': ('info', _('You have been logged out'))
         }
 
-
     @exposed(access_level=1, template='user/user_password_form.tmpl')
     def user_password_form(self, request):
-        if not plugins.auth.uses_internal_user_pages():
+        if not self._uses_internal_user_pages():
             raise UserActionException(_('This function is disabled.'))
         return {}
 
@@ -77,7 +76,7 @@ class User(Kontext):
             new_passwd = request.form['new_passwd']
             new_passwd2 = request.form['new_passwd2']
 
-            if not plugins.auth.uses_internal_user_pages():
+            if not self._uses_internal_user_pages():
                 raise UserActionException(_('This function is disabled.'))
             logged_in = plugins.auth.validate_user(self._session_get('user', 'user'), curr_passwd)
 
