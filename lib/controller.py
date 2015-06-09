@@ -652,8 +652,6 @@ class Controller(object):
         if type(result) is dict:
             result['messages'] = self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
-            if len(self._system_messages) > 0:
-                result['message_auto_hide_interval'] = 0
 
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
@@ -760,7 +758,6 @@ class Controller(object):
                                         _('Failed to process your request. '
                                           'Please try again later or contact system support.'))
 
-            named_args['message_auto_hide_interval'] = 0
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 

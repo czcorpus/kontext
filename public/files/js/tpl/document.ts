@@ -132,14 +132,35 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
     dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
 
-    messageType:string;
-
-    messageText:string;
+    messages:Array<{messageType:string; messageText:string, messageId:string}>;
 
     addMessage(messageType:string, messageText:string) {
-        this.messageType = messageType;
-        this.messageText = messageText;
+        var msgId = String(Math.random()),
+            timeout,
+            self = this;
+
+        this.messages.push({
+            messageType: messageType,
+            messageText: messageText,
+            messageId: msgId
+        });
+
+        if (messageType !== 'error') {
+            timeout = win.setTimeout(function () {
+                self.removeMessage(msgId);
+                win.clearTimeout(timeout);
+                self.notifyChangeListeners();
+            }, 15000);
+        }
         this.notifyChangeListeners();
+    }
+
+    getMessages():Array<{messageType:string; messageText:string, messageId:string}> {
+        return this.messages;
+    }
+
+    removeMessage(messageId:string) {
+        this.messages = this.messages.filter(function (x) { return x.messageId !== messageId; });
     }
 
     constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
@@ -147,11 +168,13 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
         var self = this;
         this.pageModel = pageModel;
         this.dispatcher = dispatcher;
+        this.messages = [];
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
-                case 'SHOW_MESSAGE':
-                    self.addMessage(payload.props['messageType'], payload.props['messageText']);
+                case 'MESSAGE_CLOSED':
+                    self.removeMessage(payload.props['messageId']);
+                    self.notifyChangeListeners();
                     break;
             }
         });
@@ -581,56 +604,15 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
      * @param message - text of the message
-     * @param callback - do something after message is rendered
      */
-    showMessage = (msgType:string, message:string, callback?:(msgElm:HTMLElement)=>void) => {
-        var innerHTML:string,
-            messageListElm:HTMLElement,
-            messageElm:HTMLElement,
-            timeout:number,
-            typeIconMap:{[t:string]:string};
-
-        typeIconMap = {
-            info: '../files/img/info-icon.png',
-            warning: '../files/img/warning-icon.png',
-            error: '../files/img/error-icon.png'
-        };
+    showMessage = (msgType:string, message:string) => {
+        var timeout,
+            self = this;
 
         if (typeof message === 'object' && msgType === 'error') {
             message = message['message'];
         }
-
-        innerHTML = '<img class="icon" alt="message" src="' + typeIconMap[msgType] + '">'
-            + '<span>' + message + '</span><a class="close-icon"><img src="../files/img/close-icon.png" /></a>';
-
-        if ($('#content .messages').length === 0) {
-            messageListElm = win.document.createElement('div');
-            $(messageListElm).addClass('messages');
-            $('#content').prepend(messageListElm);
-
-        } else {
-            messageListElm = $('#content .messages').get(0);
-        }
-        messageElm = win.document.createElement('div');
-        $(messageElm).addClass('message').addClass(msgType);
-        $(messageElm).html(innerHTML);
-        $(messageListElm).append(messageElm);
-
-
-        $(messageElm).find('a.close-icon').bind('click', function () {
-            $(messageElm).hide(200);
-        });
-
-        if (this.conf['messageAutoHideInterval']) {
-            timeout = win.setTimeout(function () {
-                $(messageElm).hide(200);
-                win.clearTimeout(timeout);
-            }, this.conf['messageAutoHideInterval']);
-        }
-
-        if (typeof callback === 'function') {
-            callback(messageElm);
-        }
+        this.messageStore.addMessage(msgType, message);
     };
 
     /**
@@ -983,21 +965,6 @@ export class PageModel implements Kontext.PluginProvider {
             self.applySelectAll(this, $(this).closest('table.envelope'));
         });
 
-        // Click which removes the 'error box'
-        $('.message a.close-icon').bind('click', function (event) {
-            var nextUrl,
-                parentElm;
-
-            parentElm = $(event.target).closest('.message').get(0);
-            nextUrl = $(parentElm).data('next-url');
-
-            $(parentElm).hide(200, function () {
-                if (nextUrl) {
-                    win.location = nextUrl;
-                }
-            });
-        });
-
         // Footer's language switch
         $('#switch-language-box a').each(function () {
             $(this).bind('click', function () {
@@ -1020,6 +987,17 @@ export class PageModel implements Kontext.PluginProvider {
                 }
             }, this.conf['messageAutoHideInterval']);
         }
+    }
+
+    initNotifications() {
+        var self = this;
+
+        this.renderReactComponent(
+            this.layoutViews.Messages, $('#content .messages-mount').get(0));
+        
+        $.each(this.conf['notifications'], function (i, msg) {
+            self.messageStore.addMessage(msg[0], msg[1]);
+        });
     }
 
     mouseOverImages(context?) {
@@ -1186,7 +1164,8 @@ export class PageModel implements Kontext.PluginProvider {
             timeoutMessages: self.timeoutMessages(),
             mouseOverImages: self.mouseOverImages(),
             enhanceMessages: self.enhanceMessages(),
-            externalHelpLinks: self.externalHelpLinks()
+            externalHelpLinks: self.externalHelpLinks(),
+            showNotification: self.initNotifications()
         });
 
         // init plug-ins
