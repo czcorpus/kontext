@@ -603,6 +603,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #end for
     </select>
     #end if ## SubcorpList
+    #if not $_anonymous
     <div class="starred">
         #if $is_fav:
           <img class="starred" data-item-id="$curr_key" src="$files_path/img/starred_24x24.png" alt="$_('starred')" />
@@ -610,6 +611,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
           <img src="$files_path/img/starred_24x24_grey.png" alt="$_('not starred starred')" />
         #end if
     </div>
+    #end if
 
 #end def  ## corp_sel
 ## ***************************************** ##
