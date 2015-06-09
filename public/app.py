@@ -293,6 +293,11 @@ settings.load(path=CONF_PATH)
 if settings.contains('global', 'manatee_path'):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
+if not settings.contains('corpora', 'calc_pid_dir'):
+    raise Exception('Missing configuration: calc_pid_dir')
+elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
+    os.makedirs(settings.get('corpora', 'calc_pid_dir'))
+
 application = App()
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
