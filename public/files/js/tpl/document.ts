@@ -994,7 +994,7 @@ export class PageModel implements Kontext.PluginProvider {
 
         this.renderReactComponent(
             this.layoutViews.Messages, $('#content .messages-mount').get(0));
-        
+
         $.each(this.conf['notifications'], function (i, msg) {
             self.messageStore.addMessage(msg[0], msg[1]);
         });

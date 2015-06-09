@@ -221,23 +221,21 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 classes = 'message ' + this.props.messageType;
 
                 return (
-                    <ReactCSSTransitionGroup transitionName="example">
-                        <div key={0} className={classes}>
-                            <div className="icon-box">
-                                <img className="icon" alt="message"
-                                     src={ typeIconMap[this.props.messageType] } />
-                            </div>
-                            <div className="message-text">
-                                <span>{ this.props.messageText }</span>
-                            </div>
-                            <div className="button-box">
-                                <a className="close-icon">
-                                    <img src="../files/img/close-icon.png"
-                                        onClick={this._handleCloseClick } />
-                                </a>
-                            </div>
+                    <div className={classes}>
+                        <div className="icon-box">
+                            <img className="icon" alt="message"
+                                 src={ typeIconMap[this.props.messageType] } />
                         </div>
-                    </ReactCSSTransitionGroup>
+                        <div className="message-text">
+                            <span>{ this.props.messageText }</span>
+                        </div>
+                        <div className="button-box">
+                            <a className="close-icon">
+                                <img src="../files/img/close-icon.png"
+                                    onClick={this._handleCloseClick } />
+                            </a>
+                        </div>
+                    </div>
                 );
             }
         });
@@ -264,7 +262,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 if (messages) {
                     return (
                         <div className="messages">
+                            <ReactCSSTransitionGroup transitionName="msganim">
                             {messages}
+                            </ReactCSSTransitionGroup>
                         </div>
                     );
 

@@ -1651,3 +1651,21 @@ section.my-subcorpora label.show-deleted {
 .inline-label {
   padding-left: 0.5em;
 }
+
+.msganim-enter {
+  opacity: 0.01;
+  transition: opacity .3s ease-in;
+}
+
+.msganim-enter.msganim-enter-active {
+  opacity: 1;
+}
+
+.msganim-leave {
+  opacity: 1;
+  transition: opacity .3s ease-in;
+}
+
+.msganim-leave.msganim-leave-active {
+  opacity: 0.01;
+}
