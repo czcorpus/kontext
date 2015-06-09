@@ -142,7 +142,7 @@ def setup_plugins():
     init_plugin('locking', (settings, plugins.db,))
     init_plugin('conc_cache', (settings, plugins.db, plugins.locking))
     init_plugin('export', (settings,), module=plugins.export)
-    init_plugin('user_items', (settings, plugins.db))
+    init_plugin('user_items', (settings, plugins.db, plugins.auth))
     init_plugin('menu_items', (settings, plugins.db))
 
     # Optional plugins

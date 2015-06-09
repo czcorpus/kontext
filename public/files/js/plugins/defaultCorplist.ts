@@ -660,35 +660,50 @@ class FavoritesTab implements WidgetTab {
 
         this.editMode = false;
 
-        $.each(this.dataFav, function (i, item) {
-            jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
-                + ' title="' + item.description + '"'
-                + ' href="' + self.generateItemUrl(item)
-                + '" data-id="' + item.id + '">' + item.name + '</a></td>'
-                + '<td class="num">~' + item.size_info + '</td>'
-                + '<td class="tools"><img class="remove over-img disabled" '
-                + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
-                + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
-                + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
-                + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
-                + '</td></tr>');
-        });
+        if (!this.pageModel.getConf('anonymousUser')) {
+            $.each(this.dataFav, function (i, item) {
+                jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
+                    + ' title="' + item.description + '"'
+                    + ' href="' + self.generateItemUrl(item)
+                    + '" data-id="' + item.id + '">' + item.name + '</a></td>'
+                    + '<td class="num">~' + item.size_info + '</td>'
+                    + '<td class="tools"><img class="remove over-img disabled" '
+                    + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                    + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                    + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
+                    + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                    + '</td></tr>');
+            });
 
-        jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {
-            if (!$(e.currentTarget).hasClass('disabled')) {
-                self.removeFromList($(e.currentTarget).closest('tr').find('a.corplist-item').data('id'));
-            }
-        });
-
-        jqWrapper.find('a.corplist-item').each(function() {
-            $(this).on('click', function (e:Event) {
-                if (typeof self.itemClickCallback === 'function') {
-                    self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
-                    e.stopPropagation();
-                    e.preventDefault();
+            jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {
+                if (!$(e.currentTarget).hasClass('disabled')) {
+                    self.removeFromList($(e.currentTarget).closest('tr').find('a.corplist-item').data('id'));
                 }
             });
-        });
+
+            jqWrapper.find('a.corplist-item').each(function () {
+                $(this).on('click', function (e:Event) {
+                    if (typeof self.itemClickCallback === 'function') {
+                        self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                });
+            });
+
+        } else {
+            jqWrapper.append('<tr><td colspan="3">'
+                + this.pageModel.translate('Please log-in to use favorite items')
+                + '</td></tr>');
+            // TODO show loginUrl here
+        }
+
+        if (this.dataFav.length > 0) {
+            $('.corplist-widget table.favorite-list img.config').show();
+
+        } else {
+            $('.corplist-widget table.favorite-list img.config').hide();
+        }
 
         if (this.dataFeat.length > 0) {
             $.each(this.dataFeat, function (i, item:Array<string>) { // item = (id, name, size)

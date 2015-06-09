@@ -85,10 +85,11 @@ class UserItems(AbstractUserItems):
 
     decoder = json.JSONDecoder(object_hook=import_from_json)
 
-    def __init__(self, settings, db):
+    def __init__(self, settings, db, auth):
         super(UserItems, self).__init__()
         self._settings = settings
         self._db = db
+        self._auth = auth
 
     def setup(self, controller_obj):
         """
@@ -112,9 +113,10 @@ class UserItems(AbstractUserItems):
 
     def get_user_items(self, user_id):
         ans = []
-        for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
-            ans.append(self.decoder.decode(item))
-        ans = l10n.sort(ans, self.getlocal('lang'), key=lambda itm: itm.name, reverse=False)
+        if self._auth.anonymous_user()['id'] != user_id:
+            for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
+                ans.append(self.decoder.decode(item))
+            ans = l10n.sort(ans, self.getlocal('lang'), key=lambda itm: itm.name, reverse=False)
         return ans
 
     def add_user_item(self, user_id, item):
@@ -128,5 +130,5 @@ class UserItems(AbstractUserItems):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
 
-def create_instance(settings, db):
-    return UserItems(settings, db)
+def create_instance(settings, db, auth):
+    return UserItems(settings, db, auth)
