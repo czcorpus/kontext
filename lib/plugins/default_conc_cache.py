@@ -63,11 +63,6 @@ class CacheMapping(AbstractConcCache):
         cache_dir = self._cache_dir_path()
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
-        elif os.path.isfile(self._cache_map_path()) and os.stat(self._cache_map_path()).st_mtime < \
-                os.stat(self._corpus.get_conf('PATH') + 'word.text').st_mtime:
-            os.remove(self._cache_map_path())
-            for f in os.listdir(cache_dir):
-                os.remove(cache_dir + f)
 
     @property
     def data(self):
