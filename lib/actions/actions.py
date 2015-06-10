@@ -16,7 +16,6 @@ import math
 import os
 import sys
 import re
-import urllib
 
 import werkzeug
 

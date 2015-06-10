@@ -27,6 +27,7 @@ class Corpora(Kontext):
 
     @exposed()
     def corplist(self, request):
+        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         return dict(
             corplist_params=plugins.corptree.initial_search_params(request.args.get('query'),
                                                                    request.args),

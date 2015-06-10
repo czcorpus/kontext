@@ -44,7 +44,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <th>{this.translate('Name')}</th>
                     <th>{this.translate('Size (in positions)')}</th>
                     <th>{this.translate('Labels')}</th>
-                    <th>{this.translate('Actions')}</th>
+                    <th></th>
                 </tr>);
             }
         });
@@ -308,11 +308,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 return (
                     <fieldset>
-                        <legend>{this.props.label}</legend>
+                        <legend>{this.translate('Properties')}</legend>
                         {hiddenInputs}
-                        {this.translate('size from')}:
+                        <span>{this.translate('size from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                        <span className="inline-label">{this.translate('to')}:</span>
+                        <span className="inline-label">{this.translate('to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                         <span className="inline-label">{'(' +
                         this.translate('You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T') + ')'}</span>
