@@ -68,22 +68,6 @@
                 }
             },
             "uglify": {
-                nonOptimized: {
-                    files: [
-                        {
-                            expand: true,
-                            cwd: 'public/files/js/',
-                            src: ['**/*.js', '!min/*', '!**/*.min.js', '!compiled/**'],
-                            dest: 'public/files/js/min/'
-                        },
-                        {
-                            expand: true,
-                            cwd: 'public/files/js/compiled',
-                            src: ['**/*.js'],
-                            dest: 'public/files/js/min/'
-                        }
-                    ]
-                },
                 optimized: {
                     files: [
                         {
@@ -101,7 +85,7 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!compiled/**', '!vendor/**'],
+                            src: ['**/*.js', '!compiled/**', '!vendor/**', '!min/**'],
                             dest: 'public/files/js/min'
                         },
                         {
@@ -119,16 +103,6 @@
                             cwd: 'public/files/js',
                             src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**', '!*.ts'],
                             dest: 'public/files/js/compiled'
-                        }
-                    ]
-                },
-                finishNonOptimized: {
-                    files: [
-                        {
-                            expand: true,
-                            cwd: 'public/files/js/compiled',
-                            src: ['**/*.js'],
-                            dest: 'public/files/js/min'
                         }
                     ]
                 },
@@ -189,7 +163,7 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./conf/config.xml'),
+                        paths: kontext.loadPluginMap('./conf/config.xml', true),
                         modules: kontext.listAppModules('./public/files/js/tpl')
                             .concat(kontext.listVendorModules())
                     }
@@ -206,7 +180,7 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./conf/config.xml'),
+                        paths: kontext.loadPluginMap('./conf/config.xml', false),
                         modules: kontext.listVendorModules()
                     }
                 }
@@ -224,17 +198,9 @@
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
-        grunt.registerTask('production-optimized', ['clean:all', 'less', 'typescript', 'react',
+        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react',
             'copy:prepare', 'requirejs:production',
             'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
-
-        // generates production-ready project where all JavaScript modules are loaded individually
-        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react', 'copy:prepare',
-            'copy:finishNonOptimized', 'uglify:nonOptimized', 'clean:cleanup', 'exec']);
-
-        // generates production-like project with RequireJS optimization but without minimization
-        grunt.registerTask('production-debug', ['clean:all', 'less', 'typescript', 'copy:prepare',
-            'requirejs:production', 'copy:finishOptimized', 'clean:cleanup', 'exec']);
 
         // just compiles Cheetah templates
         grunt.registerTask('templates', ['clean:templates', 'exec:compile_html_templates']);

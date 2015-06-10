@@ -27,7 +27,8 @@
         jsModules = {
             'application_bar' : 'applicationBar',
             'query_storage' : 'queryStorage',
-            'live_attributes' : 'liveAttributes'
+            'live_attributes' : 'liveAttributes',
+            'corptree' : 'corplist'
         };
 
     /**
@@ -41,16 +42,17 @@
      * @param {string} path to the main app configuration XML
      * @return {{}}
      */
-    module.exports.loadPluginMap = function (confPath) {
+    module.exports.loadPluginMap = function (confPath, isProduction) {
         var data = fs.readFileSync(confPath, {encoding: 'utf8'}),
             DOMParser = require('xmldom').DOMParser,
             doc = new DOMParser().parseFromString(data),
+            reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev',
             pluginMap = {
                 'win' : 'empty:',
                 'conf' : 'empty:',
                 'jquery' : 'vendor/jquery.min',
                 'vendor/rsvp' : 'vendor/rsvp.min',
-                'vendor/react': 'vendor/react',
+                'vendor/react': reactModule,
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
             },
