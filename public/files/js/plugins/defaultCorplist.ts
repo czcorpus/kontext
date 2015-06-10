@@ -64,6 +64,13 @@ export interface CorplistItem {
     size_info: string;
 }
 
+interface FeaturedItem {
+    id: string;
+    name: string;
+    size: string; // rough size (100G, 1T etc.)
+    description: string;
+}
+
 /**
  *
  */
@@ -160,6 +167,7 @@ interface SearchResponse {
     desc: string;
     id: string;
     size: number;
+    found_in?: Array<string>;
 }
 
 /**
@@ -177,7 +185,11 @@ class WidgetMenu {
 
     funcMap:{[name:string]: WidgetTab};
 
+    pageModel:Kontext.FirstFormPage;
+
     currentBoxId:string;
+
+    blockingTimeout:number;
 
     static SEARCH_WIDGET_ID:string = 'search';
     static MY_ITEMS_WIDGET_ID:string = 'my-corpora';
@@ -188,11 +200,13 @@ class WidgetMenu {
      *
      * @param widget
      */
-    constructor(widget:Corplist) {
+    constructor(widget:Corplist, pageModel:Kontext.FirstFormPage) {
         this.widget = widget;
+        this.pageModel = pageModel;
         this.menuWrapper = $('<div class="menu"></div>');
         $(this.widget.getWrapperElm()).append(this.menuWrapper);
         this.funcMap = {};
+        this.blockingTimeout = null;
     }
 
     /**
@@ -258,7 +272,10 @@ class WidgetMenu {
      */
     init(searchBox:SearchTab, favoriteBox:FavoritesTab):void {
         var self = this;
-        this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
+        this.menuWrapper.append('<a data-func="my-corpora">'
+            + this.pageModel.translate('my list') + '</a> | '
+            + '<a data-func="search">' + this.pageModel.translate('other corpora')
+            + '</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
         this.funcMap[WidgetMenu.MY_ITEMS_WIDGET_ID] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
@@ -269,10 +286,10 @@ class WidgetMenu {
             self.setCurrent(e.currentTarget);
         });
 
-        $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
+        function eventListener(e:JQueryEventObject) {
             var cycle;
 
-            if (self.widget.isVisible()) {
+            if (!self.blockingTimeout && self.widget.isVisible()) {
                 cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
                 if (e.keyCode == WidgetMenu.TAB_KEY) {
                     self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
@@ -280,6 +297,19 @@ class WidgetMenu {
                     e.stopPropagation();
                 }
             }
+        }
+        $(window.document).on('keyup.quick-actions', eventListener);
+
+        // we have to prevent Alt+Tab to be catched by our Tab-based switch
+        $(window).on('blur', function () {
+            clearTimeout(self.blockingTimeout);
+            self.blockingTimeout = null;
+        });
+        $(window).on('focus', function () {
+            self.blockingTimeout = setTimeout(function () {
+                clearTimeout(self.blockingTimeout);
+                self.blockingTimeout = null;
+            }, 300);
         });
     }
 }
@@ -451,8 +481,20 @@ export class SearchTab implements WidgetTab {
             limit : self.maxNumHints,
             templates: {
                 suggestion: function (item:SearchResponse) {
-                    return $('<p>' + item.name
-                        + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
+                    if (item.found_in.length > 0) {
+                        return $('<p>' + item.name
+                            + ' <span class="num">('
+                            + self.pluginApi.translate('size')
+                            + ': ~' + item.raw_size + ', '
+                            + self.pluginApi.translate('found in')
+                            + ': ' + item.found_in.join(', ')
+                            + ')</span></p>');
+
+                    } else {
+                        return $('<p>' + item.name
+                            + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
+                    }
+
                 }
             }
         });
@@ -507,7 +549,7 @@ class FavoritesTab implements WidgetTab {
 
     private wrapperFav:HTMLElement;
 
-    dataFeat:Array<CorplistItem>;
+    dataFeat:Array<FeaturedItem>;
 
     private wrapperFeat:HTMLElement;
 
@@ -522,7 +564,7 @@ class FavoritesTab implements WidgetTab {
      * @param widgetWrapper
      */
     constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
-                dataFeat:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
+                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistItemClick) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
@@ -706,12 +748,15 @@ class FavoritesTab implements WidgetTab {
         }
 
         if (this.dataFeat.length > 0) {
-            $.each(this.dataFeat, function (i, item:Array<string>) { // item = (id, name, size)
-                $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
-                    + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
-                    + item[1] + '</a></td>'
+            $.each(this.dataFeat, function (i, item:FeaturedItem) {
+                $(self.wrapperFeat).append('<tr class="data-item"><td>'
+                    + '<a'
+                    + ' href="' + self.pageModel.createActionUrl('first_form?corpname=') + item.id + '"'
+                    + ' title="' + item.description + '"'
+                    + ' >'
+                    + item.name + '</a></td>'
                     + '<td class="num">'
-                    + (parseInt(item[2]) > 0 ? '~' + item[2] : '<span title="'
+                    + (item.size ? '~' + item.size : '<span title="'
                             + self.pageModel.translate('unknown size') + '">?</span>')
                     + '</td>'
                     + '</tr>');
@@ -738,7 +783,7 @@ class FavoritesTab implements WidgetTab {
     }
 
     getFooter():JQuery {
-        return $('<span>' + this.pageModel.translate('hit [Tab] to start a search') + '</span>');
+        return $('<span>' + this.pageModel.translate('hit [Tab] to search for other corpora') + '</span>');
     }
 }
 
@@ -1227,7 +1272,7 @@ export class Corplist {
         this.jqWrapper.addClass(this.widgetClass);
 
         // main menu
-        this.mainMenu = new WidgetMenu(this);
+        this.mainMenu = new WidgetMenu(this, this.pageModel);
 
         // search func
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
