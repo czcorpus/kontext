@@ -64,6 +64,13 @@ export interface CorplistItem {
     size_info: string;
 }
 
+interface FeaturedItem {
+    id: string;
+    name: string;
+    size: string; // rough size (100G, 1T etc.)
+    description: string;
+}
+
 /**
  *
  */
@@ -179,6 +186,8 @@ class WidgetMenu {
 
     currentBoxId:string;
 
+    blockingTimeout:number;
+
     static SEARCH_WIDGET_ID:string = 'search';
     static MY_ITEMS_WIDGET_ID:string = 'my-corpora';
 
@@ -193,6 +202,7 @@ class WidgetMenu {
         this.menuWrapper = $('<div class="menu"></div>');
         $(this.widget.getWrapperElm()).append(this.menuWrapper);
         this.funcMap = {};
+        this.blockingTimeout = null;
     }
 
     /**
@@ -269,10 +279,10 @@ class WidgetMenu {
             self.setCurrent(e.currentTarget);
         });
 
-        $(window.document).on('keyup.quick-actions', function (e:JQueryEventObject) {
+        function eventListener(e:JQueryEventObject) {
             var cycle;
 
-            if (self.widget.isVisible()) {
+            if (!self.blockingTimeout && self.widget.isVisible()) {
                 cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
                 if (e.keyCode == WidgetMenu.TAB_KEY) {
                     self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
@@ -280,6 +290,19 @@ class WidgetMenu {
                     e.stopPropagation();
                 }
             }
+        }
+        $(window.document).on('keyup.quick-actions', eventListener);
+
+        // we have to prevent Alt+Tab to be catched by our Tab-based switch
+        $(window).on('blur', function () {
+            clearTimeout(self.blockingTimeout);
+            self.blockingTimeout = null;
+        });
+        $(window).on('focus', function () {
+            self.blockingTimeout = setTimeout(function () {
+                clearTimeout(self.blockingTimeout);
+                self.blockingTimeout = null;
+            }, 300);
         });
     }
 }
@@ -507,7 +530,7 @@ class FavoritesTab implements WidgetTab {
 
     private wrapperFav:HTMLElement;
 
-    dataFeat:Array<CorplistItem>;
+    dataFeat:Array<FeaturedItem>;
 
     private wrapperFeat:HTMLElement;
 
@@ -522,7 +545,7 @@ class FavoritesTab implements WidgetTab {
      * @param widgetWrapper
      */
     constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
-                dataFeat:Array<CorplistItem>, itemClickCallback?:CorplistItemClick) {
+                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistItemClick) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
@@ -706,12 +729,15 @@ class FavoritesTab implements WidgetTab {
         }
 
         if (this.dataFeat.length > 0) {
-            $.each(this.dataFeat, function (i, item:Array<string>) { // item = (id, name, size)
-                $(self.wrapperFeat).append('<tr class="data-item"><td><a href="'
-                    + self.pageModel.createActionUrl('first_form?corpname=') + item[0] + '">'
-                    + item[1] + '</a></td>'
+            $.each(this.dataFeat, function (i, item:FeaturedItem) {
+                $(self.wrapperFeat).append('<tr class="data-item"><td>'
+                    + '<a'
+                    + ' href="' + self.pageModel.createActionUrl('first_form?corpname=') + item.id + '"'
+                    + ' title="' + item.description + '"'
+                    + ' >'
+                    + item.name + '</a></td>'
                     + '<td class="num">'
-                    + (parseInt(item[2]) > 0 ? '~' + item[2] : '<span title="'
+                    + (item.size ? '~' + item.size : '<span title="'
                             + self.pageModel.translate('unknown size') + '">?</span>')
                     + '</td>'
                     + '</tr>');

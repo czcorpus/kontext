@@ -389,10 +389,12 @@ class CorpTree(AbstractSearchableCorporaArchive):
         featured = []
         for x in self._raw_list().values():
             if x['id'] in permitted_corpora and is_featured(x):
-                featured.append((
-                    permitted_corpora[x['id']],
-                    self._manatee_corpora.get_info(x['id']).name,
-                    l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size)))
+                featured.append({
+                    'id': permitted_corpora[x['id']],
+                    'name': self._manatee_corpora.get_info(x['id']).name,
+                    'size': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
+                    'description': self._manatee_corpora.get_info(x['id']).description
+                })
         return featured
 
     def export(self, user_id, *args):
