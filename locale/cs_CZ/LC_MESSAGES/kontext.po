@@ -2143,8 +2143,8 @@ msgstr "klikněte pro vyřazení položky z oblíbených"
 msgid "click to (un)lock items for removal"
 msgstr "klikněte pro odemčení/uzamčení režimu odebírání položek ze seznamu"
 
-msgid "Hold CTRL to select multiple items"
-msgstr "Přidržte klávesu CTRL, chcete-li vybrat více položek"
+msgid "Hold CTRL/Command to select multiple items"
+msgstr "Přidržte klávesu CTRL/Command, chcete-li vybrat více položek"
 
 msgid "You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T"
 msgstr "Pro zápis přibližné velikosti lze použít přípony - např. 50k, 100M, 7G, 1T"
