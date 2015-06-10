@@ -167,6 +167,7 @@ interface SearchResponse {
     desc: string;
     id: string;
     size: number;
+    found_in?: Array<string>;
 }
 
 /**
@@ -480,8 +481,20 @@ export class SearchTab implements WidgetTab {
             limit : self.maxNumHints,
             templates: {
                 suggestion: function (item:SearchResponse) {
-                    return $('<p>' + item.name
-                        + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
+                    if (item.found_in.length > 0) {
+                        return $('<p>' + item.name
+                            + ' <span class="num">('
+                            + self.pluginApi.translate('size')
+                            + ': ~' + item.raw_size + ', '
+                            + self.pluginApi.translate('found in')
+                            + ': ' + item.found_in.join(', ')
+                            + ')</span></p>');
+
+                    } else {
+                        return $('<p>' + item.name
+                            + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
+                    }
+
                 }
             }
         });

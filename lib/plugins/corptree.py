@@ -70,6 +70,7 @@ from plugins.abstract.corpora import CorpusInfo
 import l10n
 import manatee
 from fallback_corpus import EmptyCorpus
+from translation import ugettext as _
 
 DEFAULT_LANG = 'en'
 
@@ -444,12 +445,26 @@ class CorpTree(AbstractSearchableCorporaArchive):
         for corp in corplist:
             full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
             keywords = [k for k in full_data['metadata']['keywords'].keys()]
-            if matches_all([k in keywords for k in query_keywords]
-                           + [(s in corp['name'].lower() or s in corp['desc'].lower())
-                              for s in normalized_query_substrs]
-                           + [matches_size(corp)]):
+            hits = []
+            found_in = []
+
+            hits.extend([k in keywords for k in query_keywords])
+            for s in normalized_query_substrs:
+                # the name must be tested first to prevent the list 'found_in'
+                # to be filled in case item matches both name and description
+                if s in corp['name'].lower():
+                    hits.append(True)
+                elif s in corp['desc'].lower():
+                    hits.append(True)
+                    found_in.append(_('description'))
+                else:
+                    hits.append(False)
+            hits.append(matches_size(corp))
+
+            if matches_all(hits):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
                 corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
+                corp['found_in'] = found_in
                 ans['rows'].append(corp)
                 used_keywords.update(keywords)
         ans['rows'] = l10n.sort(ans['rows'], loc=self._lang(), key=lambda v: v['name'])
