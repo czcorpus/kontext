@@ -1719,7 +1719,7 @@ class Actions(Kontext):
         bib_data = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
         return {'bib_data': bib_data}
 
-    @exposed(return_type='html', template='empty.tmpl', legacy=True)
+    @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
         html = plugins.application_bar.get_contents(cookies=self._cookies,
                                                     curr_lang=self.ui_lang,

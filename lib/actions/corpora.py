@@ -25,7 +25,7 @@ class Corpora(Kontext):
     def get_mapping_url_prefix(self):
         return '/corpora/'
 
-    @exposed()
+    @exposed(skip_corpus_init=True)
     def corplist(self, request):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         return dict(

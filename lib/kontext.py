@@ -382,11 +382,6 @@ class Kontext(Controller):
         logging.getLogger('QUERY').info(json.dumps(log_data))
 
     @staticmethod
-    def _requires_corpus_access(action):
-        # TODO this is a flawed solution - method metadata (access_level should be used instead)
-        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar', 'corplist')
-
-    @staticmethod
     def _init_default_settings(options):
         if 'shuffle' not in options:
             options['shuffle'] = 1
@@ -641,7 +636,7 @@ class Kontext(Controller):
 
     def _check_corpus_access(self, path, form, action_metadata):
         allowed_corpora = plugins.auth.permitted_corpora(self._session_get('user', 'id'))
-        if self._requires_corpus_access(path[0]):
+        if not action_metadata.get('skip_corpus_init', False):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if not action_metadata.get('legacy', False):
                 mapping = self.get_args_mapping(ConcArgsMapping)
