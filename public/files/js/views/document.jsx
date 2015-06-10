@@ -246,11 +246,16 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return {messages: []};
             },
 
+            _changeListener : function (store) {
+                this.setState({messages: store.getMessages()});
+            },
+
             componentDidMount : function () {
-                var self = this;
-                storeProvider.messageStore.addChangeListener(function (store) {
-                    self.setState({messages: store.getMessages()});
-                });
+                storeProvider.messageStore.addChangeListener(this._changeListener);
+            },
+
+            componentWillUnmount : function () {
+                storeProvider.messageStore.removeChangeListener(this._changeListener);
             },
 
             render: function () {
