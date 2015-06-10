@@ -29,14 +29,14 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return settings.get_int('global', 'anonymous_user_id') == user_id
 
-    @exposed()
+    @exposed(skip_corpus_init=True)
     def login(self, request):
         self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
                                     MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         return {}
 
-    @exposed()
+    @exposed(skip_corpus_init=True)
     def loginx(self, request):
         ans = {}
         self._session['user'] = plugins.auth.validate_user(request.form['username'],
@@ -51,7 +51,7 @@ class User(Kontext):
             self.add_system_message('error', _('Incorrect username or password'))
         return ans
 
-    @exposed(access_level=1, template='user/login.tmpl')
+    @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True)
     def logoutx(self, request):
         self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
                                     MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
