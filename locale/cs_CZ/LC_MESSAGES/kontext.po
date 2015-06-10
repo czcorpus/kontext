@@ -2152,6 +2152,9 @@ msgstr "Pro zápis přibližné velikosti lze použít přípony - např. 50k, 1
 msgid "size from"
 msgstr "velikost od"
 
+msgid "Add/remove the current corpus, subcorpus, aligned corpora to/from favorites"
+msgstr "Přidat/odstranit aktuální korpus, subkorpus, zarované korpusy do/z oblíbených"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

@@ -606,9 +606,10 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #if not $_anonymous
     <div class="starred">
         #if $is_fav:
-          <img class="starred" data-item-id="$curr_key" src="$files_path/img/starred_24x24.png" alt="$_('starred')" />
+            #set $img_title = $_('Add/remove the current corpus, subcorpus, aligned corpora to/from favorites')
+          <img class="starred" title="$img_title" data-item-id="$curr_key" src="$files_path/img/starred_24x24.png" alt="$_('starred')" />
         #else
-          <img src="$files_path/img/starred_24x24_grey.png" alt="$_('not starred starred')" />
+          <img title="$img_title" src="$files_path/img/starred_24x24_grey.png" alt="$_('not starred starred')" />
         #end if
     </div>
     #end if

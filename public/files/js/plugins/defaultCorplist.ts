@@ -184,6 +184,8 @@ class WidgetMenu {
 
     funcMap:{[name:string]: WidgetTab};
 
+    pageModel:Kontext.FirstFormPage;
+
     currentBoxId:string;
 
     blockingTimeout:number;
@@ -197,8 +199,9 @@ class WidgetMenu {
      *
      * @param widget
      */
-    constructor(widget:Corplist) {
+    constructor(widget:Corplist, pageModel:Kontext.FirstFormPage) {
         this.widget = widget;
+        this.pageModel = pageModel;
         this.menuWrapper = $('<div class="menu"></div>');
         $(this.widget.getWrapperElm()).append(this.menuWrapper);
         this.funcMap = {};
@@ -268,7 +271,10 @@ class WidgetMenu {
      */
     init(searchBox:SearchTab, favoriteBox:FavoritesTab):void {
         var self = this;
-        this.menuWrapper.append('<a data-func="my-corpora">my list</a> | <a data-func="search">search</a>');
+        this.menuWrapper.append('<a data-func="my-corpora">'
+            + this.pageModel.translate('my list') + '</a> | '
+            + '<a data-func="search">' + this.pageModel.translate('other corpora')
+            + '</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
         this.funcMap[WidgetMenu.MY_ITEMS_WIDGET_ID] = this.favoriteBox; // TODO attributes vs. this map => redundancy & design flaw
@@ -764,7 +770,7 @@ class FavoritesTab implements WidgetTab {
     }
 
     getFooter():JQuery {
-        return $('<span>' + this.pageModel.translate('hit [Tab] to start a search') + '</span>');
+        return $('<span>' + this.pageModel.translate('hit [Tab] to search for other corpora') + '</span>');
     }
 }
 
@@ -1253,7 +1259,7 @@ export class Corplist {
         this.jqWrapper.addClass(this.widgetClass);
 
         // main menu
-        this.mainMenu = new WidgetMenu(this);
+        this.mainMenu = new WidgetMenu(this, this.pageModel);
 
         // search func
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
