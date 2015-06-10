@@ -436,7 +436,7 @@ export class SearchTab implements WidgetTab {
             $(link).text(item[1]).addClass('keyword');
             $(link).attr('data-srchkey', item[0]);
             $(link).on('click', function (e:JQueryEventObject) {
-                self.toggleTagSelection(link, e.ctrlKey);
+                self.toggleTagSelection(link, e.ctrlKey || e.metaKey);
                 self.triggerTypeaheadSearch();
             });
             if (i < self.pluginApi.getConf('pluginData')['corptree']['corpora_labels']['length'] - 1) {
