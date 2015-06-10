@@ -127,7 +127,8 @@ class LiveData {
     private createDataTable(rows, defaultRowIdKey:string, bibConf:BibConf, checkedItems) {
         var table:HTMLElement = window.document.createElement('table'),
             rowIdentKey:string,   // specifies data key which uniquely identifies data rows
-            rowIdentValue:string; // specifies unique value which identifies respective data row
+            rowIdentValue:string, // specifies unique value which identifies respective data row
+            rowIdentTitle:string;
 
         $(table).addClass('dynamic');
         $.each(rows, function (i:number, row:any) {
@@ -139,6 +140,7 @@ class LiveData {
             if ($.isArray(row)) { // => value and label differ
                 itemLabel = row[0];
                 rowIdentValue = row[1];
+                rowIdentTitle = row[2] ? row[2] : row[1];
 
             } else {
                 itemLabel = row;
@@ -161,10 +163,10 @@ class LiveData {
                 + rowIdentKey + '" ' + (labelAttrName ? ' data-virt-name="' + labelAttrName + '" ' : '')
                 + ' value="' + (typeof row === 'object' ? row[1] : row) + '" checked="checked" disabled="disabled" /> '
                 + '<input type="hidden" name="sca_' + rowIdentKey + '" value="' + rowIdentValue + '" /> '
-                + itemLabel + '</label></td><td>' + bibLink + '</td></tr>');
+                + itemLabel + '</label title="' + rowIdentTitle + '"></td><td>' + bibLink + '</td></tr>');
 
             } else {
-                $(table).append('<tr><td><label><input class="attr-selector" type="checkbox" name="sca_'
+                $(table).append('<tr><td><label title="' + rowIdentTitle + '"><input class="attr-selector" type="checkbox" name="sca_'
                 + rowIdentKey + '" ' + (labelAttrName ? ' data-virt-name="' + labelAttrName + '" ' : '')
                 + ' value="' + rowIdentValue + '" /> ' + itemLabel + '</label></td><td>'
                 + bibLink + '</td></tr>');

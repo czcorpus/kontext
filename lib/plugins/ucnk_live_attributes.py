@@ -14,15 +14,34 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
+Interactive (ad hoc) subcorpus selection.
+
+Required XML configuration:
+
+<kontext>
+  <plugins>
+    ...
+    <live_attributes>
+      <module>ucnk_live_attributes</module>
+      <js_module>ucnkLiveAttributes</js_module>
+      <max_attr_visible_chars extension-by="ucnk">30</max_attr_visible_chars>
+    </live_attributes>
+    ...
+  </plugins>
+</kontext>
+"""
 
 import re
 from sqlalchemy import create_engine
 import json
 from functools import wraps
 from hashlib import md5
+from functools import partial
 
 import l10n
 from abstract.live_attributes import AbstractLiveAttributes
+from templating.filters import Shortener
 
 
 def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora):
@@ -121,11 +140,14 @@ class AttrArgs(object):
 
 class LiveAttributes(AbstractLiveAttributes):
 
-    def __init__(self, corptree, max_attr_list_size, empty_val_placeholder):
+    def __init__(self, corptree, max_attr_list_size, empty_val_placeholder,
+                 max_attr_visible_chars):
         self.corptree = corptree
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
+        self.shorten_value = partial(Shortener().filter,
+                                     length=int(max_attr_visible_chars), nice=True)
 
     def db(self, corpname):
         """
@@ -266,9 +288,10 @@ class LiveAttributes(AbstractLiveAttributes):
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
                     if attr == bib_label:
-                        ans[attr].add((unicode(v), item[srch_attr_map[bib_id]]))
+                        ans[attr].add((self.shorten_value(unicode(v)),
+                                       item[srch_attr_map[bib_id]], unicode(v)))
                     elif type(ans[attr]) is set:
-                        ans[attr].add(v)
+                        ans[attr].add((self.shorten_value(v), v, v))
                     elif type(ans[attr]) is int:
                         ans[attr] += int(v)
 
@@ -318,4 +341,6 @@ def create_instance(corptree, settings):
     """
     return LiveAttributes(corptree,
                           settings.get_int('global', 'max_attr_list_size'),
-                          settings.get('corpora', 'empty_attr_value_placeholder'))
+                          settings.get('corpora', 'empty_attr_value_placeholder'),
+                          settings.get('plugins', 'live_attributes')
+                          .get('ucnk:max_attr_visible_chars', 20))
