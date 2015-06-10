@@ -228,7 +228,7 @@ def load_controller_class(path_info):
     elif path_info.startswith('/corpora'):
         from actions.corpora import Corpora as controller_class
     else:
-        from actions.actions import Actions
+        from actions.concordance import Actions
         controller_class = Actions
     return controller_class
 
