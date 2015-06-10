@@ -206,7 +206,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         props: {
                             keyword: self.props.keyword,
                             status: active,
-                            ctrlKey: e.ctrlKey
+                            ctrlKey: e.ctrlKey || e.metaKey
                         }
                     });
                 };
