@@ -296,7 +296,8 @@ class Kontext(Controller):
         action method's approach where all the arguments were mapped to self.
 
         returns:
-        an implementation of argsmapping.GeneralAttrMapping or None if clazz is not registered
+        an implementation of argsmapping.GeneralAttrMapping or freshly initialized
+        object with empty values if clazz is not registered
         """
         if clazz in self._args_mappings:
             return self._args_mappings[clazz]

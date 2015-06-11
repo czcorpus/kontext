@@ -66,6 +66,6 @@ class AbstractMenuItems(object):
         lang -- a language+country (e.g. 'en_US') or language (eng. 'cs') code
 
         returns:
-        a list/tuple of MenuItem instances
+        a list/tuple of plugin.abstract.menu_items.MenuItem instances
         """
         raise NotImplementedError()

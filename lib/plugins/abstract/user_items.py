@@ -159,7 +159,7 @@ class AbstractUserItems(ThreadLocalData):
 
     def from_dict(self, data):
         """
-        According to the provided data it returns a proper
+        According to provided data it returns a proper
         implementation of GeneralItem.
 
         arguments:
@@ -188,7 +188,7 @@ class AbstractUserItems(ThreadLocalData):
 
     def add_user_item(self, user_id, item):
         """
-        Adds (in a persistent way) an item to user's list.
+        Adds (persistently) an item to user's list.
 
         arguments:
         user_id -- a database ID of a user
