@@ -88,6 +88,3 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def set_ttl(self, key, ttl):
         pass
-
-    def apply_on_entries(self, fn, match):
-        pass

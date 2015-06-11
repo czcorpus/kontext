@@ -41,7 +41,7 @@ class AbstractSubcRestore(object):
 
     def delete_query(self, user_id, corpname, subcname):
         """
-        Removes query from archive
+        Removes a query from archive
 
         arguments:
         user_id -- int, ID of a user
@@ -83,7 +83,7 @@ class AbstractSubcRestore(object):
         Returns a query with ID == query_id
 
         returns:
-        a dict with following structure:
+        a dict with the following structure:
         {
             'id': str,
             'user_id': int,

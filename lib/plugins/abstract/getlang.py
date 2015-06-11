@@ -47,4 +47,4 @@ class AbstractGetLang(object):
         This specific implementation requires you to specify either an empty value
         or underscore-separated ISO 639 language code and ISO 3166 country code
         """
-        raise NotImplementedError()
+        pass
