@@ -512,6 +512,9 @@ class Kontext(Controller):
             if self._prev_q_data is not None:
                 self.q = self._prev_q_data['q'][:] + url_q[1:]
             else:
+                # !!! we have to reset the invalid query, otherwise _store_conc_params
+                # generates a new key pointing to it
+                self.q = []
                 raise UserActionException(_('Invalid or expired query'))
 
     def _store_conc_params(self):
