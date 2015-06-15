@@ -914,14 +914,13 @@ class Kontext(Controller):
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
 
-        if self.cm:  # under normal circumstances (!= error), CorpusManager should be always set
+        poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
+        result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
+        poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
+        if 'lempos' not in attrlist:
             poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
-            result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-            poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
-            if 'lempos' not in attrlist:
-                poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
-            result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-            result['lpos_dict'] = dict([(y, x) for x, y in poslist])
+        result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
+        result['lpos_dict'] = dict([(y, x) for x, y in poslist])
 
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
@@ -1076,13 +1075,15 @@ class Kontext(Controller):
         global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
+        result['corp_full_name'] = None
 
         if self.maincorp:
             thecorp = corplib.open_corpus(self.maincorp)
         else:
             thecorp = self._corp()
 
-        self._add_corpus_related_globals(result, thecorp)
+        if not action_metadata.get('skip_corpus_init', False):
+            self._add_corpus_related_globals(result, thecorp)
 
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
