@@ -25,7 +25,7 @@ from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, UserActionException, convert_types
+from controller import Controller, UserActionException, convert_types, exposed
 import plugins
 import settings
 import l10n
@@ -1522,3 +1522,8 @@ class Kontext(Controller):
 
     def _uses_internal_user_pages(self):
         return isinstance(plugins.auth, AbstractInternalAuth)
+
+    @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True)
+    def message(self, **kwargs):
+        self.disabled_menu_items = Kontext.ANON_FORBIDDEN_MENU_ITEMS
+        return kwargs
