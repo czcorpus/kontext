@@ -88,7 +88,8 @@
                     'vendor/Dispatcher',
                     'SoundManager',
                     'vendor/typeahead',
-                    'vendor/bloodhound'
+                    'vendor/bloodhound',
+                    'vendor/jscrollpane'
                 ]
             }
         ];
