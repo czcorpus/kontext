@@ -518,7 +518,7 @@ def corp_freqs_cache_path(corp, attrname):
         for d in subdirs:
             cache_dir = '%s/%s' % (cache_dir, d)
             if not os.path.exists(cache_dir):
-                os.mkdir(cache_dir)
+                os.makedirs(cache_dir)
         ans = '%s/%s' % (cache_dir, attrname)
     return ans.encode('utf-8')
 
