@@ -22,7 +22,7 @@ import urllib
 
 import corplib
 import conclib
-from controller import Controller, UserActionException, convert_types, Parameter
+from controller import Controller, UserActionException, convert_types, Parameter, exposed
 import plugins
 import settings
 import taghelper
@@ -436,6 +436,9 @@ class Kontext(Controller):
             if self._prev_q_data is not None:
                 self.q = self._prev_q_data['q'][:] + url_q[1:]
             else:
+                # !!! we have to reset the invalid query, otherwise _store_conc_params
+                # generates a new key pointing to it
+                self.q = []
                 raise UserActionException(_('Invalid or expired query'))
 
     def _store_conc_params(self):
@@ -1167,3 +1170,8 @@ class Kontext(Controller):
         else:
             revers = False
         return k, revers
+
+    @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True)
+    def message(self, **kwargs):
+        self.disabled_menu_items = Kontext.ANON_FORBIDDEN_MENU_ITEMS
+        return kwargs
