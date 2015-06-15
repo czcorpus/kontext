@@ -659,8 +659,7 @@ class Controller(object):
     def is_action(self, action_name):
         return callable(getattr(self, action_name, None))
 
-    @staticmethod
-    def _analyze_error(err):
+    def _analyze_error(self, err):
         """
         This method is intended to extract details about (some) errors via their
         messages and return more specific type with fixed text message.
@@ -680,10 +679,7 @@ class Controller(object):
             if type(err.message) == unicode:
                 text = err.message
             else:
-                try:
-                    text = err.message.decode('utf-8')
-                except:
-                    text = str(err)
+                text = str(err.message).decode(self.self_encoding(), errors='replace')
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error

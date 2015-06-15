@@ -843,10 +843,7 @@ class Kontext(Controller):
 
     def self_encoding(self):
         enc = corpus_get_conf(self._corp(), 'ENCODING')
-        if enc:
-            return enc
-        else:
-            return 'iso-8859-1'
+        return enc if enc else 'iso-8859-1'
 
     def _app_cookie_names(self):
         """
