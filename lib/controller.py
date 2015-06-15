@@ -673,8 +673,7 @@ class Controller(object):
     def _method_is_exposed(self, metadata):
         return '__exposed__' in metadata
 
-    @staticmethod
-    def _analyze_error(err):
+    def _analyze_error(self, err):
         """
         This method is intended to extract details about (some) errors via their
         messages and return more specific type with fixed text message.
@@ -690,7 +689,10 @@ class Controller(object):
         returns:
         user-readable text of the error
         """
-        text = err.message if type(err.message) == unicode else str(err.message).decode('utf-8')
+        if type(err.message) == unicode:
+            text = err.message
+        else:
+            text = str(err.message).decode(self.self_encoding(), errors='replace')
 
         if 'Query evaluation error' in text:
             srch = re.match(r'.+ at position (\d+):', text)
