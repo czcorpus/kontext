@@ -207,7 +207,6 @@ class Actions(Kontext):
         if len(out['Lines']) == 0:
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
-            out['next_url'] = '%sfirst_form' % self.get_root_url()
 
         params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
                  '&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \

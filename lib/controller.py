@@ -659,8 +659,7 @@ class Controller(object):
     def is_action(self, action_name):
         return callable(getattr(self, action_name, None))
 
-    @staticmethod
-    def _analyze_error(err):
+    def _analyze_error(self, err):
         """
         This method is intended to extract details about (some) errors via their
         messages and return more specific type with fixed text message.
@@ -680,10 +679,7 @@ class Controller(object):
             if type(err.message) == unicode:
                 text = err.message
             else:
-                try:
-                    text = err.message.decode('utf-8')
-                except:
-                    text = str(err)
+                text = str(err.message).decode(self.self_encoding(), errors='replace')
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
@@ -734,14 +730,12 @@ class Controller(object):
         except AuthException as e:
             self._status = 401
             self.add_system_message('error', u'%s' % fetch_exception_msg(e))
-            named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         except (UserActionException, RuntimeError) as e:
             if hasattr(e, 'code'):
                 self._status = e.code
             self.add_system_message('error',  fetch_exception_msg(e))
-            named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         except Exception as e:  # we assume that this means some kind of a fatal error
@@ -753,8 +747,6 @@ class Controller(object):
                 self.add_system_message('error',
                                         _('Failed to process your request. '
                                           'Please try again later or contact system support.'))
-
-            named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
         # Let's test whether process_method actually invoked requested method.

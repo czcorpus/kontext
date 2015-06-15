@@ -27,19 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def bodyonload
 require(['jquery', '${client_model_dir}/document', 'conf'], function ($, page, conf) {
     var pageModel = new page.PageModel(conf);
+    pageModel.init();
     \$('a.reload').on('click', pageModel.reload);
 });
 #end def
 
 #def main
 <section class="exclusive">
-<h2>&nbsp;</h2>
-<p class="continue-url">
-    <a class="reload">$_('Reload the page')</a><br />
-    #if $varExists('next_url')
-    $_('or')<br />
-    <a href="$next_url">$_('go to the homepage').</a>
-    #end if
-</p>
+<h2>?!</h2>
 </section>
 #end def
