@@ -298,7 +298,7 @@ class Kontext(Controller):
 
     def _requires_corpus_access(self, action):
         # TODO this is a flawed solution - method metadata (access_level should be used instead)
-        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar')
+        return action not in ('login', 'loginx', 'logoutx', 'ajax_get_toolbar', 'message')
 
     def _init_default_settings(self, options):
         if 'shuffle' not in options:
@@ -755,7 +755,6 @@ class Kontext(Controller):
             return EmptyCorpus()
 
     def _add_corpus_related_globals(self, result, corpus):
-        result['files_path'] = self._files_path
         result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
         result['corp_doc'] = corpus_get_conf(corpus, 'DOCUMENTATION')
         result['corp_full_name'] = (corpus_get_conf(corpus, 'NAME')
@@ -865,15 +864,20 @@ class Kontext(Controller):
                           if getattr(self.__class__, n, None) is not val and val != '']
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
+        result['files_path'] = self._files_path
+        result['corp_full_name'] = None
 
         if self.maincorp:
             thecorp = corplib.open_corpus(self.maincorp)
         else:
             thecorp = self._corp()
-        try:
-            self._add_corpus_related_globals(result, thecorp)
-        except Exception as ex:
-            logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
+
+        if self._requires_corpus_access(methodname):
+            try:
+                self._add_corpus_related_globals(result, thecorp)
+            except Exception as ex:
+                # TODO this should not happen unless there is an action with incorrect configuration
+                logging.getLogger(__name__).warning('supressed error in kontext._add_corpus_related_globals(): %s' % ex)
 
         result['supports_password_change'] = settings.supports_password_change()
         result['undo_q'] = self.urlencode([('q', q) for q in self.q[:-1]])
