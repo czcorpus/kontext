@@ -728,10 +728,6 @@ class Controller(object):
                                                                     action_metadata)
                 self._pre_action_validate()
                 methodname, tmpl, result = self.process_method(path[0], request, path, named_args)
-                # Let's test whether process_method used requested our method.
-                # If not (e.g. there was an error and a fallback has been used) then reload action metadata
-                if methodname != path[0]:
-                    action_metadata = self._get_method_metadata(methodname)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
@@ -760,6 +756,11 @@ class Controller(object):
 
             named_args['next_url'] = '%sfirst_form' % self.get_root_url()
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
+
+        # Let's test whether process_method actually invoked requested method.
+        # If not (e.g. there was an error and a fallback has been used) then reload action metadata
+        if methodname != path[0]:
+            action_metadata = self._get_method_metadata(methodname)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, action_metadata, tmpl, result)
@@ -916,7 +917,7 @@ class Controller(object):
         """
         return None
 
-    @exposed(accept_kwargs=True, legacy=True)
+    @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True)
     def message(self, *args, **kwargs):
         return kwargs
 
