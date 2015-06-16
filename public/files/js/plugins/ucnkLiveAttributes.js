@@ -276,7 +276,7 @@ define(['win', 'jquery', 'popupbox'], function (win, $, popupBox) {
 
             } else if (typeof vals[0] === 'object') {
                 ans = false;
-                $.each(vals, function (item) {
+                $.each(vals, function (i, item) {
                     if (item[1] === value) {
                         ans = true;
                         return false;
