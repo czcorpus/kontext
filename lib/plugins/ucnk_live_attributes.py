@@ -14,6 +14,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
+Interactive (ad hoc) subcorpus selection.
+
+Required XML configuration:
+
+<kontext>
+  <plugins>
+    ...
+    <live_attributes>
+      <module>ucnk_live_attributes</module>
+      <js_module>ucnkLiveAttributes</js_module>
+      <max_attr_visible_chars extension-by="ucnk">30</max_attr_visible_chars>
+    </live_attributes>
+    ...
+  </plugins>
+</kontext>
+"""
 
 import re
 from sqlalchemy import create_engine
@@ -273,13 +290,14 @@ class LiveAttributes(AbstractLiveAttributes):
                         ans[attr] += int(v)
 
         exported = {}
+        collator_locale = self.corptree.get_corpus_info(corpname)['collator_locale']
         for k in ans.keys():
             if type(ans[k]) is set:
                 if len(ans[k]) <= self.max_attr_list_size:
                     if k == bib_label:
-                        out_data = l10n.sort(ans[k], 'cs_CZ', key=lambda t: t[0])
+                        out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
                     else:
-                        out_data = tuple(sorted(ans[k]))
+                        out_data = tuple(l10n.sort(ans[k], collator_locale))
                     exported[self.export_key(k)] = out_data
                 else:
                     exported[self.export_key(k)] = {'length': len(ans[k])}

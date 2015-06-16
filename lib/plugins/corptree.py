@@ -22,6 +22,25 @@ Required config.xml/plugins entries:
     <file>[a path to a configuration XML file]</file>
     <root_elm_path>[an XPath query leading to a root element where configuration can be found]</root_elm_path>
 </corptree>
+
+
+How does the corpus list specification XML entry looks like:
+
+<a_root_elm>
+  <corpus sentence_struct="p" ident="SUSANNE" collator_locale="cs_CZ" tagset="pp_tagset"
+      web="http://www.korpus.cz/syn2010.php">
+    <metadata>
+        <database>/opt/kontext-data/metadata/syn2010.db</database>
+        <label_attr>opus.nazev</label_attr>
+        <id_attr>opus.id</id_attr>
+    </metadata>
+    <reference>
+        <default>authors..... opus ... etc.</default>
+        <other_bibliography>http://www.korpus.cz</other_bibliography>
+    </reference>
+  </corpus>
+   ...
+</a_root_elm>
 """
 
 import threading
@@ -127,6 +146,7 @@ class CorpTree(object):
                     'speech_segment': item.attrib.get('speech_segment', None),
                     'bib_struct': item.attrib.get('bib_struct', None),
                     'citation_info': {'default_ref': None, 'article_ref': None, 'other_bibliography': None},
+                    'collator_locale': item.attrib.get('collator_locale', 'en_US'),
                     'metadata': {'database': None, 'label_attr': None, 'id_attr': None, 'desc': {}}
                 }
 
