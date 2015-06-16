@@ -56,7 +56,7 @@ def join_params(*args):
         elif type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()
-            tmp.extend(['%s=%s' % (k, v) for k, v in a])
+            tmp.extend(['%s=%s' % (k, v if v is not None else '') for k, v in a])
         elif type(a) in (str, unicode):
             tmp.append(a.strip())
         else:

@@ -26,11 +26,14 @@ $_("Frequency list")#slurp
 
 #def custom_save
 #filter WebSafe
-<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savefreq?saveformat=csv&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">CSV</a></li>
-<li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savefreq?saveformat=xlsx&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">XLSX</a></li>
-<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savefreq?saveformat=xml&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">XML</a></li>
-<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savefreq?saveformat=text&from_line=$quick_from_line&to_line=$quick_to_line&$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">TXT</a></li>
-<li><a title="$_("Save Frequency list with custom parameters")" href="savefreq_form?$q;$globals;$fcrit;ml=$ml&amp;flimit=$flimit&amp;freq_sort=$freq_sort&amp;fpage=$fpage&amp;ftt_include_empty=$ftt_include_empty">$_("Custom")&#8230;</a></li>
+#set $common_save_args = [('from_line', $quick_from_line), ('to_line', $quick_to_line),
+        ('ml', $ml), ('flimit', $flimit), ('freq_sort', $freq_sort), ('fpage', $fpage),
+        ('ftt_include_empty', $ftt_include_empty)]
+<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'csv')], $common_save_args)}">CSV</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'xlsx')], $common_save_args)}">XLSX</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'xml')], $common_save_args)}">XML</a></li>
+<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'txt')], $common_save_args)}">TXT</a></li>
+<li><a title="$_("Save Frequency list with custom parameters")" href="savefreq_form?${$join_params($q, $globals, $fcrit, $common_save_args)}">$_("Custom")&#8230;</a></li>
 #end filter
 #end def
 
@@ -40,14 +43,15 @@ $_("Frequency list")#slurp
     <h2>$_("Frequency list")</h2>
 
     #block freqs_navigation($navid="next")
-    #set $allhref = 'freqs?%s;%s;%s;flimit=%s;freq_sort=%s;ml=%s' % ($q, $globals, $fcrit, $flimit, $freq_sort, $ml)
+    #set $allhref = 'freqs?' + $join_params($q, $globals, $fcrit, [('flimit', $flimit),
+            ('freq_sort', $freq_sort), ('ml', $ml)])
     #if $paging and ($fpage > 1 or not $lastpage)
     <div class="bonito-pagination">
         <form action="freqs">
             #if $fpage > 1
             <div class="bonito-pagination-left">
                 <a href="$allhref"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                <a href="$allhref;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
+                <a href="$allhref&amp;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
             </div>
             #end if
 
@@ -68,7 +72,7 @@ $_("Frequency list")#slurp
 
             #if not $lastpage
             <div class="bonito-pagination-right">
-                <a href="$allhref;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+                <a href="$allhref&amp;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
             </div>
             #else
             <a id="$navid"></a>
@@ -105,7 +109,8 @@ $_("Frequency list")#slurp
             <th></th>
             #for $h in $b.Head
             <th colspan="2">
-                <a href="freqs?$q;$globals;$fcrit;flimit=$flimit;freq_sort=$h.s;ftt_include_empty=$ftt_include_empty"
+                <a href="freqs?$join_params($q, $globals, $fcrit, [('flimit', $flimit),
+                    ('freq_sort', $h.s), ('ftt_include_empty', $ftt_include_empty)])"
                 #if 'title' in $h# title="$h.title" #end if#>
                 $_($h.n)</a>
             </th>
@@ -119,9 +124,9 @@ $_("Frequency list")#slurp
             #set $rowNum += 1
             <td class="nowrap">
                 #if $i.get('pfilter', '')
-                <a href='view?$q;$globals;$i.get('pfilter')'>p</a>/#slurp
+                <a href="view?$join_params($q, $globals, $i.get('pfilter'))">p</a>/#slurp
                 #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
-                <a href='view?$q;$globals;$i.get('nfilter')'>n</a>
+                <a href="view?$join_params($q, $globals, $i.get('nfilter'))">n</a>
             </td>
                 #else
                 <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
