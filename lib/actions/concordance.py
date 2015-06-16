@@ -1069,8 +1069,8 @@ class Actions(Kontext):
             result['lastpage'] = 1
 
         for item in result['Items']:
-            item['pfilter'] = 'q=' + self.urlencode(item['pfilter'])
-            item['nfilter'] = 'q=' + self.urlencode(item['nfilter'])
+            item['pfilter'] = self.urlencode([('q', item['pfilter'])])
+            item['nfilter'] = self.urlencode([('q', item['nfilter'])])
             item['str'] = import_string(item['str'],
                                         from_encoding=self._corp().get_conf('ENCODING'))
 
@@ -1120,6 +1120,7 @@ class Actions(Kontext):
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
                 saved_filename,)
             out_data = result
+            out_data['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-collocations.%s' % (
                 self._canonical_corpname(self.corpname), suffix)
