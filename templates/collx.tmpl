@@ -27,11 +27,13 @@ $_("Collocations")#slurp
 #def custom_save
 #set global $new_maxitems = $cmaxitems / $collpage
 #filter WebSafe
-<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savecoll?$q;$globals&amp;saveformat=csv&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage"">CSV</a></li>
-<li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savecoll?$q;$globals&amp;saveformat=xlsx&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage"">XLSX</a></li>
-<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savecoll?$q;$globals&amp;saveformat=xml&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage"">XML</a></li>
-<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savecoll?$q;$globals&amp;saveformat=text&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage">TXT</a></li>
-<li><a title="$_("Save Frequency list with custom parameters")" href="savecoll_form?$q;$globals&amp;cattr=$cattr&amp;cfromw=$cfromw&amp;ctow=$ctow&amp;cminfreq=$cminfreq&amp;cminbgr=$cminbgr&amp;cmaxitems=$new_maxitems&amp;cbgrfns=$cbgrfns&amp;csortfn=$csortfn&amp;collpage=$collpage">$_("Custom")&#8230;</a></li>
+#set $common_save_args = [('cattr', $cattr), ('cfromw', $cfromw), ('ctow', $ctow), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cmaxitems', $new_maxitems), ('cbgrfns', $cbgrfns), ('csortfn', $csortfn), ('collpage', $collpage)]
+
+<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'csv')], $common_save_args)}">CSV</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'xlsx')], $common_save_args)}">XLSX</a></li>
+<li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'xml')], $common_save_args)}">XML</a></li>
+<li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'txt')], $common_save_args)}">TXT</a></li>
+<li><a title="$_("Save Frequency list with custom parameters")" href="savecoll_form?${$join_params($q, $globals, $common_save_args)}">$_("Custom")&#8230;</a></li>
 #end filter
 #end def
 
@@ -42,7 +44,7 @@ $_("Collocations")#slurp
     <h2>$_("Collocation candidates")</h2>
     #block collx_navigation($navid="next")
 
-    #set $allhref = 'collx?%s;%s;cattr=%s;cbgrfns=%s;cminfreq=%s;cminbgr=%s;cfromw=%s;ctow=%s;csortfn=%s' % ($q, $globals, $cattr, $cbgrfns, $cminfreq, $cminbgr, $cfromw, $ctow, $csortfn)
+    #set $allhref = 'collx?' + $join_params($q, $globals, [('cattr', $cattr), ('cbgrfns', $cbgrfns), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw), ('ctow', $ctow), ('csortfn', $csortfn)])
     #if $collpage > 1 or not $lastpage
         <div class="bonito-pagination">
             <form action="collx">
@@ -72,7 +74,7 @@ $_("Collocations")#slurp
 
                     #if not $lastpage
                     <div class="bonito-pagination-right">
-                        <a href="$allhref;collpage=$(int($collpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+                        <a href="$join_params($allhref, [('collpage', $int($collpage) + 1)])" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
                     </div>
                     #else
                     <a id="$navid"></a>
@@ -97,7 +99,9 @@ $_("Collocations")#slurp
         #else
           #set $hs = ''
         #end if
-        ><a href='collx?$q;$globals;cattr=$cattr;cbgrfns=$cbgrfns;cminfreq=$cminfreq;cminbgr=$cminbgr;cfromw=$cfromw;ctow=$ctow;csortfn=$hs'>#if $h.n #$_($h.n)#else# #end if#</a>
+        ><a href="collx?$join_params($q, $globals, [('cattr', $cattr), ('cbgrfns', $cbgrfns),
+                ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw),
+                ('ctow', $ctow), ('csortfn', $hs)])">#if $h.n #$_($h.n)#else# #end if#</a>
         </th>
       #end for
       </tr>
@@ -105,7 +109,7 @@ $_("Collocations")#slurp
         <tr>
             <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
         #set $rowNum += 1
-          <td><a href='view?$globals;$q;$i.pfilter'>p</a>/<a href='view?$globals;$q;$i.nfilter'>n</a></td>
+          <td><a href="view?$join_params($globals, $q, $i.pfilter)>p</a>/<a href="view?$join_params($globals, $q, $i.nfilter)">n</a></td>
           <td class='left monospace'>$i.str</td><td class="num"> $i.freq</td>
           #for $s in $i.Stats
             <td class="num"> $s.s</td>
