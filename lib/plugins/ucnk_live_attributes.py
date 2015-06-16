@@ -243,12 +243,14 @@ class LiveAttributes(AbstractLiveAttributes):
         a dictionary containing matching attributes and values
         """
         corpname = vanilla_corpname(corpus.corpname)
+        corpus_info = self.corptree.get_corpus_info(corpname)
         attrs = self._get_subcorp_attrs(corpus)
         db = self.db(corpname)
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
-        bib_label = LiveAttributes.import_key(self.corptree.get_corpus_info(corpname)['metadata']['label_attr'])
-        bib_id = LiveAttributes.import_key(self.corptree.get_corpus_info(corpname)['metadata']['id_attr'])
+        bib_label = LiveAttributes.import_key(corpus_info.metadata.label_attr)
+        bib_id = LiveAttributes.import_key(corpus_info.metadata.id_attr)
+        collator_locale = corpus_info.collator_locale
         hidden_attrs = set()
 
         if bib_id not in srch_attrs:
@@ -300,9 +302,9 @@ class LiveAttributes(AbstractLiveAttributes):
             if type(ans[k]) is set:
                 if len(ans[k]) <= self.max_attr_list_size:
                     if k == bib_label:
-                        out_data = l10n.sort(ans[k], 'cs_CZ', key=lambda t: t[0])
+                        out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
                     else:
-                        out_data = tuple(sorted(ans[k]))
+                        out_data = tuple(l10n.sort(ans[k], collator_locale, key=lambda t: t[0]))
                     exported[self.export_key(k)] = out_data
                 else:
                     exported[self.export_key(k)] = {'length': len(ans[k])}

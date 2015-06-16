@@ -40,7 +40,8 @@ Required config.xml/plugins entries:
 How does the corpus list specification XML entry looks like:
 
 <a_root_elm>
-  <corpus sentence_struct="p" ident="SUSANNE">
+  <corpus sentence_struct="p" ident="SUSANNE" collator_locale="cs_CZ" tagset="pp_tagset"
+      web="http://www.korpus.cz/syn2010.php">
     <metadata>
       <featured />
       <keywords>
@@ -239,6 +240,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 ans.tagset = item.attrib.get('tagset', None)
                 ans.speech_segment = item.attrib.get('speech_segment', None)
                 ans.bib_struct = item.attrib.get('bib_struct', None)
+                ans.collator_locale = item.attrib.get('collator_locale', 'en_US')
 
                 ref_elm = item.find('reference')
                 if ref_elm is not None:

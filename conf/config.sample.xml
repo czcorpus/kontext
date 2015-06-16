@@ -149,7 +149,7 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset">
+		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset" collator_locale="en_US">
                     <metadata>
                         <database>/path/to/a/sqlite/database/metadata-orwell.db</database>
                         <label_attr>opus.title</label_attr>
@@ -159,7 +159,7 @@
                 </corpus>
 	        </corplist>
             <corplist title="Foreign corpora">
-                <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  />
+                <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  collator_locale="en_GB"  />
 		        <corpus ident="BNC" sentence_struct="s">
                     <reference>
                         <default>main bib. entry...</default>
@@ -168,7 +168,8 @@
                     </reference>
                 </corpus>
             </corplist>
-            <corpus ident="spoken_stuff" sentence_struct="p" tagset="czech_tagset" speech_segment="seg.soundfile" />
+            <corpus ident="spoken_stuff" sentence_struct="p" tagset="czech_tagset"
+                    speech_segment="seg.soundfile"  collator_locale="cs_CZ" />
         </corplist>
 
         <tagsets>

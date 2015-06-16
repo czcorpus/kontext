@@ -62,6 +62,7 @@ class CorpusInfo(DictLike):
         self.tagset = None
         self.speech_segment = None
         self.bib_struct = None
+        self.collator_locale = 'en_US'  # this does not apply for Manatee functions
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
 
@@ -75,7 +76,6 @@ class CorpInfoEncoder(json.JSONEncoder):
             else:
                 ans[key] = val
         return ans
-
 
 
 class AbstractCorporaArchive(ThreadLocalData):
