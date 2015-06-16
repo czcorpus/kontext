@@ -325,7 +325,8 @@ class Checkboxes {
 
         } else if (typeof vals[0] === 'object') {
             ans = false;
-            $.each(vals, function (item) {
+            $.each(vals, function (i, item) {
+                // (0 = shortened, 1 = id, 2 = full title)
                 if (item[1] === value) {
                     ans = true;
                     return false;
@@ -354,7 +355,6 @@ class Checkboxes {
             } else {
                 id = stripPrefix($(this).attr('name'));
             }
-
             if (!self.attrValsContain(inputVal, data[id])) {
                 trElm.addClass('excluded');
                 labelElm.removeClass('locked');
