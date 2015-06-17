@@ -518,7 +518,8 @@ export class SearchTab implements WidgetTab {
             $(self.ajaxLoader).removeClass('hidden');
             if (!self.loaderKiller) {
                 self.loaderKiller = setInterval(function () {
-                    if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH) {
+                    if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH
+                            && $.isEmptyObject(self.selectedTags)) {
                         $(self.ajaxLoader).addClass('hidden');
                         clearInterval(self.loaderKiller);
                     }
