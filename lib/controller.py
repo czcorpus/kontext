@@ -251,11 +251,12 @@ class Controller(object):
         creates an empty dictionary with some predefined keys to allow other
         parts of the application to operate properly)
         """
+        auth = plugins.get('auth')
         if 'user' not in self._session:
-            self._session['user'] = plugins.auth.anonymous_user()
+            self._session['user'] = auth.anonymous_user()
 
-        if hasattr(plugins.auth, 'revalidate'):
-            plugins.auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
+        if hasattr(plugins.get('auth'), 'revalidate'):
+            auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self):

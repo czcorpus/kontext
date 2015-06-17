@@ -33,8 +33,8 @@ from kwiclib import tokens2strclass
 from l10n import import_string
 import plugins
 
-cache_factory = plugins.conc_cache
-lock_factory = plugins.locking
+cache_factory = plugins.get('conc_cache')
+lock_factory = plugins.get('locking')
 
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
