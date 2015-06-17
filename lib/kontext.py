@@ -64,6 +64,10 @@ def join_params(*args):
     return '&'.join(tmp)
 
 
+def update_params(params, key, value):
+    return [(k, v) for k, v in params if k != key] + [(key, value)]
+
+
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
@@ -1142,6 +1146,7 @@ class Kontext(Controller):
         # util functions
         result['format_number'] = partial(format_number)
         result['join_params'] = join_params
+        result['update_params'] = update_params
         result['jsonize_user_item'] = plugins.user_items.to_json
 
         result['error_report_url'] = self._get_error_reporting_url()
