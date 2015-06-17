@@ -47,36 +47,54 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewOpts, conf)
         <legend>$_('Concordance')</legend>
 
         <table  class="results-range-and-paging">
-            <tr>
-                <th>$_("Page size (number of lines)"):</th>
-                <td><input type="text" name="pagesize" value='$pagesize' size="2" /></td>
-            </tr>
-            <tr>
-                <th>$_("KWIC Context size (positions)"):</th>
-                <td><input type="text" name="newctxsize" value='$newctxsize' size="2" />
-                    <input type="hidden" name="ctxunit" value="@pos" />
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <th>$_("Page size (number of lines)"):</th>
+                    <td><input type="text" name="pagesize" value='$pagesize' size="2" /></td>
+                </tr>
+                <tr>
+                    <th>$_("KWIC Context size (positions)"):</th>
+                    <td><input type="text" name="newctxsize" value="$newctxsize" size="2" />
+                        <input type="hidden" name="ctxunit" value="@pos" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </fieldset>
+
+    <fieldset class="options">
+        <legend>$_('Word list')</legend>
+        <table  class="results-range-and-paging">
+            <tbody>
+                <tr>
+                    <th>$_("Page size (number of lines)"):</th>
+                    <td><input type="text" name="wlpagesize" value="$wlpagesize" size="2" /></td>
+                </tr>
+            </tbody>
         </table>
     </fieldset>
 
     <fieldset class="options">
         <legend>$_('frequency distribution')</legend>
         <table class="results-range-and-paging">
-            <tr>
-                <th>$_("Page size (number of lines)"):</th>
-                <td><input type="text" name="citemsperpage" value='$citemsperpage' size="2" /></td>
-            </tr>
+            <tbody>
+                <tr>
+                    <th>$_("Page size (number of lines)"):</th>
+                    <td><input type="text" name="citemsperpage" value="$citemsperpage" size="2" /></td>
+                </tr>
+            </tbody>
         </table>
     </fieldset>
 
     <fieldset class="options">
         <legend>$_('Collocations')</legend>
         <table class="results-range-and-paging">
-            <tr>
-                <th>$_("Page size (number of lines)"):</th>
-                <td><input type="text" name="fmaxitems" value='$fmaxitems' size="2" /></td>
-            </tr>
+            <tbody>
+                <tr>
+                    <th>$_("Page size (number of lines)"):</th>
+                    <td><input type="text" name="fmaxitems" value='$fmaxitems' size="2" /></td>
+                </tr>
+            </tbody>
         </table>
     </fieldset>
 

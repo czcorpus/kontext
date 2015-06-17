@@ -448,7 +448,9 @@ class Controller(object):
         params -- a dict-like object containing parameter names and values
         """
         root = self.get_root_url()
-        params_str = '&'.join(['%s=%s' % (k, quote(v.encode('utf-8'))) for k, v in params.items()])
+
+        convert_val = lambda x: str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
+        params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
         if len(params_str) > 0:
             return '%s%s?%s' % (root, action, params_str)
         else:

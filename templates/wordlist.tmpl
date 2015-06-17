@@ -29,11 +29,16 @@ $_("Word list")#slurp
 
 #def headers
     #filter WebSafe
-    #set global $new_maxitems = $wlmaxitems / $wlpage
     #set global $url_wlpat = $urlquote($wlpat)
     #set global $url_usesubcorp = $urlquote($usesubcorp)
 
-    #set global $curr_settings = '%(corpname_url)s;usesubcorp=%(url_usesubcorp)s;wlattr=%(wlattr)s;wlminfreq=%(wlminfreq)s;wlpat=%(url_wlpat)s;wlicase=%(wlicase)s;wlmaxitems=%(wlmaxitems)s;wlsort=%(wlsort)s;ref_corpname=%(ref_corpname)s;ref_usesubcorp=%(ref_usesubcorp)s;wlcache=%(wlcache)s;simple_n=%(simple_n)s;wltype=%(wltype)s;wlnums=%(wlnums)s;include_nonwords=%(include_nonwords)s;blcache=%(blcache)s;wlpage=%(wlpage)s' % {'corpname_url': $corpname_url, 'url_usesubcorp': $url_usesubcorp, 'wlattr': $wlattr, 'wlminfreq': $wlminfreq, 'url_wlpat': $url_wlpat, 'wlicase': $wlicase, 'wlmaxitems': $new_maxitems, 'wlsort': $wlsort, 'ref_corpname': $ref_corpname, 'ref_usesubcorp': $ref_usesubcorp, 'wlcache': $wlcache, 'simple_n': $simple_n, 'wltype': $wltype, 'wlnums': $wlnums, 'include_nonwords': $include_nonwords, 'blcache': $blcache, 'wlpage': $wlpage}
+    #set global $curr_params = [('usesubcorp', $url_usesubcorp),
+        ('wlattr', $wlattr), ('wlminfreq', $wlminfreq), ('wlpat', $url_wlpat), ('wlicase', $wlicase),
+        ('wlsort', $wlsort), ('ref_corpname', $ref_corpname), ('ref_usesubcorp', $ref_usesubcorp),
+        ('wlcache', $wlcache), ('simple_n', $simple_n), ('wltype', $wltype), ('wlnums', $wlnums),
+        ('include_nonwords', $include_nonwords), ('blcache', $blcache), ('wlpage', $wlpage)]
+
+    #set global $curr_settings = $join_params($corpname_url, $curr_params)
 
     #end filter
 #end def
@@ -91,9 +96,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
       #if $wlpage > 1
         <div class="bonito-pagination-left">
-        #set $firstlink_sett = $url_sub($curr_settings, 'wlpage', 1)
+        #set $firstlink_sett = $join_params($update_params($curr_params, 'wlpage', 1))
         <a href="wordlist?$firstlink_sett"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-        #set $prevlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) - 1)
+        #set $prevlink_sett = $join_params($update_params($curr_params, 'wlpage', int($wlpage) - 1))
         <a href="wordlist?$prevlink_sett"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
         </div>
       #end if
@@ -105,7 +110,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         <input type="hidden" name="wlminfreq" value='$wlminfreq' />
         <input type="hidden" name="wlpat" value='$wlpat' />
         <input type="hidden" name="wlicase" value='$wlicase' />
-        <input type="hidden" name="wlmaxitems" value='$new_maxitems' />
         <input type="hidden" name="wlsort" value='$wlsort' />
         <input type="hidden" name="ref_corpname" value='$ref_corpname' />
         <input type="hidden" name="ref_usesubcorp" value='$ref_usesubcorp' />
@@ -122,7 +126,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
       #if not $lastpage
       <div class="bonito-pagination-right">
-        #set $nextlink_sett = $url_sub($curr_settings, 'wlpage', int($wlpage) + 1)
+        #set $nextlink_sett = $join_params($update_params($curr_params, 'wlpage', int($wlpage) + 1))
       <a href="wordlist?$nextlink_sett" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
       </div>
       #else
@@ -136,8 +140,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     <table class="data word-list">
     #if $Items
 
-      #set $attrsort_sett = $url_sub($curr_settings, 'wlsort', '')
-      #set $freqsort_sett = $url_sub($curr_settings, 'wlsort', 'f')
+      #set $attrsort_sett = $join_params($update_params($curr_params, 'wlsort', ''))
+      #set $freqsort_sett = $join_params($update_params($curr_params, 'wlsort', 'f'))
       <thead><tr>
       <th><a href="wordlist?$attrsort_sett">$wlattr_label</a></th>
       <th><a href="wordlist?$freqsort_sett">$freq_figure</a></th>
@@ -150,7 +154,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
           #if '.' in $wlattr
             $i.freq
           #else
-            <a href="first?$corpname_url;usesubcorp=$url_usesubcorp;cql=%5B$wlattr%3D%3D%22$url_str%22%5D;default_attr=$wlattr;qmcase=1;queryselector=cqlrow">$i.freq</a>
+            <a href="first?$join_params($corpname_url, [('usesubcorp', $url_usesubcorp),
+                ('cql', '%5B$wlattr%3D%3D%22' + $url_str + '%22%5D'), ('default_attr', $wlattr),
+                ('qmcase', 1), ('queryselector', 'cqlrow')])">$i.freq</a>
           #end if
           </td>
         </tr>
@@ -185,13 +191,17 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
           <td class="left">$k.str</td>
           <td></td>
           #set $url_str = $urlquote($k.str.replace('"', '\\"'))
-          <td><a href="first?$corpname_url;usesubcorp=$url_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq</a></td>
+          <td><a href="first?$join_params($corpname_url, [('usesubcorp', $url_usesubcorp),
+                ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
+                ('queryselector', 'phraserow')])">$k.freq</a></td>
 
           <td>$k.rel</td>
           <td></td>
           <td>
           #if $k.freq_ref
-            <a href="first?corpname=$ref_corpname;usesubcorp=$ref_usesubcorp;phrase=$url_str;default_attr=$wlattr;qmcase=1;queryselector=phraserow">$k.freq_ref</a>
+            <a href="first?$join_params([('corpname', $ref_corpname), ('usesubcorp', $ref_usesubcorp),
+                    ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
+                    ('queryselector', 'phraserow')])">$k.freq_ref</a>
           #else
             0
           #end if
