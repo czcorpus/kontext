@@ -10,16 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
-import logging
 
 from controller import exposed
-from kontext import Kontext, ConcError, MainMenu, UserActionException
+from kontext import Kontext
 from translation import ugettext as _
+
 import plugins
-import l10n
-from l10n import export_string, import_string, format_number
-import corplib
+import settings
 
 
 class Admin(Kontext):
@@ -37,7 +34,7 @@ class Admin(Kontext):
         to_date = request.args.get('to_date')
         min_occur = request.args.get('min_occur')
 
-        if plugins.auth.is_administrator(self._session_get('user', 'id')):
+        if plugins.get('auth').is_administrator(self._session_get('user', 'id')):
             import system_stats
 
             data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date,

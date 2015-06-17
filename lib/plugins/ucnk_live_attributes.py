@@ -334,7 +334,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return size
 
 
-def create_instance(corptree, settings):
+def create_instance(settings, corptree):
     """
     creates an instance of the plugin
 

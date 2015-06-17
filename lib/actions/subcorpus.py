@@ -76,11 +76,11 @@ class Subcorpus(Kontext):
         if corplib.create_subcorpus(path, self._corp(), structname, subquery):
             if plugins.has_plugin('subc_restore'):
                 try:
-                    plugins.subc_restore.store_query(user_id=self._session_get('user', 'id'),
-                                                     corpname=self.corpname,
-                                                     subcname=subcname,
-                                                     structname=within_struct,
-                                                     condition=within_condition)
+                    plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
+                                                            corpname=self.corpname,
+                                                            subcname=subcname,
+                                                            structname=within_struct,
+                                                            condition=within_condition)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
@@ -177,7 +177,7 @@ class Subcorpus(Kontext):
             self._delete_subcorpora(selected_subc)
 
         data = []
-        for corp in plugins.auth.permitted_corpora(self._session_get('user', 'id')).values():
+        for corp in plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values():
             try:
                 self.cm.get_Corpus(corp)
                 basecorpname = corp.split(':')[0]
@@ -202,8 +202,9 @@ class Subcorpus(Kontext):
 
         if plugins.has_plugin('subc_restore'):
             try:
-                full_list = plugins.subc_restore.extend_subc_list(data, self._session_get('user', 'id'),
-                                                                  bool(show_deleted), 0)
+                full_list = plugins.get('subc_restore').extend_subc_list(
+                    data, self._session_get('user', 'id'),
+                    bool(show_deleted), 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
                 full_list = []
@@ -245,8 +246,10 @@ class Subcorpus(Kontext):
         if plugins.has_plugin('subc_restore'):
             corpus_id = request.form['corpname']
             subcorp_name = request.form['subcname']
-            plugins.subc_restore.delete_query(self._session_get('user', 'id'), corpus_id, subcorp_name)
-            self.add_system_message('info', _('Subcorpus %s has been deleted permanently.') % subcorp_name)
+            plugins.get('subc_restore').delete_query(self._session_get('user', 'id'),
+                                                     corpus_id, subcorp_name)
+            self.add_system_message('info',
+                                    _('Subcorpus %s has been deleted permanently.') % subcorp_name)
         else:
             self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
         return {}

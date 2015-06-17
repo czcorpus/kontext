@@ -144,7 +144,7 @@ class Actions(Kontext):
         Returns:
             tuple (structname, attr_name)
         """
-        segment_str = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
+        segment_str = plugins.get('corptree').get_corpus_info(self.corpname).get('speech_segment')
         if segment_str:
             return tuple(segment_str.split('.'))
         return None
@@ -166,7 +166,8 @@ class Actions(Kontext):
             self.leftctx = 'a,%s' % os.path.basename(self.corpname)
             self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
-            sentence_struct = plugins.corptree.get_corpus_info(self.corpname)['sentence_struct']
+            sentence_struct = plugins.get('corptree').get_corpus_info(
+                self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
             self.rightctx = self.senrightctx_tpl % sentence_struct
 
@@ -305,10 +306,11 @@ class Actions(Kontext):
         query_desc_raw = ''
         is_public = True
         if query_id and plugins.has_plugin('query_storage'):
-            ans = plugins.query_storage.get_user_query(self._session_get('user', 'id'), query_id)
+            query_storage = plugins.get('query_storage')
+            ans = query_storage.get_user_query(self._session_get('user', 'id'), query_id)
             if ans:
                 query_desc_raw = ans['description']
-                query_desc = plugins.query_storage.decode_description(query_desc_raw)
+                query_desc = query_storage.decode_description(query_desc_raw)
                 is_public = ans['public']
             else:
                 self.add_system_message('error', _('Cannot access recorded query.'))
@@ -977,7 +979,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-freq-distrib.%s' % (
                 self._canonical_corpname(self.corpname), suffix)
-            writer = plugins.export.load_plugin(saveformat, subtype='freq')
+            writer = plugins.get('export').load_plugin(saveformat, subtype='freq')
             writer.set_col_types(int, unicode, int)
 
             self._headers['Content-Type'] = writer.content_type()
@@ -1122,7 +1124,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-collocations.%s' % (
                 self._canonical_corpname(self.corpname), suffix)
-            writer = plugins.export.load_plugin(saveformat, subtype='coll')
+            writer = plugins.get('export').load_plugin(saveformat, subtype='coll')
             writer.set_col_types(int, unicode, *(8 * (float,)))
 
             self._headers['Content-Type'] = writer.content_type()
@@ -1273,7 +1275,7 @@ class Actions(Kontext):
         if not ref_corpname:
             ref_corpname = self.corpname
         if hasattr(self, 'compatible_corpora'):
-            out['CompatibleCorpora'] = plugins.corptree.get_list(self.permitted_corpora())
+            out['CompatibleCorpora'] = plugins.get('corptree').get_list(self.permitted_corpora())
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
@@ -1520,7 +1522,7 @@ class Actions(Kontext):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-word-list.%s' % (
                 self._canonical_corpname(self.corpname), suffix)
-            writer = plugins.export.load_plugin(saveformat, subtype='wordlist')
+            writer = plugins.get('export').load_plugin(saveformat, subtype='wordlist')
             writer.set_col_types(int, unicode, float)
 
             self._headers['Content-Type'] = writer.content_type()
@@ -1621,7 +1623,7 @@ class Actions(Kontext):
                     mkfilename('txt'),)
                 output.update(data)
             elif saveformat in ('csv', 'xlsx', 'xml'):
-                writer = plugins.export.load_plugin(saveformat, subtype='concordance')
+                writer = plugins.get('export').load_plugin(saveformat, subtype='concordance')
 
                 self._headers['Content-Type'] = writer.content_type()
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1702,23 +1704,23 @@ class Actions(Kontext):
             else:
                 aligned = json.loads(aligned)
 
-            ans = plugins.live_attributes.get_attr_values(self._corp(), attrs, aligned)
+            ans = plugins.get('live_attributes').get_attr_values(self._corp(), attrs, aligned)
             return ans
         else:
             return {}
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
-        bib_data = plugins.live_attributes.get_bibliography(self._corp(), item_id=id)
+        bib_data = plugins.get('live_attributes').get_bibliography(self._corp(), item_id=id)
         return {'bib_data': bib_data}
 
     @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
-        html = plugins.application_bar.get_contents(cookies=self._cookies,
-                                                    curr_lang=self.ui_lang,
-                                                    return_url=self.return_url,
-                                                    use_fallback=False,
-                                                    timeout=20)
+        html = plugins.get('application_bar').get_contents(cookies=self._cookies,
+                                                           curr_lang=self.ui_lang,
+                                                           return_url=self.return_url,
+                                                           use_fallback=False,
+                                                           timeout=20)
         return {'html': html}
 
     @exposed(return_type='json', legacy=True)

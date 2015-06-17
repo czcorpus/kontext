@@ -93,17 +93,17 @@ def init_plugin(name, dependencies, module=None):
         if module is None:
             if not settings.contains('plugins', name):
                 raise PluginException('Missing configuration for the "%s" plugin' % name)
-            plugin_module = plugins.load_plugin(settings.get('plugins', name)['module'])
+            plugin_module = plugins.load_plugin_module(settings.get('plugins', name)['module'])
         else:
             plugin_module = module
         if plugin_module:
             resolved_deps = []
             for d in dependencies:
                 if type(d) is str:
-                    resolved_deps.append(getattr(plugins, d))
+                    resolved_deps.append(plugins.get(d))
                 else:
                     resolved_deps.append(d)
-            setattr(plugins, name, apply(plugin_module.create_instance, tuple(resolved_deps)))
+            plugins.install_plugin(name, apply(plugin_module.create_instance, tuple(resolved_deps)))
     except ImportError as e:
         logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                          % (settings.get('plugins', 'getlang')['module'], e))
@@ -117,10 +117,7 @@ def cleanup_runtime_modules():
     Makes app to forget previously faked modules which
     ensures proper plugins initialization if not starting from scratch.
     """
-    del sys.modules['plugins.export']
-    if 'plugins.corptree' in sys.modules:
-        del sys.modules['plugins.corptree']
-        del plugins.corptree
+    plugins.flush_plugins()
 
 
 def setup_plugins():
@@ -135,15 +132,15 @@ def setup_plugins():
     """
     # required plugins
     init_plugin('db', (settings.get('plugins', 'db'),))
-    init_plugin('sessions', (settings, plugins.db))
-    init_plugin('settings_storage', (settings, plugins.db))
-    init_plugin('auth', (settings, plugins.db, plugins.sessions))
-    init_plugin('conc_persistence', (settings, plugins.db))  # TODO this is actually an optional plug-in
-    init_plugin('locking', (settings, plugins.db,))
-    init_plugin('conc_cache', (settings, plugins.db, plugins.locking))
+    init_plugin('sessions', (settings, 'db'))
+    init_plugin('settings_storage', (settings, 'db'))
+    init_plugin('auth', (settings, 'db', 'sessions'))
+    init_plugin('conc_persistence', (settings, 'db'))  # TODO make this optional
+    init_plugin('locking', (settings, 'db'))
+    init_plugin('conc_cache', (settings, 'db', 'locking'))
     init_plugin('export', (settings,), module=plugins.export)
-    init_plugin('user_items', (settings, plugins.db, plugins.auth))
-    init_plugin('menu_items', (settings, plugins.db))
+    init_plugin('user_items', (settings, 'db', 'auth'))
+    init_plugin('menu_items', (settings, 'db'))
 
     # Optional plugins
     #
@@ -152,12 +149,12 @@ def setup_plugins():
     # what is possibly needed for individual plug-ins here.
     optional_plugins = (
         ('getlang', (settings,)),
-        ('corptree', (settings, plugins.db, plugins.auth)),
-        ('query_storage', (settings, plugins.db)),
-        ('application_bar', (settings, plugins.auth)),
-        ('live_attributes', ('corptree', settings)),
+        ('corptree', (settings, 'db', 'auth')),
+        ('query_storage', (settings, 'db')),
+        ('application_bar', (settings, 'auth')),
+        ('live_attributes', (settings, 'corptree')),
         ('query_mod', (settings,)),
-        ('subc_restore', (settings, plugins.db)),
+        ('subc_restore', (settings, 'db')),
         ('taghelper', (settings,))
     )
 
@@ -179,7 +176,8 @@ def get_lang(environ):
     installed = dict([(x.split('_')[0], x) for x in os.listdir('%s/../locale' % os.path.dirname(__file__))])
 
     if plugins.has_plugin('getlang'):
-        lgs_string = plugins.getlang.fetch_current_language(KonTextCookie(environ.get('HTTP_COOKIE', '')))
+        lgs_string = plugins.get('getlang').fetch_current_language(KonTextCookie(
+            environ.get('HTTP_COOKIE', '')))
     else:
         lgs_string = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
         if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
@@ -258,12 +256,13 @@ class App(object):
         l10n.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
 
+        sessions = plugins.get('sessions')
         request = Request(environ)
-        sid = request.cookies.get(plugins.sessions.get_cookie_name())
+        sid = request.cookies.get(sessions.get_cookie_name())
         if sid is None:
-            request.session = plugins.sessions.new()
+            request.session = sessions.new()
         else:
-            request.session = plugins.sessions.get(sid)
+            request.session = sessions.get(sid)
 
         if environ['PATH_INFO'] in ('/', ''):
             url = environ['REQUEST_URI']
@@ -282,8 +281,8 @@ class App(object):
             status, headers, body = app.run(request)
         response = Response(response=body, status=status, headers=headers)
         if request.session.should_save:
-            plugins.sessions.save(request.session)
-            response.set_cookie(plugins.sessions.get_cookie_name(), request.session.sid)
+            sessions.save(request.session)
+            response.set_cookie(sessions.get_cookie_name(), request.session.sid)
         start_response(status, headers)
         return response(environ, start_response)
 

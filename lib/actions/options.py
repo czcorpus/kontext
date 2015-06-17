@@ -82,7 +82,7 @@ class Options(Kontext):
         reflist = self.refs.split(',')
 
         ref_is_allowed = lambda r: r and r not in (
-            '#', plugins.corptree.get_corpus_info(self.corpname).get('speech_segment'))
+            '#', plugins.get('corptree').get_corpus_info(self.corpname).get('speech_segment'))
 
         for item in availref:
             if ref_is_allowed(item):

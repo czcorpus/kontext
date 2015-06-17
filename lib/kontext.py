@@ -422,7 +422,7 @@ class Kontext(Controller):
         options = {}
         corp_options = {}
         if self._user_has_persistent_settings():
-            data = plugins.settings_storage.load(self._session_get('user', 'id'))
+            data = plugins.get('settings_storage').load(self._session_get('user', 'id'))
         else:
             data = self._session_get('settings')
             if not data:
@@ -497,9 +497,10 @@ class Kontext(Controller):
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
         # to store (again) even values not used in this particular request)
+        settings_storage = plugins.get('settings_storage')
         if self._user_has_persistent_settings():
-            options = normalize_opts(plugins.settings_storage.load(self._session_get('user', 'id')))
-            plugins.settings_storage.save(self._session_get('user', 'id'), options)
+            options = normalize_opts(settings_storage.load(self._session_get('user', 'id')))
+            settings_storage.save(self._session_get('user', 'id'), options)
         else:
             options = normalize_opts(self._session_get('settings'))
             self._session['settings'] = options
@@ -517,9 +518,10 @@ class Kontext(Controller):
         UserActionException will be raised.
         """
         url_q = self.q[:]
-        if plugins.has_plugin('conc_persistence') and self.q and plugins.conc_persistence.is_valid_id(url_q[0]):
+        conc_persistence = plugins.get('conc_persistence')
+        if plugins.has_plugin('conc_persistence') and self.q and conc_persistence.is_valid_id(url_q[0]):
             self._q_code = url_q[0][1:]
-            self._prev_q_data = plugins.conc_persistence.open(self._q_code)
+            self._prev_q_data = conc_persistence.open(self._q_code)
             # !!! must create a copy here otherwise _q_data (as prev query)
             # will be rewritten by self.q !!!
             if self._prev_q_data is not None:
@@ -545,8 +547,9 @@ class Kontext(Controller):
                 'usesubcorp': self.usesubcorp,
                 'align': self.align
             }
-            q_id = plugins.conc_persistence.store(self._session_get('user', 'id'),
-                                                  curr_data=query, prev_data=self._prev_q_data)
+            q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
+                                                             curr_data=query,
+                                                             prev_data=self._prev_q_data)
         else:
             q_id = None
         return q_id
@@ -652,7 +655,7 @@ class Kontext(Controller):
         self.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.auth.permitted_corpora(self._session_get('user', 'id'))
+        allowed_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
         if not action_metadata.get('skip_corpus_init', False):
             self.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if not action_metadata.get('legacy', False):
@@ -751,19 +754,21 @@ class Kontext(Controller):
         arguments:
         tpl_out -- dict data to be used when building an output page from a template
         """
+        taghelper = plugins.get('taghelper')
         tpl_out['tag_builder_support'] = {
-            '': plugins.taghelper.tag_variants_file_exists(self.corpname)
+            '': taghelper.tag_variants_file_exists(self.corpname)
         }
         tpl_out['user_menu'] = True
         if 'Aligned' in tpl_out:
             for item in tpl_out['Aligned']:
-                tpl_out['tag_builder_support']['_%s' % item['n']] = plugins.taghelper.tag_variants_file_exists(item['n'])
+                tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
 
     def _attach_query_metadata(self, tpl_out):
         """
         Adds information needed by extended version of text type (and other attributes) selection in a query
         """
-        tpl_out['metadata_desc'] = plugins.corptree.get_corpus_info(self.corpname, language=self.ui_lang)['metadata']['desc']
+        tpl_out['metadata_desc'] = plugins.get('corptree').get_corpus_info(
+            self.corpname, language=self.ui_lang)['metadata']['desc']
 
     def _add_save_menu_item(self, label, action, params):
         self.save_menu.append({'label': label, 'action': action, 'params': params})
@@ -799,9 +804,10 @@ class Kontext(Controller):
                 params['qmcase'] = self.qmcase
             elif query_type == 'cql':
                 params['default_attr'] = self.default_attr
-            plugins.query_storage.write(user_id=self._session_get('user', 'id'), corpname=self.corpname,
-                                        subcorpname=self.usesubcorp, query=query, query_type=query_type,
-                                        params=params)
+            plugins.get('query_storage').write(
+                user_id=self._session_get('user', 'id'), corpname=self.corpname,
+                subcorpname=self.usesubcorp, query=query, query_type=query_type,
+                params=params)
 
     def _determine_curr_corpus(self, form, corp_list):
         """
@@ -900,10 +906,10 @@ class Kontext(Controller):
         returns:
         a dict (canonical_id, id)
         """
-        return plugins.auth.permitted_corpora(self._session_get('user', 'id'))
+        return plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
 
     def _load_fav_items(self):
-        return plugins.user_items.get_user_items(self._session_get('user', 'id'))
+        return plugins.get('user_items').get_user_items(self._session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, corpus):
         result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
@@ -913,7 +919,7 @@ class Kontext(Controller):
 
         result['corp_description'] = corpus.get_info()
         result['corp_size'] = format_number(corpus.size())
-        corp_conf_info = plugins.corptree.get_corpus_info(self.corpname)
+        corp_conf_info = plugins.get('corptree').get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
@@ -970,7 +976,7 @@ class Kontext(Controller):
             js_file_key = '%s_js' % opt_plugin
             result[js_file_key] = None
             if plugins.has_plugin(opt_plugin):
-                plugin_obj = getattr(plugins, opt_plugin)
+                plugin_obj = plugins.get(opt_plugin)
                 # if the plug-in is "always on" or "sometimes off but currently on" then it must configure JavaScript
                 if not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or plugin_obj.is_enabled_for(self.corpname):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
@@ -1108,18 +1114,20 @@ class Kontext(Controller):
         result['_anonymous'] = self._user_is_anonymous()
 
         if plugins.has_plugin('auth'):
-            result['login_url'] = plugins.auth.get_login_url(self._updated_current_url({'remote': 1}))
-            result['logout_url'] = plugins.auth.get_logout_url(self.get_root_url())
+            result['login_url'] = plugins.get('auth').get_login_url(
+                self._updated_current_url({'remote': 1}))
+            result['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
         else:
             result['login_url'] = 'login'
             result['logout_url'] = 'login'
 
         if plugins.has_plugin('application_bar'):
-            result['app_bar'] = plugins.application_bar.get_contents(cookies=self._cookies,
-                                                                     curr_lang=self.ui_lang,
-                                                                     return_url=self.return_url)
-            result['app_bar_css'] = plugins.application_bar.css_url
-            result['app_bar_css_ie'] = plugins.application_bar.css_url_ie
+            application_bar = plugins.get('application_bar')
+            result['app_bar'] = application_bar.get_contents(cookies=self._cookies,
+                                                             curr_lang=self.ui_lang,
+                                                             return_url=self.return_url)
+            result['app_bar_css'] = application_bar.css_url
+            result['app_bar_css_ie'] = application_bar.css_url_ie
         else:
             result['app_bar'] = None
             result['app_bar_css'] = None
@@ -1132,17 +1140,19 @@ class Kontext(Controller):
         self._setup_optional_plugins_js(result)
 
         result['CorplistFn'] = self._load_fav_items
+        user_items = plugins.get('user_items')
         if action_metadata.get('legacy', False):
-            result['curr_corpora_fav_key'] = plugins.user_items.infer_item_key(self.corpname, self.usesubcorp,
-                                                                               self.sel_aligned)
+            result['curr_corpora_fav_key'] = user_items.infer_item_key(self.corpname,
+                                                                       self.usesubcorp,
+                                                                       self.sel_aligned)
         else:
             # new-style action methods do not use self.* arguments
             result.update(self._export_mapped_args())
             conc_args = self.get_args_mapping(ConcArgsMapping)
-            result['curr_corpora_fav_key'] = plugins.user_items.infer_item_key(conc_args.corpname,
-                                                                               conc_args.usesubcorp,
-                                                                               conc_args.getlist('sel_aligned'))
-        result['bib_conf'] = plugins.corptree.get_corpus_info(self.corpname).metadata
+            result['curr_corpora_fav_key'] = user_items.infer_item_key(conc_args.corpname,
+                                                                       conc_args.usesubcorp,
+                                                                       conc_args.getlist('sel_aligned'))
+        result['bib_conf'] = plugins.get('corptree').get_corpus_info(self.corpname).metadata
 
         # avalilable languages
         if plugins.has_plugin('getlang'):
@@ -1156,7 +1166,7 @@ class Kontext(Controller):
         result['format_number'] = partial(format_number)
         result['join_params'] = join_params
         result['update_params'] = update_params
-        result['jsonize_user_item'] = plugins.user_items.to_json
+        result['jsonize_user_item'] = user_items.to_json
 
         result['error_report_url'] = self._get_error_reporting_url()
 
@@ -1260,7 +1270,7 @@ class Kontext(Controller):
         to support multiple configurations per single corpus.
         (e.g. 'public/bnc' will transform into just 'bnc')
         """
-        return plugins.auth.canonical_corpname(c)
+        return plugins.get('auth').canonical_corpname(c)
 
     def _human_readable_corpname(self):
         """
@@ -1287,7 +1297,8 @@ class Kontext(Controller):
         corpus : manatee.Corpus
           corpus object we want to test
         """
-        speech_struct = plugins.corptree.get_corpus_info(self.corpname).get('speech_segment')
+        speech_struct = plugins.get('corptree').get_corpus_info(self.corpname).get(
+            'speech_segment')
         return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
 
     @staticmethod
@@ -1370,7 +1381,8 @@ class Kontext(Controller):
         # if live_attributes are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         if plugins.has_plugin('live_attributes'):
-            ans['bib_attr'] = plugins.corptree.get_corpus_info(self.corpname)['metadata']['label_attr']
+            ans['bib_attr'] = plugins.get('corptree').get_corpus_info(
+                self.corpname)['metadata']['label_attr']
             list_none = (ans['bib_attr'], )
         else:
             ans['bib_attr'] = None
@@ -1535,10 +1547,11 @@ class Kontext(Controller):
         out['custom_menu_items'] = {}
         menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
         for item in [x[1] for x in menu_items]:
-            out['custom_menu_items'][item.name] = plugins.menu_items.get_items(item.name, self.ui_lang)
+            out['custom_menu_items'][item.name] = plugins.get('menu_items').get_items(
+                item.name, self.ui_lang)
 
     def _uses_internal_user_pages(self):
-        return isinstance(plugins.auth, AbstractInternalAuth)
+        return isinstance(plugins.get('auth'), AbstractInternalAuth)
 
     @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True)
     def message(self, **kwargs):
