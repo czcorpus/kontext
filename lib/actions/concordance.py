@@ -951,7 +951,6 @@ class Actions(Kontext):
         """
         save a frequency list
         """
-
         from_line = int(from_line)
         to_line = int(to_line) if to_line else sys.maxint
         err = self._validate_range((from_line, to_line), (1, None))
@@ -1319,7 +1318,7 @@ class Actions(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
-                 ref_usesubcorp='', wlmaxitems=''):
+                 ref_usesubcorp='', paginate=True):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'viewattrs'),
@@ -1339,7 +1338,10 @@ class Actions(Kontext):
             elif self.wlnums == 'docf':
                 self.wlnums = 'docf'
 
-        wlmaxitems = self.wlpagesize * self.wlpage + 1
+        if paginate:
+            wlmaxitems = self.wlpagesize * self.wlpage + 1
+        else:
+            wlmaxitems = sys.maxint
         wlstart = (self.wlpage - 1) * self.wlpagesize
         result = {
             'reload_url': self.create_url('wordlist', {
@@ -1384,7 +1386,8 @@ class Actions(Kontext):
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
-                result_list = result_list[:-1]
+                if paginate:
+                    result_list = result_list[:-1]
             result['Items'] = result_list
 
             if '.' in self.wlattr:
@@ -1499,11 +1502,10 @@ class Actions(Kontext):
         """
         from_line = int(from_line)
         to_line = int(to_line) if to_line else sys.maxint
-        line_offset = (from_line - 1)
         self.wlpage = 1
         ans = self.wordlist(wlpat=wlpat, wltype=wltype, usesubcorp=usesubcorp,
                             ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp,
-                            line_offset=line_offset, wlmaxitems=sys.maxint)
+                            paginate=False)
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
