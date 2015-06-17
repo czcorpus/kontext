@@ -844,6 +844,8 @@ class StarComponent {
 
     private editable:boolean;
 
+    private starImg:HTMLElement;
+
     /**
      * Once user adds an aligned corpus we must
      * test whether the new corpora combinations is already
@@ -897,11 +899,13 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, starImg:HTMLElement,
+                editable:boolean) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
+        this.starImg = starImg;
         this.editable = editable;
-        this.starSwitch = new StarSwitch(this.pageModel, $('#mainform div.starred img').get(0));
+        this.starSwitch = new StarSwitch(this.pageModel, starImg);
     }
 
     /**
@@ -1071,7 +1075,7 @@ class StarComponent {
         var self = this;
 
         if (this.editable) {
-            $('#mainform .starred img').on('click', function (e) {
+            $(this.starImg).on('click', function (e) {
                 if (!self.starSwitch.isStarred()) {
                     self.starSwitch.setStarState(true);
                     self.setFavorite(Favorite.FAVORITE);
@@ -1124,6 +1128,8 @@ export class Corplist {
 
     private parentForm:HTMLElement;
 
+    private starImg:HTMLElement;
+
     private mainMenu:WidgetMenu;
 
     private starComponent:StarComponent;
@@ -1161,11 +1167,13 @@ export class Corplist {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<CorplistItem>, pageModel:Kontext.FirstFormPage, parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<CorplistItem>, pageModel:Kontext.FirstFormPage,
+                parentForm:HTMLElement, starImg:HTMLElement) {
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
         this.parentForm = parentForm;
+        this.starImg = starImg;
         this.currCorpIdent = pageModel.getConf('corpname');
         this.currCorpname = pageModel.getConf('humanCorpname');
         this.visible = Visibility.HIDDEN;
@@ -1296,8 +1304,8 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
 
-        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
-            this.options.editable !== undefined ? this.options.editable : true);
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel, this.starImg,
+                this.options.editable !== undefined ? this.options.editable : true);
         this.starComponent.init();
 
         this.switchComponentVisibility(Visibility.HIDDEN);
@@ -1525,12 +1533,14 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage, options:Options):Corplist {
+export function create(selectElm:HTMLElement, starImg:HTMLElement, pluginApi:Kontext.FirstFormPage,
+                       options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
     data = fetchDataFromSelect(selectElm);
-    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
+    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0),
+                        starImg);
     corplist.bind(selectElm);
     return corplist;
 }

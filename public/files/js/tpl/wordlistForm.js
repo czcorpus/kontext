@@ -27,10 +27,31 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corplist', 'popupbox'], functi
 
     var lib = {
             layoutModel: null,
-            corplistComponent : null
+            corplistComponent : null,
+            onSubcorpChangeActions: []
         },
         selectOutputType,
         updForm;
+
+    lib.getConf = function (name) {
+        return lib.layoutModel.getConf(name);
+    };
+
+    lib.translate = function (msg) {
+        return lib.layoutModel.translate(msg);
+    };
+
+    lib.createActionUrl = function (path) {
+        return lib.layoutModel.createActionUrl(path);
+    };
+
+    lib.createStaticUrl = function (path) {
+        return lib.layoutModel.createStaticUrl(path);
+    };
+
+    lib.showMessage = function (type, message, callback) {
+        return lib.layoutModel.showMessage(type, message, callback);
+    };
 
 
     /**
@@ -133,11 +154,39 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corplist', 'popupbox'], functi
 
     lib.createCorplistComponent = function () {
         lib.corplistComponent = corplistComponent.create(
-            $('form[id="wordlist_form"] select[name="corpname"]'),
-            lib.layoutModel.pluginApi(),
+            $('form[id="wordlist_form"] select[name="corpname"]').get(0),
+            $('#wordlist_form .starred img').get(0),
+            lib,
             {formTarget: 'wordlist_form', submitMethod: 'GET'}
         );
     };
+
+    /**
+     * Registers a callback which is invoked after the subcorpus
+     * selection element is changed. It guarantees that all the
+     * firstForm's internal actions are performed before this
+     * externally registered ones.
+     *
+     * @param fn:(subcname:string)=>void
+     */
+    lib.registerOnSubcorpChangeAction = function (fn) {
+        lib.onSubcorpChangeActions.push(fn);
+    };
+
+    /**
+     *
+     */
+    lib.registerSubcorpChange = function () {
+        $('#subcorp-selector').on('change', function (e) {
+            // following code must be always the last action performed on the event
+            $.each(lib.onSubcorpChangeActions, function (i, fn) {
+                fn.call(lib, $(e.currentTarget).val());
+            });
+        });
+    };
+
+    lib.registerOnAddParallelCorpAction = function () {};
+    lib.registerOnBeforeRemoveParallelCorpAction = function () {};
 
     /**
      *
@@ -148,6 +197,7 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corplist', 'popupbox'], functi
         lib.layoutModel.init();
         lib.bindStaticElements();
         lib.createCorplistComponent();
+        lib.registerSubcorpChange();
     };
 
     return lib;

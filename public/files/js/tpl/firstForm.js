@@ -236,11 +236,11 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
      */
     lib.misc = function () {
         lib.corplistComponent = corplistComponent.create(
-            $('form[action="first"] select[name="corpname"]'),
+            $('form[action="first"] select[name="corpname"]').get(0),
+            $('#mainform .starred img').get(0),
             lib,
             {formTarget: 'first_form'}
         );
-
 
         // initial query selector setting (just like when user changes it manually)
         queryInput.cmdSwitchQuery(lib.layoutModel, $('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
