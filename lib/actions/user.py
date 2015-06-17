@@ -39,8 +39,8 @@ class User(Kontext):
     @exposed(skip_corpus_init=True)
     def loginx(self, request):
         ans = {}
-        self._session['user'] = plugins.auth.validate_user(request.form['username'],
-                                                           request.form['password'])
+        self._session['user'] = plugins.get('auth').validate_user(request.form['username'],
+                                                                  request.form['password'])
 
         if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
@@ -56,7 +56,7 @@ class User(Kontext):
         self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
                                     MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        plugins.auth.logout(self._session.sid)
+        plugins.get('auth').logout(self._session.sid)
         self._init_session()
 
         return {
@@ -71,6 +71,7 @@ class User(Kontext):
 
     @exposed(access_level=1, template='user/user_password.tmpl')
     def user_password(self, request):
+        auth = plugins.get('auth')
         try:
             curr_passwd = request.form['curr_passwd']
             new_passwd = request.form['new_passwd']
@@ -78,17 +79,17 @@ class User(Kontext):
 
             if not self._uses_internal_user_pages():
                 raise UserActionException(_('This function is disabled.'))
-            logged_in = plugins.auth.validate_user(self._session_get('user', 'user'), curr_passwd)
+            logged_in = auth.validate_user(self._session_get('user', 'user'), curr_passwd)
 
             if self._is_anonymous_id(logged_in['id']):
                 raise UserActionException(_('Invalid user or password'))
             if new_passwd != new_passwd2:
                 raise UserActionException(_('New password and its confirmation do not match.'))
 
-            if not plugins.auth.validate_new_password(new_passwd):
-                raise UserActionException(plugins.auth.get_required_password_properties())
+            if not auth.validate_new_password(new_passwd):
+                raise UserActionException(auth.get_required_password_properties())
 
-            plugins.auth.update_user_password(self._session_get('user', 'id'), new_passwd)
+            auth.update_user_password(self._session_get('user', 'id'), new_passwd)
         except UserActionException as e:
             self.add_system_message('error', e)
         return {}
