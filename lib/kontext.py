@@ -53,14 +53,18 @@ def join_params(*args):
     for a in args:
         if a is None:
             continue
-        elif type(a) in (tuple, list, dict):
+        if isinstance(a, StateGlobals):
+            a = a.items()
+        if type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()
             tmp.extend(['%s=%s' % (k, v if v is not None else '') for k, v in a])
         elif type(a) in (str, unicode):
             tmp.append(a.strip())
         else:
-            raise TypeError('Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (type(a)))
+            raise TypeError(
+                'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
+                    type(a)))
     return '&'.join(tmp)
 
 
@@ -103,7 +107,8 @@ class Kontext(Controller):
     A controller.Controller extension implementing
     KonText-specific requirements.
     """
-    # main menu items disabled for public users (this is applied automatically during _post_dispatch())
+    # main menu items disabled for public users (this is applied automatically during
+    # _post_dispatch())
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
                                  MainMenu.CORPORA('my-subcorpora', 'new-subcorpus'),
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
@@ -112,14 +117,16 @@ class Kontext(Controller):
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                            MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'))
 
-    # A list of parameters needed to make concordance result parameters (e.g. size, currently viewed page,..)
-    # persistent. It is used to keep showing these values to a user even if he is outside the concordance view page.
-    CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp', 'result_relative_freq',
-                         'result_relative_freq_rel_to', 'result_arf', 'result_shuffled', 'Sort_idx',
-                         'nextlink', 'lastlink', 'prevlink', 'firstlink')
+    # A list of parameters needed to make concordance result parameters (e.g. size, currently
+    # viewed page,..) persistent. It is used to keep showing these values to a user even if he is
+    # outside the concordance view page.
+    CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp',
+                         'result_relative_freq', 'result_relative_freq_rel_to', 'result_arf',
+                         'result_shuffled', 'Sort_idx', 'nextlink', 'lastlink', 'prevlink',
+                         'firstlink')
 
-    GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template', 'ctxunit',
-                       'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems')
+    GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'tbl_template',
+                       'ctxunit', 'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
                           'csortfn')
@@ -225,6 +232,7 @@ class Kontext(Controller):
     structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
     q = Parameter([])
     pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
+    wlpagesize = Parameter(25, persistent=Parameter.PERSISTENT)
     _avail_tbl_templates = Parameter(u'')
     multiple_copy = Parameter(0, persistent=Parameter.PERSISTENT)
     wlsendmail = Parameter(u'')
@@ -253,9 +261,9 @@ class Kontext(Controller):
     viewmode = Parameter('kwic')
     align = Parameter('')
     sel_aligned = Parameter([])
-    maincorp = Parameter('')   # used only in case of parallel corpora - specifies corpus with "focus"
+    maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
     refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
-    refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
+    refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 
     enable_sadd = Parameter(0)
     tag_builder_support = Parameter([])
@@ -397,7 +405,8 @@ class Kontext(Controller):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
-        excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get('excluded_users', ())]
+        excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get(
+            'excluded_users', ())]
         return self._session_get('user', 'id') not in excluded_users and not self._user_is_anonymous()
 
     def _load_user_settings(self):

@@ -16,9 +16,9 @@ import urllib
 class StateGlobals(object):
     """
     A simple wrapper for $Globals template variable. Unfortunately,
-    current code (which comes from Bonito 2) operates with $globals
-    (see the difference: g vs. G) which is escaped, hard to update
-    string.
+    current code (which comes from Bonito2 operates with $globals
+    (see the difference: [g]lobals vs. [G]lobals) which is an escaped,
+    hard to update string.
 
     This object should replace $globals in the future because it
     allows easier updates: $Globals.update('corpname', 'bar').to_s()

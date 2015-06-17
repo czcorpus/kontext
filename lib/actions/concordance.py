@@ -50,7 +50,6 @@ class Actions(Kontext):
     citemsperpage = Parameter(50)
 
     wlminfreq = Parameter(5)
-    wlmaxitems = Parameter(100)
     wlicase = Parameter(0)
     wlwords = Parameter([])
     blacklist = Parameter([])
@@ -1319,11 +1318,12 @@ class Actions(Kontext):
         return wlwords, os.path.basename(filename)
 
     @exposed(access_level=1, legacy=True)
-    def wordlist(self, wlpat='', wltype='simple', usesubcorp='',
-                 ref_corpname='', ref_usesubcorp='', line_offset=0):
+    def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
+                 ref_usesubcorp='', wlmaxitems=''):
         """
         """
-        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+        self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'viewattrs'),
+                                    MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
         if not wlpat:
@@ -1339,16 +1339,8 @@ class Actions(Kontext):
             elif self.wlnums == 'docf':
                 self.wlnums = 'docf'
 
-        lastpage = 0
-        if self._user_is_anonymous() and self.wlpage >= 10:  # limit paged lists
-            self.wlpage = 10
-            lastpage = 1
-        elif self._user_is_anonymous() and self.wlmaxitems > 1000:  # limit saved lists
-            self.wlpage = 1
-            self.wlmaxitems = 1000
-        wlstart = (self.wlpage - 1) * self.wlmaxitems + line_offset
-
-        self.wlmaxitems = self.wlmaxitems * self.wlpage + 1  # +1 = end detection
+        wlmaxitems = self.wlpagesize * self.wlpage + 1
+        wlstart = (self.wlpage - 1) * self.wlpagesize
         result = {
             'reload_url': self.create_url('wordlist', {
                 'corpname': self.corpname, 'usesubcorp': self.usesubcorp,
@@ -1366,7 +1358,7 @@ class Actions(Kontext):
                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
                 kw_func = getattr(corplib, 'subc_keywords_onstr')
                 args = args + (self.wlattr,)
-                out = self.call_function(kw_func, args)[wlstart:]
+                out = self.call_function(kw_func, args, wlmaxitems=wlmaxitems)[wlstart:]
                 ref_name = self.cm.get_Corpus(ref_corpname).get_conf('NAME')
                 result.update({'Keywords': [{'str': w, 'score': round(s, 1),
                                              'freq': round(f, 1),
@@ -1381,24 +1373,25 @@ class Actions(Kontext):
                 if hasattr(self, 'wlfile') and self.wlpat == '.*':
                     self.wlsort = ''
                 result_list = self.call_function(corplib.wordlist,
-                                                 (self._corp(), self.wlwords))[wlstart:]
+                                                 (self._corp(), self.wlwords),
+                                                 wlmaxitems=wlmaxitems)[wlstart:]
                 if self.wlwords:
                     result['wlcache'] = self.wlcache
                 if self.blacklist:
                     result['blcache'] = self.blcache
                 result['Items'] = result_list
-            if len(result_list) < self.wlmaxitems / self.wlpage:
+            if len(result_list) < self.wlpagesize + 1:
                 result['lastpage'] = 1
             else:
                 result['lastpage'] = 0
                 result_list = result_list[:-1]
             result['Items'] = result_list
-            self.wlmaxitems -= 1
+
             if '.' in self.wlattr:
                 self.wlnums = orig_wlnums
             try:
-                result['wlattr_label'] = self._corp().get_conf(self.wlattr + '.LABEL') or \
-                                         self.wlattr
+                result['wlattr_label'] = (self._corp().get_conf(self.wlattr + '.LABEL') or
+                                          self.wlattr)
             except Exception as e:
                 result['wlattr_label'] = self.wlattr
                 logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
@@ -1427,7 +1420,6 @@ class Actions(Kontext):
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
-            self.wlmaxitems -= 1
             out = corplib.build_arf_db(e.args[0], self.wlattr)
             if out:
                 processing = out[1].strip('%')
@@ -1508,11 +1500,10 @@ class Actions(Kontext):
         from_line = int(from_line)
         to_line = int(to_line) if to_line else sys.maxint
         line_offset = (from_line - 1)
-        self.wlmaxitems = sys.maxint  # TODO
         self.wlpage = 1
         ans = self.wordlist(wlpat=wlpat, wltype=wltype, usesubcorp=usesubcorp,
                             ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp,
-                            line_offset=line_offset)
+                            line_offset=line_offset, wlmaxitems=sys.maxint)
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
