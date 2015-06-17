@@ -339,6 +339,10 @@ export class SearchTab implements WidgetTab {
 
     ajaxLoader:HTMLElement;
 
+    loaderKiller:any;
+
+    static TYPEAHEAD_MIN_LENGTH = 2;
+
     /**
      *
      * @param widgetWrapper
@@ -474,7 +478,7 @@ export class SearchTab implements WidgetTab {
             name: 'corplist',
             hint: true,
             highlight: true,
-            minLength: 2
+            minLength: SearchTab.TYPEAHEAD_MIN_LENGTH
         };
 
         $(this.srchField).typeahead(options, {
@@ -482,6 +486,9 @@ export class SearchTab implements WidgetTab {
             source : this.bloodhound.ttAdapter(),
             limit : self.maxNumHints,
             templates: {
+                notFound: function () {
+                    return '<p>' + self.pluginApi.translate('no result') + '</p>';
+                },
                 suggestion: function (item:SearchResponse) {
                     if (item.found_in.length > 0) {
                         return $('<p>' + item.name
@@ -501,16 +508,30 @@ export class SearchTab implements WidgetTab {
             }
         });
 
+        this.loaderKiller = null;
+
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
             self.itemClickCallback(suggestion['id'], suggestion['name']);
         });
 
         $(this.srchField).on('typeahead:asyncrequest', function () {
             $(self.ajaxLoader).removeClass('hidden');
+            if (!self.loaderKiller) {
+                self.loaderKiller = setInterval(function () {
+                    if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH) {
+                        $(self.ajaxLoader).addClass('hidden');
+                        clearInterval(self.loaderKiller);
+                    }
+                }, 250);
+            }
         });
 
         $(this.srchField).on('typeahead:asyncreceive', function () {
             $(self.ajaxLoader).addClass('hidden');
+            if (self.loaderKiller) {
+                clearInterval(self.loaderKiller);
+                self.loaderKiller = null;
+            }
         });
     }
 
