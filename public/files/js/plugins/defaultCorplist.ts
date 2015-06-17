@@ -524,12 +524,6 @@ export class SearchTab implements WidgetTab {
         this.initLabels();
         jqWrapper.append(inputWrapper);
 
-        this.srchField = window.document.createElement('input');
-        $(this.srchField)
-            .addClass('corp-search')
-            .attr('type', 'text')
-            .attr('placeholder', this.pluginApi.translate('name or description'));
-        $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.ajaxLoader = window.document.createElement('img');
         $(this.ajaxLoader)
             .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader.gif'))
@@ -537,6 +531,13 @@ export class SearchTab implements WidgetTab {
             .attr('title', this.pluginApi.translate('loading') + '...')
             .hide();
         $(inputWrapper).append(this.ajaxLoader);
+
+        this.srchField = window.document.createElement('input');
+        $(this.srchField)
+            .addClass('corp-search')
+            .attr('type', 'text')
+            .attr('placeholder', this.pluginApi.translate('name or description'));
+        $(inputWrapper).append(this.srchField).addClass('srch-box');
         this.initTypeahead();
         this.hide();
     }
