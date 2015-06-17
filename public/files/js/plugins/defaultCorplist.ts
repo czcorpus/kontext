@@ -337,6 +337,8 @@ export class SearchTab implements WidgetTab {
 
     private selectedTags:{[key:string]:HTMLElement};
 
+    ajaxLoader:HTMLElement;
+
     /**
      *
      * @param widgetWrapper
@@ -502,6 +504,14 @@ export class SearchTab implements WidgetTab {
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
             self.itemClickCallback(suggestion['id'], suggestion['name']);
         });
+
+        $(this.srchField).on('typeahead:asyncrequest', function () {
+            $(self.ajaxLoader).show();
+        });
+
+        $(this.srchField).on('typeahead:asyncreceive', function () {
+            $(self.ajaxLoader).hide();
+        });
     }
 
     /**
@@ -520,7 +530,13 @@ export class SearchTab implements WidgetTab {
             .attr('type', 'text')
             .attr('placeholder', this.pluginApi.translate('name or description'));
         $(inputWrapper).append(this.srchField).addClass('srch-box');
-
+        this.ajaxLoader = window.document.createElement('img');
+        $(this.ajaxLoader)
+            .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader.gif'))
+            .addClass('ajax-loader')
+            .attr('title', this.pluginApi.translate('loading') + '...')
+            .hide();
+        $(inputWrapper).append(this.ajaxLoader);
         this.initTypeahead();
         this.hide();
     }
