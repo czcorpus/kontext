@@ -506,11 +506,11 @@ export class SearchTab implements WidgetTab {
         });
 
         $(this.srchField).on('typeahead:asyncrequest', function () {
-            $(self.ajaxLoader).show();
+            $(self.ajaxLoader).removeClass('hidden');
         });
 
         $(this.srchField).on('typeahead:asyncreceive', function () {
-            $(self.ajaxLoader).hide();
+            $(self.ajaxLoader).addClass('hidden');
         });
     }
 
@@ -519,17 +519,21 @@ export class SearchTab implements WidgetTab {
      */
     init():void {
         var jqWrapper = $(this.wrapper),
+            srchBox = window.document.createElement('div'),
             inputWrapper = window.document.createElement('div');
 
         this.initLabels();
-        jqWrapper.append(inputWrapper);
+        jqWrapper.append(srchBox);
+        $(srchBox)
+            .addClass('srch-box')
+            .append(inputWrapper);
 
         this.ajaxLoader = window.document.createElement('img');
         $(this.ajaxLoader)
             .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader.gif'))
             .addClass('ajax-loader')
-            .attr('title', this.pluginApi.translate('loading') + '...')
-            .hide();
+            .addClass('hidden')
+            .attr('title', this.pluginApi.translate('loading') + '...');
         $(inputWrapper).append(this.ajaxLoader);
 
         this.srchField = window.document.createElement('input');
@@ -537,7 +541,9 @@ export class SearchTab implements WidgetTab {
             .addClass('corp-search')
             .attr('type', 'text')
             .attr('placeholder', this.pluginApi.translate('name or description'));
-        $(inputWrapper).append(this.srchField).addClass('srch-box');
+        $(inputWrapper)
+            .addClass('input-wrapper')
+            .append(this.srchField);
         this.initTypeahead();
         this.hide();
     }

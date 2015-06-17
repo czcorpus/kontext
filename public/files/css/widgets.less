@@ -219,8 +219,17 @@ ul.multiselect li td.checkbox-cell {
 }
 
 .corplist-widget .ajax-loader {
-  position: absolute;
-  margin-left: 10pt;
+  display: inline-block;
+  margin-right: 10pt;
+}
+
+.corplist-widget .ajax-loader.hidden {
+  visibility: hidden;
+}
+
+.corplist-widget .input-wrapper {
+  position: relative;
+  left: -24px;
 }
 
 .corplist-widget .keyword {
