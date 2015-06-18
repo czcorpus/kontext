@@ -47,7 +47,6 @@ class Actions(Kontext):
     ctow = Parameter(5)
     cminfreq = Parameter(5)
     cminbgr = Parameter(3)
-    citemsperpage = Parameter(50)
 
     wlminfreq = Parameter(5)
     wlicase = Parameter(0)

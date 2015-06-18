@@ -233,6 +233,7 @@ class Kontext(Controller):
     q = Parameter([])
     pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
     wlpagesize = Parameter(25, persistent=Parameter.PERSISTENT)
+    citemsperpage = Parameter(50, persistent=Parameter.PERSISTENT)
     _avail_tbl_templates = Parameter(u'')
     multiple_copy = Parameter(0, persistent=Parameter.PERSISTENT)
     wlsendmail = Parameter(u'')
