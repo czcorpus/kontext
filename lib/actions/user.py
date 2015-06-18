@@ -105,10 +105,11 @@ class User(Kontext):
 
             exporter = Export(corpus_manager=self.cm, corpname_canonizer=self._canonical_corpname,
                               url_creator=self.create_url)
-            rows = plugins.query_storage.get_user_queries(self._session_get('user', 'id'),
-                                                          offset=offset, limit=limit,
-                                                          query_type=query_type, corpname=corpname,
-                                                          from_date=from_date, to_date=to_date)
+            rows = plugins.get('query_storage').get_user_queries(
+                self._session_get('user', 'id'),
+                offset=offset, limit=limit,
+                query_type=query_type, corpname=corpname,
+                from_date=from_date, to_date=to_date)
             rows = [exporter.export_row(row) for row in rows]
         else:
             rows = ()
@@ -180,15 +181,16 @@ class User(Kontext):
                 'type': 'corpus'
             })
 
-        item = plugins.user_items.from_dict(data)
-        plugins.user_items.add_user_item(self._session_get('user', 'id'), item)
+        item = plugins.get('user_items').from_dict(data)
+        plugins.get('user_items').add_user_item(self._session_get('user', 'id'), item)
         return {'id': item.id}
 
     @exposed(return_type='json', access_level=1)
     def unset_favorite_item(self, request):
-        plugins.user_items.delete_user_item(self._session_get('user', 'id'), request.form['id'])
+        plugins.get('user_items').delete_user_item(
+            self._session_get('user', 'id'), request.form['id'])
         return {}
 
     @exposed(return_type='json', access_level=1)
     def get_favorite_corpora(self, request):
-        return lambda: plugins.user_items.to_json(self._load_fav_items())
+        return lambda: plugins.get('user_items').to_json(self._load_fav_items())
