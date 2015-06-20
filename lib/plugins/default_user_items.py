@@ -14,7 +14,7 @@ import json
 
 from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
 from abstract.user_items import infer_item_key
-
+from plugins import inject
 import l10n
 
 
@@ -130,5 +130,6 @@ class UserItems(AbstractUserItems):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
 
+@inject('db', 'auth')
 def create_instance(settings, db, auth):
     return UserItems(settings, db, auth)

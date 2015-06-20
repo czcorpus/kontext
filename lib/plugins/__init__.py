@@ -7,8 +7,11 @@ from abstract import PluginException
 _plugins = {}
 
 
-def install_plugin(name, obj):
-    _plugins[name] = obj
+def install_plugin(name, module, config):
+    if isinstance(module.create_instance, PluginFactory):
+        _plugins[name] = apply(module.create_instance, (config,))
+    else:  # modules without @inject will get just the configuration
+        _plugins[name] = apply(module.create_instance, (config,))
 
 
 def flush_plugins():
@@ -49,3 +52,30 @@ def get_plugins():
     a dict (plugin_name, plugin_object)
     """
     return _plugins
+
+
+class PluginFactory(object):
+    def __init__(self, fn, *args):
+        self._fn = fn
+        self._args = args
+
+    def __call__(self, conf):
+        return apply(self._fn, (conf,) + self._args)
+
+def inject(*args):
+    """
+    A decorator allowing a declarative injection of plug-in
+    dependencies (= other plug-ins). Plug-ins are injected
+    as positional arguments. The first argument is always
+    the 'settings' object.
+
+    @inject('db', 'sessions', 'auth')
+    def create_instance(conf, db, sessions, auth):
+      pass
+
+    arguments:
+    one or more plug-in names (see the example)
+    """
+    def wrapper(func):
+        return PluginFactory(func, *[get(v) for v in args])
+    return wrapper

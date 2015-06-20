@@ -51,6 +51,8 @@ import uuid
 
 from werkzeug.contrib.sessions import SessionStore, Session
 
+from plugins import inject
+
 
 class DefaultSessions(SessionStore):
 
@@ -112,6 +114,7 @@ class DefaultSessions(SessionStore):
             self.save(session)
 
 
+@inject('db')
 def create_instance(config, db):
     """
     This is an expected plugin module method to create instance of the service

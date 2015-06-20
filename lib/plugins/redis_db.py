@@ -206,4 +206,4 @@ def create_instance(conf):
     Arguments:
     conf -- a dictionary containing imported XML configuration of the plugin
     """
-    return RedisDb(conf)
+    return RedisDb(conf.get('plugins', 'db'))

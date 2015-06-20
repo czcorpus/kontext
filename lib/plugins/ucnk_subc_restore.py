@@ -145,5 +145,5 @@ class UCNKSubcRestore(AbstractSubcRestore):
         return sorted(subc_list + deleted_items, key=lambda t: t['n'])
 
 
-def create_instance(conf, *args):
+def create_instance(conf):
     return UCNKSubcRestore(conf)

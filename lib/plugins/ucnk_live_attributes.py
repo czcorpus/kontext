@@ -40,6 +40,7 @@ from hashlib import md5
 from functools import partial
 
 import l10n
+from plugins import inject
 from abstract.live_attributes import AbstractLiveAttributes
 from templating.filters import Shortener
 
@@ -333,7 +334,7 @@ class LiveAttributes(AbstractLiveAttributes):
             self.to_cache(db, 'bib_size', size)
         return size
 
-
+@inject('corptree')
 def create_instance(settings, corptree):
     """
     creates an instance of the plugin

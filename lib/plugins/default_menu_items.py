@@ -79,5 +79,5 @@ class MenuItems(AbstractMenuItems):
         return ans
 
 
-def create_instance(settings, db):
+def create_instance(settings):
     return MenuItems(settings.get('plugins', 'menu_items'))

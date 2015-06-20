@@ -34,7 +34,6 @@ import locale
 from werkzeug.http import parse_accept_header
 from werkzeug.wrappers import Request, Response
 
-
 sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
 sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template modules
 
@@ -79,37 +78,31 @@ def has_configured_plugin(name):
     return settings.contains('plugins', name) and settings.get('plugins', name).get('module', None)
 
 
-def init_plugin(name, dependencies, module=None):
+def init_plugin(name, module=None, optional=False):
     """
-    Loads plugin module, creates respective plugin object and creates a [plugin name] attribute
-    in the 'plugins' package.
+    Installs a plug-in specified by the supplied name (or name and module).
 
     arguments:
-    name -- name of the plugin
-    dependencies -- list/tuple containing arguments needed to initialize the plugin
-    module -- allows changing configured module programmatically
+    name -- a name of the plugin
+    module -- if supplied then name->module inference is skipped and init_plugin
+              uses this module as a source of the plug-in
+    optional -- if True then the module is installed only if it is configured
     """
-    try:
-        if module is None:
-            if not settings.contains('plugins', name):
-                raise PluginException('Missing configuration for the "%s" plugin' % name)
-            plugin_module = plugins.load_plugin_module(settings.get('plugins', name)['module'])
-        else:
-            plugin_module = module
-        if plugin_module:
-            resolved_deps = []
-            for d in dependencies:
-                if type(d) is str:
-                    resolved_deps.append(plugins.get(d))
-                else:
-                    resolved_deps.append(d)
-            plugins.install_plugin(name, apply(plugin_module.create_instance, tuple(resolved_deps)))
-    except ImportError as e:
-        logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
-                                         % (settings.get('plugins', 'getlang')['module'], e))
-    except (PluginException, Exception) as e:
-        logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
-        raise e
+    if not optional or has_configured_plugin(name):
+        try:
+            if module is None:
+                if not settings.contains('plugins', name):
+                    raise PluginException('Missing configuration for the "%s" plugin' % name)
+                plugin_module = plugins.load_plugin_module(settings.get('plugins', name)['module'])
+            else:
+                plugin_module = module
+            plugins.install_plugin(name, plugin_module, settings)
+        except ImportError as e:
+            logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
+                                             % (settings.get('plugins', 'getlang')['module'], e))
+        except (PluginException, Exception) as e:
+            logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
+            raise e
 
 
 def cleanup_runtime_modules():
@@ -125,42 +118,27 @@ def setup_plugins():
     Sets-up all the plugins. Please note that they are expected
     to be accessed concurrently by multiple requests which means any stateful
     properties should be considered carefully.
-
-    Each plug-in is configured using a pair of values:
-    1 - name
-    2 - dependencies
     """
     # required plugins
-    init_plugin('db', (settings.get('plugins', 'db'),))
-    init_plugin('sessions', (settings, 'db'))
-    init_plugin('settings_storage', (settings, 'db'))
-    init_plugin('auth', (settings, 'db', 'sessions'))
-    init_plugin('conc_persistence', (settings, 'db'))  # TODO make this optional
-    init_plugin('locking', (settings, 'db'))
-    init_plugin('conc_cache', (settings, 'db', 'locking'))
-    init_plugin('export', (settings,), module=plugins.export)
-    init_plugin('user_items', (settings, 'db', 'auth'))
-    init_plugin('menu_items', (settings, 'db'))
-
+    init_plugin('db')
+    init_plugin('sessions')
+    init_plugin('settings_storage')
+    init_plugin('auth')
+    init_plugin('conc_persistence')  # TODO make this optional
+    init_plugin('locking')
+    init_plugin('conc_cache')
+    init_plugin('export', module=plugins.export)
+    init_plugin('user_items')
+    init_plugin('menu_items')
     # Optional plugins
-    #
-    # Please note that KonText currently does not support dynamic dependency configuration
-    # (e.g. like some DI-based Java frameworks do). It means we have to (in a sense) foresee
-    # what is possibly needed for individual plug-ins here.
-    optional_plugins = (
-        ('getlang', (settings,)),
-        ('corptree', (settings, 'db', 'auth')),
-        ('query_storage', (settings, 'db')),
-        ('application_bar', (settings, 'auth')),
-        ('live_attributes', (settings, 'corptree')),
-        ('query_mod', (settings,)),
-        ('subc_restore', (settings, 'db')),
-        ('taghelper', (settings,))
-    )
-
-    for plugin, dependencies in optional_plugins:
-        if has_configured_plugin(plugin):
-            init_plugin(plugin, dependencies)
+    init_plugin('getlang', optional=True)
+    init_plugin('corptree', optional=True)
+    init_plugin('query_storage', optional=True)
+    init_plugin('application_bar', optional=True)
+    init_plugin('live_attributes', optional=True)
+    init_plugin('query_mod', optional=True)
+    init_plugin('subc_restore', optional=True)
+    init_plugin('taghelper', optional=True)
 
 
 def get_lang(environ):
@@ -206,29 +184,22 @@ def load_controller_class(path_info):
     a class matching provided path_info
     """
     if settings.get_bool('global', 'maintenance'):
-        from maintenance import MaintenanceController
-        controller_class = MaintenanceController
+        from maintenance import MaintenanceController as ControllerClass
     elif path_info.startswith('/fcs'):
-        from actions.fcs import Actions
-        controller_class = Actions
+        from actions.fcs import Actions as ControllerClass
     elif path_info.startswith('/user'):
-        from actions.user import User
-        controller_class = User
+        from actions.user import User as ControllerClass
     elif path_info.startswith('/subcorpus'):
-        from actions.subcorpus import Subcorpus
-        controller_class = Subcorpus
+        from actions.subcorpus import Subcorpus as ControllerClass
     elif path_info.startswith('/options'):
-        from actions.options import Options
-        controller_class = Options
+        from actions.options import Options as ControllerClass
     elif path_info.startswith('/admin'):
-        from actions.admin import Admin
-        controller_class = Admin
+        from actions.admin import Admin as ControllerClass
     elif path_info.startswith('/corpora'):
-        from actions.corpora import Corpora as controller_class
+        from actions.corpora import Corpora as ControllerClass
     else:
-        from actions.concordance import Actions
-        controller_class = Actions
-    return controller_class
+        from actions.concordance import Actions as ControllerClass
+    return ControllerClass
 
 
 class App(object):
@@ -298,6 +269,7 @@ elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
     os.makedirs(settings.get('corpora', 'calc_pid_dir'))
 
 application = App()
+
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
     application = DebuggedApplication(application)

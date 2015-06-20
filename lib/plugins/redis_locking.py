@@ -17,6 +17,7 @@
 import time
 
 from plugins.abstract.locking import AbstractLock, LockTimeout
+from plugins import inject
 
 
 class RedisLock(AbstractLock):
@@ -72,6 +73,7 @@ class LockFactory(object):
         return RedisLock(self._db, key, ttl=self._ttl, num_attempts=self._num_attempts)
 
 
+@inject('db')
 def create_instance(settings, db):
     if not hasattr(db, 'setnx') or not hasattr(db, 'getset'):
         from plugins.abstract import PluginDependencyException

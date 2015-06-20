@@ -49,6 +49,7 @@ import json
 from sqlalchemy import create_engine
 
 from abstract.conc_persistence import AbstractConcPersistence
+from plugins import inject
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
@@ -186,6 +187,7 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
+@inject('db')
 def create_instance(settings, db):
     """
     Creates a plugin instance.

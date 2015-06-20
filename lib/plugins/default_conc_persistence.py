@@ -33,6 +33,7 @@ import time
 import re
 
 from abstract.conc_persistence import AbstractConcPersistence
+from plugins import inject
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
@@ -151,6 +152,7 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
+@inject('db')
 def create_instance(settings, db):
     """
     Creates a plugin instance.

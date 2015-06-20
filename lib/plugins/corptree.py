@@ -68,6 +68,7 @@ from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import CorpusInfo
+from plugins import inject
 import l10n
 import manatee
 from fallback_corpus import EmptyCorpus
@@ -489,7 +490,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
         }
 
 
-def create_instance(conf, db, auth):
+@inject('auth')
+def create_instance(conf, auth):
     """
     Interface function called by KonText creates new plugin instance
     """
