@@ -35,7 +35,7 @@ import time
 import re
 
 from abstract.conc_persistence import AbstractConcPersistence
-
+from plugins import inject
 
 TABLE_NAME = 'kontext_conc_persistence'
 
@@ -146,5 +146,6 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
+@inject('db')
 def create_instance(settings, db_provider):
     return ConcPersistence(db_provider)

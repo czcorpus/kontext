@@ -33,6 +33,7 @@ import random
 import logging
 
 from abstract.auth import AbstractRemoteAuth
+from plugins import inject
 
 import MySQLdb
 
@@ -192,7 +193,7 @@ class CentralAuth(AbstractRemoteAuth):
         return self.logout_url % (urllib.quote(return_url))
 
 
-
+@inject('db', 'sessions')
 def create_instance(conf, db_provider, sessions):
     """
     Factory function providing

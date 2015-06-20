@@ -13,6 +13,7 @@
 import json
 
 from abstract.settings_storage import AbstractSettingsStorage
+from plugins import inject
 
 
 TABLE_NAME = 'noske_user_settings'
@@ -67,5 +68,6 @@ class SettingsStorage(AbstractSettingsStorage):
         return current_settings
 
 
+@inject('db')
 def create_instance(conf, db):
     return SettingsStorage(conf, db)

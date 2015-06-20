@@ -47,6 +47,7 @@ import time
 import random
 
 from abstract.query_storage import AbstractQueryStorage
+from plugins import inject
 
 
 TABLE_NAME = 'kontext_saved_queries'
@@ -160,6 +161,7 @@ class QueryStorage(AbstractQueryStorage):
                        " AND id = %%s") % TABLE_NAME, (user_id, row[0]))
 
 
+@inject('db')
 def create_instance(settings, db):
     """
     arguments:

@@ -31,6 +31,7 @@ import urllib
 import logging
 
 from abstract.appbar import AbstractApplicationBar
+from plugins import inject
 
 
 class ApplicationBar(AbstractApplicationBar):
@@ -83,6 +84,7 @@ class ApplicationBar(AbstractApplicationBar):
         return html
 
 
+@inject('auth')
 def create_instance(settings, ticket_id_provider):
     server = settings.get('plugins', 'application_bar').get('server')
     path = settings.get('plugins', 'application_bar').get('path', '')

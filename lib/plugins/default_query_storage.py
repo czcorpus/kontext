@@ -32,6 +32,7 @@ import time
 import random
 
 from abstract.query_storage import AbstractQueryStorage
+from plugins import inject
 
 
 class QueryStorage(AbstractQueryStorage):
@@ -125,6 +126,7 @@ class QueryStorage(AbstractQueryStorage):
             self.db.list_trim(data_key, num_over, -1)
 
 
+@inject('db')
 def create_instance(settings, db):
     """
     arguments:

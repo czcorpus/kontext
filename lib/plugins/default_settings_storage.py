@@ -14,8 +14,11 @@
 A simple settings storage which relies on default_db plug-in.
 """
 
+from plugins.abstract.settings_storage import AbstractSettingsStorage
+from plugins import inject
 
-class SettingsStorage(object):
+
+class SettingsStorage(AbstractSettingsStorage):
 
     def __init__(self, db):
         """
@@ -59,5 +62,6 @@ class SettingsStorage(object):
             return data
 
 
+@inject('db')
 def create_instance(conf, db):
     return SettingsStorage(db)
