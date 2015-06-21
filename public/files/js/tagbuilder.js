@@ -108,7 +108,7 @@ define(['jquery', 'multiselect', 'popupbox', 'util', 'win'], function ($, multis
         /**
          * Holds a corpus name for which this object is configured.
          */
-        this.corpusName = pluginApi.getgetConf('corpname');
+        this.corpusName = pluginApi.getConf('corpname');
 
         /**
          *

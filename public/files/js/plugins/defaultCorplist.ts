@@ -713,12 +713,13 @@ class FavoritesTab implements WidgetTab {
                     return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
 
                 } else {
-                    self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+                    self.pageModel.showMessage('error', self.pageModel.translate('failed to remove item from favorites'));
+                    throw new Error(data.error);
                 }
 
             },
             function (err) {
-                self.pageModel.showMessage('error', this.pageModel.translate('failed to remove item from favorites'));
+                self.pageModel.showMessage('error', self.pageModel.translate('failed to remove item from favorites'));
             }
         ).then(
             function (favItems) {
@@ -730,6 +731,7 @@ class FavoritesTab implements WidgetTab {
 
                 } else {
                     self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                    throw new Error(favItems.error);
                 }
             },
             function (err) {
