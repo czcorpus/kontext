@@ -195,19 +195,20 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         return function () {
             var corpusId,
                 jqHiddenStatus,
-                jqNewLangNode;
+                jqNewLangNode,
+                searchedLangWidgetOpt;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
 
             if (corpusId) {
+                searchedLangWidgetOpt = $('#add-searched-lang-widget').find('select option[value="' + corpusId + '"]');
                 jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
-
                 jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
 
                 if (jqNewLangNode.length > 0) {
                     jqNewLangNode.show();
                     addActiveParallelCorpus(corpusId);
-                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+                    searchedLangWidgetOpt.attr('disabled', true);
 
 
                     jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
@@ -215,11 +216,11 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
                         $('[id="qnode_' + corpusId + '"]').hide();
                         jqHiddenStatus.val('');
                         removeActiveParallelCorpus(corpusId);
-                        $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                        searchedLangWidgetOpt.removeAttr('disabled');
                        lib.layoutModel.resetPlugins();
                     });
 
-                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
+                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form .query-area .spec-chars').get(0));
 
                     if (!$.support.cssFloat) {
                         // refresh content in IE < 9
@@ -366,6 +367,13 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         });
     };
 
+    lib.textareaSubmitOverride = function () {
+        var jqMainForm = $('#mainform');
+        jqMainForm.find('.query-area textarea').each(function (i, area) {
+            queryInput.initCqlTextarea(area, jqMainForm);
+        });
+    };
+
     /**
      *
      * @param {object} conf
@@ -396,7 +404,8 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params'),
-            registerSubcorpChange : lib.registerSubcorpChange()
+            registerSubcorpChange : lib.registerSubcorpChange(),
+            textareaSubmitOverride : lib.textareaSubmitOverride()
         });
 
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));

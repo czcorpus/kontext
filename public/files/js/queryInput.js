@@ -32,7 +32,6 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param {pluginApi} pluginApi
      */
     function bindTagHelper(inputElm, triggerElm, pluginApi) {
-
         tagbuilder.bindTextInputHelper(
             pluginApi,
             triggerElm,
@@ -165,7 +164,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      *
      */
     lib.bindQueryHelpers = function (pluginApi) {
-        $('input.cql-input').each(function () {
+        $('.query-area .cql-input').each(function () {
             var blockWrapper = $(this).closest('td');
 
             bindTagHelper($(this), blockWrapper.find('.insert-tag a'), pluginApi);
@@ -269,9 +268,12 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         if ($('#error').length === 0) {
             $('#error').css('display', 'none');
         }
-        $(f).find('input,select').each(function () {
+        $(f).find('input,select,textarea').each(function () {
             if ($(this).data('ignore-reset') !== '1') {
                 if ($(this).attr('type') === 'text') {
+                    $(this).val('');
+                }
+                if ($(this).prop('tagName').toLowerCase() === 'textarea') {
                     $(this).val('');
                 }
                 if ($(this).attr('name') === 'default_attr') {
@@ -295,6 +297,20 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             win.VKI_close(jqElm.get(0));
             win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
         }
+    };
+
+    /**
+     *
+     * @param area
+     * @param parentForm
+     */
+    lib.initCqlTextarea = function (area, parentForm) {
+        $(area).on('keyup', function (evt) {
+            if (!evt.shiftKey && evt.keyCode === 13) {
+                evt.preventDefault();
+                $(parentForm).submit();
+            }
+        });
     };
 
     /**
@@ -382,7 +398,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      */
     lib.bindBeforeSubmitActions = function (submitElm, layoutModel) {
         $(submitElm).on('click', function (event) {
-            var currQueryElm = $('#mainform input.query:visible').get(0),
+            var currQueryElm = $('#mainform .query-area .query:visible').get(0),
                 queryTypeElm = $('#mainform select.qselector').get(0),
                 currQuery = $(currQueryElm).val(),
                 data = $('#mainform').serialize().split('&'),

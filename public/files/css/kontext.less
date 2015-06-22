@@ -1015,19 +1015,37 @@ table.query {
   text-align: right;
 }
 
+.query-area {
+  border-radius: @input-border-radius;
+  border: @input-border-style;
+  background-color: #FFFFFF;
+}
+
+.query-area textarea,
+.query-area input[type=text] {
+  border-style: solid;
+  border-width: 1pt 0 0 0;
+  border-color: @color-light-frame;
+  border-radius: 0;
+}
+
+.query-area textarea {
+  margin: 0;
+  padding: 5pt 3pt 3pt 3pt;
+  resize: vertical;
+  font-family: @monospace-font-family;
+}
+
 ul.query-toolbox {
   list-style-type: none;
-  margin: 0 0 2px;
-  padding: 0;
+  margin: 0;
+  padding: 2pt 0;
+  background-color: #FFFFFF;
 }
 
 ul.query-toolbox li a {
-  background-color: #fefefe;
-  border-style: solid;
-  border-color: #a6754d;
-  border-width: 1px 1px 0 1px;
-  border-radius: 3px 3px 0 0;
-  color: @color-logo-pink;
+  background-color: #FFFFFF;
+  color: @color-light-text;
   font-size: 75%;
   padding: 2px 5px;
   text-decoration: none;
@@ -1035,8 +1053,13 @@ ul.query-toolbox li a {
 }
 
 ul.query-toolbox li a:hover {
-  border: 1px solid @color-logo-pink;
   color: @color-logo-pink;
+  text-decoration: underline;
+}
+
+.query-options {
+  display: block;
+  margin-top: 7pt;
 }
 
 tr#cqlrow td {
