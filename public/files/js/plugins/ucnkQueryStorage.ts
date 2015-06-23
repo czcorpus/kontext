@@ -571,7 +571,7 @@ export class QueryStoragePlugin implements Kontext.Plugin {
     reset(): void {
         var self = this;
         if (!this.pluginApi.userIsAnonymous()) {
-            $('input.history:visible').each(function () {
+            $('.query-area .history:visible').each(function () {
                 var plugin = self.bind(this);
                 self.addTriggerButton(plugin);
             });
