@@ -1123,6 +1123,29 @@ export class PageModel implements Kontext.PluginProvider {
         return staticPath + path;
     }
 
+    /**
+     *
+     * @param params
+     * @returns {string}
+     */
+    encodeURLParameters(params:{[key:string]:any}):string {
+        var ans = [],
+            v;
+
+        for (var p in params) {
+            if (params.hasOwnProperty(p)) {
+                v = params[p];
+                if (Object.prototype.toString.call(v) !== '[object Array]') {
+                    v = [v];
+                }
+                for (var i = 0; i < v.length; i += 1) {
+                    ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(v[i]));
+                }
+            }
+        }
+        return ans.join('&');
+    }
+
     getConf(item:string):any {
         return this.conf[item];
     }

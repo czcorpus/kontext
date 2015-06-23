@@ -261,7 +261,7 @@ class Kontext(Controller):
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
     align = Parameter('')
-    sel_aligned = Parameter([])
+    sel_aligned = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
     maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
     refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
@@ -333,16 +333,9 @@ class Kontext(Controller):
     def _export_mapped_args(self):
         """
         This method exports currently registered argument mappings (see get_args_mapping())
-        into a dictionary. Please note that internal dictionary is always MultiDict dictionary
-        (i.e. a value is always a list) but this method exports only the first respective value.
-
-        If you want to export list values (e.g. in case the URL contains repeated parameter) you
-        can always export this manually within an action method
-        using:
-
-            self.get_args_mapping(ArgMappingClass).to_dict(multivals=(param1, ..., paramN))
-
-        where param1,...,paramN are keys of values you want to have as lists.
+        into a dictionary. Please note that internal dictionary is always MultiDict. A list vs.
+        scalar decision is done based on Parameter definition (type [] produces lists here,
+        other types (str, int) produces scalars).
 
         The automatic mapping is exported in _pre_dispatch (i.e. before an action method is invoked).
         """
@@ -350,6 +343,19 @@ class Kontext(Controller):
         for v in self._args_mappings.values():
             ans.update(v.to_dict(none_replac=''))
         return ans
+
+    def _store_mapped_args(self):
+        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
+
+        for am in self._args_mappings.values():
+            args = am.get_names(persistence=Parameter.SEMI_PERSISTENT)
+            for arg in args:
+                v = getattr(am, arg)
+                if type(v) in (list, tuple):
+                    tmp.setlist(arg, v)
+                else:
+                    tmp[arg] = v
+        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
     def _log_request(self, user_settings, action_name, proc_time=None):
         """
@@ -696,7 +702,9 @@ class Kontext(Controller):
         form = LegacyForm(self._request.form, self._request.args)
         if not is_legacy_method:
             for arg_mapping in action_metadata.get('argmappings', []):
-                self._args_mappings[arg_mapping] = arg_mapping(self._request.args)  # TODO what about forms?
+                self._args_mappings[arg_mapping] = arg_mapping(
+                    self._request.args, MultiDict(self._session.get('semi_persistent_attrs')))
+                    # TODO what about forms?
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
@@ -963,7 +971,6 @@ class Kontext(Controller):
                                               ('usesubcorp', self.usesubcorp),
                                               ])
         result['citation_info'] = corp_conf_info.get('citation_info', '')
-        result['aligned_corpora'] = self._request.args.getlist('sel_aligned')
 
     def _setup_optional_plugins_js(self, result):
         """
@@ -1149,6 +1156,7 @@ class Kontext(Controller):
         else:
             # new-style action methods do not use self.* arguments
             result.update(self._export_mapped_args())
+            self._store_mapped_args()
             conc_args = self.get_args_mapping(ConcArgsMapping)
             result['curr_corpora_fav_key'] = user_items.infer_item_key(conc_args.corpname,
                                                                        conc_args.usesubcorp,

@@ -39,6 +39,7 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     lib.onRemoveParallelCorpActions = [];
     lib.onBeforeRemoveParallelCorpActions = [];
     lib.onSubcorpChangeActions = [];
+    lib.alignedCorpora = [];
 
     lib.getConf = function (name) {
         return lib.layoutModel.getConf(name);
@@ -110,52 +111,24 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     lib.extendedApi = null;
     lib.layoutModel = null;
 
-
-    /**
-     *
-     * @param {function} callback
-     * @return returns what callback returns
-     */
-    function callOnParallelCorporaList(callback) {
-        var itemList;
-
-        if (lib.layoutModel.conf.alignedCorpora) {
-            itemList = lib.layoutModel.conf.alignedCorpora;
-            lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-
-        } else {
-            itemList = lib.layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
-        }
-
-        if (typeof itemList !== 'object') {
-            itemList = itemList.split(',');
-        }
-        return callback(itemList);
-    }
-
     /**
      *
      */
     function getActiveParallelCorpora() {
-        return callOnParallelCorporaList(function (itemList) {
-            return itemList;
-        });
+        return lib.alignedCorpora;
     }
 
     /**
      * @param {string} corpusName
      */
     function addActiveParallelCorpus(corpusName) {
-        callOnParallelCorporaList(function (itemList) {
-            if (corpusName && $.inArray(corpusName, itemList) === -1) {
-                itemList.push(corpusName);
-            }
-           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if ($('div.parallel-corp-lang:visible').length > 0) {
-                $('#default-view-mode').remove();
-                $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
-            }
-        });
+        if (corpusName && $.inArray(corpusName, lib.alignedCorpora) === -1) {
+            lib.alignedCorpora.push(corpusName);
+        }
+        if ($('div.parallel-corp-lang:visible').length > 0) {
+            $('#default-view-mode').remove();
+            $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
+        }
         $.each(lib.onAddParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
@@ -168,15 +141,12 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         $.each(lib.onBeforeRemoveParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
-        callOnParallelCorporaList(function (itemList) {
-            if ($.inArray(corpusName, itemList) >= 0) {
-                itemList.splice($.inArray(corpusName, itemList), 1);
-            }
-           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if ($('div.parallel-corp-lang:visible').length === 0) {
-                $('#default-view-mode').remove();
-            }
-        });
+        if ($.inArray(corpusName, lib.alignedCorpora) >= 0) {
+                lib.alignedCorpora.splice($.inArray(corpusName, lib.alignedCorpora), 1);
+        }
+        if ($('div.parallel-corp-lang:visible').length === 0) {
+            $('#default-view-mode').remove();
+        }
         $.each(lib.onRemoveParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
@@ -344,14 +314,18 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         queryForm.find('.make-primary').on('click', function (evt) {
             var linkElm = evt.currentTarget,
                 jqCurrPrimaryCorpInput = queryForm.find('input[type="hidden"][name="corpname"]'),
-                newPrimary = $(linkElm).attr('data-corpus-id');
+                newPrimary = $(linkElm).attr('data-corpus-id'),
+                urlArgs;
 
-            queryForm.attr('action', 'first_form?' + lib.layoutModel.conf.stateParams);
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
-            $('#mainform input[type="hidden"][name="corpname"]').val(newPrimary);
-            $('#mainform input[type="hidden"][name="reload"]').val(1);
-            $('#make-concordance-button').click();
+
+            urlArgs = lib.layoutModel.conf.currentArgs; // TODO possible mutability issues
+            urlArgs['corpname'] = newPrimary;
+            urlArgs['sel_aligned'] = lib.alignedCorpora;
+
+            window.location = lib.layoutModel.createActionUrl(
+                    'first_form?' + lib.layoutModel.encodeURLParameters(urlArgs));
         });
     };
 
@@ -387,6 +361,7 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
 
         lib.layoutModel = new layoutModule.PageModel(conf);
         lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        lib.alignedCorpora = conf.alignedCorpora.slice();
 
         promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(),
