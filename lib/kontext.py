@@ -292,7 +292,6 @@ class Kontext(Controller):
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
-        self._args_mappings = {}
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database

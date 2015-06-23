@@ -156,7 +156,7 @@ class User(Kontext):
         }
 
     @exposed(return_type='json', argmappings=(ConcArgsMapping,), access_level=1)
-    def set_favorite_item(self, request):
+    def set_favorite_item(self, request, concArgs):
         """
         """
         main_corp = self.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])

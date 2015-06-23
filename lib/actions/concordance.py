@@ -208,12 +208,10 @@ class Actions(Kontext):
         return out
 
     @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping, QueryInputs))
-    def first_form(self, request):
+    def first_form(self, request, concArgs, queryInputArgs):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
-        out.update(self.get_args_mapping(QueryInputs).to_dict())
-        out.update(self.get_args_mapping(ConcArgsMapping).to_dict())
 
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
@@ -237,7 +235,7 @@ class Actions(Kontext):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
-        out['aligned_corpora'] = out.get('sel_aligned', [])
+        out['aligned_corpora'] = concArgs.getlist('sel_aligned')
         self._export_subcorpora_list(out)
         self._attach_query_metadata(out)
         self.last_corpname = self.corpname
