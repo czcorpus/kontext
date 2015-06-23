@@ -829,6 +829,8 @@ class Controller(object):
                 else:
                     self.add_system_message('error', e2.message)
 
+                self._pre_dispatch(self.exceptmethod, None, named_args,
+                                   self._get_method_metadata(self.exceptmethod))
                 em, self.exceptmethod = self.exceptmethod, None
                 return self.process_method(em, request, pos_args, named_args)
 

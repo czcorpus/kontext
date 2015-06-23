@@ -29,6 +29,26 @@ define(['jquery', 'tpl/document', 'plugins/corplist', 'popupbox', 'plugins/liveA
         layoutModel: null
     };
 
+    lib.getConf = function (name) {
+        return lib.layoutModel.getConf(name);
+    };
+
+    lib.translate = function (msg) {
+        return lib.layoutModel.translate(msg);
+    };
+
+    lib.createActionUrl = function (path) {
+        return lib.layoutModel.createActionUrl(path);
+    };
+
+    lib.createStaticUrl = function (path) {
+        return lib.layoutModel.createStaticUrl(path);
+    };
+
+    lib.showMessage = function (type, message, callback) {
+        return lib.layoutModel.showMessage(type, message, callback);
+    };
+
     /**
      *
      * @param item
@@ -76,9 +96,11 @@ define(['jquery', 'tpl/document', 'plugins/corplist', 'popupbox', 'plugins/liveA
     };
 
     lib.initTreeComponent = function () {
+        var subcForm = $('#subcorp-form');
         lib.corplistComponent = corplistComponent.create(
-            $('form[action="subcorp"] select[name="corpname"]'),
-            lib.layoutModel.pluginApi(),
+            subcForm.find('select[name="corpname"]').get(0),
+            subcForm.find('.starred img').get(0),
+            lib,
             {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
         );
     };

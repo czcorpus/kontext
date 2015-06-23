@@ -208,7 +208,7 @@ class Actions(Kontext):
         return out
 
     @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping, QueryInputs))
-    def first_form(self, request, concArgs, queryInputArgs):
+    def first_form(self, request, conc_args, query_input_args):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
@@ -235,7 +235,7 @@ class Actions(Kontext):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
-        out['aligned_corpora'] = concArgs.getlist('sel_aligned')
+        out['aligned_corpora'] = conc_args.getlist('sel_aligned')
         self._export_subcorpora_list(out)
         self._attach_query_metadata(out)
         self.last_corpname = self.corpname
