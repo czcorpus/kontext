@@ -30,6 +30,7 @@ import inspect
 import time
 import re
 from functools import partial
+from collections import OrderedDict
 
 import werkzeug.urls
 
@@ -232,6 +233,7 @@ class Controller(object):
         self._system_messages = []
         self._proc_time = None
         self._validators = []  # a list of functions which must pass (= return None) before any action is performed
+        self._args_mappings = OrderedDict()
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
@@ -282,7 +284,7 @@ class Controller(object):
 
     def add_validator(self, fn):
         """
-        Adds a function which is then run after pre_dispatch but before action processing.
+        Adds a function which is run after pre_dispatch but before action processing.
         If the function returns an instance of Exception then Controller raises this value.
         The validation fails on first encountered error (i.e. subsequent validators are not run).
         This is intended for ancestors to inject pre-run checks.
@@ -800,7 +802,9 @@ class Controller(object):
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
             if not action_metadata.get('legacy', False):
-                method_ans = apply(method, (request,))  # new-style actions use werkzeug.wrappers.Request
+                # new-style actions use werkzeug.wrappers.Request
+                args = [request] + self._args_mappings.values()
+                method_ans = apply(method, args)
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans

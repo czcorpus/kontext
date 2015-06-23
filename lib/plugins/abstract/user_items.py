@@ -39,11 +39,14 @@ def generate_item_key(obj):
 
 
 def infer_item_key(corpname, usesubcorp, aligned_corpora):
+    if aligned_corpora is None or (len(aligned_corpora) == 1 and aligned_corpora[0] == ''):
+        aligned_corpora = []
     if corpname:
         if usesubcorp:
             return '%s:%s' % (corpname, usesubcorp)
         elif aligned_corpora:
-            return '+'.join([corpname] + [infer_item_key(corp, None, None) for corp in aligned_corpora])
+            return '+'.join([corpname] + [infer_item_key(corp, None, None)
+                                          for corp in aligned_corpora])
         else:
             return corpname
     else:

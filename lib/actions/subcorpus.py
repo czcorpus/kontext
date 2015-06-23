@@ -100,7 +100,7 @@ class Subcorpus(Kontext):
         return ans
 
     @exposed(access_level=1, argmappings=(ConcArgsMapping,))
-    def subcorp_form(self, request):
+    def subcorp_form(self, request, concArgs):
         """
         Displays a form to create a new subcorpus
         """
