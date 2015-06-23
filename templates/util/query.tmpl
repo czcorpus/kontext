@@ -68,10 +68,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required $hidden" id="iqueryrow$suff">
         <th>$_("Query"):</th>
         <td>
-            <ul class="query-toolbox">
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            <input type="text" id="iquery$suff" class="query spec-chars iquery-input #unless $suff#history #end unless#" name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                <input type="text" id="iquery$suff" class="query spec-chars iquery-input #unless $suff#history #end unless#"
+                       name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+            </div>
         </td>
     </tr>
 
@@ -80,18 +83,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required $hidden" id="lemmarow$suff">
         <th>$_("Lemma"):</th>
         <td>
-            <ul class="query-toolbox">
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            #if $q
-            <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="query search lemma-input" />
-            #else
-            <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff"
-                   class="query spec-chars lemma-input #unless $suff#history #end unless#" />
-            #end if
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                #if $q
+                <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="query search lemma-input" />
+                #else
+                <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff"
+                       class="query spec-chars lemma-input #unless $suff#history #end unless#" />
+                #end if
+            </div>
 
             #if $Lposlist
-                <span class="no-wrap">
+                <div class="query-options">
                     $_("PoS"):
                     <select name="lpos$suff">
                         <option value="">$_("unspecified")</option>
@@ -99,7 +104,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                         <option value="$lp.v" #if $lp.v == $getVar('lpos' + $suff, '')#selected="selected"#end if#>$lp.n</option>
                         #end for
                     </select>
-                </span>
+                </div>
             #end if
         </td>
     </tr>
@@ -109,15 +114,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required $hidden" id="phraserow$suff">
         <th>$_("Phrase"):</th>
         <td>
-            <ul class="query-toolbox">
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff"
-                   class="query spec-chars phrase-input #unless $suff#history #end unless#" />
-            <span class="no-wrap">
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff"
+                       class="query spec-chars phrase-input #unless $suff#history #end unless#" />
+            </div>
+            <div class="query-options">
                 <label>$_("Match case"):</label>
                 <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
-            </span>
+            </div>
         </td>
 
     </tr>
@@ -126,13 +133,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required $hidden" id="wordrow$suff">
         <th>$_("Word Form"):</th>
         <td>
-            <ul class="query-toolbox">
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff"
-                   class="query spec-chars word-input #unless $suff#history #end unless#" />
-            #if $Wposlist
-            <span class="no-wrap">
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff"
+                       class="query spec-chars word-input #unless $suff#history #end unless#" />
+            </div>
+            <div class="query-options">
+                <label>$_("Match case"):
+                    <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
+                </label>
+                #if $Wposlist
                 $_("PoS"):
                 <select name="wpos$suff">
                     <option value="">$_("unspecified")</option>
@@ -141,12 +153,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     #if $wp.v == $getVar('wpos' + $suff, '')#selected="selected"#end if#>$wp.n</option>
                     #end for
                 </select>
-            </span>
-            #end if
-            <span class="no-wrap">
-                <label>$_("Match case"):</label>
-                <input type="checkbox" name="qmcase$suff" value="1" #if $getVar('qmcase' + $suff, '')#checked#end if# />
-            </span>
+                #end if
+            </div>
         </td>
     </tr>
 
@@ -154,11 +162,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required $hidden" id="charrow$suff">
         <th>$_("Character"):</th>
         <td>
-            <ul class="query-toolbox">
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff"
-                   class="query spec-chars char-input" />
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff"
+                       class="query spec-chars char-input" />
+            </div>
         </td>
     </tr>
 
@@ -183,17 +193,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             </div>
             #end unless
 
-            <ul class="query-toolbox">
-                #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
-                <li class="insert-tag"><a data-bound-input="cql$suff">$_('insert tag')</a></li>
-                #end if
-                <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
-                <li><a class="virtual-keyboard-trigger" href="#">$_('keyboard')</a></li>
-            </ul>
-            <input id="cql$suff" class="query #unless $suff#history #end unless#spec-chars cql-input" type="text" name="cql$suff" value='$getVar('cql' + $suff, '')' />
+            <div class="query-area">
+                <ul class="query-toolbox">
+                    #if $suff in $tag_builder_support and $tag_builder_support[$suff] is True:
+                    <li class="insert-tag"><a data-bound-input="cql$suff">$_('insert tag')</a></li>
+                    #end if
+                    <li class="within"><a data-bound-input="cql$suff">$_('insert "within"')</a></li>
+                    <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
+                </ul>
+                <textarea id="cql$suff" class="query #unless $suff#history #end unless#spec-chars cql-input"
+                          rows="2" cols="60" name="cql$suff" value='$getVar('cql' + $suff, '')'></textarea>
+            </div>
 
             #if not $suff
-            <span class="no-wrap">
+            <div class="query-options">
                 $_("Default attribute"):
                 <select name="default_attr$suff">
                     #for $a in $getVar('AttrList', ())
@@ -204,7 +217,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 #if $tagsetdoc
                 <a target="_blank" href="$tagsetdoc">$_("Tagset summary")</a>
                 #end if
-            </span>
+            </div>
             #end if
         </td>
     </tr>

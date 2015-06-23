@@ -11,6 +11,7 @@
 # GNU General Public License for more details.
 
 import urllib
+import json
 
 
 class StateGlobals(object):
@@ -40,6 +41,9 @@ class StateGlobals(object):
 
     def to_s(self):
         return urllib.urlencode(self._data)
+
+    def to_json(self):
+        return json.dumps(self._data)
 
     def update(self, *args):
         if type(args[0]) is dict:

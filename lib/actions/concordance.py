@@ -18,6 +18,7 @@ import sys
 import re
 
 import werkzeug
+from werkzeug.datastructures import MultiDict
 
 from kontext import Kontext, ConcError, MainMenu
 from controller import UserActionException, exposed
@@ -103,40 +104,22 @@ class Actions(Kontext):
                              without Parameter.SEMI_PERSISTENT flag will be ignored)
         """
         semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
-        tmp = self._session.get('semi_persistent_attrs', {})
+        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
         for attr_name in attr_list:
             if attr_name in semi_persist_attrs:
-                tmp[attr_name] = semi_persist_attrs[attr_name]
+                v = getattr(self, attr_name)
+                if type(v) in (list, tuple):
+                    tmp.setlist(attr_name, v)
+                else:
+                    tmp[attr_name] = v
         # we have to ensure Werkzeug sets 'should_save' attribute
-        self._session['semi_persistent_attrs'] = tmp
+        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
         # aligned corpora forms inputs require different approach due to their dynamic nature
         tmp = self._session.get('aligned_forms', {})
         for aligned_lang in self.sel_aligned:
             tmp[aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
         self._session['aligned_forms'] = tmp  # this ensures Werkzeug sets 'should_save' attribute
-
-    def _fetch_semi_peristent_attrs(self):
-        """
-        Restores the state of all semi-persistent parameters (i.e. the ones
-        with persistence flag Parameter.PERSISTENT) and also aligned
-        corpora form elements (they must be treated in a different way because
-        they cannot be hardcoded as Parameter instances due to their dynamic nature).
-
-        Please note that the original controller's attributes are not touched by this.
-
-        returns:
-        found attributes dict (attr_name => attr_value)
-        """
-        ans = {}
-        if self.queryselector:
-            ans['queryselector'] = self.queryselector
-        elif 'semi_persistent_attrs' in self._session:
-            ans.update(self._session['semi_persistent_attrs'])
-        for form_lang, form_data in self._session.get('aligned_forms', {}).items():
-            for attr_name, attr_val in form_data.items():
-                ans['%s_%s' % (attr_name, form_lang)] = attr_val
-        return ans
 
     def _get_speech_segment(self):
         """
@@ -230,12 +213,13 @@ class Actions(Kontext):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
         out.update(self.get_args_mapping(QueryInputs).to_dict())
+        out.update(self.get_args_mapping(ConcArgsMapping).to_dict())
+
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
         else:
             self._store_checked_text_types(request.form, out)
         self._reset_session_conc()
-        out.update(self._fetch_semi_peristent_attrs())
 
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []
@@ -253,6 +237,7 @@ class Actions(Kontext):
                     or 'lemma' in attrlist
         self._attach_tag_builder(out)
         out['user_menu'] = True
+        out['aligned_corpora'] = out.get('sel_aligned', [])
         self._export_subcorpora_list(out)
         self._attach_query_metadata(out)
         self.last_corpname = self.corpname
@@ -682,7 +667,7 @@ class Actions(Kontext):
               fc_pos=()):
 
         ans = {}
-        self._store_semi_persistent_attrs(('queryselector',))
+        self._store_semi_persistent_attrs(('queryselector', 'sel_aligned'))
         try:
             self._set_first_query(fc_lemword_window_type,
                                   fc_lemword_wsize,
@@ -709,7 +694,6 @@ class Actions(Kontext):
         self.lemma = ''
         self.lpos = ''
         out = {'within': within}
-        out.update(self._fetch_semi_peristent_attrs())
         if within and not self.error:
             self.add_system_message('error', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)

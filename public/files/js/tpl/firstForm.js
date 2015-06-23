@@ -39,6 +39,7 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     lib.onRemoveParallelCorpActions = [];
     lib.onBeforeRemoveParallelCorpActions = [];
     lib.onSubcorpChangeActions = [];
+    lib.alignedCorpora = [];
 
     lib.getConf = function (name) {
         return lib.layoutModel.getConf(name);
@@ -110,52 +111,24 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     lib.extendedApi = null;
     lib.layoutModel = null;
 
-
-    /**
-     *
-     * @param {function} callback
-     * @return returns what callback returns
-     */
-    function callOnParallelCorporaList(callback) {
-        var itemList;
-
-        if (lib.layoutModel.conf.alignedCorpora) {
-            itemList = lib.layoutModel.conf.alignedCorpora;
-            lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-
-        } else {
-            itemList = lib.layoutModel.userSettings.get(activeParallelCorporaSettingKey) || [];
-        }
-
-        if (typeof itemList !== 'object') {
-            itemList = itemList.split(',');
-        }
-        return callback(itemList);
-    }
-
     /**
      *
      */
     function getActiveParallelCorpora() {
-        return callOnParallelCorporaList(function (itemList) {
-            return itemList;
-        });
+        return lib.alignedCorpora;
     }
 
     /**
      * @param {string} corpusName
      */
     function addActiveParallelCorpus(corpusName) {
-        callOnParallelCorporaList(function (itemList) {
-            if (corpusName && $.inArray(corpusName, itemList) === -1) {
-                itemList.push(corpusName);
-            }
-           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if ($('div.parallel-corp-lang:visible').length > 0) {
-                $('#default-view-mode').remove();
-                $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
-            }
-        });
+        if (corpusName && $.inArray(corpusName, lib.alignedCorpora) === -1) {
+            lib.alignedCorpora.push(corpusName);
+        }
+        if ($('div.parallel-corp-lang:visible').length > 0) {
+            $('#default-view-mode').remove();
+            $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
+        }
         $.each(lib.onAddParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
@@ -168,15 +141,12 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         $.each(lib.onBeforeRemoveParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
-        callOnParallelCorporaList(function (itemList) {
-            if ($.inArray(corpusName, itemList) >= 0) {
-                itemList.splice($.inArray(corpusName, itemList), 1);
-            }
-           lib.layoutModel.userSettings.set(activeParallelCorporaSettingKey, itemList.join(','));
-            if ($('div.parallel-corp-lang:visible').length === 0) {
-                $('#default-view-mode').remove();
-            }
-        });
+        if ($.inArray(corpusName, lib.alignedCorpora) >= 0) {
+                lib.alignedCorpora.splice($.inArray(corpusName, lib.alignedCorpora), 1);
+        }
+        if ($('div.parallel-corp-lang:visible').length === 0) {
+            $('#default-view-mode').remove();
+        }
         $.each(lib.onRemoveParallelCorpActions, function (i, fn) {
             fn.call(lib, corpusName);
         });
@@ -195,19 +165,20 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         return function () {
             var corpusId,
                 jqHiddenStatus,
-                jqNewLangNode;
+                jqNewLangNode,
+                searchedLangWidgetOpt;
 
             corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
 
             if (corpusId) {
+                searchedLangWidgetOpt = $('#add-searched-lang-widget').find('select option[value="' + corpusId + '"]');
                 jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
-
                 jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
 
                 if (jqNewLangNode.length > 0) {
                     jqNewLangNode.show();
                     addActiveParallelCorpus(corpusId);
-                    $('#add-searched-lang-widget select option[value="' + corpusId + '"]').attr('disabled', true);
+                    searchedLangWidgetOpt.attr('disabled', true);
 
 
                     jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
@@ -215,11 +186,11 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
                         $('[id="qnode_' + corpusId + '"]').hide();
                         jqHiddenStatus.val('');
                         removeActiveParallelCorpus(corpusId);
-                        $('#add-searched-lang-widget select option[value="' + corpusId + '"]').removeAttr('disabled');
+                        searchedLangWidgetOpt.removeAttr('disabled');
                        lib.layoutModel.resetPlugins();
                     });
 
-                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form tr:visible td > .spec-chars').get(0));
+                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form .query-area .spec-chars').get(0));
 
                     if (!$.support.cssFloat) {
                         // refresh content in IE < 9
@@ -343,14 +314,18 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         queryForm.find('.make-primary').on('click', function (evt) {
             var linkElm = evt.currentTarget,
                 jqCurrPrimaryCorpInput = queryForm.find('input[type="hidden"][name="corpname"]'),
-                newPrimary = $(linkElm).attr('data-corpus-id');
+                newPrimary = $(linkElm).attr('data-corpus-id'),
+                urlArgs;
 
-            queryForm.attr('action', 'first_form?' + lib.layoutModel.conf.stateParams);
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
-            $('#mainform input[type="hidden"][name="corpname"]').val(newPrimary);
-            $('#mainform input[type="hidden"][name="reload"]').val(1);
-            $('#make-concordance-button').click();
+
+            urlArgs = lib.layoutModel.conf.currentArgs; // TODO possible mutability issues
+            urlArgs['corpname'] = newPrimary;
+            urlArgs['sel_aligned'] = lib.alignedCorpora;
+
+            window.location = lib.layoutModel.createActionUrl(
+                    'first_form?' + lib.layoutModel.encodeURLParameters(urlArgs));
         });
     };
 
@@ -363,6 +338,13 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
             $.each(lib.onSubcorpChangeActions, function (i, fn) {
                 fn.call(lib, $(e.currentTarget).val());
             });
+        });
+    };
+
+    lib.textareaSubmitOverride = function () {
+        var jqMainForm = $('#mainform');
+        jqMainForm.find('.query-area textarea').each(function (i, area) {
+            queryInput.initCqlTextarea(area, jqMainForm);
         });
     };
 
@@ -379,6 +361,7 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
 
         lib.layoutModel = new layoutModule.PageModel(conf);
         lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        lib.alignedCorpora = conf.alignedCorpora.slice();
 
         promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(),
@@ -396,7 +379,8 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
             queryStorage : queryStorage.createInstance(lib.extendedApi),
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params'),
-            registerSubcorpChange : lib.registerSubcorpChange()
+            registerSubcorpChange : lib.registerSubcorpChange(),
+            textareaSubmitOverride : lib.textareaSubmitOverride()
         });
 
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
