@@ -57,40 +57,43 @@ class Parameter(object):
         return self.persistent & p_level == p_level
 
 
-class GeneralAttrMapping(object):
+class AttrMappingInfoProxy(object):
     """
-    A class collecting arguments used in URL to perform
-    some (typically repeated) task - e.g. to be able to
-    (re)store a concordance.
+    If a user requires an argument mapping object, this proxy is returned. This
+    version can only inform about defined arguments.
+    """
+    def __init__(self, mapping):
+        self._mapping = mapping
 
-    It is expected to be used along with request.args, request.form
-    to extract/store parameters without need to repeat them
-    manually again and again.
+    def get_params(self, persistence=None):
+        is_param = lambda m: isinstance(m, Parameter) and (persistence is None
+                                                           or m.meets_persistence(persistence))
+        return inspect.getmembers(self._mapping.__class__, predicate=is_param)
 
-    Implementations are expected just to define arguments (i.e.
-    no methods are needed).
+    def get_names(self, persistence=None):
+        return [k for k, _ in self.get_params(persistence)]
+
+
+class AttrMappingProxy(AttrMappingInfoProxy):
+    """
+    An extended version of argument mapping proxy which supports
+    access to actual values (from URL, session etc.).
     """
 
-    def __init__(self, data=None, semi_persistent_data=None):
+    def __init__(self, mapping, data=None, semi_persistent_data=None):
         """
         Initializes arguments using primary (= request) and secondary
-        (= semi-persistent storage like session).
+        (= semi-persistent storage in session).
 
         arguments:
+        mapping -- an instance of an argument mapping object
         data -- a werkzeug.datastructures.MultiDict compatible object
         semi_persistent_data -- a dict-like object
         """
+        super(AttrMappingProxy, self).__init__(mapping)
         self._data = data if data is not None else MultiDict()
         self._semi_persistent_data = semi_persistent_data if semi_persistent_data else MultiDict()
         self._params = dict(self.get_params())
-
-        for k, v in self.get_params():
-            if k in self._data:
-                setattr(self, k, data.getlist(k))
-            elif v.meets_persistence(Parameter.SEMI_PERSISTENT) and k in self._semi_persistent_data:
-                setattr(self, k, self._semi_persistent_data[k])
-            else:
-                setattr(self, k, v.unwrap())
 
     def _is_semipersist_loadable(self, item):
         return (self._params[item].meets_persistence(Parameter.SEMI_PERSISTENT)
@@ -105,14 +108,6 @@ class GeneralAttrMapping(object):
             return self._semi_persistent_data[item]
         else:
             return self._params[item].unwrap()
-
-    def get_params(self, persistence=None):
-        is_param = lambda m: isinstance(m, Parameter) and (persistence is None
-                                                           or m.meets_persistence(persistence))
-        return inspect.getmembers(self.__class__, predicate=is_param)
-
-    def get_names(self, persistence=None):
-        return [k for k, _ in self.get_params(persistence)]
 
     def getlist(self, item):
         """
@@ -163,7 +158,7 @@ class GeneralAttrMapping(object):
         return self.to_dict().__repr__()
 
 
-class ConcArgsMapping(GeneralAttrMapping):
+class ConcArgsMapping(object):
     """
     This class covers all the attributes representing a concordance. I.e. the application should
     be able to restore any concordance just by using these parameters.
@@ -172,37 +167,59 @@ class ConcArgsMapping(GeneralAttrMapping):
     (it has been inherited from Bonito2).
     """
     corpname = Parameter(u'', persistent=Parameter.SEMI_PERSISTENT)
+
     usesubcorp = Parameter(u'')
+
     maincorp = Parameter(u'')
+
     viewmode = Parameter('kwic')
+
     pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
+
     align = Parameter('')
+
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+
     attr_allpos = Parameter(u'kw')
+
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+
     structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
-    refs = Parameter(None)  # None means "not initialized" while '' means "user wants to show no refs"
+
+    # None means "not initialized" while '' means "user wants to show no refs"
+    refs = Parameter(None)
+
     sel_aligned = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
 
 
-class QueryInputs(GeneralAttrMapping):
+class QueryInputs(object):
     """
     """
     iquery = Parameter(u'')
+
     lemma = Parameter(u'')
+
     phrase = Parameter(u'')
+
     word = Parameter(u'')
+
     char = Parameter(u'')
+
     cql = Parameter(u'')
+
     queryselector = Parameter(u'', persistent=Parameter.SEMI_PERSISTENT)
 
 
-class WidectxArgsMapping(GeneralAttrMapping):
+class WidectxArgsMapping(object):
     """
     Attributes needed to open correct detailed KWIC context.
     """
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+
     attr_allpos = Parameter(u'kw')
+
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
+
     structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
+    
     refs = Parameter(None)

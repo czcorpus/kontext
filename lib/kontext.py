@@ -35,7 +35,7 @@ import scheduled
 from structures import Nicedict
 from templating import StateGlobals
 import fallback_corpus
-from argmapping import ConcArgsMapping, Parameter
+from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
 
@@ -315,7 +315,7 @@ class Kontext(Controller):
         if clazz in self._args_mappings:
             return self._args_mappings[clazz]
         else:
-            return clazz()
+            return AttrMappingInfoProxy(clazz())
 
     def get_args_mapping_keys(self, clazz):
         """
@@ -328,7 +328,7 @@ class Kontext(Controller):
         if ans is not None:
             return ans.get_names()
         else:
-            return clazz().get_names()
+            return AttrMappingInfoProxy(clazz()).get_names()
 
     def _export_mapped_args(self):
         """
@@ -346,7 +346,6 @@ class Kontext(Controller):
 
     def _store_mapped_args(self):
         tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
-
         for am in self._args_mappings.values():
             args = am.get_names(persistence=Parameter.SEMI_PERSISTENT)
             for arg in args:
@@ -555,8 +554,8 @@ class Kontext(Controller):
                 'align': self.align
             }
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                             curr_data=query,
-                                                             prev_data=self._prev_q_data)
+                                                         curr_data=query,
+                                                         prev_data=self._prev_q_data)
         else:
             q_id = None
         return q_id
@@ -681,6 +680,14 @@ class Kontext(Controller):
             self.corpname = ''
         return path
 
+    def _init_semi_persistent_args(self):
+        sp_data = MultiDict(self._session_get('semi_persistent_attrs'))
+        if 'corpname' in self._request.args and 'sel_aligned' in sp_data:
+            curr_corpora = (sp_data.getlist('sel_aligned') + [sp_data.get('corpname', None)])
+            if self._request.args['corpname'] not in curr_corpora:
+                sp_data.pop('sel_aligned')
+            self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
+
     # TODO: decompose this method (phase 2)
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
@@ -695,6 +702,8 @@ class Kontext(Controller):
             return None
         self.add_validator(validate_corpus)
 
+        self._init_semi_persistent_args()
+
         if not action_metadata:
             action_metadata = {}
         is_legacy_method = action_metadata.get('legacy', False)
@@ -702,7 +711,7 @@ class Kontext(Controller):
         form = LegacyForm(self._request.form, self._request.args)
         if not is_legacy_method:
             for arg_mapping in action_metadata.get('argmappings', []):
-                self._args_mappings[arg_mapping] = arg_mapping(
+                self._args_mappings[arg_mapping] = AttrMappingProxy(arg_mapping(),
                     self._request.args, MultiDict(self._session.get('semi_persistent_attrs')))
                     # TODO what about forms?
 

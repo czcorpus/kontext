@@ -282,7 +282,7 @@ class Controller(object):
 
     def add_validator(self, fn):
         """
-        Adds a function which is then run after pre_dispatch but before action processing.
+        Adds a function which is run after pre_dispatch but before action processing.
         If the function returns an instance of Exception then Controller raises this value.
         The validation fails on first encountered error (i.e. subsequent validators are not run).
         This is intended for ancestors to inject pre-run checks.
