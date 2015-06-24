@@ -248,7 +248,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         jqFocusElem.focus();
 
         if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
-            $('#mainform input.history').each(function () {
+            $('.query-area input.history, .query-area textarea.history').each(function () {
                 if (typeof $(this).data('plugin') === 'object') {
                     layoutModel.getPlugin('queryStorage').detach(this);
                 }
@@ -433,7 +433,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
 
             if (isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
                 $('#mainform select.qselector').addClass('error-input');
-                $('#mainform input.query:visible').addClass('error-input');
+                $('.query-area input.query:visible, .query-area textarea.query:visible')
+                        .addClass('error-input');
                 if (!win.confirm(layoutModel.translate('query_type_mismatch'))) {
                     event.stopPropagation();
                     event.preventDefault();
