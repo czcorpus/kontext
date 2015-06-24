@@ -23,6 +23,7 @@ import re
 import math
 
 import manatee
+import l10n
 from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as _
@@ -330,12 +331,12 @@ class PyConc(manatee.Concordance):
         if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
             sortkey = int(sortkey)
             lines = [(x['Word'][sortkey]['n'], x) for x in lines]
-            lines.sort()
+            lines = l10n.sort(lines, 'cs_CZ', key=lambda v: v[0])  # version 0.7 solves hardcoded sorting lang
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
             lines = [(x[sortkey], x) for x in lines]
-            lines.sort()
+            lines = l10n.sort(lines, 'cs_CZ', key=lambda v: v[0])  # version 0.7 solves hardcoded sorting lang
             lines.reverse()
 
         return {'Head': head,
