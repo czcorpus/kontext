@@ -83,7 +83,7 @@ class Formatter(object):
         if v is not None:
             ans = ''
 
-            if type(v) is int:
+            if type(v) in (int, long):
                 n1 = str(v)
                 n2 = ''
             elif type(v) is float:
