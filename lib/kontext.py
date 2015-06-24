@@ -1157,18 +1157,11 @@ class Kontext(Controller):
 
         result['CorplistFn'] = self._load_fav_items
         user_items = plugins.get('user_items')
-        if action_metadata.get('legacy', False):
-            result['curr_corpora_fav_key'] = user_items.infer_item_key(self.corpname,
-                                                                       self.usesubcorp,
-                                                                       self.sel_aligned)
-        else:
-            # new-style action methods do not use self.* arguments
+
+        if not action_metadata.get('legacy', False):
             result.update(self._export_mapped_args())
             self._store_mapped_args()
-            conc_args = self.get_args_mapping(ConcArgsMapping)
-            result['curr_corpora_fav_key'] = user_items.infer_item_key(conc_args.corpname,
-                                                                       conc_args.usesubcorp,
-                                                                       conc_args.getlist('sel_aligned'))
+
         result['bib_conf'] = plugins.get('corptree').get_corpus_info(self.corpname).metadata
 
         # avalilable languages

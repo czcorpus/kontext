@@ -208,7 +208,6 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     lib.misc = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
-            $('#mainform .starred img').get(0),
             lib,
             {formTarget: 'first_form'}
         );

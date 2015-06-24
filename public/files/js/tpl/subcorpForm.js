@@ -99,7 +99,6 @@ define(['jquery', 'tpl/document', 'plugins/corplist', 'popupbox', 'plugins/liveA
         var subcForm = $('#subcorp-form');
         lib.corplistComponent = corplistComponent.create(
             subcForm.find('select[name="corpname"]').get(0),
-            subcForm.find('.starred img').get(0),
             lib,
             {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
         );

@@ -511,7 +511,7 @@ export class SearchTab implements WidgetTab {
         this.loaderKiller = null;
 
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
-            self.itemClickCallback(suggestion['id'], suggestion['name']);
+            self.itemClickCallback.call(self, suggestion['id'], suggestion['name']);
         });
 
         $(this.srchField).on('typeahead:asyncrequest', function () {
@@ -773,7 +773,7 @@ class FavoritesTab implements WidgetTab {
             jqWrapper.find('a.corplist-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
+                        self.itemClickCallback.call(self, $(e.currentTarget).data('id'), $(e.currentTarget).text());
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -863,12 +863,16 @@ class StarSwitch {
         if (state === true) {
             $(this.triggerElm)
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
-                .addClass('starred');
+                .addClass('starred')
+                .attr('title', this.pageModel.translate('starred'))
+                .attr('alt', this.pageModel.translate('starred'));
 
         } else {
             $(this.triggerElm)
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
-                .removeClass('starred');
+                .removeClass('starred')
+                .attr('title', this.pageModel.translate('not starred'))
+                .attr('alt', this.pageModel.translate('not starred'));
         }
     }
 
@@ -946,13 +950,18 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, starImg:HTMLElement,
-                editable:boolean) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
-        this.starImg = starImg;
+        this.starImg = window.document.createElement('img');
+        $(this.starImg)
+            .addClass('starred')
+            .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+            .attr('title', this.pageModel.translate('not starred'))
+            .attr('alt', this.pageModel.translate('not starred'));
+        $('form .starred').append(this.starImg);
         this.editable = editable;
-        this.starSwitch = new StarSwitch(this.pageModel, starImg);
+        this.starSwitch = new StarSwitch(this.pageModel, this.starImg);
     }
 
     /**
@@ -1136,9 +1145,9 @@ class StarComponent {
             this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
             this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
             this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
-
             this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
         }
+        this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(this.extractItemFromPage()));
     }
 }
 
@@ -1197,7 +1206,7 @@ export class Corplist {
         this.setButtonLabel(corpusName);
 
         if (this.options.itemClickAction) {
-            this.options.itemClickAction.call(this, corpusId);
+            this.options.itemClickAction.call(this, corpusId, corpusName);
 
         } else {
             if (this.options.formTarget) {
@@ -1215,12 +1224,11 @@ export class Corplist {
      * @param options
      */
     constructor(options:Options, data:Array<CorplistItem>, pageModel:Kontext.FirstFormPage,
-                parentForm:HTMLElement, starImg:HTMLElement) {
+                parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
         this.parentForm = parentForm;
-        this.starImg = starImg;
         this.currCorpIdent = pageModel.getConf('corpname');
         this.currCorpname = pageModel.getConf('humanCorpname');
         this.visible = Visibility.HIDDEN;
@@ -1334,7 +1342,7 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corptree']['featured']);
+            this.pageModel.getConf('pluginData')['corptree']['featured'], this.onItemClick);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -1351,7 +1359,7 @@ export class Corplist {
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
 
-        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel, this.starImg,
+        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
                 this.options.editable !== undefined ? this.options.editable : true);
         this.starComponent.init();
 
@@ -1580,14 +1588,13 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, starImg:HTMLElement, pluginApi:Kontext.FirstFormPage,
+export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
                        options:Options):Corplist {
     var corplist:Corplist,
         data:Array<CorplistItem>;
 
     data = fetchDataFromSelect(selectElm);
-    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0),
-                        starImg);
+    corplist = new Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }

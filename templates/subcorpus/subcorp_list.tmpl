@@ -38,6 +38,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 <section class="my-subcorpora">
     <h2>$_('My subcorpora')</h2>
     <form id="mainform" action="${root_url}subcorpus/subcorp_list" method="POST">
+        #filter None
+        <div id="corpus-selection" style="display:none">
+        $corp_sel_node
+        </div>
+        #end filter
         <table class="data" border="0">
             <thead>
                 <tr>
