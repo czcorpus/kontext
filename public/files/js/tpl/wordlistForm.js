@@ -155,7 +155,6 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corplist', 'popupbox'], functi
     lib.createCorplistComponent = function () {
         lib.corplistComponent = corplistComponent.create(
             $('form[id="wordlist_form"] select[name="corpname"]').get(0),
-            $('#wordlist_form .starred img').get(0),
             lib,
             {formTarget: 'wordlist_form', submitMethod: 'GET'}
         );

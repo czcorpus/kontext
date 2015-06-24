@@ -511,7 +511,7 @@ export class SearchTab implements WidgetTab {
         this.loaderKiller = null;
 
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
-            self.itemClickCallback(suggestion['id'], suggestion['name']);
+            self.itemClickCallback.call(self, suggestion['id'], suggestion['name']);
         });
 
         $(this.srchField).on('typeahead:asyncrequest', function () {
@@ -773,7 +773,7 @@ class FavoritesTab implements WidgetTab {
             jqWrapper.find('a.corplist-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback($(e.currentTarget).data('id'), $(e.currentTarget).data('name'));
+                        self.itemClickCallback.call(self, $(e.currentTarget).data('id'), $(e.currentTarget).text());
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -1206,7 +1206,7 @@ export class Corplist {
         this.setButtonLabel(corpusName);
 
         if (this.options.itemClickAction) {
-            this.options.itemClickAction.call(this, corpusId);
+            this.options.itemClickAction.call(this, corpusId, corpusName);
 
         } else {
             if (this.options.formTarget) {
@@ -1342,7 +1342,7 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corptree']['featured'], this.options.itemClickAction);
+            this.pageModel.getConf('pluginData')['corptree']['featured'], this.onItemClick);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');

@@ -578,16 +578,13 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 #end def
 
 
-#def corp_sel($corplist, $curr_key)
+#def corp_sel($corplist)
 
     <input type="hidden" name="reload" />
     #set $is_fav = False
     <select name="corpname">
       #for $c in $corplist
         #filter None#$user_item_opt($c)#end filter#
-        #if $c.id == $curr_key
-          #set $is_fav = True
-        #end if
       #end for
     </select>
     #if $SubcorpList
@@ -599,12 +596,6 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #end if ## SubcorpList
     #if not $_anonymous
     <div class="starred">
-        #set $img_title = $_('Add/remove the current corpus, subcorpus, aligned corpora to/from favorites')
-        #if $is_fav:
-          <img class="starred" title="$img_title" data-item-id="$curr_key" src="$files_path/img/starred_24x24.png" alt="$_('starred')" />
-        #else
-          <img title="$img_title" src="$files_path/img/starred_24x24_grey.png" alt="$_('not starred starred')" />
-        #end if
     </div>
     #end if
 
@@ -621,7 +612,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
             <th>$_("Corpus"):</th>
             <td colspan="2">
             #filter None
-            $corp_sel($corplist, $curr_corpora_fav_key)
+            $corp_sel($corplist)
             #end filter
             </td>
         </tr>
