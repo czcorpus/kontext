@@ -330,17 +330,15 @@ class PyConc(manatee.Concordance):
 
         if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
             sortkey = int(sortkey)
-            lines = [(x['Word'][sortkey]['n'], x) for x in lines]
-            lines = l10n.sort(lines, 'cs_CZ', key=lambda v: v[0])  # version 0.7 solves hardcoded sorting lang
+            # TODO: version 0.7 solves hardcoded collation locale
+            lines = l10n.sort(lines, loc='cs_CZ', key=lambda v: v['Word'][sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
-            lines = [(x[sortkey], x) for x in lines]
-            lines = l10n.sort(lines, 'cs_CZ', key=lambda v: v[0])  # version 0.7 solves hardcoded sorting lang
-            lines.reverse()
+            lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
 
         return {'Head': head,
-                'Items': self.add_block_items([x[1] for x in lines], block_size=2)}
+                'Items': self.add_block_items(lines, block_size=2)}
 
     def xdistribution(self, xrange, yrange):
         """
