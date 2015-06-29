@@ -710,7 +710,7 @@ div.buttons {
 }
 
 div.contents{
-  display: none;  
+  display: none;
 }
 
 div.css_format_help {
@@ -1041,12 +1041,33 @@ ul.query-toolbox {
   margin: 0;
   padding: 2pt 0;
   background-color: @color-section-bg;
+  color: @color-light-text;
+}
+
+ul.query-toolbox li:before {
+  content: " | ";
+}
+
+ul.query-toolbox li:first-child:before {
+  content: none;
+}
+
+ul.query-toolbox li a,
+ul.query-toolbox li .hint {
+  font-size: 75%;
+}
+
+ul.query-toolbox li .hint strong {
+  font-size: 100%;
+  font-weight: normal;
+  padding: 0;
+  border: 1px solid @color-light-grey;
+  border-style: @border-radius-default;
 }
 
 ul.query-toolbox li a {
   background-color: transparent;
   color: @color-logo-blue;
-  font-size: 75%;
   padding: 2px 5px;
   text-decoration: none;
   margin: 0;

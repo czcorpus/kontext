@@ -410,8 +410,6 @@ export class QueryHistory {
         }
         tbl.empty();
         $.each(this.data, function (i, v:QueryHistoryRecord) {
-            var subcorpSuff = v.subcorpname ? ':' + v.subcorpname : '';
-
             listItem = $(window.document.createElement('li'));
             listItem.attr('data-rownum', i);
             listItem.attr('data-corpname', v.corpname);
@@ -434,8 +432,8 @@ export class QueryHistory {
 
             tbl.append(listItem);
             listItem.append(link);
-            listItem.append('&nbsp;<span class="corpname">(' + v.query_type_translated + ', '
-                + v.humanCorpname + subcorpSuff + (v.details ? ', ' + v.details : '') + ')</span>');
+            listItem.append('&nbsp;<span class="corpname">(' + v.query_type_translated
+                + (v.details ? ', ' + v.details : '') + ')</span>');
             listItem.wrapInner('<span class="wrapper"></span>');
         });
         this.highlightCurrentRow();
@@ -514,6 +512,11 @@ export class QueryStoragePlugin implements Kontext.Plugin {
 
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             liElm.append(aElm);
+            liElm.append('<span class="hint">('
+                    + this.pluginApi.translate('or')
+                    + ' <strong title="'
+                    + this.pluginApi.translate('down arrow key') + '">&#9660;</strong>'
+                    + ')</span>');
             aElm.append(this.pluginApi.translate('Recent queries'));
             aElm.on('click', function () {
                 if (plugin.isActive()) {
