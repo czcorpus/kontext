@@ -910,7 +910,7 @@ class Controller(object):
         return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
 
     @exposed()
-    def nop(self, request):
+    def nop(self, request, *args):
         """
         Represents an empty operation. This is sometimes required
         to keep the controller in a consistent state. E.g. if a redirect
