@@ -202,7 +202,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
                 <textarea id="cql$suff" class="query #unless $suff#history #end unless#spec-chars cql-input"
-                          rows="2" cols="60" name="cql$suff" value='$getVar('cql' + $suff, '')'></textarea>
+                          rows="2" cols="60" name="cql$suff">$getVar('cql' + $suff, '')</textarea>
             </div>
 
             #if not $suff
