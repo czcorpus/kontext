@@ -606,7 +606,6 @@ class FavoritesTab implements WidgetTab {
 
     /**
      *
-     * @param widgetWrapper
      */
     constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<CorplistItem>,
                 dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistItemClick) {
@@ -797,8 +796,9 @@ class FavoritesTab implements WidgetTab {
         if (this.dataFeat.length > 0) {
             $.each(this.dataFeat, function (i, item:FeaturedItem) {
                 $(self.wrapperFeat).append('<tr class="data-item"><td>'
-                    + '<a'
+                    + '<a class="featured-item"'
                     + ' href="' + self.pageModel.createActionUrl('first_form?corpname=') + item.id + '"'
+                    + ' data-id="' + item.id + '"'
                     + ' title="' + item.description + '"'
                     + ' >'
                     + item.name + '</a></td>'
@@ -807,6 +807,16 @@ class FavoritesTab implements WidgetTab {
                             + self.pageModel.translate('unknown size') + '">?</span>')
                     + '</td>'
                     + '</tr>');
+            });
+
+            $(self.wrapperFeat).find('a.featured-item').each(function () {
+                $(this).on('click', function (e:Event) {
+                    if (typeof self.itemClickCallback === 'function') {
+                        self.itemClickCallback.call(self, $(e.currentTarget).data('id'), $(e.currentTarget).text());
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                });
             });
 
         } else {
@@ -1598,5 +1608,3 @@ export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
     corplist.bind(selectElm);
     return corplist;
 }
-
-
