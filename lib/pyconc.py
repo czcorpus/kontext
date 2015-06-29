@@ -23,6 +23,7 @@ import re
 import math
 
 import manatee
+import l10n
 from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as _
@@ -192,7 +193,8 @@ class PyConc(manatee.Concordance):
             ans[self.import_string(value)] = cnt
         return ans
 
-    def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0):
+    def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0,
+                   collator_locale='en_US'):
         """
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
@@ -325,20 +327,16 @@ class PyConc(manatee.Concordance):
                     'freqbar': 0,
                     'fbar': 0,
                 })
-
         if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
             sortkey = int(sortkey)
-            lines = [(x['Word'][sortkey]['n'], x) for x in lines]
-            lines.sort()
+            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v['Word'][sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
-            lines = [(x[sortkey], x) for x in lines]
-            lines.sort()
-            lines.reverse()
+            lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
 
         return {'Head': head,
-                'Items': self.add_block_items([x[1] for x in lines], block_size=2)}
+                'Items': self.add_block_items(lines, block_size=2)}
 
     def xdistribution(self, xrange, yrange):
         """

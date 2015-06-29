@@ -796,13 +796,15 @@ class Actions(Kontext):
             rel_mode = 1
         else:
             rel_mode = 0
+        corp_info = plugins.get('corptree').get_corpus_info(self.corpname)
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         result = {
             'fcrit': self.urlencode([('fcrit', cr) for cr in fcrit]),
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,
-                                       self.ftt_include_empty, rel_mode) for cr in fcrit],
+                                       self.ftt_include_empty, rel_mode,
+                                       collator_locale=corp_info.collator_locale) for cr in fcrit],
             'paging': 0,
             'concsize': conc.size(),
             'fmaxitems': self.fmaxitems,
