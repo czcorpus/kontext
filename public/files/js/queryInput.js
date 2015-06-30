@@ -313,20 +313,6 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         });
     };
 
-    lib.initHints = function (pluginApi, hintArea, hintList) {
-        var hintIdx;
-
-        function getRandomHintIndex() {
-            return (Math.random() * (hintList.length - 1))|0;
-        }
-
-        hintIdx = getRandomHintIndex();
-        if (hintList.length > 0) {
-            $(hintArea).append('<span>' + pluginApi.translate('Hint')
-                + ': ' + hintList[hintIdx] + '</span>');
-        }
-    };
-
     /**
      * @param {{}} pluginApi
      * @param {{}} userSettings

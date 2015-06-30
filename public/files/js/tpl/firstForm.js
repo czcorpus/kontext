@@ -348,8 +348,9 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
     };
 
     lib.textareaHints = function () {
-        queryInput.initHints($('.query-area .query-hints').get(0),
-            lib.layoutModel.getConf('queryHints'), lib.layoutModel.pluginApi());
+        var hint = this.layoutModel.getStores().queryHintStore.getHint();
+        this.layoutModel.renderReactComponent(this.layoutModel.layoutViews.QueryHints,
+            $('.query-area .query-hints').get(0), {hintText: hint});
     };
 
     /**

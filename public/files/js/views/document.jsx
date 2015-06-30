@@ -280,12 +280,53 @@ define(['vendor/react', 'jquery'], function (React, $) {
         });
 
 
+        var QueryHints = React.createClass({
+
+            mixins: mixins,
+
+            _changeListener : function (store) {
+                this.setState({hintText: store.getHint()});
+            },
+
+            getInitialState : function () {
+                return {hintText: this.props.hintText};
+            },
+
+            componentDidMount : function () {
+                storeProvider.queryHintStore.addChangeListener(this._changeListener);
+            },
+
+            componentWillUnmount : function () {
+                storeProvider.queryHintStore.removeChangeListener(this._changeListener);
+            },
+
+            _clickHandler : function () {
+                dispatcher.dispatch({
+                    actionType: 'NEXT_QUERY_HINT',
+                    props: {}
+                });
+            },
+
+            render: function () {
+                return (
+                    <div>
+                        <span className="hint">{this.state.hintText}</span>
+                        <span className="next-hint">
+                            (<a onClick={this._clickHandler}>{this.translate('next tip')}</a>)
+                        </span>
+                    </div>
+                );
+            }
+        });
+
+
         // ------------------------------------------------------------------------------------
 
         return {
             CorpusInfoBox: CorpusInfoBox,
             PopupBox: PopupBox,
-            Messages: Messages
+            Messages: Messages,
+            QueryHints: QueryHints
         };
 
     };
