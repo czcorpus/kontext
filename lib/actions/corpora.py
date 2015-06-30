@@ -32,13 +32,16 @@ class Corpora(Kontext):
             corplist_params=plugins.get('corptree').initial_search_params(request.args.get('query'),
                                                                    request.args),
             corplist_data=plugins.get('corptree').search(self.permitted_corpora(),
-                                                         request.args.get('query'), request.args)
+                                                         request.args.get('query'),
+                                                         offset=0,
+                                                         filter_dict=request.args)
         )
 
     @exposed(return_type='json')
     def ajax_list_corpora(self, request):
         return plugins.get('corptree').search(self.permitted_corpora(), request.args['query'],
-                                              request.args)
+                                              offset=request.args.get('offset', None),
+                                              filter_dict=request.args)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_corp_details(self):

@@ -354,11 +354,6 @@ export class PageModel implements Kontext.PluginProvider {
             },
             createActionLink(path:string):string {
                 return self.createActionUrl(path);
-            },
-            getPosition(component:React.ReactElement) {
-                var elm:HTMLElement = React.findDOMNode(component);
-
-                return $(elm).position();
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
