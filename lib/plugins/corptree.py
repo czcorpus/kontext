@@ -124,7 +124,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
     FEATURED_KEY = 'featured'
     FAVORITE_KEY = 'favorite'
 
-    def __init__(self, auth, file_path, root_xpath, tag_prefix, max_num_hints):
+    def __init__(self, auth, file_path, root_xpath, tag_prefix, max_num_hints, max_page_size):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._auth = auth
         self._corplist = None
@@ -132,6 +132,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self.root_xpath = root_xpath
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
+        self._max_page_size = max_page_size
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._manatee_corpora = ManateeCorpora()
@@ -424,7 +425,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     substrs.append(t)
         return substrs, query_keywords
 
-    def search(self, permitted_corpora, query, filter_dict=None):
+    def search(self, permitted_corpora, query, offset=0, limit=None, filter_dict=None):
         ans = {'rows': []}
         used_keywords = set()
         all_keywords_map = dict(self.all_keywords)
@@ -437,6 +438,25 @@ class CorpTree(AbstractSearchableCorporaArchive):
         else:
             max_size = None
         corplist = self.get_list(permitted_corpora)
+
+        if offset is None:
+            offset = 0
+        else:
+            offset = int(offset)
+
+        if limit is None:
+            limit = self._max_page_size
+
+        def cut_result(res):
+            if limit is not None:
+                right_lim = offset + int(limit)
+                new_res = res[offset:right_lim]
+                if right_lim >= len(res):
+                    right_lim = None
+            else:
+                right_lim = None
+                new_res = res
+            return new_res, right_lim
 
         query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
@@ -470,8 +490,11 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 corp['found_in'] = found_in
                 ans['rows'].append(corp)
                 used_keywords.update(keywords)
-        ans['rows'] = l10n.sort(ans['rows'], loc=self._lang(), key=lambda v: v['name'])
+
+        ans['rows'], ans['nextOffset'] = cut_result(l10n.sort(ans['rows'], loc=self._lang(),
+                                                              key=lambda v: v['name']))
         ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
+        ans['query'] = query
         ans['filters'] = dict(filter_dict)
         return ans
 
@@ -499,4 +522,6 @@ def create_instance(conf, auth):
                     file_path=conf.get('plugins', 'corptree')['file'],
                     root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
                     tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'],
-                    max_num_hints=conf.get('plugins', 'corptree')['default:max_num_hints'])
+                    max_num_hints=conf.get('plugins', 'corptree')['default:max_num_hints'],
+                    max_page_size=conf.get('plugins', 'corptree').get(
+                        'default:default_page_list_size', None))

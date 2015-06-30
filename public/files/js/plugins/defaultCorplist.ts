@@ -1412,6 +1412,8 @@ export class CorplistFormStore extends util.SimplePageStore {
 
     private selectedKeywords:{[key:string]:boolean};
 
+    private offset:number;
+
     private tagPrefix:string;
 
     private data:any;
@@ -1425,31 +1427,43 @@ export class CorplistFormStore extends util.SimplePageStore {
         this.dispatcher = pluginApi.dispatcher();
         this.data = {};
         this.selectedKeywords = {};
+        this.offset = 0;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
 
         CorplistFormStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'KEYWORD_CLICKED':
+                        self.offset = 0;
                         if (!payload.props['ctrlKey']) {
                             self.selectedKeywords = {};
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                                 !self.selectedKeywords[payload.props['keyword']];
                         CorplistPage.CorplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter());
+                            self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
                     case 'KEYWORD_RESET_CLICKED':
+                        self.offset = 0;
                         self.selectedKeywords = {};
                         CorplistPage.CorplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter());
+                            self.exportQuery(), self.exportFilter(), self.offset);
+                        self.notifyChangeListeners();
+                        break;
+                    case 'EXPANSION_CLICKED':
+                        if (payload.props['offset']) {
+                            self.offset = payload.props['offset'];
+                        }
+                        CorplistPage.CorplistTableStore.loadData(
+                            self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
                     case 'FILTER_CHANGED':
+                        self.offset = 0;
                         self.updateFilter(payload.props);
                         CorplistPage.CorplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter());
+                            self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
                 }
@@ -1498,7 +1512,17 @@ export class CorplistFormStore extends util.SimplePageStore {
     getKeywordState(keyword:string):boolean {
         return this.selectedKeywords[keyword];
     }
+}
 
+
+export interface CorplistData {
+    contains_errors:boolean;
+    filters:{[name:string]:any};
+    keywords:Array<string>;
+    messages:any;
+    nextOffset:number;
+    query:string;
+    rows:Array<any>; // TODO
 }
 
 /**
@@ -1510,7 +1534,7 @@ export class CorplistTableStore extends util.SimplePageStore {
 
     dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>; // TODO
 
-    private data:any;
+    private data:CorplistData;
 
     static DispatchToken:string;
 
@@ -1524,15 +1548,21 @@ export class CorplistTableStore extends util.SimplePageStore {
         this.dispatcher = pluginApi.dispatcher();
     }
 
-    public loadData(query:string, filters:string):void {
+    public loadData(query:string, filters:string, offset:number):void {
         var self = this;
         var prom = $.ajax(
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
             + '?query=' + encodeURIComponent(query)
+            + (offset ? '&offset=' + offset : '')
             + (filters ? '&' + filters : ''));
         prom.then(
             function (data) {
-                self.setData(data);
+                if (offset == 0) {
+                    self.setData(data);
+
+                } else {
+                    self.extendData(data);
+                }
                 self.notifyChangeListeners();
             },
             function (err) {
@@ -1542,8 +1572,21 @@ export class CorplistTableStore extends util.SimplePageStore {
         )
     }
 
-    setData(data:any):void {
+    setData(data:CorplistData):void {
         this.data = data;
+    }
+
+    extendData(data:CorplistData):void {
+        if (!this.data) {
+            this.setData(data);
+
+        } else {
+            this.data.filters = data.filters;
+            this.data.keywords = data.keywords;
+            this.data.nextOffset = data.nextOffset;
+            this.data.query = data.query;
+            this.data.rows = this.data.rows.concat(data.rows);
+        }
     }
 
     getData():any {
@@ -1576,6 +1619,7 @@ class CorplistPage implements Customized.CorplistPage {
     }
 
     createList(targetElm:HTMLElement, properties:any):void {
+        CorplistPage.CorplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
 }

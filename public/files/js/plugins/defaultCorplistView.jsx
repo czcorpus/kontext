@@ -49,6 +49,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * A single dataset row
+         */
         var CorplistRow = React.createClass({
 
             mixins: mixins,
@@ -127,7 +130,34 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * Provides a link allowing to load more items with current
+         * query and filter settings.
+         */
+        var ListExpansion = React.createClass({
+            mixins : mixins,
+            _linkClickHandler : function () {
+                dispatcher.dispatch({
+                    actionType: 'EXPANSION_CLICKED',
+                    props: {
+                        offset: this.props.offset
+                    }
+                });
+            },
+            render : function () {
+                return (
+                  <tr className="load-more">
+                      <td colSpan="4">
+                          <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
+                      </td>
+                  </tr>
+                );
+            }
+        });
 
+        /**
+         * dataset table
+         */
         var CorplistTable = React.createClass({
 
             changeHandler: function () {
@@ -138,7 +168,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return {
                     filters: this.props.filters,
                     keywords: this.props.keywords,
-                    rows: this.props.rows
+                    rows: this.props.rows,
+                    query: this.props.query,
+                    nextOffset: this.props.nextOffset
                 };
             },
 
@@ -154,12 +186,18 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 var rows = this.state.rows.map(function (row, i) {
                     return <CorplistRow key={i} row={row} />;
                 });
+                var expansion = null;
+                if (this.state.nextOffset) {
+                    expansion = <ListExpansion offset={this.state.nextOffset} />;
+                }
+
                 return (
                     <div>
                         <table className="data corplist" border="0">
                             <tbody>
                                 <CorplistHeader />
                                 {rows}
+                                {expansion}
                             </tbody>
                         </table>
                     </div>
@@ -167,6 +205,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * a single keyword link shown within a dataset table row
+         */
         var CorpKeywordLink = React.createClass({
 
             mixins: mixins,
@@ -180,8 +221,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // ------------------------------------------------------------------
         // -------------------------- form components -----------------------
+        // ------------------------------------------------------------------
 
+        /**
+         * A keyword link from the filter form
+         */
         var KeywordLink = React.createClass({
             mixins: mixins,
             changeHandler: function () {
@@ -233,6 +279,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * A keyword-like link to reset currently set keywords
+         */
         var ResetLink = React.createClass({
             mixins: mixins,
             handleClick: function (e) {
@@ -248,6 +297,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * A form fieldset containing all the available keywords
+         */
         var KeywordsField = React.createClass({
             mixins: mixins,
             getInitialState: function () {
@@ -270,6 +322,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * An input to specify minimum corpus size
+         */
         var MinSizeInput = React.createClass({
             changeHandler: function (e) {
                 dispatcher.dispatch({
@@ -284,6 +339,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * An input to specify maximum corpus size
+         */
         var MaxSizeInput = React.createClass({
             changeHandler: function (e) {
                 dispatcher.dispatch({
@@ -298,6 +356,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * A fieldset containing non-keyword filter inputs.
+         */
         var FilterInputFieldset = React.createClass({
             mixins: mixins,
 
@@ -321,6 +382,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        /**
+         * Filter form root component
+         */
         var FilterForm = React.createClass({
             render: function () {
                 return (
