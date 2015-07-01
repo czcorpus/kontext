@@ -270,6 +270,13 @@ elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
 
 application = App()
 
+robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
+if os.path.isfile(robots_path):
+    from werkzeug.wsgi import SharedDataMiddleware
+    application = SharedDataMiddleware(application, {
+        '/robots.txt': robots_path
+    })
+
 if settings.is_debug_mode():
     from werkzeug.debug import DebuggedApplication
     application = DebuggedApplication(application)
