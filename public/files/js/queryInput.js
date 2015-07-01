@@ -305,7 +305,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param parentForm
      */
     lib.initCqlTextarea = function (area, parentForm) {
-        $(area).on('keyup', function (evt) {
+        $(area).on('keydown', function (evt) {
             if (!evt.shiftKey && evt.keyCode === 13) {
                 evt.preventDefault();
                 $(parentForm).submit();

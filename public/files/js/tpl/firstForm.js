@@ -347,6 +347,12 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
         });
     };
 
+    lib.textareaHints = function () {
+        var hint = this.layoutModel.getStores().queryHintStore.getHint();
+        this.layoutModel.renderReactComponent(this.layoutModel.layoutViews.QueryHints,
+            $('.query-area .query-hints').get(0), {hintText: hint});
+    };
+
     /**
      *
      * @param {object} conf
@@ -379,7 +385,8 @@ define(['win', 'jquery', 'plugins/corplist', 'tpl/document', 'queryInput', 'plug
             liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
                 '.text-type-params'),
             registerSubcorpChange : lib.registerSubcorpChange(),
-            textareaSubmitOverride : lib.textareaSubmitOverride()
+            textareaSubmitOverride : lib.textareaSubmitOverride(),
+            textareaHints : lib.textareaHints()
         });
 
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));

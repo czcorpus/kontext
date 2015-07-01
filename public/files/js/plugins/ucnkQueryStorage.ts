@@ -512,11 +512,6 @@ export class QueryStoragePlugin implements Kontext.Plugin {
 
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             liElm.append(aElm);
-            liElm.append('<span class="hint">('
-                    + this.pluginApi.translate('or')
-                    + ' <strong title="'
-                    + this.pluginApi.translate('down arrow key') + '">&#9660;</strong>'
-                    + ')</span>');
             aElm.append(this.pluginApi.translate('Recent queries'));
             aElm.on('click', function () {
                 if (plugin.isActive()) {
@@ -527,9 +522,9 @@ export class QueryStoragePlugin implements Kontext.Plugin {
                 }
             });
             plugin.registerDependency({
-                element : aElm,
+                element : liElm,
                 close : function () {
-                    $(aElm).remove();
+                    $(liElm).remove();
                 }
             });
         }

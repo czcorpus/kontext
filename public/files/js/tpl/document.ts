@@ -32,6 +32,7 @@ import documentViews = require('views/document');
 import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
 import util = require('util');
+import docStores = require('./documentStores');
 
 
 /**
@@ -101,143 +102,7 @@ export interface ComponentCoreMixins {
 }
 
 
-export class StatusStore extends util.SimplePageStore implements Kontext.StatusStore {
 
-    pageModel:PageModel;
-
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
-    status:string;
-
-    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
-        this.pageModel = pageModel;
-        this.dispatcher = dispatcher;
-        this.status = 'ok';
-    }
-
-    updateStatus(status:string) {
-        this.status = status;
-        this.notifyChangeListeners(this.status);
-    }
-}
-
-
-/**
- *
- */
-export class MessageStore extends util.SimplePageStore implements Kontext.MessagePageStore {
-
-    pageModel:PageModel;
-
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
-    messages:Array<{messageType:string; messageText:string, messageId:string}>;
-
-    addMessage(messageType:string, messageText:string) {
-        var msgId = String(Math.random()),
-            timeout,
-            self = this;
-
-        this.messages.push({
-            messageType: messageType,
-            messageText: messageText,
-            messageId: msgId
-        });
-
-        if (messageType !== 'error') {
-            timeout = win.setTimeout(function () {
-                self.removeMessage(msgId);
-                win.clearTimeout(timeout);
-                self.notifyChangeListeners();
-            }, 15000);
-        }
-        this.notifyChangeListeners();
-    }
-
-    getMessages():Array<{messageType:string; messageText:string, messageId:string}> {
-        return this.messages;
-    }
-
-    removeMessage(messageId:string) {
-        this.messages = this.messages.filter(function (x) { return x.messageId !== messageId; });
-    }
-
-    constructor(pageModel:PageModel, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
-        var self = this;
-        this.pageModel = pageModel;
-        this.dispatcher = dispatcher;
-        this.messages = [];
-
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            switch (payload.actionType) {
-                case 'MESSAGE_CLOSED':
-                    self.removeMessage(payload.props['messageId']);
-                    self.notifyChangeListeners();
-                    break;
-            }
-        });
-    }
-}
-
-/**
- *
- */
-export class CorpusInfoStore extends util.SimplePageStore {
-
-    pluginApi:Kontext.PluginApi;
-
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
-    data:{[corpusId:string]:any};
-
-
-    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
-        var self = this;
-        this.pluginApi = pluginApi;
-        this.dispatcher = dispatcher;
-        this.data = {};
-
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            switch (payload.actionType) {
-                case 'CORPUS_INFO_REQUIRED':
-                    if (self.data.hasOwnProperty(payload.props['corpusId'])) {
-                        self.notifyChangeListeners();
-
-                    } else {
-                        self.loadData(payload.props['corpusId']).then(
-                            function (data) {
-                                self.data[payload.props['corpusId']] = data;
-                                self.notifyChangeListeners();
-                            },
-                            function (jqXHR, textStatus, errorThrown) {
-                                self.notifyChangeListeners('error', errorThrown);
-                                self.pluginApi.getStores().messageStore.addMessage(
-                                    'error', errorThrown);
-                                self.pluginApi.getStores().statusStore.updateStatus('error');
-                            }
-                        );
-                    }
-                    break;
-            }
-        });
-    }
-
-    getData(corpusId):any {
-        return this.data[corpusId];
-    }
-
-    loadData(corpusId?:string):JQueryXHR {
-        var url = this.pluginApi.createActionUrl('corpora/ajax_get_corp_details');
-
-        if (!corpusId) {
-            corpusId = this.pluginApi.getConf('corpname');
-        }
-        return $.get(url + '?corpname=' + corpusId);
-    }
-}
 
 
 /**
@@ -291,20 +156,13 @@ export class PageModel implements Kontext.PluginProvider {
      */
     layoutViews:Kontext.LayoutViews;
 
-    /**
-     *
-     */
-    corpusInfoStore:CorpusInfoStore;
+    corpusInfoStore:docStores.CorpusInfoStore;
 
-    /**
-     *
-     */
-    messageStore:MessageStore;
+    messageStore:docStores.MessageStore;
 
-    /**
-     *
-     */
-    statusStore:StatusStore;
+    statusStore:docStores.StatusStore;
+
+    queryHintStore:docStores.QueryHintStore;
 
     /**
      *
@@ -319,9 +177,10 @@ export class PageModel implements Kontext.PluginProvider {
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
-        this.corpusInfoStore = new CorpusInfoStore(this.pluginApi(), this.dispatcher);
-        this.messageStore = new MessageStore(this, this.dispatcher);
-        this.statusStore = new StatusStore(this, this.dispatcher);
+        this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
+        this.messageStore = new docStores.MessageStore(this.dispatcher);
+        this.statusStore = new docStores.StatusStore(this.dispatcher);
+        this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
     }
 
     /**
@@ -332,7 +191,8 @@ export class PageModel implements Kontext.PluginProvider {
         return {
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
-            statusStore: this.statusStore
+            statusStore: this.statusStore,
+            queryHintStore: this.queryHintStore
         };
     }
 
