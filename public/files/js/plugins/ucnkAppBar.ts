@@ -32,7 +32,8 @@ export class AppBar implements Kontext.Plugin {
      */
     toolbarReloader = () => {
         var self = this,
-            promise = $.ajax(this.pluginApi.getConf('rootURL') + 'ajax_get_toolbar', {dataType : 'html'});
+            promise = $.ajax(this.pluginApi.createActionUrl('user/ajax_get_toolbar'),
+                {dataType : 'html'});
 
         promise.done(function(data, textStatus, jqXHR) {
             $('#common-bar').html(data);

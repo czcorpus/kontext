@@ -1159,17 +1159,6 @@ class Actions(Kontext):
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
 
-    @exposed(legacy=True)
-    def draw_graph(self, fcrit='', flimit=0):
-        """
-        draw frequency distribution graph
-        """
-        self._headers['Content-Type'] = 'image/png'
-        self.fcrit = fcrit
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
-        #        print 'Content-Type: text/html; charset=iso-8859-2\n'
-        return self.call_function(conc.graph_dist, (fcrit, flimit))
-
     @exposed(template='wordlist.tmpl', legacy=True)
     def build_arf_db(self, corpname='', attrname=''):
         if not corpname:
@@ -1181,70 +1170,6 @@ class Actions(Kontext):
             return {'processing': out[1].strip('%')}
         else:
             return {'processing': 0}
-
-    @exposed(legacy=True)
-    def check_histogram_processing(self):
-        logfile_name = os.path.join(self.subcpath[-1], self.corpname,
-                                    'hist.build')
-        if os.path.isfile(logfile_name):
-            logfile = open(logfile_name)
-            lines = logfile.readlines()
-            if len(lines) > 1:
-                try:
-                    out = (lines[1], lines[-1])
-                except:
-                    out = (lines[0], lines[-1])
-            else:
-                out = ('', lines[-1])
-            logfile.close()
-        else:
-            out = ('', '')
-        return ':'.join(map(str.strip, out))
-
-    @exposed(template='findx_upload_form.tmpl', vars=('LastSubcorp',), legacy=True)
-    def kill_histogram_processing(self):
-        import glob
-
-        pid = self.check_histogram_processing().split(':')[0]
-        if pid:
-            try:
-                os.kill(int(pid), 9)
-                os.remove(os.path.join(self._tmp_dir, 'findx_upload.%s' % (
-                    self._session_get('user', 'user'),)))
-            except OSError:
-                pass
-        logfile_name = os.path.join(self.subcpath[-1], self.corpname,
-                                    'hist.build')
-        if os.path.isfile(logfile_name):
-            os.rename(logfile_name, logfile_name + '.old')
-        tmp_glob = os.path.join(self.subcpath[-1], self.corpname, '*.histtmp')
-        for name in glob.glob(tmp_glob):
-            os.rename(name, name[:-8])
-        return self.wordlist_form()
-
-    @exposed(legacy=True)
-    def findx_form(self):
-        out = {'Histlist': []}
-        try:
-            import genhist
-        except:
-            return out
-        histpath = self._corp().get_conf('WSHIST')
-        histpath_custom = os.path.join(self.subcpath[-1], self.corpname,
-                                       'histograms.def')
-        histlist = []
-        if os.path.isfile(histpath):
-            histlist.extend(genhist.parse_config_file(open(histpath)))
-        if os.path.isfile(histpath_custom):
-            histlist.extend(genhist.parse_config_file(open(histpath_custom)))
-        histlist_ids = []
-        for hist in histlist:
-            id = hist.get_id()
-            if id not in histlist_ids:
-                histlist_ids.append(id)
-                out['Histlist'].append({'name': hist.get_attr('HR') or id,
-                                        'id': id})
-        return out
 
     @exposed(access_level=1, vars=('LastSubcorp',), legacy=True)
     def wordlist_form(self, ref_corpname=''):
@@ -1265,12 +1190,6 @@ class Actions(Kontext):
         out['freq_figures'] = self.FREQ_FIGURES
         self._export_subcorpora_list(out)
         return out
-
-    @exposed(legacy=True)
-    def findx_upload_form(self):
-        return {
-            'processing': self.check_histogram_processing().split(':')[1]
-        }
 
     @exposed(legacy=True)
     def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
@@ -1696,15 +1615,6 @@ class Actions(Kontext):
     def bibliography(self, id=''):
         bib_data = plugins.get('live_attributes').get_bibliography(self._corp(), item_id=id)
         return {'bib_data': bib_data}
-
-    @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
-    def ajax_get_toolbar(self):
-        html = plugins.get('application_bar').get_contents(cookies=self._cookies,
-                                                           curr_lang=self.ui_lang,
-                                                           return_url=self.return_url,
-                                                           use_fallback=False,
-                                                           timeout=20)
-        return {'html': html}
 
     @exposed(return_type='json', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
