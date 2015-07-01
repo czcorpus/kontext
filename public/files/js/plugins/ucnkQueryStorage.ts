@@ -522,9 +522,9 @@ export class QueryStoragePlugin implements Kontext.Plugin {
                 }
             });
             plugin.registerDependency({
-                element : aElm,
+                element : liElm,
                 close : function () {
-                    $(aElm).remove();
+                    $(liElm).remove();
                 }
             });
         }
