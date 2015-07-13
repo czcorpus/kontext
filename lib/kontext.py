@@ -928,14 +928,20 @@ class Kontext(Controller):
     def _load_fav_items(self):
         return plugins.get('user_items').get_user_items(self._session_get('user', 'id'))
 
-    def _add_corpus_related_globals(self, result, corpus):
-        result['struct_ctx'] = corpus_get_conf(corpus, 'STRUCTCTX')
-        result['corp_doc'] = corpus_get_conf(corpus, 'DOCUMENTATION')
-        result['corp_full_name'] = (corpus_get_conf(corpus, 'NAME')
-                                    or self.corpname)
+    def _add_corpus_related_globals(self, result, maincorp):
+        """
+        arguments:
+        result -- template data dict
+        maincorp -- currently focused corpus; please note that in case of aligned
+                    corpora this can be a different one than self._corp()
+                    (or self.corpname) represents.
+        """
+        result['struct_ctx'] = corpus_get_conf(maincorp, 'STRUCTCTX')
+        result['corp_doc'] = corpus_get_conf(maincorp, 'DOCUMENTATION')
+        result['human_corpname'] = self._human_readable_corpname()
 
-        result['corp_description'] = corpus.get_info()
-        result['corp_size'] = format_number(corpus.size())
+        result['corp_description'] = maincorp.get_info()
+        result['corp_size'] = format_number(self._corp().size())
         corp_conf_info = plugins.get('corptree').get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
@@ -945,34 +951,34 @@ class Kontext(Controller):
             result['subcorp_size'] = format_number(self._corp().search_size())
         else:
             result['subcorp_size'] = None
-        attrlist = corpus_get_conf(corpus, 'ATTRLIST').split(',')
-        sref = corpus_get_conf(corpus, 'SHORTREF')
+        attrlist = corpus_get_conf(maincorp, 'ATTRLIST').split(',')
+        sref = corpus_get_conf(maincorp, 'SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
                                              for a in sref.split(',')])
 
-        poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
+        poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
         result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        poslist = self.cm.corpconf_pairs(corpus, 'LPOSLIST')
+        poslist = self.cm.corpconf_pairs(maincorp, 'LPOSLIST')
         if 'lempos' not in attrlist:
-            poslist = self.cm.corpconf_pairs(corpus, 'WPOSLIST')
+            poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
         result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['lpos_dict'] = dict([(y, x) for x, y in poslist])
 
         result['has_lemmaattr'] = 'lempos' in attrlist \
             or 'lemma' in attrlist
-        result['default_attr'] = corpus_get_conf(corpus, 'DEFAULTATTR')
+        result['default_attr'] = corpus_get_conf(maincorp, 'DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
                 continue
             result[listname] = \
-                [{'label': corpus_get_conf(corpus, n + '.LABEL') or n, 'n': n}
-                 for n in corpus_get_conf(corpus, listname.upper()).split(',')
+                [{'label': corpus_get_conf(maincorp, n + '.LABEL') or n, 'n': n}
+                 for n in corpus_get_conf(maincorp, listname.upper()).split(',')
                  if n]
-        result['tagsetdoc'] = corpus_get_conf(corpus, 'TAGSETDOC')
+        result['tagsetdoc'] = corpus_get_conf(maincorp, 'TAGSETDOC')
         result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a) for a in
-                                           corpus_get_conf(corpus, 'SUBCORPATTRS')
+                                           corpus_get_conf(maincorp, 'SUBCORPATTRS')
                                            .replace('|', ',').split(',') if a])
-        result['corp_uses_tag'] = 'tag' in corpus_get_conf(corpus, 'ATTRLIST').split(',')
+        result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
         result['commonurl'] = self.urlencode([('corpname', self.corpname),
                                               ('lemma', self.lemma),
                                               ('lpos', self.lpos),
@@ -993,8 +999,10 @@ class Kontext(Controller):
             result[js_file_key] = None
             if plugins.has_plugin(opt_plugin):
                 plugin_obj = plugins.get(opt_plugin)
-                # if the plug-in is "always on" or "sometimes off but currently on" then it must configure JavaScript
-                if not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or plugin_obj.is_enabled_for(self.corpname):
+                # if the plug-in is "always on" or "sometimes off but currently on"
+                # then it must configure JavaScript
+                if (not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin)
+                        or plugin_obj.is_enabled_for(self.corpname)):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
                     if js_file:
                         result[js_file_key] = js_file
@@ -1096,7 +1104,6 @@ class Kontext(Controller):
         Controller._add_globals(self, result, methodname, action_metadata)
 
         result['files_path'] = self._files_path
-        result['human_corpname'] = self._human_readable_corpname()
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
@@ -1110,7 +1117,7 @@ class Kontext(Controller):
         global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
-        result['corp_full_name'] = None
+        result['human_corpname'] = None
 
         if self.maincorp:
             thecorp = corplib.open_corpus(self.maincorp)

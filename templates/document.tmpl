@@ -360,10 +360,10 @@ define('conf', [], function () {
         </div>
     </div>
 
-    #if $corp_full_name
+    #if $human_corpname
     <div id="active-corpus">
         $_('corpus')
-        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$corp_full_name</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
         <div id="corp-size-information">
         #if $usesubcorp
             <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
