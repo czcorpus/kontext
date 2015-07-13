@@ -189,10 +189,10 @@ def add_block_items(items, attr='class', val='even', block_size=3):
     return items
 
 
-def wordlist(corp, words=[], wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
-             wlsort='', blacklist=[], wlnums='frq', include_nonwords=0):
-    blacklist = set(blacklist)
-    words = set(words)
+def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
+             wlsort='', blacklist=None, wlnums='frq', include_nonwords=0):
+    blacklist = set(blacklist) if blacklist else set()
+    words = set(words) if words else set()
     attr = corp.get_attr(wlattr)
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
