@@ -944,9 +944,9 @@ class Actions(Kontext):
 
         self.fpage = 1
         self.fmaxitems = to_line - from_line + 1
-        self.wlwords, self.wlcache = self.get_wl_words()
-        self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
-                                                          'blcache'))
+        self.wlwords, self.wlcache = self._get_wl_words(upl_file='wlfile', cache_file='wlcache')
+        self.blacklist, self.blcache = self._get_wl_words(upl_file='wlblacklist',
+                                                          cache_file='blcache')
         if self.wlattr:
             self._make_wl_query()  # multilevel wordlist
 
@@ -1191,30 +1191,31 @@ class Actions(Kontext):
         self._export_subcorpora_list(out)
         return out
 
-    @exposed(legacy=True)
-    def get_wl_words(self, attrnames=('wlfile', 'wlcache')):
+    #(upl_file='wlfile', cache_file='wlcache')
+    def _get_wl_words(self, upl_file, cache_file):
         """
         gets arbitrary list of words for wordlist
         """
-        wlfile = getattr(self, attrnames[0], '').encode('utf8')
-        wlcache = getattr(self, attrnames[1], '')
+        from hashlib import md5
+
+        wl_cache_dir = settings.get('global', 'upload_cache_dir')
+        if not os.path.isdir(wl_cache_dir):
+            os.makedirs(wl_cache_dir)
+
+        wlfile = self._request.files.get(upl_file)
+        if wlfile:
+            wlfile = wlfile.read()
+        wlcache = getattr(self, cache_file, '')
         filename = wlcache
         wlwords = []
         if wlfile:  # save a cache file
-            try:
-                from hashlib import md5
-            except ImportError:
-                from md5 import new as md5
-            filename = os.path.join(self.cache_dir,
-                                    md5(wlfile).hexdigest() + '.wordlist')
-            if not os.path.isdir(self.cache_dir):
-                os.makedirs(self.cache_dir)
+            filename = os.path.join(wl_cache_dir, md5(wlfile).hexdigest() + '.wordlist')
             cache_file = open(filename, 'w')
             cache_file.write(wlfile)
             cache_file.close()
-            wlwords = [w.decode('utf8').strip() for w in wlfile.split('\n')]
+            wlwords = [w.strip() for w in wlfile.split('\n')]
         if wlcache:  # read from a cache file
-            filename = os.path.join(self.cache_dir, wlcache)
+            filename = os.path.join(wl_cache_dir, wlcache)
             cache_file = open(filename)
             wlwords = [w.strip() for w in cache_file]
             cache_file.close()
@@ -1256,9 +1257,9 @@ class Actions(Kontext):
             })
         }
         try:
-            self.wlwords, self.wlcache = self.get_wl_words()
-            self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
-                                                              'blcache'))
+            self.wlwords, self.wlcache = self._get_wl_words(upl_file='wlfile', cache_file='wlcache')
+            self.blacklist, self.blcache = self._get_wl_words(upl_file='wlblacklist',
+                                                              cache_file='blcache')
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.corpname, usesubcorp),
                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
@@ -1305,22 +1306,26 @@ class Actions(Kontext):
 
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.wlnums, '?'))
 
-            params_values = {
+            params = {
+                'colheaders': 0,
+                'ref_usesubcorp': None,
                 'wlattr': self.wlattr,
                 'wlpat': wlpat,
                 'wlsort': self.wlsort,
                 'wlminfreq': self.wlminfreq,
-                'wlnums': self.wlnums
+                'wlnums': self.wlnums,
+                'wlcache': self.wlcache,
+                'blcache': self.blcache,
+                'wltype': 'simple',
+                'from_line': 1,
+                'to_line': None,
+                'include_nonwords': self.include_nonwords
             }
 
-            # TODO use create_url
-            params = ('saveformat=%%s&wlattr=%(wlattr)s&colheaders=0&ref_usesubcorp=&wltype=simple&wlpat=%(wlpat)s&'
-                      'from_line=1&to_line=&wlsort=%(wlsort)s&wlminfreq=%(wlminfreq)s&wlnums=%(wlnums)s') % params_values
-
-            self._add_save_menu_item('CSV', 'savewl', params % 'csv')
-            self._add_save_menu_item('XLSX', 'savewl', params % 'xlsx')
-            self._add_save_menu_item('XML', 'savewl', params % 'xml')
-            self._add_save_menu_item('TXT', 'savewl', params % 'text')
+            self._add_save_menu_item('CSV', 'savewl', params, save_format='csv')
+            self._add_save_menu_item('XLSX', 'savewl', params, save_format='xlsx')
+            self._add_save_menu_item('XML', 'savewl', params, save_format='xml')
+            self._add_save_menu_item('TXT', 'savewl', params, save_format='text')
             # custom save is solved in templates because of compatibility issues
             self.last_corpname = self.corpname
             self._save_options(['last_corpname'])
@@ -1353,9 +1358,9 @@ class Actions(Kontext):
     def struct_wordlist(self):
         self.exceptmethod = 'wordlist_form'
         if self.fcrit:
-            self.wlwords, self.wlcache = self.get_wl_words()
-            self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
-                                                              'blcache'))
+            self.wlwords, self.wlcache = self._get_wl_words(upl_file='wlfile', cache_file='wlcache')
+            self.blacklist, self.blcache = self._get_wl_words(upl_file='wlblacklist',
+                                                              cache_file='blcache')
             self._make_wl_query()
             return self.freqs(self.fcrit, self.flimit, self.freq_sort, 1)
 
@@ -1364,9 +1369,9 @@ class Actions(Kontext):
         if self.wlnums != 'frq':
             raise ConcError('Multilevel lists are limited to Word counts frequencies')
         level = 3
-        self.wlwords, self.wlcache = self.get_wl_words()
-        self.blacklist, self.blcache = self.get_wl_words(('wlblacklist',
-                                                          'blcache'))
+        self.wlwords, self.wlcache = self._get_wl_words(upl_file='wlfile', cache_file='wlcache')
+        self.blacklist, self.blcache = self._get_wl_words(upl_file='wlblacklist',
+                                                          cache_file='blcache')
         if not self.wlstruct_attr1:
             raise ConcError(_('No output attribute specified'))
         if not self.wlstruct_attr3:
@@ -1399,7 +1404,7 @@ class Actions(Kontext):
         return ans
 
     @exposed(access_level=1, legacy=True)
-    def savewl(self, wlpat='', from_line=1, to_line='', wltype='simple', usesubcorp='',
+    def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
         save word list
@@ -1407,7 +1412,7 @@ class Actions(Kontext):
         from_line = int(from_line)
         to_line = int(to_line) if to_line else sys.maxint
         self.wlpage = 1
-        ans = self.wordlist(wlpat=wlpat, wltype=wltype, usesubcorp=usesubcorp,
+        ans = self.wordlist(wlpat=self.wlpat, wltype=wltype, usesubcorp=usesubcorp,
                             ref_corpname=ref_corpname, ref_usesubcorp=ref_usesubcorp,
                             paginate=False)
         err = self._validate_range((from_line, to_line), (1, None))
@@ -1416,6 +1421,7 @@ class Actions(Kontext):
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
         saved_filename = self._canonical_corpname(self.corpname)
+
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % (

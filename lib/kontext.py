@@ -19,6 +19,7 @@ import logging
 import inspect
 import urllib
 import os.path
+import copy
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -50,17 +51,19 @@ def join_params(*args):
     a string of the form param1=value1&param2=value2&....
     """
     tmp = []
+    quote = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
     for a in args:
         if a is None:
             continue
         if isinstance(a, StateGlobals):
-            a = a.items()
+            a = [(k, quote(v)) for k, v in a.items()]
         if type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()
-            tmp.extend(['%s=%s' % (k, v if v is not None else '') for k, v in a])
+            tmp.extend(['%s=%s' % (k, quote(v) if v is not None else '')
+                        for k, v in a])
         elif type(a) in (str, unicode):
-            tmp.append(a.strip())
+            tmp.append(a)
         else:
             raise TypeError(
                 'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
@@ -287,7 +290,6 @@ class Kontext(Controller):
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
         self.last_corpname = None
         self.empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
-        self.cache_dir = settings.get('corpora', 'cache_dir')
         self.return_url = None
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
@@ -373,8 +375,7 @@ class Kontext(Controller):
 
         params = {}
         if self.environ.get('QUERY_STRING'):
-            params.update(dict([item.split('=', 1) for item in [x for x in self.environ.get('QUERY_STRING').split('&')
-                                                                if x]])) 
+            params.update(dict(self._request.args.items()))
 
         for val in logged_values:
             if val == 'date':
@@ -787,7 +788,10 @@ class Kontext(Controller):
         tpl_out['metadata_desc'] = plugins.get('corptree').get_corpus_info(
             self.corpname, language=self.ui_lang)['metadata']['desc']
 
-    def _add_save_menu_item(self, label, action, params):
+    def _add_save_menu_item(self, label, action, params, save_format=None):
+        params = copy.copy(params)
+        if save_format:
+            params['saveformat'] = save_format
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
     def _reset_session_conc(self):
