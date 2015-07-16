@@ -45,7 +45,59 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <th>{this.translate('Size (in positions)')}</th>
                     <th>{this.translate('Labels')}</th>
                     <th></th>
+                    <th></th>
                 </tr>);
+            }
+        });
+
+
+        var FavStar = React.createClass({
+
+            mixins: mixins,
+
+            _handleClick : function () {
+                var newState = !this.state.isFav;
+
+                dispatcher.dispatch({
+                    actionType: 'LIST_STAR_CLICKED',
+                    props: {
+                        corpusId: this.props.corpusId,
+                        corpusName: this.props.corpusName,
+                        isFav: newState,
+                        type: 'corpus'
+                    }
+                });
+            },
+
+            _changeListener : function (store) {
+                var isFav = store.isFav(this.props.corpusId);
+                if (isFav !== this.state.isFav) {
+                    this.setState({isFav: isFav});
+                }
+            },
+
+            getInitialState : function () {
+                return {isFav: this.props.isFav};
+            },
+
+            componentDidMount : function () {
+                listStore.addChangeListener(this._changeListener);
+            },
+
+            componentWillUnmount : function () {
+                listStore.removeChangeListener(this._changeListener);
+            },
+
+            render: function () {
+                var imgUrl;
+
+                if (this.state.isFav) {
+                    imgUrl = this.createStaticUrl('img/starred_24x24.png');
+
+                } else {
+                    imgUrl = this.createStaticUrl('img/starred_24x24_grey.png');
+                }
+                return <img className="starred" src={imgUrl} onClick={this._handleClick} />;
             }
         });
 
@@ -100,7 +152,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 if (this.state.detail) {
                     detailBox = <layoutViews.PopupBox
                         onCloseClick={this.detailCloseHandler}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '25pt'}}>
+                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
                         <layoutViews.CorpusInfoBox corpusId={this.props.row.id}   />
                     </layoutViews.PopupBox>;
 
@@ -119,8 +171,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             {keywords}
                         </td>
                         <td>
+                            <FavStar corpusId={this.props.row.id}
+                                     corpusName={this.props.row.name}
+                                     isFav={this.props.row.user_item} />
+                        </td>
+                        <td>
                             {detailBox}
-                            <p className="desc">
+                            <p className="desc" style={{display: 'none'}}>
                             </p>
                             <a className="detail"
                                onClick={this.detailClickHandler}>{this.translate('details')}</a>

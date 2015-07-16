@@ -214,6 +214,9 @@ export class PageModel implements Kontext.PluginProvider {
             },
             createActionLink(path:string):string {
                 return self.createActionUrl(path);
+            },
+            createStaticUrl(path:string):string {
+                return self.createStaticUrl(path);
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];

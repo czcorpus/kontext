@@ -127,12 +127,12 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, permitted_corpora, query, offset=0, limit=None, filter_dict=None):
+    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         """
         Returns a subset of corplist matching provided query.
 
         arguments:
-        permitted_corpora -- a dict (canonical_id => full_id) containing user-accessible corpora
+        user_id -- a database ID of the user who triggered the search
         query -- any search query the concrete plug-in implementation can understand
                  (KonText itself just passes it around).
         offset -- return a list starting from this index (zero-based; default is 0)
