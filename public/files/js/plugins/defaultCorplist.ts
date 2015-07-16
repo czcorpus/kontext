@@ -722,7 +722,7 @@ class FavoritesTab implements WidgetTab {
             }
         ).then(
             function (favItems) {
-                if (!favItems.error) {
+                if (favItems && !favItems.error) {
                     self.reinit(favItems);
                     $.each(self.onListChange, function (i, fn:(trigger:FavoritesTab)=>void) {
                         fn.call(self, self);
@@ -854,15 +854,14 @@ class StarSwitch {
 
     itemId:string;
 
-    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement) {
+    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement, itemId:string) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
-        this.itemId = $(this.triggerElm).data('item-id');
+        this.itemId = itemId;
     }
 
     setItemId(id:string):void {
         this.itemId = id;
-        $(this.triggerElm).attr('data-item-id', id);
     }
 
     getItemId():string {
@@ -961,17 +960,30 @@ class StarComponent {
      * @param pageModel
      */
     constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
+        var currItem:CorplistItem;
+
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starImg = window.document.createElement('img');
-        $(this.starImg)
-            .addClass('starred')
-            .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
-            .attr('title', this.pageModel.translate('not starred'))
-            .attr('alt', this.pageModel.translate('not starred'));
+
+        currItem = this.extractItemFromPage();
+        if (favoriteItemsTab.containsItem(currItem)) {
+            $(this.starImg)
+                .addClass('starred')
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('title', this.pageModel.translate('starred'))
+                .attr('alt', this.pageModel.translate('starred'));
+
+        } else {
+            $(this.starImg)
+                .addClass('starred')
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('title', this.pageModel.translate('not starred'))
+                .attr('alt', this.pageModel.translate('not starred'));
+        }
         $('form .starred').append(this.starImg);
         this.editable = editable;
-        this.starSwitch = new StarSwitch(this.pageModel, this.starImg);
+        this.starSwitch = new StarSwitch(this.pageModel, this.starImg, currItem.id);
     }
 
     /**
@@ -1020,7 +1032,7 @@ class StarComponent {
             }
         ).then(
             function (favItems) {
-                if (!favItems.error) {
+                if (favItems && !favItems.error) {
                     self.favoriteItemsTab.reinit(favItems);
 
                 } else {
@@ -1120,7 +1132,6 @@ class StarComponent {
         if (userItemFlag === undefined) {
             userItemFlag = Favorite.NOT_FAVORITE;
         }
-
         corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
@@ -1368,7 +1379,6 @@ export class Corplist {
 
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
-
         this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
                 this.options.editable !== undefined ? this.options.editable : true);
         this.starComponent.init();
