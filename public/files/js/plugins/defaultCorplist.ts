@@ -64,6 +64,14 @@ export interface CorplistItem {
     size_info: string;
 }
 
+function createEmptyCorplistItem():CorplistItem {
+    return {
+        id: null, name: null, type: null, corpus_id: null, canonical_id: null,
+        subcorpus_id: null, corpora: null, description: null, featured: null,
+        size: null, size_info: null, user_item: null
+    }
+}
+
 interface FeaturedItem {
     id: string;
     name: string;
@@ -722,7 +730,7 @@ class FavoritesTab implements WidgetTab {
             }
         ).then(
             function (favItems) {
-                if (!favItems.error) {
+                if (favItems && !favItems.error) {
                     self.reinit(favItems);
                     $.each(self.onListChange, function (i, fn:(trigger:FavoritesTab)=>void) {
                         fn.call(self, self);
@@ -854,15 +862,14 @@ class StarSwitch {
 
     itemId:string;
 
-    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement) {
+    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement, itemId:string) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
-        this.itemId = $(this.triggerElm).data('item-id');
+        this.itemId = itemId;
     }
 
     setItemId(id:string):void {
         this.itemId = id;
-        $(this.triggerElm).attr('data-item-id', id);
     }
 
     getItemId():string {
@@ -961,17 +968,30 @@ class StarComponent {
      * @param pageModel
      */
     constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
+        var currItem:CorplistItem;
+
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
         this.starImg = window.document.createElement('img');
-        $(this.starImg)
-            .addClass('starred')
-            .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
-            .attr('title', this.pageModel.translate('not starred'))
-            .attr('alt', this.pageModel.translate('not starred'));
+
+        currItem = this.extractItemFromPage();
+        if (favoriteItemsTab.containsItem(currItem)) {
+            $(this.starImg)
+                .addClass('starred')
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('title', this.pageModel.translate('starred'))
+                .attr('alt', this.pageModel.translate('starred'));
+
+        } else {
+            $(this.starImg)
+                .addClass('starred')
+                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('title', this.pageModel.translate('not starred'))
+                .attr('alt', this.pageModel.translate('not starred'));
+        }
         $('form .starred').append(this.starImg);
         this.editable = editable;
-        this.starSwitch = new StarSwitch(this.pageModel, this.starImg);
+        this.starSwitch = new StarSwitch(this.pageModel, this.starImg, currItem.id);
     }
 
     /**
@@ -1020,7 +1040,7 @@ class StarComponent {
             }
         ).then(
             function (favItems) {
-                if (!favItems.error) {
+                if (favItems && !favItems.error) {
                     self.favoriteItemsTab.reinit(favItems);
 
                 } else {
@@ -1072,11 +1092,7 @@ class StarComponent {
             self = this;
 
         if (corpus_id) {
-            ans = {
-                id: null, name: null, type: null, corpus_id: null, canonical_id: null,
-                subcorpus_id: null, corpora: null, description: null, featured: null,
-                size: null, size_info: null, user_item: null
-            };
+            ans = createEmptyCorplistItem();
             ans.corpus_id = corpus_id; // TODO canonical vs. regular
             ans.canonical_id = corpus_id;
 
@@ -1120,7 +1136,6 @@ class StarComponent {
         if (userItemFlag === undefined) {
             userItemFlag = Favorite.NOT_FAVORITE;
         }
-
         corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
@@ -1368,7 +1383,6 @@ export class Corplist {
 
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
-
         this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
                 this.options.editable !== undefined ? this.options.editable : true);
         this.starComponent.init();
@@ -1546,6 +1560,61 @@ export class CorplistTableStore extends util.SimplePageStore {
         super();
         this.pluginApi = pluginApi;
         this.dispatcher = pluginApi.dispatcher();
+        var self = this;
+        CorplistTableStore.DispatchToken = this.dispatcher.register(
+            function (payload:Kontext.DispatcherPayload) {
+                switch (payload.actionType) {
+                    case 'LIST_STAR_CLICKED':
+                        var prom;
+                        var item:CorplistItem;
+                        var message;
+
+                        if (payload.props['isFav']) {
+                            item = createEmptyCorplistItem();
+                            item.corpus_id = payload.props['corpusId'];
+                            item.id = item.corpus_id;
+                            item.name = payload.props['corpusName'];
+                            item.type = payload.props['type'];
+                            prom = $.ajax(self.pluginApi.createActionUrl('user/set_favorite_item'),
+                                {
+                                    method: 'POST',
+                                    dataType: 'json',
+                                    data: item
+                                }
+                            );
+                            message = self.pluginApi.translate('item added to favorites');
+
+                        } else {
+                            prom = $.ajax(self.pluginApi.createActionUrl('user/unset_favorite_item'),
+                                {
+                                    method: 'POST',
+                                    dataType: 'json',
+                                    data: {id: payload.props['corpusId']}
+                                }
+                            );
+                            message = self.pluginApi.translate('item removed from favorites');
+                        }
+                        prom.then(
+                            function (data) {
+                                if (!data.error) {
+                                    self.updateDataItem(payload.props['corpusId'], {user_item: payload.props['isFav']});
+                                    self.notifyChangeListeners();
+                                    self.pluginApi.showMessage('info', message);
+
+                                } else {
+                                    self.pluginApi.showMessage('error',
+                                        self.pluginApi.translate('failed to update item'));
+                                }
+                            },
+                            function (err) {
+                                self.pluginApi.showMessage('error',
+                                    self.pluginApi.translate('failed to update item'));
+                            }
+                        );
+                        break;
+                }
+            }
+        );
     }
 
     public loadData(query:string, filters:string, offset:number):void {
@@ -1570,6 +1639,35 @@ export class CorplistTableStore extends util.SimplePageStore {
                 console.error(err);
             }
         )
+    }
+
+    setFavorite(item):void {
+
+    }
+
+    unsetFavorite(item):void {
+
+    }
+
+    private updateDataItem(corpusId, data) {
+        this.data.rows.forEach(function (item:CorplistItem) {
+            if (item.id === corpusId) {
+                for (var p in data) {
+                    if (data.hasOwnProperty(p)) {
+                        item[p] = data[p];
+                    }
+                }
+            }
+        });
+    }
+
+    isFav(corpusId:string):boolean {
+        return this.data.rows.some(function (item:CorplistItem) {
+            if (item.id === corpusId) {
+                return item.user_item;
+            }
+            return false;
+        });
     }
 
     setData(data:CorplistData):void {

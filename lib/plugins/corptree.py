@@ -68,6 +68,7 @@ from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import CorpusInfo
+from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
 import manatee
@@ -124,9 +125,11 @@ class CorpTree(AbstractSearchableCorporaArchive):
     FEATURED_KEY = 'featured'
     FAVORITE_KEY = 'favorite'
 
-    def __init__(self, auth, file_path, root_xpath, tag_prefix, max_num_hints, max_page_size):
+    def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
+                 max_page_size):
         super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._auth = auth
+        self._user_items = user_items
         self._corplist = None
         self.file_path = file_path
         self.root_xpath = root_xpath
@@ -293,7 +296,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
             corp_name = corp_name.split('/')[-1].lower()
             if corp_name in self._raw_list():
                 if language is not None:
-                    return self._localize_corpus_info(self._raw_list()[corp_name], lang_code=language)
+                    return self._localize_corpus_info(self._raw_list()[corp_name],
+                                                      lang_code=language)
                 else:
                     return self._raw_list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
@@ -425,8 +429,10 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     substrs.append(t)
         return substrs, query_keywords
 
-    def search(self, permitted_corpora, query, offset=0, limit=None, filter_dict=None):
+    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         ans = {'rows': []}
+        permitted_corpora = self._auth.permitted_corpora(user_id)
+        user_items = self._user_items.get_user_items(user_id)
         used_keywords = set()
         all_keywords_map = dict(self.all_keywords)
         if filter_dict.get('minSize'):
@@ -458,6 +464,12 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 new_res = res
             return new_res, right_lim
 
+        def is_fav(corpus_id):
+            for item in user_items:
+                if isinstance(item, CorpusItem) and item.corpus_id == corpus_id:
+                    return True
+            return False
+
         query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
         matches_size = lambda d: ((not min_size or int(d.get('size', 0)) >= int(min_size))
@@ -488,6 +500,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 corp['raw_size'] = l10n.simplify_num(corp['size'])
                 corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                 corp['found_in'] = found_in
+                corp['user_item'] = is_fav(corp['id'])
                 ans['rows'].append(corp)
                 used_keywords.update(keywords)
 
@@ -513,12 +526,13 @@ class CorpTree(AbstractSearchableCorporaArchive):
         }
 
 
-@inject('auth')
-def create_instance(conf, auth):
+@inject('auth', 'user_items')
+def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance
     """
     return CorpTree(auth=auth,
+                    user_items=user_items,
                     file_path=conf.get('plugins', 'corptree')['file'],
                     root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
                     tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'],
