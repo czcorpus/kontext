@@ -20,8 +20,8 @@
  * A corplist.tmpl page model.
  *
  */
-define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist'], function (win, $, documentModule,
-                                                                                    popupBox, corplist) {
+define(['win', 'jquery', 'tpl/document', 'popupbox', 'plugins/corplist/init'], function (win, $, documentModule,
+                                                                                         popupBox, corplist) {
     'use strict';
 
     var lib = {};

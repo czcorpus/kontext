@@ -20,8 +20,9 @@
 /**
  *
  */
-define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'util', 'plugins/queryStorage'], function ($,
-        win, cookies, popupBox, conf, tagbuilder, util, queryStorage) {
+define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'util',
+        'plugins/queryStorage/init'],
+    function ($, win, cookies, popupBox, conf, tagbuilder, util, queryStorage) {
     'use strict';
 
     var lib = {};

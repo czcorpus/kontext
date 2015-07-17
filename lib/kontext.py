@@ -998,6 +998,7 @@ class Kontext(Controller):
         """
         import plugins
 
+        # TODO hardcoded plug-ins
         for opt_plugin in ('live_attributes', 'query_storage', 'application_bar', 'corptree'):
             js_file_key = '%s_js' % opt_plugin
             result[js_file_key] = None

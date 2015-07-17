@@ -182,7 +182,7 @@ declare module Customized {
 /**
  *
  */
-declare module "plugins/applicationBar" {
+declare module "plugins/applicationBar/init" {
     export function createInstance(pluginApi:Kontext.PluginApi);
 }
 

@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['tpl/document', 'queryInput', 'plugins/queryStorage', 'plugins/liveAttributes'], function (
+define(['tpl/document', 'queryInput', 'plugins/queryStorage/init', 'plugins/liveAttributes/init'], function (
     documentModule, queryInput, queryStorage, liveAttributes) {
     'use strict';
 
