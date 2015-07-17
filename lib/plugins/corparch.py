@@ -22,8 +22,8 @@ interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 Required config.xml/plugins entries:
 
-<corptree>
-    <module>corptree</module>
+<corparch>
+    <module>corparch</module>
     <file>[a path to a configuration XML file]</file>
     <root_elm_path>
         [an XPath query leading to a root element where configuration can be found]
@@ -35,7 +35,7 @@ Required config.xml/plugins entries:
         [the maximum number of hints corpus selection widget shows (even if there are more results
          available]
     </max_num_hints>
-</corptree>
+</corparch>
 
 How does the corpus list specification XML entry looks like:
 
@@ -533,9 +533,9 @@ def create_instance(conf, auth, user_items):
     """
     return CorpTree(auth=auth,
                     user_items=user_items,
-                    file_path=conf.get('plugins', 'corptree')['file'],
-                    root_xpath=conf.get('plugins', 'corptree')['root_elm_path'],
-                    tag_prefix=conf.get('plugins', 'corptree')['default:tag_prefix'],
-                    max_num_hints=conf.get('plugins', 'corptree')['default:max_num_hints'],
-                    max_page_size=conf.get('plugins', 'corptree').get(
+                    file_path=conf.get('plugins', 'corparch')['file'],
+                    root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                    tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
+                    max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                    max_page_size=conf.get('plugins', 'corparch').get(
                         'default:default_page_list_size', None))

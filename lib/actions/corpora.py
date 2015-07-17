@@ -29,9 +29,9 @@ class Corpora(Kontext):
     def corplist(self, request):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         return dict(
-            corplist_params=plugins.get('corptree').initial_search_params(request.args.get('query'),
+            corplist_params=plugins.get('corparch').initial_search_params(request.args.get('query'),
                                                                    request.args),
-            corplist_data=plugins.get('corptree').search(self._session_get('user', 'id'),
+            corplist_data=plugins.get('corparch').search(self._session_get('user', 'id'),
                                                          request.args.get('query'),
                                                          offset=0,
                                                          filter_dict=request.args)
@@ -39,7 +39,7 @@ class Corpora(Kontext):
 
     @exposed(return_type='json')
     def ajax_list_corpora(self, request):
-        return plugins.get('corptree').search(self._session_get('user', 'id'), request.args['query'],
+        return plugins.get('corparch').search(self._session_get('user', 'id'), request.args['query'],
                                               offset=request.args.get('offset', None),
                                               filter_dict=request.args)
 
@@ -47,7 +47,7 @@ class Corpora(Kontext):
     def ajax_get_corp_details(self):
         """
         """
-        corp_conf_info = plugins.get('corptree').get_corpus_info(self._corp().corpname)
+        corp_conf_info = plugins.get('corparch').get_corpus_info(self._corp().corpname)
         encoding = self._corp().get_conf('ENCODING')
 
         ans = {
@@ -88,7 +88,7 @@ class Corpora(Kontext):
         try:
             tag_loader = plugins.get('taghelper').loader(
                 self.corpname,
-                plugins.get('corptree').get_corpus_info(self.corpname)['tagset'],
+                plugins.get('corparch').get_corpus_info(self.corpname)['tagset'],
                 self.ui_lang)
         except IOError:
             raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)

@@ -103,6 +103,8 @@ def init_plugin(name, module=None, optional=False):
         except (PluginException, Exception) as e:
             logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
             raise e
+    else:
+        plugins.add_missing_plugin(name)
 
 
 def cleanup_runtime_modules():
@@ -132,7 +134,7 @@ def setup_plugins():
     init_plugin('menu_items')
     # Optional plugins
     init_plugin('getlang', optional=True)
-    init_plugin('corptree', optional=True)
+    init_plugin('corparch', optional=True)
     init_plugin('query_storage', optional=True)
     init_plugin('application_bar', optional=True)
     init_plugin('live_attributes', optional=True)

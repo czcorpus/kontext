@@ -24,11 +24,11 @@
     'use strict';
 
     var fs = require('fs'),
-        jsModules = {
+        jsModules = { // TODO this should be dynamic
             'application_bar' : 'applicationBar',
             'query_storage' : 'queryStorage',
             'live_attributes' : 'liveAttributes',
-            'corptree' : 'corplist'
+            'corparch' : 'corparch'
         };
 
     /**

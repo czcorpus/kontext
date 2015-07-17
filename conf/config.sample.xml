@@ -107,13 +107,13 @@
             <ttl>14400</ttl>
             <cleanup_probability>0.9</cleanup_probability>
         </sessions>
-        <corptree>
-            <module>corptree</module>
+        <corparch>
+            <module>my_corparch</module>
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
-        </corptree>
+        </corparch>
         <export>
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>

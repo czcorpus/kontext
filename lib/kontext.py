@@ -785,7 +785,7 @@ class Kontext(Controller):
         """
         Adds information needed by extended version of text type (and other attributes) selection in a query
         """
-        tpl_out['metadata_desc'] = plugins.get('corptree').get_corpus_info(
+        tpl_out['metadata_desc'] = plugins.get('corparch').get_corpus_info(
             self.corpname, language=self.ui_lang)['metadata']['desc']
 
     def _add_save_menu_item(self, label, action, params, save_format=None):
@@ -946,7 +946,7 @@ class Kontext(Controller):
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = format_number(self._corp().size())
-        corp_conf_info = plugins.get('corptree').get_corpus_info(self.corpname)
+        corp_conf_info = plugins.get('corparch').get_corpus_info(self.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
@@ -997,11 +997,10 @@ class Kontext(Controller):
         (i.e. layout template) configures RequireJS module accordingly.
         """
         import plugins
-
-        # TODO hardcoded plug-ins
-        for opt_plugin in ('live_attributes', 'query_storage', 'application_bar', 'corptree'):
-            js_file_key = '%s_js' % opt_plugin
-            result[js_file_key] = None
+        ans = {}
+        for opt_plugin in plugins.get_plugins(include_missing=True).keys():
+            logging.getLogger(__name__).debug('key: %s' % opt_plugin)
+            ans[opt_plugin] = None
             if plugins.has_plugin(opt_plugin):
                 plugin_obj = plugins.get(opt_plugin)
                 # if the plug-in is "always on" or "sometimes off but currently on"
@@ -1010,7 +1009,8 @@ class Kontext(Controller):
                         or plugin_obj.is_enabled_for(self.corpname)):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
                     if js_file:
-                        result[js_file_key] = js_file
+                        ans[opt_plugin] = js_file
+        result['plugin_js'] = ans
 
     def _get_attrs(self, attr_names, force_values=None):
         """
@@ -1174,7 +1174,7 @@ class Kontext(Controller):
             result.update(self._export_mapped_args())
             self._store_mapped_args()
 
-        result['bib_conf'] = plugins.get('corptree').get_corpus_info(self.corpname).metadata
+        result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.corpname).metadata
 
         # avalilable languages
         if plugins.has_plugin('getlang'):
@@ -1187,6 +1187,7 @@ class Kontext(Controller):
         # util functions
         result['format_number'] = partial(format_number)
         result['join_params'] = join_params
+        result['camelize'] = l10n.camelize
         result['update_params'] = update_params
         result['jsonize_user_item'] = user_items.to_json
 
@@ -1319,7 +1320,7 @@ class Kontext(Controller):
         corpus : manatee.Corpus
           corpus object we want to test
         """
-        speech_struct = plugins.get('corptree').get_corpus_info(self.corpname).get(
+        speech_struct = plugins.get('corparch').get_corpus_info(self.corpname).get(
             'speech_segment')
         return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
 
@@ -1403,7 +1404,7 @@ class Kontext(Controller):
         # if live_attributes are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         if plugins.has_plugin('live_attributes'):
-            ans['bib_attr'] = plugins.get('corptree').get_corpus_info(
+            ans['bib_attr'] = plugins.get('corparch').get_corpus_info(
                 self.corpname)['metadata']['label_attr']
             list_none = (ans['bib_attr'], )
         else:

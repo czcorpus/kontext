@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the subcorp_list.tmpl template
  */
-define(['jquery', 'tpl/document', 'plugins/corplist/init', 'popupbox'], function ($, documentModule, corplist, popupBox) {
+define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function ($, documentModule, corplist, popupBox) {
     'use strict';
 
     var lib = {};
