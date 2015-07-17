@@ -361,8 +361,8 @@ export class SearchTab implements WidgetTab {
         this.itemClickCallback = itemClickCallback;
         this.wrapper = window.document.createElement('div');
         $(this.widgetWrapper).append(this.wrapper);
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
-        this.maxNumHints = this.pluginApi.getConf('pluginData')['corptree']['max_num_hints'];
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+        this.maxNumHints = this.pluginApi.getConf('pluginData')['corparch']['max_num_hints'];
         this.selectedTags = {};
     }
 
@@ -444,7 +444,7 @@ export class SearchTab implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
-        $.each(this.pluginApi.getConf('pluginData')['corptree']['corpora_labels'], function (i, item) {
+        $.each(this.pluginApi.getConf('pluginData')['corparch']['corpora_labels'], function (i, item) {
             var link = window.document.createElement('a');
             $(div).append(link);
             $(link).text(item[1]).addClass('keyword');
@@ -453,7 +453,7 @@ export class SearchTab implements WidgetTab {
                 self.toggleTagSelection(link, e.ctrlKey || e.metaKey);
                 self.triggerTypeaheadSearch();
             });
-            if (i < self.pluginApi.getConf('pluginData')['corptree']['corpora_labels']['length'] - 1) {
+            if (i < self.pluginApi.getConf('pluginData')['corparch']['corpora_labels']['length'] - 1) {
                 $(div).append(' ');
             }
         });
@@ -1367,7 +1367,7 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corptree']['featured'], this.onItemClick);
+            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onItemClick);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -1442,7 +1442,7 @@ export class CorplistFormStore extends util.SimplePageStore {
         this.data = {};
         this.selectedKeywords = {};
         this.offset = 0;
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corptree']['tag_prefix'];
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
 
         CorplistFormStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {

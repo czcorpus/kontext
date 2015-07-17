@@ -141,9 +141,9 @@ class AttrArgs(object):
 
 class LiveAttributes(AbstractLiveAttributes):
 
-    def __init__(self, corptree, max_attr_list_size, empty_val_placeholder,
+    def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
                  max_attr_visible_chars):
-        self.corptree = corptree
+        self.corparch = corparch
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
@@ -158,7 +158,7 @@ class LiveAttributes(AbstractLiveAttributes):
         corpname -- vanilla corpus name (i.e. without any path-like prefixes)
         """
         if not corpname in self.databases:
-            db_path = self.corptree.get_corpus_info(corpname).get('metadata', {}).get('database')
+            db_path = self.corparch.get_corpus_info(corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = create_engine('sqlite:///%s' % db_path)
             else:
@@ -244,7 +244,7 @@ class LiveAttributes(AbstractLiveAttributes):
         a dictionary containing matching attributes and values
         """
         corpname = vanilla_corpname(corpus.corpname)
-        corpus_info = self.corptree.get_corpus_info(corpname)
+        corpus_info = self.corparch.get_corpus_info(corpname)
         attrs = self._get_subcorp_attrs(corpus)
         db = self.db(corpname)
         srch_attrs = set(attrs) - set(attr_map.keys())
@@ -334,15 +334,15 @@ class LiveAttributes(AbstractLiveAttributes):
             self.to_cache(db, 'bib_size', size)
         return size
 
-@inject('corptree')
-def create_instance(settings, corptree):
+@inject('corparch')
+def create_instance(settings, corparch):
     """
     creates an instance of the plugin
 
     arguments:
-    corptree -- corptree plugin
+    corparch -- corparch plugin
     """
-    return LiveAttributes(corptree,
+    return LiveAttributes(corparch,
                           settings.get_int('global', 'max_attr_list_size'),
                           settings.get('corpora', 'empty_attr_value_placeholder'),
                           settings.get('plugins', 'live_attributes')

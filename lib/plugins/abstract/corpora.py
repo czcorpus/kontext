@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-'corptree' plug-in interfaces
+'corparch' plug-in interfaces
 """
 
 import json
@@ -80,7 +80,7 @@ class CorpInfoEncoder(json.JSONEncoder):
 
 class AbstractCorporaArchive(ThreadLocalData):
     """
-    A template for the 'corptree' (the quite misleading name stays
+    A template for the 'corparch' (the quite misleading name stays
     for historical reasons) plug-in.
 
     Please note that the interface may change in the future as it is

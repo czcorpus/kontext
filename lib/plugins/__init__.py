@@ -14,12 +14,16 @@ def install_plugin(name, module, config):
         _plugins[name] = apply(module.create_instance, (config,))
 
 
+def add_missing_plugin(name):
+    _plugins[name] = None
+
+
 def flush_plugins():
     _plugins.clear()
 
 
 def has_plugin(name):
-    return name in _plugins
+    return _plugins.get(name) is not None
 
 
 def load_plugin_module(name):
@@ -33,7 +37,7 @@ def load_plugin_module(name):
 
 
 def _factory(name):
-    if name in _plugins:
+    if has_plugin(name):
         return _plugins[name]
     else:
         raise PluginException('Plugin %s not installed' % name)
@@ -46,12 +50,15 @@ def get(*names):
         return tuple([_factory(obj) for obj in names])
 
 
-def get_plugins():
+def get_plugins(include_missing=False):
     """
     returns:
     a dict (plugin_name, plugin_object)
     """
-    return _plugins
+    if not include_missing:
+        return dict([(k, v) for k, v in _plugins.items() if v is not None])
+    else:
+        return _plugins
 
 
 class PluginFactory(object):
@@ -61,6 +68,7 @@ class PluginFactory(object):
 
     def __call__(self, conf):
         return apply(self._fn, (conf,) + self._args)
+
 
 def inject(*args):
     """

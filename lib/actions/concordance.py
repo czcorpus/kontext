@@ -126,7 +126,7 @@ class Actions(Kontext):
         Returns:
             tuple (structname, attr_name)
         """
-        segment_str = plugins.get('corptree').get_corpus_info(self.corpname).get('speech_segment')
+        segment_str = plugins.get('corparch').get_corpus_info(self.corpname).get('speech_segment')
         if segment_str:
             return tuple(segment_str.split('.'))
         return None
@@ -148,7 +148,7 @@ class Actions(Kontext):
             self.leftctx = 'a,%s' % os.path.basename(self.corpname)
             self.rightctx = 'a,%s' % os.path.basename(self.corpname)
         else:
-            sentence_struct = plugins.get('corptree').get_corpus_info(
+            sentence_struct = plugins.get('corparch').get_corpus_info(
                 self.corpname)['sentence_struct']
             self.leftctx = self.senleftctx_tpl % sentence_struct
             self.rightctx = self.senrightctx_tpl % sentence_struct
@@ -796,7 +796,7 @@ class Actions(Kontext):
             rel_mode = 1
         else:
             rel_mode = 0
-        corp_info = plugins.get('corptree').get_corpus_info(self.corpname)
+        corp_info = plugins.get('corparch').get_corpus_info(self.corpname)
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         result = {
@@ -1183,7 +1183,7 @@ class Actions(Kontext):
         if not ref_corpname:
             ref_corpname = self.corpname
         if hasattr(self, 'compatible_corpora'):
-            out['CompatibleCorpora'] = plugins.get('corptree').get_list(self.permitted_corpora())
+            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self.permitted_corpora())
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname

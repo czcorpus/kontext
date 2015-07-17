@@ -22,7 +22,7 @@ import argparse
 
 sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
 import autoconf
-from plugins import corptree
+from plugins import corparch
 from plugins import ucnk_live_attributes
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('action', metavar='ACTION', help='one of {status, clear}')
     args = parser.parse_args()
 
-    ctree = corptree.create_instance(autoconf.settings)
+    ctree = corparch.create_instance(autoconf.settings)
     ctree.setup(lang='en')
     live_attrs = ucnk_live_attributes.create_instance(ctree, autoconf.settings)
     corplist = get_corplist(ctree)
