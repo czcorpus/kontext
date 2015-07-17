@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {

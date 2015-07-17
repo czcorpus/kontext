@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../ts/declarations/popupbox.d.ts" />
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import popupBox = require("popupbox");
 

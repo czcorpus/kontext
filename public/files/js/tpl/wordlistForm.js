@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the filter_form.tmpl template
  *
  */
-define(['win', 'jquery', 'tpl/document', 'plugins/corplist', 'popupbox'], function (win, $, documentModule, corplistComponent,
+define(['win', 'jquery', 'tpl/document', 'plugins/corplist/init', 'popupbox'], function (win, $, documentModule, corplistComponent,
     popupbox) {
     'use strict';
 
