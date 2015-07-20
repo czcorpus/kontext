@@ -118,7 +118,8 @@ class Kontext(Controller):
                                  MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
 
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
-                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'))
+                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
+                           MainMenu.CORPORA('new-subcorpus'))
 
     # A list of parameters needed to make concordance result parameters (e.g. size, currently
     # viewed page,..) persistent. It is used to keep showing these values to a user even if he is
@@ -1117,7 +1118,7 @@ class Kontext(Controller):
         new_query_key = self._store_conc_params()
         self._update_output_with_conc_params(new_query_key, result)
 
-        result['corpname_url'] = 'corpname=' + self.corpname
+        result['corpname_url'] = 'corpname=' + self.corpname if self.corpname else ''
         global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
