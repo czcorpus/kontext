@@ -108,7 +108,7 @@
             <cleanup_probability>0.9</cleanup_probability>
         </sessions>
         <corparch>
-            <module>my_corparch</module>
+            <module>default_corparch</module>
             <file>/path/to/your/corpus/tree/xml/file</file>
             <root_elm_path>//corpora/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
