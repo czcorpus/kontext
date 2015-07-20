@@ -999,7 +999,6 @@ class Kontext(Controller):
         import plugins
         ans = {}
         for opt_plugin in plugins.get_plugins(include_missing=True).keys():
-            logging.getLogger(__name__).debug('key: %s' % opt_plugin)
             ans[opt_plugin] = None
             if plugins.has_plugin(opt_plugin):
                 plugin_obj = plugins.get(opt_plugin)
