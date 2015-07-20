@@ -269,10 +269,23 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             mixins: mixins,
 
+            _handleClick : function (e) {
+                var self = this;
+
+                e.preventDefault();
+                dispatcher.dispatch({
+                    actionType: 'KEYWORD_CLICKED',
+                    props: {
+                        keyword: self.props.keyword,
+                        status: true,
+                        ctrlKey: e.ctrlKey || e.metaKey
+                    }
+                });
+            },
+
             render: function () {
-                var link = this.createActionLink("corplist?keyword="+this.props.keyword);
                 return (
-                    <a className="keyword" href={link}
+                    <a className="keyword" onClick={this._handleClick}
                        data-keyword-id={this.props.keyword}>{this.props.label}</a>
                 );
             }
@@ -299,7 +312,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             componentWillUnmount: function () {
                 formStore.removeChangeListener(this.changeHandler);
             },
-            handleClick: function (active) {
+            _handleClick: function (active) {
                 var self = this;
 
                 return function (e) {
@@ -322,14 +335,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     return (
                         <a className="keyword" href={link}
                            data-keyword-id={this.props.keyword}
-                            onClick={this.handleClick(true)}>{this.props.label}</a>
+                            onClick={this._handleClick(true)}>{this.props.label}</a>
                     );
 
                 } else {
                     return (
                         <span className="keyword current"
                               data-keyword-id={this.props.keyword}
-                              onClick={this.handleClick(false)}
+                              onClick={this._handleClick(false)}
                             >{this.props.label}</span>
                     );
                 }
@@ -341,7 +354,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
          */
         var ResetLink = React.createClass({
             mixins: mixins,
-            handleClick: function (e) {
+            _handleClick: function (e) {
                 e.preventDefault();
                 dispatcher.dispatch({
                     actionType: 'KEYWORD_RESET_CLICKED',
@@ -350,7 +363,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
             render: function () {
                 return <a className="keyword reset"
-                          onClick={this.handleClick}>{this.translate('None')}</a>;
+                          onClick={this._handleClick}>{this.translate('None')}</a>;
             }
         });
 
