@@ -21,6 +21,7 @@
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../ts/declarations/sprintf.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -33,6 +34,7 @@ import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
 import util = require('util');
 import docStores = require('./documentStores');
+import sprintf = require('vendor/sprintf');
 
 
 /**
@@ -91,7 +93,7 @@ export type InitCallback = InitCallbackObject|(()=>void);
 
 /**
  * Functions required by KonText's React components
- */
+ */sprintf
 export interface ComponentCoreMixins {
 
     translate(s:string):string;
@@ -217,6 +219,9 @@ export class PageModel implements Kontext.PluginProvider {
             },
             createStaticUrl(path:string):string {
                 return self.createStaticUrl(path);
+            },
+            sprintf(...args:any[]):string {
+                return sprintf.sprintf.apply(this, args);
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
