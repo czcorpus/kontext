@@ -392,25 +392,42 @@ export class SearchTab implements WidgetTab {
 
     /**
      *
-     * @param id
+     * @param skipId
+     */
+    private resetTagSelection(skipId?:Array<string>|string):void {
+        var toReset = [],
+            skipIds:Array<string>;
+
+        if (typeof skipId === 'string') {
+            skipIds = [skipId];
+
+        } else if (skipId) {
+            skipIds = skipId;
+
+        } else {
+            skipIds = [];
+        }
+
+        for (var p in this.selectedTags) {
+            if (this.selectedTags.hasOwnProperty(p)
+                    && this.selectedTags[p]
+                    && skipIds.indexOf(p) === -1) {
+                toReset.push(p);
+            }
+        }
+        for (var i = 0; i < toReset.length; i += 1) {
+            $(this.selectedTags[toReset[i]]).removeClass('selected');
+            delete this.selectedTags[toReset[i]];
+        }
+    }
+
+    /**
      */
     private toggleTagSelection(link:HTMLElement, ctrlPressed:boolean):void {
-        var id = $(link).data('srchkey'),
-            toReset;
+        var id = $(link).data('srchkey');
 
         if (!ctrlPressed) {
-            toReset = [];
-            for (var p in this.selectedTags) {
-                if (this.selectedTags.hasOwnProperty(p)
-                        && this.selectedTags[p]
-                        && p !== id) {
-                    toReset.push(p);
-                }
-            }
-            for (var i = 0; i < toReset.length; i += 1) {
-                $(this.selectedTags[toReset[i]]).removeClass('selected');
-                delete this.selectedTags[toReset[i]];
-            }
+            this.resetTagSelection(id);
         }
 
         if (!this.selectedTags[id]) {
@@ -437,6 +454,24 @@ export class SearchTab implements WidgetTab {
 
     /**
      *
+     * @param parent
+     */
+    private createResetLink():HTMLElement {
+        var link = window.document.createElement('a'),
+            self = this;
+
+        $(link)
+            .text(this.pluginApi.translate('none'))
+            .addClass('keyword')
+            .addClass('reset')
+            .on('click', function () {
+                self.resetTagSelection();
+            });
+        return link;
+    }
+
+    /**
+     *
      */
     private initLabels():void {
         var div = window.document.createElement('div'),
@@ -444,8 +479,10 @@ export class SearchTab implements WidgetTab {
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
+        $(div).append(this.createResetLink());
         $.each(this.pluginApi.getConf('pluginData')['corparch']['corpora_labels'], function (i, item) {
             var link = window.document.createElement('a');
+            $(div).append(' ');
             $(div).append(link);
             $(link).text(item[1]).addClass('keyword');
             $(link).attr('data-srchkey', item[0]);
@@ -453,9 +490,6 @@ export class SearchTab implements WidgetTab {
                 self.toggleTagSelection(link, e.ctrlKey || e.metaKey);
                 self.triggerTypeaheadSearch();
             });
-            if (i < self.pluginApi.getConf('pluginData')['corparch']['corpora_labels']['length'] - 1) {
-                $(div).append(' ');
-            }
         });
         $(div).append('<span class="labels-hint">(' + this.pluginApi.translate('hold_ctrl') + ')</span>');
     }
