@@ -310,7 +310,7 @@ export class CorplistPage implements Customized.CorplistPage {
         CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
         this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
             pluginApi.getViews(), CorplistPage.CorplistFormStore,
-            CorplistPage.CorplistTableStore, pluginApi.getStores().statusStore);
+            CorplistPage.CorplistTableStore);
         this.pluginApi = pluginApi;
     }
 

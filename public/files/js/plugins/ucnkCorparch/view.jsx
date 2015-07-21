@@ -21,7 +21,7 @@ define(['vendor/react'], function (React) {
 
     var lib = {};
 
-    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore, statusStore) {
+    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
         // -------------------------- dataset components -----------------------
 
@@ -116,17 +116,27 @@ define(['vendor/react'], function (React) {
                         corpusName: this.props.corpusName
                     }
                 });
-
                 this.props.submitHandler();
+            },
+
+            _textareaChangeHandler : function (e) {
+                this.setState({customMessage: e.target.value});
+            },
+
+            getInitialState : function () {
+                return {customMessage: null};
             },
 
             render : function () {
                 return (
                     <form>
                         <p>{this.translate(
-                            this.sprintf('Please give me an access to the %s corpus', this.props.corpusName))}</p>
-                        <textarea></textarea>
-                        <button type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
+                            this.sprintf('\u201CPlease give me an access to the %s corpus\u201D', this.props.corpusName))}</p>
+                        <label>{this.translate('Custom message (optional)')}</label>
+                        <textarea rows="3" cols="50" onChange={this._textareaChangeHandler}></textarea>
+                        <div>
+                            <button type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
+                        </div>
                     </form>
                 );
             }
@@ -173,7 +183,8 @@ define(['vendor/react'], function (React) {
 
                     if (this.state.hasDialog) {
                         dialog = (
-                            <layoutViews.PopupBox onCloseClick={this._closeDialog}>
+                            <layoutViews.PopupBox onCloseClick={this._closeDialog}
+                                customClass="corpus-access-req">
                                 <div>
                                     <RequestForm submitHandler={this._closeDialog}
                                         corpusId={this.props.corpusId} corpusName={this.props.corpusName} />
@@ -211,35 +222,20 @@ define(['vendor/react'], function (React) {
 
             mixins: mixins,
 
-            errorHandler: function (store, statusType) {
-                if (statusType === 'error' && this.state.detail) {
-                    var state = this.state;
-                    state.detail = false;
-                    this.setState(state);
-                }
+            _corpDetailErrorHandler: function () {
+                this.setState(React.addons.update(this.state, {detail: {$set: false}}));
             },
 
-            componentDidMount: function () {
-                // TODO this is not very effective - a single component should listen for corpinfo error
-                statusStore.addChangeListener(this.errorHandler);
-            },
-
-            componentWillUnmount: function () {
-                statusStore.removeChangeListener(this.errorHandler);
-            },
-
-            detailClickHandler: function (evt) {
+            _detailClickHandler: function (evt) {
                 evt.preventDefault();
-                var state = this.state;
-                state.detail = true;
-                this.setState(state);
+                this.setState(React.addons.update(this.state, {detail: {$set: true}}));
             },
 
             getInitialState: function () {
                 return {detail: false};
             },
 
-            detailCloseHandler: function () {
+            _detailCloseHandler: function () {
                 var state = this.state;
                 state.detail = false;
                 this.setState(state);
@@ -254,9 +250,10 @@ define(['vendor/react'], function (React) {
 
                 if (this.state.detail) {
                     detailBox = <layoutViews.PopupBox
-                        onCloseClick={this.detailCloseHandler}
+                        onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <layoutViews.CorpusInfoBox corpusId={this.props.row.id}   />
+                        <layoutViews.CorpusInfoBox corpusId={this.props.row.id}
+                            parentErrorHandler={this._corpDetailErrorHandler} />
                     </layoutViews.PopupBox>;
 
                 } else {
@@ -264,12 +261,13 @@ define(['vendor/react'], function (React) {
                 }
 
                 var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+                var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
 
                 return (
                     <tr>
                         <td className="corpname"><a
                             href={link}>{this.props.row.name}</a></td>
-                        <td className="num">{this.props.row.raw_size}</td>
+                        <td className="num">{size}</td>
                         <td>
                             {keywords}
                         </td>
@@ -279,7 +277,7 @@ define(['vendor/react'], function (React) {
                                      isFav={this.props.row.user_item} />
                         </td>
                         <td>
-                            <LockIcon isLocked={true} corpusId={this.props.row.id}
+                            <LockIcon isLocked={!this.props.row.user_access} corpusId={this.props.row.id}
                                       corpusName={this.props.row.name} />
                         </td>
                         <td>
@@ -287,7 +285,7 @@ define(['vendor/react'], function (React) {
                             <p className="desc" style={{display: 'none'}}>
                             </p>
                             <a className="detail"
-                               onClick={this.detailClickHandler}>{this.translate('details')}</a>
+                               onClick={this._detailClickHandler}>{this.translate('details')}</a>
                         </td>
                     </tr>
                 );
@@ -311,7 +309,7 @@ define(['vendor/react'], function (React) {
             render : function () {
                 return (
                   <tr className="load-more">
-                      <td colSpan="4">
+                      <td colSpan="6">
                           <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
                       </td>
                   </tr>

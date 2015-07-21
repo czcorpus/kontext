@@ -212,11 +212,13 @@ export class CorplistTableStore extends util.SimplePageStore {
                                 } else {
                                     self.pluginApi.showMessage('error',
                                         self.pluginApi.translate('failed to update item'));
+                                    self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, data.error);
                                 }
                             },
-                            function (err) {
+                            function (jqXHR, textStatus, errorThrown) {
                                 self.pluginApi.showMessage('error',
                                     self.pluginApi.translate('failed to update item'));
+                                self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, errorThrown);
                             }
                         );
                         break;
@@ -300,6 +302,16 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 
     static DispatchToken:string;
 
+    private sendRequest(data):JQueryXHR {
+        return $.ajax(this.pluginApi.createActionUrl('user/ask_corpus_access'),
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: data
+            }
+        );
+    }
+
     constructor(pluginApi:Kontext.PluginApi) {
         super();
         var self = this;
@@ -307,12 +319,30 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
         this.dispatcher = pluginApi.dispatcher();
         CorpusAccessRequestStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
-                console.log(payload);
                 switch (payload.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                        console.log('sending data...'); // TODO
-                        self.pluginApi.showMessage('info', self.pluginApi.translate('Your request has been sent'));
-                        self.notifyChangeListeners();
+                        var prom = self.sendRequest(payload.props);
+                        prom.then(
+                            function (ans) {
+                                if (!ans.error) {
+                                    self.pluginApi.showMessage('info',
+                                        self.pluginApi.translate('Your request has been sent. '
+                                            + 'You will be informed by e-mail once it is resolved.'));
+                                    self.notifyChangeListeners();
+
+                                } else {
+                                    self.pluginApi.showMessage('error', ans.error);
+                                    self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, ans.error);
+                                }
+                            },
+                            function (jqXHR, textStatus, errorThrown) {
+                                self.pluginApi.showMessage('error',
+                                    self.pluginApi.translate(
+                                        'Failed to send the request. Please try again '
+                                        + 'later or contact support.'));
+                                self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, errorThrown);
+                            }
+                        );
                         break;
                 }
             }
@@ -341,7 +371,7 @@ export class CorplistPage implements Customized.CorplistPage {
         CorplistPage.CorpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
         this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
             pluginApi.getViews(), CorplistPage.CorplistFormStore,
-            CorplistPage.CorplistTableStore, pluginApi.getStores().statusStore);
+            CorplistPage.CorplistTableStore);
         this.pluginApi = pluginApi;
     }
 

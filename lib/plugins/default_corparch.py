@@ -67,7 +67,7 @@ except ImportError:
 from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
-from plugins.abstract.corpora import CorpusInfo
+from plugins.abstract.corpora import CorpusInfo, BrokenCorpusInfo
 from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
@@ -113,7 +113,7 @@ class ManateeCorpora(object):
             return self._cache[canonical_corpus_id]
         except:
             # refactoring warning: we do not want non-existent/fault items to be cached
-            return ManateeCorpusInfo(EmptyCorpus(), None)
+            return ManateeCorpusInfo(EmptyCorpus(corpname=canonical_corpus_id), None)
 
 
 class CorpTree(AbstractSearchableCorporaArchive):
@@ -291,7 +291,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         return ans
 
     def get_corpus_info(self, corp_name, language=None):
-        if corp_name != '':
+        if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
             if corp_name in self._raw_list():
@@ -302,7 +302,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     return self._raw_list()[corp_name]
             raise ValueError('Missing configuration data for %s' % corp_name)
         else:
-            return CorpusInfo()
+            return BrokenCorpusInfo()
 
     def _load(self):
         """
@@ -479,30 +479,31 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
         for corp in corplist:
             full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
-            keywords = [k for k in full_data['metadata']['keywords'].keys()]
-            hits = []
-            found_in = []
+            if not isinstance(full_data, BrokenCorpusInfo):
+                keywords = [k for k in full_data['metadata']['keywords'].keys()]
+                hits = []
+                found_in = []
 
-            hits.extend([k in keywords for k in query_keywords])
-            for s in normalized_query_substrs:
-                # the name must be tested first to prevent the list 'found_in'
-                # to be filled in case item matches both name and description
-                if s in corp['name'].lower():
-                    hits.append(True)
-                elif s in corp['desc'].lower():
-                    hits.append(True)
-                    found_in.append(_('description'))
-                else:
-                    hits.append(False)
-            hits.append(matches_size(corp))
+                hits.extend([k in keywords for k in query_keywords])
+                for s in normalized_query_substrs:
+                    # the name must be tested first to prevent the list 'found_in'
+                    # to be filled in case item matches both name and description
+                    if s in corp['name'].lower():
+                        hits.append(True)
+                    elif s in corp['desc'].lower():
+                        hits.append(True)
+                        found_in.append(_('description'))
+                    else:
+                        hits.append(False)
+                hits.append(matches_size(corp))
 
-            if matches_all(hits):
-                corp['raw_size'] = l10n.simplify_num(corp['size'])
-                corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
-                corp['found_in'] = found_in
-                corp['user_item'] = is_fav(corp['id'])
-                ans['rows'].append(corp)
-                used_keywords.update(keywords)
+                if matches_all(hits):
+                    corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
+                    corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
+                    corp['found_in'] = found_in
+                    corp['user_item'] = is_fav(corp['id'])
+                    ans['rows'].append(corp)
+                    used_keywords.update(keywords)
 
         ans['rows'], ans['nextOffset'] = cut_result(l10n.sort(ans['rows'], loc=self._lang(),
                                                               key=lambda v: v['name']))

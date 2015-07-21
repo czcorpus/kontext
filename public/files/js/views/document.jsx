@@ -110,6 +110,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             changeHandler: function (store, status) {
                 if (status !== 'error') {
                     this.setState(storeProvider.corpusInfoStore.getData(this.props.corpusId));
+
+                } else if (typeof this.props.parentErrorHandler === 'function') {
+                    this.props.parentErrorHandler(store, status);
                 }
             },
 
@@ -186,8 +189,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             render: function () {
+                var classes = 'tooltip-box framed';
+
+                if (this.props.customClass) {
+                    classes += ' ' + this.props.customClass;
+                }
+
                 return (
-                    <div className="tooltip-box framed" style={this.props.customStyle}>
+                    <div className={classes} style={this.props.customStyle}>
                         <div className="header">
                             <a className="close-link" onClick={this.closeClickHandler}></a>
                         </div>

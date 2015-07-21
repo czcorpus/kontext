@@ -162,8 +162,6 @@ export class PageModel implements Kontext.PluginProvider {
 
     messageStore:docStores.MessageStore;
 
-    statusStore:docStores.StatusStore;
-
     queryHintStore:docStores.QueryHintStore;
 
     /**
@@ -181,7 +179,6 @@ export class PageModel implements Kontext.PluginProvider {
             this.conf['uiStateTTL']);
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.dispatcher);
-        this.statusStore = new docStores.StatusStore(this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
     }
 
@@ -193,7 +190,6 @@ export class PageModel implements Kontext.PluginProvider {
         return {
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
-            statusStore: this.statusStore,
             queryHintStore: this.queryHintStore
         };
     }

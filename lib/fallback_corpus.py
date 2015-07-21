@@ -19,9 +19,12 @@ class EmptyCorpus(object):
     count with).
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.cm = object()
         self.corpname = ''
+        for k, v in kwargs:
+            if hasattr(self, k):
+                setattr(self, k, v)
 
     def compute_docf(self, *args, **kwargs):
         pass

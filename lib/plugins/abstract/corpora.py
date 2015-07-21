@@ -67,6 +67,10 @@ class CorpusInfo(DictLike):
         self.metadata = CorpusMetadata()
 
 
+class BrokenCorpusInfo(CorpusInfo):
+    pass
+
+
 class CorpInfoEncoder(json.JSONEncoder):
     def default(self, o):
         ans = {}

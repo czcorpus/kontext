@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2013 Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
@@ -59,13 +60,32 @@ try:
     from markdown import markdown
 except ImportError:
     markdown = lambda s: s
+import smtplib
+from email.mime.text import MIMEText
+import time
+import logging
 
-
+import plugins
 from plugins import inject
 from plugins.default_corparch import CorpTree
 import l10n
+from controller import exposed
+import actions.user
+from translation import ugettext as _
 
 DEFAULT_LANG = 'en'
+
+
+@exposed(return_type='json')
+def ask_corpus_access(controller, request):
+    ans = {}
+    status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
+                                                        user=controller._session_get('user', 'user'),
+                                                        user_id=controller._session_get('user', 'id'))
+    if status is False:
+        ans['error'] = _(
+            'Failed to send e-mail. Please try again later or contact system administrator')
+    return ans
 
 
 class UcnkCorpArch(CorpTree):
@@ -74,14 +94,46 @@ class UcnkCorpArch(CorpTree):
     defined in XML format
     """
 
-    FEATURED_KEY = 'featured'
-    FAVORITE_KEY = 'favorite'
-
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
-                 max_page_size):
+                 max_page_size, access_req_sender, access_req_smtp_server,
+                 access_req_recipients):
         super(UcnkCorpArch, self).__init__(auth=auth, user_items=user_items, file_path=file_path,
                                            root_xpath=root_xpath, tag_prefix=tag_prefix,
                                            max_num_hints=max_num_hints, max_page_size=max_page_size)
+        self.access_req_sender = access_req_sender
+        self.access_req_smtp_server = access_req_smtp_server
+        self.access_req_recipients = access_req_recipients
+
+    def send_request_email(self, corpus_id, user, user_id):
+        """
+        returns:
+        True if at least one recipient has been reached else False
+        """
+        errors = []
+
+        text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
+        text += u'datum a čas žádosti: %s\n' % time.strftime('%d. %m. %Y %H:%M')
+        text += u'uživatel: %s (ID = %s)\n' % (user, user_id)
+        text += u'korpus ID: %s\n' % corpus_id
+
+        s = smtplib.SMTP(self.access_req_smtp_server)
+
+        for recipient in self.access_req_recipients:
+            msg = MIMEText(text, 'plain', 'utf-8')
+            msg['Subject'] = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
+            msg['From'] = self.access_req_sender
+            msg['To'] = recipient
+            try:
+                s.sendmail(self.access_req_sender, [recipient], msg.as_string())
+            except Exception as ex:
+                errors.append('Failed to send an e-email to <%s>, error: %r' % (recipient, ex))
+        s.quit()
+        if len(errors) < len(self.access_req_recipients):
+            logging.getLogger(__name__).warn(
+                'There were errors sending corpus access request e-mail(s): %s' % ', '.join(errors))
+            return True
+        else:
+            return False
 
     def get_list(self, user_allowed_corpora):
         """
@@ -89,33 +141,34 @@ class UcnkCorpArch(CorpTree):
         user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
                                 accessible by the current user
         """
-        simple_names = set(user_allowed_corpora.keys())
         cl = []
         for item in self._raw_list().values():
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
-            if canonical_id in simple_names:
-                try:
-                    corp_id = user_allowed_corpora[canonical_id]
-                    corp_info = self._manatee_corpora.get_info(corp_id)
-
-                    cl.append({'id': corp_id,
-                               'canonical_id': canonical_id,
-                               'name': l10n.import_string(corp_info.name,
-                                                          from_encoding=corp_info.encoding),
-                               'desc': l10n.import_string(corp_info.description,
-                                                          from_encoding=corp_info.encoding),
-                               'size': corp_info.size,
-                               'path': path
-                               })
-                except Exception, e:
-                    import logging
-                    logging.getLogger(__name__).warn(
-                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
-                                                                               type(e).__name__, e))
-                    cl.append({
-                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
-                        'path': path, 'desc': '', 'size': None})
+            corp_id = user_allowed_corpora.get(canonical_id, canonical_id)
+            try:
+                corp_info = self._manatee_corpora.get_info(corp_id)
+                cl.append({'id': corp_id,
+                           'canonical_id': canonical_id,
+                           'name': l10n.import_string(corp_info.name,
+                                                      from_encoding=corp_info.encoding),
+                           'desc': l10n.import_string(corp_info.description,
+                                                      from_encoding=corp_info.encoding),
+                           'size': corp_info.size,
+                           'path': path,
+                           'user_access': canonical_id in user_allowed_corpora
+                           })
+            except Exception, e:
+                import logging
+                logging.getLogger(__name__).warn(
+                    u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
+                                                                           type(e).__name__, e))
+                cl.append({
+                    'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
+                    'path': path, 'desc': '', 'size': None})
         return cl
+
+    def export_actions(self):
+        return {actions.user.User: [ask_corpus_access]}
 
 
 @inject('auth', 'user_items')
@@ -123,11 +176,16 @@ def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance
     """
-    return CorpTree(auth=auth,
-                    user_items=user_items,
-                    file_path=conf.get('plugins', 'corparch')['file'],
-                    root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
-                    tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                    max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
-                    max_page_size=conf.get('plugins', 'corparch').get(
-                        'default:default_page_list_size', None))
+    return UcnkCorpArch(auth=auth,
+                        user_items=user_items,
+                        file_path=conf.get('plugins', 'corparch')['file'],
+                        root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                        tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
+                        max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                        max_page_size=conf.get('plugins', 'corparch').get(
+                            'default:default_page_list_size', None),
+                        access_req_smtp_server=conf.get('plugins',
+                                                        'corparch')['ucnk:access_req_smtp_server'],
+                        access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
+                        access_req_recipients=conf.get('plugins',
+                                                       'corparch')['ucnk:access_req_recipients'])
