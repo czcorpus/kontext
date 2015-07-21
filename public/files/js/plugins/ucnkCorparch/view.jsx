@@ -235,8 +235,8 @@ define(['vendor/react'], function (React) {
                 return {detail: false};
             },
 
-            detailCloseHandler: function () {
-                this.setState(React.addons.update(this.state, {state: {$set: false}}));
+            _detailCloseHandler: function () {
+                this.setState(React.addons.update(this.state, {detail: {$set: false}}));
             },
 
             render: function () {
