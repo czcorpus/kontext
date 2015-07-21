@@ -46,6 +46,7 @@ define(['vendor/react'], function (React) {
                     <th>{this.translate('Labels')}</th>
                     <th></th>
                     <th></th>
+                    <th></th>
                 </tr>);
             }
         });
@@ -102,6 +103,119 @@ define(['vendor/react'], function (React) {
         });
 
         /**
+         *
+         */
+        var RequestForm = React.createClass({
+            mixins: mixins,
+
+            _submitHandler : function () {
+                dispatcher.dispatch({
+                    actionType: 'CORPUS_ACCESS_REQ_SUBMITTED',
+                    props: {
+                        corpusId: this.props.corpusId,
+                        corpusName: this.props.corpusName
+                    }
+                });
+                this.props.submitHandler();
+            },
+
+            _textareaChangeHandler : function (e) {
+                this.setState({customMessage: e.target.value});
+            },
+
+            getInitialState : function () {
+                return {customMessage: null};
+            },
+
+            render : function () {
+                return (
+                    <form>
+                        <p>{this.translate(
+                            this.sprintf('\u201CPlease give me an access to the %s corpus\u201D', this.props.corpusName))}</p>
+                        <label>{this.translate('Custom message (optional)')}</label>
+                        <textarea rows="3" cols="50" onChange={this._textareaChangeHandler}></textarea>
+                        <div>
+                            <button type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
+                        </div>
+                    </form>
+                );
+            }
+
+        });
+
+        /**
+         *
+         */
+        var LockIcon = React.createClass({
+            mixins: mixins,
+
+            getInitialState : function () {
+                return {isLocked: this.props.isLocked, hasFocus: false, hasDialog: false};
+            },
+
+            _mouseOverHandler : function () {
+                this.setState({isLocked: this.state.isLocked, hasFocus: true, hasDialog: this.state.hasDialog});
+            },
+
+            _mouseOutHandler : function () {
+                this.setState({isLocked: this.state.isLocked, hasFocus: false, hasDialog: this.state.hasDialog});
+            },
+
+            _clickHandler : function () {
+                this.setState({isLocked: this.state.isLocked, hasFocus: this.state.hasFocus, hasDialog: true});
+            },
+
+            _closeDialog : function () {
+                this.setState(React.addons.update(this.state, {hasDialog: {$set: false}}));
+            },
+
+            render : function () {
+                var img,
+                    dialog;
+
+                if (this.state.isLocked) {
+                    if (this.state.hasFocus) {
+                        img = <img src={this.createStaticUrl('img/24px-Unlocked.png')} />;
+
+                    } else {
+                        img = <img src={this.createStaticUrl('img/24px-Locked.png')} />;
+                    }
+
+                    if (this.state.hasDialog) {
+                        dialog = (
+                            <layoutViews.PopupBox onCloseClick={this._closeDialog}
+                                customClass="corpus-access-req">
+                                <div>
+                                    <RequestForm submitHandler={this._closeDialog}
+                                        corpusId={this.props.corpusId} corpusName={this.props.corpusName} />
+                                </div>
+                            </layoutViews.PopupBox>
+                        );
+
+                    } else {
+                        dialog = null;
+                    }
+
+                    return (
+                        <div>
+                            <div className="lock-status"
+                                 title={this.translate('click to ask for access')}
+                                 onMouseOver={this._mouseOverHandler}
+                                 onMouseOut={this._mouseOutHandler}
+                                 onClick={this._clickHandler}>
+                                {img}
+                            </div>
+                            {dialog}
+                        </div>
+                    );
+
+                } else {
+                    return false;
+                }
+            }
+        });
+
+        /**
          * A single dataset row
          */
         var CorplistRow = React.createClass({
@@ -121,8 +235,8 @@ define(['vendor/react'], function (React) {
                 return {detail: false};
             },
 
-            _detailCloseHandler: function () {
-                this.setState(React.addons.update(this.state, {detail: {$set: false}}));
+            detailCloseHandler: function () {
+                this.setState(React.addons.update(this.state, {state: {$set: false}}));
             },
 
             render: function () {
@@ -161,6 +275,10 @@ define(['vendor/react'], function (React) {
                                      isFav={this.props.row.user_item} />
                         </td>
                         <td>
+                            <LockIcon isLocked={!this.props.row.user_access} corpusId={this.props.row.id}
+                                      corpusName={this.props.row.name} />
+                        </td>
+                        <td>
                             {detailBox}
                             <p className="desc" style={{display: 'none'}}>
                             </p>
@@ -189,7 +307,7 @@ define(['vendor/react'], function (React) {
             render : function () {
                 return (
                   <tr className="load-more">
-                      <td colSpan="5">
+                      <td colSpan="6">
                           <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
                       </td>
                   </tr>

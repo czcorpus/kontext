@@ -43,30 +43,31 @@ class Corpora(Kontext):
                                               offset=request.args.get('offset', None),
                                               filter_dict=request.args)
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_corp_details(self):
+    @exposed(return_type='json', skip_corpus_init=True)
+    def ajax_get_corp_details(self, request):
         """
         """
-        corp_conf_info = plugins.get('corparch').get_corpus_info(self._corp().corpname)
-        encoding = self._corp().get_conf('ENCODING')
+        corp_conf_info = plugins.get('corparch').get_corpus_info(request.args['corpname'])
+        corpus = self.cm.get_Corpus(request.args['corpname'])
+        encoding = corpus.get_conf('ENCODING')
 
         ans = {
-            'corpname': l10n.import_string(self._canonical_corpname(self._corp().get_conf('NAME')),
+            'corpname': l10n.import_string(self._canonical_corpname(corpus.get_conf('NAME')),
                                            from_encoding=encoding),
-            'description': l10n.import_string(self._corp().get_info(), from_encoding=encoding),
-            'size': l10n.format_number(int(self._corp().size())),
+            'description': l10n.import_string(corpus.get_info(), from_encoding=encoding),
+            'size': l10n.format_number(int(corpus.size())),
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else ''
         }
         try:
-            ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_attr(item).id_range()))}
-                               for item in self._corp().get_conf('ATTRLIST').split(',')]
+            ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(corpus.get_attr(item).id_range()))}
+                               for item in corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warn('%s' % e)
             ans['attrlist'] = {'error': _('Failed to load')}
-        ans['structlist'] = [{'name': item, 'size': l10n.format_number(int(self._corp().get_struct(item).size()))}
-                             for item in self._corp().get_conf('STRUCTLIST').split(',')]
+        ans['structlist'] = [{'name': item, 'size': l10n.format_number(int(corpus.get_struct(item).size()))}
+                             for item in corpus.get_conf('STRUCTLIST').split(',')]
         return ans
 
     @exposed(return_type='json', legacy=True)

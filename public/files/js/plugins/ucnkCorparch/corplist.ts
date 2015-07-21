@@ -294,6 +294,62 @@ export class CorplistTableStore extends util.SimplePageStore {
     }
 }
 
+export class CorpusAccessRequestStore extends util.SimplePageStore {
+
+    private pluginApi:Kontext.PluginApi;
+
+    private dispatcher:Dispatcher.Dispatcher<any>;
+
+    static DispatchToken:string;
+
+    private sendRequest(data):JQueryXHR {
+        return $.ajax(this.pluginApi.createActionUrl('user/ask_corpus_access'),
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: data
+            }
+        );
+    }
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        super();
+        var self = this;
+        this.pluginApi = pluginApi;
+        this.dispatcher = pluginApi.dispatcher();
+        CorpusAccessRequestStore.DispatchToken = this.dispatcher.register(
+            function (payload:Kontext.DispatcherPayload) {
+                switch (payload.actionType) {
+                    case 'CORPUS_ACCESS_REQ_SUBMITTED':
+                        var prom = self.sendRequest(payload.props);
+                        prom.then(
+                            function (ans) {
+                                if (!ans.error) {
+                                    self.pluginApi.showMessage('info',
+                                        self.pluginApi.translate('Your request has been sent. '
+                                            + 'You will be informed by e-mail once it is resolved.'));
+                                    self.notifyChangeListeners();
+
+                                } else {
+                                    self.pluginApi.showMessage('error', ans.error);
+                                    self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, ans.error);
+                                }
+                            },
+                            function (jqXHR, textStatus, errorThrown) {
+                                self.pluginApi.showMessage('error',
+                                    self.pluginApi.translate(
+                                        'Failed to send the request. Please try again '
+                                        + 'later or contact support.'));
+                                self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, errorThrown);
+                            }
+                        );
+                        break;
+                }
+            }
+        );
+    }
+}
+
 /**
  * Corplist page 'model'.
  */
@@ -307,9 +363,12 @@ export class CorplistPage implements Customized.CorplistPage {
 
     static CorplistTableStore:CorplistTableStore;
 
+    static CorpusAccessRequestStore:CorpusAccessRequestStore;
+
     constructor(pluginApi:Kontext.PluginApi) {
         CorplistPage.CorplistFormStore = new CorplistFormStore(pluginApi);
         CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
+        CorplistPage.CorpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
         this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
             pluginApi.getViews(), CorplistPage.CorplistFormStore,
             CorplistPage.CorplistTableStore);

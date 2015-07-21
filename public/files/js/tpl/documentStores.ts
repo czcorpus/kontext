@@ -21,26 +21,6 @@
 import win = require('win');
 import util = require('util');
 
-/**
- *
- */
-export class StatusStore extends util.SimplePageStore implements Kontext.StatusStore {
-
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
-    status:string;
-
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
-        this.dispatcher = dispatcher;
-        this.status = 'ok';
-    }
-
-    updateStatus(status:string) {
-        this.status = status;
-        this.notifyChangeListeners(this.status);
-    }
-}
 
 /**
  *
@@ -168,14 +148,18 @@ export class CorpusInfoStore extends util.SimplePageStore {
                     } else {
                         self.loadData(payload.props['corpusId']).then(
                             function (data) {
-                                self.data[payload.props['corpusId']] = data;
-                                self.notifyChangeListeners();
+                                if (!data.error) {
+                                    self.data[payload.props['corpusId']] = data;
+                                    self.notifyChangeListeners();
+
+                                } else {
+                                    self.pluginApi.showMessage('error', data.error);
+                                    self.notifyChangeListeners(CorpusInfoStore.ERROR_EVENT, data.error);
+                                }
                             },
                             function (jqXHR, textStatus, errorThrown) {
-                                self.notifyChangeListeners('error', errorThrown);
-                                self.pluginApi.getStores().messageStore.addMessage(
-                                    'error', errorThrown);
-                                self.pluginApi.getStores().statusStore.updateStatus('error');
+                                self.notifyChangeListeners(CorpusInfoStore.ERROR_EVENT, errorThrown);
+                                self.pluginApi.showMessage('error', errorThrown);
                             }
                         );
                     }
