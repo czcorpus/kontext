@@ -36,6 +36,19 @@ Required config.xml/plugins entries:
         [the maximum number of hints corpus selection widget shows (even if there are more results
          available]
     </max_num_hints>
+    <default_page_list_size extension-by="default">
+        [number of items on the 'corplist' page]
+    </default_page_list_size>
+    <access_req_smtp_server extension-by="ucnk">
+        [an address of a SMTP server KonText will send corpus access request through]
+    </access_req_smtp_server>
+    <access_req_sender extension-by="ucnk">
+        [an e-email sender address user will see once she gets the message]
+    </access_req_sender>
+    <access_req_recipients extension-by="ucnk">
+        [a list of recipients/adminstrators who will be notified about request; use child
+         elements here]
+    </access_req_recipients>
 </corparch>
 
 How does the corpus list specification XML entry looks like:
