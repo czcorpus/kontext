@@ -31,6 +31,7 @@ import time
 import re
 from functools import partial
 from collections import OrderedDict
+import types
 
 import werkzeug.urls
 
@@ -640,6 +641,24 @@ class Controller(object):
                 ans[k] = getattr(self, k)
         return ans
 
+    def _install_plugin_actions(self):
+        """
+        Tests plug-ins whether they provide method 'export_actions' and if so
+        then attaches functions they provide to itself (if exported function's required
+        controller class matches current instance's one).
+        """
+        for p in plugins.get_plugins().values():
+            if callable(getattr(p, 'export_actions', None)):
+                exported = p.export_actions()
+                if self.__class__ in exported:
+                    for action in exported[self.__class__]:
+                        if not hasattr(self, action.__name__):
+                            setattr(self, action.__name__, types.MethodType(action, self))
+                        else:
+                            raise Exception(
+                                'Plugins cannot overwrite existing action methods (%s.%s)' % (
+                                    self.__class__.__name__, action.__name__))
+
     def _pre_dispatch(self, path, selectorname, args, action_metadata=None):
         """
         Allows specific operations to be performed before the action itself is processed.
@@ -717,6 +736,7 @@ class Controller(object):
         """
         This method wraps all the processing of an HTTP request.
         """
+        self._install_plugin_actions()
         self._proc_time = time.time()
         path = path if path is not None else self.import_req_path()
         named_args = {}
