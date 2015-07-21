@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['vendor/react', 'jquery'], function (React, $) {
+define(['vendor/react'], function (React) {
     'use strict';
 
     var lib = {};
 
-    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore, statusStore) {
+    lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
         // -------------------------- dataset components -----------------------
 
@@ -108,38 +108,21 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             mixins: mixins,
 
-            errorHandler: function (store, statusType) {
-                if (statusType === 'error' && this.state.detail) {
-                    var state = this.state;
-                    state.detail = false;
-                    this.setState(state);
-                }
+            _corpDetailErrorHandler: function () {
+                this.setState(React.addons.update(this.state, {detail: {$set: false}}));
             },
 
-            componentDidMount: function () {
-                // TODO this is not very effective - a single component should listen for corpinfo error
-                statusStore.addChangeListener(this.errorHandler);
-            },
-
-            componentWillUnmount: function () {
-                statusStore.removeChangeListener(this.errorHandler);
-            },
-
-            detailClickHandler: function (evt) {
+            _detailClickHandler: function (evt) {
                 evt.preventDefault();
-                var state = this.state;
-                state.detail = true;
-                this.setState(state);
+                this.setState(React.addons.update(this.state, {detail: {$set: true}}));
             },
 
             getInitialState: function () {
                 return {detail: false};
             },
 
-            detailCloseHandler: function () {
-                var state = this.state;
-                state.detail = false;
-                this.setState(state);
+            _detailCloseHandler: function () {
+                this.setState(React.addons.update(this.state, {detail: {$set: false}}));
             },
 
             render: function () {
@@ -151,9 +134,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 if (this.state.detail) {
                     detailBox = <layoutViews.PopupBox
-                        onCloseClick={this.detailCloseHandler}
+                        onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <layoutViews.CorpusInfoBox corpusId={this.props.row.id}   />
+                        <layoutViews.CorpusInfoBox corpusId={this.props.row.id}
+                            parentErrorHandler={this._corpDetailErrorHandler} />
                     </layoutViews.PopupBox>;
 
                 } else {
@@ -161,12 +145,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 }
 
                 var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+                var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
 
                 return (
                     <tr>
                         <td className="corpname"><a
                             href={link}>{this.props.row.name}</a></td>
-                        <td className="num">{this.props.row.raw_size}</td>
+                        <td className="num">{size}</td>
                         <td>
                             {keywords}
                         </td>
@@ -180,7 +165,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             <p className="desc" style={{display: 'none'}}>
                             </p>
                             <a className="detail"
-                               onClick={this.detailClickHandler}>{this.translate('details')}</a>
+                               onClick={this._detailClickHandler}>{this.translate('details')}</a>
                         </td>
                     </tr>
                 );
@@ -204,7 +189,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render : function () {
                 return (
                   <tr className="load-more">
-                      <td colSpan="4">
+                      <td colSpan="5">
                           <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
                       </td>
                   </tr>

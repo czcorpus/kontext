@@ -212,11 +212,13 @@ export class CorplistTableStore extends util.SimplePageStore {
                                 } else {
                                     self.pluginApi.showMessage('error',
                                         self.pluginApi.translate('failed to update item'));
+                                    self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, data.error);
                                 }
                             },
-                            function (err) {
+                            function (jqXHR, textStatus, errorThrown) {
                                 self.pluginApi.showMessage('error',
                                     self.pluginApi.translate('failed to update item'));
+                                self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, errorThrown);
                             }
                         );
                         break;
