@@ -291,3 +291,5 @@ def desimplify_num(v, strict=True):
         if x is None:
             x = 1
         return int(v[:-1]) * x
+    else:
+        return int(v)
