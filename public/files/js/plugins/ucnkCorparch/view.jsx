@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['vendor/react'], function (React) {
+define(['vendor/react', 'jquery'], function (React, $) {
     'use strict';
 
     var lib = {};
@@ -113,10 +113,16 @@ define(['vendor/react'], function (React) {
                     actionType: 'CORPUS_ACCESS_REQ_SUBMITTED',
                     props: {
                         corpusId: this.props.corpusId,
-                        corpusName: this.props.corpusName
+                        corpusName: this.props.corpusName,
+                        customMessage: this.state.customMessage
                     }
                 });
                 this.props.submitHandler();
+            },
+
+            _clickExpandTextareaHandler : function () {
+                this.setState(React.addons.update(this.state,
+                    {textareaVisible: {$set: !this.state.textareaVisible}}));
             },
 
             _textareaChangeHandler : function (e) {
@@ -124,18 +130,38 @@ define(['vendor/react'], function (React) {
             },
 
             getInitialState : function () {
-                return {customMessage: null};
+                return {customMessage: '-', textareaVisible: false};
             },
 
             render : function () {
+                var toggleImgPath;
+                var textarea;
+
+                if (this.state.textareaVisible) {
+                    textarea = <textarea rows="3" cols="50"
+                                    onChange={this._textareaChangeHandler}
+                                    value={this.state.customMessage} />;
+                    toggleImgPath = this.createStaticUrl('img/collapse.png');
+
+                } else {
+                    textarea = <p>{this.state.customMessage}</p>;
+                    toggleImgPath = this.createStaticUrl('img/expand.png');
+                }
+
                 return (
                     <form>
                         <p>{this.translate(
                             this.sprintf('\u201CPlease give me an access to the %s corpus\u201D', this.props.corpusName))}</p>
-                        <label>{this.translate('Custom message (optional)')}</label>
-                        <textarea rows="3" cols="50" onChange={this._textareaChangeHandler}></textarea>
+                        <label className="toggle-textarea" onClick={this._clickExpandTextareaHandler}
+                            title={this.translate('click to expand/close the field')}>
+                            {this.translate('Custom message (optional)')}
+                            <img src={toggleImgPath} />
+                        </label>
                         <div>
-                            <button type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
+                            {textarea}
+                        </div>
+                        <div>
+                            <button className="submit" type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
                         </div>
                     </form>
                 );
@@ -171,7 +197,8 @@ define(['vendor/react'], function (React) {
 
             render : function () {
                 var img,
-                    dialog;
+                    dialog,
+                    onBoxReady;
 
                 if (this.state.isLocked) {
                     if (this.state.hasFocus) {
@@ -182,12 +209,21 @@ define(['vendor/react'], function (React) {
                     }
 
                     if (this.state.hasDialog) {
+                        onBoxReady = function (elm) {
+                            var rect = elm.getBoundingClientRect();
+                            var newX, newY;
+
+                            newX = (document.documentElement.clientWidth - rect.width) / 2;
+                            newY = document.documentElement.clientHeight / 2;
+                            $(elm).css('left', newX).css('top', newY);
+                        };
                         dialog = (
                             <layoutViews.PopupBox onCloseClick={this._closeDialog}
-                                customClass="corpus-access-req">
+                                customClass="corpus-access-req" onReady={onBoxReady} >
                                 <div>
                                     <RequestForm submitHandler={this._closeDialog}
-                                        corpusId={this.props.corpusId} corpusName={this.props.corpusName} />
+                                        corpusId={this.props.corpusId}
+                                        corpusName={this.props.corpusName} />
                                 </div>
                             </layoutViews.PopupBox>
                         );
@@ -314,11 +350,11 @@ define(['vendor/react'], function (React) {
             },
             render : function () {
                 return (
-                  <tr className="load-more">
-                      <td colSpan="6">
-                          <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
-                      </td>
-                  </tr>
+                      <tr className="load-more">
+                          <td colSpan="6">
+                              <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
+                          </td>
+                      </tr>
                 );
             }
         });

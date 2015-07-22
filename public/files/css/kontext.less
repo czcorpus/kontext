@@ -1659,9 +1659,25 @@ section.corplist .data tr .lock-status {
   cursor: pointer;
 }
 
-section.corplist .data .corpus-access-req textarea {
-  display: block;
+section.corplist .data .corpus-access-req {
+
+    textarea {
+        display: block;
+    }
+
+    label.toggle-textarea {
+        cursor: pointer;
+
+        img {
+            padding-left: 5pt;
+        }
+    }
+
+    button.submit {
+        margin-top: 10pt;
+    }
 }
+
 
 /* --------------------- media queries --------------------- */
 
