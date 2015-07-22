@@ -89,7 +89,7 @@ from translation import ugettext as _
 DEFAULT_LANG = 'en'
 
 
-@exposed(return_type='json')
+@exposed(acess_level=1, return_type='json')
 def ask_corpus_access(controller, request):
     ans = {}
     status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
