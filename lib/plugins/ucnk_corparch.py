@@ -94,7 +94,8 @@ def ask_corpus_access(controller, request):
     ans = {}
     status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
                                                         user=controller._session_get('user', 'user'),
-                                                        user_id=controller._session_get('user', 'id'))
+                                                        user_id=controller._session_get('user', 'id'),
+                                                        custom_message=request.form['customMessage'])
     if status is False:
         ans['error'] = _(
             'Failed to send e-mail. Please try again later or contact system administrator')
@@ -117,7 +118,7 @@ class UcnkCorpArch(CorpTree):
         self.access_req_smtp_server = access_req_smtp_server
         self.access_req_recipients = access_req_recipients
 
-    def send_request_email(self, corpus_id, user, user_id):
+    def send_request_email(self, corpus_id, user, user_id, custom_message):
         """
         returns:
         True if at least one recipient has been reached else False
@@ -125,9 +126,15 @@ class UcnkCorpArch(CorpTree):
         errors = []
 
         text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
-        text += u'datum a čas žádosti: %s\n' % time.strftime('%d. %m. %Y %H:%M')
+        text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
         text += u'uživatel: %s (ID = %s)\n' % (user, user_id)
         text += u'korpus ID: %s\n' % corpus_id
+
+        if custom_message:
+            text += u'Doplňující zpráva od uživatele:\n\n'
+            text += custom_message + '\n\n'
+
+        text += u'\n---------------------\nNa tento e-mail prosím neodpovídejte.\n'
 
         s = smtplib.SMTP(self.access_req_smtp_server)
 

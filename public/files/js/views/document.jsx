@@ -176,6 +176,15 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
         // ------------------------------ general pop-up box -----------------------------
 
+        /**
+         * React version of KonText popupbox
+         *
+         * supported properties:
+         * customStyle -- an optional inline CSS
+         * onCloseClick -- custom action to be performed when user clicks 'close'
+         * onReady -- a custom action to be performed once the component is mounted
+         *            (signature: onReady(DOMNode) )
+         */
         var PopupBox = React.createClass({
 
             getInitialState: function () {
@@ -185,6 +194,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
             closeClickHandler: function () {
                 if (typeof this.props.onCloseClick === 'function') {
                     this.props.onCloseClick.call(this);
+                }
+            },
+
+            componentDidMount : function () {
+                if (this.props.onReady) {
+                    this.props.onReady(this.getDOMNode());
                 }
             },
 
