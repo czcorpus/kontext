@@ -146,6 +146,13 @@ define(['vendor/react'], function (React) {
 
                 var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
                 var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
+                var favStar = null;
+
+                if (this.props.enableUserActions) {
+                    favStar = <FavStar corpusId={this.props.row.id}
+                                       corpusName={this.props.row.name}
+                                       isFav={this.props.row.user_item} />;
+                }
 
                 return (
                     <tr>
@@ -156,9 +163,7 @@ define(['vendor/react'], function (React) {
                             {keywords}
                         </td>
                         <td>
-                            <FavStar corpusId={this.props.row.id}
-                                     corpusName={this.props.row.name}
-                                     isFav={this.props.row.user_item} />
+                            {favStar}
                         </td>
                         <td>
                             {detailBox}
@@ -225,8 +230,10 @@ define(['vendor/react'], function (React) {
             },
 
             render: function () {
+                var self = this;
                 var rows = this.state.rows.map(function (row, i) {
-                    return <CorplistRow key={row.id} row={row} />;
+                    return <CorplistRow key={row.id} row={row}
+                                        enableUserActions={!self.props.anonymousUser} />;
                 });
                 var expansion = null;
                 if (this.state.nextOffset) {

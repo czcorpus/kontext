@@ -321,6 +321,7 @@ export class CorplistPage implements Customized.CorplistPage {
     }
 
     createList(targetElm:HTMLElement, properties:any):void {
+        properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
         CorplistPage.CorplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
