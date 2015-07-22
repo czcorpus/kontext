@@ -344,7 +344,7 @@ define(['vendor/react'], function (React) {
 
             render: function () {
                 var rows = this.state.rows.map(function (row, i) {
-                    return <CorplistRow key={i} row={row} />;
+                    return <CorplistRow key={row.id} row={row} />;
                 });
                 var expansion = null;
                 if (this.state.nextOffset) {
