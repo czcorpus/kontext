@@ -22,7 +22,7 @@ class EmptyCorpus(object):
     def __init__(self, **kwargs):
         self.cm = object()
         self.corpname = ''
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)
 

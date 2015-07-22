@@ -112,8 +112,9 @@ class ManateeCorpora(object):
                     manatee.Corpus(canonical_corpus_id), canonical_corpus_id)
             return self._cache[canonical_corpus_id]
         except:
-            # refactoring warning: we do not want non-existent/fault items to be cached
-            return ManateeCorpusInfo(EmptyCorpus(corpname=canonical_corpus_id), None)
+            # probably a misconfigured/missing corpus
+            return ManateeCorpusInfo(EmptyCorpus(corpname=canonical_corpus_id),
+                                     canonical_corpus_id)
 
 
 class CorpTree(AbstractSearchableCorporaArchive):
@@ -472,8 +473,13 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
         query_substrs, query_keywords = self._parse_query(query)
         matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
-        matches_size = lambda d: ((not min_size or int(d.get('size', 0)) >= int(min_size))
-                                  and (not max_size or int(d.get('size', 0)) <= int(max_size)))
+
+        def matches_size(d):
+            item_size = d.get('size', None)
+            return (item_size is not None
+                    and (not min_size or int(item_size) >= int(min_size))
+                    and (not max_size or int(item_size) <= int(max_size))
+            )
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
 
@@ -505,8 +511,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
 
+        corp_cmp_key = lambda c: c.get('name') if c.get('name') is not None else ''
         ans['rows'], ans['nextOffset'] = cut_result(l10n.sort(ans['rows'], loc=self._lang(),
-                                                              key=lambda v: v['name']))
+                                                              key=corp_cmp_key))
         ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
         ans['query'] = query
         ans['filters'] = dict(filter_dict)
