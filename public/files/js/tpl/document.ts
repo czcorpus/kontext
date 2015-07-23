@@ -77,19 +77,6 @@ function getLocalStorage():Storage {
     }
 }
 
-/**
- */
-export interface InitCallbackObject {
-    plugin:string;
-    method:string;
-    args?:Array<any>;
-}
-
-/**
- * Either a function or an object
- */
-export type InitCallback = InitCallbackObject|(()=>void);
-
 
 /**
  * Functions required by KonText's React components
@@ -102,8 +89,6 @@ export interface ComponentCoreMixins {
 
     createActionLink(path:string):string;
 }
-
-
 
 
 
@@ -314,7 +299,7 @@ export class PageModel implements Kontext.PluginProvider {
      * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
      * @param fn
      */
-    registerInitCallback(fn:InitCallback):void;
+    registerInitCallback(fn:Kontext.InitCallback):void;
     registerInitCallback(fn:()=>void):void;
     registerInitCallback(fn):void {
         var self = this;
@@ -1254,6 +1239,12 @@ export class PluginApi implements Kontext.PluginApi {
 
     registerReset(fn) {
         this.pageModel.pluginResets.push(fn);
+    }
+
+    registerInitCallback(fn:Kontext.InitCallback):void;
+    registerInitCallback(fn:()=>void):void;
+    registerInitCallback(fn):void {
+        return this.pageModel.registerInitCallback(fn);
     }
 
     resetToHomepage(params) {

@@ -19,6 +19,11 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 
+import $ = require('jquery');
+
+/**
+ *
+ */
 export class AppBar implements Kontext.Plugin {
 
     pluginApi:Kontext.PluginApi;
@@ -76,7 +81,12 @@ export class AppBar implements Kontext.Plugin {
 
 export function createInstance(pluginApi:Kontext.PluginApi) {
     var appBar = new AppBar(pluginApi);
-    appBar.init();
+    if ($('.appbar-loading-msg').data('reload-toolbar') == 1) {
+        pluginApi.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
+
+    } else {
+        appBar.init();
+    }
     return appBar;
 }
 
