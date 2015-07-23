@@ -32,6 +32,19 @@ declare module Kontext {
     }
 
     /**
+     */
+    export interface InitCallbackObject {
+        plugin:string;
+        method:string;
+        args?:Array<any>;
+    }
+
+    /**
+     * Either a function or an object
+     */
+    export type InitCallback = InitCallbackObject|(()=>void);
+
+    /**
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
@@ -46,6 +59,8 @@ declare module Kontext {
         translate(text:string):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
+        registerInitCallback(fn:InitCallback):void;
+        registerInitCallback(fn:()=>void):void;
         resetToHomepage(params:any); // TODO
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);

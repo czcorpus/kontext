@@ -46,12 +46,7 @@ class ApplicationBar(AbstractApplicationBar):
         self.connection = None
 
     def get_fallback_content(self):
-        return """<div class="appbar-loading-msg"><span>loading toolbar...</span></div>
-        <script type="text/javascript">
-        require(['tpl/document'], function (document) {
-            document.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
-        });
-        </script>"""
+        return '<div class="appbar-loading-msg" data-reload-toolbar="1"><span>loading toolbar...</span></div>'
 
     def get_contents(self, cookies, curr_lang, return_url, use_fallback=True, timeout=2):
         """
