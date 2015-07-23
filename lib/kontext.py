@@ -738,10 +738,15 @@ class Kontext(Controller):
             self.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
         # return url (for 3rd party pages etc.)
+        args = {'remote': 1}
+        if self.corpname:
+            args['corpname'] = self.corpname
         if self.get_http_method() == 'GET':
-            self.return_url = self._updated_current_url({'remote': 1})
+            self.return_url = self._updated_current_url(args)
         else:
-            self.return_url = '%sfirst_form?corpname=%sremote=1' % (self.get_root_url(), self.corpname)
+            self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
+                                                   '&'.join(['%s=%s' % (k, v)
+                                                             for k, v in args.items()]))
 
         self._restore_prev_conc_params()
 
@@ -1142,8 +1147,7 @@ class Kontext(Controller):
         result['_anonymous'] = self._user_is_anonymous()
 
         if plugins.has_plugin('auth'):
-            result['login_url'] = plugins.get('auth').get_login_url(
-                self._updated_current_url({'remote': 1}))
+            result['login_url'] = plugins.get('auth').get_login_url(self.return_url)
             result['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
         else:
             result['login_url'] = 'login'

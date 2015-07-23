@@ -123,9 +123,7 @@ class CentralAuth(AbstractRemoteAuth):
         if 'remote=1' in query_string.split('&'):
             session.clear()
 
-        if not 'user' in session:
-            session['user'] = {}
-        user_data = session['user']
+        user_data = session.get('user', {})
         ticket_id = self.get_ticket(cookies)
 
         if not user_data.get('revalidated', None) or _toss():
@@ -151,10 +149,9 @@ class CentralAuth(AbstractRemoteAuth):
                 user_data['fullname'] = user['fullname']
             user_data['revalidated'] = True
             db.close()
-            # Normally, the 'modified' flag should be set by Werkzeug's session automatically
-            # (via its CallbackDict) but there was a problem detected once (Werkzeug v0.9.6)
-            # when the auto-update failed from unknown reason. So just to be sure this won't happen again.
-            session.modified = True
+            # session's first level key must be updated here to make
+            # session object trigger its internal 'changed' event.
+            session['user'] = user_data
 
     def canonical_corpname(self, corpname):
         """
