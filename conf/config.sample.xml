@@ -138,7 +138,6 @@
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <calc_pid_dir>/tmp/kontext-calc</calc_pid_dir>
         <wseval_dir></wseval_dir>
-        <helpsite>https://trac.sketchengine.co.uk/wiki/SkE/Help/PageSpecificHelp/</helpsite>
         <default_corpora>
             <item>susanne</item>
             <item>spec/susanne</item>
