@@ -581,21 +581,44 @@ define(['vendor/react', 'jquery'], function (React, $) {
         var FilterInputFieldset = React.createClass({
             mixins: mixins,
 
+            getInitialState : function () {
+                return {expanded: false};
+            },
+
+            _handleLegendClick : function () {
+                this.setState(React.addons.update(this.state, {expanded: {$set: !this.state.expanded}}));
+            },
+
             render: function () {
                 var hiddenInputs = this.props.currKeywords.map(function (v, i) {
                     return <input key={i} type="hidden" name="keyword" value={v} />;
                 });
+                var fields;
+                var fieldsetClasses;
 
-                return (
-                    <fieldset>
-                        <legend>{this.translate('Properties')}</legend>
-                        {hiddenInputs}
+                if (this.state.expanded) {
+                    fieldsetClasses = 'advanced-filter';
+                    fields = (
+                        <div>
                         <span>{this.translate('size from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
                         <span className="inline-label">{this.translate('to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                         <span className="inline-label">{'(' +
                         this.translate('You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T') + ')'}</span>
+                        </div>
+                    );
+
+                } else {
+                    fieldsetClasses = 'advanced-filter closed';
+                    fields = null;
+                }
+
+                return (
+                    <fieldset className={fieldsetClasses}>
+                        <legend onClick={this._handleLegendClick}>{this.translate('Advanced filter')}</legend>
+                        {hiddenInputs}
+                        {fields}
                     </fieldset>
                 );
             }
