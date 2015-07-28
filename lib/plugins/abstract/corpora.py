@@ -152,3 +152,22 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
     def initial_search_params(self, user_id, lang):
         raise NotImplementedError()
+
+    def create_corpus_info(self):
+        """
+        An optional factory method which returns a CorpusInfo compatible instance
+        """
+        return CorpusInfo()
+
+    def customize_corpus_info(self, corpus_info, node):
+        """
+        An optional method allowing custom corpus_info initialization
+        """
+        pass
+
+    def customize_search_result_item(self, item, full_data):
+        """
+        An optional method allowing customization of search result item (= a dict)
+        using full_data (= custom CorpusInfo implementation)
+        """
+        pass
