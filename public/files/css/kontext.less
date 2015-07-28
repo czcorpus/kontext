@@ -1678,6 +1678,33 @@ section.corplist .data .corpus-access-req {
     }
 }
 
+section.corplist fieldset.advanced-filter {
+  legend {
+    cursor: pointer;
+    background-image: url(../img/expand.png);
+    background-repeat: no-repeat;
+    background-position: 95% 2pt;
+    padding-right: 20px;
+  }
+
+  legend:hover {
+    text-decoration: underline;
+    background-image: url(../img/collapse.png);
+  }
+}
+
+section.corplist fieldset.advanced-filter.closed {
+  border: none;
+
+  legend {
+    text-decoration: underline;
+  }
+
+  legend:hover {
+    background-image: url(../img/expand.png);
+  }
+}
+
 
 /* --------------------- media queries --------------------- */
 
