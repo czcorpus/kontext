@@ -496,7 +496,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     # to be filled in case item matches both name and description
                     if s in corp['name'].lower():
                         hits.append(True)
-                    elif s in corp['desc'].lower():
+                    elif s in (corp['desc'].lower() if corp['desc'] else ''):
                         hits.append(True)
                         found_in.append(_('description'))
                     else:
