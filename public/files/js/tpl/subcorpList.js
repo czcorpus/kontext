@@ -33,8 +33,8 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         return lib.layoutModel.getConf(name);
     };
 
-    lib.translate = function (msg) {
-        return lib.layoutModel.translate(msg);
+    lib.translate = function (msg, values) {
+        return lib.layoutModel.translate(msg, values);
     };
 
     lib.createActionUrl = function (path) {

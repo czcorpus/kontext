@@ -1187,6 +1187,7 @@ class Kontext(Controller):
             result['avail_languages'] = settings.get_full('global', 'translations')
 
         result['history_max_query_size'] = settings.get_int('global', 'history_max_query_size')
+        result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
         result['format_number'] = partial(format_number)

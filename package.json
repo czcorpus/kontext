@@ -21,7 +21,8 @@
     "requirejs": "~2.1.15",
     "grunt-requirejs": "~0.4.2",
     "xmldom": "~0.1.19",
-    "grunt-react": "~0.12.2"
+    "grunt-react": "~0.12.2",
+    "merge": "~1.2.0"
   },
   "repository": {
     "type": "hg",

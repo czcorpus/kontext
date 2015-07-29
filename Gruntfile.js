@@ -184,23 +184,36 @@
                         modules: kontext.listVendorModules()
                     }
                 }
+            },
+            translations: {
+                devel: {
+                    targetFile: './public/files/js/min/translations.js'
+                },
+                production: {
+                    targetFile: './public/files/js/min/translations.js'
+                }
             }
         });
 
+        // generates client-side translations file by merging individual 'messages.json' files
+        grunt.registerMultiTask('translations', function () {
+            kontext.mergeTranslations('./public', this.data.targetFile);
+        });
+
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'typescript', 'react', 'requirejs:vendor',
-            'copy:devel', 'clean:cleanup', 'exec']);
+        grunt.registerTask('devel', ['clean:all', 'typescript', 'react',
+                'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup', 'exec']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:javascript', 'typescript', 'react',
-            'requirejs:vendor', 'copy:devel', 'clean:cleanup']);
+        grunt.registerTask('develjs', ['clean:javascript', 'typescript',
+                'react', 'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
         grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react',
-            'copy:prepare', 'requirejs:production',
-            'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
+                'copy:prepare', 'requirejs:production', 'translations:production',
+                'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
 
         // just compiles Cheetah templates
         grunt.registerTask('templates', ['clean:templates', 'exec:compile_html_templates']);
