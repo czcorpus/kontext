@@ -137,6 +137,18 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._manatee_corpora = ManateeCorpora()
 
+    @staticmethod
+    def _decode_bool(v):
+        ans = False
+        if v is not None:
+            if v.isdigit():
+                ans = bool(int(v))
+            elif v.lower() == 'true':
+                ans = True
+            elif v.lower() == 'false':
+                ans = False
+        return ans
+
     def _get_corplist_title(self, elm):
         """
         Returns locale-correct title of a corpus group (= CORPLIST XML element)
@@ -505,6 +517,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     else:
                         hits.append(False)
                 hits.append(matches_size(corp))
+                hits.append(self.custom_filter(full_data, permitted_corpora))
 
                 if matches_all(hits):
                     corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None

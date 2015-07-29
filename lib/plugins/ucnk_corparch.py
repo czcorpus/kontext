@@ -169,10 +169,13 @@ class UcnkCorpArch(CorpTree):
         return UcnkCorpusInfo()
 
     def customize_corpus_info(self, corpus_info, node):
-        corpus_info.internal = bool(node.attrib.get('internal', False))
+        corpus_info.internal = self._decode_bool(node.attrib.get('internal'))
 
-    def customize_search_result_item(self, item, full_data):
-        item['internal'] = full_data.internal
+    def customize_search_result_item(self, item, corpus_info):
+        item['internal'] = corpus_info.internal
+
+    def custom_filter(self, corpus_info, permitted_corpora):
+        return corpus_info.id in permitted_corpora or not corpus_info.internal
 
     def get_list(self, user_allowed_corpora):
         """
