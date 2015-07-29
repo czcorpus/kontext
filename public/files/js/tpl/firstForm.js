@@ -45,8 +45,8 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
         return lib.layoutModel.getConf(name);
     };
 
-    lib.translate = function (msg) {
-        return lib.layoutModel.translate(msg);
+    lib.translate = function (msg, values) {
+        return lib.layoutModel.translate(msg, values);
     };
 
     lib.createActionUrl = function (path) {

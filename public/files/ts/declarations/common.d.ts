@@ -56,7 +56,7 @@ declare module Kontext {
         ajaxAnimSmall();
         appendLoader();
         showMessage(type:string, message:string); // TODO type: MsgType vs string
-        translate(text:string):string;
+        translate(text:string, values?:any):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         registerInitCallback(fn:InitCallback):void;

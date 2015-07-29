@@ -29,7 +29,8 @@
             'query_storage' : 'queryStorage',
             'live_attributes' : 'liveAttributes',
             'corparch' : 'corparch'
-        };
+        },
+        merge = require('merge');
 
     /**
      * Produces mapping for specific modules:
@@ -91,7 +92,8 @@
                     'vendor/typeahead',
                     'vendor/bloodhound',
                     'vendor/jscrollpane',
-                    'vendor/sprintf'
+                    'vendor/sprintf',
+                    'vendor/intl-messageformat'
                 ]
             }
         ];
@@ -121,5 +123,33 @@
         });
         return ans;
     };
+
+
+    function findAllMessageFiles(startDir) {
+        var ans = [];
+        fs.readdirSync(startDir).forEach(function (item) {
+            var fullPath = startDir + '/' + item;
+            if (fs.lstatSync(fullPath).isDirectory() && ['min'].indexOf(item) === -1) {
+                ans = ans.concat(findAllMessageFiles(fullPath));
+
+            } else if (item === 'messages.json') {
+                ans.push(fullPath);
+            }
+        });
+        return ans;
+    }
+
+    module.exports.mergeTranslations = function (startDir, destFile) {
+        var files = findAllMessageFiles(startDir);
+        var translations = {};
+        files.forEach(function (item) {
+           translations = merge.recursive(translations, JSON.parse(fs.readFileSync(item)));
+        });
+        if (!destFile) {
+            throw new Error('No target file for client-side translations specified');
+        }
+        fs.writeFileSync(destFile, "define([], function () { return "
+            + JSON.stringify(translations) + "; });");
+    }
 
 }(module));

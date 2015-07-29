@@ -143,6 +143,7 @@ define('conf', [], function () {
     conf.bibConf = $bib_conf.to_json();
     conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
     conf.currentArgs = $Globals.to_json();
+    conf.uiLang = "$uiLang";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
     conf.historyMaxQuerySize = ${history_max_query_size};

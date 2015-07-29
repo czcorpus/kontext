@@ -22,6 +22,8 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../ts/declarations/sprintf.d.ts" />
+/// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
+/// <reference path="../../ts/declarations/translations.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -35,6 +37,8 @@ import RSVP = require('vendor/rsvp');
 import util = require('util');
 import docStores = require('./documentStores');
 import sprintf = require('vendor/sprintf');
+import translations = require('translations');
+import IntlMessageFormat = require('vendor/intl-messageformat');
 
 
 /**
@@ -80,10 +84,10 @@ function getLocalStorage():Storage {
 
 /**
  * Functions required by KonText's React components
- */sprintf
+ */
 export interface ComponentCoreMixins {
 
-    translate(s:string):string;
+    translate(s:string, values?:any):string;
 
     getConf(k:string):any;
 
@@ -150,6 +154,11 @@ export class PageModel implements Kontext.PluginProvider {
     queryHintStore:docStores.QueryHintStore;
 
     /**
+     * A dictionary containing translations for current UI language (conf['uiLang']).
+     */
+    private translations:{[key:string]:string};
+
+    /**
      *
      * @param conf
      */
@@ -165,6 +174,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
+        this.translations = translations[this.conf['uiLang']] || {};
     }
 
     /**
@@ -189,8 +199,8 @@ export class PageModel implements Kontext.PluginProvider {
     exportMixins(...mixins:any[]):any[] {
         var self = this;
         var componentTools:ComponentCoreMixins = {
-            translate(s:string):string {
-                return self.translate(s);
+            translate(s:string, values?:any):string {
+                return self.translate(s, values);
             },
             getConf(k:string):any {
                 return self.getConf(k);
@@ -925,9 +935,18 @@ export class PageModel implements Kontext.PluginProvider {
      * @param msg
      * @returns {*}
      */
-    translate(msg:string):string {
+    translate(msg:string, values?:any):string {
+        var tmp;
         msg = msg || '';
-        return this.conf['messages'][msg] ? this.conf['messages'][msg] : msg;
+
+        if (this.translations.hasOwnProperty(msg)) {
+            tmp = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
+            console.log('values ', values);
+            return tmp.format(values);
+
+        } else {
+            return this.conf['messages'][msg] ? this.conf['messages'][msg] : msg;
+        }
     }
 
     /**
@@ -1229,8 +1248,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.showMessage.apply(this.pageModel, arguments);
     }
 
-    translate(msg) {
-        return this.pageModel.translate(msg);
+    translate(msg, values) {
+        return this.pageModel.translate(msg, values);
     }
 
     applySelectAll(elm, context) {
