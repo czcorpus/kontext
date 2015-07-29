@@ -54,6 +54,12 @@ class CitationInfo(DictLike):
 
 
 class CorpusInfo(DictLike):
+    """
+    Genereal corpus information and metadata.
+    All the possible implementations are expected to
+    be user-independent. I.e. all the information must
+    apply for all the users.
+    """
     def __init__(self):
         self.id = None
         self.path = None
@@ -68,6 +74,10 @@ class CorpusInfo(DictLike):
 
 
 class BrokenCorpusInfo(CorpusInfo):
+    """
+    An incomplete corpus information. It should be used in corpus info lists
+    instead of None and similar solutions to detect a problematic item.
+    """
     pass
 
 
@@ -151,4 +161,47 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         raise NotImplementedError()
 
     def initial_search_params(self, user_id, lang):
+        """
+        Returns a dictionary containing initial corpus search parameters.
+        (e.g. you typically don't want to display a full list so you can set a page size).
+        """
         raise NotImplementedError()
+
+    def custom_filter(self, corpus_info, permitted_corpora):
+        """
+        An optional custom filter to exclude specific items from results.
+
+        arguments:
+        corpus_info -- a CorpusInfo object
+        permitted_corpora -- a dict (canonical_corp_id, corp_id) as returned
+                             by auth.permitted_corpora
+        """
+        return True
+
+    def create_corpus_info(self):
+        """
+        An optional factory method which returns a CorpusInfo compatible instance.
+        Overriding this method allows you to use your own CorpusInfo implementations.
+        """
+        return CorpusInfo()
+
+    def customize_corpus_info(self, corpus_info, node):
+        """
+        An optional method allowing custom corpus_info initialization.
+
+        arguments:
+        corpus_info -- a CorpusInfo instance
+        node -- an Etree XML node <corpus>
+        """
+        pass
+
+    def customize_search_result_item(self, item, corpus_info):
+        """
+        An optional method allowing customization of search result item (= a dict)
+        using full_data (= custom CorpusInfo implementation).
+
+        arguments:
+        item -- a dict containing corpus information as required by client-side
+        corpus_info -- a CorpusInfo instance
+        """
+        pass

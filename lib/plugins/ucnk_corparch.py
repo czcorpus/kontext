@@ -81,12 +81,22 @@ import logging
 import plugins
 from plugins import inject
 from plugins.default_corparch import CorpTree
+from plugins.abstract.corpora import CorpusInfo
 import l10n
 from controller import exposed
 import actions.user
 from translation import ugettext as _
 
 DEFAULT_LANG = 'en'
+
+
+class UcnkCorpusInfo(CorpusInfo):
+    """
+    A modified CorpusInfo containing 'internal' flag
+    """
+    def __init__(self):
+        super(UcnkCorpusInfo, self).__init__()
+        self.internal = False
 
 
 @exposed(acess_level=1, return_type='json')
@@ -154,6 +164,18 @@ class UcnkCorpArch(CorpTree):
             return True
         else:
             return False
+
+    def create_corpus_info(self):
+        return UcnkCorpusInfo()
+
+    def customize_corpus_info(self, corpus_info, node):
+        corpus_info.internal = self._decode_bool(node.attrib.get('internal'))
+
+    def customize_search_result_item(self, item, corpus_info):
+        item['internal'] = corpus_info.internal
+
+    def custom_filter(self, corpus_info, permitted_corpora):
+        return corpus_info.id in permitted_corpora or not corpus_info.internal
 
     def get_list(self, user_allowed_corpora):
         """

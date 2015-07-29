@@ -87,10 +87,6 @@ def translate_markup(s):
     return markdown(s.strip())
 
 
-def call_controller(controller_obj, method, *args, **kwargs):
-    return apply(getattr(controller_obj, method), args, kwargs)
-
-
 class ManateeCorpusInfo(object):
     def __init__(self, corpus, canonical_id):
         self.encoding = corpus.get_conf('ENCODING')
@@ -140,6 +136,18 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._manatee_corpora = ManateeCorpora()
+
+    @staticmethod
+    def _decode_bool(v):
+        ans = False
+        if v is not None:
+            if v.isdigit():
+                ans = bool(int(v))
+            elif v.lower() == 'true':
+                ans = True
+            elif v.lower() == 'false':
+                ans = False
+        return ans
 
     def _get_corplist_title(self, elm):
         """
@@ -218,6 +226,41 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 ans.append((label_key, item[lang_key]))
         return ans
 
+    def _process_corpus_node(self, node, path, data):
+        corpus_id = node.attrib['ident'].lower()
+        web_url = node.attrib['web'] if 'web' in node.attrib else None
+        sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
+
+        ans = self.create_corpus_info()
+        ans.id = corpus_id
+        ans.path = path
+        ans.web = web_url
+        ans.sentence_struct = sentence_struct
+        ans.tagset = node.attrib.get('tagset', None)
+        ans.speech_segment = node.attrib.get('speech_segment', None)
+        ans.bib_struct = node.attrib.get('bib_struct', None)
+        ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
+        self.customize_corpus_info(ans, node)
+
+        ref_elm = node.find('reference')
+        if ref_elm is not None:
+            ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
+                                                                     'text', None))
+            articles = [translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
+            ans.citation_info.article_ref = articles
+            ans.citation_info.other_bibliography = translate_markup(
+                getattr(ref_elm.find('other_bibliography'), 'text', None))
+
+        meta_elm = node.find('metadata')
+        if meta_elm is not None:
+            ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
+            ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
+            ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
+            ans.metadata.desc = self._parse_meta_desc(meta_elm)
+            ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
+            ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
+        data.append(ans)
+
     def _parse_corplist_node(self, root, data, path='/'):
         """
         """
@@ -234,38 +277,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
             elif item.tag == 'corplist':
                 self._parse_corplist_node(item, data, path)
             elif item.tag == 'corpus':
-                corpus_id = item.attrib['ident'].lower()
-                web_url = item.attrib['web'] if 'web' in item.attrib else None
-                sentence_struct = item.attrib['sentence_struct'] if 'sentence_struct' in item.attrib else None
-
-                ans = CorpusInfo()
-                ans.id = corpus_id
-                ans.path = path
-                ans.web = web_url
-                ans.sentence_struct = sentence_struct
-                ans.tagset = item.attrib.get('tagset', None)
-                ans.speech_segment = item.attrib.get('speech_segment', None)
-                ans.bib_struct = item.attrib.get('bib_struct', None)
-                ans.collator_locale = item.attrib.get('collator_locale', 'en_US')
-
-                ref_elm = item.find('reference')
-                if ref_elm is not None:
-                    ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
-                                                                             'text', None))
-                    articles = [translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
-                    ans.citation_info.article_ref = articles
-                    ans.citation_info.other_bibliography = translate_markup(
-                        getattr(ref_elm.find('other_bibliography'), 'text', None))
-
-                meta_elm = item.find('metadata')
-                if meta_elm is not None:
-                    ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
-                    ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
-                    ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
-                    ans.metadata.desc = self._parse_meta_desc(meta_elm)
-                    ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
-                    ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
-                data.append(ans)
+                self._process_corpus_node(item, path, data)
 
     @staticmethod
     def _localize_corpus_info(data, lang_code):
@@ -430,6 +442,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     substrs.append(t)
         return substrs, query_keywords
 
+    def customize_search_result_item(self, item, full_data):
+        pass
+
     def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(user_id)
@@ -502,12 +517,14 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     else:
                         hits.append(False)
                 hits.append(matches_size(corp))
+                hits.append(self.custom_filter(full_data, permitted_corpora))
 
                 if matches_all(hits):
                     corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
                     corp['user_item'] = is_fav(corp['id'])
+                    self.customize_search_result_item(corp, full_data)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
 
