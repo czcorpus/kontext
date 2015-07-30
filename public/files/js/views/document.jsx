@@ -70,7 +70,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <table className="attrib-list">
                         <tbody>
                         <tr>
-                            <th colSpan="2" className="attrib-heading">{this.translate('Attributes') }</th>
+                            <th colSpan="2" className="attrib-heading">{this.translate('global__attributes') }</th>
                         </tr>
                         {values}
                         </tbody>
@@ -89,7 +89,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <table className="struct-list">
                         <tbody>
                         <tr>
-                            <th colSpan="2" className="attrib-heading">{this.translate('Structures')}</th>
+                            <th colSpan="2" className="attrib-heading">{this.translate('global__structures')}</th>
                         </tr>
                         {this.props.rows.map(function (row, i) {
                             return <ItemAndNumRow key={i} brackets={true} label={row.name} value={row.size} />
@@ -150,10 +150,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             <h4 className="corpus-name">{this.state.corpname}</h4>
 
                             <p className="metadata">
-                                <strong>{this.translate('size')}: </strong>
-                                <span className="size">{this.state.size}</span> {this.translate('positions')}<br />
+                                <strong>{this.translate('global__size')}: </strong>
+                                <span className="size">{this.state.size}</span> {this.translate('global__positions')}<br />
 
-                                <strong className="web_url">{this.translate('website')}: </strong>
+                                <strong className="web_url">{this.translate('global__website')}: </strong>
                                 {webLink}
                             </p>
                         </div>
@@ -167,7 +167,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 </td>
                             </tr>
                         </table>
-                        <p className="note">{this.translate('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')}</p>
+                        <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
                         <p className="corpus-description">{this.state.description}</p>
                     </div>
                 );

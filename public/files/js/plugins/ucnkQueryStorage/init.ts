@@ -512,7 +512,7 @@ export class QueryStoragePlugin implements Kontext.Plugin {
 
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             liElm.append(aElm);
-            aElm.append(this.pluginApi.translate('Recent queries'));
+            aElm.append(this.pluginApi.translate('ucnkQS__recent_queries'));
             aElm.on('click', function () {
                 if (plugin.isActive()) {
                     plugin.close();

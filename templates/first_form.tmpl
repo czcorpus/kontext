@@ -27,17 +27,7 @@ $_("Concordance - First query form")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf) {
-    conf.labelStdQuery = '$_("Std. Query")';
-    conf.labelErrorQuery = '$_("Error Query")';
-    conf.messages.too_long_condition = '$_('The selection condition you have specified is too long. Please create a subcorpus instead.')';
-    conf.messages.cancel = '$_("Cancel")';
-    conf.messages.open_the_subcorpus_form = '$_("Open the subcorpus form")';
-    conf.messages.click_to_expand = '$_('Click to expand')';
-    conf.messages.click_to_hide = '$_('Click to hide')';
     firstForm.init(conf);
-    #if $getVar('show_cup_menu', '')
-        firstForm.showCupMenu(conf);
-    #end if
 });
 #end def
 
@@ -71,9 +61,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
       $corp_sel_node
       $query_node
     </table>
-    #if $getVar('show_cup_menu', '')
-        $cup_err_menu
-    #end if
 
     #end filter
     #if $corp_doc

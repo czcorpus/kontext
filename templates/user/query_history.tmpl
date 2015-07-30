@@ -28,16 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def bodyonload
     require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-        conf.messages.failed_to_delete_the_query = "$_('Failed to delete the query')";
-        conf.messages.deleted_query = "$_('Deleted the query.')";
-        conf.messages.undeleted_query = "$_('Undeleted the query.')";
-        conf.messages.failed_to_undelete_the_query = "$_('Failed to undelete the query.')";
-        conf.messages.undo = "$_('Undo')";
-        conf.messages.use_query = "$_('use query')";
-
         conf.page.page_num_records = $page_num_records;
         conf.page.page_append_records = $page_append_records;
-
         pageSelf.init(conf);
     });
 #end def

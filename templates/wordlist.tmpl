@@ -49,9 +49,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.subcName = "$usesubcorp";
     conf.attrName = "$wlattr";
     conf.reloadUrl = "$reload_url";
-    conf.messages.calculating_info = "$_("Some operations need more preprocessing. It will take a while, please wait.") "
-                     + "$_("Once the list has been computed, it will be stored, so will be immediately available next time.")"
-                     + "$_("You can close this window. Repeating wordlist or keywords queries on the same subcorpus will show you progress of the computation.")";
     pageSelf.init(conf);
     #if $processing
     pageSelf.startWatching();

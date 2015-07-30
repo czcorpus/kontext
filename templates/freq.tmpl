@@ -26,9 +26,6 @@ $_("Freqs form")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-    conf.messages['this_applies_only_for_mk'] = "$_('This counts only for multi-word KWICs')";
-    conf.messages['remove_item'] = "$_('Remove item')";
-    conf.messages['max_level_reached'] = "$_('Maximum level reached.')";
     conf.multilevel_freq_dist_max_levels = $multilevel_freq_dist_max_levels;
     conf.lastNumLevels = #if $last_num_levels#$last_num_levels#else#null#end if#;
     pageSelf.init(conf);

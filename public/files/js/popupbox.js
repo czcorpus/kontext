@@ -87,10 +87,6 @@ define(['win', 'jquery'], function (win, $) {
 
         this.expandLeft = false;
 
-        this.messages = {
-            close : 'close'
-        };
-
         this._suppressKeys = false;
     }
 
@@ -268,7 +264,7 @@ define(['win', 'jquery'], function (win, $) {
      * @property {string} options.htmlClass
      * @property {boolean} options.calculatePosition
      * @property {boolean} options.expandLeft
-     * @property {{}} options.messages translation messages
+     * @property {{}} options.translator a function fn(message, vals?) able to translate messages
      */
 
     /**
@@ -305,10 +301,8 @@ define(['win', 'jquery'], function (win, $) {
                 customErrorHandler(this.beforeOpenVal, this.onShowVal);
             }
         };
-
-        if (options.hasOwnProperty('messages')) {
-            this.importMessages(fetchOption('messages', {}));
-        }
+        
+        this.translator = fetchOption('translator', function (s) { return s; });
 
         this.rootElm = win.document.createElement('div');
         $(this.rootElm).addClass('tooltip-box').hide();
@@ -320,7 +314,7 @@ define(['win', 'jquery'], function (win, $) {
         $(this.rootElm).append(this.contentElm);
 
         if (fetchOption('closeIcon', false)) {
-            this.jqCloseIcon = $('<a class="close-link" title="' + this.messages.close + '"></a>');
+            this.jqCloseIcon = $('<a class="close-link" title="' + this.translator('close') + '"></a>');
             $(this.rootElm).addClass('framed');
         }
         if (boxId) {
@@ -383,22 +377,6 @@ define(['win', 'jquery'], function (win, $) {
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);
-        }
-    };
-
-    /**
-     * Imports custom user messages/labels etc.
-     * In most cases, it is not to call this from outside.
-     *
-     * @param {{}} messages
-     */
-    TooltipBox.prototype.importMessages = function (messages) {
-        var prop;
-
-        for (prop in messages) {
-            if (messages.hasOwnProperty(prop) && this.messages.hasOwnProperty(prop)) {
-                this.messages[prop] = messages[prop];
-            }
         }
     };
 

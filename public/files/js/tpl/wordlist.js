@@ -64,7 +64,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'popupbox'], 
     lib.init = function (conf) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
-        lib.setupContextHelp(conf.messages.calculating_info);
+        lib.setupContextHelp(lib.layoutModel.translate('global__wl_calc_info');
         lib.startWatching = function () {
             lib.updateProcessBar(lib.layoutModel.conf.corpnameUrl, lib.layoutModel.conf.subcName,
                 lib.layoutModel.conf.attrName, lib.layoutModel.conf.reloadUrl);

@@ -29,10 +29,6 @@ $_("Create Subcorpus")#slurp
 
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.inputMethod = "$method";
-    conf.messages['available_attributes'] = "$_('available attributes')";
-    conf.messages['and'] = "$_('and')";
-    conf.messages['close'] = "$_('close')";
-    conf.messages['this_action_resets_current_selection'] = "$_('This action will reset you current unsaved subcorpus')";
     pageSelf.init(conf);
 });
 

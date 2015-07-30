@@ -58,7 +58,7 @@ export class AppBar implements Kontext.Plugin {
         try {
             code = JSON.parse($('#cnc-toolbar-data').text());
             if (!this.pluginApi.userIsAnonymous() && !code['id']) {
-                ans = confirm(this.pluginApi.translate('you have been logged out'));
+                ans = confirm(this.pluginApi.translate('ucnkAB__you_logged_out'));
 
                 if (ans === true) {
                     window.location = this.pluginApi.getConf('loginUrl');

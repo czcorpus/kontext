@@ -156,48 +156,9 @@ define('conf', [], function () {
         "$_('You can use the \\u0022down arrow\\u0022 key to view recent queries')",
         "$_('In CQL mode you can use Shift+ENTER to enter a new line')"
     ];
-
-    conf.messages = {};
-    #if $_anonymous
-    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\">sign-in</a> to unlock all the functions.') % $login_url)";
-    #end if
-    conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
-    conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
-    conf.messages.view_result = "$_('View result')";
-    conf.messages.operation = "$_('Operation')";
-    conf.messages.parameters = "$_('Parameters')";
-    conf.messages.num_of_hits = "$_('Num of Hits')";
-    conf.messages.query_overview = "$_('Query overview')";
-    conf.messages.failed_to_load_query_overview = "$_('Failed to load query overview')";
-    conf.messages.close = "$_('close')";
-    conf.messages.search_by_name = "$_('Search by name')";
-    conf.messages.more_information_at = "$_('More information at')";
-    conf.messages.loading = "$_('Loading...')";
-    conf.messages['number of matching positions'] = "$_('number of matching positions')";
-    conf.messages['number of matching items'] = "$_('number of matching items')";
-    conf.messages['%s positions'] = "$_('%s positions')";
-    conf.messages['Recent queries'] = "$_('Recent queries')";
-    conf.messages['No more lines'] = "$_('No more lines')";
-    conf.messages['Load more'] = "$_('Load more')";
-    conf.messages['selected lines'] = "$_('selected lines')";
-    conf.messages['you have been logged out'] = "$_('You have been logged out. Do you want to log in again?')";
-    conf.messages['bib_list_warning'] = "$_('Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection.')";
-    conf.messages['select_all'] = "$_('Select all')";
-    conf.messages['query_type_mismatch'] = "$_('Possible query type mismatch. Do you want to continue?')";
-    conf.messages['there_are_unsaved_changes'] = "$_('There are unsaved changes on the page. Do you want to continue without saving them?')";
-    conf.messages['size'] = "$_('size')";
-    conf.messages['positions'] = "$_('positions')";
-    conf.messages['website'] = "$_('website')";
-    conf.messages['Attributes'] = "$_('Attributes')";
-    conf.messages['Structures'] = "$_('Structures')";
-    conf.messages['Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.'] = "$_('Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.')";
-    conf.messages['hold_ctrl'] = "$_('Hold CTRL/Command to select multiple items')";
-
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
     };
-    conf.messages.msg1 = '$_('Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href="http://www.korpus.cz/english/struktura.php" target="_blank">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.')';
-    conf.messages.failed_to_load_corpus_info = "$_('Failed to load corpus information.')";
 
     return conf;
 });

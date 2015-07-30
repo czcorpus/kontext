@@ -39,20 +39,9 @@ $_("Concordance")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
-    conf.messages.ctrlc_to_copy = "$_('Press Ctrl+C to copy the text')";
-
-    conf.messages.calc_warning = '$_("Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus.")';
-    conf.messages.are_you_sure_to_leave = "$_('You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost.')";
     pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
-    conf.messages.using_random = '$_("using random")';
-    conf.messages.using_first = '$_("Using first")';
-    conf.messages.use_random = '$_("Use random")';
-    conf.messages.instead = '$_("instead")';
-    conf.messages.per_million = '$_("million")';
-    conf.messages.calculating = '$_("calculating...")';
-    conf.messages.lines_only = '$_("lines only").';
     conf.numLines = $len($Lines);
     conf.q = '$q';
     conf.q2 = '$q[2]';

@@ -243,40 +243,21 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
                 jqFieldset.find('div.desc').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', lib.layoutModel.conf.messages.click_to_hide);
-                jqLink.attr('title', lib.layoutModel.conf.messages.click_to_hide);
+                    .attr('alt', lib.layoutModel.translate('global__click_to_hide'));
+                jqLink.attr('title', lib.layoutModel.translate('global__click_to_hide'));
 
             } else {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('div.desc').show();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', lib.layoutModel.conf.messages.click_to_expand);
-                jqLink.attr('title', lib.layoutModel.conf.messages.click_to_expand);
+                    .attr('alt', lib.layoutModel.translate('global__click_to_expand'));
+                jqLink.attr('title', lib.layoutModel.translate('global__click_to_expand'));
             }
         });
         lib.layoutModel.mouseOverImages();
         defer.resolve();
         return defer.promise();
-    };
-
-    lib.bindStaticElements = function () {
-        // context-switch TODO
-
-        $('#switch_err_stand').on('click', function () {
-            if ($(this).text() === lib.layoutModel.conf.labelStdQuery) {
-                $('#qnode').show();
-                $('#cup_err_menu').hide();
-                $(this).text(lib.layoutModel.conf.labelErrorQuery);
-                lib.layoutModel.userSettings.set("errstdq", "std");
-
-            } else {
-                $('#qnode').hide();
-                $('#cup_err_menu').show();
-                $(this).text(lib.layoutModel.conf.labelStdQuery);
-                lib.layoutModel.userSettings.set("errstdq", "err");
-            }
-        });
     };
 
     /**
@@ -292,19 +273,6 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
                 $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
             }
         });
-    };
-
-    /**
-     *
-     */
-    lib.showCupMenu = function () {
-        if (lib.layoutModel.userSettings.get('errstdq') === 'std') {
-            $('#cup_err_menu').hide();
-            $('#switch_err_stand').text(lib.layoutModel.conf.messages.labelErrorQuery);
-
-        } else {
-            $('#qnode').hide();
-        }
     };
 
     lib.makePrimaryButtons = function () {
@@ -370,7 +338,6 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
 
         promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(),
-            bindStaticElements : lib.bindStaticElements(),
             bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
                 $('#make-concordance-button'), lib.layoutModel),
             bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(

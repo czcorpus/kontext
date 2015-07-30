@@ -42,7 +42,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render: function () {
                 return (<tr className={this.state.htmlClasses.join(' ')}>
                     <th>{this.translate('Name')}</th>
-                    <th>{this.translate('Size (in positions)')}</th>
+                    <th>{this.translate('defaultCorparch__size_in_positions')}</th>
                     <th>{this.translate('Labels')}</th>
                     <th></th>
                     <th></th>
@@ -352,7 +352,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                       <tr className="load-more">
                           <td colSpan="6">
-                              <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
+                              <a onClick={this._linkClickHandler}>{this.translate('global__load_more')}</a>
                           </td>
                       </tr>
                 );
@@ -512,7 +512,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
             render: function () {
                 return <a className="keyword reset"
-                          onClick={this._handleClick}>{this.translate('None')}</a>;
+                          onClick={this._handleClick}>{this.translate('global__none')}</a>;
             }
         });
 
@@ -535,7 +535,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <legend>{this.props.label}</legend>
                         <ResetLink />
                         {links}
-                        <span className="inline-label">({this.translate('hold_ctrl')})</span>
+                        <span className="inline-label">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</span>
                     </fieldset>
                 );
             }
@@ -600,12 +600,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     fieldsetClasses = 'advanced-filter';
                     fields = (
                         <div>
-                        <span>{this.translate('size from')}: </span>
+                        <span>{this.translate('defaultCorparch__size_from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
                         <span className="inline-label">{this.translate('to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                         <span className="inline-label">{'(' +
-                        this.translate('You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T') + ')'}</span>
+                        this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
                         </div>
                     );
 
