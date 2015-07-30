@@ -138,7 +138,7 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], f
      *
      */
     lib.bindStaticElements = function () {
-        popupbox.bind($('#show-help-format-link'), lib.layoutModel.conf.messages.whiteLists, {
+        popupbox.bind($('#show-help-format-link'), lib.layoutModel.translate('global__wl_white_lists'), {
             width: '300px'
         });
         $('#select-output-type-simple').on('click', function () {

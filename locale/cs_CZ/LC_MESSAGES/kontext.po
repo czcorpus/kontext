@@ -369,10 +369,6 @@ msgstr "vytvořit nový"
 msgid "Create Subcorpus"
 msgstr "Vytvořit subkorpus"
 
-#: cmpltmpl/subcorp_form.py:126
-msgid "available attributes"
-msgstr "dostupné atributy"
-
 #: cmpltmpl/subcorp_form.py:132
 msgid "and"
 msgstr "a"
@@ -575,10 +571,6 @@ msgstr "Uložit frekvenční seznam jako"
 msgid "Sort form"
 msgstr "Formulář třídění"
 
-#: cmpltmpl/sort.py:120 cmpltmpl/freq.py:120
-msgid "This counts only for multi-word KWICs"
-msgstr "Platí pouze pro víceslovná KWIC"
-
 #: cmpltmpl/sort.py:163
 msgid "Simple Sort"
 msgstr "Jednoduché třídění"
@@ -706,30 +698,6 @@ msgstr "Referenční korpus"
 msgid "Reference subcorpus"
 msgstr "Referenční subkorpus"
 
-#: cmpltmpl/wordlist.py:574
-msgid ""
-"Some operations need more preprocessing. It will take a while, please "
-"wait."
-msgstr ""
-"Některé operace vyžadují rozsáhlejší přípravu. Prosím, vyčkejte, "
-"chvíli to potrvá."
-
-#: cmpltmpl/wordlist.py:580
-msgid ""
-"Once the list has been computed, it will be stored, so will be immediately "
-"available next time."
-msgstr ""
-"Jakmile bude seznam spočítán, bude uložen, aby byl při dalším přihlášení "
-"okamžitě dostupný."
-
-#: cmpltmpl/wordlist.py:586
-msgid ""
-"You can close this window. Repeating wordlist or keywords queries on the "
-"same subcorpus will show you progress of the computation."
-msgstr ""
-"Můžete toto okno zavřít. Opakováním dotazu na seznam slov nebo klíčová slova "
-"na stejném subkorpusu lze zobrazit průběh výpočtu."
-
 #: cmpltmpl/wordlist.py:592 cmpltmpl/wordlist.py:597
 msgid "calculating ..."
 msgstr "probíhá výpočet..."
@@ -762,37 +730,9 @@ msgstr "heslo"
 msgid "Concordance - First query form"
 msgstr "Konkordance - formulář prvního dotazu"
 
-#: cmpltmpl/first_form.py:123
-msgid "Std. Query"
-msgstr "Standardní dotaz"
-
-#: cmpltmpl/first_form.py:129
-msgid "Error Query"
-msgstr "Chybný dotaz"
-
-#: cmpltmpl/first_form.py:135
-msgid ""
-"The selection condition you have specified is too long. Please create a "
-"subcorpus instead."
-msgstr ""
-"Podmínka generovaná vaším výběrem je příliš dlouhá. Vytvořte si prosím místo "
-"ní subkorpus."
-
 #: cmpltmpl/first_form.py:141
 msgid "Cancel"
 msgstr "Zrušit"
-
-#: cmpltmpl/first_form.py:147
-msgid "Open the subcorpus form"
-msgstr "Přejít na formulář subkorpusu"
-
-#: cmpltmpl/first_form.py:153
-msgid "Click to expand"
-msgstr "Rozšířit"
-
-#: cmpltmpl/first_form.py:159
-msgid "Click to hide"
-msgstr "Skrýt"
 
 #: cmpltmpl/first_form.py:227 cmpltmpl/document.py:1855
 msgid "User"
@@ -911,14 +851,6 @@ msgstr "Hledat"
 #: cmpltmpl/freq.py:88
 msgid "Freqs form"
 msgstr "Frekv. formulář"
-
-#: cmpltmpl/freq.py:126
-msgid "Remove item"
-msgstr "Odstranit položku"
-
-#: cmpltmpl/freq.py:132
-msgid "Maximum level reached."
-msgstr "Bylo dosaženo maximální povolené úrovně."
 
 #: cmpltmpl/freq.py:185
 msgid "Multilevel frequency distribution"
@@ -1067,20 +999,6 @@ msgstr "Seznam výrazů pro negativní filtr"
 #: cmpltmpl/wordlist_form.py:348
 msgid "format"
 msgstr "formát"
-
-#: cmpltmpl/wordlist_form.py:355
-msgid ""
-"Wordlist whitelists and blacklists must be plain text (.txt), encoded in "
-"UTF-8, with one item per line.  The items must correspond to the selected "
-"attribute, so, eg, if 'lemma' is selected from the attribute menu, then the "
-"list should be a list of lemmas. We use exact matching, not regular-"
-"expression matching, for file input."
-msgstr ""
-"Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí "
-"býtprosté textové soubory (.txt) s jednou položkou na každém řádku. Položky "
-"musíodpovídat vybranému atributu. Pokud je tedy např. v menu atributu "
-"vybráno 'lemma',musí být seznam seznamem lemmat. Pro vstupní soubor se "
-"používá přesné porovnávání,nikoliv porovnávání pomocí regulárních výrazů."
 
 #: cmpltmpl/wordlist_form.py:369
 msgid "Include non-words"
@@ -1297,14 +1215,6 @@ msgstr "zobrazit i prázdné řádky"
 msgid "default"
 msgstr "defaultní nastavení"
 
-#: cmpltmpl/document.py:1772
-msgid "Failed to contact server. Please try again later."
-msgstr "Chyba při zpracování požadavku. Opakujte, prosím, akci později."
-
-#: cmpltmpl/document.py:1778
-msgid "Error loading application bar."
-msgstr "Nepodařilo se načíst přihlašovací tabulku."
-
 #: cmpltmpl/document.py:1794
 msgid ""
 "Query type <em>basic</em> is suitable for getting to know the corpus. It "
@@ -1316,28 +1226,6 @@ msgstr ""
 "Vyhledá vložený výraz jako slovní tvar bez ohledu na velikost písmen; jde-li "
 "zároveň o základní slovníkový tvar (lemma), vyhledají se také všechny jeho "
 "tvary."
-
-#: cmpltmpl/document.py:1801
-msgid ""
-"Positions are basic units for searching the corpus that correspond to "
-"tokens: every single occurrence of a word form, number or punctuation symbol "
-"in the corpus constitutes a position. Corpus size in positions given by the "
-"search interface is therefore higher than corpus size in number of words "
-"given on the <a href=\"http://www.korpus.cz/english/struktura.php\" target="
-"\"_blank\">ICNC web pages</a>, where only postions containing at least one "
-"alphabetic character are considered."
-msgstr ""
-"Pozice jsou základní jednotky pro vyhledávání v korpusu odpovídající "
-"tokenům: samostatnou pozici tvoří každý jednotlivý výskyt slovního tvaru, "
-"čísla nebo interpunkčního znaménka v korpusu. Velikost korpusu v pozicích "
-"udávaná vyhledávacím rozhraním je tedy vždy vyšší než velikost korpusu v "
-"počtu slov uváděná na <a href=\"http://www.korpus.cz/struktura.php\" target="
-"\"_blank\">stránkách ÚČNK</a>, kde se slovem rozumí pouze pozice obsahující "
-"alespoň jeden alfabetický znak."
-
-#: cmpltmpl/document.py:1807
-msgid "Failed to load corpus information."
-msgstr "Nepodařilo se načíst informaci o korpusu."
 
 #: cmpltmpl/document.py:1871
 msgid "logout"
@@ -1556,14 +1444,6 @@ msgstr "Atributy"
 msgid "Structures"
 msgstr "Struktury"
 
-#: cmpltmpl/document.py:2650
-msgid ""
-"Remark: figures listed denote a number of different attributes / structures "
-"(i.e. types) in the corpus."
-msgstr ""
-"Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur "
-"(tj. typů) v korpusu."
-
 #: cmpltmpl/document.py:2722
 msgid "user interface languages"
 msgstr "jazyky uživatelského rozhraní"
@@ -1589,22 +1469,6 @@ msgstr "Zobrazit atributy pouze pro KWIC"
 msgid "References"
 msgstr "Metainformace"
 
-#: cmpltmpl/query_history.py:118
-msgid "Failed to delete the query"
-msgstr "Nepodařilo se vymazat dotaz"
-
-#: cmpltmpl/query_history.py:124
-msgid "Deleted the query."
-msgstr "Dotaz vymazán."
-
-#: cmpltmpl/query_history.py:130
-msgid "Undeleted the query."
-msgstr "Dotaz obnoven."
-
-#: cmpltmpl/query_history.py:136
-msgid "Failed to undelete the query."
-msgstr "Nepodařilo se zrušit vymazání dotazu."
-
 #: cmpltmpl/query_history.py:186
 msgid "date"
 msgstr "datum"
@@ -1616,30 +1480,6 @@ msgstr "další možnosti"
 #: cmpltmpl/user_password.py:128
 msgid "Your password has been changed successfully."
 msgstr "Vaše heslo bylo úspěšně změněno."
-
-#: cmpltmpl/concdesc.py:121
-msgid "Failed to save the query"
-msgstr "Nepodařilo se uložit dotaz."
-
-#: cmpltmpl/concdesc.py:163
-msgid "Concordance description"
-msgstr "Popis konkordance"
-
-#: cmpltmpl/concdesc.py:196
-msgid "Operation"
-msgstr "Operace"
-
-#: cmpltmpl/concdesc.py:202
-msgid "Parameters"
-msgstr "Parametry"
-
-#: cmpltmpl/concdesc.py:208
-msgid "Num of Hits"
-msgstr "Počet výskytů"
-
-#: cmpltmpl/concdesc.py:244
-msgid "View result"
-msgstr "Zobrazit výsledek"
 
 #: cmpltmpl/lngroupinfo.py:126
 #, fuzzy
@@ -1841,22 +1681,6 @@ msgstr "Uložit konkordanci do textového nebo XML souboru"
 msgid "Press Ctrl+C to copy the text"
 msgstr "Pro zkopírování textu zmáčkněte Ctrl+C."
 
-#: cmpltmpl/view.py:274 cmpltmpl/view.py:997
-msgid "using random"
-msgstr "zvolen náhodný"
-
-#: cmpltmpl/view.py:280
-msgid "Using first"
-msgstr "nejdříve použít"
-
-#: cmpltmpl/view.py:286 cmpltmpl/view.py:982
-msgid "Use random"
-msgstr "Zvolit náhodný"
-
-#: cmpltmpl/view.py:292 cmpltmpl/view.py:990
-msgid "instead"
-msgstr "místo"
-
 #: cmpltmpl/view.py:298
 msgid "million"
 msgstr "na milion"
@@ -1939,26 +1763,17 @@ msgstr "zobrazit celý dokument"
 msgid "Maximum number of lines"
 msgstr "Maximální počet řádek"
 
-msgid "Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus."
-msgstr "Uváděné frekvenční údaje jsou vztažené k celému korpusu, ne pouze k jeho části specifikované hodnotami zadaných atributů, na níž jsou výsledky vyhledávání omezeny. Údaje vztažené na část korpusu se zobrazují pouze při vyhledávání v předem definovaném subkorpusu."
-
 msgid "Create new subcorpus"
 msgstr "Vytvořit nový subkorpus"
 
 msgid "Corpus access denied"
 msgstr "Přístup ke korpusu odepřen"
 
-msgid "Failed to load query overview"
-msgstr "Nepodařilo se nahrát podrobnosti dotazu"
-
 msgid "Click to enter a new query"
 msgstr "Klikněte pro přechod na nový dotaz"
 
 msgid "<strong>%s</strong> positions"
 msgstr "<strong>%s</strong> pozic"
-
-msgid "KonText is running in anonymous mode. Please <a href=\\\"%s\\\">sign-in</a> to unlock all the functions."
-msgstr "Všechny funkce KonTextu jsou k dispozici až po <a href=\\\"%s\\\">přihlášení</a>."
 
 msgid "uses"
 msgstr "používá"
@@ -1975,9 +1790,6 @@ msgstr "Odstávka aplikace"
 msgid "The application is under maintenance. Sorry for inconvenience."
 msgstr "Právě probíhá údržba aplikace. Omlouváme se za případné obtíže."
 
-msgid "Search by name"
-msgstr "Hledat podle názvu"
-
 msgid "Frequency figures"
 msgstr "Frekvenční údaje"
 
@@ -1986,15 +1798,6 @@ msgstr "požadovaný formát souborů"
 
 msgid "More information at"
 msgstr "Více informací na"
-
-msgid "number of matching positions"
-msgstr "počet odpovídajících pozic"
-
-msgid "number of matching items"
-msgstr "počet odpovídajících položek"
-
-msgid "This action will reset you current unsaved subcorpus"
-msgstr "Tato akce zruší váš aktuální neuložený subkorpus"
 
 msgid "Report an error"
 msgstr "Ohlásit chybu"
@@ -2017,23 +1820,14 @@ msgstr "typ dotazu"
 msgid "date and time"
 msgstr "datum a čas"
 
-msgid "use query"
-msgstr "použít dotaz"
-
 msgid "any type"
 msgstr "libovolný typ"
 
 msgid "Filter list"
 msgstr "Filtrovat seznam"
 
-msgid "No more lines"
-msgstr "Nejsou žádné další řádky"
-
 msgid "Load more"
 msgstr "Nahrát další"
-
-msgid "selected lines"
-msgstr "vybrané řádky"
 
 msgid "Confirm"
 msgstr "Potvrdit"
@@ -2062,9 +1856,6 @@ msgstr "Provést"
 msgid "Invalid or expired query"
 msgstr "Neplatný nebo vypršelý dotaz"
 
-msgid "You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost."
-msgstr "Nemáte dokončený výběr řádků (nebyl dosud použit žádný filtr). Opuštěním stránky můžete o tento výběr přijít."
-
 msgid "new subcorpora in your library: %s"
 msgstr "nové subkorpusy ve vaší knihovně: %s"
 
@@ -2074,9 +1865,6 @@ msgstr "Zobrazit frekvence lemmat"
 msgid "Lemmas"
 msgstr "Lemmata"
 
-msgid "You have been logged out. Do you want to log in again?"
-msgstr "Uživatel byl odhlášen. Chcete se znovu přihlásit?"
-
 msgid "frequency distribution"
 msgstr "frekvenční distribuce"
 
@@ -2085,9 +1873,6 @@ msgstr "zúžit výběr"
 
 msgid "reset selection"
 msgstr "zrušit výběr"
-
-msgid "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection."
-msgstr "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru."
 
 msgid "Query failed: Syntax error at position %s."
 msgstr "Dotaz selhal: Syntaktická chyba na pozici %s."
@@ -2122,38 +1907,11 @@ msgstr "rozlišovat velikost písmen"
 msgid "default attr."
 msgstr "výchozí atribut"
 
-msgid "Possible query type mismatch. Do you want to continue?"
-msgstr "Byl detekován možný nesoulad mezi zvoleným a faktickým typem dotazu. Chcete pokračovat?"
-
-msgid "There are unsaved changes on the page. Do you want to continue without saving them?"
-msgstr "Na stránce jsou neuložené změny. Chcete pokračovat bez jejich uložení?"
-
 msgid "Subcorpus created but there was a problem saving a backup copy."
 msgstr "Subkorpus byl vytvořen, ale nepodařilo se uložit záložní kopii."
 
 msgid "Subcorpus %s has been deleted permanently."
 msgstr "Subkorpus %s byl permanentně odstraněn."
-
-msgid "unknown size"
-msgstr "neznámá velikost"
-
-msgid "click to remove the item from favorites"
-msgstr "klikněte pro vyřazení položky z oblíbených"
-
-msgid "click to (un)lock items for removal"
-msgstr "klikněte pro odemčení/uzamčení režimu odebírání položek ze seznamu"
-
-msgid "Hold CTRL/Command to select multiple items"
-msgstr "Přidržte klávesu CTRL/Command, chcete-li vybrat více položek"
-
-msgid "You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T"
-msgstr "Pro zápis přibližné velikosti lze použít přípony - např. 50k, 100M, 7G, 1T"
-
-msgid "size from"
-msgstr "velikost od"
-
-msgid "Add/remove the current corpus, subcorpus, aligned corpora to/from favorites"
-msgstr "Přidat/odstranit aktuální korpus, subkorpus, zarované korpusy do/z oblíbených"
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"

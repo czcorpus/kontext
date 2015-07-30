@@ -41,7 +41,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, documentModule, win) {
                 + '<td>' + this.query_type_translated + '</td>'
                 + '<td>' + this.details + '</td>'
                 + '<td class="date">' + this.created[1] + ' <strong>' + this.created[0] + '</strong></td>'
-                + '<td><a href="' + this.query_form_url + '">' + lib.layoutModel.translate('use_query') + '</a></td>'
+                + '<td><a href="' + this.query_form_url + '">' + lib.layoutModel.translate('global__use_query') + '</a></td>'
                 );
         });
     }
@@ -76,7 +76,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, documentModule, win) {
 
     function addExpandLink() {
         $('table.query-history').append('<tr class="expand-line"><td colspan="7"><a class="expand-list">'
-            + lib.layoutModel.translate('Load more') + '</a></td></tr>');
+            + lib.layoutModel.translate('global__load_more') + '</a></td></tr>');
 
         $('table.query-history').find('a.expand-list').on('click', function () {
             var prom,
@@ -116,7 +116,7 @@ define(['jquery', 'tpl/document', 'win'], function ($, documentModule, win) {
 
                         } else {
                             cleanUpLoader(function () {
-                                actionCell.append('[' + lib.layoutModel.translate('No more lines') + ']');
+                                actionCell.append('[' + lib.layoutModel.translate('global__no_more_lines') + ']');
                             });
                         }
                         appendData(data);

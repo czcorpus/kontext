@@ -372,9 +372,7 @@ class Actions(Kontext):
 
     def _is_err_corpus(self):
         availstruct = self._corp().get_conf('STRUCTLIST').split(',')
-        if not ('err' in availstruct and 'corr' in availstruct):
-            return False
-        return True
+        return 'err' in availstruct and 'corr' in availstruct
 
     def _compile_basic_query(self, qtype=None, suff='', cname=''):
         queryselector = getattr(self, 'queryselector' + suff)
@@ -497,51 +495,10 @@ class Actions(Kontext):
             return cql
 
     def _compile_query(self, qtype=None, cname=''):
-        if not self._is_err_corpus():
-            return self._compile_basic_query(qtype, cname=cname)
-        err_code = getattr(self, 'cup_err_code', '')
-        err = getattr(self, 'cup_err', '')
-        corr = getattr(self, 'cup_corr', '')
-        switch = getattr(self, 'errcorr_switch', '')
-        if not err_code and not err and not corr:
-            cql = self._compile_basic_query(qtype)
-            if self.queryselector != 'cqlrow':
-                cql = cql.replace('][', '] (<corr/>)? [')
-                cql = cql.replace('](', '] (<corr/>)? (')
-                cql = cql.replace('] [', '] (<corr/>)? [')
-            return cql
-            # compute error query
-        corr_restr = corr or (err_code and switch == 'c')
-        err_restr = err or (err_code and switch == 'e')
-        if err_code:
-            corr_within = '<corr type="%s"/>' % err_code
-        else:
-            corr_within = '<corr/>'
-        if err_code:
-            err_within = '<err type="%s"/>' % err_code
-        else:
-            err_within = '<err/>'
-        err_containing = ''
-        corr_containing = ''
-        if err:
-            self.iquery = err
-            self.queryselector = 'iqueryrow'
-            err_containing = ' containing ' + self._compile_basic_query(qtype)
-        if corr:
-            self.iquery = corr
-            self.queryselector = 'iqueryrow'
-            corr_containing = ' containing ' + self._compile_basic_query(qtype)
-        err_query = '(%s%s)' % (err_within, err_containing)
-        corr_query = '(%s%s)' % (corr_within, corr_containing)
-        fullstruct = '(%s%s)' % (err_query, corr_query)
-        if self.cup_hl == 'e' or (self.cup_hl == 'q' and err_restr
-                                  and not corr_restr):
-            return '%s within %s' % (err_query, fullstruct)
-        elif self.cup_hl == 'c' or (self.cup_hl == 'q' and corr_restr
-                                    and not err_restr):
-            return '%s within %s' % (corr_query, fullstruct)
-        else:  # highlight both
-            return fullstruct
+        if self._is_err_corpus():
+            from controller import FunctionNotSupported
+            raise FunctionNotSupported()
+        return self._compile_basic_query(qtype, cname=cname)
 
     @exposed(template='view.tmpl', page_model='view', legacy=True)
     def query(self, qtype='cql'):

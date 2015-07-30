@@ -50,7 +50,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 allowMultipleOpenedBoxes: false
             },
             function (message) {
-                pluginApi.showMessage('error', message || conf.messages.failed_to_contact_server);
+                pluginApi.showMessage('error', message || pluginApi.translate('global__failed_to_contact_server'));
             }
         );
     }
@@ -328,8 +328,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', pluginApi.translate('click_to_expand'));
-                jqTriggerLink.attr('title', pluginApi.translate('click_to_expand'));
+                    .attr('alt', pluginApi.translate('global__click_to_expand'));
+                jqTriggerLink.attr('title', pluginApi.translate('global__click_to_expand'));
                 jqFieldset.find('div.desc').show();
                 userSettings.set(jqTriggerLink.data('box-id'), false);
 
@@ -337,8 +337,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.contents').show();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', pluginApi.translate('click_to_hide'));
-                jqTriggerLink.attr('title', pluginApi.translate('click_to_hide'));
+                    .attr('alt', pluginApi.translate('global__click_to_hide'));
+                jqTriggerLink.attr('title', pluginApi.translate('global__click_to_hide'));
                 jqFieldset.find('div.desc').hide();
                 userSettings.set(jqTriggerLink.data('box-id'), true);
             }
@@ -368,16 +368,16 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.desc').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', pluginApi.translate('click_to_hide'));
-                jqLink.attr('title', pluginApi.translate('click_to_hide'));
+                    .attr('alt', pluginApi.translate('global__click_to_hide'));
+                jqLink.attr('title', pluginApi.translate('global__click_to_hide'));
 
             } else {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('div.desc').show();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', pluginApi.translate('click_to_expand'));
-                jqLink.attr('title', pluginApi.translate('click_to_expand'));
+                    .attr('alt', pluginApi.translate('global__click_to_expand'));
+                jqLink.attr('title', pluginApi.translate('global__click_to_expand'));
             }
         });
         defer.resolve();
@@ -436,7 +436,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 $('#mainform select.qselector').addClass('error-input');
                 $('.query-area input.query:visible, .query-area textarea.query:visible')
                         .addClass('error-input');
-                if (!win.confirm(layoutModel.translate('query_type_mismatch'))) {
+                if (!win.confirm(layoutModel.translate('global__query_type_mismatch'))) {
                     event.stopPropagation();
                     event.preventDefault();
                     return false;

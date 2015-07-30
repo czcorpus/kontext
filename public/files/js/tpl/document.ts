@@ -611,12 +611,12 @@ export class PageModel implements Kontext.PluginProvider {
     renderOverview = function (data, tooltipBox):void {
         var self = this,
             url,
-            html = '<h3>' + this.translate('query_overview') + '</h3><table border="1">',
+            html = '<h3>' + this.translate('global__query_overview') + '</h3><table border="1">',
             parentElm = tooltipBox.getRootElement();
 
-        html += '<tr><th>' + self.conf.messages.operation + '</th>';
-        html += '<th>' + self.conf.messages.parameters + '</th>';
-        html += '<th>' + self.conf.messages.num_of_hits + '</th><th></th></tr>';
+        html += '<tr><th>' + self.translate('global__operation') + '</th>';
+        html += '<th>' + self.translate('global__parameters') + '</th>';
+        html += '<th>' + self.translate('global__num_of_hits') + '</th><th></th></tr>';
 
         $.each(data.Desc, function (i, item:{op:string; arg:string; size:number; tourl:string}) {
             html += '<tr><td>' + self.escapeHTML(item.op) + '</td>';
@@ -625,7 +625,7 @@ export class PageModel implements Kontext.PluginProvider {
             html += '<td>';
             if (item.tourl) {
                 url = 'view?' + item.tourl;
-                html += '<a href="' + url + '">' + self.conf.messages.view_result + '</a>';
+                html += '<a href="' + url + '">' + self.translate('global__view_result') + '</a>';
             }
             html += '</td>';
             html += '</tr>';
@@ -677,7 +677,7 @@ export class PageModel implements Kontext.PluginProvider {
                                 closeIcon: true,
                                 calculatePosition: false,
                                 timeout: null,
-                                messages: self.conf['messages'] // TODO
+                                translator: self.translate
                             }
                         );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
@@ -686,11 +686,11 @@ export class PageModel implements Kontext.PluginProvider {
                         $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
 
                     } else {
-                        self.showMessage('error', self.translate('failed_to_load_query_overview'));
+                        self.showMessage('error', self.translate('global__failed_to_load_query_overview'));
                     }
                 },
                 error: function () {
-                    self.showMessage('error', self.translate('failed_to_load_query_overview'));
+                    self.showMessage('error', self.translate('global__failed_to_load_query_overview'));
                 }
             });
             event.preventDefault();
@@ -775,7 +775,7 @@ export class PageModel implements Kontext.PluginProvider {
             {
                 width: 'auto',
                 closeIcon: true,
-                messages: self.conf['messages'],
+                translator: self.translate,
                 type: 'plain',
                 onClose: function () {
                     self.unmountReactComponent(this.getRootElement());
@@ -791,8 +791,8 @@ export class PageModel implements Kontext.PluginProvider {
         var self = this,
             citationHtml = $('#corpus-citation-box').html();
 
-        popupbox.bind($('#positions-help-link'), self.conf['messages']['msg1'],
-            {messages: self.conf['messages'], width: '30%'});
+        popupbox.bind($('#positions-help-link'), self.translate('global__what_are_positions'),
+            {translator: self.translate, width: '30%'});
 
         popupbox.bind('#corpus-citation-link a',
             function (box, finalizeCallback) {
@@ -806,8 +806,7 @@ export class PageModel implements Kontext.PluginProvider {
                 closeIcon: true,
                 calculatePosition: true,
                 timeout: null,
-                messages: self.conf['messages']
-                ,
+                translator: self.translate,
                 width: '40%',
                 onClose: function () {
                     $('#corpus-citation-box').html(citationHtml);
@@ -908,7 +907,7 @@ export class PageModel implements Kontext.PluginProvider {
 
         $('a.external-help').each(function () {
             var href = $(this).attr('href'),
-                message = self.translate('more_information_at')
+                message = self.translate('global__more_info_at')
                     + ' <a href="' + href + '" target="_blank">' + href + '</a>';
             popupbox.bind(this, message, {});
         });
@@ -927,7 +926,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns {jQuery}
      */
     createAjaxLoader():JQuery {
-        return $('<div class="ajax-loading-msg"><span>' + this.translate('loading') + '</span></div>');
+        return $('<div class="ajax-loading-msg"><span>' + this.translate('global__loading') + '</span></div>');
     }
 
     /**
@@ -937,16 +936,17 @@ export class PageModel implements Kontext.PluginProvider {
      */
     translate(msg:string, values?:any):string {
         var tmp;
-        msg = msg || '';
-
-        if (this.translations.hasOwnProperty(msg)) {
-            tmp = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
-            console.log('values ', values);
-            return tmp.format(values);
-
-        } else {
-            return this.conf['messages'][msg] ? this.conf['messages'][msg] : msg;
+        var format;        
+        
+        if (msg) {
+            tmp = this.translations[msg];
+            if (tmp) {
+                format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
+                return format.format(values);
+            }
+            return msg;
         }
+        return '';
     }
 
     /**
@@ -954,8 +954,8 @@ export class PageModel implements Kontext.PluginProvider {
      */
     createSmallAjaxLoader:()=>JQuery = () => {
         return $('<img src="../files/img/ajax-loader.gif" '
-            + 'alt="' + this.translate('loading') + '" '
-            + 'title="' + this.translate('loading') + '" '
+            + 'alt="' + this.translate('global__loading') + '" '
+            + 'title="' + this.translate('global__loading') + '" '
             + 'style="width: 24px; height: 24px" />');
     };
 

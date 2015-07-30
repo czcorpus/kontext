@@ -33,7 +33,7 @@ define(['win', 'jquery', 'tpl/document'], function (win, $, documentModule) {
 
         $(win).on('beforeunload', function (event) {
             if (lib.changed) {
-                event.returnValue = lib.layoutModel.translate('there_are_unsaved_changes');
+                event.returnValue = lib.layoutModel.translate('global__there_are_unsaved_changes');
                 return event.returnValue;
             }
             return undefined;

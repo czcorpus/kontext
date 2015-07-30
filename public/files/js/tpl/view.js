@@ -109,7 +109,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             finalize();
         };
 
-        linesSelection.text(lib.layoutModel.translate('selected lines') + ': ' + numSelected);
+        linesSelection.text(lib.layoutModel.translate('global__selected_lines') + ': ' + numSelected);
         if (!popupBox.hasAttachedPopupBox(linesSelection)) {
             popupBox.bind(linesSelection, createContent, {
                 type : 'plain',
@@ -161,7 +161,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     function onBeforeUnloadAsk() {
         $(win).on('beforeunload.alert_unsaved', function (event) {
             if (clStorage.size() > 0) {
-                event.returnValue = lib.layoutModel.translate('are_you_sure_to_leave');
+                event.returnValue = lib.layoutModel.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
             return undefined; // !! any other value will cause the dialog window to be shown
@@ -189,8 +189,9 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             box,
             top;
 
-        box = popupBox.open(lib.layoutModel.conf.messages.anonymous_user_warning,
-            {top: 0, left: 0}, {type: 'warning'});
+        box = popupBox.open(lib.layoutModel.translate('global__anonymous_user_warning',
+                {login_url: lib.layoutModel.getConf('login_url')}),
+                {top: 0, left: 0}, {type: 'warning'});
         left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
         box.setCss('left', left + 'px');
@@ -306,7 +307,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
 
         popupBox.bind(
             $('.calc-warning'),
-            lib.layoutModel.conf.messages.calc_warning,
+            lib.layoutModel.translate('global__calc_warning'),
             {
                 type: 'warning',
                 width: 'nice'
@@ -355,9 +356,10 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         var freq = 500;
 
         $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
-            + lib.layoutModel.conf.messages.calculating + '" title="' + lib.layoutModel.conf.messages.calculating
+            + lib.layoutModel.translate('global__calculating')
+            + '" title="' + lib.layoutModel.translate('global__calculating')
             + '" style="width: 24px; height: 24px" />');
-        $('#arf').empty().html(lib.layoutModel.conf.messages.calculating);
+        $('#arf').empty().html(lib.layoutModel.translate('global__calculating'));
 
         /*
          * Checks periodically for the current state of a concordance calculation
@@ -393,11 +395,11 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
 
                     if (data.fullsize > 0 && lib.layoutModel.conf.q2 !== "R") {
                         l = addCommas(data.concsize);
-                        $('#conc-calc-info').html(lib.layoutModel.conf.messages.using_first + ' ' + l +
-                            lib.layoutModel.conf.messages.lines_only + ' <a href="view?' +
-                            'q=R' + lib.layoutModel.conf.q2toEnd + ';' + lib.layoutModel.conf.globals + '">'
-                            + lib.layoutModel.conf.messages.use_random + ' ' +
-                            l + ' ' + lib.layoutModel.conf.messages.instead + '.</a>');
+                        $('#conc-calc-info').html(
+                            lib.layoutModel.translate('global__using_first_k_lines', {num_lines: l })
+                            + ' <a href="view?' + 'q=R' + lib.layoutModel.conf.q2toEnd + '&amp;'
+                            + lib.layoutModel.conf.globals + '">'
+                            + lib.layoutModel.translate('global__use_random_k_instead', {num_lines: l}) + '.</a>');
                     }
 
                     if (data.finished) {

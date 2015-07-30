@@ -154,6 +154,14 @@ class CheetahResponseFile(object):
         return self.outfile
 
 
+class FunctionNotSupported(Exception):
+    """
+    This marks a functionality which is present in bonito-open but not in KonText
+    (either temporarily or for good).
+    """
+    pass
+
+
 class UserActionException(Exception):
     """
     This exception should cover general errors occurring in Controller's action methods'

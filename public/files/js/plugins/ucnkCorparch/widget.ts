@@ -16,8 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import $ = require('jquery');
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../../ts/declarations/typeahead.d.ts" />
 
+import $ = require('jquery');
 import common = require('./common');
 
 
@@ -423,7 +426,7 @@ export class SearchTab implements WidgetTab {
             self = this;
 
         $(link)
-            .text(this.pluginApi.translate('none'))
+            .text(this.pluginApi.translate('global__none'))
             .addClass('keyword')
             .addClass('reset')
             .on('click', function () {
@@ -453,7 +456,8 @@ export class SearchTab implements WidgetTab {
                 self.triggerTypeaheadSearch();
             });
         });
-        $(div).append('<span class="labels-hint">(' + this.pluginApi.translate('hold_ctrl') + ')</span>');
+        $(div).append('<span class="labels-hint">('
+            + this.pluginApi.translate('defaultCorparch__hold_ctrl_for_multiple') + ')</span>');
     }
 
     private initTypeahead():void {
@@ -497,7 +501,7 @@ export class SearchTab implements WidgetTab {
                     if (item.found_in.length > 0) {
                         return $('<p>' + item.name
                             + ' <span class="num">('
-                            + self.pluginApi.translate('size')
+                            + self.pluginApi.translate('global__size')
                             + ': ~' + item.raw_size + ', '
                             + self.pluginApi.translate('found in')
                             + ': ' + item.found_in.join(', ')
@@ -559,7 +563,7 @@ export class SearchTab implements WidgetTab {
             .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader.gif'))
             .addClass('ajax-loader')
             .addClass('hidden')
-            .attr('title', this.pluginApi.translate('loading') + '...');
+            .attr('title', this.pluginApi.translate('global__loading') + '...');
         $(inputWrapper).append(this.ajaxLoader);
 
         this.srchField = window.document.createElement('input');
@@ -629,8 +633,8 @@ class FavoritesTab implements WidgetTab {
         $(this.wrapperFav).addClass('favorite-list')
             .append('<tr><th colspan="2">'
             + '<img class="config over-img" '
-            + 'title="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
-            + 'alt="' + this.pageModel.translate('click to (un)lock items for removal') + '" '
+            + 'title="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
+            + 'alt="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
             + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
             + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
             + ' />'
@@ -760,8 +764,8 @@ class FavoritesTab implements WidgetTab {
                     + '" data-id="' + item.id + '">' + item.name + '</a></td>'
                     + '<td class="num">~' + item.size_info + '</td>'
                     + '<td class="tools"><img class="remove over-img disabled" '
-                    + 'alt="' + self.pageModel.translate('click to remove the item from favorites') + '" '
-                    + 'title="' + self.pageModel.translate('click to remove the item from favorites') + '" '
+                    + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
+                    + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                     + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
                     + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
                     + '</td></tr>');
@@ -808,7 +812,7 @@ class FavoritesTab implements WidgetTab {
                     + item.name + '</a></td>'
                     + '<td class="num">'
                     + (item.size ? '~' + item.size : '<span title="'
-                    + self.pageModel.translate('unknown size') + '">?</span>')
+                    + self.pageModel.translate('defaultCorparch__unknown_size') + '">?</span>')
                     + '</td>'
                     + '</tr>');
             });

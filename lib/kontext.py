@@ -1288,8 +1288,6 @@ class Kontext(Controller):
                                               subchash=getattr(self._corp(), "subchash", None))
             if len(conc_desc) > 1:
                 result['tourl'] = self.urlencode(conc_desc[0][3])
-        if methodname.startswith('first'):
-            result['show_cup_menu'] = self._is_err_corpus()
 
     @staticmethod
     def _canonical_corpname(c):

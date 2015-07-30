@@ -111,7 +111,7 @@ class LiveData {
     private createSelectAllBib():HTMLElement {
         var wrapper:HTMLElement = window.document.createElement('label');
 
-        $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('select_all'))
+        $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('global__select_all'))
                   .addClass('select-all');
         return wrapper;
     }
@@ -241,7 +241,7 @@ class LiveData {
                 checkedItems = [],
                 selectAll:HTMLElement,
                 dataTable:HTMLElement,
-                msg = self.pluginApi.translate('number of matching items'),
+                msg = self.pluginApi.translate('ucnkLA__num_of_matching_items'),
                 helpLink = window.document.createElement('a');
 
             attrTable.find('table.dynamic .attr-selector:checked').each(function () {
@@ -274,7 +274,7 @@ class LiveData {
             } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
                 attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
                 attrTable.find('.metadata').append(helpLink);
-                self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('bib_list_warning'));
+                self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('ucnkLA__bib_list_warning'));
             }
         });
     }
@@ -568,7 +568,7 @@ class SelectionSteps {
         newAttrs = this.expandAttributes(selectedAttrs, usedAttrs);
         if (newAttrs.length > 0) {
             if (data.poscount !== undefined) {
-                positionInfo = this.pluginApi.translate('%s positions').replace(/%s/, data.poscount.toString());
+                positionInfo = this.pluginApi.translate('ucnkLA__num_positions', {num_pos: data.poscount.toString()});
             }
             ansHtml = this.rawCreateStepTable(this.numSteps(), newAttrs + '<br />' + positionInfo);
         }

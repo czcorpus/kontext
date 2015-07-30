@@ -25,7 +25,6 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
     var lib = {};
 
     lib.layoutModel = null;
-    lib.messages = {};
 
     /**
      *
@@ -81,8 +80,10 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         newLine.find('td:nth-child(5) select').attr('id', 'kwic-alignment-' + newLevelNum);
         newLine.find('td input[name="freqlevel"]').val(newLevelNum);
         // close icon
-        newLine.find('td:last').empty().append('<a class="remove-level" title="' + lib.messages.remove_item + '">' +
-            '<img class="over-img" src="../files/img/close-icon.png" alt="' + lib.messages.remove_item + '" data-alt-img="../files/img/close-icon_s.png" /></a>');
+        newLine.find('td:last').empty().append('<a class="remove-level" title="'
+                + lib.layoutModel.translate('global__remove_item') + '">' +
+            '<img class="over-img" src="../files/img/close-icon.png" alt="'
+                + lib.layoutModel.translate('global__remove_item') + '" data-alt-img="../files/img/close-icon_s.png" /></a>');
         lib.layoutModel.mouseOverImages(newLine);
 
         newLine.find('td:last a.remove-level').on('click', function (event) {
@@ -91,7 +92,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
 
         if (lib.getCurrNumLevels() === lib.maxNumLevels) {
             $('#add-freq-level-button').attr('disabled', 'disabled');
-            $('#add-freq-level-button').attr('title', lib.messages.max_level_reached);
+            $('#add-freq-level-button').attr('title', lib.layoutModel.translate('global__max_level_reached'));
         }
 
         kwicAlignUtils.fix(newLine);
@@ -124,7 +125,6 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
 
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
-        lib.messages = lib.layoutModel.conf.messages;
         lib.maxNumLevels = lib.layoutModel.conf.multilevel_freq_dist_max_levels;
         kwicAlignUtils.fix();
         if (lib.layoutModel.conf.lastNumLevels) {
@@ -134,7 +134,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         }
 
         $('a.kwic-alignment-help').each(function () {
-            popupbox.bind($(this), lib.layoutModel.translate('this_applies_only_for_mk'), {
+            popupbox.bind($(this), lib.layoutModel.translate('global__this_applies_only_for_mk'), {
                 'top': 'attached-bottom',
                 'width': 'auto',
                 'height': 'auto'

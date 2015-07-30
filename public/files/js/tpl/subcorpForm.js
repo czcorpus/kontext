@@ -109,7 +109,8 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
             var v;
 
             v = $('#within-struct-selector').find('option[value="' + $('#within-struct-selector').val() + '"]').attr('title');
-            $(tooltipBox.getRootElement()).append('<strong>' + lib.layoutModel.conf.messages.available_attributes + '</strong>: ');
+            $(tooltipBox.getRootElement()).append('<strong>' + lib.layoutModel.translate('global__available_attributes')
+                                                    + '</strong>: ');
             $(tooltipBox.getRootElement()).append(v);
             finalize();
         }, {width : 'nice'});
@@ -133,7 +134,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
      */
     lib.sizeUnitsSafeSwitch = function () {
         $('.text-type-top-bar a').on('click', function (event) {
-            var ans = confirm(lib.layoutModel.conf.messages['this_action_resets_current_selection']);
+            var ans = confirm(lib.layoutModel.translate('global__this_action_resets_current_selection'));
 
             if (!ans) {
                 event.preventDefault();
