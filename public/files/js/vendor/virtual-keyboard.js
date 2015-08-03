@@ -55,8 +55,8 @@
  *   This file contains minor modifications created by Institute of the Czech National Corpus
  *
  */
-var VKI_attach, VKI_close;
-(function() {
+
+define([], function() {
   var self = this;
 
   this.VKI_version = "1.49";
@@ -598,7 +598,7 @@ var VKI_attach, VKI_close;
    * Attach the keyboard to an element
    *
    */
-  VKI_attach = function(elem, triggerElem) {
+  window.VKI_attach = function(elem, triggerElem) {
     if (elem.getAttribute("VKI_attached")) return false;
     if (self.VKI_imageURI) {
       var keybut = document.createElement('img');
@@ -669,7 +669,7 @@ var VKI_attach, VKI_close;
     for (var x = 0, elem; elem = inputElems[x++];)
       for (var y = 0, ex; ex = elem[y++];)
         if (ex.nodeName == "TEXTAREA" || ex.type == "text" || ex.type == "password")
-				  if (ex.className.indexOf("keyboardInput") > -1) VKI_attach(ex);
+				  if (ex.className.indexOf("keyboardInput") > -1) window.VKI_attach(ex);
 
     VKI_addListener(document.documentElement, 'click', function(e) { self.VKI_close(); }, false);
   }
@@ -1259,7 +1259,7 @@ var VKI_attach, VKI_close;
    * Close the keyboard interface
    *
    */
-  this.VKI_close = VKI_close = function() {
+  this.VKI_close = function() {
     if (this.VKI_target) {
       try {
         this.VKI_keyboard.parentNode.removeChild(this.VKI_keyboard);
@@ -1335,4 +1335,5 @@ var VKI_attach, VKI_close;
   // VKI_addListener(window, 'load', function() {
   //   setTimeout(VKI_buildKeyboardInputs, 5);
   // }, false);
-})();
+  return this.VKI_attach;
+});

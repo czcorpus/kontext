@@ -22,7 +22,7 @@
  *
  */
 define(['tpl/document', 'queryInput', 'plugins/queryStorage/init', 'plugins/liveAttributes/init'], function (
-    documentModule, queryInput, queryStorage, liveAttributes) {
+        documentModule, queryInput, queryStorage, liveAttributes) {
     'use strict';
 
     var lib = {};
@@ -34,20 +34,28 @@ define(['tpl/document', 'queryInput', 'plugins/queryStorage/init', 'plugins/live
      * @param conf page configuration data
      */
     lib.init = function (conf) {
+        var queryFormTweaks,
+            extendedApi,
+            promises;
+
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
-        lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi, lib.layoutModel.userSettings,
+            $('#mainform').get(0), lib.layoutModel.getPlugin.bind(lib.layoutModel));
 
-        var promises = lib.layoutModel.init(conf).add({
-            bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
-                lib.extendedApi, lib.layoutModel.userSettings),
-            bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
-                $('#mainform input.submit'), lib.layoutModel),
-            updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
-                lib.extendedApi, lib.layoutModel.userSettings),
-            queryStorage : queryStorage.createInstance(lib.extendedApi),
-            liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-                '.text-type-params')
+        promises = lib.layoutModel.init(conf).add({
+            bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
+            bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
+            updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
+            queryStorage : queryStorage.createInstance(extendedApi),
+            liveAttributesInit : liveAttributes.init(extendedApi, '#live-attrs-update', '#live-attrs-reset',
+                '.text-type-params'),
+            textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
+            textareaHints : queryFormTweaks.textareaHints(),
+            initQuerySwitching : queryFormTweaks.initQuerySwitching(),
+            fixFormSubmit : queryFormTweaks.fixFormSubmit(),
+            bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
         });
 
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));

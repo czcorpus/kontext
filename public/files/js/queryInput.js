@@ -21,20 +21,30 @@
  *
  */
 define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'util',
-        'plugins/queryStorage/init'],
-    function ($, win, cookies, popupBox, conf, tagbuilder, util, queryStorage) {
+            'plugins/queryStorage/init', 'vendor/virtual-keyboard'], function ($, win, cookies, popupBox,
+                                                                               conf, tagbuilder, util,
+                                                                               queryStorage, virtKeyboard) {
     'use strict';
 
     var lib = {};
 
+    function QueryFormTweaks(pluginApi, userSettings, formElm, pluginFactory) {
+        this.pluginApi = pluginApi;
+        this.userSettings = userSettings;
+        this.formElm = formElm;
+        this.pluginFactory = pluginFactory;
+        this.maxEncodedParamsLength = 1500;
+    }
+
     /**
      * @param {jQuery|HTMLElement|String} inputElm
      * @param {jQuery|HTMLElement|String} triggerElm
-     * @param {pluginApi} pluginApi
      */
-    function bindTagHelper(inputElm, triggerElm, pluginApi) {
+    QueryFormTweaks.prototype.bindTagHelper = function (inputElm, triggerElm) {
+        var self = this;
+
         tagbuilder.bindTextInputHelper(
-            pluginApi,
+            this.pluginApi,
             triggerElm,
             {
                 inputElement: $(inputElm),
@@ -50,20 +60,20 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 allowMultipleOpenedBoxes: false
             },
             function (message) {
-                pluginApi.showMessage('error', message || pluginApi.translate('global__failed_to_contact_server'));
+                self.pluginApi.showMessage('error',
+                    message || self.pluginApi.translate('global__failed_to_contact_server'));
             }
         );
-    }
+    };
 
     /**
-     *
      * @param {jQuery} jqLinkElement
-     * @param {pluginApi} pluginApi
      */
-    function bindWithinHelper(jqLinkElement, pluginApi) {
+    QueryFormTweaks.prototype.bindWithinHelper = function(jqLinkElement) {
         var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
             clickAction,
-            buttonEnterAction;
+            buttonEnterAction,
+            self = this;
 
         clickAction = function (box) {
             return function () {
@@ -103,18 +113,18 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 if ($('#within-structattr').length > 0) {
                     jqWithinModal.css('display', 'block');
                     box.importElement(jqWithinModal);
-                    $('#within-insert-button').off('click');
-                    $('#within-insert-button').one('click', clickAction(box));
+                    $('#within-insert-button').off('click')
+                            .one('click', clickAction(box));
                     $(win.document).off('keypress.withinBoxEnter');
                     $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
                     finalize();
 
                 } else {
-                    loaderGIF = pluginApi.appendLoader(box.getRootElement());
+                    loaderGIF = self.pluginApi.appendLoader(box.getRootElement());
 
-                    pluginApi.ajax({
-                        url: pluginApi.getConf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
-                                + pluginApi.getConf('corpname'),
+                    self.pluginApi.ajax({
+                        url: self.pluginApi.getConf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
+                                + self.pluginApi.getConf('corpname'),
                         data: {},
                         method: 'get',
                         dataType: 'json',
@@ -145,7 +155,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                         },
                         error: function () {
                             box.close();
-                            pluginApi.showMessage('error', conf.failed_to_contact_server);
+                            self.pluginApi.showMessage('error',
+                                self.pluginApi.translate('global__failed_to_contact_server'));
                             finalize();
                         }
                     });
@@ -159,20 +170,36 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                     $(win.document).off('keypress.withinBoxEnter');
                 }
             });
-    }
+    };
 
     /**
      *
      */
-    lib.bindQueryHelpers = function (pluginApi) {
+    QueryFormTweaks.prototype.bindQueryHelpers = function () {
+        var self = this;
         $('.query-area .cql-input').each(function () {
             var blockWrapper = $(this).closest('td');
 
-            bindTagHelper($(this), blockWrapper.find('.insert-tag a'), pluginApi);
-            bindWithinHelper(blockWrapper.find('li.within a'), pluginApi);
+            self.bindTagHelper($(this), blockWrapper.find('.insert-tag a'));
+            self.bindWithinHelper(blockWrapper.find('li.within a'));
         });
+        this.initVirtualKeyboard($(this.formElm).find('tr:visible .spec-chars'));
+    };
 
-        lib.initVirtualKeyboard($('#mainform table.form tr:visible td > .spec-chars'));
+
+    QueryFormTweaks.prototype.textareaSubmitOverride = function () {
+        var jqMainForm = $(this.formElm),
+            self = this;
+
+        jqMainForm.find('.query-area textarea').each(function (i, area) {
+            self.initCqlTextarea(area, jqMainForm);
+        });
+    };
+
+    QueryFormTweaks.prototype.textareaHints = function () {
+        this.pluginApi.renderReactComponent(this.pluginApi.getViews().QueryHints,
+            $(this.formElm).find('.query-area .query-hints').get(0),
+                {hintText: this.pluginApi.getStores().queryHintStore.getHint()});
     };
 
 
@@ -182,11 +209,10 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * (e.g. to init the form) then query type selection input (currently it is a SELECT element)
      * must be used.
      *
-     * @param layoutModel
      * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    lib.cmdSwitchQuery = function (layoutModel, source, hints) {
+    QueryFormTweaks.prototype.cmdSwitchQuery = function (source, hints) {
         var jqQs,
             newidCom,
             newid,
@@ -196,7 +222,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             elementIdCom,
             jqOldElem,
             jqElem,
-            jqQueryTypeHint;
+            jqQueryTypeHint,
+            self = this;
 
         if (source.hasOwnProperty('currentTarget')) {
             jqQs = $(source.currentTarget);
@@ -211,9 +238,9 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
         oldval = jqFocusElem.val();
 
-        $('#conc-form-clear-button').unbind('click');
-        $('#conc-form-clear-button').bind('click', function () {
-            lib.clearForm($('#mainform'));
+        $('#conc-form-clear-button').unbind('click')
+                .bind('click', function () {
+            self.clearForm($(self.formElm));
         });
 
         jqQs.find('option').each(function () {
@@ -233,7 +260,9 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         });
         jqFocusElem.val(oldval);
         if (newid === 'iqueryrow') {
-            jqQueryTypeHint = $('<a href="#" class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
+            jqQueryTypeHint = $('<a href="#" class="context-help">'
+                + '<img class="over-img" src="../files/img/question-mark.png" '
+                + 'data-alt-img="../files/img/question-mark_s.png" /></a>');
             $('#queryselector').after(jqQueryTypeHint);
             popupBox.bind(jqQueryTypeHint,
                 hints['iqueryrow'],
@@ -251,23 +280,25 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
             $('.query-area input.history, .query-area textarea.history').each(function () {
                 if (typeof $(this).data('plugin') === 'object') {
-                    layoutModel.getPlugin('queryStorage').detach(this);
+                    self.pluginFactory('queryStorage').detach(this);
                 }
             });
-            layoutModel.getPlugin('queryStorage').reset();
+            self.pluginFactory('queryStorage').reset();
         }
-        lib.initVirtualKeyboard(jqFocusElem);
+        this.initVirtualKeyboard(jqFocusElem);
     };
 
     /**
      *
      * @param f
      */
-    lib.clearForm = function (f) {
-        var prevRowType = $('#queryselector').val();
+    QueryFormTweaks.prototype.clearForm = function (f) {
+        var jqQuerySel = $('#queryselector'),
+            prevRowType = jqQuerySel.val(),
+            jqErr = $('#error');
 
-        if ($('#error').length === 0) {
-            $('#error').css('display', 'none');
+        if (jqErr.length === 0) {
+            jqErr.css('display', 'none');
         }
         $(f).find('input,select,textarea').each(function () {
             if ($(this).data('ignore-reset') !== '1') {
@@ -285,13 +316,13 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 }
             }
         });
-        $('#queryselector').val(prevRowType);
+        jqQuerySel.val(prevRowType);
     };
 
     /**
-     * @param {HTMLElement|string|jQuery} input element the VirtualKeyboard binds to
+     * @param elm
      */
-    lib.initVirtualKeyboard = function (elm) {
+    QueryFormTweaks.prototype.initVirtualKeyboard = function (elm) {
         var jqElm = $(elm);
 
         if (jqElm.length > 0) {
@@ -300,12 +331,90 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         }
     };
 
+
+    /**
+     * Disables (if state === true) or enables (if state === false)
+     * all empty/unused form fields. This is used to reduce number of passed parameters,
+     * especially in case of parallel corpora.
+     *
+     * @param formElm
+     * @param state
+     */
+    function setAlignedCorporaFieldsDisabledState(formElm, state) {
+        var stateStr = state.toString();
+
+        $(formElm).find('input[name="sel_aligned"]').each(function () {
+            var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
+                queryType;
+
+            // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
+            if (!$(this).val()) {
+                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', stateStr);
+                $('select[name="queryselector_' + corpn + '"]').attr('disabled', stateStr);
+                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', stateStr);
+                $(this).attr('disabled', stateStr);
+
+                $(this).parent().find('input[type="text"]').each(function () {
+                    $(this).attr('disabled', stateStr);
+                });
+
+            } else {
+                queryType = $(this).parent().find('[id="queryselector_' + corpn + '"]').val();
+                queryType = queryType.substring(0, queryType.length - 3);
+                $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
+                    if (!$(this).hasClass(queryType + '-input')) {
+                        $(this).attr('disabled', stateStr);
+                    }
+                });
+            }
+        });
+        // now let's disable unused corpora completely
+        $('.parallel-corp-lang').each(function () {
+            if ($(this).css('display') === 'none') {
+                $(this).find('input,select').attr('disabled', stateStr);
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    QueryFormTweaks.prototype.initQuerySwitching = function () {
+        var queryTypeHints = this.pluginApi.getConf('queryTypesHints'),
+            self = this;
+
+        $('select.qselector').each(function () {
+            $(this).on('change', function (event) {
+                self.cmdSwitchQuery(event, queryTypeHints);
+            });
+
+            // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
+            if ($(this).val() !== 'iqueryrow') {
+                self.cmdSwitchQuery($(this).get(0), queryTypeHints);
+            }
+        });
+    };
+
+    /**
+     *
+     */
+    QueryFormTweaks.prototype.fixFormSubmit = function () {
+        var self = this;
+        // remove empty and unused parameters from URL before form submit
+        $(this.formElm).submit(function () { // run before submit
+            setAlignedCorporaFieldsDisabledState(self.formElm, true);
+            $(win).on('unload', function () {
+                setAlignedCorporaFieldsDisabledState(self.formElm, false);
+            });
+        });
+    };
+
     /**
      *
      * @param area
      * @param parentForm
      */
-    lib.initCqlTextarea = function (area, parentForm) {
+    QueryFormTweaks.prototype.initCqlTextarea = function (area, parentForm) {
         $(area).on('keydown', function (evt) {
             if (!evt.shiftKey && evt.keyCode === 13) {
                 evt.preventDefault();
@@ -315,10 +424,10 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     };
 
     /**
-     * @param {{}} pluginApi
-     * @param {{}} userSettings
      */
-    lib.bindQueryFieldsetsEvents = function (pluginApi, userSettings) {
+    QueryFormTweaks.prototype.bindQueryFieldsetsEvents = function () {
+        var self = this;
+
         $('a.form-extension-switch').on('click', function (event) {
             var jqTriggerLink = $(event.currentTarget),
                 jqFieldset = jqTriggerLink.closest('fieldset');
@@ -328,21 +437,21 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', pluginApi.translate('global__click_to_expand'));
-                jqTriggerLink.attr('title', pluginApi.translate('global__click_to_expand'));
+                    .attr('alt', self.pluginApi.translate('global__click_to_expand'));
+                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_expand'));
                 jqFieldset.find('div.desc').show();
-                userSettings.set(jqTriggerLink.data('box-id'), false);
+                self.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
                 jqFieldset.find('div.contents').show();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', pluginApi.translate('global__click_to_hide'));
-                jqTriggerLink.attr('title', pluginApi.translate('global__click_to_hide'));
+                    .attr('alt', self.pluginApi.translate('global__click_to_hide'));
+                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_hide'));
                 jqFieldset.find('div.desc').hide();
-                userSettings.set(jqTriggerLink.data('box-id'), true);
+                self.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
-            $.each(pluginApi.queryFieldsetToggleEvents, function (i, fn) {
+            $.each(self.pluginApi.queryFieldsetToggleEvents, function (i, fn) {
                 fn(jqFieldset);
             });
         });
@@ -352,15 +461,16 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      *
      * @returns {*}
      */
-    lib.updateToggleableFieldsets = function (pluginApi, userSettings) {
+    QueryFormTweaks.prototype.updateToggleableFieldsets = function () {
         var jqLink = $('a.form-extension-switch'),
             jqFieldset,
             elmStatus,
-            defer = $.Deferred(); // currently, this is synchronous
+            defer = $.Deferred(), // currently, this is synchronous
+            self = this;
 
         jqLink.each(function () {
             jqFieldset = $(this).closest('fieldset');
-            elmStatus = userSettings.get($(this).data('box-id'));
+            elmStatus = self.userSettings.get($(this).data('box-id'));
 
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
@@ -368,16 +478,16 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.desc').hide();
                 jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
                     .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', pluginApi.translate('global__click_to_hide'));
-                jqLink.attr('title', pluginApi.translate('global__click_to_hide'));
+                    .attr('alt', self.pluginApi.translate('global__click_to_hide'));
+                jqLink.attr('title', self.pluginApi.translate('global__click_to_hide'));
 
             } else {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('div.desc').show();
                 jqFieldset.find('.status').attr('src', '../files/img/expand.png')
                     .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', pluginApi.translate('global__click_to_expand'));
-                jqLink.attr('title', pluginApi.translate('global__click_to_expand'));
+                    .attr('alt', self.pluginApi.translate('global__click_to_expand'));
+                jqLink.attr('title', self.pluginApi.translate('global__click_to_expand'));
             }
         });
         defer.resolve();
@@ -393,16 +503,15 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     }
 
     /**
-     *
      * @param submitElm
-     * @param layoutModel
      */
-    lib.bindBeforeSubmitActions = function (submitElm, layoutModel) {
-        $(submitElm).on('click', function (event) {
-            var currQueryElm = $('#mainform .query-area .query:visible').get(0),
-                queryTypeElm = $('#mainform select.qselector').get(0),
-                currQuery = $(currQueryElm).val(),
-                data = $('#mainform').serialize().split('&'),
+    QueryFormTweaks.prototype.bindBeforeSubmitActions = function (submitElm) {
+        var self = this;
+
+        $(this.formElm).find(submitElm).on('click', function (event) { // TODO
+            var currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0),
+                queryTypeElm = $(self.formElm).find('select.qselector').get(0),
+                data = self.formElm.serialize().split('&'),
                 cleanData = '',
                 unusedLangs = {};
 
@@ -433,7 +542,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             });
 
             if (isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
-                $('#mainform select.qselector').addClass('error-input');
+                this.formElm.find('select.qselector').addClass('error-input');
                 $('.query-area input.query:visible, .query-area textarea.query:visible')
                         .addClass('error-input');
                 if (!win.confirm(layoutModel.translate('global__query_type_mismatch'))) {
@@ -442,7 +551,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                     return false;
                 }
 
-            } else if (cleanData.length > lib.maxEncodedParamsLength) {
+            } else if (cleanData.length > self.maxEncodedParamsLength) {
                 $('#mainform').attr('method', 'POST');
             }
         });
@@ -467,6 +576,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
 
         return new ExtendedApi();
     };
+
+    lib.QueryFormTweaks = QueryFormTweaks;
 
     return lib;
 });

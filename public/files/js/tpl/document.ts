@@ -27,7 +27,6 @@
 
 import win = require('win');
 import $ = require('jquery');
-import queryInput = require('queryInput');
 import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar/init');
 import flux = require('vendor/Dispatcher');
@@ -507,49 +506,6 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
-     * Disables (if state === true) or enables (if state === false)
-     * all empty/unused form fields. This is used to reduce number of passed parameters,
-     * especially in case of parallel corpora.
-     *
-     * @param state
-     */
-    setAlignedCorporaFieldsDisabledState(state:boolean):void {
-        var stateStr:string = state.toString();
-
-        $('#mainform input[name="sel_aligned"]').each(function () {
-            var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
-                queryType;
-
-            // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
-            if (!$(this).val()) {
-                $('select[name="pcq_pos_neg_' + corpn + '"]').attr('disabled', stateStr);
-                $('select[name="queryselector_' + corpn + '"]').attr('disabled', stateStr);
-                $('[id="qnode_' + corpn + '"]').find('input').attr('disabled', stateStr);
-                $(this).attr('disabled', stateStr);
-
-                $(this).parent().find('input[type="text"]').each(function () {
-                    $(this).attr('disabled', stateStr);
-                });
-
-            } else {
-                queryType = $(this).parent().find('[id="queryselector_' + corpn + '"]').val();
-                queryType = queryType.substring(0, queryType.length - 3);
-                $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
-                    if (!$(this).hasClass(queryType + '-input')) {
-                        $(this).attr('disabled', stateStr);
-                    }
-                });
-            }
-        });
-        // now let's disable unused corpora completely
-        $('.parallel-corp-lang').each(function () {
-            if ($(this).css('display') === 'none') {
-                $(this).find('input,select').attr('disabled', stateStr);
-            }
-        });
-    }
-
-    /**
      *
      * @param value
      * @param groupSepar - separator character for thousands groups
@@ -574,31 +530,6 @@ export class PageModel implements Kontext.PluginProvider {
             s += radixSepar + numParts[1];
         }
         return s;
-    }
-
-    /**
-     * @todo rewrite/refactor
-     */
-    misc():void {
-        var self = this;
-        $('select.qselector').each(function () {
-            $(this).on('change', function (event) {
-                queryInput.cmdSwitchQuery(self, event, self.conf['queryTypesHints']);
-            });
-
-            // we have to initialize inputs properly (unless it is the default (as loaded from server) state)
-            if ($(this).val() !== 'iqueryrow') {
-                queryInput.cmdSwitchQuery(self, $(this).get(0), self.conf['queryTypesHints']);
-            }
-        });
-
-        // remove empty and unused parameters from URL before mainform submit
-        $('form').submit(function () { // run before submit
-            self.setAlignedCorporaFieldsDisabledState(true);
-            $(win).on('unload', function () {
-                self.setAlignedCorporaFieldsDisabledState(false);
-            });
-        });
     }
 
     /**
@@ -949,6 +880,16 @@ export class PageModel implements Kontext.PluginProvider {
         return '';
     }
 
+    formatNumber(v:number):string {
+        var format:any = new Intl.NumberFormat(this.conf['uiLang']);
+        return format.format(v);
+    }
+
+    formatDate(d:Date):string {
+        var format:any = new Intl.DateTimeFormat(this.conf['uiLang']);
+        return format.format(d);
+    }
+
     /**
      * note: must preserve 'this'
      */
@@ -1041,8 +982,6 @@ export class PageModel implements Kontext.PluginProvider {
         this.userSettings.init();
 
         this.initActions.add({
-            misc: self.misc(),
-            bindQueryHelpers: queryInput.bindQueryHelpers(self.pluginApi()),
             bindStaticElements: self.bindStaticElements(),
             bindCorpusDescAction: self.bindCorpusDescAction(),
             queryOverview: self.queryOverview(),
@@ -1250,6 +1189,14 @@ export class PluginApi implements Kontext.PluginApi {
 
     translate(msg, values) {
         return this.pageModel.translate(msg, values);
+    }
+
+    formatNumber(v) {
+        return this.pageModel.formatNumber(v);
+    }
+
+    formatDate(v) {
+        return this.pageModel.formatDate(v);
     }
 
     applySelectAll(elm, context) {
