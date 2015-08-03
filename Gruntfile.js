@@ -165,7 +165,7 @@
                         optimize: 'none',
                         paths: kontext.loadPluginMap('./conf/config.xml', true),
                         modules: kontext.listAppModules('./public/files/js/tpl')
-                            .concat(kontext.listVendorModules())
+                            .concat(kontext.listVendorModules(true))
                     }
                 },
                 vendor: {
@@ -181,7 +181,7 @@
                         wrapShim: true,
                         optimize: 'none',
                         paths: kontext.loadPluginMap('./conf/config.xml', false),
-                        modules: kontext.listVendorModules()
+                        modules: kontext.listVendorModules(false)
                     }
                 }
             },
@@ -190,7 +190,7 @@
                     targetFile: './public/files/js/min/translations.js'
                 },
                 production: {
-                    targetFile: './public/files/js/min/translations.js'
+                    targetFile: './public/files/js/compiled/translations.js'
                 }
             }
         });
@@ -212,7 +212,7 @@
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
         grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react',
-                'copy:prepare', 'requirejs:production', 'translations:production',
+                'copy:prepare', 'translations:production', 'requirejs:production',
                 'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
 
         // just compiles Cheetah templates

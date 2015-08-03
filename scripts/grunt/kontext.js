@@ -79,23 +79,27 @@
      * Configures a special module "vendor/common" which contains all the 3rd
      * party libs merged into a single file
      */
-    module.exports.listVendorModules = function () {
+    module.exports.listVendorModules = function (isProduction) {
+        var modules = [
+                'jquery',
+                'vendor/rsvp',
+                'vendor/react',
+                'vendor/Dispatcher',
+                'SoundManager',
+                'vendor/typeahead',
+                'vendor/bloodhound',
+                'vendor/jscrollpane',
+                'vendor/sprintf',
+                'vendor/intl-messageformat',
+                'vendor/virtual-keyboard',
+        ];
+        if (isProduction) {
+            modules.push('translations');
+        }
         return [
             {
                 'name': 'vendor/common',
-                'include': [
-                    'jquery',
-                    'vendor/rsvp',
-                    'vendor/react',
-                    'vendor/Dispatcher',
-                    'SoundManager',
-                    'vendor/typeahead',
-                    'vendor/bloodhound',
-                    'vendor/jscrollpane',
-                    'vendor/sprintf',
-                    'vendor/intl-messageformat',
-                    'vendor/virtual-keyboard'
-                ]
+                'include': modules
             }
         ];
     };
@@ -146,11 +150,16 @@
         files.forEach(function (item) {
            translations = merge.recursive(translations, JSON.parse(fs.readFileSync(item)));
         });
-        if (!destFile) {
+        if (!destFile || destFile.length === 0) {
             throw new Error('No target file for client-side translations specified');
+
+        } else if (Object.prototype.toString.call(destFile) !== '[object Array]') {
+            destFile = [destFile];
         }
-        fs.writeFileSync(destFile, "define([], function () { return "
-            + JSON.stringify(translations) + "; });");
+        destFile.forEach(function (destItem) {
+            fs.writeFileSync(destItem, "define([], function () { return "
+                + JSON.stringify(translations) + "; });");
+        });
     }
 
 }(module));
