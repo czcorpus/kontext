@@ -93,7 +93,8 @@
                     'vendor/bloodhound',
                     'vendor/jscrollpane',
                     'vendor/sprintf',
-                    'vendor/intl-messageformat'
+                    'vendor/intl-messageformat',
+                    'vendor/virtual-keyboard'
                 ]
             }
         ];

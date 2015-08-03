@@ -57,6 +57,8 @@ declare module Kontext {
         appendLoader();
         showMessage(type:string, message:string); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
+        formatNumber(v:number):string;
+        formatDate(d:Date):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         registerInitCallback(fn:InitCallback):void;
@@ -206,8 +208,8 @@ declare module "win" {
  *
  */
 declare module "queryInput" {
-    export function cmdSwitchQuery(plugProvider:Kontext.PluginProvider, event:any, conf:any); // TODO types
-    export function bindQueryHelpers(api:Kontext.PluginApi);
+    export function cmdSwitchQuery(event:any, conf:any); // TODO types
+    export function bindQueryHelpers(formElm:string|HTMLElement|JQuery, api:Kontext.PluginApi);
 }
 
 /**

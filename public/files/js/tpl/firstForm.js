@@ -22,15 +22,15 @@
  *
  */
 define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 'plugins/queryStorage/init',
-    'plugins/liveAttributes/init', 'conclines'], function (win, $, corplistComponent, layoutModule, queryInput, queryStorage,
-                                                           liveAttributes, conclines) {
+    'plugins/liveAttributes/init', 'conclines'], function (win, $, corplistComponent, layoutModule, queryInput,
+                                                                                      queryStorage, liveAttributes,
+                                                                                      conclines) {
     'use strict';
 
     var lib = {},
         activeParallelCorporaSettingKey = 'active_parallel_corpora',
         clStorage = conclines.openStorage();
 
-    lib.maxEncodedParamsLength = 1500;
     lib.corplistComponent = null;
     lib.starComponent = null;
     lib.layoutModel = null;
@@ -166,12 +166,13 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
             var corpusId,
                 jqHiddenStatus,
                 jqNewLangNode,
-                searchedLangWidgetOpt;
+                searchedLangWidgetOpt,
+                jqAddLangWidget = $('#add-searched-lang-widget');
 
-            corpusId = forcedCorpusId || $('#add-searched-lang-widget select').val();
+            corpusId = forcedCorpusId || jqAddLangWidget.find('select').val();
 
             if (corpusId) {
-                searchedLangWidgetOpt = $('#add-searched-lang-widget').find('select option[value="' + corpusId + '"]');
+                searchedLangWidgetOpt = jqAddLangWidget.find('select option[value="' + corpusId + '"]');
                 jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
                 jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
 
@@ -205,15 +206,14 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
     /**
      * @todo rename/refactor this stuff
      */
-    lib.misc = function () {
+    lib.misc = function (queryEnhance) {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
             lib,
             {formTarget: 'first_form'}
         );
-
         // initial query selector setting (just like when user changes it manually)
-        queryInput.cmdSwitchQuery(lib.layoutModel, $('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
+        queryEnhance.cmdSwitchQuery($('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
@@ -265,7 +265,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
      */
     lib.bindParallelCorporaCheckBoxes = function () {
 
-        $('#add-searched-lang-widget button[type="button"]').each(function () {
+        $('#add-searched-lang-widget').find('button[type="button"]').each(function () {
             $(this).on('click', createAddLanguageClickHandler());
         });
         $('input[name="sel_aligned"]').each(function () {
@@ -287,7 +287,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
             removeActiveParallelCorpus(newPrimary);
             addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
 
-            urlArgs = lib.layoutModel.conf.currentArgs; // TODO possible mutability issues
+            urlArgs = lib.layoutModel.getConf('currentArgs'); // TODO possible mutability issues
             urlArgs['corpname'] = newPrimary;
             urlArgs['sel_aligned'] = lib.alignedCorpora;
 
@@ -308,19 +308,6 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
         });
     };
 
-    lib.textareaSubmitOverride = function () {
-        var jqMainForm = $('#mainform');
-        jqMainForm.find('.query-area textarea').each(function (i, area) {
-            queryInput.initCqlTextarea(area, jqMainForm);
-        });
-    };
-
-    lib.textareaHints = function () {
-        var hint = this.layoutModel.getStores().queryHintStore.getHint();
-        this.layoutModel.renderReactComponent(this.layoutModel.layoutViews.QueryHints,
-            $('.query-area .query-hints').get(0), {hintText: hint});
-    };
-
     /**
      *
      * @param {object} conf
@@ -328,34 +315,35 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
      * by some of
      */
     lib.init = function (conf) {
-        var promises;
+        var promises,
+            queryFormTweaks,
+            extendedApi;
 
         clStorage.clear();
 
         lib.layoutModel = new layoutModule.PageModel(conf);
-        lib.extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
         lib.alignedCorpora = conf.alignedCorpora.slice();
+        queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi, lib.layoutModel.userSettings,
+                $('#mainform').get(0), lib.layoutModel.getPlugin.bind(lib.layoutModel));
 
         promises = lib.layoutModel.init(conf).add({
-            misc : lib.misc(),
-            bindBeforeSubmitActions : queryInput.bindBeforeSubmitActions(
-                $('#make-concordance-button'), lib.layoutModel),
-            bindQueryFieldsetsEvents : queryInput.bindQueryFieldsetsEvents(
-                lib.extendedApi,
-                lib.layoutModel.userSettings),
+            misc : lib.misc(queryFormTweaks),
+            bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),
+            bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
-            updateToggleableFieldsets : queryInput.updateToggleableFieldsets(
-                lib.extendedApi,
-                lib.layoutModel.userSettings),
+            updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
-            queryStorage : queryStorage.createInstance(lib.extendedApi),
-            liveAttributesInit : liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-                '.text-type-params'),
+            queryStorage : queryStorage.createInstance(lib.layoutModel.pluginApi()),
+            liveAttributesInit : liveAttributes.init(extendedApi, '#live-attrs-update', '#live-attrs-reset',
+                    '.text-type-params'),
             registerSubcorpChange : lib.registerSubcorpChange(),
-            textareaSubmitOverride : lib.textareaSubmitOverride(),
-            textareaHints : lib.textareaHints()
+            textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
+            textareaHints : queryFormTweaks.textareaHints(),
+            initQuerySwitching : queryFormTweaks.initQuerySwitching(),
+            fixFormSubmit : queryFormTweaks.fixFormSubmit(),
+            bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
         });
-
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
         lib.layoutModel.mouseOverImages();
         return promises;
