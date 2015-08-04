@@ -608,7 +608,7 @@ export class PageModel implements Kontext.PluginProvider {
                                 closeIcon: true,
                                 calculatePosition: false,
                                 timeout: null,
-                                translator: self.translate
+                                translator: self.translate.bind(self)
                             }
                         );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
@@ -706,7 +706,7 @@ export class PageModel implements Kontext.PluginProvider {
             {
                 width: 'auto',
                 closeIcon: true,
-                translator: self.translate,
+                translator: self.translate.bind(self),
                 type: 'plain',
                 onClose: function () {
                     self.unmountReactComponent(this.getRootElement());
@@ -723,7 +723,7 @@ export class PageModel implements Kontext.PluginProvider {
             citationHtml = $('#corpus-citation-box').html();
 
         popupbox.bind($('#positions-help-link'), self.translate('global__what_are_positions'),
-            {translator: self.translate, width: '30%'});
+            {translator: self.translate.bind(self), width: '30%'});
 
         popupbox.bind('#corpus-citation-link a',
             function (box, finalizeCallback) {
@@ -737,7 +737,7 @@ export class PageModel implements Kontext.PluginProvider {
                 closeIcon: true,
                 calculatePosition: true,
                 timeout: null,
-                translator: self.translate,
+                translator: self.translate.bind(self),
                 width: '40%',
                 onClose: function () {
                     $('#corpus-citation-box').html(citationHtml);
@@ -867,8 +867,8 @@ export class PageModel implements Kontext.PluginProvider {
      */
     translate(msg:string, values?:any):string {
         var tmp;
-        var format;        
-        
+        var format;
+
         if (msg) {
             tmp = this.translations[msg];
             if (tmp) {
