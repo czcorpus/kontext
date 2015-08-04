@@ -269,15 +269,10 @@ class Kontext(Controller):
     refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 
-    enable_sadd = Parameter(0)
-    tag_builder_support = Parameter([])
-
     shuffle = Parameter(0, persistent=Parameter.PERSISTENT)
     SubcorpList = Parameter([])
 
     subcnorm = Parameter('tokens')
-
-    keyword = Parameter([])
 
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
 
@@ -777,14 +772,15 @@ class Kontext(Controller):
         arguments:
         tpl_out -- dict data to be used when building an output page from a template
         """
-        taghelper = plugins.get('taghelper')
+        tag_support = lambda c: (plugins.has_plugin('taghelper')
+                                 and plugins.get('taghelper').tag_variants_file_exists(c))
         tpl_out['tag_builder_support'] = {
-            '': taghelper.tag_variants_file_exists(self.corpname)
+            '': tag_support(self.corpname)
         }
         tpl_out['user_menu'] = True
         if 'Aligned' in tpl_out:
             for item in tpl_out['Aligned']:
-                tpl_out['tag_builder_support']['_%s' % item['n']] = taghelper.tag_variants_file_exists(item['n'])
+                tpl_out['tag_builder_support']['_%s' % item['n']] = tag_support(item['n'])
 
     def _attach_query_metadata(self, tpl_out):
         """
