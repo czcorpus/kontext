@@ -198,10 +198,6 @@ class Controller(object):
       5) building output headers and body
     """
 
-    _keep_blank_values = Parameter(0)
-
-    exceptmethod = Parameter(None)
-
     # specifies response output format (used in case default one is not applicable)
     format = Parameter(u'')
 
@@ -209,10 +205,6 @@ class Controller(object):
     # calls "action_form" which (by convention) leads to a page with a form submitting
     # to the "action"
     reload = Parameter(0)
-
-    _template_dir = u'../cmpltmpl/'
-
-    _tmp_dir = u'/tmp'
 
     NO_OPERATION = 'nop'
 
@@ -243,6 +235,9 @@ class Controller(object):
         self._proc_time = None
         self._validators = []  # a list of functions which must pass (= return None) before any action is performed
         self._args_mappings = OrderedDict()
+        self._exceptmethod = None
+        self._template_dir = u'../cmpltmpl/'
+        self._tmp_dir = u'/tmp'
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
@@ -850,16 +845,16 @@ class Controller(object):
                                  'Please try again later or contact system support.')
                 return methodname, None, {'error': json_msg, 'contains_errors': True}
             else:
-                if not self.exceptmethod and self.is_template(methodname + '_form'):
-                    self.exceptmethod = methodname + '_form'
-                if not self.exceptmethod:  # let general error handlers in run() handle the error
+                if not self._exceptmethod and self.is_template(methodname + '_form'):
+                    self._exceptmethod = methodname + '_form'
+                if not self._exceptmethod:  # let general error handlers in run() handle the error
                     raise e2
                 else:
                     self.add_system_message('error', e2.message)
 
-                self._pre_dispatch(self.exceptmethod, None, named_args,
-                                   self._get_method_metadata(self.exceptmethod))
-                em, self.exceptmethod = self.exceptmethod, None
+                self._pre_dispatch(self._exceptmethod, None, named_args,
+                                   self._get_method_metadata(self._exceptmethod))
+                em, self._exceptmethod = self._exceptmethod, None
                 return self.process_method(em, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):

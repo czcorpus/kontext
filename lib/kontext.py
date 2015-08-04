@@ -143,7 +143,6 @@ class Kontext(Controller):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    error = Parameter(u'')
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
     fc_lemword_wsize = Parameter(5)
@@ -638,7 +637,7 @@ class Kontext(Controller):
         for k in form.keys():
             # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
-            if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
+            if len(form.getvalue(k)) > 0:
                 key = str(k)
                 val = form.getvalue(k)
                 if key in param_types:
@@ -1425,7 +1424,7 @@ class Kontext(Controller):
                 try:
                     nas = struct.get_attr(self.subcnorm).pos2str
                 except conclib.manatee.AttrNotFound, e:
-                    self.error = str(e)
+                    self.add_system_message('error', str(e))
                     self.subcnorm = 'freq'
             if self.subcnorm == 'freq':
                 normvals = dict([(struct.beg(i), 1)
