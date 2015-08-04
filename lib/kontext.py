@@ -143,7 +143,6 @@ class Kontext(Controller):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    error = Parameter(u'')
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
     fc_lemword_wsize = Parameter(5)
@@ -1425,7 +1424,7 @@ class Kontext(Controller):
                 try:
                     nas = struct.get_attr(self.subcnorm).pos2str
                 except conclib.manatee.AttrNotFound, e:
-                    self.error = str(e)
+                    self.add_system_message('error', str(e))
                     self.subcnorm = 'freq'
             if self.subcnorm == 'freq':
                 normvals = dict([(struct.beg(i), 1)
