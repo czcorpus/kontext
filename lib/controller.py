@@ -198,8 +198,6 @@ class Controller(object):
       5) building output headers and body
     """
 
-    _keep_blank_values = Parameter(0)
-
     exceptmethod = Parameter(None)
 
     # specifies response output format (used in case default one is not applicable)

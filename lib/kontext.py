@@ -638,7 +638,7 @@ class Kontext(Controller):
         for k in form.keys():
             # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
-            if len(form.getvalue(k)) > 0 and not self._keep_blank_values:
+            if len(form.getvalue(k)) > 0:
                 key = str(k)
                 val = form.getvalue(k)
                 if key in param_types:
