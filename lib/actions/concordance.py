@@ -695,7 +695,7 @@ class Actions(Kontext):
                 del self.q[-1]
             raise
 
-    @exposed()
+    @exposed(legacy=True)
     def reduce_form(self):
         """
         """
