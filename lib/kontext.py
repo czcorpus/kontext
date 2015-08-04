@@ -1174,6 +1174,7 @@ class Kontext(Controller):
         result['CorplistFn'] = self._load_fav_items
         user_items = plugins.get('user_items')
 
+        # automatically result using registered mapped args
         if not action_metadata.get('legacy', False):
             result.update(self._export_mapped_args())
             self._store_mapped_args()

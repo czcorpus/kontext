@@ -487,10 +487,10 @@ class Controller(object):
     def _invoke_legacy_action(self, action, args, named_args):
         """
         Calls an action method (= method with the @exposed annotation) in the
-        "bonito" way (i.e. with automatic mapping between request args to the
-        target method args). Such action must have legacy=True meta-information.
+        "bonito" way (i.e. with automatic mapping between request args to target
+        method args). Such action must have legacy=True meta-information.
         Non-legacy actions are called with werkzeug.wrappers.Request instance
-        as the first (and currently only) argument.
+        as the first argument.
 
         arguments:
         action -- name of the action
