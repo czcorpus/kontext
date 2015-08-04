@@ -964,7 +964,7 @@ class Actions(Kontext):
     @exposed(access_level=1, template='freqs.tmpl', legacy=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
-            self.exceptmethod = 'freq'
+            self._exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
@@ -1313,7 +1313,7 @@ class Actions(Kontext):
 
     @exposed(template='freqs.tmpl', legacy=True)
     def struct_wordlist(self):
-        self.exceptmethod = 'wordlist_form'
+        self._exceptmethod = 'wordlist_form'
         if self.fcrit:
             self.wlwords, self.wlcache = self._get_wl_words(upl_file='wlfile', cache_file='wlcache')
             self.blacklist, self.blcache = self._get_wl_words(upl_file='wlblacklist',

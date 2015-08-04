@@ -35,7 +35,7 @@ class Options(Kontext):
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
             if not newctxsize.isdigit():
-                self.exceptmethod = 'viewattrs'
+                self._exceptmethod = 'viewattrs'
                 raise Exception(
                     _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
