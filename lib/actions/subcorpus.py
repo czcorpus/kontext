@@ -224,13 +224,17 @@ class Subcorpus(Kontext):
         else:
             sort_keys[sort_key] = (sort_key, '&#8595;')
 
-        self.cm.get_Corpus(current_corp)  # this is necessary to reset manatee module back to its original state
-        return {
+        # this is necessary to reset manatee module back to its original state
+        self.cm.get_Corpus(current_corp)
+
+        ans = {
             'subcorp_list': full_list,
             'sort_keys': sort_keys,
             'show_deleted': show_deleted,
             'rev': rev
         }
+        self._export_subcorpora_list(ans)
+        return ans
 
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
