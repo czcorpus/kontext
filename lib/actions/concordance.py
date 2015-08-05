@@ -753,8 +753,8 @@ class Actions(Kontext):
 
         for b in result['Blocks']:
             for item in b['Items']:
-                item['pfilter'] = ''
-                item['nfilter'] = ''
+                item['pfilter'] = []
+                item['nfilter'] = []
                 # generating positive and negative filter references
         for b_index, block in enumerate(result['Blocks']):
             curr_fcrit = fcrit[b_index]
@@ -792,10 +792,9 @@ class Actions(Kontext):
                                     l10n.escape(item['Word'][0]['n']))
                     if not item['freq']:
                         continue
-                    efquery = werkzeug.urls.url_quote(fquery)
-                    item['pfilter'] += ';q=p%s' % efquery
+                    item['pfilter'].append(('q', 'p%s' % fquery))
                     if len(attrs) == 1 and item['freq'] <= conc.size():
-                        item['nfilter'] += ';q=n%s' % efquery
+                        item['nfilter'].append(('q', 'n%s' % fquery))
                         # adding no error, no correction (originally for CUP)
         errs, corrs, err_block, corr_block = 0, 0, -1, -1
         for b_index, block in enumerate(result['Blocks']):
@@ -810,9 +809,9 @@ class Actions(Kontext):
                     corrs += item['freq']
         freq = conc.size() - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
-            pfilter = ';q=p0 0 1 ([] within ! <err/>) within ! <corr/>'
+            pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
             cc = self.call_function(conclib.get_conc, (self._corp(),),
-                                    q=self.args.q + [pfilter[3:]])
+                                    q=self.args.q + [pfilter[0][1]])
             freq = cc.size()
             err_nfilter, corr_nfilter = '', ''
             if freq != conc.size():
@@ -1314,9 +1313,7 @@ class Actions(Kontext):
                            ml3attr=self.args.wlstruct_attr3)
 
     @exposed(access_level=1, legacy=True)
-    def savewl_form(self, wlpat='', from_line=1, to_line='', wltype='simple',
-                    usesubcorp='', ref_corpname='', ref_usesubcorp='',
-                    saveformat='text'):
+    def savewl_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
         if to_line == '':
             to_line = 1000
