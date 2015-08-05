@@ -974,8 +974,8 @@ class Actions(Kontext):
             result['lastpage'] = 1
 
         for item in result['Items']:
-            item['pfilter'] = self.urlencode([('q', item['pfilter'])])
-            item['nfilter'] = self.urlencode([('q', item['nfilter'])])
+            item['pfilter'] = [('q', item['pfilter'])]
+            item['nfilter'] = [('q', item['nfilter'])]
             item['str'] = import_string(item['str'],
                                         from_encoding=self._corp().get_conf('ENCODING'))
 
