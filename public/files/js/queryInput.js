@@ -511,7 +511,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         $(this.formElm).find(submitElm).on('click', function (event) { // TODO
             var currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0),
                 queryTypeElm = $(self.formElm).find('select.qselector').get(0),
-                data = self.formElm.serialize().split('&'),
+                data = $(self.formElm).serialize().split('&'),
                 cleanData = '',
                 unusedLangs = {};
 
