@@ -264,8 +264,12 @@ class PyConc(manatee.Concordance):
                 if maxrel < newrel:
                     maxrel = newrel
             if rel_mode == 0:
-                head.append({'n': 'i.p.m.', 'title': _(
-                    'instances per million (refers to the respective category)'), 's': 'rel'})
+                head.append({
+                    'n': 'i.p.m.',
+                    'title': _(
+                        'instances per million positions (refers to the respective category)'),
+                    's': 'rel'}
+                )
             else:
                 head.append({'n': 'Freq [%]', 'title': '', 's': 'rel'})
 

@@ -54,8 +54,8 @@ msgid "Freq"
 msgstr "Frekvence"
 
 #: lib/conclib.py:815
-msgid "instances per million (refers to the respective category)"
-msgstr "výskytů na milion (vztaženo k příslušné kategorii)"
+msgid "instances per million positions (refers to the respective category)"
+msgstr "výskytů na milion pozic (vztaženo k příslušné kategorii)"
 
 #: lib/conclib.py:1374
 msgid "enabled"
@@ -1074,8 +1074,8 @@ msgid "random sample of size"
 msgstr "Náhodný vzorek o velikosti"
 
 #: cmpltmpl/document.py:252 cmpltmpl/view.py:1019
-msgid "instances per million"
-msgstr "výskytů na milion"
+msgid "instances per million positions"
+msgstr "výskytů na milion pozic"
 
 #: cmpltmpl/document.py:276 cmpltmpl/view.py:1043
 msgid "Average Reduced Frequency"
