@@ -54,7 +54,7 @@ class Subcorpus(Kontext):
             within_struct = import_string(tt_query[0][0], from_encoding=corp_encoding)
             within_condition = import_string(tt_query[0][1], from_encoding=corp_encoding)
 
-        basecorpname = self.corpname.split(':')[0]
+        basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
             raise ConcError(_('No subcorpus name specified!'))
 
@@ -77,7 +77,7 @@ class Subcorpus(Kontext):
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
-                                                            corpname=self.corpname,
+                                                            corpname=self.args.corpname,
                                                             subcname=subcname,
                                                             structname=within_struct,
                                                             condition=within_condition)
@@ -94,7 +94,7 @@ class Subcorpus(Kontext):
     def subcorp(self, request):
         try:
             ans = self._create_subcorpus(request)
-            self._redirect('subcorpus/subcorp_list?corpname=%s' % self.corpname)
+            self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
         except Exception:
             ans = self.subcorp_form(request)
         return ans
@@ -171,7 +171,7 @@ class Subcorpus(Kontext):
 
         sort = 'n'  # TODO
         show_deleted = int(request.args.get('show_deleted', 0))
-        current_corp = self.corpname
+        current_corp = self.args.corpname
         if self.get_http_method() == 'POST':
             selected_subc = request.form.getlist('selected_subc')
             self._delete_subcorpora(selected_subc)
@@ -234,7 +234,7 @@ class Subcorpus(Kontext):
 
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
-        sc = self.cm.get_Corpus(self.corpname, subcname)
+        sc = self.cm.get_Corpus(self.args.corpname, subcname)
         return {
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),

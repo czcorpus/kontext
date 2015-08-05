@@ -10,15 +10,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
-import logging
 
 from controller import exposed
-from kontext import Kontext, ConcError, MainMenu, UserActionException
+from kontext import Kontext, MainMenu
 from translation import ugettext as _
 import plugins
-import l10n
-from l10n import export_string, import_string, format_number
 import corplib
 
 
@@ -33,24 +29,24 @@ class Options(Kontext):
     def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit=''):
         if ctxunit == '@pos':
             ctxunit = ''
-        if "%s%s" % (newctxsize, ctxunit) != self.kwicrightctx:
+        if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
             if not newctxsize.isdigit():
                 self._exceptmethod = 'viewattrs'
                 raise Exception(
                     _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
-            self.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
-            self.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
+            self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
+            self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
 
     def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
-        self.attrs = ','.join(setattrs)
-        self.structs = ','.join(setstructs)
-        self.refs = ','.join(setrefs)
-        self.attr_allpos = allpos
+        self.args.attrs = ','.join(setattrs)
+        self.args.structs = ','.join(setstructs)
+        self.args.refs = ','.join(setrefs)
+        self.args.attr_allpos = allpos
         if allpos == 'all':
-            self.ctxattrs = self.attrs
+            self.args.ctxattrs = self.args.attrs
         else:
-            self.ctxattrs = 'word'
-        self.structattrs = structattrs
+            self.args.ctxattrs = 'word'
+        self.args.structattrs = structattrs
 
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def viewattrs(self):
@@ -62,15 +58,15 @@ class Options(Kontext):
         self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         out = {}
-        if self.maincorp:
-            corp = corplib.manatee.Corpus(self.maincorp)
+        if self.args.maincorp:
+            corp = corplib.manatee.Corpus(self.args.maincorp)
             out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
                                for n in corp.get_conf('ATTRLIST').split(',')
                                if n]
         else:
             corp = self._corp()
         availstruct = corp.get_conf('STRUCTLIST').split(',')
-        structlist = self.structs.split(',')
+        structlist = self.args.structs.split(',')
         out['Availstructs'] = [{'n': n,
                                 'sel': (((n in structlist)
                                          and 'selected') or ''),
@@ -79,10 +75,10 @@ class Options(Kontext):
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         structattrs = defaultdict(list)
-        reflist = self.refs.split(',')
+        reflist = self.args.refs.split(',')
 
         ref_is_allowed = lambda r: r and r not in (
-            '#', plugins.get('corparch').get_corpus_info(self.corpname).get('speech_segment'))
+            '#', plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment'))
 
         for item in availref:
             if ref_is_allowed(item):
@@ -107,9 +103,9 @@ class Options(Kontext):
         if doc in availstruct:
             out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
                                         'sel': (doc in reflist and 'selected' or '')})
-        out['newctxsize'] = self.kwicleftctx[1:]
+        out['newctxsize'] = self.args.kwicleftctx[1:]
         out['structattrs'] = structattrs
-        out['curr_structattrs'] = self.structattrs
+        out['curr_structattrs'] = self.args.structattrs
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
@@ -119,9 +115,9 @@ class Options(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.corpname)
+        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
         # TODO refs_up ???
-        if self.q:
+        if self.args.q:
             self._redirect_to_conc()
         else:
             self._redirect('/first_form')
@@ -131,7 +127,7 @@ class Options(Kontext):
         self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         out = {
-            'newctxsize': self.kwicleftctx[1:]
+            'newctxsize': self.args.kwicleftctx[1:]
         }
         return out
 
@@ -141,7 +137,7 @@ class Options(Kontext):
         self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
         self._save_options(self.GENERAL_OPTIONS)
 
-        if self.q:
+        if self.args.q:
             return self.view()
         else:
             self._redirect('/first_form')
