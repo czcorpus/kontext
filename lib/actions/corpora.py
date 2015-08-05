@@ -88,11 +88,11 @@ class Corpora(Kontext):
         """
         try:
             tag_loader = plugins.get('taghelper').loader(
-                self.corpname,
-                plugins.get('corparch').get_corpus_info(self.corpname)['tagset'],
+                self.args.corpname,
+                plugins.get('corparch').get_corpus_info(self.args.corpname)['tagset'],
                 self.ui_lang)
         except IOError:
-            raise UserActionException(_('Corpus %s is not supported by this widget.') % self.corpname)
+            raise UserActionException(_('Corpus %s is not supported by this widget.') % self.args.corpname)
 
         if len(pattern) > 0:
             ans = tag_loader.get_variant(pattern)

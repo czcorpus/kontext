@@ -99,7 +99,7 @@ class User(Kontext):
             from query_history import Export
 
             if current_corpus:
-                corpname = self.corpname
+                corpname = self.args.corpname
             else:
                 corpname = None
 

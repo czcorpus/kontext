@@ -110,9 +110,9 @@ class Kwic(object):
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
-    def kwicpage(self, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
-        ctxattrs='word', refs='#', structs='p', pagesize=40, labelmap={}, righttoleft=False, alignlist=[],
-            tbl_template='none', hidenone=0):
+    def kwicpage(self, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5',
+                 attrs='word', ctxattrs='word', refs='#', structs='p', pagesize=40, labelmap={},
+                 righttoleft=False, alignlist=[], hidenone=0):
         """
         Generates template data for page displaying provided concordance
 
@@ -130,7 +130,6 @@ class Kwic(object):
         labelmap -- dict, optional (default is {}) ???
         righttoleft -- bool, optional (default is False), whether text flows from right to left
         alignlist -- list, optional (default is [])
-        tbl_template -- str, optional (default is 'none')
         hidenone -- int (0 or 1), whether display ===EMPTY=== or '' in case a value is empty
 
         returns:

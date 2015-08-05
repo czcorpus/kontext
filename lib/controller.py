@@ -39,7 +39,7 @@ import plugins
 import settings
 from plugins.abstract.auth import AuthException
 from translation import ugettext as _
-from argmapping import Parameter
+from argmapping import Parameter, GlobalArgs
 
 
 def replace_dot_error_handler(err):
@@ -185,6 +185,13 @@ class NotFoundException(UserActionException):
         super(NotFoundException, self).__init__(message, 404)
 
 
+class Args(object):
+    """
+    URL/form parameters are mapped here
+    """
+    pass
+
+
 class Controller(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
@@ -197,14 +204,6 @@ class Controller(object):
       4) post-dispatch (_post_dispatch() method)
       5) building output headers and body
     """
-
-    # specifies response output format (used in case default one is not applicable)
-    format = Parameter(u'')
-
-    # after an "action" was called, controller internally (without HTTP redirects)
-    # calls "action_form" which (by convention) leads to a page with a form submitting
-    # to the "action"
-    reload = Parameter(0)
 
     NO_OPERATION = 'nop'
 
@@ -238,10 +237,12 @@ class Controller(object):
         self._exceptmethod = None
         self._template_dir = u'../cmpltmpl/'
         self._tmp_dir = u'/tmp'
+        self._css_prefix = ''
+        self.args = Args()
 
         # initialize all the Parameter attributes
-        for k, v in inspect.getmembers(self.__class__, predicate=lambda m: isinstance(m, Parameter)):
-            setattr(self, k, v.unwrap())
+        for k, v in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
+            setattr(self.args, k, v.unwrap())
 
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
@@ -527,9 +528,9 @@ class Controller(object):
         Please note that the copy is shallow.
         """
         na = {}
-        for a in dir(self) + dir(self.__class__):
-            if not a.startswith('_') and not callable(getattr(self, a)):
-                na[a] = getattr(self, a)
+        for a in dir(self.args):  # + dir(self.__class__): TODO
+            if not a.startswith('_') and not callable(getattr(self.args, a)):
+                na[a] = getattr(self.args, a)
         return na
 
     def _get_method_metadata(self, method_name, data_name=None):
@@ -628,7 +629,7 @@ class Controller(object):
         2. has a matching persistence flag
         """
         is_valid_parameter = lambda m: isinstance(m, Parameter) and m.meets_persistence(persistence_types)
-        attrs = inspect.getmembers(self.__class__, predicate=is_valid_parameter)
+        attrs = inspect.getmembers(GlobalArgs, predicate=is_valid_parameter)
         return tuple([x[0] for x in attrs])
 
     def _get_items_by_persistence(self, persistence_types):
@@ -640,8 +641,8 @@ class Controller(object):
         """
         ans = {}
         for k in self._get_attrs_by_persistence(persistence_types):
-            if hasattr(self, k):
-                ans[k] = getattr(self, k)
+            if hasattr(self.args, k):
+                ans[k] = getattr(self.args, k)
         return ans
 
     def _install_plugin_actions(self):
@@ -815,8 +816,8 @@ class Controller(object):
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
         action_metadata = self._get_method_metadata(methodname)
-        if getattr(self, 'reload', None):
-            self.reload = None
+        if getattr(self.args, 'reload', None):
+            self.args.reload = None
             if methodname != 'subcorp':
                 reload_template = reload.get(methodname, methodname + '_form')
                 if self.is_template(reload_template):
@@ -919,9 +920,9 @@ class Controller(object):
             self._add_undefined(result, methodname, action_metadata.get('vars', ()))
             if template.endswith('.tmpl'):
                 TemplateClass = self._get_template_class(template[:-5])
-                result = TemplateClass(searchList=[result, self])
+                result = TemplateClass(searchList=[result, self.args])
             else:
-                result = Template(template, searchList=[result, self])
+                result = Template(template, searchList=[result, self.args])
             if return_template:
                 return result
             result.respond(CheetahResponseFile(outf))
