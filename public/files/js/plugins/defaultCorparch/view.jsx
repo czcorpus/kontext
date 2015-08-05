@@ -41,9 +41,9 @@ define(['vendor/react'], function (React) {
             },
             render: function () {
                 return (<tr className={this.state.htmlClasses.join(' ')}>
-                    <th>{this.translate('Name')}</th>
+                    <th>{this.translate('defaultCorparch__corpus_name')}</th>
                     <th>{this.translate('defaultCorparch__size_in_positions')}</th>
-                    <th>{this.translate('Labels')}</th>
+                    <th>{this.translate('defaultCorparch__corpus_labels')}</th>
                     <th></th>
                     <th></th>
                 </tr>);
@@ -170,7 +170,7 @@ define(['vendor/react'], function (React) {
                             <p className="desc" style={{display: 'none'}}>
                             </p>
                             <a className="detail"
-                               onClick={this._detailClickHandler}>{this.translate('details')}</a>
+                               onClick={this._detailClickHandler}>{this.translate('defaultCorparch__corpus_details')}</a>
                         </td>
                     </tr>
                 );
@@ -195,7 +195,7 @@ define(['vendor/react'], function (React) {
                 return (
                   <tr className="load-more">
                       <td colSpan="5">
-                          <a onClick={this._linkClickHandler}>{this.translate('load more')}</a>
+                          <a onClick={this._linkClickHandler}>{this.translate('global__load_more')}</a>
                       </td>
                   </tr>
                 );
@@ -448,12 +448,13 @@ define(['vendor/react'], function (React) {
          * Filter form root component
          */
         var FilterForm = React.createClass({
+            mixins: mixins,
             render: function () {
                 return (
                     <div>
                         <KeywordsField
                             keywords={this.props.keywords}
-                            label={this.props.keywordsFieldLabel} />
+                            label={this.translate('defaultCorparch__keywords_field_label')} />
                         <FilterInputFieldset
                             currKeywords={this.props.currKeywords}
                             filters={this.props.filters} />

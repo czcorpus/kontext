@@ -542,7 +542,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
         exp_keywords = [(k, lab, k in query_keywords) for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
-            'keywordsFieldLabel': 'Available keywords',   # TODO
             'currKeywords': [],  # TODO
             'filters': {
                 'maxSize': filter_dict.getlist('maxSize'),
