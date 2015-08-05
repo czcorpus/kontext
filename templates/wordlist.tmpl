@@ -29,16 +29,16 @@ $_("Word list")#slurp
 
 #def headers
     #filter WebSafe
-    #set global $url_wlpat = $urlquote($wlpat)
-    #set global $url_usesubcorp = $urlquote($usesubcorp)
 
-    #set global $curr_params = [('usesubcorp', $url_usesubcorp),
-        ('wlattr', $wlattr), ('wlminfreq', $wlminfreq), ('wlpat', $url_wlpat), ('wlicase', $wlicase),
+    #set global $curr_hidden_params = [('corpname', $corpname), ('usesubcorp', $usesubcorp),
+        ('wlattr', $wlattr), ('wlminfreq', $wlminfreq), ('wlpat', $wlpat), ('wlicase', $wlicase),
         ('wlsort', $wlsort), ('ref_corpname', $ref_corpname), ('ref_usesubcorp', $ref_usesubcorp),
         ('wlcache', $wlcache), ('simple_n', $simple_n), ('wltype', $wltype), ('wlnums', $wlnums),
-        ('include_nonwords', $include_nonwords), ('blcache', $blcache), ('wlpage', $wlpage)]
+        ('include_nonwords', $include_nonwords), ('blcache', $blcache)]
 
-    #set global $curr_settings = $join_params($corpname_url, $curr_params)
+    #set global $curr_params = $curr_hidden_params + [('wlpage', $wlpage)]
+
+    #set global $curr_settings = $join_params($curr_params)
 
     #end filter
 #end def
@@ -101,22 +101,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
       #end if
 
     <div class="bonito-pagination-core">
-        <input type="hidden" name="corpname" value='$corpname' />
-        <input type="hidden" name="usesubcorp" value='$usesubcorp' />
-        <input type="hidden" name="wlattr" value='$wlattr' />
-        <input type="hidden" name="wlminfreq" value='$wlminfreq' />
-        <input type="hidden" name="wlpat" value='$wlpat' />
-        <input type="hidden" name="wlicase" value='$wlicase' />
-        <input type="hidden" name="wlsort" value='$wlsort' />
-        <input type="hidden" name="ref_corpname" value='$ref_corpname' />
-        <input type="hidden" name="ref_usesubcorp" value='$ref_usesubcorp' />
-        <input type="hidden" name="wlcache" value='$wlcache' />
-        <input type="hidden" name="simple_n" value='$simple_n' />
-        <input type="hidden" name="wltype" value='$wltype' />
-        <input type="hidden" name="wlnums" value='$wlnums' />
-        <input type="hidden" name="include_nonwords" value='$include_nonwords' />
-        <input type="hidden" name="blcache" value='$blcache' />
-
+      #for $n, $v in $curr_hidden_params:
+      <input type="hidden" name="$n" value="$v" />
+      #end for
       <input type="text" name="wlpage" value="$wlpage" size="4" />
       <input type="submit" value="$_("Go")" />
     </div>
@@ -151,7 +138,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
           #if '.' in $wlattr
             $i.freq
           #else
-            <a href="first?$join_params($corpname_url, [('usesubcorp', $url_usesubcorp),
+            <a href="first?$join_params([('corpname', $corpname), ('usesubcorp', $usesubcorp),
                 ('cql', '%5B$wlattr%3D%3D%22' + $url_str + '%22%5D'), ('default_attr', $wlattr),
                 ('qmcase', 1), ('queryselector', 'cqlrow')])">$i.freq</a>
           #end if
@@ -188,7 +175,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
           <td class="left">$k.str</td>
           <td></td>
           #set $url_str = $urlquote($k.str.replace('"', '\\"'))
-          <td><a href="first?$join_params($corpname_url, [('usesubcorp', $url_usesubcorp),
+          <td><a href="first?$join_params($corpname_url, [('usesubcorp', $usesubcorp),
                 ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
                 ('queryselector', 'phraserow')])">$k.freq</a></td>
 
