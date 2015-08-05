@@ -138,6 +138,6 @@ class Options(Kontext):
         self._save_options(self.GENERAL_OPTIONS)
 
         if self.args.q:
-            return self.view()
+            return self._redirect_to_conc()
         else:
             self._redirect('/first_form')
