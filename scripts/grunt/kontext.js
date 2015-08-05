@@ -79,9 +79,10 @@
      * Configures a special module "vendor/common" which contains all the 3rd
      * party libs merged into a single file
      */
-    module.exports.listVendorModules = function (isProduction) {
+    module.exports.listPackedModules = function (isProduction) {
         var modules = [
                 'jquery',
+                'popupbox',
                 'vendor/rsvp',
                 'vendor/react',
                 'vendor/Dispatcher',
