@@ -155,7 +155,7 @@ class User(Kontext):
             'limit': limit
         }
 
-    @exposed(return_type='json', argmappings=(ConcArgsMapping,), access_level=1)
+    @exposed(return_type='json', argmappings=(ConcArgsMapping,), access_level=1, skip_corpus_init=True)
     def set_favorite_item(self, request, conc_args):
         """
         """
@@ -185,13 +185,13 @@ class User(Kontext):
         plugins.get('user_items').add_user_item(self._session_get('user', 'id'), item)
         return {'id': item.id}
 
-    @exposed(return_type='json', access_level=1)
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
     def unset_favorite_item(self, request):
         plugins.get('user_items').delete_user_item(
             self._session_get('user', 'id'), request.form['id'])
         return {}
 
-    @exposed(return_type='json', access_level=1)
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
     def get_favorite_corpora(self, request):
         return lambda: plugins.get('user_items').to_json(self._load_fav_items())
 

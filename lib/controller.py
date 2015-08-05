@@ -480,7 +480,8 @@ class Controller(object):
             if isinstance(err, Exception):
                 raise err
 
-    def _invoke_legacy_action(self, action, args, named_args):
+    @staticmethod
+    def _invoke_legacy_action(action, args, named_args):
         """
         Calls an action method (= method with the @exposed annotation) in the
         "bonito" way (i.e. with automatic mapping between request args to target
