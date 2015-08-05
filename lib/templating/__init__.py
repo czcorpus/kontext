@@ -12,6 +12,7 @@
 
 import urllib
 import json
+import copy
 
 
 class StateGlobals(object):
@@ -46,8 +47,20 @@ class StateGlobals(object):
         return json.dumps(self._data)
 
     def update(self, *args):
+        """
+        Creates a new (deep) copy with updated values
+        according to passed args.
+
+        arguments:
+         - if a single argument is passed then a dict is expected
+         - if two arguments are passed then (key, value) is expected
+
+        returns:
+        updated copy of the called object
+        """
+        new_data = copy.deepcopy(self._data)
         if type(args[0]) is dict:
-            self._data.update(args[0])
+            new_data.update(args[0])
         elif len(args) == 2:
-            self._data[args[0]] = args[1]
-        return self
+            new_data[args[0]] = args[1]
+        StateGlobals(data=new_data)
