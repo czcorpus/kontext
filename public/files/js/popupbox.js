@@ -470,6 +470,7 @@ define(['win', 'jquery'], function (win, $) {
             if (typeof beforeOpen === 'function') {
                 beforeOpenValue = beforeOpen.call(self);
             }
+
             if ($(elm).data('popupBox')
                         && $(elm).data('popupBox').toString() === '[object TooltipBox]') {
                 box = $(elm).data('popupBox');
@@ -514,20 +515,27 @@ define(['win', 'jquery'], function (win, $) {
      * @param {String|HTMLElement|jQuery} [context]
      */
     lib.abbr = function (context) {
+        var dataKey = 'abbr-popupbox-applied';
+
+        function isModifiedAbbr(item) {
+            return Boolean($(item).data(dataKey));
+        }
 
         context = context || win.document;
 
         $(context).find('abbr').each(function () {
             var supElm,
                 linkElm;
-
-            $(this).css('border', 'none');
-            supElm = $(win.document.createElement('sup'));
-            $(this).after(supElm);
-            linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
-            lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
-            $(this).attr('title', null);
-            supElm.append(linkElm);
+            if (!isModifiedAbbr(this)) {
+                $(this).css('border', 'none');
+                supElm = $(win.document.createElement('sup'));
+                $(this).after(supElm);
+                linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
+                lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
+                $(this).attr('title', null);
+                supElm.append(linkElm);
+                $(this).data(dataKey, true);
+            }
         });
     };
 

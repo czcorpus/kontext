@@ -369,14 +369,15 @@ define('conf', [], function () {
         <div id="conc-top-bar">
             <div id="result-info">
                 #if $usesubcorp
-                    $_("subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
+                    $_("Subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
                 #end if
 
                 #if $cached['conc_persist']
-                $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['concsize'], mask='%d')
-                    </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
-                    <span class="separ">|</span> #end if
-
+                $_('Hits'): <span id="loader"></span>
+                <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['concsize'], mask='%d')
+                </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
+                #end if
+                <span class="separ">|</span>
                 <abbr title="$_('instances per million positions') $cached['result_relative_freq_rel_to']">i.p.m.</abbr>:
                 <span class="ipm">$format_number($cached['result_relative_freq'], mask='%01.2f')</span>
                 $cached['result_relative_freq_rel_to']
