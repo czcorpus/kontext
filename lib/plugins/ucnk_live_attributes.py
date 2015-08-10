@@ -223,7 +223,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
     @staticmethod
     def import_key(k):
-        return k.replace('.', '_', 1)
+        return k.replace('.', '_', 1) if k is not None else k
 
     @staticmethod
     def _get_subcorp_attrs(corpus):
@@ -254,7 +254,7 @@ class LiveAttributes(AbstractLiveAttributes):
         collator_locale = corpus_info.collator_locale
         hidden_attrs = set()
 
-        if bib_id not in srch_attrs:
+        if bib_id is not None and bib_id not in srch_attrs:
             hidden_attrs.add(bib_id)
 
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
