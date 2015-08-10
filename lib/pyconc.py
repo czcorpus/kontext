@@ -277,8 +277,8 @@ class PyConc(manatee.Concordance):
             for w, f, nf in zip(words, freqs, norms):
                 w = self.import_string(w)
                 rel_norm_freq = {
-                    0: round(f * 1e6 / nf, 1),
-                    1: round(f / sumf * 100, 1)
+                    0: round(f * 1e6 / nf, 2),
+                    1: round(f / sumf * 100, 2)
                 }[rel_mode]
 
                 rel_bar = {
