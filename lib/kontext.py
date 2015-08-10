@@ -949,7 +949,9 @@ class Kontext(Controller):
         if settings.contains('theme', 'logo_href'):
             logo_href = settings.get('theme', 'logo_href')
         else:
-            logo_href = self.get_root_url() + 'first_form'
+            logo_href = self.get_root_url() + 'first_form?corpname={corpname}' \
+                                            + '&usesubcorp={usesubcorp}'
+        logo_href = logo_href.format(**self.args.__dict__)
 
         if theme_name == 'default':
             logo_title = _('Click to enter a new query')

@@ -201,7 +201,7 @@ define('conf', [], function () {
         <ul id="menu-level-1">
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
                 <ul class="submenu">
-                    <li class="separ"><a title="$_('Enter new query')" href="${root_url}first_form?$corpname_url&amp;lemma=$lemma&amp;lpos=$lpos&amp;align=$align">$_('New query')&#8230;</a></li>
+                    <li class="separ"><a title="$_('Enter new query')" href="${root_url}first_form?$corpname_url&amp;lemma=$lemma&amp;lpos=$lpos&amp;align=$align&amp;usesubcorp=$usesubcorp">$_('New query')&#8230;</a></li>
                     <li class="separ $menu_status('menu-new-query:history')"><a title="$_('List of recent queries')" href="${root_url}user/query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
                     <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")"
                         href="${root_url}wordlist_form?$join_params($corpname_url, 'include_nonwords=1')">$_("Word List")&#8230;</a></li>
