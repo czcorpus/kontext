@@ -222,45 +222,6 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
     };
 
     /**
-     * Updates toggleable fieldsets to the state user set
-     * last time he used the form.
-     *
-     * @returns {$.Deferred.Promise} a promise object
-     */
-    lib.updateToggleableFieldsets = function () {
-        var jqLink = $('a.form-extension-switch'),
-            jqFieldset,
-            elmStatus,
-            defer = $.Deferred(); // currently, this is synchronous
-
-        jqLink.each(function () {
-            jqFieldset = $(this).closest('fieldset');
-            elmStatus = lib.layoutModel.userSettings.get($(this).data('box-id'));
-
-            if (elmStatus === true) {
-                jqFieldset.removeClass('inactive');
-                jqFieldset.find('div.contents').show();
-                jqFieldset.find('div.desc').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
-                    .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', lib.layoutModel.translate('global__click_to_hide'));
-                jqLink.attr('title', lib.layoutModel.translate('global__click_to_hide'));
-
-            } else {
-                jqFieldset.find('div.contents').hide();
-                jqFieldset.find('div.desc').show();
-                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
-                    .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', lib.layoutModel.translate('global__click_to_expand'));
-                jqLink.attr('title', lib.layoutModel.translate('global__click_to_expand'));
-            }
-        });
-        lib.layoutModel.mouseOverImages();
-        defer.resolve();
-        return defer.promise();
-    };
-
-    /**
      *
      */
     lib.bindParallelCorporaCheckBoxes = function () {
