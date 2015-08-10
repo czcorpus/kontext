@@ -4,6 +4,7 @@
 **/*.sublime-workspace
 *.*~
 **/tsconfig.json
+public/files/.settings
 
 # local development 
 doc/
