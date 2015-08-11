@@ -245,12 +245,15 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         corpname = vanilla_corpname(corpus.corpname)
         corpus_info = self.corparch.get_corpus_info(corpname)
-        attrs = self._get_subcorp_attrs(corpus)
-        db = self.db(corpname)
-        srch_attrs = set(attrs) - set(attr_map.keys())
-        srch_attrs.add('poscount')
         bib_label = LiveAttributes.import_key(corpus_info.metadata.label_attr)
         bib_id = LiveAttributes.import_key(corpus_info.metadata.id_attr)
+        attrs = self._get_subcorp_attrs(corpus)
+        if bib_label not in attrs:
+            attrs.append(bib_label)
+
+        srch_attrs = set(attrs) - set(attr_map.keys())
+        srch_attrs.add('poscount')
+
         collator_locale = corpus_info.collator_locale
         hidden_attrs = set()
 
@@ -286,7 +289,7 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[attr] = set()
 
-        for item in db.execute(sql_template, *where_values).fetchall():
+        for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
@@ -333,6 +336,7 @@ class LiveAttributes(AbstractLiveAttributes):
             size = ans[0]
             self.to_cache(db, 'bib_size', size)
         return size
+
 
 @inject('corparch')
 def create_instance(settings, corparch):
