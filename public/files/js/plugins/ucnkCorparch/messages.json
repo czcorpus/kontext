@@ -1,0 +1,8 @@
+{
+  "en-US": {
+    "ucnkCorparch__please_give_me_access_{corpname}": "\u201CPlease give me an access to the {corpname} corpus\u201D"
+  },
+  "cs-CZ": {
+	"ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D"
+  }
+}

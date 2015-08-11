@@ -53,7 +53,6 @@
                 'conf' : 'empty:',
                 'jquery' : 'vendor/jquery.min',
                 'vendor/rsvp' : 'vendor/rsvp.min',
-                'vendor/sprintf': 'vendor/sprintf.min',
                 'vendor/react': reactModule,
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
@@ -90,7 +89,6 @@
                 'vendor/typeahead',
                 'vendor/bloodhound',
                 'vendor/jscrollpane',
-                'vendor/sprintf',
                 'vendor/intl-messageformat',
                 'vendor/virtual-keyboard',
         ];
