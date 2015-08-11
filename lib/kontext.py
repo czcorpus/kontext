@@ -20,6 +20,7 @@ import inspect
 import urllib
 import os.path
 import copy
+import re
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -1277,10 +1278,13 @@ class Kontext(Controller):
                 return 0
 
         if not subcorpattrs:
-            subcorpattrs = corp.get_conf('SUBCORPATTRS') \
-                or corp.get_conf('FULLREF')
+            subcorpattrs = corp.get_conf('SUBCORPATTRS')
+            if not subcorpattrs:
+                subcorpattrs = corp.get_conf('FULLREF')
+
         if not subcorpattrs or subcorpattrs == '#':
-            raise UserActionException(_('No meta-information to create a subcorpus.'))
+            raise UserActionException(
+                _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if live_attributes are installed then always shrink bibliographical
@@ -1289,6 +1293,11 @@ class Kontext(Controller):
             ans['bib_attr'] = plugins.get('corparch').get_corpus_info(
                 self.args.corpname)['metadata']['label_attr']
             list_none = (ans['bib_attr'], )
+            tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
+
+            if ans['bib_attr'] not in tmp:
+                tmp.insert(0, ans['bib_attr'])
+                subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
         else:
             ans['bib_attr'] = None
             list_none = ()

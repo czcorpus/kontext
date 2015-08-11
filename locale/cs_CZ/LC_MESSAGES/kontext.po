@@ -191,8 +191,8 @@ msgid "Empty result cannot be saved."
 msgstr "Prázdný výsledek nelze uložit."
 
 #: lib/actions.py:1633
-msgid "No meta-information to create a subcorpus."
-msgstr "Chybí meta-informace pro vytvoření subkorpusu."
+msgid "Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF)."
+msgstr "Chybí konfigurace zobrazení strukturních atributů (SUBCORPATTRS or FULLREF)."
 
 #: lib/actions.py:1693
 msgid "Document counts"

@@ -545,7 +545,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 this.formElm.find('select.qselector').addClass('error-input');
                 $('.query-area input.query:visible, .query-area textarea.query:visible')
                         .addClass('error-input');
-                if (!win.confirm(layoutModel.translate('global__query_type_mismatch'))) {
+                if (!win.confirm(self.pluginApi.translate('global__query_type_mismatch'))) {
                     event.stopPropagation();
                     event.preventDefault();
                     return false;
