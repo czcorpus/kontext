@@ -1374,7 +1374,7 @@ class Kontext(Controller):
         a list of tuples (struct, condition)
         """
         if obj is None:
-            obj = self
+            obj = self.args
         if access is None:
             access = lambda o, att: getattr(o, att)
         if attr_producer is None:
