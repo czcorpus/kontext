@@ -150,8 +150,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 return (
                     <form>
-                        <p>{this.translate(
-                            this.sprintf('\u201CPlease give me an access to the %s corpus\u201D', this.props.corpusName))}</p>
+                        <p>{this.translate('ucnkCorparch__please_give_me_access_{corpname}',
+                            {corpname: this.props.corpusName})}</p>
                         <label className="toggle-textarea" onClick={this._clickExpandTextareaHandler}
                             title={this.translate('click to expand/close the field')}>
                             {this.translate('Custom message (optional)')}

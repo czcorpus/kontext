@@ -21,7 +21,6 @@
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../ts/declarations/sprintf.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
@@ -35,7 +34,6 @@ import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
 import util = require('util');
 import docStores = require('./documentStores');
-import sprintf = require('vendor/sprintf');
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
 
@@ -209,9 +207,6 @@ export class PageModel implements Kontext.PluginProvider {
             },
             createStaticUrl(path:string):string {
                 return self.createStaticUrl(path);
-            },
-            sprintf(...args:any[]):string {
-                return sprintf.sprintf.apply(this, args);
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
