@@ -117,16 +117,7 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     """
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
     i = 1
-    while _is_conc_alive(pidfile) and i < hard_limit:
-        try:
-            sizes = get_cached_conc_sizes(corp, q, cachefile)
-            if minsize == -1:
-                if sizes['finished'] == 1:  # whole conc
-                    break
-            elif sizes['concsize'] >= minsize:
-                break
-        except Exception as e:
-            logging.getLogger(__name__).warning('Concordance calculation error (ignored): %s' % e)
+    while _is_conc_alive(pidfile, minsize) and i < hard_limit:
         time.sleep(i * 0.1)
         i += 1
     if not os.path.isfile(cachefile):
@@ -138,7 +129,7 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
         raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
-def _is_conc_alive(pidfile):
+def _is_conc_alive(pidfile, minsize):
     if pidfile is not None and os.path.exists(os.path.realpath(pidfile)):
         with open(pidfile, 'r') as f:
             data = cPickle.load(f)
@@ -147,6 +138,11 @@ def _is_conc_alive(pidfile):
                 raise Exception(data['error'])
             elif math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
                 return False
+            elif data.get('minsize') == -1:
+                if data.get('finished') == 1:  # whole conc
+                    return False
+            elif data.get('concsize') >= minsize:
+                    return False
         return True
     else:
         return False
@@ -205,7 +201,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
                     conccorp = manatee.Corpus(qq[2:])
                     break
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
-            if not _is_conc_alive(pidfile) and not conc.finished():
+            if not _is_conc_alive(pidfile, minsize) and not conc.finished():
                 # unfinished and dead concordance
                 del cache_map[(subchash, q)]
                 try:
@@ -304,10 +300,15 @@ class BackgroundCalc(object):
                 conc.save(cachefile, False, True, False)  # partial
                 while not conc.finished():
                     # TODO it looks like append=True does not work with Manatee 2.121.1 properly
-                    conc.save(cachefile, False, True, False)
+                    tmp_cachefile = cachefile + '.tmp'
+                    conc.save(tmp_cachefile, False, True, False)
+                    os.rename(tmp_cachefile, cachefile)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
-                    _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime)
+                    sizes = get_cached_conc_sizes(self._corpus, self._q, cachefile)
+                    _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime,
+                                    finished=sizes['finished'], concsize=sizes['concsize'],
+                                    fullsize=sizes['fullsize'], relconcsize=sizes['relconcsize'])
                 tmp_cachefile = cachefile + '.tmp'
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, cachefile)
