@@ -301,9 +301,10 @@ class BackgroundCalc(object):
                 conc = _compute_conc(self._corpus, self._q, samplesize)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
-                conc.save(cachefile, False, True)  # partial
+                conc.save(cachefile, False, True, False)  # partial
                 while not conc.finished():
-                    conc.save(cachefile, False, True, True)  # partial + append
+                    # TODO it looks like append=True does not work with Manatee 2.121.1 properly
+                    conc.save(cachefile, False, True, False)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
                     _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime)
