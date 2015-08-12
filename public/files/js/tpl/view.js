@@ -360,13 +360,12 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             + '" title="' + lib.layoutModel.translate('global__calculating')
             + '" style="width: 24px; height: 24px" />');
         $('#arf').empty().html(lib.layoutModel.translate('global__calculating'));
-
         /*
          * Checks periodically for the current state of a concordance calculation
          */
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
             $.ajax({
-                url: 'get_cached_conc_sizes?' + lib.layoutModel.conf.q + ';' + lib.layoutModel.conf.globals,
+                url: 'get_cached_conc_sizes?' + lib.layoutModel.conf.q + '&' + lib.layoutModel.conf.globals,
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
