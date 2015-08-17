@@ -48,6 +48,19 @@ export class AppBar implements Kontext.Plugin {
              self.pluginApi.showMessage("error", errorThrown); // TODO
         });
     };
+    
+    private updateCurrentURL(updArgs:{[name:string]:any}) {
+        var args:string = window.location.search;
+        var href:string;
+        var updArgsList = [];
+        
+        for (var p in updArgs) {
+            if (updArgs.hasOwnProperty(p)) {
+                updArgsList.push(p + '=' + encodeURIComponent(updArgs[p]));
+            }
+        }        
+        return window.location.href + (args.substr(0, 1) === '?' ? '&' : '?') + updArgsList.join('&');
+    }
 
     /**
      */
@@ -64,11 +77,11 @@ export class AppBar implements Kontext.Plugin {
                     window.location = this.pluginApi.getConf('loginUrl');
 
                 } else {
-                    this.pluginApi.resetToHomepage({remote: 1});
+                    window.location.href = this.updateCurrentURL({remote: 1});
                 }
 
             } else if (this.pluginApi.userIsAnonymous() && typeof code['id'] === 'number') {
-                this.pluginApi.resetToHomepage({remote: 1});
+                window.location.href = this.updateCurrentURL({remote: 1});
             }
 
         } catch (e) {

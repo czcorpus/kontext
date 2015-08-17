@@ -63,7 +63,6 @@ declare module Kontext {
         registerReset(fn:Function);
         registerInitCallback(fn:InitCallback):void;
         registerInitCallback(fn:()=>void):void;
-        resetToHomepage(params:any); // TODO
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
