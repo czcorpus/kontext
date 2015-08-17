@@ -41,7 +41,8 @@
 		"global__wl_white_lists": "Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.",
 		"global__use_query": "use query",
 		"global__none": "None",
-	  	"global__advanced_filter": "Advanced filter"
+	  	"global__advanced_filter": "Advanced filter",
+		"global__sorting_backwards_explanation": "Comparison starts with the last characters of words"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -85,6 +86,7 @@
 		"global__wl_white_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí býtprosté textové soubory (.txt) s jednou položkou na každém řádku. Položky musíodpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma',musí být seznam seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání,nikoliv porovnávání pomocí regulárních výrazů.",
 		"global__use_query": "použít dotaz",
 		"global__none": "Žádný",
-	  	"global__advanced_filter": "Pokročilý filtr"
+	  	"global__advanced_filter": "Pokročilý filtr",
+		"global__sorting_backwards_explanation": "Porovnání slov začíná od jejich posledního písmene."
 	}
 }

@@ -113,6 +113,14 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
                 'height': 'auto'
             });
         });
+        
+        $('a.backward-sort-help').each(function () {
+            popupBox.bind($(this), lib.layoutModel.translate('global__sorting_backwards_explanation'), {
+                'top': 'attached-bottom',
+                'width': 'auto',
+                'height': 'auto'
+            });
+        });
 
         lib.updateForm();
     };
