@@ -248,17 +248,18 @@ class LiveAttributes(AbstractLiveAttributes):
         bib_label = LiveAttributes.import_key(corpus_info.metadata.label_attr)
         bib_id = LiveAttributes.import_key(corpus_info.metadata.id_attr)
         attrs = self._get_subcorp_attrs(corpus)
+
         if bib_label and bib_label not in attrs:
             attrs.append(bib_label)
 
         srch_attrs = set(attrs) - set(attr_map.keys())
         srch_attrs.add('poscount')
 
-        collator_locale = corpus_info.collator_locale
         hidden_attrs = set()
-
         if bib_id is not None and bib_id not in srch_attrs:
             hidden_attrs.add(bib_id)
+        if not bib_id:
+            hidden_attrs.add('id')
 
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
@@ -302,6 +303,7 @@ class LiveAttributes(AbstractLiveAttributes):
                         ans[attr] += int(v)
 
         exported = {}
+        collator_locale = corpus_info.collator_locale
         for k in ans.keys():
             if type(ans[k]) is set:
                 if len(ans[k]) <= self.max_attr_list_size:
