@@ -74,17 +74,24 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                 <td><input type="text" name="spos" value="$spos" size="3" /></td>
               </tr>
               <tr>
-              <td colspan="2">
-              <label>$_("Ignore case") <input type="checkbox" name="sicase" value="i"
-              #if $sicase
-                checked="checked"
-              #end if
-              /></label>
-              <label>$_("Backward")<input type="checkbox" name="sbward" value="r"
+                <th>
+                  <label for="sicase_checkbox">$_("Ignore case"):</label>
+                </th>
+                <td>
+                <input id="sicase_checkbox" type="checkbox" name="sicase" value="i" #if $sicase#checked="checked"#end if# />
+                </td>
+              </tr>
+              <tr>
+              <th>
+              <label for="sbward_checkbox">$_("Backward")</label>
+              <a class="backward-sort-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:
+              </th>
+              <td>
+              <input id="sbward_checkbox" type="checkbox" name="sbward" value="r"
               #if $sbward
                 checked="checked"
               #end if
-              /></label>
+              />
               </td>
               </tr>
             </table>
@@ -138,12 +145,19 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th></th>
+                                        <th>
+                                            <label for="ml${i}icase_checkbox">$_("Ignore case"):</label>
+                                        </th>
                                         <td>
-                                            <label>$_("Ignore case")
-                                            <input type="checkbox" name="ml${i}icase" value="i" /></label>
-                                            <br />
-                                            <label> $_("Backward") <input type="checkbox" name="ml${i}bward" value="r" /></label>
+                                            <input id="ml${i}icase_checkbox" type="checkbox" name="ml${i}icase" value="i" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><label for="sbward_checkbox2"> $_("Backward")</label>
+                                        <a class="backward-sort-help context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>:
+                                        </th>
+                                        <td>
+                                            <input id="sbward_checkbox2" type="checkbox" name="ml${i}bward" value="r" />
                                         </td>
                                     </tr>
                                     <tr>
