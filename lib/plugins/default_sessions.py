@@ -48,6 +48,8 @@ request processing.
 """
 
 import uuid
+import hashlib
+import random
 
 from werkzeug.contrib.sessions import SessionStore, Session
 
@@ -82,10 +84,10 @@ class DefaultSessions(SessionStore):
             self.db.set_ttl(key, self.ttl)
 
     def generate_key(self, salt=None):
-        return str(uuid.uuid1())
+        return hashlib.sha1(str(uuid.uuid1()) + str(random.random())).hexdigest()
 
-    def delete(self, session_id):
-        self.db.remove(self._mk_key(session_id))
+    def delete(self, session):
+        self.db.remove(self._mk_key(session.sid))
 
     def get(self, sid):
         if not self.is_valid_key(sid):
@@ -99,7 +101,7 @@ class DefaultSessions(SessionStore):
         """
         Writes a new session record to the storage
         """
-        session_id = str(uuid.uuid1())
+        session_id = self.generate_key()
         data = {}
         sess_key = self._mk_key(session_id)
         self.db.set(sess_key, data)

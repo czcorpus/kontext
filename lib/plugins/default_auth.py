@@ -69,12 +69,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
                 }
         return self.anonymous_user()
 
-    def logout(self, session_id):
+    def logout(self, session):
         """
         arguments:
-        session_id -- a session ID
+        session -- Werkzeug session instance
         """
-        self.sessions.delete(session_id)
+        self.sessions.delete(session)
+        session.clear()
 
     def update_user_password(self, user_id, password):
         """
