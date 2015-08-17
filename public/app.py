@@ -237,6 +237,7 @@ class App(object):
         else:
             request.session = sessions.get(sid)
 
+        sid_is_valid = True
         if environ['PATH_INFO'] in ('/', ''):
             url = environ['REQUEST_URI']
             if not url.endswith('/'):
@@ -251,8 +252,13 @@ class App(object):
         else:
             controller_class = load_controller_class(environ['PATH_INFO'])
             app = controller_class(request=request, ui_lang=ui_lang)
-            status, headers, body = app.run(request)
+            status, headers, sid_is_valid, body = app.run(request)
         response = Response(response=body, status=status, headers=headers)
+        if not sid_is_valid:
+            curr_data = dict(request.session)
+            request.session = sessions.new()
+            request.session.update(curr_data)
+            request.session.modified = True
         if request.session.should_save:
             sessions.save(request.session)
             response.set_cookie(sessions.get_cookie_name(), request.session.sid)

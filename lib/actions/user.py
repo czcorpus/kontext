@@ -49,6 +49,7 @@ class User(Kontext):
                                         MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
                                         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
             self.add_system_message('error', _('Incorrect username or password'))
+        self.refresh_session_id()
         return ans
 
     @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True)
@@ -56,8 +57,9 @@ class User(Kontext):
         self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
                                     MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-        plugins.get('auth').logout(self._session.sid)
+        plugins.get('auth').logout(self._session)
         self._init_session()
+        self.refresh_session_id()
 
         return {
             'message': ('info', _('You have been logged out'))

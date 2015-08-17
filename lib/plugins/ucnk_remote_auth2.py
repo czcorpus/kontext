@@ -119,9 +119,10 @@ class CentralAuth(AbstractRemoteAuth):
             ticket_id = None
         return ticket_id
 
-    def revalidate(self, cookies, session, query_string):
+    def revalidate(self, cookies, session, query_string, refresh_sid_fn):
         if 'remote=1' in query_string.split('&'):
             session.clear()
+            refresh_sid_fn()
 
         user_data = session.get('user', {})
         ticket_id = self.get_ticket(cookies)

@@ -239,6 +239,7 @@ class Controller(object):
         self._tmp_dir = u'/tmp'
         self._css_prefix = ''
         self.args = Args()
+        self._uses_valid_sid = True
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
@@ -263,7 +264,8 @@ class Controller(object):
             self._session['user'] = auth.anonymous_user()
 
         if hasattr(plugins.get('auth'), 'revalidate'):
-            auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''))
+            auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''),
+                            self.refresh_session_id)
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self):
@@ -286,6 +288,13 @@ class Controller(object):
             else:
                 return None
         return curr
+
+    def refresh_session_id(self):
+        """
+        This tells the wrapping WSGI app to create a new session with
+        the same data the current one has.
+        """
+        self._uses_valid_sid = False
 
     def add_validator(self, fn):
         """
@@ -740,6 +749,9 @@ class Controller(object):
     def run(self, request, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
+
+        Returns:
+        a 4-tuple: HTTP status, HTTP headers, valid SID flag, response body
         """
         self._install_plugin_actions()
         self._proc_time = time.time()
@@ -797,7 +809,7 @@ class Controller(object):
         ans_body = output.getvalue()
         output.close()
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
-        return self._export_status(), headers, ans_body
+        return self._export_status(), headers, self._uses_valid_sid, ans_body
 
     def process_method(self, methodname, request, pos_args, named_args):
         """

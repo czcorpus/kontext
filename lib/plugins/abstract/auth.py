@@ -97,9 +97,9 @@ class AbstractInternalAuth(AbstractAuth):
         """
         raise NotImplementedError()
 
-    def logout(self, session_id):
+    def logout(self, session):
         """
-        Logs-out current user (identified by session_id).
+        Logs-out current user (identified by passed session object).
         """
         raise NotImplementedError()
 
@@ -142,7 +142,7 @@ class AbstractRemoteAuth(AbstractAuth):
     A general authentication based on an external authentication service.
     """
 
-    def revalidate(self, cookies, session, query_string):
+    def revalidate(self, cookies, session, query_string, refresh_sid_fn):
         """
         Re-validates user authentication against external database with central
         authentication ticket (expected to be found in cookies) and session data.
@@ -155,6 +155,7 @@ class AbstractRemoteAuth(AbstractAuth):
         session -- dictionary like session data
         query_string -- the portion of the request URL that follows '?'
         (see environmental variable QUERY_STRING)
+        refresh_sid_fn -- by calling this function KonText will regenerate session ID
         """
         raise NotImplementedError()
 
