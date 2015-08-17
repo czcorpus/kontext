@@ -248,7 +248,7 @@ class LiveAttributes(AbstractLiveAttributes):
         bib_label = LiveAttributes.import_key(corpus_info.metadata.label_attr)
         bib_id = LiveAttributes.import_key(corpus_info.metadata.id_attr)
         attrs = self._get_subcorp_attrs(corpus)
-        if bib_label not in attrs:
+        if bib_label and bib_label not in attrs:
             attrs.append(bib_label)
 
         srch_attrs = set(attrs) - set(attr_map.keys())
