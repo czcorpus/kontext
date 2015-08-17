@@ -1208,18 +1208,6 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.registerInitCallback(fn);
     }
 
-    resetToHomepage(params) {
-        var p,
-            ans = [];
-
-        for (p in params) {
-            if (params.hasOwnProperty(p)) {
-                ans.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
-            }
-        }
-        win.location = this.pageModel.createActionUrl('first_form?' + ans.join('&'));
-    }
-
     userIsAnonymous() {
         return this.getConf('anonymousUser');
     }
