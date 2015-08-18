@@ -213,7 +213,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             api.reinitialise();
         });
         $(win).on('keydown', function (event) {
-            if ($('#conclines-wrapper:focus').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
+            if ($('#conclines-wrapper:visible').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
                 event.preventDefault();
             }
             if ($('input:focus').length === 0) {
