@@ -156,12 +156,13 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
      * Creates function (i.e. you must call it first to be able to use it)
      * to handle the "add language" action.
      *
+     * @param {QueryFormTweaks} queryFormTweaks
      * @param {string} [forcedCorpusId] optional parameter to force corpus to be added (otherwise
      * it is chosen based on "#add-searched-lang-widget select" select box value). It is useful
      * in case you want to call the handler manually.
      * @return {function} handler function
      */
-    function createAddLanguageClickHandler(forcedCorpusId) {
+    function createAddLanguageClickHandler(queryFormTweaks, forcedCorpusId) {
         return function () {
             var corpusId,
                 jqHiddenStatus,
@@ -191,7 +192,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
                        lib.layoutModel.resetPlugins();
                     });
 
-                    queryInput.initVirtualKeyboard(jqNewLangNode.find('table.form .query-area .spec-chars').get(0));
+                    queryFormTweaks.initVirtualKeyboard(jqNewLangNode.find('table.form .query-area .spec-chars').get(0));
 
                     if (!$.support.cssFloat) {
                         // refresh content in IE < 9
@@ -206,28 +207,28 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
     /**
      * @todo rename/refactor this stuff
      */
-    lib.misc = function (queryEnhance) {
+    lib.misc = function (queryFormTweaks) {
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
             lib,
             {formTarget: 'first_form'}
         );
         // initial query selector setting (just like when user changes it manually)
-        queryEnhance.cmdSwitchQuery($('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
+        queryFormTweaks.cmdSwitchQuery($('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
 
         // open currently used languages for parallel corpora
         $.each(getActiveParallelCorpora(), function (i, item) {
-            createAddLanguageClickHandler(item)();
+            createAddLanguageClickHandler(queryFormTweaks, item)();
         });
     };
 
     /**
      *
      */
-    lib.bindParallelCorporaCheckBoxes = function () {
+    lib.bindParallelCorporaCheckBoxes = function (queryFormTweaks) {
 
         $('#add-searched-lang-widget').find('button[type="button"]').each(function () {
-            $(this).on('click', createAddLanguageClickHandler());
+            $(this).on('click', createAddLanguageClickHandler(queryFormTweaks));
         });
         $('input[name="sel_aligned"]').each(function () {
             if ($(this).val()) {
@@ -252,7 +253,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
             urlArgs['corpname'] = newPrimary;
             urlArgs['sel_aligned'] = lib.alignedCorpora;
 
-            window.location = lib.layoutModel.createActionUrl(
+            window.location.href = lib.layoutModel.createActionUrl(
                     'first_form?' + lib.layoutModel.encodeURLParameters(urlArgs));
         });
     };
@@ -292,7 +293,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
             misc : lib.misc(queryFormTweaks),
             bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),
             bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
-            bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(),
+            bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(queryFormTweaks),
             updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.createInstance(lib.layoutModel.pluginApi()),
