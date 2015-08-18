@@ -486,6 +486,17 @@ class Actions(Kontext):
         self.args.q = [qbase + self._compile_query()]
         return self.view()
 
+    def _fetch_pcq_args(self):
+        """
+        Loads form values of "contain"/"does not contain" select elements located in
+        aligned languages' fieldsets.
+        """
+        ans = {}
+        for k, v in self._request.args.items():
+            if k.startswith('pcq_pos_neg_'):
+                ans[k] = v
+        return ans
+
     def _set_first_query(self, fc_lemword_window_type='',
                          fc_lemword_wsize=0,
                          fc_lemword_type='',
@@ -530,8 +541,9 @@ class Actions(Kontext):
             ttquery = u''
         par_query = ''
         nopq = []
+        pcq_args = self._fetch_pcq_args()
         for al_corpname in self.args.sel_aligned:
-            if getattr(self, 'pcq_pos_neg_' + al_corpname) == 'pos':
+            if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos':
                 wnot = ''
             else:
                 wnot = '!'
