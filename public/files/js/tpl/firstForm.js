@@ -165,12 +165,14 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
     function createAddLanguageClickHandler(queryFormTweaks, forcedCorpusId) {
         return function () {
             var corpusId,
+                jqSelect,
                 jqHiddenStatus,
                 jqNewLangNode,
                 searchedLangWidgetOpt,
                 jqAddLangWidget = $('#add-searched-lang-widget');
 
-            corpusId = forcedCorpusId || jqAddLangWidget.find('select').val();
+            jqSelect = jqAddLangWidget.find('select');
+            corpusId = forcedCorpusId || jqSelect.val();
 
             if (corpusId) {
                 searchedLangWidgetOpt = jqAddLangWidget.find('select option[value="' + corpusId + '"]');
@@ -200,6 +202,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
                     }
                 }
                lib.layoutModel.resetPlugins();
+               jqSelect.prop('selectedIndex', 0);
             }
         };
     }
@@ -226,10 +229,12 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
      *
      */
     lib.bindParallelCorporaCheckBoxes = function (queryFormTweaks) {
+        $('#add-searched-lang-widget').find('select')
+            .prepend('<option value="" disabled="disabled">-- ' + lib.layoutModel.translate('global__add_aligned_corpus')
+                + ' --</option>')
+            .prop('selectedIndex', 0)
+            .on('change', createAddLanguageClickHandler(queryFormTweaks));
 
-        $('#add-searched-lang-widget').find('button[type="button"]').each(function () {
-            $(this).on('click', createAddLanguageClickHandler(queryFormTweaks));
-        });
         $('input[name="sel_aligned"]').each(function () {
             if ($(this).val()) {
                 $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
