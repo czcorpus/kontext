@@ -63,4 +63,4 @@ class StateGlobals(object):
             new_data.update(args[0])
         elif len(args) == 2:
             new_data[args[0]] = args[1]
-        StateGlobals(data=new_data)
+        return StateGlobals(data=new_data)
