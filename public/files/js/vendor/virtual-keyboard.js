@@ -56,7 +56,7 @@
  *
  */
 
-define([], function() {
+define(['jquery'], function($) {
   var self = this;
 
   this.VKI_version = "1.49";
@@ -624,6 +624,11 @@ define([], function() {
             triggerElem[i].onclick = function () {
                 if (!self.VKI_target) {
                     self.VKI_show(elem);
+                    $(window).on('keyup.closeVirtualKeyboard', function (event) {
+                        if (event.keyCode === 27) {
+                            window.VKI_close(elem);
+                        }
+                    });
 
                 } else {
                     self.VKI_close(elem);
@@ -1273,6 +1278,7 @@ define([], function() {
       if (this.VKI_isIE) {
         setTimeout(function() { self.VKI_target = false; }, 0);
       } else this.VKI_target = false;
+      $(window).off('keyup.closeVirtualKeyboard');
     }
   };
 
