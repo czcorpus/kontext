@@ -6,14 +6,11 @@ and it is not needed for default KonText installation.
 The script is expected to be run either by cron in regular intervals or manually in
 special cases.
 
-It is possible to specify extra parameters using syncdb.json file located in the
-root of the KonText application.
+A simple config is required:
 {
-   "default_corpora" : ["corp1", "corp2"],
+   "default_corpora" : ["corp1", "corp2"], <--- optional
    "logging" : {
-        "path" : "/path/to/a/log/file",
-        "file_size" : 8000000,
-        "num_files" : 5
+        "path" : "/path/to/a/log/file"
    }
 
 """
@@ -21,54 +18,28 @@ import argparse
 import os
 import sys
 import logging
-from logging import handlers
 import json
 from datetime import datetime
 
-SCRIPT_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-APP_PATH = os.path.realpath('%s/../../..' % SCRIPT_PATH)
-sys.path.insert(0, '%s/lib' % APP_PATH)
-import settings
-from plugins import ucnk_remote_auth2 as auth
+sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
+import autoconf
+
+import plugins
+
+from plugins import redis_db
+plugins.install_plugin('db', redis_db, autoconf.settings)
+
+from plugins import default_sessions
+plugins.install_plugin('sessions', default_sessions, autoconf.settings)
+
+from plugins import ucnk_remote_auth2
+plugins.install_plugin('auth', ucnk_remote_auth2, autoconf.settings)
+
 import mysql2redis as m2r
 
 logger = logging.getLogger('syncdb')
 
 DEFAULT_CHECK_INTERVAL = 5
-DEFAULT_LOG_FILE_SIZE = 1000000
-DEFAULT_NUM_LOG_FILES = 5
-
-
-def load_conf():
-    """
-    Loads an optional syncdb script configuration
-    """
-    conf_file = '%s/syncdb.json' % APP_PATH
-    if os.path.isfile(conf_file):
-        return json.load(open(conf_file, 'r'))
-    else:
-        return {}
-
-
-def setup_logger(conf=None):
-    """
-    Configures logging parameters. If an emtpy conf is provided then
-    logging to the standard output is configured. Otherwise, file rotating
-    logger is instantiated.
-
-    arguments:
-    conf -- a dictionary containing syncdb configuration ('logging' key is searched here)
-    """
-    if conf is not None and 'logging' in conf:
-        conf = conf['logging']
-        handler = handlers.RotatingFileHandler(conf['path'],
-                                               maxBytes=conf.get('file_size', DEFAULT_LOG_FILE_SIZE),
-                                               backupCount=conf.get('num_files', DEFAULT_NUM_LOG_FILES))
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
 class DbSync(object):
@@ -77,7 +48,7 @@ class DbSync(object):
     The object is callable - by calling it, a single "check and update" action is run.
     """
 
-    def __init__(self, mysql_conn, redis_params, check_interval, db_name):
+    def __init__(self, mysql_conn, redis_params, check_interval, db_name, default_user_corpora):
         """
         arguments:
         mysql_conn -- a MySQLdb connection object
@@ -85,11 +56,13 @@ class DbSync(object):
         check_interval -- how old (in minutes) changes should syncdb script consider; this
             applies only for mass changes as user_changelog is always read without any restriction
         db_name -- a name of respective MySQL/MariaDB database
+        default_user_corpora -- a list of corpora user gets in case nothing is found for her
         """
         self._mysql = mysql_conn
         self._redis_params = redis_params
         self._check_interval = check_interval
         self._db_name = db_name
+        self._default_user_corpora = default_user_corpora
 
     def _current_dbtime(self):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -179,7 +152,7 @@ class DbSync(object):
             self.log_mass_change()
         self.log_user_updates()
 
-        export = m2r.Export(mysqldb=self._mysql, default_corpora=conf.get('default_corpora', ('susanne',)))
+        export = m2r.Export(mysqldb=self._mysql, default_corpora=self._default_user_corpora)
         import_obj = m2r.create_import_instance(self._redis_params, dry_run=dry_run)
 
         changed_users = 0
@@ -199,25 +172,32 @@ class DbSync(object):
 if __name__ == '__main__':
     import time
 
-    settings.load('%s/conf/config.xml' % APP_PATH)
-    conf = load_conf()
-    setup_logger(conf)
-    parser = argparse.ArgumentParser(description='Check for changes in UCNK database and synchronize with KonText')
+    parser = argparse.ArgumentParser(description='Check for changes in UCNK database and'
+                                     'synchronize with KonText')
+    parser.add_argument('conf_path', metavar='CONF_PATH', type=str, help='Path to a config file')
     parser.add_argument('-t', '--interval', type=int, default=DEFAULT_CHECK_INTERVAL,
                         help='how often (in minutes) script runs (default=%d)' % DEFAULT_CHECK_INTERVAL)
-    parser.add_argument('-d', '--dry-run', action='store_true', help='allows running without affecting storage data')
+    parser.add_argument('-d', '--dry-run', action='store_true',
+                        help='allows running without affecting storage data')
     args = parser.parse_args()
+    conf = json.load(open(args.conf_path))
 
-    mysql_params = auth.create_auth_db_params(settings.get('plugins', 'auth'))
+    autoconf.setup_logger(log_path=conf['logging']['path'],
+                          logger_name='user_db_sync',
+                          logging_level=autoconf.LOG_LEVELS[conf['logging']['level']])
+
+    mysql_params = ucnk_remote_auth2.create_auth_db_params(
+            autoconf.settings.get('plugins', 'auth'))
     mysql_params.update(dict(charset='utf8', use_unicode=True))
-    redis_params = settings.get('plugins', 'db')
+    redis_params = autoconf.settings.get('plugins', 'db')
     redis_params = dict(host=redis_params['default:host'],
                         port=redis_params['default:port'],
                         db_id=redis_params['default:id'])
-    w = DbSync(mysql_conn=auth.connect_auth_db(**mysql_params),
+    w = DbSync(mysql_conn=ucnk_remote_auth2.connect_auth_db(**mysql_params),
                redis_params=redis_params,
                check_interval=args.interval,
-               db_name=mysql_params['db'])
+               db_name=mysql_params['db'],
+               default_user_corpora=conf.get('default_corpora', ('susanne',)))
     t = time.time()
     changed = w(dry_run=args.dry_run)
     t = time.time() - t

@@ -37,12 +37,15 @@ import autoconf
 settings = autoconf.settings
 logger = autoconf.logger
 
-DEFAULT_LOG_FILE_SIZE = 1000000
-DEFAULT_NUM_LOG_FILES = 5
+
 MAX_NUM_SHOW_ERRORS = 10
 MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24 * 3   # empirical value
 
-import settings
+import plugins
+
+from plugins import redis_db
+plugins.install_plugin('db', redis_db, autoconf.settings)
+
 from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
 
 
@@ -176,11 +179,15 @@ class Archiver(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
-    parser.add_argument('-k', '--key-prefix', type=str, help='Processes just keys with defined prefix')
-    parser.add_argument('-c', '--cron-interval', type=int, help='Non-empty values initializes partial processing with '
-                                                                + 'defined interval between chunks')
-    parser.add_argument('-d', '--dry-run', action='store_true', help='allows running without affecting storage data')
-    parser.add_argument('-l', '--log-file', type=str, help='A file used for logging. If omitted then stdout is used')
+    parser.add_argument('-k', '--key-prefix', type=str,
+                        help='Processes just keys with defined prefix')
+    parser.add_argument('-c', '--cron-interval', type=int,
+                        help='Non-empty values initializes partial processing with '
+                        'defined interval between chunks')
+    parser.add_argument('-d', '--dry-run', action='store_true',
+                        help='allows running without affecting storage data')
+    parser.add_argument('-l', '--log-file', type=str,
+                        help='A file used for logging. If omitted then stdout is used')
     args = parser.parse_args()
 
     autoconf.setup_logger(log_path=args.log_file, logger_name='conc_archive')
@@ -192,7 +199,8 @@ if __name__ == '__main__':
     to_db = sqlite_connection(settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
     default_ttl = settings.get('plugins', 'conc_persistence')['default:ttl_days']
     try:
-        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)  # if 1/3 of TTL is reached then archiving is possible
+        # if 1/3 of TTL is reached then archiving is possible
+        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)
         min_ttl = 3600 * 24 * 7  # smaller TTL then this is understood as non-preserved; TODO: this is a weak concept
     except Exception as e:
         print(e)

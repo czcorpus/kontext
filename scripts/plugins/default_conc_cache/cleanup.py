@@ -31,7 +31,6 @@ import collections
 import json
 
 sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
-
 import autoconf
 
 import plugins
