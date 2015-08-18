@@ -31,11 +31,17 @@ import collections
 import json
 
 sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
-
 import autoconf
 
-from plugins import redis_locking
+import plugins
+
 from plugins import redis_db
+plugins.install_plugin('db', redis_db, autoconf.settings)
+
+from plugins import redis_locking
+plugins.install_plugin('locking', redis_locking, autoconf.settings)
+
+
 from plugins import default_conc_cache
 
 DEFAULT_TTL = 60  # in minutes
@@ -210,8 +216,6 @@ if __name__ == '__main__':
                           logging_level=autoconf.LOG_LEVELS[args.log_level])
     root_dir = autoconf.settings.get('plugins', 'conc_cache')['default:cache_dir']
 
-    db = redis_db.create_instance(autoconf.settings.get('plugins', 'db'))
-    lock_factory = redis_locking.create_instance(autoconf.settings, db)
-    proc = CacheCleanup(root_dir, args.corpus, args.ttl, args.subdir, lock_factory)
+    proc = CacheCleanup(root_dir, args.corpus, args.ttl, args.subdir, plugins.get('locking'))
     proc.run(dry_run=args.dry_run)
 

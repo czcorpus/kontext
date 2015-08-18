@@ -2,11 +2,16 @@
 import sys
 import os
 
-app_path = os.path.realpath('%s/../../..' % os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '%s/lib' % app_path)
+sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(__file__)))
+import autoconf
 
-import settings
+import plugins
+
+from plugins import redis_db
+plugins.install_plugin('db', redis_db, autoconf.settings)
+
 from plugins import default_query_storage
+plugins.install_plugin('query_storage', default_query_storage, autoconf.settings)
 
 if __name__ == '__main__':
     import argparse
@@ -15,8 +20,14 @@ if __name__ == '__main__':
     argparser.add_argument('source_file', metavar="FILE", help="a file containing JSON-encoded initial data")
     argparser.add_argument('action', metavar="ACTION", help="an action to be performed (add, reset)")
     argparser.add_argument('-s', '--specific-id', type=int, help='add only user with specific ID (even if the source contains a list)')
+    argparser.add_argument('-d', '--dry-run', action='store_true',
+                           help='allows running without affecting storage data')
     args = argparser.parse_args()
-    print("---------------------")
+
+    if not args.dry_run:
+        print("==================================================")
+    else:
+        print("==================== dry run =====================")
 
     src_data = json.load(open(args.source_file, 'r'))
     if type(src_data) is not list:
@@ -26,20 +37,21 @@ if __name__ == '__main__':
         src_data = filter(lambda x: x.get('id', None) == args.specific_id, src_data)
 
     if len(src_data) > 0:
-        settings.load('%s/conf/config.xml' % app_path)
-        db_adapter = __import__('plugins.%s' % settings.get('plugins', 'db')['module'], fromlist=['create_instance'])
-        db = db_adapter.create_instance(settings.get('plugins', 'db'))
-        query_storage = default_query_storage.create_instance(settings, db)
+        query_storage = plugins.get('query_storage')
+        db = plugins.get('db')
 
         for item in src_data:
             user_key = 'user:%d' % item['id']
             corplist_key = 'corplist:user:%d' % item['id']
             corpora = item['corpora']
             del item['corpora']
-            db.set(user_key, item)
-            db.set(corplist_key, corpora)
-            db.hash_set('user_index', item['username'], user_key)
-
-        print(src_data)
+            if not args.dry_run:
+                db.set(user_key, item)
+                db.set(corplist_key, corpora)
+                db.hash_set('user_index', item['username'], user_key)
+            else:
+                print('> set(%s, %s)' % (user_key, item))
+                print('> set(%s, %s)' % (corplist_key, corpora))
+                print('> hash_set(%s, %s, %s)' % ('user_index', item['username'], user_key))
     else:
         print('Nothing to store. Either the source list is empty or the specific-id parameter does not match any item.')
