@@ -1012,46 +1012,36 @@ export class MainMenu {
      */
     jqMenuBar:JQuery;
 
-    /**
-     * Wrapper where sub-menu is rendered
-     */
-    jqMenuLevel2:JQuery;
+    private activeSubmenu:HTMLElement;
+
 
     constructor() {
         this.jqMenuBar = $('#menu-bar');
-        this.jqMenuLevel2 = $('#menu-level-2');
     }
 
     /**
      *
-     * @returns {*}
      */
-    getActiveSubmenuId() {
-        return this.jqMenuLevel2.attr('data-current-menu');
+    getActiveSubmenu():HTMLElement {
+        return this.activeSubmenu;
     }
 
     /**
      *
      * @param {string} id
      */
-    setActiveSubmenuId(id) {
-        this.jqMenuLevel2.attr('data-current-menu', id);
+    setActiveSubmenu(submenu:HTMLElement) {
+        this.activeSubmenu = submenu;
     }
 
     /**
      * @param {string} [menuId]
      */
     closeSubmenu(menuId?) {
-        var jqPrevMenuUl = this.jqMenuLevel2.find('ul');
-
-        if (!menuId) {
-            menuId = this.getActiveSubmenuId();
-        }
-
-        if (menuId) {
-            $('#' + menuId).removeClass('active').append(jqPrevMenuUl);
-            jqPrevMenuUl.css('display', 'none');
-            this.setActiveSubmenuId(null);
+        if (this.activeSubmenu) {
+            $(this.activeSubmenu).css('display', 'none');
+            $(this.activeSubmenu).closest('li').removeClass('active');
+            this.activeSubmenu = null;
         }
     }
 
@@ -1068,27 +1058,25 @@ export class MainMenu {
      *
      * @param activeLi - active main menu item LI
      */
-    openSubmenu(activeLi:HTMLElement|JQuery) {
-        var menuLeftPos,
-            jqSubMenuUl,
-            jqActiveLi = $(activeLi);
+    openSubmenu(activeLi:JQuery) {
+        var menuLeftPos;
+        var jqSubMenuUl;
+        var jqActiveLi = $(activeLi);
+        var rightmostPos;
 
         jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
         if (jqSubMenuUl.length > 0) {
             jqActiveLi.addClass('active');
             jqSubMenuUl.css('display', 'block');
-            this.jqMenuLevel2.addClass('active').empty().append(jqSubMenuUl);
-            menuLeftPos = jqActiveLi.offset().left + jqActiveLi.width() / 2 - jqSubMenuUl.width() / 2;
-            if (menuLeftPos < this.jqMenuBar.offset().left) {
-                menuLeftPos = this.jqMenuBar.offset().left;
+            rightmostPos = jqSubMenuUl.offset().left + jqSubMenuUl.width();
+            if (rightmostPos > $(window).width()) {
+                menuLeftPos = - (rightmostPos - $(window).width());
 
-            } else if (menuLeftPos + jqSubMenuUl.width() > this.jqMenuBar.offset().left + this.jqMenuBar.width()) {
-                menuLeftPos = this.jqMenuBar.offset().left + this.jqMenuBar.width() - jqSubMenuUl.width();
+            } else {
+                menuLeftPos = 0;
             }
             jqSubMenuUl.css('left', menuLeftPos);
-
-        } else {
-            this.jqMenuLevel2.removeClass('active');
+            this.activeSubmenu = jqSubMenuUl.get(0);
         }
     }
 
@@ -1105,15 +1093,15 @@ export class MainMenu {
         $('#menu-level-1 a.trigger').each(function () {
             $(this).on('mouseover', function (event) {
                 var jqMenuLi = $(event.target).closest('li'),
-                    prevMenuId,
-                    newMenuId = jqMenuLi.attr('id');
+                    prevMenu:HTMLElement,
+                    newMenu = jqMenuLi.get(0);
 
-                prevMenuId = self.getActiveSubmenuId();
-                if (prevMenuId !== newMenuId) {
-                    self.closeSubmenu(prevMenuId);
+                prevMenu = self.getActiveSubmenu();
+                if (prevMenu !== newMenu) {
+                    self.closeSubmenu(prevMenu);
 
                     if (!jqMenuLi.hasClass('disabled')) {
-                        self.setActiveSubmenuId(jqMenuLi.attr('id'));
+                        self.setActiveSubmenu(jqMenuLi.get(0));
                         self.openSubmenu(jqMenuLi);
                     }
                 }
@@ -1121,7 +1109,7 @@ export class MainMenu {
         });
 
         self.jqMenuBar.on('mouseleave', function (event) {
-            self.closeSubmenu(self.getActiveSubmenuId());
+            self.closeSubmenu(self.getActiveSubmenu());
         });
 
         $(win).on('resize', function () {
