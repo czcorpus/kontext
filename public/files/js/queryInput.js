@@ -435,19 +435,15 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             jqFieldset.toggleClass('inactive');
             if (jqFieldset.hasClass('inactive')) {
                 jqFieldset.find('div.contents').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
-                    .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', self.pluginApi.translate('global__click_to_expand'));
-                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_expand'));
+                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_expand'))
+                        .removeClass('collapse').addClass('expand');
                 jqFieldset.find('div.desc').show();
                 self.userSettings.set(jqTriggerLink.data('box-id'), false);
 
             } else {
                 jqFieldset.find('div.contents').show();
-                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
-                    .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', self.pluginApi.translate('global__click_to_hide'));
-                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_hide'));
+                jqTriggerLink.attr('title', self.pluginApi.translate('global__click_to_hide'))
+                        .removeClass('expand').addClass('collapse');
                 jqFieldset.find('div.desc').hide();
                 self.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
@@ -464,6 +460,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     QueryFormTweaks.prototype.updateToggleableFieldsets = function () {
         var jqLink = $('a.form-extension-switch'),
             jqFieldset,
+            jqSwitchLink,
             elmStatus,
             defer = $.Deferred(), // currently, this is synchronous
             self = this;
@@ -471,23 +468,20 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         jqLink.each(function () {
             jqFieldset = $(this).closest('fieldset');
             elmStatus = self.userSettings.get($(this).data('box-id'));
+            jqSwitchLink = jqFieldset.find('a.form-extension-switch');
 
             if (elmStatus === true) {
                 jqFieldset.removeClass('inactive');
                 jqFieldset.find('div.contents').show();
                 jqFieldset.find('div.desc').hide();
-                jqFieldset.find('.status').attr('src', '../files/img/collapse.png')
-                    .attr('data-alt-img', '../files/img/collapse_s.png')
-                    .attr('alt', self.pluginApi.translate('global__click_to_hide'));
                 jqLink.attr('title', self.pluginApi.translate('global__click_to_hide'));
+                jqSwitchLink.removeClass('expand').addClass('collapse');
 
             } else {
                 jqFieldset.find('div.contents').hide();
                 jqFieldset.find('div.desc').show();
-                jqFieldset.find('.status').attr('src', '../files/img/expand.png')
-                    .attr('data-alt-img', '../files/img/expand_s.png')
-                    .attr('alt', self.pluginApi.translate('global__click_to_expand'));
                 jqLink.attr('title', self.pluginApi.translate('global__click_to_expand'));
+                jqSwitchLink.removeClass('collapse').addClass('expand');
             }
         });
         defer.resolve();
