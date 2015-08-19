@@ -834,7 +834,7 @@ class Kontext(Controller):
             result['subcorp_size'] = None
         attrlist = corpus_get_conf(maincorp, 'ATTRLIST').split(',')
         sref = corpus_get_conf(maincorp, 'SHORTREF')
-        result['fcrit_shortref'] = '+'.join([a.strip('=') + '+0'
+        result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
 
         poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
