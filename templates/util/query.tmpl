@@ -242,8 +242,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def specify_context_form
 <fieldset id="specify-context" class="inactive">
-        <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="context-box">$_("Specify context")
-        <img class="status over-img" src="../files/img/expand.png" /></a></legend>
+        <legend><a class="form-extension-switch expand" title="$_('click to expand')" data-box-id="context-box">$_("Specify context")</a></legend>
         <div class="contents">
         #if $has_lemmaattr
           <h3>$_("Lemma filter")</h3>
@@ -340,8 +339,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def specify_meta_form
 
 <fieldset id="specify-query-metainformation" class="inactive">
-      <legend><a class="form-extension-switch" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information")
-      <img class="status over-img" src="../files/img/expand.png" /></a></legend>
+      <legend>
+      <a class="form-extension-switch expand" title="$_('click to expand')" data-box-id="attrib-box">$_("Specify query according to the meta-information")</a>
+      </legend>
 
       #if $metadata_desc
       <div class="desc">

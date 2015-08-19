@@ -168,6 +168,8 @@ class WidgetMenu {
 
     static TAB_KEY = 9;
 
+    static ESC_KEY = 27;
+
     /**
      *
      * @param widget
@@ -267,6 +269,9 @@ class WidgetMenu {
                     self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
                     e.preventDefault();
                     e.stopPropagation();
+
+                } else if (e.keyCode == WidgetMenu.ESC_KEY) {
+                    self.widget.hide();
                 }
             }
         }

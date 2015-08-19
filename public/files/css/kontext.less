@@ -766,8 +766,30 @@ a.form-extension-switch,
   padding: 3px;
 }
 
+a.form-extension-switch {
+  background-position: 0 4pt;
+  background-repeat: no-repeat;
+  padding-left: 15px;
+}
+
 a.form-extension-switch:hover {
   text-decoration: underline;
+}
+
+a.form-extension-switch.expand {
+  background-image: url(../img/expand.png);
+}
+
+a.form-extension-switch.expand:hover {
+  background-image: url(../img/expand_s.png);
+}
+
+a.form-extension-switch.collapse {
+  background-image: url(../img/collapse.png);
+}
+
+a.form-extension-switch.collapse:hover {
+  background-image: url(../img/collapse_s.png);
 }
 
 .form-extension-switch .status {
@@ -1671,15 +1693,15 @@ section.corplist .data .corpus-access-req {
 section.corplist fieldset.advanced-filter {
   legend {
     cursor: pointer;
-    background-image: url(../img/expand.png);
+    background-image: url(../img/collapse.png);
     background-repeat: no-repeat;
-    background-position: 95% 2pt;
-    padding-right: 20px;
+    background-position: 0 2pt;
+    padding-left: 15px;
   }
 
   legend:hover {
     text-decoration: underline;
-    background-image: url(../img/collapse.png);
+    background-image: url(../img/collapse_s.png);
   }
 }
 
@@ -1688,10 +1710,11 @@ section.corplist fieldset.advanced-filter.closed {
 
   legend {
     text-decoration: underline;
+    background-image: url(../img/expand.png);
   }
 
   legend:hover {
-    background-image: url(../img/expand.png);
+    background-image: url(../img/expand_s.png);
   }
 }
 
