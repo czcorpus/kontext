@@ -29,7 +29,7 @@ $_("Frequency list")#slurp
 #set $common_save_args = [('from_line', $quick_from_line), ('to_line', $quick_to_line),
         ('ml', $ml), ('flimit', $flimit), ('freq_sort', $freq_sort), ('fpage', $fpage),
         ('ftt_include_empty', $ftt_include_empty)]
-<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'csv')], $common_save_args)}">CSV</a></li>
+<li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savefreq?$join_params($q, $globals, $fcrit, [('saveformat', 'csv')], $common_save_args)">CSV</a></li>
 <li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'xlsx')], $common_save_args)}">XLSX</a></li>
 <li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'xml')], $common_save_args)}">XML</a></li>
 <li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savefreq?${$join_params($q, $globals, $fcrit, [('saveformat', 'txt')], $common_save_args)}">TXT</a></li>

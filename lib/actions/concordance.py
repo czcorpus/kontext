@@ -732,7 +732,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(),))
         result = {
-            'fcrit': self.urlencode([('fcrit', cr) for cr in fcrit]),
+            'fcrit': [('fcrit', cr) for cr in fcrit],
             'FCrit': [{'fcrit': cr} for cr in fcrit],
             'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,
                                        self.args.ftt_include_empty, rel_mode,
@@ -747,7 +747,7 @@ class Actions(Kontext):
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
             return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0,
-                    'quick_from_line': None, 'quick_to_line': None, 'FCrit': []}
+                    'quick_from_line': None, 'quick_to_line': None, 'FCrit': [], 'fcrit': []}
 
         if len(result['Blocks']) == 1:  # paging
             items_per_page = self.args.fmaxitems

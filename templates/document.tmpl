@@ -261,7 +261,7 @@ define('conf', [], function () {
                     #end if
                     <li class="separ"><a title="$_("Show frequencies of Node forms")" href="${root_url}freqs?$join_params($q, $globals, 'fcrit=word/e+0~0>0', 'ml=0')">$_("Node forms")</a></li>
                     #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
-                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="${root_url}freqs?$join_params($q, $globals, 'fcrit=$fcrit_shortref', 'ml=0')">$_("Doc IDs")</a></li>
+                    <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="${root_url}freqs?$join_params($q, $globals, [('fcrit', $fcrit_shortref), ('ml', 0)])">$_("Doc IDs")</a></li>
                     #end if
                     #if $varExists('ttcrit') and $ttcrit
                     <li class="separ"><a title="$_("Show frequencies of Text Types")" href="${root_url}freqs?$join_params($q, $globals, $ttcrit)">$_("Text Types")</a></li>
