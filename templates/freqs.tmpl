@@ -140,11 +140,6 @@ $_("Frequency list")#slurp
                 $format_number($i.freq, mask='%d')
             </td>
             <td>
-                #if 'freqbar' in $i
-                <div class="bar" style="height:10px;width:${i['freqbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['freqbar']}" />
-                #elif 'fbar' in $i
-                <div class="bar" style="height:10px;width:${i['fbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['fbar']}" />
-                #end if
             </td>
             #if $i.has_key('rel')
             <td class="num">$i.rel</td>
