@@ -48,47 +48,13 @@ export class AppBar implements Kontext.Plugin {
              self.pluginApi.showMessage("error", errorThrown); // TODO
         });
     };
-    
-    private updateCurrentURL(updArgs:{[name:string]:any}) {
-        var args:string = window.location.search;
-        var href:string;
-        var updArgsList = [];
-        
-        for (var p in updArgs) {
-            if (updArgs.hasOwnProperty(p)) {
-                updArgsList.push(p + '=' + encodeURIComponent(updArgs[p]));
-            }
-        }        
-        return window.location.href + (args.substr(0, 1) === '?' ? '&' : '?') + updArgsList.join('&');
-    }
 
-    /**
-     */
     init(): void {
-        var code,
-            ans:boolean;
-
-        try {
-            code = JSON.parse($('#cnc-toolbar-data').text());
-            if (!this.pluginApi.userIsAnonymous() && !code['id']) {
-                ans = confirm(this.pluginApi.translate('ucnkAB__you_logged_out'));
-
-                if (ans === true) {
-                    window.location = this.pluginApi.getConf('loginUrl');
-
-                } else {
-                    window.location.href = this.updateCurrentURL({remote: 1});
-                }
-
-            } else if (this.pluginApi.userIsAnonymous() && typeof code['id'] === 'number') {
-                window.location.href = this.updateCurrentURL({remote: 1});
+        $('#cnc-toolbar-user').find('a').each(function () {
+            if ($(this).attr('href').indexOf('continue=') > -1) {
+                $(this).attr('href', $(this).attr('href') + encodeURIComponent(window.location.href));
             }
-
-        } catch (e) {
-            if (this.pluginApi.getConf('isDebug')) {
-                console.error(e);
-            }
-        }
+        });
     }
 }
 

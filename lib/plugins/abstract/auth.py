@@ -54,10 +54,13 @@ class AbstractAuth(object):
         """
         return '%slogoutx' % self.root_url
 
-    def is_administrator(self):
+    def is_administrator(self, user_id):
         """
         Should return True if user has administrator's privileges
         else False
+
+        arguments:
+        user_id -- user's database ID
         """
         return False
 
@@ -142,20 +145,19 @@ class AbstractRemoteAuth(AbstractAuth):
     A general authentication based on an external authentication service.
     """
 
-    def revalidate(self, cookies, session, query_string, refresh_sid_fn):
+    def revalidate(self, plugin_api):
         """
         Re-validates user authentication against external database with central
         authentication ticket (expected to be found in cookies) and session data.
         Resulting user data is written to the session (typically - if a remote
         service marks auth. cookie as invalid we store an anonymous user into
-        the session. The method return no value.
+        the session. The method returns no value.
+
+        Please note that in case this method raises an exception, KonText
+        automatically sets current user as 'anonymous' to prevent security issues.
 
         arguments:
-        cookies -- a Cookie.BaseCookie compatible instance
-        session -- dictionary like session data
-        query_string -- the portion of the request URL that follows '?'
-        (see environmental variable QUERY_STRING)
-        refresh_sid_fn -- by calling this function KonText will regenerate session ID
+        plugin_api -- a controller.PluginApi instance
         """
         raise NotImplementedError()
 

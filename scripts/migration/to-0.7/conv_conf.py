@@ -387,6 +387,10 @@ def update_15(doc):
     mfdml_elm.text = '3'
 
 
+def update_16(doc):
+    remove_element(doc.find('/global/administrators'))
+
+
 def process_document(xml_doc):
     func_name = lambda j: 'update_%d' % j
     i = 1

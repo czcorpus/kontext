@@ -23,16 +23,12 @@ class AbstractApplicationBar(object):
         """
         raise NotImplementedError()
 
-    def get_contents(self, cookies, curr_lang, return_url, use_fallback=True, timeout=2):
+    def get_contents(self, plugin_api, return_url):
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 
         arguments:
-        cookies -- a Cookie.BaseCookie compatible instance
-        curr_lang -- current language (xx_YY format)
+        cookies -- a controller.PluginApi instance
         return_url -- a URL user returns to in case she uses some of he appbar's links/services
-        use_fallback -- if True then in case there is no response or an error from the server a fallback content
-                        (as provided by get_fallback_content()) is used
-        timeout -- how many seconds to wait for the response; default is 2 seconds
         """
         raise NotImplementedError()

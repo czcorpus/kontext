@@ -11,60 +11,64 @@
 # GNU General Public License for more details.
 
 """
-This is another version of a custom authentication plugin for the
-Institute of the Czech National Corpus (for the original documentation
-please see lib/plugins/ucnk_remote_auth.py). It is based on
-RedisDB.
+This is a specific authentication module as used by the Institute
+of The Czech National Corpus. It obtains a user status via
+a custom HTTP service (aka "CNC toolbar"). When asked about passed
+cookie-stored identifier, the remote service returns two values mixed
+into one:
+
+1. an HTML code for KonText's application bar (= a part of KonText's web interface)
+2. a JSON inserted in a <div> element containing current user credentials
+
+(note: the search pattern to extract the JSON part is defined
+here in CentralAuth.UCNK_TOOLBAR_PATTERN)
+
+Because there is also a UCNK-specific plug-in "ucnk_appbar" which
+requires the HTML part of the response, the ucnk_remote_auth2 plug-in
+stores the received HTML code into user's session where it is available for
+later pick-up. (Please note that KonText plug-ins cannot send user/request
+data to each other). This prevents additional HTTP request from ucnk_appbar.
 
 Required config.xml/plugins entries:
 
 <auth>
-    <module>devel_remote_auth</module>
+    <module>ucnk__remote_auth2</module>
     <auth_cookie_name>[name of a cookie used to store KonText's internal auth ID]</auth_cookie_name>
+    <central_auth_cookie_name extension-by="ucnk">[name of a cookie used by a central-authentication service]</central_auth_cookie_name>
     <login_url>[URL where KonText redirects user to log her in; placeholders can be used]</login_url>
     <logout_url>[URL where KonText redirects user to log her out; placeholders can be used]</logout_url>
-    <central_auth_cookie_name extension-by="ucnk">[name of a cookie used by a central-authentication service]</central_auth_cookie_name>
+    <toolbar_server>[service address (without path part)]</toolbar_server>
+    <toolbar_port>[TCP port used by the external service]</toolbar_port>
+    <toolbar_path>[path part of the service; placeholders are supported]</toolbar_path>
 </auth>
-
 """
 
 import urllib
-import random
-import logging
+import httplib
+import re
+import json
 
 from abstract.auth import AbstractRemoteAuth
 from plugins import inject
 
-import MySQLdb
-
 
 IMPLICIT_CORPUS = 'susanne'
-REVALIDATION_PROBABILITY = 0.1
 
 
-def create_auth_db_params(conf):
-    """
-    """
-    if conf['ucnk:auth_db_charset'].lower() in ('utf8', 'utf-8'):
-        use_unicode = True
-    else:
-        use_unicode = False
-    return dict(
-        host=conf['ucnk:auth_db_host'],
-        user=conf['ucnk:auth_db_username'],
-        passwd=conf['ucnk:auth_db_password'],
-        db=conf['ucnk:auth_db_name'],
-        charset=conf['ucnk:auth_db_charset'],
-        use_unicode=use_unicode
-    )
+class ToolbarConf(object):
+    def __init__(self, conf):
+        self.server = conf.get('plugins', 'auth')['ucnk:toolbar_server']
+        self.path = conf.get('plugins', 'auth')['ucnk:toolbar_path']
+        self.port = conf.get('plugins', 'auth')['ucnk:toolbar_port']
 
 
-def connect_auth_db(**conn_params):
-    return MySQLdb.connect(**conn_params)
-
-
-def _toss():
-    return random.random() < REVALIDATION_PROBABILITY
+class AuthConf(object):
+    def __init__(self, conf):
+        self.admins = conf.get('global', 'ucnk:administrators')
+        self.login_url = conf.get('plugins', 'auth')['login_url']
+        self.logout_url = conf.get('plugins', 'auth')['logout_url']
+        self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
+        self.anonymous_user_id = conf.get_int('global', 'anonymous_user_id')
 
 
 class CentralAuth(AbstractRemoteAuth):
@@ -72,27 +76,21 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, redis_db, sessions, conf):
+    UCNK_TOOLBAR_PATTERN = r'cnc-toolbar-data[^{]+(\{.+)</div>'
+
+    def __init__(self, db, sessions, toolbar_conf, conf):
         """
         arguments:
-        db_provider -- a database connection wrapper (SQLAlchemy)
-        sessions -- a session plug-in instance
-        admins -- tuple/list of usernames with administrator privileges
-        login_url -- a URL the application redirects a user to when login is necessary
-        logout_url -- a URL the application redirects a user to when logout is requested
-        cookie_name -- name of the cookie used to store authentication ticket
-        anonymous_id -- numeric ID of anonymous user
+        db -- a key-value storage plug-in
+        sessions -- a sessions plug-in
+        toolbar_conf -- a ToolbarConf instance
+        conf -- a AuthConf instance
         """
-        super(CentralAuth, self).__init__(conf.get_int('global', 'anonymous_user_id'))
-        self.redis_db = redis_db
-        self.sessions = sessions
-        self.corplist = []
-        self.admins = conf.get('global', 'ucnk:administrators')
-        self.login_url = conf.get('plugins', 'auth')['login_url']
-        self.logout_url = conf.get('plugins', 'auth')['logout_url']
-        self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
-        self.user = 'anonymous'
-        self.auth_db_params = create_auth_db_params(conf.get('plugins', 'auth'))
+        super(CentralAuth, self).__init__(conf.anonymous_user_id)
+        self._db = db
+        self._sessions = sessions
+        self._toolbar_conf = toolbar_conf
+        self._conf = conf
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -108,55 +106,76 @@ class CentralAuth(AbstractRemoteAuth):
         is not a part of AbstractAuth interface.
 
         arguments:
-        cookies -- a Cookie.BaseCookie compatible instance
+        cookies -- a Cookie.BaseCookie compatible
 
         returns:
         ticket id
         """
-        if self.cookie_name in cookies:
-            ticket_id = cookies[self.cookie_name].value
+        if self._conf.cookie_name in cookies:
+            ticket_id = cookies[self._conf.cookie_name].value
         else:
             ticket_id = None
         return ticket_id
 
-    def revalidate(self, cookies, session, query_string, refresh_sid_fn):
-        if 'remote=1' in query_string.split('&'):
-            session.clear()
-            refresh_sid_fn()
-
-        user_data = session.get('user', {})
+    def _fetch_ucnk_toolbar(self, cookies, curr_lang, timeout=2):
+        if not curr_lang:
+            curr_lang = 'en'
+        curr_lang = curr_lang.split('_')[0]
         ticket_id = self.get_ticket(cookies)
+        connection = httplib.HTTPConnection(self._toolbar_conf.server,
+                                            port=self._toolbar_conf.port, timeout=timeout)
+        connection.request('GET', self._toolbar_conf.path % {
+            'id': ticket_id,
+            'lang': curr_lang,
+            'continue': ''   # this is filled-in on client-side (this the value is not known yet here)
+        })
+        response = connection.getresponse()
+        if response and response.status == 200:
+            return response.read().decode('utf-8')
+        else:
+            raise Exception('Failed to load data from authentication server (UCNK toolbar): %s' % (
+                'status %s' % response.status if response else 'unknown error'))
 
-        if not user_data.get('revalidated', None) or _toss():
-            logging.getLogger(__name__).debug('re-validating user')
-            cols = ('u.id', 'u.user', 'u.pass', 'u.firstName', 'u.surname', 't.lang')
-            db = connect_auth_db(**self.auth_db_params)
-            cursor = db.cursor()
-            cursor.execute("SELECT %s FROM user AS u JOIN toolbar_session AS t ON u.id = t.user_id WHERE t.id = %%s"
-                           % ','.join(cols), (ticket_id, ))
-            row = cursor.fetchone()
-            if row:
-                row = dict(zip(cols, row))
+    def _parse_user_data(self, toolbar_src):
+        m = re.search(CentralAuth.UCNK_TOOLBAR_PATTERN, toolbar_src)
+        if m:
+            ans = json.loads(m.groups()[0])
+        else:
+            raise Exception('Failed to parse UCNK toolbar response: %s' % toolbar_src)
+        if 'id' not in ans:
+            ans['id'] = self._anonymous_id
+        return ans
+
+    def revalidate(self, plugin_api):
+        """
+        User re-validation as required by plug-in specification. The method
+        catches no exceptions which means that in case of a problem with response
+        from the authentication server (aka "CNC toolbar") KonText re-sets user to
+        anonymous and shows an error message to a user.
+
+        Method also writes a CNC toolbar's HTML code for page's top bar (this solution
+        is given by CNC toolbar app design).
+        """
+        curr_user_id = plugin_api.session.get('user', {'id': None})['id']
+        ucnk_toolbar = self._fetch_ucnk_toolbar(plugin_api.cookies, plugin_api.user_lang)
+        remote_data = self._parse_user_data(ucnk_toolbar)
+        toolbar_sess_key = self.get_toolbar_session_key()
+
+        if toolbar_sess_key not in plugin_api.session or curr_user_id != remote_data['id']:
+            plugin_api.session[toolbar_sess_key] = ucnk_toolbar
+
+        if curr_user_id != remote_data['id']:
+            plugin_api.refresh_session_id()
+            if remote_data['id'] != self._anonymous_id:
+                plugin_api.session['user'] = {
+                    'id': remote_data['id'],
+                    'user': remote_data['user'],
+                    'fullname': u'%s %s' % (remote_data['firstName'], remote_data['surname'])
+                }
             else:
-                row = {}
-            if 'u.id' in row:
-                user_data['id'] = row['u.id']
-                user_data['user'] = row['u.user']
-                user_data['fullname'] = u'%s %s' % (row['u.firstName'], row['u.surname'])
-            else:
-                user = self.anonymous_user()
-                user_data['id'] = user['id']
-                user_data['user'] = user['user']
-                user_data['fullname'] = user['fullname']
-            user_data['revalidated'] = True
-            db.close()
-            # session's first level key must be updated here to make
-            # session object trigger its internal 'changed' event.
-            session['user'] = user_data
+                plugin_api.session['user'] = self.anonymous_user()
 
     def canonical_corpname(self, corpname):
-        """
-        """
         return corpname.rsplit('/', 1)[-1]
 
     def permitted_corpora(self, user_id):
@@ -164,37 +183,33 @@ class CentralAuth(AbstractRemoteAuth):
         Fetches list of corpora available to the current user
 
         arguments:
-        user -- username
+        user_id -- a database user ID
 
         returns:
-        a list of corpora names (sorted alphabetically)
+        a dict (canonical_corp_name, corp_name)
         """
-        corpora = self.redis_db.get(self._mk_list_key(user_id), [])
+        corpora = self._db.get(self._mk_list_key(user_id), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
 
-    def is_administrator(self):
+    def is_administrator(self, user_id):
         """
-        Tests whether the current user's name belongs to the 'administrators' group.
-        This is affected by /kontext/global/administrators configuration section.
-
-        returns:
-        bool
+        Currently not supported (always returns False)
         """
-        return self.user in self.admins
+        return False
 
     def get_login_url(self, return_url):
-        return self.login_url % (urllib.quote(return_url))
+        return self._conf.login_url % (urllib.quote(return_url))
 
     def get_logout_url(self, return_url):
-        return self.logout_url % (urllib.quote(return_url))
+        return self._conf.logout_url % (urllib.quote(return_url))
+
+    @staticmethod
+    def get_toolbar_session_key():
+        return 'application_bar'
 
 
 @inject('db', 'sessions')
 def create_instance(conf, db_provider, sessions):
-    """
-    Factory function providing
-    an instance of authentication module.
-    """
-    return CentralAuth(redis_db=db_provider, sessions=sessions, conf=conf)
+    return CentralAuth(db=db_provider, sessions=sessions, conf=AuthConf(conf), toolbar_conf=ToolbarConf(conf))
