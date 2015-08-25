@@ -33,10 +33,6 @@
         <profile_log_path>/optional/path/used/for/profiling/output/if/debug/level/is/2</profile_log_path>
         <max_attr_list_size>30</max_attr_list_size>
         <history_max_query_size>250</history_max_query_size>
-        <administrators extension-by="ucnk">
-            <user>johndoe</user>
-            <user>janedoe</user>
-        </administrators>
         <translations>
             <language label="česky">cs_CZ</language>
             <language label="English">en_US</language>

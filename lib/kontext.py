@@ -604,7 +604,7 @@ class Kontext(Controller):
             self.args.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
         # return url (for 3rd party pages etc.)
-        args = {'remote': 1}
+        args = {}
         if self.args.corpname:
             args['corpname'] = self.args.corpname
         if self.get_http_method() == 'GET':
@@ -1034,8 +1034,7 @@ class Kontext(Controller):
 
         if plugins.has_plugin('application_bar'):
             application_bar = plugins.get('application_bar')
-            result['app_bar'] = application_bar.get_contents(cookies=self._cookies,
-                                                             curr_lang=self.ui_lang,
+            result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
                                                              return_url=self.return_url)
             result['app_bar_css'] = application_bar.css_url
             result['app_bar_css_ie'] = application_bar.css_url_ie

@@ -240,6 +240,7 @@ class Controller(object):
         self._css_prefix = ''
         self.args = Args()
         self._uses_valid_sid = True
+        self._plugin_api = PluginApi(self, self._cookies, self._request.session)
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
@@ -264,8 +265,13 @@ class Controller(object):
             self._session['user'] = auth.anonymous_user()
 
         if hasattr(plugins.get('auth'), 'revalidate'):
-            auth.revalidate(self._cookies, self._session, self.environ.get('QUERY_STRING', ''),
-                            self.refresh_session_id)
+            try:
+                auth.revalidate(self._plugin_api)
+            except Exception as e:
+                self._session['user'] = auth.anonymous_user()
+                logging.getLogger(__name__).error('Revalidation error: %s' % e)
+                self.add_system_message('error', _('User authentication error. Please try to reload the page or '
+                                                   'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self):
@@ -965,3 +971,26 @@ class Controller(object):
         Error page
         """
         return {'error': {'message': error, 'reset': reset}}
+
+
+class PluginApi(object):
+
+    def __init__(self, controller, cookies, session):
+        self._controller = controller
+        self._cookies = cookies
+        self._session = session
+
+    @property
+    def cookies(self):
+        return self._cookies
+
+    @property
+    def session(self):
+        return self._session
+
+    def refresh_session_id(self):
+        return self._controller.refresh_session_id()
+
+    @property
+    def user_lang(self):
+        return self._controller.ui_lang
