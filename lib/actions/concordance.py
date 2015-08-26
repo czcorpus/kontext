@@ -112,6 +112,7 @@ class Actions(Kontext):
         KWIC view
         """
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.args.q))
+        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
         self.args.righttoleft = False
         if self._corp().get_conf('RIGHTTOLEFT'):
@@ -123,8 +124,7 @@ class Actions(Kontext):
             self.args.leftctx = 'a,%s' % os.path.basename(self.args.corpname)
             self.args.rightctx = 'a,%s' % os.path.basename(self.args.corpname)
         else:
-            sentence_struct = plugins.get('corparch').get_corpus_info(
-                self.args.corpname)['sentence_struct']
+            sentence_struct = corpus_info['sentence_struct']
             self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
             self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
 
@@ -135,7 +135,7 @@ class Actions(Kontext):
                 del self.args.q[i]
             i += 1
 
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
+        conc = self.call_function(conclib.get_conc, (self._corp(),), samplesize=corpus_info.sample_size)
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}

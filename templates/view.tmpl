@@ -163,6 +163,17 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
   </td>
 #end def
 
+
+#def num_hits($c_size, $f_size)
+#if $c_size == $f_size:
+<span id="loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
+#else
+<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="../files/img/warning-icon.png" /></a>
+<span id="loader"></span>
+<strong>$format_number($c_size, mask='%d')</strong> ($_('out of total') <span id="fullsize" title="$f_size">$format_number($f_size, mask='%d'))</span>
+#end if
+#end def
+
 #def concordance
 #filter WebSafe
 
@@ -179,20 +190,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 #set $online_sample = False
             #end if
 
-            $_('Hits'): <span id="loader"></span> <strong id="fullsize" title="$fullsize">$format_number($concsize, mask='%d')</strong>
+            $_('Hits'): #filter None# $num_hits($concsize, $fullsize) #end filter#
             #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>#end if#
-            <span id="conc-calc-info" title="$concsize">#slurp
-            #if $concsize != $fullsize
-                #set $l=$format_number($concsize, mask='%d')
-                #if not $online_sample
-                    $_('using first') $l $_('lines only'). <a href="view?q=R$q[2:];$globals">$_('Use random') $l $_('instead').</a>#slurp
-                #else
-                    $_('using random') $l#slurp
-                    #if not $finished
-                        $_('counting') ...#slurp
-                    #end if
-                    $_('lines only')#slurp
-                #end if
+            <span id="conc-calc-info" title="$concsize">
+            #if not $finished
+              $_('calculating') ...#slurp
             #end if
             </span>
 

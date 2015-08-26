@@ -43,7 +43,8 @@
 		"global__none": "None",
 	  	"global__advanced_filter": "Advanced filter",
 		"global__sorting_backwards_explanation": "Comparison starts with the last characters of words",
-		"global__add_aligned_corpus": "Add a corpus"
+		"global__add_aligned_corpus": "Add a corpus",
+		"global__size_warning": "Due to the large size, the concordance has been truncated to the first {size} lines."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -89,6 +90,7 @@
 		"global__none": "Žádný",
 	  	"global__advanced_filter": "Pokročilý filtr",
 		"global__sorting_backwards_explanation": "Porovnání slov začíná od jejich posledního písmene.",
-		"global__add_aligned_corpus": "Přidat korpus"
+		"global__add_aligned_corpus": "Přidat korpus",
+		"global__size_warning": "Kvůli nadměrnému rozsahu byla konkordance zredukována na prvních {size} řádek."
 	}
 }
