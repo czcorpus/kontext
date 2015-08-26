@@ -199,9 +199,6 @@ class User(Kontext):
 
     @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
-        html = plugins.get('application_bar').get_contents(cookies=self._cookies,
-                                                           curr_lang=self.ui_lang,
-                                                           return_url=self.return_url,
-                                                           use_fallback=False,
-                                                           timeout=20)
+        html = plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,
+                                                           return_url=self.return_url)
         return {'html': html}
