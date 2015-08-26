@@ -166,13 +166,14 @@ class CentralAuth(AbstractRemoteAuth):
 
         if curr_user_id != remote_data['id']:
             plugin_api.refresh_session_id()
-            if remote_data['id'] != self._anonymous_id:
+            if remote_data['id'] != self._anonymous_id:  # user logged in => keep session data (except for credentials)
                 plugin_api.session['user'] = {
-                    'id': remote_data['id'],
+                    'id': int(remote_data['id']),  # CNC toolbar seems to return 'string' here
                     'user': remote_data['user'],
                     'fullname': u'%s %s' % (remote_data['firstName'], remote_data['surname'])
                 }
-            else:
+            else:  # logout => clear current user's session data and set new credentials
+                plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
 
     def canonical_corpname(self, corpname):
@@ -200,10 +201,10 @@ class CentralAuth(AbstractRemoteAuth):
         return False
 
     def get_login_url(self, return_url):
-        return self._conf.login_url % (urllib.quote(return_url))
+        return self._conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
 
     def get_logout_url(self, return_url):
-        return self._conf.logout_url % (urllib.quote(return_url))
+        return self._conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
     @staticmethod
     def get_toolbar_session_key():
