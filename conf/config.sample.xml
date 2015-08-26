@@ -146,7 +146,8 @@
 
         <corplist title="">
             <corplist title="Our corpora">
-		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset" collator_locale="en_US">
+		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset" collator_locale="en_US"
+                        sample_size="1000000">
                     <metadata>
                         <database>/path/to/a/sqlite/database/metadata-orwell.db</database>
                         <label_attr>opus.title</label_attr>

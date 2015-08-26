@@ -371,7 +371,7 @@ define('conf', [], function () {
 
                 #if $cached['conc_persist']
                 $_('Hits'): <span id="loader"></span>
-                <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['concsize'], mask='%d')
+                <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['fullsize'], mask='%d')
                 </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
                 #end if
                 <span class="separ">|</span>

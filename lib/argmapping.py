@@ -250,7 +250,6 @@ class GlobalArgs(GeneralArgs):
     prevlink = Parameter(u'')
     nextlink = Parameter(u'')
     concsize = Parameter(u'')
-    samplesize = Parameter(0)  # orig 1e7
     Lines = Parameter([])
     fromp = Parameter(u'1')
     numofpages = Parameter(0)

@@ -240,6 +240,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.bib_struct = node.attrib.get('bib_struct', None)
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
+        ans.sample_size = node.attrib.get('sample_size', -1)
         self.customize_corpus_info(ans, node)
 
         ref_elm = node.find('reference')

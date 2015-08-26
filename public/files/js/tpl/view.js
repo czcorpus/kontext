@@ -304,10 +304,24 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 return false;
             });
         });
+    }
+
+    function addWarnings() {
+        var jqTriggerElm;
 
         popupBox.bind(
             $('.calc-warning'),
             lib.layoutModel.translate('global__calc_warning'),
+            {
+                type: 'warning',
+                width: 'nice'
+            }
+        );
+
+        jqTriggerElm = $('#result-info').find('.size-warning');
+        popupBox.bind(
+            jqTriggerElm,
+            lib.layoutModel.translate('global__size_warning', {size: jqTriggerElm.data('size-limit')}),
             {
                 type: 'warning',
                 width: 'nice'
@@ -369,8 +383,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
-                    var l,
-                        num2Str;
+                    var num2Str;
 
                     num2Str = function (n) {
                         return lib.layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
@@ -390,15 +403,6 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     } else {
                         $('#fullsize').html(num2Str(data.concsize));
                         $('#toolbar-hits').html(num2Str(data.concsize));
-                    }
-
-                    if (data.fullsize > 0 && lib.layoutModel.conf.q2 !== "R") {
-                        l = addCommas(data.concsize);
-                        $('#conc-calc-info').html(
-                            lib.layoutModel.translate('global__using_first_k_lines', {num_lines: l })
-                            + ' <a href="view?' + 'q=R' + lib.layoutModel.conf.q2toEnd + '&amp;'
-                            + lib.layoutModel.conf.globals + '">'
-                            + lib.layoutModel.translate('global__use_random_k_instead', {num_lines: l}) + '.</a>');
                     }
 
                     if (data.finished) {
@@ -425,7 +429,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             window.history.replaceState({}, window.document.title, '/view?' + conf.stateParams);
 
         } else if (!conf.replicableQuery) {
-            window.location = '/view?' + conf.stateParams;
+            window.location.href = '/view?' + conf.stateParams;
         }
     }
 
@@ -437,6 +441,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         misc();
+        addWarnings();
         initConcViewScrollbar();
         if (conf.anonymousUser) {
             anonymousUserWarning();
