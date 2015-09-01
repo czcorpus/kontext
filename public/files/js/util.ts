@@ -22,6 +22,8 @@
  *
  */
 export class SimplePageStore implements Kontext.PageStore {
+    
+    dispatcher:Dispatcher.Dispatcher<any>;
 
     private changeListeners:Array<Kontext.StoreListener>;
 
@@ -48,7 +50,8 @@ export class SimplePageStore implements Kontext.PageStore {
         }
     }
 
-    constructor() {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>) {
+        this.dispatcher = dispatcher;
         this.changeListeners = [];
     }
 }

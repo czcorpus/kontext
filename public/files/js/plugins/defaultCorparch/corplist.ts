@@ -30,8 +30,6 @@ export class CorplistFormStore extends util.SimplePageStore {
 
     private pluginApi:Kontext.PluginApi;
 
-    private dispatcher:Dispatcher.Dispatcher<any>;
-
     private selectedKeywords:{[key:string]:boolean};
 
     private offset:number;
@@ -43,10 +41,9 @@ export class CorplistFormStore extends util.SimplePageStore {
     static DispatchToken:string;
 
     constructor(pluginApi:Kontext.PluginApi) {
-        super();
+        super(pluginApi.dispatcher());
         var self = this;
         this.pluginApi = pluginApi;
-        this.dispatcher = pluginApi.dispatcher();
         this.data = {};
         this.selectedKeywords = {};
         this.offset = 0;
@@ -154,8 +151,6 @@ export class CorplistTableStore extends util.SimplePageStore {
 
     pluginApi:Kontext.PluginApi;
 
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
     private data:CorplistData;
 
     static DispatchToken:string;
@@ -165,9 +160,8 @@ export class CorplistTableStore extends util.SimplePageStore {
      * @param pluginApi
      */
     constructor(pluginApi:Kontext.PluginApi) {
-        super();
+        super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
-        this.dispatcher = pluginApi.dispatcher();
         var self = this;
         CorplistTableStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
