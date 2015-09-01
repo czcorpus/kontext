@@ -99,7 +99,7 @@ def init_plugin(name, module=None, optional=False):
             plugins.install_plugin(name, plugin_module, settings)
         except ImportError as e:
             logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
-                                             % (settings.get('plugins', 'getlang')['module'], e))
+                                             % (name, e))
         except (PluginException, Exception) as e:
             logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
             raise e
