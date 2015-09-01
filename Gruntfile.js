@@ -12,7 +12,7 @@
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-typescript');
         grunt.loadNpmTasks('grunt-requirejs');
-        grunt.loadNpmTasks('grunt-react');
+        grunt.loadNpmTasks('grunt-babel');
 
         grunt.initConfig({
             clean: {
@@ -134,7 +134,7 @@
                     }
                 }
             },
-            "react": {
+            "babel": {
                 all: {
                     files: [
                         {
@@ -201,17 +201,17 @@
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'typescript', 'react',
+        grunt.registerTask('devel', ['clean:all', 'typescript', 'babel',
                 'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup', 'exec']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
         grunt.registerTask('develjs', ['clean:javascript', 'typescript',
-                'react', 'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup']);
+                'babel', 'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
-        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'react',
+        grunt.registerTask('production', ['clean:all', 'less', 'typescript', 'babel',
                 'copy:prepare', 'translations:production', 'requirejs:production',
                 'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
 
