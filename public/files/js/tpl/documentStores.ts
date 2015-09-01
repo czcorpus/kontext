@@ -27,16 +27,13 @@ import util = require('util');
  */
 export class QueryHintStore extends util.SimplePageStore {
 
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
     private hints:Array<string>;
 
     private currentHint:number;
 
     constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, hints:Array<string>) {
-        var self = this;
-        super();
-        this.dispatcher = dispatcher;
+        super(dispatcher);
+        var self = this;        
         this.hints = hints ? hints : [];
         this.currentHint = this.randomIndex();
 
@@ -70,8 +67,6 @@ export class QueryHintStore extends util.SimplePageStore {
  */
 export class MessageStore extends util.SimplePageStore implements Kontext.MessagePageStore {
 
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
     messages:Array<{messageType:string; messageText:string, messageId:string}>;
 
     addMessage(messageType:string, messageText:string) {
@@ -104,9 +99,8 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
     }
 
     constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
+        super(dispatcher);
         var self = this;
-        this.dispatcher = dispatcher;
         this.messages = [];
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -127,13 +121,11 @@ export class CorpusInfoStore extends util.SimplePageStore {
 
     pluginApi:Kontext.PluginApi;
 
-    dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>;
-
     data:{[corpusId:string]:any};
 
 
     constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
-        super();
+        super(dispatcher);
         var self = this;
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
