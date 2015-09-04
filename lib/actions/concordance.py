@@ -1395,7 +1395,8 @@ class Actions(Kontext):
     @exposed(access_level=1, legacy=True)
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
-        conc = self.call_function(conclib.get_conc, (self._corp(), self.args.samplesize))
+        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+        conc = self.call_function(conclib.get_conc, (self._corp(), corpus_info.sample_size))
         if not to_line:
             to_line = conc.size()
             # TODO Save menu should be active here
@@ -1434,7 +1435,8 @@ class Actions(Kontext):
             return ans
 
         try:
-            conc = self.call_function(conclib.get_conc, (self._corp(), self.args.samplesize))
+            corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+            conc = self.call_function(conclib.get_conc, (self._corp(), corpus_info.sample_size))
             kwic = Kwic(self._corp(), self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
