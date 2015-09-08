@@ -117,7 +117,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             getInitialState : function () {
-                return {attrlist: [], structlist: [], size: null, description: null, url: null};
+                return {
+                    corpname: null,
+                    attrlist: [], 
+                    structlist: [], 
+                    size: null, 
+                    description: null, 
+                    url: null
+                };
             },
 
             componentDidMount : function () {
@@ -144,33 +151,43 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     webLink = '-';
                 }
 
-                return (
-                    <div id="corpus-details-box">
-                        <div className="top">
-                            <h4 className="corpus-name">{this.state.corpname}</h4>
-
-                            <p className="metadata">
-                                <strong>{this.translate('global__size')}: </strong>
-                                <span className="size">{this.state.size}</span> {this.translate('global__positions')}<br />
-
-                                <strong className="web_url">{this.translate('global__website')}: </strong>
-                                {webLink}
-                            </p>
+                if (!this.state.corpname) {
+                    return (
+                        <div id="corpus-details-box">
+                            <img src={this.createStaticUrl('img/ajax-loader.gif')} 
+                                alt={this.translate('global__loading')} title={this.translate('global__loading')} />
                         </div>
-                        <table className="structs-and-attrs" border="0">
-                            <tr>
-                                <td>
-                                    <AttributeList rows={this.state.attrlist} />
-                                </td>
-                                <td style={{paddingLeft: '4em'}}>
-                                    <StructureList rows={this.state.structlist} />
-                                </td>
-                            </tr>
-                        </table>
-                        <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
-                        <p className="corpus-description">{this.state.description}</p>
-                    </div>
-                );
+                    );
+
+                } else {
+                    return (
+                        <div id="corpus-details-box">
+                            <div className="top">
+                                <h4 className="corpus-name">{this.state.corpname}</h4>
+
+                                <p className="metadata">
+                                    <strong>{this.translate('global__size')}: </strong>
+                                    <span className="size">{this.state.size}</span> {this.translate('global__positions')}<br />
+
+                                    <strong className="web_url">{this.translate('global__website')}: </strong>
+                                    {webLink}
+                                </p>
+                            </div>
+                            <table className="structs-and-attrs" border="0">
+                                <tr>
+                                    <td>
+                                        <AttributeList rows={this.state.attrlist} />
+                                    </td>
+                                    <td style={{paddingLeft: '4em'}}>
+                                        <StructureList rows={this.state.structlist} />
+                                    </td>
+                                </tr>
+                            </table>
+                            <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
+                            <p className="corpus-description">{this.state.description}</p>
+                        </div>
+                    );
+                }
             }
         });
 
