@@ -12,7 +12,23 @@
     "defaultCorparch__keywords_field_label": "Available keywords",
     "defaultCorparch__corpus_name": "Name",
     "defaultCorparch__corpus_labels": "Labels",
-    "defaultCorparch__corpus_details": "Details"
+    "defaultCorparch__corpus_details": "Details",
+    "defaultCorparch__my_list": "My list",
+    "defaultCorparch__no_result": "No result",
+    "defaultCorparch__found_in": "Found in",
+    "defaultCorparch__name_or_description": "Name or description",
+    "defaultCorparch__hit_tab_to_see_fav": "Hit [Tab] to see your favorite items",
+    "defaultCorparch__fav_items": "Favorite items",
+    "defaultCorparch__featured_corpora": "Featured corpora",
+    "defaultCorparch__item_removed_from_fav": "Item removed from favorites",
+    "defaultCorparch__failed_to_remove_fav": "Failed to remove item from favorites",
+    "defaultCorparch__failed_to_fetch_fav": "Failed to fetch favorite items",
+    "defaultCorparch__please_log_in_to_see_fav": "Please log-in to use favorite items",
+    "defaultCorparch__hit_tab_to_see_other": "Hit [Tab] to search for other corpora",
+    "defaultCorparch__in_fav": "In favorites",
+    "defaultCorparch__not_in_fav": "In favorites",
+    "defaultCorparch__item_added_to_fav": "Item added to favorites",
+    "defaultCorparch__failed_to_update_item": "Failed to update item"
 
   },
   "cs-CZ": {
@@ -28,6 +44,22 @@
     "defaultCorparch__keywords_field_label": "Dostupné štítky",
     "defaultCorparch__corpus_name": "Název",
     "defaultCorparch__corpus_labels": "Štítky",
-    "defaultCorparch__corpus_details": "Podrobnosti"
+    "defaultCorparch__corpus_details": "Podrobnosti",
+    "defaultCorparch__my_list": "Můj seznam",
+    "defaultCorparch__no_result": "Žádný výsledek",
+    "defaultCorparch__found_in": "Nalezeno v",
+    "defaultCorparch__name_or_description": "Název nebo popis",
+    "defaultCorparch__hit_tab_to_see_fav": "Stiskněte [Tab] pro zobrazení vašich oblíbených položek",
+    "defaultCorparch__fav_items": "Oblíbené položky",
+    "defaultCorparch__featured_corpora": "Vlajkové korpusy",
+    "defaultCorparch__item_removed_from_fav": "Položka odstraněna z oblíbených",
+    "defaultCorparch__failed_to_remove_fav": "Položku se nepodařilo odstranit z oblíbených",
+    "defaultCorparch__failed_to_fetch_fav": "Nepodařilo se stáhnout seznam oblíbených položek",
+    "defaultCorparch__please_log_in_to_see_fav": "Pro zobrazení oblíbených položek se prosím přihlašte",
+    "defaultCorparch__hit_tab_to_see_other": "Stiskněte [Tab] pro vyhledávání ostatních korpusů",
+    "defaultCorparch__in_fav": "V oblíbených",
+    "defaultCorparch__not_in_fav": "Není v oblíbených",
+    "defaultCorparch__item_added_to_fav": "Položka přidána do oblíbených",
+    "defaultCorparch__failed_to_update_item": "Nepodařilo se aktualizovat položku"
   }
 }

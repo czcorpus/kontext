@@ -247,8 +247,8 @@ class WidgetMenu {
     init(searchBox:SearchTab, favoriteBox:FavoritesTab):void {
         var self = this;
         this.menuWrapper.append('<a data-func="my-corpora">'
-            + this.pageModel.translate('my list') + '</a> | '
-            + '<a data-func="search">' + this.pageModel.translate('other corpora')
+            + this.pageModel.translate('defaultCorparch__my_list') + '</a> | '
+            + '<a data-func="search">' + this.pageModel.translate('defaultCorparch__other_corpora')
             + '</a>');
         this.favoriteBox = favoriteBox;
         this.searchBox = searchBox;
@@ -500,7 +500,7 @@ export class SearchTab implements WidgetTab {
             limit : self.maxNumHints,
             templates: {
                 notFound: function () {
-                    return '<p>' + self.pluginApi.translate('no result') + '</p>';
+                    return '<p>' + self.pluginApi.translate('defaultCorparch__no_result') + '</p>';
                 },
                 suggestion: function (item:SearchResponse) {
                     if (item.found_in.length > 0) {
@@ -508,7 +508,7 @@ export class SearchTab implements WidgetTab {
                             + ' <span class="num">('
                             + self.pluginApi.translate('global__size')
                             + ': ~' + item.raw_size + ', '
-                            + self.pluginApi.translate('found in')
+                            + self.pluginApi.translate('defaultCorparch__found_in')
                             + ': ' + item.found_in.join(', ')
                             + ')</span></p>');
 
@@ -575,7 +575,7 @@ export class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', this.pluginApi.translate('name or description'));
+            .attr('placeholder', this.pluginApi.translate('defaultCorparch__name_or_description'));
         $(inputWrapper)
             .addClass('input-wrapper')
             .append(this.srchField);
@@ -588,7 +588,7 @@ export class SearchTab implements WidgetTab {
      * @returns {}
      */
     getFooter():JQuery {
-        return $('<span>' + this.pluginApi.translate('hit [Tab] to see your favorite items') + '</span>');
+        return $('<span>' + this.pluginApi.translate('defaultCorparch__hit_tab_to_see_fav') + '</span>');
     }
 }
 
@@ -643,7 +643,7 @@ class FavoritesTab implements WidgetTab {
             + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
             + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
             + ' />'
-            + this.pageModel.translate('favorite items') + '</th>'
+            + this.pageModel.translate('defaultCorparch__fav_items') + '</th>'
             + '<th></th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
 
@@ -653,7 +653,7 @@ class FavoritesTab implements WidgetTab {
 
         this.wrapperFeat = window.document.createElement('table');
         $(this.wrapperFeat).addClass('featured-list')
-            .append('<tr><th colspan="2">' + this.pageModel.translate('featured corpora') + '</th></tr>');
+            .append('<tr><th colspan="2">' + this.pageModel.translate('defaultCorparch__featured_corpora') + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFeat);
     }
 
@@ -721,17 +721,17 @@ class FavoritesTab implements WidgetTab {
         prom.then(
             function (data) {
                 if (!data.error) {
-                    self.pageModel.showMessage('info', self.pageModel.translate('item removed from favorites'));
+                    self.pageModel.showMessage('info', self.pageModel.translate('defaultCorparch__item_removed_from_fav'));
                     return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('failed to remove item from favorites'));
+                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
                     throw new Error(data.error);
                 }
 
             },
             function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('failed to remove item from favorites'));
+                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
             }
         ).then(
             function (favItems) {
@@ -742,12 +742,12 @@ class FavoritesTab implements WidgetTab {
                     });
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
                     throw new Error(favItems.error);
                 }
             },
             function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
             }
         );
     }
@@ -794,7 +794,7 @@ class FavoritesTab implements WidgetTab {
 
         } else {
             jqWrapper.append('<tr><td colspan="3">'
-                + this.pageModel.translate('Please log-in to use favorite items')
+                + this.pageModel.translate('defaultCorparch__please_log_in_to_see_fav')
                 + '</td></tr>');
             // TODO show loginUrl here
         }
@@ -853,7 +853,7 @@ class FavoritesTab implements WidgetTab {
     }
 
     getFooter():JQuery {
-        return $('<span>' + this.pageModel.translate('hit [Tab] to search for other corpora') + '</span>');
+        return $('<span>' + this.pageModel.translate('defaultCorparch__hit_tab_to_see_other') + '</span>');
     }
 }
 
@@ -886,15 +886,15 @@ class StarSwitch {
             $(this.triggerElm)
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
                 .addClass('starred')
-                .attr('title', this.pageModel.translate('starred'))
-                .attr('alt', this.pageModel.translate('starred'));
+                .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
+                .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.triggerElm)
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
                 .removeClass('starred')
-                .attr('title', this.pageModel.translate('not starred'))
-                .attr('alt', this.pageModel.translate('not starred'));
+                .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
+                .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
         }
     }
 
@@ -984,15 +984,15 @@ class StarComponent {
             $(this.starImg)
                 .addClass('starred')
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
-                .attr('title', this.pageModel.translate('starred'))
-                .attr('alt', this.pageModel.translate('starred'));
+                .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
+                .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.starImg)
                 .addClass('starred')
                 .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
-                .attr('title', this.pageModel.translate('not starred'))
-                .attr('alt', this.pageModel.translate('not starred'));
+                .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
+                .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
         }
         $('form .starred').append(this.starImg);
         this.editable = editable;
@@ -1015,7 +1015,7 @@ class StarComponent {
             newItem = this.extractItemFromPage(flag);
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
-            message = self.pageModel.translate('item added to favorites');
+            message = self.pageModel.translate('defaultCorparch__item_added_to_fav');
             postDispatch = function (data) {
                 self.starSwitch.setItemId(data.id);
             };
@@ -1023,7 +1023,7 @@ class StarComponent {
         } else {
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
                 {method: 'POST', data: {id: self.starSwitch.getItemId()}, dataType: 'json'});
-            message = self.pageModel.translate('item removed from favorites');
+            message = self.pageModel.translate('defaultCorparch__item_removed_from_fav');
             postDispatch = function (data) {
                 self.starSwitch.setItemId(null);
             };
@@ -1037,11 +1037,11 @@ class StarComponent {
                     return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
+                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
                 }
             },
             function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('failed to update item'));
+                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
             }
         ).then(
             function (favItems) {
@@ -1049,11 +1049,11 @@ class StarComponent {
                     self.favoriteItemsTab.reinit(favItems);
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
                 }
             },
             function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('failed to fetch favorite items'));
+                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
             }
         );
     }
