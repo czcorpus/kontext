@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
- 
+
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
@@ -27,8 +27,15 @@ import common = require('./common');
 /**
  *
  */
-export interface CorplistItemClick {
-    (corpId:string, corpName:string): void;
+export interface CorplistSrchItemClick {
+    (corpId:string, corpName:string):void;
+}
+
+/**
+ *
+ */
+export interface CorplistFavItemClick {
+    (itemId:string, href:string):void;
 }
 
 /**
@@ -112,7 +119,7 @@ export interface Options {
      * formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:CorplistItemClick;
+    itemClickAction?:CorplistSrchItemClick;
 
     /**
      * A HTML class to be used for widget's wrapping container.
@@ -301,7 +308,7 @@ export class SearchTab implements WidgetTab {
 
     widgetWrapper:HTMLElement;
 
-    itemClickCallback:CorplistItemClick;
+    itemClickCallback:CorplistSrchItemClick;
 
     wrapper:HTMLElement;
 
@@ -325,7 +332,7 @@ export class SearchTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
+    constructor(pluginApi:Kontext.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
@@ -611,7 +618,7 @@ class FavoritesTab implements WidgetTab {
 
     private wrapperFeat:HTMLElement;
 
-    itemClickCallback:CorplistItemClick;
+    itemClickCallback:CorplistSrchItemClick;
 
     editMode:boolean;
 
@@ -621,7 +628,7 @@ class FavoritesTab implements WidgetTab {
      *
      */
     constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
-                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistItemClick) {
+                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
@@ -785,7 +792,11 @@ class FavoritesTab implements WidgetTab {
             jqWrapper.find('a.corplist-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback.call(self, $(e.currentTarget).data('id'), $(e.currentTarget).text());
+                        self.itemClickCallback.call(
+                            self,
+                            $(e.currentTarget).data('id'),
+                            $(e.currentTarget).attr('href')
+                            );
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -1235,7 +1246,7 @@ export class Corplist {
     onShow:(widget:Corplist)=>void;
 
 
-    onItemClick:CorplistItemClick = (corpusId:string, corpusName:string) => {
+    onSrchItemClick:CorplistSrchItemClick = (corpusId:string, corpusName:string) => {
         $(this.hiddenInput).val(corpusId);
         this.setButtonLabel(corpusName);
 
@@ -1251,6 +1262,10 @@ export class Corplist {
             }
             $(this.parentForm).submit();
         }
+    };
+
+    onFavItemClick:CorplistFavItemClick = (itemId:string, href:string) => {
+        window.location.href = href;
     };
 
     /**
@@ -1372,11 +1387,11 @@ export class Corplist {
         this.mainMenu = new WidgetMenu(this, this.pageModel);
 
         // search func
-        this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onItemClick);
+        this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onSrchItemClick);
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onItemClick);
+            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
