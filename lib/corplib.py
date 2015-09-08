@@ -22,6 +22,7 @@ import glob
 from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
+import logging
 
 from l10n import import_string, export_string
 import manatee
@@ -132,12 +133,17 @@ class CorpusManager(object):
 
     def subcorpora(self, corpname):
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
-        enc_corpname = corpname.encode("utf-8")
-
+        enc_corpname = corpname.encode('utf-8')
         subc = []
         for sp in self.subcpath:
-            subc += [x.decode('utf-8') for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8'))]
-        subc += glob.glob(os.path.join(self.default_subcpath(corpname).encode("utf-8"), '*.subc'))
+            items = []
+            for x in glob.glob(os.path.join(sp, enc_corpname, '*.subc').encode('utf-8')):
+                try:
+                    items.append(x.decode('utf-8'))
+                except UnicodeDecodeError as e:
+                    logging.getLogger(__name__).warning('Subcorpus filename encoding problem. File: %s' % x)
+            subc.extend(items)
+        subc.extend(glob.glob(os.path.join(self.default_subcpath(corpname).encode('utf-8'), '*.subc')))
         return sorted(subc)
 
     def subcorp_names(self, corpname):
