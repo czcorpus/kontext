@@ -264,6 +264,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         jqFieldset.prepend(this.corpusSelectorWrapper);
         corplist.create(this.corpusSelector, lib, {
             editable: false,
+            submitMethod: 'GET',
             itemClickAction: function (corpusId) {
                 self.corpusId = corpusId;
             }

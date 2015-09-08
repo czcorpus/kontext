@@ -214,7 +214,7 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
         lib.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
             lib,
-            {formTarget: 'first_form'}
+            {formTarget: 'first_form', submitMethod: 'GET'}
         );
         // initial query selector setting (just like when user changes it manually)
         queryFormTweaks.cmdSwitchQuery($('#queryselector').get(0), lib.layoutModel.conf.queryTypesHints);
