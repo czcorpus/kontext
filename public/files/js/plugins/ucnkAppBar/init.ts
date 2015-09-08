@@ -51,10 +51,10 @@ export class AppBar implements Kontext.Plugin {
 
     init(): void {
         $('#cnc-toolbar-user').find('a').each(function () {
-            if ($(this).attr('href').indexOf('continue=') === -1) {
-                $(this).attr('href', $(this).attr('href') + '&continue='
-                        + encodeURIComponent(window.location.href));
-            }
+            let href = $(this).attr('href');
+            let hrefElms = href.split('?');
+            let contSetting = 'continue=' + encodeURIComponent(window.location.href);
+            $(this).attr('href', href + (hrefElms.length < 2 ? '?' : '&') + contSetting);
         });
     }
 }
