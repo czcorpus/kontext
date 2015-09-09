@@ -836,7 +836,8 @@ class FavoritesTab implements WidgetTab {
             $(self.wrapperFeat).find('a.featured-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback.call(self, $(e.currentTarget).data('id'), $(e.currentTarget).text());
+                        self.itemClickCallback.call(self,
+                            $(e.currentTarget).data('id'), $(e.currentTarget).attr('href'));
                         e.stopPropagation();
                         e.preventDefault();
                     }
