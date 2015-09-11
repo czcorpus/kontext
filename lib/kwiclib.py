@@ -349,7 +349,7 @@ class Kwic(object):
 
     @staticmethod
     def non1hitlen(hitlen):
-        return '' if hitlen == 1 else ';hitlen=%i' % hitlen
+        return '' if hitlen == 1 else '%i' % hitlen
 
     @staticmethod
     def isengword(strclass):
