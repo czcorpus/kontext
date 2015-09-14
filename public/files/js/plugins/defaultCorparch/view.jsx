@@ -424,21 +424,44 @@ define(['vendor/react'], function (React) {
         var FilterInputFieldset = React.createClass({
             mixins: mixins,
 
+            getInitialState : function () {
+                return {expanded: false};
+            },
+
+            _handleLegendClick : function () {
+                this.setState(React.addons.update(this.state, {expanded: {$set: !this.state.expanded}}));
+            },
+
             render: function () {
                 var hiddenInputs = this.props.currKeywords.map(function (v, i) {
                     return <input key={i} type="hidden" name="keyword" value={v} />;
                 });
+                var fields;
+                var fieldsetClasses;
 
-                return (
-                    <fieldset>
-                        <legend>{this.translate('Properties')}</legend>
-                        {hiddenInputs}
+                if (this.state.expanded) {
+                    fieldsetClasses = 'advanced-filter';
+                    fields = (
+                        <div>
                         <span>{this.translate('defaultCorparch__size_from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                        <span className="inline-label">{this.translate('to')}: </span>
+                        <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                         <span className="inline-label">{'(' +
                         this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
+                        </div>
+                    );
+
+                } else {
+                    fieldsetClasses = 'advanced-filter closed';
+                    fields = null;
+                }
+
+                return (
+                    <fieldset className={fieldsetClasses}>
+                        <legend onClick={this._handleLegendClick}>{this.translate('defaultCorparch__advanced_filters')}</legend>
+                        {hiddenInputs}
+                        {fields}
                     </fieldset>
                 );
             }
@@ -451,14 +474,15 @@ define(['vendor/react'], function (React) {
             mixins: mixins,
             render: function () {
                 return (
-                    <div>
+                    <section className="inner">
+                        <h3>{this.translate('defaultCorparch__filters')}</h3>
                         <KeywordsField
                             keywords={this.props.keywords}
                             label={this.translate('defaultCorparch__keywords_field_label')} />
                         <FilterInputFieldset
                             currKeywords={this.props.currKeywords}
                             filters={this.props.filters} />
-                    </div>
+                    </section>
                 )
             }
         });

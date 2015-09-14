@@ -120,48 +120,32 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 this.props.submitHandler();
             },
 
-            _clickExpandTextareaHandler : function () {
-                this.setState(React.addons.update(this.state,
-                    {textareaVisible: {$set: !this.state.textareaVisible}}));
-            },
-
             _textareaChangeHandler : function (e) {
                 this.setState({customMessage: e.target.value});
             },
 
             getInitialState : function () {
-                return {customMessage: '-', textareaVisible: false};
+                return {customMessage: ''};
             },
 
             render : function () {
-                var toggleImgPath;
-                var textarea;
-
-                if (this.state.textareaVisible) {
-                    textarea = <textarea rows="3" cols="50"
-                                    onChange={this._textareaChangeHandler}
-                                    value={this.state.customMessage} />;
-                    toggleImgPath = this.createStaticUrl('img/collapse.png');
-
-                } else {
-                    textarea = <p>{this.state.customMessage}</p>;
-                    toggleImgPath = this.createStaticUrl('img/expand.png');
-                }
-
                 return (
                     <form>
+                        <img className="message-icon" src={this.createStaticUrl('img/message-icon.png')}
+                             alt={this.translate('ucnkCorparch__message_icon')} />
                         <p>{this.translate('ucnkCorparch__please_give_me_access_{corpname}',
                             {corpname: this.props.corpusName})}</p>
-                        <label className="toggle-textarea" onClick={this._clickExpandTextareaHandler}
-                            title={this.translate('click to expand/close the field')}>
-                            {this.translate('Custom message (optional)')}
-                            <img src={toggleImgPath} />
+                        <label>
+                            {this.translate('ucnkCorparch__custom_message')}:
                         </label>
                         <div>
-                            {textarea}
+                            <textarea rows="3" cols="50"
+                                    onChange={this._textareaChangeHandler}
+                                    value={this.state.customMessage} />
                         </div>
                         <div>
-                            <button className="submit" type="button" onClick={this._submitHandler}>{this.translate('Send')}</button>
+                            <button className="submit" type="button"
+                                    onClick={this._submitHandler}>{this.translate('ucnkCorparch__send')}</button>
                         </div>
                     </form>
                 );
@@ -235,7 +219,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     return (
                         <div>
                             <div className="lock-status"
-                                 title={this.translate('click to ask for access')}
+                                 title={this.translate('ucnkCorparch__click_to_ask_access')}
                                  onMouseOver={this._mouseOverHandler}
                                  onMouseOut={this._mouseOutHandler}
                                  onClick={this._clickHandler}>
@@ -300,9 +284,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 var lockIcon = null;
 
                 if (this.props.enableUserActions) {
-                    favStar = <FavStar corpusId={this.props.row.id}
-                                       corpusName={this.props.row.name}
-                                       isFav={this.props.row.user_item} />;
+                    if (this.props.row.user_access) {
+                        favStar = <FavStar corpusId={this.props.row.id}
+                                           corpusName={this.props.row.name}
+                                           isFav={this.props.row.user_item} />;
+                    }
                     lockIcon = <LockIcon isLocked={!this.props.row.user_access}
                                          corpusId={this.props.row.id}
                                          corpusName={this.props.row.name} />;
@@ -602,7 +588,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <div>
                         <span>{this.translate('defaultCorparch__size_from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                        <span className="inline-label">{this.translate('to')}: </span>
+                        <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
                         <span className="inline-label">{'(' +
                         this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
@@ -616,7 +602,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 return (
                     <fieldset className={fieldsetClasses}>
-                        <legend onClick={this._handleLegendClick}>{this.translate('global__advanced_filter')}</legend>
+                        <legend onClick={this._handleLegendClick}>{this.translate('defaultCorparch__advanced_filters')}</legend>
                         {hiddenInputs}
                         {fields}
                     </fieldset>
@@ -631,14 +617,15 @@ define(['vendor/react', 'jquery'], function (React, $) {
             mixins: mixins,
             render: function () {
                 return (
-                    <div>
+                    <section className="inner">
+                        <h3>{this.translate('defaultCorparch__filters')}</h3>
                         <KeywordsField
                             keywords={this.props.keywords}
                             label={this.translate('defaultCorparch__keywords_field_label')} />
                         <FilterInputFieldset
                             currKeywords={this.props.currKeywords}
                             filters={this.props.filters} />
-                    </div>
+                    </section>
                 )
             }
         });

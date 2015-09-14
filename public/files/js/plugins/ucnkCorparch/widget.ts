@@ -514,14 +514,14 @@ export class SearchTab implements WidgetTab {
                         return $('<p>' + item.name
                             + ' <span class="num">('
                             + self.pluginApi.translate('global__size')
-                            + ': ~' + item.raw_size + ', '
+                            + ': ' + item.raw_size + ', '
                             + self.pluginApi.translate('defaultCorparch__found_in')
                             + ': ' + item.found_in.join(', ')
                             + ')</span></p>');
 
                     } else {
                         return $('<p>' + item.name
-                            + ' <span class="num">(size: ~' + item.raw_size + ')</span></p>');
+                            + ' <span class="num">(size: ' + item.raw_size + ')</span></p>');
                     }
 
                 }
@@ -774,7 +774,7 @@ class FavoritesTab implements WidgetTab {
                     + ' title="' + item.description + '"'
                     + ' href="' + self.generateItemUrl(item)
                     + '" data-id="' + item.id + '">' + item.name + '</a></td>'
-                    + '<td class="num">~' + item.size_info + '</td>'
+                    + '<td class="num">' + item.size_info + '</td>'
                     + '<td class="tools"><img class="remove over-img disabled" '
                     + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                     + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
@@ -827,7 +827,7 @@ class FavoritesTab implements WidgetTab {
                     + ' >'
                     + item.name + '</a></td>'
                     + '<td class="num">'
-                    + (item.size ? '~' + item.size : '<span title="'
+                    + (item.size ? item.size : '<span title="'
                     + self.pageModel.translate('defaultCorparch__unknown_size') + '">?</span>')
                     + '</td>'
                     + '</tr>');
@@ -836,7 +836,7 @@ class FavoritesTab implements WidgetTab {
             $(self.wrapperFeat).find('a.featured-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback.call(self, 
+                        self.itemClickCallback.call(self,
                             $(e.currentTarget).data('id'), $(e.currentTarget).attr('href'));
                         e.stopPropagation();
                         e.preventDefault();
