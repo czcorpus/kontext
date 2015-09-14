@@ -695,8 +695,7 @@ export class PageModel implements Kontext.PluginProvider {
                     }
                 });
                 self.renderReactComponent(self.layoutViews.CorpusInfoBox,
-                        box.getRootElement());
-                finalize();
+                        box.getRootElement(), {doneCallback: finalize.bind(self)});
             },
             {
                 width: 'auto',
