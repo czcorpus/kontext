@@ -106,7 +106,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
         var CorpusInfoBox = React.createClass({
 
             mixins: mixins,
-            
+
             changeHandler: function (store, status) {
                 if (status !== 'error') {
                     this.setState(storeProvider.corpusInfoStore.getData(this.props.corpusId));
@@ -119,10 +119,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
             getInitialState : function () {
                 return {
                     corpname: null,
-                    attrlist: [], 
-                    structlist: [], 
-                    size: null, 
-                    description: null, 
+                    attrlist: [],
+                    structlist: [],
+                    size: null,
+                    description: null,
                     url: null
                 };
             },
@@ -135,6 +135,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         corpusId: this.props.corpusId
                     }
                 });
+            },
+
+            componentDidUpdate : function () {
+                // we must inform non-react environment (here popupbox.js) we are ready here
+                if (typeof this.props.doneCallback === 'function') {
+                    this.props.doneCallback();
+                }
             },
 
             componentWillUnmount : function () {
@@ -154,7 +161,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 if (!this.state.corpname) {
                     return (
                         <div id="corpus-details-box">
-                            <img src={this.createStaticUrl('img/ajax-loader.gif')} 
+                            <img src={this.createStaticUrl('img/ajax-loader.gif')}
                                 alt={this.translate('global__loading')} title={this.translate('global__loading')} />
                         </div>
                     );
@@ -173,6 +180,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                     {webLink}
                                 </p>
                             </div>
+                            <p className="corpus-description">{this.state.description}</p>
                             <table className="structs-and-attrs" border="0">
                                 <tr>
                                     <td>
@@ -184,7 +192,6 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 </tr>
                             </table>
                             <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
-                            <p className="corpus-description">{this.state.description}</p>
                         </div>
                     );
                 }
