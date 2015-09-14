@@ -300,9 +300,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 var lockIcon = null;
 
                 if (this.props.enableUserActions) {
-                    favStar = <FavStar corpusId={this.props.row.id}
-                                       corpusName={this.props.row.name}
-                                       isFav={this.props.row.user_item} />;
+                    if (this.props.row.user_access) {
+                        favStar = <FavStar corpusId={this.props.row.id}
+                                           corpusName={this.props.row.name}
+                                           isFav={this.props.row.user_item} />;
+                    }
                     lockIcon = <LockIcon isLocked={!this.props.row.user_access}
                                          corpusId={this.props.row.id}
                                          corpusName={this.props.row.name} />;
