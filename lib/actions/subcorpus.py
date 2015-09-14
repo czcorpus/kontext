@@ -183,7 +183,7 @@ class Subcorpus(Kontext):
                 basecorpname = corp.split(':')[0]
                 for item in self.cm.subcorp_names(basecorpname):
                     sc = self.cm.get_Corpus(corp, item['n'])
-                    subc_id = '%s:%s' % (corp, item['n'])
+                    subc_id = '%s:%s' % (self._canonical_corpname(corp), item['n'])
                     data.append({
                         'n': subc_id,
                         'v': item['n'],
