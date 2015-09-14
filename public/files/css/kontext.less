@@ -1,26 +1,43 @@
 @import "shared.less";
 
+body {
+  font-family: @default-font-family;
+  color: @color-default-text;
+  background-image: @main-background;
+  font-size: 10pt;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 #content {
   display: block;
   margin: 0;
   overflow: auto;
-  padding: 17px 30px 30px 30px;
-}
-
-#content section {
-  border-radius: @border-radius-default;
-  display: inline-block;
-  vertical-align: top;
-  margin: 0;
-  padding: 0;
-  background-color: @color-section-bg;
-  box-shadow: @portal-box-shadow;
+  padding: 0 2em 2em 2em;
 }
 
 #content > section {
-  margin-top: 10px;
-  margin-right: 15px;
+  border-radius: @border-radius-default;
+  display: inline-block;
+  vertical-align: top;
+  margin: 1.5em 0 0 0;
+  padding: 0;
+  background-color: @color-section-bg;
+  box-shadow: @portal-box-shadow;
   min-width: 46%;
+}
+
+section.inner {
+  margin: 0;
+  padding: 1em 3em 2em 2em;
+  box-shadow: 0 3px 3px -2px #A0A0A0;
+
+  h3 {
+    margin: 0;
+    text-align: left;
+    padding-bottom: 0.5;
+  }
 }
 
 #content > section.full {
@@ -119,8 +136,9 @@ button, input[type='button'], input[type='submit'] {
 
 .messages {
   display: block;
-  position: absolute;
+  position: fixed;
   left: 50%;
+  top: 20pt;
 }
 
 .message {
@@ -134,7 +152,6 @@ button, input[type='button'], input[type='submit'] {
   padding: 1em;
   position: relative;
   left: -50%;
-  top: -25pt;
 }
 
 .message.info {
@@ -420,26 +437,26 @@ a#logo-wrapper {
   padding: 0;
   border-radius: 6px;
   min-width: 110px;
-  list-style: none;  
-  
+  list-style: none;
+
   a {
     text-shadow: none;
   }
-  
+
   li {
     display: list-item;
     padding: 1.9pt 10pt;
     margin: 6px 0 6px 0;
   }
-  
+
   li.disabled a {
     color: #999999;
   }
-  
+
   li:not(.disabled) a:hover {
     color: #009EE0;
   }
-  
+
   li.separ {
     border-width: 0;
     border-style: solid;
@@ -684,16 +701,6 @@ a:hover {
   text-decoration: underline;
 }
 
-body {
-  font-family: @default-font-family;
-  color: @color-default-text;
-  background-image: @main-background;
-  font-size: 10pt;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
 div.buttons {
   padding-top: 2em;
 }
@@ -867,15 +874,16 @@ table.data {
 table.data td,
 table.data th {
   text-align: left;
-  padding: 3px 8px 3px 8px;
+  padding: 0.3em 0.7em 0.3em 0.8em;
 }
 
 table.data th {
   color: @color-default-text;
   background-color: @color-default-green;
-  font-weight: 700;
-  padding-top: 10px;
-  padding-bottom: 8px;
+  font-size: 130%;
+  font-weight: normal;
+  padding-top: 1em;
+  padding-bottom: 0.5em;
 }
 
 table.data td.num {
@@ -1621,102 +1629,109 @@ table.corplist a.keyword {
   #label-design();
 }
 
-section.corplist .keywords {
-  margin: 10pt 0;
-}
+// ------------------------------ corplist --------
+section.corplist {
 
-section.corplist .keywords .keyword {
-  background-color: @color-bg-light-blue;
-  text-decoration: none;
-  border-style: solid;
-  border-color: @color-logo-blue;
-  border-width: 1pt;
-  border-radius: @border-radius-default;
-  padding: 1pt 5pt;
-  display: inline-block;
-  margin: 2pt 1pt;
-}
+  .keywords {
+    margin: 10pt 0;
+  }
 
-section.corplist .keywords .keyword.reset {
-  background-color: @color-light-grey;
-  border-color: @color-light-text;
-  color: @color-default-text;
-}
+  .keywords .keyword {
+    background-color: @color-bg-light-blue;
+    text-decoration: none;
+    border-style: solid;
+    border-color: @color-logo-blue;
+    border-width: 1pt;
+    border-radius: @border-radius-default;
+    padding: 1pt 5pt;
+    display: inline-block;
+    margin: 2pt 1pt;
+  }
 
-section.corplist .keywords .keyword.reset:hover {
-  border-color: @color-light-text;
-  background-color: white;
-}
+  .keywords .keyword.reset {
+    background-color: @color-light-grey;
+    border-color: @color-light-text;
+    color: @color-default-text;
+  }
 
-section.corplist .keywords .keyword.current {
-  border-style: solid;
-  border-color: @color-logo-pink;
-  border-width: 1pt;
-  color: @color-logo-pink;
-  font-weight: bold;
-}
+  .keywords .keyword.reset:hover {
+    border-color: @color-light-text;
+    background-color: white;
+  }
 
-section.corplist .keywords a.keyword:hover {
-  text-decoration: none;
-  background-color: @color-bg-light-blue;
-  border-style: solid;
-  border-color: @color-logo-blue;
-  border-width: 1pt;
-}
+  .keywords .keyword.current {
+    border-style: solid;
+    border-color: @color-logo-pink;
+    border-width: 1pt;
+    color: @color-logo-pink;
+    font-weight: bold;
+  }
 
-section.corplist .data tr .lock-status {
-  width: 24px;
-  height: 24px;
-  display: inline-block;
-  cursor: pointer;
-}
+  .keywords a.keyword:hover {
+    text-decoration: none;
+    background-color: @color-bg-light-blue;
+    border-style: solid;
+    border-color: @color-logo-blue;
+    border-width: 1pt;
+  }
 
-section.corplist .data .corpus-access-req {
+  .data tr .lock-status {
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  data .corpus-access-req {
 
     textarea {
         display: block;
     }
 
-    label.toggle-textarea {
-        cursor: pointer;
 
-        img {
-            padding-left: 5pt;
-        }
+    img.message-icon {
+        float: left;
+        padding-right: 5pt;
     }
 
     button.submit {
         margin-top: 10pt;
     }
-}
-
-section.corplist fieldset.advanced-filter {
-  legend {
-    cursor: pointer;
-    background-image: url(../img/collapse.png);
-    background-repeat: no-repeat;
-    background-position: 0 2pt;
-    padding-left: 15px;
   }
 
-  legend:hover {
-    text-decoration: underline;
-    background-image: url(../img/collapse_s.png);
-  }
-}
-
-section.corplist fieldset.advanced-filter.closed {
-  border: none;
-
-  legend {
-    text-decoration: underline;
-    background-image: url(../img/expand.png);
+  fieldset legend {
+    margin-left: 0.7em;
   }
 
-  legend:hover {
-    background-image: url(../img/expand_s.png);
+  fieldset.advanced-filter {
+    legend {
+      cursor: pointer;
+      background-image: url(../img/collapse.png);
+      background-repeat: no-repeat;
+      background-position: 0 2pt;
+      padding-left: 15px;
+    }
+
+    legend:hover {
+      text-decoration: underline;
+      background-image: url(../img/collapse_s.png);
+    }
   }
-}
+
+  fieldset.advanced-filter.closed {
+    border: none;
+
+    legend {
+      text-decoration: underline;
+      background-image: url(../img/expand.png);
+    }
+
+    legend:hover {
+      background-image: url(../img/expand_s.png);
+    }
+  }
+
+} // -- section.corplist
 
 
 /* --------------------- media queries --------------------- */
