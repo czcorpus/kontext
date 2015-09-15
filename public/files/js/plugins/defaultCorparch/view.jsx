@@ -378,7 +378,7 @@ define(['vendor/react'], function (React) {
                         <legend>{this.props.label}</legend>
                         <ResetLink />
                         {links}
-                        <span className="inline-label">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</span>
+                        <span className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</span>
                     </fieldset>
                 );
             }
@@ -405,7 +405,7 @@ define(['vendor/react'], function (React) {
          * An input to specify maximum corpus size
          */
         var MaxSizeInput = React.createClass({
-            changeHandler: function (e) {
+            _changeHandler: function (e) {
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
                     props: {maxSize: e.target.value}
@@ -414,7 +414,28 @@ define(['vendor/react'], function (React) {
             render : function () {
                 return <input className="min-max" type="text"
                               defaultValue={this.props.maxSize}
-                              onChange={this.changeHandler} />;
+                              onChange={this._changeHandler} />;
+            }
+        });
+
+        var NameSearchInput = React.createClass({
+            _timer : null,
+            _changeHandler : function (e) {
+                let self = this;
+
+                if (this._timer) {
+                    clearTimeout(this._timer);
+                }
+                this._timer = setTimeout(((value) => () => {
+                    dispatcher.dispatch({
+                        actionType: 'FILTER_CHANGED',
+                        props: {corpusName: value}
+                    });
+                    clearTimeout(self._timer);
+                })(e.target.value), 300);
+            },
+            render : function () {
+                return <input type="text" defaultValue={''} onChange={this._changeHandler} />;
             }
         });
 
@@ -443,12 +464,17 @@ define(['vendor/react'], function (React) {
                     fieldsetClasses = 'advanced-filter';
                     fields = (
                         <div>
-                        <span>{this.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                        <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
-                        <span className="inline-label">{'(' +
-                        this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
+                            <span>{this.translate('defaultCorparch__size_from')}: </span>
+                            <MinSizeInput minSize={this.props.filters.minSize[0]} />
+                            <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
+                            <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
+                            <span className="inline-label">{'(' +
+                            this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
+                            <p>
+                                <span>
+                                {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
+                                <NameSearchInput />
+                            </p>
                         </div>
                     );
 
