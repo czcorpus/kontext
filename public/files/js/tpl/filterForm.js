@@ -39,12 +39,12 @@ define(['tpl/document', 'queryInput', 'plugins/queryStorage/init', 'plugins/live
             promises;
 
         lib.layoutModel = new documentModule.PageModel(conf);
-        lib.layoutModel.init();
+        promises = lib.layoutModel.init(conf);
         extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
         queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi, lib.layoutModel.userSettings,
             $('#mainform').get(0), lib.layoutModel.getPlugin.bind(lib.layoutModel));
 
-        promises = lib.layoutModel.init(conf).add({
+        promises.add({
             bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
             bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
             updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),

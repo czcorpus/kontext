@@ -631,7 +631,7 @@ class Actions(Kontext):
         self.args.lpos = ''
         out = {'within': within}
         if within and not self.contains_errors():
-            self.add_system_message('error', _('Please specify positive filter to switch'))
+            self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
         return out
