@@ -91,10 +91,17 @@ class Actions(Kontext):
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
         # aligned corpora forms inputs require different approach due to their dynamic nature
-        tmp = self._session.get('aligned_forms', {})
-        for aligned_lang in self.args.sel_aligned:
-            tmp[aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
-        self._session['aligned_forms'] = tmp  # this ensures Werkzeug sets 'should_save' attribute
+        if self.args.sel_aligned:
+            sess_key = 'aligned_forms:%s' % self.args.corpname
+            tmp = self._session.get(sess_key, {})
+            for aligned_lang in self.args.sel_aligned:
+                tmp[aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
+            self._session[sess_key] = tmp
+
+    def _restore_aligned_forms(self):
+        sess_key = 'aligned_forms:%s' % self.args.corpname
+        if sess_key in self._session and not self.args.sel_aligned:
+            self.get_args_mapping(ConcArgsMapping).sel_aligned = self._session[sess_key].keys()
 
     def _get_speech_segment(self):
         """
@@ -192,6 +199,7 @@ class Actions(Kontext):
         else:
             self._store_checked_text_types(request.form, out)
         self._reset_session_conc()
+        self._restore_aligned_forms()
 
         if self._corp().get_conf('ALIGNED'):
             out['Aligned'] = []

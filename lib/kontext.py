@@ -733,7 +733,9 @@ class Kontext(Controller):
         # and if no such exists then we try default one as configured
         # in settings.xml
         if not cn:
-            cn = settings.get_default_corpus(corp_list)
+            cn = self.get_args_mapping(ConcArgsMapping).corpname
+            if not cn:
+                cn = settings.get_default_corpus(corp_list)
 
         # in this phase we should have some non-empty corpus selected
         # but we do not know whether user has access to it
