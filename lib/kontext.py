@@ -151,7 +151,6 @@ class Kontext(Controller):
     def __init__(self, request, ui_lang):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
-        self.last_corpname = None
         self._empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.return_url = None
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
@@ -284,7 +283,7 @@ class Kontext(Controller):
         """
         Loads user settings via settings_storage plugin. The settings are divided
         into two groups:
-        1. corpus independent (e.g. last_corpname, pagesize)
+        1. corpus independent (e.g. listing page sizes)
         2. corpus dependent (e.g. selected attributes to be presented on concordance page)
 
         returns:
@@ -734,9 +733,8 @@ class Kontext(Controller):
         # and if no such exists then we try default one as configured
         # in settings.xml
         if not cn:
-            if self.last_corpname:
-                cn = self.last_corpname
-            else:
+            cn = self.get_args_mapping(ConcArgsMapping).corpname
+            if not cn:
                 cn = settings.get_default_corpus(corp_list)
 
         # in this phase we should have some non-empty corpus selected
@@ -1071,6 +1069,7 @@ class Kontext(Controller):
         # util functions
         result['format_number'] = partial(format_number)
         result['join_params'] = join_params
+        result['to_str'] = lambda s: unicode(s) if s is not None else u''
         result['camelize'] = l10n.camelize
         result['update_params'] = update_params
         result['jsonize_user_item'] = user_items.to_json
