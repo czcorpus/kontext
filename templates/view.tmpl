@@ -62,7 +62,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     #if $c.n in $KWICCorps
     <a class="select-primary-lang" href="view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #else
-    <a class="select-primary-lang" href="filter_form?$join_params($q, $globals, 'maincorp=' + $c.n + 'within=1')" title="$_('Click to make the language primary')"><b>$c.label</b></a>
+    <a class="select-primary-lang" href="filter_form?$join_params($q, $globals, 'maincorp=' + $c.n, 'within=1')" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #end if
     </td>
     #end for

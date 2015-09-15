@@ -163,6 +163,9 @@ class Kontext(Controller):
         self._q_code = None  # a key to 'code->query' database
         self._prev_q_data = None  # data of the previous operation are stored here
 
+    def has_args_mapping(self, clazz):
+        return clazz in self._args_mappings
+
     def get_args_mapping(self, clazz):
         """
         If currently processed action function/method registers 'clazz' argument
@@ -732,10 +735,10 @@ class Kontext(Controller):
         # if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured
         # in settings.xml
-        if not cn:
+        if not cn and self.has_args_mapping(ConcArgsMapping):
             cn = self.get_args_mapping(ConcArgsMapping).corpname
-            if not cn:
-                cn = settings.get_default_corpus(corp_list)
+        if not cn:
+            cn = settings.get_default_corpus(corp_list)
 
         # in this phase we should have some non-empty corpus selected
         # but we do not know whether user has access to it
