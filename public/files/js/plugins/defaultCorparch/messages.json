@@ -9,7 +9,7 @@
     "defaultCorparch__size_from": "size from",
     "defaultCorparch__size_to": "size to",
     "defaultCorparch__add_remove_current_corp": "Add/remove the current corpus, subcorpus, aligned corpora to/from favorites",
-    "defaultCorparch__size_in_positions": "Size (in positions)",
+    "defaultCorparch__size_in_positions": "Size (positions)",
     "defaultCorparch__keywords_field_label": "Keywords",
     "defaultCorparch__corpus_name": "Name",
     "defaultCorparch__corpus_labels": "Labels",

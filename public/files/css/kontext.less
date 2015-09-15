@@ -874,13 +874,20 @@ table.data td,
 table.data th {
   text-align: left;
   padding: 0.3em 0.7em 0.3em 0.8em;
+  border-color: @color-default-green;
+  border-width: 0 1pt 0 0;
+  border-style: solid;
+}
+
+table.data th:last-child,
+table.data td:last-child {
+  border: none;
 }
 
 table.data th {
   color: @color-default-text;
   background-color: @color-default-green;
-  font-size: 130%;
-  font-weight: normal;
+  font-weight: bold;
   padding-top: 1em;
   padding-bottom: 0.5em;
 }
@@ -1620,8 +1627,16 @@ section.corplist .filter input.min-max {
 }
 
 table.corplist td.corpname {
-  font-size: 130%;
+  font-size: 120%;
   color: @color-logo-pink;
+}
+
+table.corplist td.corpname a {
+  text-decoration: none;
+}
+
+table.corplist td.corpname a:hover {
+  text-decoration: underline;
 }
 
 table.corplist a.keyword {
@@ -1681,7 +1696,9 @@ section.corplist {
     cursor: pointer;
   }
 
-  data .corpus-access-req {
+  .data .corpus-access-req {
+    
+    position: fixed;
 
     textarea {
         display: block;
