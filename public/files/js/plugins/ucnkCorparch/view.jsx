@@ -46,7 +46,6 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <th>{this.translate('defaultCorparch__corpus_labels')}</th>
                     <th></th>
                     <th></th>
-                    <th></th>
                 </tr>);
             }
         });
@@ -303,10 +302,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             {keywords}
                         </td>
                         <td>
-                            {favStar}
-                        </td>
-                        <td>
-                            {lockIcon}
+                            {favStar ? favStar : lockIcon }
                         </td>
                         <td>
                             {detailBox}
@@ -337,7 +333,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render : function () {
                 return (
                       <tr className="load-more">
-                          <td colSpan="6">
+                          <td colSpan="5">
                               <a onClick={this._linkClickHandler}>{this.translate('global__load_more')}</a>
                           </td>
                       </tr>
