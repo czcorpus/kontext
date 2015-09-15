@@ -32,7 +32,8 @@
     "defaultCorparch__item_added_to_fav": "Corpus added to favorites",
     "defaultCorparch__failed_to_update_item": "Failed to update item",
     "defaultCorparch__advanced_filters": "Advanced",
-    "defaultCorparch__filters": "Filters"
+    "defaultCorparch__filters": "Filters",
+    "defaultCorparch__corpus_name_input_label": "corpus name"
 
   },
   "cs-CZ": {
@@ -68,6 +69,7 @@
     "defaultCorparch__item_added_to_fav": "Korpus přidán do oblíbených",
     "defaultCorparch__failed_to_update_item": "Nepodařilo se aktualizovat položku",
     "defaultCorparch__advanced_filters": "Pokročilé",
-    "defaultCorparch__filters": "Filtry"
+    "defaultCorparch__filters": "Filtry",
+    "defaultCorparch__corpus_name_input_label": "název korpusu"
   }
 }

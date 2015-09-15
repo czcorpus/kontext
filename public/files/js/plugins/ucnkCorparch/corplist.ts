@@ -31,6 +31,8 @@ export class CorplistFormStore extends util.SimplePageStore {
     private pluginApi:Kontext.PluginApi;
 
     private selectedKeywords:{[key:string]:boolean};
+    
+    private searchedCorpName:string;
 
     private offset:number;
 
@@ -46,6 +48,7 @@ export class CorplistFormStore extends util.SimplePageStore {
         this.pluginApi = pluginApi;
         this.data = {};
         this.selectedKeywords = {};
+        this.searchedCorpName = null;
         this.offset = 0;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
 
@@ -80,6 +83,10 @@ export class CorplistFormStore extends util.SimplePageStore {
                         break;
                     case 'FILTER_CHANGED':
                         self.offset = 0;
+                        if (payload.props.hasOwnProperty('corpusName')) {
+                            self.searchedCorpName = payload.props['corpusName'];
+                            delete payload.props['corpusName'];
+                        }
                         self.updateFilter(payload.props);
                         CorplistPage.CorplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
@@ -124,6 +131,9 @@ export class CorplistFormStore extends util.SimplePageStore {
             if (this.selectedKeywords[p] === true) {
                 q.push(this.tagPrefix + p);
             }
+        }
+        if (this.searchedCorpName) {
+            q.push(this.searchedCorpName);
         }
         return q.join(' ');
     }
