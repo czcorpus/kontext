@@ -212,8 +212,6 @@ class Actions(Kontext):
         out['aligned_corpora'] = conc_args.getlist('sel_aligned')
         self._export_subcorpora_list(out)
         self._attach_query_metadata(out)
-        self.last_corpname = self.args.corpname
-        self._save_options(['last_corpname'])
         return out
 
     @exposed(return_type='json', legacy=True)
@@ -1262,8 +1260,6 @@ class Actions(Kontext):
             self._add_save_menu_item('XML', 'savewl', params, save_format='xml')
             self._add_save_menu_item('TXT', 'savewl', params, save_format='text')
             # custom save is solved in templates because of compatibility issues
-            self.last_corpname = self.args.corpname
-            self._save_options(['last_corpname'])
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
