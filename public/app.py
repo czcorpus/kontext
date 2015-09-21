@@ -239,7 +239,7 @@ class App(object):
 
         sid_is_valid = True
         if environ['PATH_INFO'] in ('/', ''):
-            url = environ['REQUEST_URI']
+            url = environ['REQUEST_URI'].split('?')[0]
             if not url.endswith('/'):
                 url += '/'
             status = '303 See Other'

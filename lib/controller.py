@@ -619,7 +619,7 @@ class Controller(object):
         url -- a target URL
         code -- an optional integer HTTP response code (default is 303)
         """
-        #self._headers.clear() # TODO resolve this
+        #  self._headers.clear() # TODO resolve this
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
@@ -796,7 +796,6 @@ class Controller(object):
                                         _('Failed to process your request. '
                                           'Please try again later or contact system support.'))
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
-
         # Let's test whether process_method actually invoked requested method.
         # If not (e.g. there was an error and a fallback has been used) then reload action metadata
         if methodname != path[0]:
