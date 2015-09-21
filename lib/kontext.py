@@ -145,7 +145,6 @@ class Kontext(Controller):
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
     _conc_dir = u''
-    _home_url = u'./first_form'
     _files_path = u'../files'
 
     def __init__(self, request, ui_lang):
@@ -535,8 +534,9 @@ class Kontext(Controller):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if not action_metadata.get('legacy', False):
                 mapping = self.get_args_mapping(ConcArgsMapping)
-                if mapping is not None:
-                    mapping.corpname = self.args.corpname
+                if mapping is not None and not mapping.corpname:
+                    path = [Controller.NO_OPERATION]
+                    self._redirect(self._updated_current_url({'corpname': self.args.corpname}))
             if fallback_url:
                 path = [Controller.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
@@ -615,7 +615,6 @@ class Kontext(Controller):
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in args.items()]))
-
         self._restore_prev_conc_params()
 
         if len(path) > 0:
@@ -627,7 +626,6 @@ class Kontext(Controller):
         for p in plugins.get_plugins().values():
             if callable(getattr(p, 'setup', None)):
                 p.setup(self)
-
         return path, selectorname, named_args
 
     def _post_dispatch(self, methodname, action_metadata, tmpl, result):
@@ -1013,7 +1011,6 @@ class Kontext(Controller):
             thecorp = corplib.open_corpus(self.args.maincorp)
         else:
             thecorp = self._corp()
-
         if not action_metadata.get('skip_corpus_init', False):
             self._add_corpus_related_globals(result, thecorp)
 
@@ -1057,7 +1054,6 @@ class Kontext(Controller):
         if not action_metadata.get('legacy', False):
             result.update(self._export_mapped_args())
             self._store_mapped_args()
-
         result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
 
         # avalilable languages
