@@ -89,7 +89,7 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], f
     selectOutputType = function () {
         var wltypes = ['wltype_simple', 'wltype_keywords', 'wltype_multilevel'],
             kwinputs = ['ref_corpname', 'ref_usesubcorp', 'simple_n'],
-            mlinputs = ['wlstruct_attr1', 'wlstruct_attr2', 'wlstruct_attr3'],
+            mlinputs = ['wlposattr1', 'wlposattr2', 'wlposattr3'],
             i,
             type;
 
@@ -187,6 +187,49 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], f
     lib.registerOnAddParallelCorpAction = function () {};
     lib.registerOnBeforeRemoveParallelCorpAction = function () {};
 
+    function initOutputTypeForms(layoutModel) {
+        var form = $('#wordlist_form'),
+            dynamicElements = form.find('select.wlposattr-sel'),
+            hint = form.find('p.hint'),
+            radioSel = form.find('.wltype-sel'),
+            wlAttrSel = form.find('select.wlattr-sel'),
+            currWlattrDisp = form.find('.current-wlattr');
+
+        function setFormElementsVisibility(status) {
+            if (status === true) {
+                dynamicElements.prop('disabled', false);
+                hint.show();
+
+            } else {
+                dynamicElements.prop('disabled', true);
+                hint.hide();
+            }
+        }
+
+        $('.output-types input.wltype-sel').on('change', function (evt) {
+            var ansType = $(evt.target).val();
+
+            if (ansType === 'simple') {
+                setFormElementsVisibility(false);
+                form.attr('action', layoutModel.createActionUrl('wordlist'));
+
+            } else if (ansType === 'multilevel') {
+                setFormElementsVisibility(true);
+                form.attr('action', layoutModel.createActionUrl('struct_wordlist'));
+            }
+        });
+
+        if (radioSel.val() === 'simple') {
+            setFormElementsVisibility(false);
+        }
+
+        wlAttrSel.on('change', function () {
+            currWlattrDisp.text(wlAttrSel.find('option:selected').text());
+        });
+
+        currWlattrDisp.text(wlAttrSel.find('option:selected').text());
+    }
+
     /**
      *
      * @param conf
@@ -197,6 +240,7 @@ define(['win', 'jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], f
         lib.bindStaticElements();
         lib.createCorplistComponent();
         lib.registerSubcorpChange();
+        initOutputTypeForms(lib.layoutModel);
     };
 
     return lib;

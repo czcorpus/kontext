@@ -380,9 +380,9 @@ class GlobalArgs(GeneralArgs):
     wltype = Parameter('simple')
     wlnums = Parameter('frq')
 
-    wlstruct_attr1 = Parameter('')
-    wlstruct_attr2 = Parameter('')
-    wlstruct_attr3 = Parameter('')
+    wlposattr1 = Parameter('')
+    wlposattr2 = Parameter('')
+    wlposattr3 = Parameter('')
 
     maxsavelines = Parameter(1000)
     fcrit = Parameter([])
