@@ -1916,6 +1916,18 @@ msgstr "Subkorpus %s byl permanentně odstraněn."
 msgid "out of total"
 msgstr "z celkových"
 
+msgid "Output type"
+msgstr "Typ výstupu"
+
+msgid "Single attribute"
+msgstr "Jeden atribut"
+
+msgid "Multiple attributes"
+msgstr "Více atributů"
+
+msgid "currently"
+msgstr "aktuálně"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

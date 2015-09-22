@@ -114,15 +114,15 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
                 </td>
             </tr>
             <tr>
-                <td>$_('Output types'):</td>
+                <td>$_('Output type'):</td>
                 <td class="output-types">
                     <ul class="wl-option-list">
                         <li>
-                            <label><input class="wltype-sel" type="radio" name="wltype" value="simple" checked="checked" /> $_('Simple')</label>
+                            <label><input class="wltype-sel" type="radio" name="wltype" value="simple" checked="checked" /> $_('Single attribute')</label>
                             ($('currently') <strong class="current-wlattr"></strong>)
                         </li>
                         <li>
-                            <label><input class="wltype-sel" type="radio" name="wltype" value="multilevel" /> $_('Multi-level')</label>:
+                            <label><input class="wltype-sel" type="radio" name="wltype" value="multilevel" /> $_('Multiple attributes')</label>:
                             #for $i in $range(1,4)
                             <select class="wlposattr-sel" name="wlposattr$i" id="wlposattr$i">
                                 <option value="">---</option>
