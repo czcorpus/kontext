@@ -1174,8 +1174,6 @@ class Actions(Kontext):
             self.args.wlpat = '.*'
         if '.' in self.args.wlattr:
             orig_wlnums = self.args.wlnums
-            if wltype != 'simple':
-                raise ConcError(_('Text types are limited to Simple output'))
             if self.args.wlnums == 'arf':
                 raise ConcError(_('ARF cannot be used with text types'))
             elif self.args.wlnums == 'frq':
@@ -1313,11 +1311,11 @@ class Actions(Kontext):
                                                                   cache_file='wlcache')
         self.args.blacklist, self.args.blcache = self._get_wl_words(upl_file='wlblacklist',
                                                                     cache_file='blcache')
-        if not self.args.wlstruct_attr1:
+        if not self.args.wlposattr1:
             raise ConcError(_('No output attribute specified'))
-        if not self.args.wlstruct_attr3:
+        if not self.args.wlposattr3:
             level = 2
-        if not self.args.wlstruct_attr2:
+        if not self.args.wlposattr2:
             level = 1
         if not self.args.wlpat and not self.args.wlwords:
             raise ConcError(
@@ -1325,8 +1323,8 @@ class Actions(Kontext):
         self._make_wl_query()
         self.args.flimit = self.args.wlminfreq
         return self.freqml(flimit=self.args.wlminfreq, freqlevel=level,
-                           ml1attr=self.args.wlstruct_attr1, ml2attr=self.args.wlstruct_attr2,
-                           ml3attr=self.args.wlstruct_attr3)
+                           ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
+                           ml3attr=self.args.wlposattr3)
 
     @exposed(access_level=1, legacy=True)
     def savewl_form(self, from_line=1, to_line=''):

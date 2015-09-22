@@ -46,7 +46,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
 <section>
     <h2>$_("Word list")</h2>
 
-    <form action="wordlist" id="wordlist_form" method="post" enctype="multipart/form-data">
+    <form action="$create_action('wordlist')" id="wordlist_form" method="post" enctype="multipart/form-data">
 
     #filter None
     $input_hidden(('usesubcorp',))
@@ -60,7 +60,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
       #end filter
     <tr class="required">
     <th>$_("Search attribute"):</th>
-      <td><select name="wlattr">
+      <td><select class="wlattr-sel" name="wlattr">
       <optgroup label="Positional Attributes">
       #for $a in $AttrList
         #set $selected = ($a.n == $wlattr) and 'selected' or ''
@@ -106,11 +106,32 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
             <tr>
                 <td>$_('Frequency figures'):</td>
                 <td>
-                <ul class="freq-figures">
+                <ul class="wl-option-list">
                     <li><input type="radio" checked="true" value="frq" name="wlnums" id="wlnums_freq"><label for="wlnums_freq">$_('Word counts')</label></li>
                     <li><input type="radio" value="docf" name="wlnums" id="wlnums_docf"><label for="wlnums_docf">$_('Document counts')</label></li>
                     <li><input type="radio" value="arf" name="wlnums" id="wlnums_arf"><label for="wlnums_arf">$_('ARF')</label></li>
                 </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>$_('Output types'):</td>
+                <td class="output-types">
+                    <ul class="wl-option-list">
+                        <li>
+                            <label><input class="wltype-sel" type="radio" name="wltype" value="simple" checked="checked" /> $_('Simple')</label>
+                            ($('currently') <strong class="current-wlattr"></strong>)
+                        </li>
+                        <li>
+                            <label><input class="wltype-sel" type="radio" name="wltype" value="multilevel" /> $_('Multi-level')</label>:
+                            #for $i in $range(1,4)
+                            <select class="wlposattr-sel" name="wlposattr$i" id="wlposattr$i">
+                                <option value="">---</option>
+                                #for $a in $AttrList#<option value="$a.n" $selected>$a.label</option>#end for#
+                            </select>
+                            #end for
+                            <p class="hint">$_("You can select one or more output attributes. Please note that this option can be time-consuming.")</p>
+                        </li>
+                    </ul>
                 </td>
             </tr>
         </table>
