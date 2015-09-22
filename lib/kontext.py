@@ -316,7 +316,7 @@ class Kontext(Controller):
         options -- a dictionary containing user settings
         actions -- a custom action to be applied to options (default is None)
         """
-        convert_types(options, self.clone_self(), selector=1)
+        convert_types(options, self.clone_args(), selector=1)
         if callable(actions):
             actions(options)
         self._setup_user_paths(self._session_get('user', 'user'))
@@ -336,7 +336,7 @@ class Kontext(Controller):
                 if len(tokens) == 2:
                     if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                         ans[tokens[1]] = v
-            convert_types(options, self.clone_self(), selector=1)
+            convert_types(options, self.clone_args(), selector=1)
             self.args.__dict__.update(ans)
 
     @staticmethod
@@ -523,7 +523,7 @@ class Kontext(Controller):
                 named_args[key] = val
         na = named_args.copy()
 
-        convert_types(na, self.clone_self())
+        convert_types(na, self.clone_args())
         if selectorname:
             choose_selector(self.args.__dict__, getattr(self.args, selectorname))
         self.args.__dict__.update(na)

@@ -381,7 +381,7 @@ class Actions(Kontext):
                 else:
                     raise ConcError(_('No query entered.'))
         if qtype:
-            return queries[qtype] % self.clone_self()
+            return queries[qtype] % self.clone_args()
         thecorp = cname and self.cm.get_Corpus(cname) or self._corp()
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict(self.cm.corpconf_pairs(thecorp, 'WPOSLIST'))

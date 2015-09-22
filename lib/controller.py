@@ -532,16 +532,14 @@ class Controller(object):
         args -- positional arguments
         **named_args -- named arguments of the callable
         """
-        na = self.clone_self()
+        na = self.clone_args()
         na.update(named_args)
         convert_types(na, function_defaults(func), 1)
         return apply(func, args, na)
 
-    def clone_self(self):
+    def clone_args(self):
         """
-        Creates a dictionary based on self arguments and respective values.
-        Callable and '_'-prefixed arguments are omitted.
-        Please note that the copy is shallow.
+        Creates a shallow copy of self.args.
         """
         na = {}
         for a in dir(self.args):  # + dir(self.__class__): TODO
