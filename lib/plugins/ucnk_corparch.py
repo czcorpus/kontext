@@ -96,7 +96,7 @@ class UcnkCorpusInfo(CorpusInfo):
     """
     def __init__(self):
         super(UcnkCorpusInfo, self).__init__()
-        self.internal = False
+        self.requestable = False
 
 
 @exposed(acess_level=1, return_type='json')
@@ -169,13 +169,13 @@ class UcnkCorpArch(CorpTree):
         return UcnkCorpusInfo()
 
     def customize_corpus_info(self, corpus_info, node):
-        corpus_info.internal = self._decode_bool(node.attrib.get('internal'))
+        corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))
 
     def customize_search_result_item(self, item, corpus_info):
-        item['internal'] = corpus_info.internal
+        item['requestable'] = corpus_info.requestable
 
     def custom_filter(self, corpus_info, permitted_corpora):
-        return corpus_info.id in permitted_corpora or not corpus_info.internal
+        return corpus_info.id in permitted_corpora or corpus_info.requestable
 
     def get_list(self, user_allowed_corpora):
         """
@@ -197,7 +197,7 @@ class UcnkCorpArch(CorpTree):
                                                       from_encoding=corp_info.encoding),
                            'size': corp_info.size,
                            'path': path,
-                           'user_access': canonical_id in user_allowed_corpora
+                           'requestable': item.get('requestable', False)
                            })
             except Exception, e:
                 import logging

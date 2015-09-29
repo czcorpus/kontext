@@ -159,19 +159,19 @@ define(['vendor/react', 'jquery'], function (React, $) {
             mixins: mixins,
 
             getInitialState : function () {
-                return {isLocked: this.props.isLocked, hasFocus: false, hasDialog: false};
+                return {isUnlockable: this.props.isUnlockable, hasFocus: false, hasDialog: false};
             },
 
             _mouseOverHandler : function () {
-                this.setState({isLocked: this.state.isLocked, hasFocus: true, hasDialog: this.state.hasDialog});
+                this.setState({isUnlockable: this.state.isUnlockable, hasFocus: true, hasDialog: this.state.hasDialog});
             },
 
             _mouseOutHandler : function () {
-                this.setState({isLocked: this.state.isLocked, hasFocus: false, hasDialog: this.state.hasDialog});
+                this.setState({isUnlockable: this.state.isUnlockable, hasFocus: false, hasDialog: this.state.hasDialog});
             },
 
             _clickHandler : function () {
-                this.setState({isLocked: this.state.isLocked, hasFocus: this.state.hasFocus, hasDialog: true});
+                this.setState({isUnlockable: this.state.isUnlockable, hasFocus: this.state.hasFocus, hasDialog: true});
             },
 
             _closeDialog : function () {
@@ -183,7 +183,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     dialog,
                     onBoxReady;
 
-                if (this.state.isLocked) {
+                if (this.state.isUnlockable) {
                     if (this.state.hasFocus) {
                         img = <img src={this.createStaticUrl('img/24px-Unlocked.png')} />;
 
@@ -279,20 +279,20 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
                 var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
-                var favStar = null;
-                var lockIcon = null;
+                var userAction = null;
 
                 if (this.props.enableUserActions) {
-                    if (this.props.row.user_access) {
-                        favStar = <FavStar corpusId={this.props.row.id}
+                    if (this.props.row.requestable) {
+                        userAction = <LockIcon isUnlockable={this.props.row.requestable}
+                                         corpusId={this.props.row.id}
+                                         corpusName={this.props.row.name} />;
+
+                    } else {
+                        userAction = <FavStar corpusId={this.props.row.id}
                                            corpusName={this.props.row.name}
                                            isFav={this.props.row.user_item} />;
                     }
-                    lockIcon = <LockIcon isLocked={!this.props.row.user_access}
-                                         corpusId={this.props.row.id}
-                                         corpusName={this.props.row.name} />;
                 }
-
                 return (
                     <tr>
                         <td className="corpname"><a
@@ -302,7 +302,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             {keywords}
                         </td>
                         <td>
-                            {favStar ? favStar : lockIcon }
+                            {userAction}
                         </td>
                         <td>
                             {detailBox}
