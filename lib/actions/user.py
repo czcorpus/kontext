@@ -36,7 +36,7 @@ class User(Kontext):
                                     MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
         return {}
 
-    @exposed(skip_corpus_init=True)
+    @exposed(template='user/login.tmpl', skip_corpus_init=True)
     def loginx(self, request):
         ans = {}
         self._session['user'] = plugins.get('auth').validate_user(request.form['username'],
