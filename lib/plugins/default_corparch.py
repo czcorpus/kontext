@@ -376,7 +376,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 try:
                     corp_id = user_allowed_corpora[canonical_id]
                     corp_info = self._manatee_corpora.get_info(corp_id)
-
                     cl.append({'id': corp_id,
                                'canonical_id': canonical_id,
                                'name': l10n.import_string(corp_info.name,
@@ -488,14 +487,13 @@ class CorpTree(AbstractSearchableCorporaArchive):
             return False
 
         query_substrs, query_keywords = self._parse_query(query)
-        matches_all = lambda d: reduce(lambda t1, t2: t1 and t2, d, True)
+        matches_all = lambda d: reduce(lambda prev, curr: prev and curr, d, True)
 
         def matches_size(d):
             item_size = d.get('size', None)
-            return (item_size is not None
-                    and (not min_size or int(item_size) >= int(min_size))
-                    and (not max_size or int(item_size) <= int(max_size))
-            )
+            return (item_size is not None and
+                    (not min_size or int(item_size) >= int(min_size)) and
+                    (not max_size or int(item_size) <= int(max_size)))
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
 

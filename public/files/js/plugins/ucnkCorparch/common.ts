@@ -49,7 +49,7 @@ export interface CorplistItem {
      * E.g. if the size is 1,200,000 then the size_info is '1M'
      */
     size_info: string;
-    user_access: boolean;
+    requestable: boolean;
 }
 
 /**
@@ -59,7 +59,7 @@ export function createEmptyCorplistItem():CorplistItem {
     return {
         id: null, name: null, type: null, corpus_id: null, canonical_id: null,
         subcorpus_id: null, corpora: null, description: null, featured: null,
-        size: null, size_info: null, user_item: null, user_access: null
+        size: null, size_info: null, user_item: null, requestable: null
     }
 }
 
