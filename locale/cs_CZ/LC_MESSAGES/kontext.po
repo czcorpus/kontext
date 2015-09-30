@@ -1928,6 +1928,9 @@ msgstr "Více atributů"
 msgid "currently"
 msgstr "aktuálně"
 
+msgid "use query"
+msgstr "použít dotaz"
+
 msgid "You can use the \\u0022down arrow\\u0022 key to view recent queries"
 msgstr "Předchozí dotazy lze zobrazit také pomocí šipky dolů"
 
