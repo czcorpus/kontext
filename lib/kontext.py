@@ -534,7 +534,7 @@ class Kontext(Controller):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if not action_metadata.get('legacy', False):
                 mapping = self.get_args_mapping(ConcArgsMapping)
-                if mapping is not None and not mapping.corpname:
+                if mapping is not None and hasattr(mapping, 'corpname') and not mapping.corpname:
                     path = [Controller.NO_OPERATION]
                     self._redirect(self._updated_current_url({'corpname': self.args.corpname}))
             if fallback_url:
