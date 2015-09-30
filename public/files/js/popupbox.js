@@ -301,7 +301,7 @@ define(['win', 'jquery'], function (win, $) {
                 customErrorHandler(this.beforeOpenVal, this.onShowVal);
             }
         };
-        
+
         this.translator = fetchOption('translator', function (s) { return s; });
 
         this.rootElm = win.document.createElement('div');
@@ -340,7 +340,7 @@ define(['win', 'jquery'], function (win, $) {
             });
 
         } else {
-            $(this.headerElm).append(contents);
+            $(this.contentElm).append(contents);
             if (this.jqCloseIcon) {
                 $(this.headerElm).append(this.jqCloseIcon);
             }
@@ -353,7 +353,7 @@ define(['win', 'jquery'], function (win, $) {
             $(self.rootElm).show();
         }
         if (msgType !== 'plain') {
-            $(this.rootElm).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
+            $(this.headerElm).prepend('<img class="info-icon" src="' + this.mapTypeToIcon(msgType) + '" alt="info" />');
         }
         $(this.rootElm).css('font-size', fontSize);
 

@@ -19,9 +19,11 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
+/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import $ = require('jquery');
 import common = require('./common');
+import popupBox = require('popupbox');
 
 
 /**
@@ -1388,6 +1390,14 @@ export class Corplist {
 
         this.jqWrapper = $(this.widgetWrapper);
         this.jqWrapper.addClass(this.widgetClass);
+
+        let tmpHint = window.document.createElement('a');
+        $(tmpHint).addClass('tmp-hint');
+        $(tmpHint).html('<img src="' + this.pageModel.createStaticUrl('img/question-mark.png')
+            + '" alt="' + this.pageModel.translate('ucnkQS__tmp_hint_alt') + '" />');
+        this.jqWrapper.append(tmpHint);
+        popupBox.bind(tmpHint, this.pageModel.translate('ucnkQS__tmp_hint_contents'),
+            {width: 'nice', closeIcon: true});
 
         // main menu
         this.mainMenu = new WidgetMenu(this, this.pageModel);

@@ -80,6 +80,8 @@ export class QueryHistory {
 
     boxElm: JQuery;
 
+    triggerButton: JQuery;
+
     highlightedRow: number;
 
     data: Array<any>;
@@ -100,6 +102,7 @@ export class QueryHistory {
         this.parentElm = $(parentElm);
         this.pluginApi = pluginApi;
         this.boxElm = null;
+        this.triggerButton = null;
         this.inputElm.attr('autocomplete', 'off');
         this.highlightedRow = 0;
         this.data = []; // currently appended data
@@ -181,7 +184,7 @@ export class QueryHistory {
      *
      */
     bindEvents(): void {
-        var self = this;
+        let self = this;
 
         this.inputElm.on('keyup.queryStoragePluginMoveSelection', function (event) {
             if (event.keyCode === 38) { // UP arrow
@@ -209,6 +212,16 @@ export class QueryHistory {
                 });
             }
         });
+
+        function windowClickHandler(event) {
+            if (self.boxElm && self.boxElm.find(event.target).length === 0
+                    && !self.boxElm.is(event.target)
+                    && !self.triggerButton.is(event.target)) {
+                $(window.document).off('click.closeHistoryWidget', windowClickHandler);
+                self.close();
+            }
+        }
+        $(window.document).on('click.closeHistoryWidget', windowClickHandler);
 
         // we have to block main form Enter key event to prevent submission
         $('#make-concordance-button').attr('disabled', 'disabled');
@@ -444,6 +457,7 @@ export class QueryHistory {
      */
     close(): void {
         this.inputElm.off('keyup.queryStoragePluginMoveSelection');
+        $(window.document).off('click.closeHistoryWidget');
         this.highlightedRow = 0;
         if (this.boxElm) {
             this.boxElm.remove();
@@ -511,6 +525,7 @@ export class QueryStoragePlugin implements Kontext.Plugin {
             aElm.css('text-transform', 'lowercase');
 
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
+            plugin.triggerButton = aElm;
             liElm.append(aElm);
             aElm.append(this.pluginApi.translate('ucnkQS__recent_queries'));
             aElm.on('click', function () {
