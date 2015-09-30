@@ -371,7 +371,7 @@ export class QueryHistory {
         html = '<ol class="rows"></ol>'
             + '<div class="footer">'
             + '<label class="filter-current">'
-            + this.pluginApi.translate('current corpus only')
+            + this.pluginApi.translate('ucnkQS__only_current_corpus')
             + '<input class="filter-checkbox" type="checkbox" /></label>'
             + '</div>';
 
