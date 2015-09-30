@@ -110,11 +110,10 @@ ul.multiselect li td.checkbox-cell {
 
 /* corpus tree/list */
 
-@corplist-widget-width: 550pt;
 @corplist-widget-table-spacing: 30pt;
 
 .corplist-widget {
-    width: @corplist-widget-width;
+    max-width: 500pt;
     border: 1px solid #E4E4E4;
     background-color: #FEFDFD;
     border-radius: 3px;
@@ -252,7 +251,6 @@ ul.multiselect li td.checkbox-cell {
 .corplist-widget table.featured-list {
   display: inline-block;
   vertical-align: top;
-  width: @corplist-widget-width / 2 - @corplist-widget-table-spacing / 2;
   box-sizing: border-box;
 }
 
@@ -280,9 +278,10 @@ ul.multiselect li td.checkbox-cell {
 }
 
 .corplist-widget .labels-hint {
-  padding-left: 10pt;
+  padding: 0.5em 0 0 0;
   color: @color-light-text;
   font-size: 8pt;
+  text-align: left;
 }
 
 #corplist .dataset-loading td,
@@ -448,7 +447,7 @@ button#reset-tag-button {
 
 .tt-menu  {
   background-color: #FFFFFF;
-  padding: 5px 10px;
+  padding: 5px 10px 0 10px;
   border-style: @input-border-style;
   border-radius: @input-border-radius;
   width: 100%;
@@ -465,7 +464,7 @@ button#reset-tag-button {
 
 .tt-menu .tt-suggestion {
   margin: 0;
-  padding-bottom: 6px;
+  padding-bottom: 4pt;
   .ping-dot-item;
   cursor: pointer;
   font-size: 13pt;
@@ -478,6 +477,14 @@ button#reset-tag-button {
 
 .tt-dropdown-menu {
   position: inherit !important;
+}
+
+.tt-menu .hint {
+  padding-top: 3pt;
+  border-width: 1pt 0 0 0;
+  border-color: @color-light-grey;
+  border-style: solid;
+  font-size: 80%;
 }
 
 // ----------------- app bar ------------------------------

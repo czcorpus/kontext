@@ -16,8 +16,8 @@
     "defaultCorparch__corpus_details": "Details",
     "defaultCorparch__my_list": "My list",
     "defaultCorparch__no_result": "No result",
-    "defaultCorparch__found_in": "Found in",
-    "defaultCorparch__name_or_description": "Name or description",
+    "defaultCorparch__found_in_{values}": "found in {values}",
+    "defaultCorparch__name_or_description": "Part of a name or description",
     "defaultCorparch__hit_tab_to_see_fav": "Hit [Tab] to see your favorite corpora",
     "defaultCorparch__fav_items": "My favorite corpora",
     "defaultCorparch__other_corpora": "All corpora",
@@ -33,7 +33,8 @@
     "defaultCorparch__failed_to_update_item": "Failed to update item",
     "defaultCorparch__advanced_filters": "Advanced",
     "defaultCorparch__filters": "Filters",
-    "defaultCorparch__corpus_name_input_label": "corpus name"
+    "defaultCorparch__corpus_name_input_label": "corpus name",
+    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>."
 
   },
   "cs-CZ": {
@@ -53,8 +54,8 @@
     "defaultCorparch__corpus_details": "Podrobnosti",
     "defaultCorparch__my_list": "Můj seznam",
     "defaultCorparch__no_result": "Žádný výsledek",
-    "defaultCorparch__found_in": "Nalezeno v",
-    "defaultCorparch__name_or_description": "Název nebo popis",
+    "defaultCorparch__found_in_{values}": "nalezeno v {values}",
+    "defaultCorparch__name_or_description": "Část názvu nebo popisu",
     "defaultCorparch__hit_tab_to_see_fav": "Stiskněte [Tab] pro zobrazení vašich oblíbených korpusů",
     "defaultCorparch__fav_items": "Moje oblíbené korpusy",
     "defaultCorparch__other_corpora": "Všechny korpusy",
@@ -70,6 +71,7 @@
     "defaultCorparch__failed_to_update_item": "Nepodařilo se aktualizovat položku",
     "defaultCorparch__advanced_filters": "Pokročilé",
     "defaultCorparch__filters": "Filtry",
-    "defaultCorparch__corpus_name_input_label": "název korpusu"
+    "defaultCorparch__corpus_name_input_label": "název korpusu",
+    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>."
   }
 }
