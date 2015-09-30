@@ -118,7 +118,7 @@ ul.multiselect li td.checkbox-cell {
     background-color: #FEFDFD;
     border-radius: 3px;
     box-shadow: 0 0 10pt #a5a5a5;
-    padding: 10pt 5pt 0 5pt;
+    padding: 1em 0.7pt 0 0.7em;
     text-align: left;
 }
 
@@ -252,6 +252,7 @@ ul.multiselect li td.checkbox-cell {
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
+  border-spacing: 0;
 }
 
 .corplist-widget table.favorite-list img.remove {
@@ -359,10 +360,17 @@ table.corplist td img.starred {
   padding: 23px 23px 14px 23px;
 }
 
+.tooltip-box > div {
+
+}
+
 .tooltip-box img.info-icon {
-  padding: 0 5px 8px 0;
+  margin-right: 1em;
   display: inline-block;
-  vertical-align: middle;
+}
+
+.tooltip-box > div > p {
+  margin: 0.4em 0;
 }
 
 .tooltip-box a.close-link {
