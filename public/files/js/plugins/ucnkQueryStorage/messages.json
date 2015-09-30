@@ -1,8 +1,10 @@
 {
-	"en-US": {
-		"ucnkQS__recent_queries": "Recent queries"
-	},
-	"cs-CZ": {
-		"ucnkQS__recent_queries": "Předchozí dotazy"
-	}
+    "en-US": {
+        "ucnkQS__recent_queries": "Recent queries",
+        "ucnkQS__only_current_corpus": "Only queries on the current corpus"
+    },
+    "cs-CZ": {
+        "ucnkQS__recent_queries": "Předchozí dotazy",
+        "ucnkQS__only_current_corpus": "Pouze dotazy do aktuálního korpusu"
+    }
 }
