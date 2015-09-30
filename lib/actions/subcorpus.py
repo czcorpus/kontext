@@ -159,7 +159,6 @@ class Subcorpus(Kontext):
     def _create_full_subc_list(self, queries, subc_files):
         pass
 
-
     @exposed(access_level=1)
     def subcorp_list(self, request):
         """
