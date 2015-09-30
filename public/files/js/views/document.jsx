@@ -360,7 +360,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <div>
                         <span className="hint">{this.state.hintText}</span>
                         <span className="next-hint">
-                            (<a onClick={this._clickHandler}>{this.translate('next tip')}</a>)
+                            (<a onClick={this._clickHandler}>{this.translate('global__next_tip')}</a>)
                         </span>
                     </div>
                 );

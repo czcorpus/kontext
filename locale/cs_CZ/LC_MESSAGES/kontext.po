@@ -1928,6 +1928,12 @@ msgstr "Více atributů"
 msgid "currently"
 msgstr "aktuálně"
 
+msgid "You can use the \\u0022down arrow\\u0022 key to view recent queries"
+msgstr "Předchozí dotazy lze zobrazit také pomocí šipky dolů"
+
+msgid "In CQL mode you can use Shift+ENTER to enter a new line"
+msgstr "V dotazu CQL můžete vložit další řádek stisknutím klávesy Shift+ENTER"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
