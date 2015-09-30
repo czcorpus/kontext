@@ -468,8 +468,8 @@ export class SearchTab implements WidgetTab {
                 self.triggerTypeaheadSearch();
             });
         });
-        $(div).append('<span class="labels-hint">('
-            + this.pluginApi.translate('defaultCorparch__hold_ctrl_for_multiple') + ')</span>');
+        $(div).append('<div class="labels-hint">('
+            + this.pluginApi.translate('defaultCorparch__hold_ctrl_for_multiple') + ')</div>');
     }
 
     private initTypeahead():void {
@@ -515,15 +515,20 @@ export class SearchTab implements WidgetTab {
                             + ' <span class="num">('
                             + self.pluginApi.translate('global__size')
                             + ': ' + item.raw_size + ', '
-                            + self.pluginApi.translate('defaultCorparch__found_in')
-                            + ': ' + item.found_in.join(', ')
+                            + self.pluginApi.translate('defaultCorparch__found_in_{values}',
+                                {values: item.found_in.join(', ')})
                             + ')</span></p>');
 
                     } else {
                         return $('<p>' + item.name
                             + ' <span class="num">(size: ' + item.raw_size + ')</span></p>');
                     }
-
+                },
+                footer: function () {
+                    return $('<p class="hint">'
+                        + self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
+                                {maxNum: self.maxNumHints, link: self.pluginApi.createActionUrl('/corpora/corplist')})
+                        + '</p>');
                 }
             }
         });
