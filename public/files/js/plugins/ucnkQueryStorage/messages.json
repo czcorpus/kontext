@@ -1,14 +1,10 @@
 {
     "en-US": {
         "ucnkQS__recent_queries": "Recent queries",
-        "ucnkQS__only_current_corpus": "Only queries on the current corpus",
-        "ucnkQS__tmp_hint_alt": "Corpus selection tool change explained",
-        "ucnkQS__tmp_hint_contents": "__TODO__"
+        "ucnkQS__only_current_corpus": "Only queries on the current corpus"
     },
     "cs-CZ": {
         "ucnkQS__recent_queries": "Předchozí dotazy",
-        "ucnkQS__only_current_corpus": "Pouze dotazy do aktuálního korpusu",
-        "ucnkQS__tmp_hint_alt": "Vysvětlení změn ve způsobu výběru korpusu",
-        "ucnkQS__tmp_hint_contents": "<p>V KonTextu verze 0.7 byla zcela přepracována komponenta pro výběr pracovního korpusu. Změna byla motivována především tím, že se zachováním referenčnosti všech korpusů dochází ke značnému nárůstu počtu korpusů a jejich verzí. Jejich zpětná dostupnost zajišťuje důležitou replikovatelnost vědeckých výsledků, může však také přinášet praktická úskalí spojená s orientací v neustále rostoucí nabídce korpusů a jejich verzí.</p><p>Protože se potřeby jednotlivých uživatelů liší i co se týče přístupu ke starším verzím, přistupili jsme k individualizaci rozhraní KonText i v této oblasti a původně používané hierarchické uspořádání korpusů bylo nahrazeno zrychlenou volbou, jejíž součástí je také možnost individuálnáho výběru oblíbených korpusů pro pravidelnou práci.</p><p>Nová komponanta je popsána v <a href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz#volba_korpusu\">manuálu</a>.</p>"
+        "ucnkQS__only_current_corpus": "Pouze dotazy do aktuálního korpusu"
     }
 }

@@ -34,7 +34,8 @@
     "defaultCorparch__advanced_filters": "Advanced",
     "defaultCorparch__filters": "Filters",
     "defaultCorparch__corpus_name_input_label": "corpus name",
-    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>."
+    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>.",
+    "defaultCorparch__no_keyword": "Reset"
 
   },
   "cs-CZ": {
@@ -72,6 +73,7 @@
     "defaultCorparch__advanced_filters": "Pokročilé",
     "defaultCorparch__filters": "Filtry",
     "defaultCorparch__corpus_name_input_label": "název korpusu",
-    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>."
+    "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>.",
+    "defaultCorparch__no_keyword": "Zrušit výběr"
   }
 }

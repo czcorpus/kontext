@@ -362,7 +362,7 @@ define(['vendor/react'], function (React) {
             },
             render: function () {
                 return <a className="keyword reset"
-                          onClick={this._handleClick}><span className="overlay">{this.translate('global__none')}</span></a>;
+                          onClick={this._handleClick}><span className="overlay">{this.translate('defaultCorparch__no_keyword')}</span></a>;
             }
         });
 

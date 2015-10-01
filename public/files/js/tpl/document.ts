@@ -169,7 +169,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
-        this.messageStore = new docStores.MessageStore(this.dispatcher);
+        this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.translations = translations[this.conf['uiLang']] || {};
     }
