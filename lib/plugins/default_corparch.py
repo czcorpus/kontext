@@ -440,7 +440,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 })
         return featured
 
-    def export(self, user_id, *args):
+    def export(self, plugin_api, user_id, *args):
         return {
             'featured': self._export_featured(user_id),
             'corpora_labels': self.all_keywords,
