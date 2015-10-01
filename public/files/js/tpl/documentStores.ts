@@ -33,7 +33,7 @@ export class QueryHintStore extends util.SimplePageStore {
 
     constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, hints:Array<string>) {
         super(dispatcher);
-        var self = this;        
+        var self = this;
         this.hints = hints ? hints : [];
         this.currentHint = this.randomIndex();
 
@@ -69,6 +69,8 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
     messages:Array<{messageType:string; messageText:string, messageId:string}>;
 
+    pluginApi:Kontext.PluginApi;
+
     addMessage(messageType:string, messageText:string) {
         var msgId = String(Math.random()),
             timeout,
@@ -85,7 +87,7 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
                 self.removeMessage(msgId);
                 win.clearTimeout(timeout);
                 self.notifyChangeListeners();
-            }, 15000);
+            }, self.pluginApi.getConf('messageAutoHideInterval'));
         }
         this.notifyChangeListeners();
     }
@@ -98,10 +100,11 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
         this.messages = this.messages.filter(function (x) { return x.messageId !== messageId; });
     }
 
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
         super(dispatcher);
         var self = this;
         this.messages = [];
+        this.pluginApi = pluginApi;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
