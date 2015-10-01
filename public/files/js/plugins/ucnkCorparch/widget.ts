@@ -1407,9 +1407,9 @@ export class Corplist {
         let tmpHint = window.document.createElement('a');
         $(tmpHint).addClass('tmp-hint');
         $(tmpHint).html('<img src="' + this.pageModel.createStaticUrl('img/question-mark.png')
-            + '" alt="' + this.pageModel.translate('ucnkQS__tmp_hint_alt') + '" />');
+            + '" alt="' + this.pageModel.translate('ucnkCorparch__tmp_hint_alt') + '" />');
         this.jqWrapper.append(tmpHint);
-        popupBox.bind(tmpHint, this.pageModel.translate('ucnkQS__tmp_hint_contents'),
+        popupBox.bind(tmpHint, this.pageModel.translate('ucnkCorparch__tmp_hint_contents'),
             {width: 'nice', closeIcon: true});
 
         // main menu
