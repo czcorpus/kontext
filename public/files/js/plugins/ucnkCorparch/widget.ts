@@ -436,16 +436,20 @@ export class SearchTab implements WidgetTab {
      * @param parent
      */
     private createResetLink():HTMLElement {
-        var link = window.document.createElement('a'),
-            self = this;
+        let link = window.document.createElement('a');
+        let self = this;
+        let overlay = window.document.createElement('span');
 
         $(link)
-            .text(this.pluginApi.translate('defaultCorparch__no_keyword'))
             .addClass('keyword')
             .addClass('reset')
             .on('click', function () {
                 self.resetTagSelection();
             });
+        $(overlay)
+            .addClass('overlay')
+            .text(this.pluginApi.translate('defaultCorparch__no_keyword'));
+        $(link).append(overlay);
         return link;
     }
 
@@ -460,11 +464,20 @@ export class SearchTab implements WidgetTab {
         $(div).addClass('labels');
         $(div).append(this.createResetLink());
         $.each(this.pluginApi.getConf('pluginData')['corparch']['corpora_labels'], function (i, item) {
-            var link = window.document.createElement('a');
+            let link = window.document.createElement('a');
+            let overlay = window.document.createElement('span');
+
             $(div).append(' ');
             $(div).append(link);
-            $(link).text(item[1]).addClass('keyword');
-            $(link).attr('data-srchkey', item[0]);
+            $(link).attr('data-srchkey', item[0]).addClass('keyword');
+
+            $(overlay).addClass('overlay')
+                .text(item[1]);
+            if (item[2]) {
+                $(overlay).css('backgroundColor', item[2]);
+            }
+            $(link).append(overlay);
+
             $(link).on('click', function (e:JQueryEventObject) {
                 self.toggleTagSelection(link, e.ctrlKey || e.metaKey);
                 self.triggerTypeaheadSearch();

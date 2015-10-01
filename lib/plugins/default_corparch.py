@@ -443,7 +443,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
     def export(self, plugin_api, user_id, *args):
         return {
             'featured': self._export_featured(user_id),
-            'corpora_labels': self.all_keywords,
+            'corpora_labels': [(k, lab, self.get_label_color(k)) for k, lab in self.all_keywords],
             'tag_prefix': self._tag_prefix,
             'max_num_hints': self._max_num_hints
         }
