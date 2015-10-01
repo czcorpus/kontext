@@ -152,7 +152,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 var webLink;
 
                 if (this.state.web_url) {
-                    webLink = <a href={this.state.web_url}>{this.state.web_url}</a>;
+                    webLink = <a href={this.state.web_url} target="_blank">{this.state.web_url}</a>;
 
                 } else {
                     webLink = '-';

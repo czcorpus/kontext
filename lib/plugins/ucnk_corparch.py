@@ -148,7 +148,7 @@ class UcnkCorpArch(CorpTree):
         else:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
-                + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
+                + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
         return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, user, user_id, custom_message):

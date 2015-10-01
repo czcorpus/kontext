@@ -5,7 +5,9 @@
     "ucnkCorparch__click_to_ask_access": "Click to ask for access.",
     "ucnkCorparch__message_icon": "Message icon",
     "ucnkCorparch__send": "Send",
-    "ucnkCorparch__load_all": "Load all"
+    "ucnkCorparch__load_all": "Load all",
+    "ucnkCorparch__tmp_hint_alt": "Corpus selection tool change explained",
+    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Confused by the new way of selecting corpora? With the update of KonText to release 0.7, we had to abandon the former way of displaying available corpora (in the form of a hierarchical tree) and introduce a new system that can better adjust to the rapidly growing number of corpora and their versions. The new corpus selection mechanism features direct access to selected corpora, including favourite corpora chosen by the user, and uses labels that provide a basic characteristic of all available corpora.</p><p class=\"boxed-par\">For a detailed description of the new system and its features please see the KonText <a target=\"_blank\" href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manual</a>.</p>"
   },
     "cs-CZ": {
     "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D",
@@ -13,6 +15,8 @@
     "ucnkCorparch__click_to_ask_access": "Klikněte pro vytvoření žádosti o přístup.",
     "ucnkCorparch__message_icon": "Message icon",
     "ucnkCorparch__send": "Odeslat",
-    "ucnkCorparch__load_all": "Nahrát vše"
+    "ucnkCorparch__load_all": "Nahrát vše",
+    "ucnkCorparch__tmp_hint_alt": "Vysvětlení změn ve způsobu výběru korpusu",
+    "ucnkCorparch__tmp_hint_contents": "<p class=\"boxed-par\">Překvapil vás nový způsob výběru korpusu? Od KonTextu verze 0.7 jsme byli nuceni nahradit zobrazování korpusů v podobě hierarchizovaného stromu jiným systémem, protože dosavadní způsob přestal být vzhledem k rostoucímu počtu korpusů a jejich verzí přehledný a do budoucna udržitelný. Nová podoba výběru korpusů umožňuje jednak využít rychlou volbu včetně uživateli definovaných oblíbených korpusů, jednak prohledávat seznam všech dostupných korpusů pomocí tzv. štítků se základní charakteristikou každého z nich.</p><p class=\"boxed-par\">Popis práce s novým systémem najdete v <a target=\"_blank\"  href=\"https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz\">manuálu</a>.</p>"
   }
 }

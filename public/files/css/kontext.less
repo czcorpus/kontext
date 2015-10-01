@@ -138,7 +138,7 @@ button, input[type='button'], input[type='submit'] {
   display: block;
   position: fixed;
   left: 50%;
-  top: 20pt;
+  top: 7em;
   z-index: 10000;
 }
 
@@ -1644,6 +1644,10 @@ table.corplist a.keyword {
   #label-design();
 }
 
+table.corplist a.keyword .overlay {
+  padding: 0.2em 0.4em;
+}
+
 // ------------------------------ corplist --------
 section.corplist {
 
@@ -1846,4 +1850,8 @@ section.my-subcorpora label.show-deleted {
 #wordlist_form .current-wlattr {
   font-weight: bold;
   color: @color-logo-pink;
+}
+
+p.boxed-par {
+  text-align: justify;
 }
