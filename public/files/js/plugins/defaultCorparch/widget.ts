@@ -438,7 +438,7 @@ export class SearchTab implements WidgetTab {
             self = this;
 
         $(link)
-            .text(this.pluginApi.translate('global__none'))
+            .text(this.pluginApi.translate('defaultCorparch__no_keyword'))
             .addClass('keyword')
             .addClass('reset')
             .on('click', function () {
