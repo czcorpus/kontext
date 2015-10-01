@@ -118,15 +118,38 @@ class UcnkCorpArch(CorpTree):
     defined in XML format
     """
 
+    SESSION_KEYWORDS_KEY = 'plugin_ucnkcorparch_default_keywords'
+
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
-                 access_req_recipients):
+                 access_req_recipients, default_label):
         super(UcnkCorpArch, self).__init__(auth=auth, user_items=user_items, file_path=file_path,
                                            root_xpath=root_xpath, tag_prefix=tag_prefix,
                                            max_num_hints=max_num_hints, max_page_size=max_page_size)
         self.access_req_sender = access_req_sender
         self.access_req_smtp_server = access_req_smtp_server
         self.access_req_recipients = access_req_recipients
+        self.default_label = default_label
+
+    def export(self, plugin_api, user_id, *args):
+        ans = super(UcnkCorpArch, self).export(plugin_api, user_id, *args)
+        ans['initial_keywords'] = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
+        return ans
+
+    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+        if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
+            plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
+        initial_query = query
+        if query is False:
+            query = ''
+        query_substrs, query_keywords = self._parse_query(query)
+        if len(query_keywords) == 0 and initial_query is False:
+            query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+        else:
+            plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
+        query = ' '.join(query_substrs) \
+                + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
+        return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, user, user_id, custom_message):
         """
@@ -230,4 +253,5 @@ def create_instance(conf, auth, user_items):
                                                         'corparch')['ucnk:access_req_smtp_server'],
                         access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
                         access_req_recipients=conf.get('plugins',
-                                                       'corparch')['ucnk:access_req_recipients'])
+                                                       'corparch')['ucnk:access_req_recipients'],
+                        default_label=conf.get('plugins', 'corparch')['ucnk:default_label'])

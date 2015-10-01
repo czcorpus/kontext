@@ -31,7 +31,7 @@ export class CorplistFormStore extends util.SimplePageStore {
     private pluginApi:Kontext.PluginApi;
 
     private selectedKeywords:{[key:string]:boolean};
-    
+
     private searchedCorpName:string;
 
     private offset:number;
@@ -256,7 +256,7 @@ export class CorplistTableStore extends util.SimplePageStore {
     }
 
     private updateDataItem(corpusId, data) {
-        this.data.rows.forEach(function (item:common.CorplistItem) {
+        (this.data.rows || []).forEach(function (item:common.CorplistItem) {
             if (item.id === corpusId) {
                 for (var p in data) {
                     if (data.hasOwnProperty(p)) {
