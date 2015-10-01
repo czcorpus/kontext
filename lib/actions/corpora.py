@@ -41,6 +41,7 @@ class Corpora(Kontext):
     def ajax_list_corpora(self, request):
         return plugins.get('corparch').search(self._session_get('user', 'id'), request.args['query'],
                                               offset=request.args.get('offset', None),
+                                              limit=request.args.get('limit', None),
                                               filter_dict=request.args)
 
     @exposed(return_type='json', skip_corpus_init=True)

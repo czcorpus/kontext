@@ -31,7 +31,7 @@ export class CorplistFormStore extends util.SimplePageStore {
     private pluginApi:Kontext.PluginApi;
 
     private selectedKeywords:{[key:string]:boolean};
-    
+
     private searchedCorpName:string;
 
     private offset:number;
@@ -165,6 +165,8 @@ export class CorplistTableStore extends util.SimplePageStore {
 
     static DispatchToken:string;
 
+    static LoadLimit:number = 5000;
+
     /**
      *
      * @param pluginApi
@@ -237,6 +239,7 @@ export class CorplistTableStore extends util.SimplePageStore {
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
             + '?query=' + encodeURIComponent(query)
             + (offset ? '&offset=' + offset : '')
+            + '&limit=' + CorplistTableStore.LoadLimit
             + (filters ? '&' + filters : ''));
         prom.then(
             function (data) {

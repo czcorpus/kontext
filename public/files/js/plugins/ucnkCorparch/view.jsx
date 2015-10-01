@@ -334,7 +334,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                       <tr className="load-more">
                           <td colSpan="5">
-                              <a onClick={this._linkClickHandler}>{this.translate('global__load_more')}</a>
+                              <a onClick={this._linkClickHandler}>{this.translate('ucnkCorparch__load_all')}</a>
                           </td>
                       </tr>
                 );
