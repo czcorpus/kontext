@@ -334,7 +334,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                       <tr className="load-more">
                           <td colSpan="5">
-                              <a onClick={this._linkClickHandler}>{this.translate('global__load_more')}</a>
+                              <a onClick={this._linkClickHandler}>{this.translate('ucnkCorparch__load_all')}</a>
                           </td>
                       </tr>
                 );
@@ -417,7 +417,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render: function () {
                 return (
                     <a className="keyword" onClick={this._handleClick}
-                       data-keyword-id={this.props.keyword}>{this.props.label}</a>
+                            data-keyword-id={this.props.keyword}>
+                        <span className="overlay">{this.props.label}</span>
+                    </a>
                 );
             }
         });
@@ -430,19 +432,25 @@ define(['vendor/react', 'jquery'], function (React, $) {
          * A keyword link from the filter form
          */
         var KeywordLink = React.createClass({
+
             mixins: mixins,
-            changeHandler: function () {
+
+            _changeHandler: function (store, action) {
                 this.setState({active: formStore.getKeywordState(this.props.keyword)});
             },
+
             getInitialState: function () {
                 return {active: Boolean(this.props.isActive)};
             },
+
             componentDidMount: function () {
-                formStore.addChangeListener(this.changeHandler);
+                formStore.addChangeListener(this._changeHandler);
             },
+
             componentWillUnmount: function () {
-                formStore.removeChangeListener(this.changeHandler);
+                formStore.removeChangeListener(this._changeHandler);
             },
+
             _handleClick: function (active) {
                 var self = this;
 
@@ -458,23 +466,29 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     });
                 };
             },
+
             render: function () {
-                var link;
+                let link;
+                let style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
+
 
                 if (!this.state.active) {
                     link = this.createActionLink("corplist?keyword="+this.props.keyword);
                     return (
                         <a className="keyword" href={link}
-                           data-keyword-id={this.props.keyword}
-                            onClick={this._handleClick(true)}>{this.props.label}</a>
+                                data-keyword-id={this.props.keyword}
+                                onClick={this._handleClick(true)}>
+                            <span className="overlay" style={style} >{this.props.label}</span>
+                        </a>
                     );
 
                 } else {
                     return (
                         <span className="keyword current"
-                              data-keyword-id={this.props.keyword}
-                              onClick={this._handleClick(false)}
-                            >{this.props.label}</span>
+                                  data-keyword-id={this.props.keyword}
+                                  onClick={this._handleClick(false)}>
+                            <span className="overlay" style={style}>{this.props.label}</span>
+                        </span>
                     );
                 }
             }
@@ -494,7 +508,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
             render: function () {
                 return <a className="keyword reset"
-                          onClick={this._handleClick}>{this.translate('global__none')}</a>;
+                          onClick={this._handleClick}><span className="overlay">{this.translate('global__none')}</span></a>;
             }
         });
 
@@ -509,7 +523,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render: function () {
                 var links = this.props.keywords.map(function (keyword, i) {
                     return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
-                                        isActive={keyword[2]} />;
+                                        isActive={keyword[2]} overlayColor={keyword[3]} />;
                 });
 
                 return (
@@ -517,7 +531,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <legend>{this.props.label}</legend>
                         <ResetLink />
                         {links}
-                        <span className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</span>
+                        <div className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</div>
                     </fieldset>
                 );
             }

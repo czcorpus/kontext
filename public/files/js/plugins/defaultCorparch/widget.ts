@@ -468,8 +468,8 @@ export class SearchTab implements WidgetTab {
                 self.triggerTypeaheadSearch();
             });
         });
-        $(div).append('<span class="labels-hint">('
-            + this.pluginApi.translate('defaultCorparch__hold_ctrl_for_multiple') + ')</span>');
+        $(div).append('<div class="labels-hint">('
+            + this.pluginApi.translate('defaultCorparch__hold_ctrl_for_multiple') + ')</div>');
     }
 
     private initTypeahead():void {
