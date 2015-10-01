@@ -466,7 +466,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
     def customize_search_result_item(self, item, full_data):
         pass
 
-    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+        if query is False:  # False means 'use default values'
+            query = ''
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(user_id)
         user_items = self._user_items.get_user_items(user_id)
@@ -553,6 +555,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                                                               key=corp_cmp_key))
         ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
         ans['query'] = query
+        ans['current_keywords'] = query_keywords
         ans['filters'] = dict(filter_dict)
         return ans
 

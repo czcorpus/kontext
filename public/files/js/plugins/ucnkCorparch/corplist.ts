@@ -38,19 +38,24 @@ export class CorplistFormStore extends util.SimplePageStore {
 
     private tagPrefix:string;
 
+    private initialKeywords:Array<string>;
+
     private data:any;
 
     static DispatchToken:string;
 
     constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
-        var self = this;
+        let self = this;
         this.pluginApi = pluginApi;
         this.data = {};
         this.selectedKeywords = {};
         this.searchedCorpName = null;
         this.offset = 0;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+        (this.pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []).forEach(function (item) {
+            self.selectedKeywords[item] = true;
+        });
 
         CorplistFormStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
@@ -78,7 +83,7 @@ export class CorplistFormStore extends util.SimplePageStore {
                             self.offset = payload.props['offset'];
                         }
                         CorplistPage.CorplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
+                            self.exportQuery(), self.exportFilter(), self.offset, CorplistTableStore.LoadLimit);
                         self.notifyChangeListeners();
                         break;
                     case 'FILTER_CHANGED':
@@ -94,7 +99,8 @@ export class CorplistFormStore extends util.SimplePageStore {
                         break;
                 }
                 return true;
-            });
+            }
+       );
     }
 
     private updateFilter(filter:{[key:string]:string}) {
@@ -233,13 +239,13 @@ export class CorplistTableStore extends util.SimplePageStore {
         );
     }
 
-    public loadData(query:string, filters:string, offset:number):void {
+    public loadData(query:string, filters:string, offset:number, limit?:number):void {
         var self = this;
         var prom = $.ajax(
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
             + '?query=' + encodeURIComponent(query)
             + (offset ? '&offset=' + offset : '')
-            + '&limit=' + CorplistTableStore.LoadLimit
+            + (limit ? '&limit=' + limit : '')
             + (filters ? '&' + filters : ''));
         prom.then(
             function (data) {
@@ -259,7 +265,7 @@ export class CorplistTableStore extends util.SimplePageStore {
     }
 
     private updateDataItem(corpusId, data) {
-        this.data.rows.forEach(function (item:common.CorplistItem) {
+        (this.data.rows || []).forEach(function (item:common.CorplistItem) {
             if (item.id === corpusId) {
                 for (var p in data) {
                     if (data.hasOwnProperty(p)) {
@@ -381,6 +387,7 @@ export class CorplistPage implements Customized.CorplistPage {
 
     createForm(targetElm:HTMLElement, properties:any):void {
         this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
+        CorplistPage.CorplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
     }
 
     createList(targetElm:HTMLElement, properties:any):void {

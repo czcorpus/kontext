@@ -142,14 +142,16 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
         """
         Returns a subset of corplist matching provided query.
 
         arguments:
+        plugin_api -- a controller.PluginApi instance
         user_id -- a database ID of the user who triggered the search
         query -- any search query the concrete plug-in implementation can understand
-                 (KonText itself just passes it around).
+                 (KonText itself just passes it around). If False then default parameters
+                 are expected. An empty string is understood as "no query".
         offset -- return a list starting from this index (zero-based; default is 0)
         limit -- a maximum number of items to return (default is None; interpretation of None
                  is up to the plug-in, i.e. it can be "no limit" or "default limit" etc.)
