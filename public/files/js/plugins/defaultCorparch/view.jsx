@@ -278,7 +278,9 @@ define(['vendor/react'], function (React) {
             render: function () {
                 return (
                     <a className="keyword" onClick={this._handleClick}
-                       data-keyword-id={this.props.keyword}>{this.props.label}</a>
+                            data-keyword-id={this.props.keyword}>
+                        <span className="overlay">{this.props.label}</span>
+                    </a>
                 );
             }
         });
@@ -320,22 +322,27 @@ define(['vendor/react'], function (React) {
                 };
             },
             render: function () {
-                var link;
+                let link;
+                let style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
+
 
                 if (!this.state.active) {
                     link = this.createActionLink("corplist?keyword="+this.props.keyword);
                     return (
                         <a className="keyword" href={link}
-                           data-keyword-id={this.props.keyword}
-                            onClick={this._handleClick(true)}>{this.props.label}</a>
+                                data-keyword-id={this.props.keyword}
+                                onClick={this._handleClick(true)}>
+                            <span className="overlay" style={style} >{this.props.label}</span>
+                        </a>
                     );
 
                 } else {
                     return (
                         <span className="keyword current"
-                              data-keyword-id={this.props.keyword}
-                              onClick={this._handleClick(false)}
-                            >{this.props.label}</span>
+                                  data-keyword-id={this.props.keyword}
+                                  onClick={this._handleClick(false)}>
+                            <span className="overlay" style={style}>{this.props.label}</span>
+                        </span>
                     );
                 }
             }
@@ -355,7 +362,7 @@ define(['vendor/react'], function (React) {
             },
             render: function () {
                 return <a className="keyword reset"
-                          onClick={this._handleClick}>{this.translate('global__none')}</a>;
+                          onClick={this._handleClick}><span className="overlay">{this.translate('global__none')}</span></a>;
             }
         });
 
@@ -370,7 +377,7 @@ define(['vendor/react'], function (React) {
             render: function () {
                 var links = this.props.keywords.map(function (keyword, i) {
                     return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
-                                        isActive={keyword[2]} />;
+                                        isActive={keyword[2]} overlayColor={keyword[3]} />;
                 });
 
                 return (
@@ -378,7 +385,7 @@ define(['vendor/react'], function (React) {
                         <legend>{this.props.label}</legend>
                         <ResetLink />
                         {links}
-                        <span className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</span>
+                        <div className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</div>
                     </fieldset>
                 );
             }

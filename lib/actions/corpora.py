@@ -31,16 +31,20 @@ class Corpora(Kontext):
         return dict(
             corplist_params=plugins.get('corparch').initial_search_params(request.args.get('query'),
                                                                    request.args),
-            corplist_data=plugins.get('corparch').search(self._session_get('user', 'id'),
-                                                         request.args.get('query'),
+            corplist_data=plugins.get('corparch').search(plugin_api=self._plugin_api,
+                                                         user_id=self._session_get('user', 'id'),
+                                                         query=False,
                                                          offset=0,
                                                          filter_dict=request.args)
         )
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):
-        return plugins.get('corparch').search(self._session_get('user', 'id'), request.args['query'],
+        return plugins.get('corparch').search(plugin_api=self._plugin_api,
+                                              user_id=self._session_get('user', 'id'),
+                                              query=request.args['query'],
                                               offset=request.args.get('offset', None),
+                                              limit=request.args.get('limit', None),
                                               filter_dict=request.args)
 
     @exposed(return_type='json', skip_corpus_init=True)

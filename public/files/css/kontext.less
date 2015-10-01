@@ -1658,9 +1658,21 @@ section.corplist {
     border-color: @color-logo-blue;
     border-width: 1pt;
     border-radius: @border-radius-default;
-    padding: 1pt 5pt;
+    padding: 0;
     display: inline-block;
     margin: 2pt 1pt;
+  }
+
+  .keywords .keyword .overlay {
+    border-width: 0;
+    border-radius: @border-radius-default;
+    padding: 0.2em 0.4em;
+    display: inline-block;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
   }
 
   .keywords .keyword.reset {

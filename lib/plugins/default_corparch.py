@@ -120,7 +120,8 @@ class CorpTree(AbstractSearchableCorporaArchive):
     """
 
     FEATURED_KEY = 'featured'
-    FAVORITE_KEY = 'favorite'
+
+    LABEL_OVERLAY_TRANSPARENCY = 0.15
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
                  max_page_size):
@@ -135,6 +136,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._max_page_size = max_page_size
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
+        self._colors = {}
         self._manatee_corpora = ManateeCorpora()
 
     @staticmethod
@@ -191,10 +193,26 @@ class CorpTree(AbstractSearchableCorporaArchive):
                         self._messages[message_key][lang_code] = ans[lang_code]
         return ans
 
+    def _parse_color(self, code):
+        code = code.lower()
+        transparency = self.LABEL_OVERLAY_TRANSPARENCY
+        if code[0] == '#':
+            code = code[1:]
+            r, g, b = [int('0x%s' % code[i:i+2], 0) for i in range(0, len(code), 2)]
+            return 'rgba(%d, %s, %d, %01.2f)' % (r, g, b, transparency)
+        elif code.find('rgb') == 0:
+            m = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', code, re.IGNORECASE)
+            if m:
+                return 'rgba(%s, %s, %s, %01.2f)' % (m.group(1), m.group(2), m.group(3), transparency)
+        raise ValueError('Invalid color code: %s' % code)
+
     def _parse_keywords(self, root):
         for k in root.findall('./keyword'):
             if k.attrib['ident'] not in self._keywords:
                 self._keywords[k.attrib['ident']] = {}
+                color_code = k.attrib.get('color')
+                if color_code:
+                    self._colors[k.attrib['ident']] = self._parse_color(color_code)
             for lab in k.findall('./label'):
                 self._keywords[k.attrib['ident']][lab.attrib['lang']] = lab.text
 
@@ -214,6 +232,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
                 else:
                     ans[keyword] = keyword
         return ans
+
+    def get_label_color(self, label_id):
+        return self._colors.get(label_id, None)
 
     @property
     def all_keywords(self):
@@ -445,7 +466,9 @@ class CorpTree(AbstractSearchableCorporaArchive):
     def customize_search_result_item(self, item, full_data):
         pass
 
-    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+        if query is False:  # False means 'use default values'
+            query = ''
         ans = {'rows': []}
         permitted_corpora = self._auth.permitted_corpora(user_id)
         user_items = self._user_items.get_user_items(user_id)
@@ -532,13 +555,14 @@ class CorpTree(AbstractSearchableCorporaArchive):
                                                               key=corp_cmp_key))
         ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
         ans['query'] = query
+        ans['current_keywords'] = query_keywords
         ans['filters'] = dict(filter_dict)
         return ans
 
     def initial_search_params(self, query, filter_dict=None):
         query_substrs, query_keywords = self._parse_query(query)
         all_keywords = self.all_keywords
-        exp_keywords = [(k, lab, k in query_keywords) for k, lab in all_keywords]
+        exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k)) for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
             'currKeywords': [],  # TODO

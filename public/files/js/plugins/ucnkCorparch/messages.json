@@ -4,13 +4,15 @@
     "ucnkCorparch__custom_message": "Custom message (optional)",
     "ucnkCorparch__click_to_ask_access": "Click to ask for access.",
     "ucnkCorparch__message_icon": "Message icon",
-    "ucnkCorparch__send": "Send"
+    "ucnkCorparch__send": "Send",
+    "ucnkCorparch__load_all": "Load all"
   },
-  "cs-CZ": {
-	"ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D",
-  "ucnkCorparch__custom_message": "Vlastní vzkaz (volitelný)",
-  "ucnkCorparch__click_to_ask_access": "Klikněte pro vytvoření žádosti o přístup.",
-  "ucnkCorparch__message_icon": "Message icon",
-  "ucnkCorparch__send": "Odeslat"
+    "cs-CZ": {
+    "ucnkCorparch__please_give_me_access_{corpname}": "\u201CProsím o přístup ke korpusu {corpname}\u201D",
+    "ucnkCorparch__custom_message": "Vlastní vzkaz (volitelný)",
+    "ucnkCorparch__click_to_ask_access": "Klikněte pro vytvoření žádosti o přístup.",
+    "ucnkCorparch__message_icon": "Message icon",
+    "ucnkCorparch__send": "Odeslat",
+    "ucnkCorparch__load_all": "Nahrát vše"
   }
 }
