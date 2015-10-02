@@ -181,7 +181,7 @@ class UcnkCorpArch(CorpTree):
             except Exception as ex:
                 errors.append('Failed to send an e-email to <%s>, error: %r' % (recipient, ex))
         s.quit()
-        if len(errors) < len(self.access_req_recipients):
+        if 0 < len(errors) < len(self.access_req_recipients):
             logging.getLogger(__name__).warn(
                 'There were errors sending corpus access request e-mail(s): %s' % ', '.join(errors))
             return True
@@ -194,11 +194,12 @@ class UcnkCorpArch(CorpTree):
     def customize_corpus_info(self, corpus_info, node):
         corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))
 
-    def customize_search_result_item(self, item, corpus_info):
-        item['requestable'] = corpus_info.requestable
+    def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
+        item['requestable'] = corpus_info.requestable and corpus_info.id not in permitted_corpora \
+                              and not plugin_api.user_is_anonymous
 
-    def custom_filter(self, corpus_info, permitted_corpora):
-        return corpus_info.id in permitted_corpora or corpus_info.requestable
+    def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
+        return corpus_info.id in permitted_corpora or (corpus_info.requestable and not plugin_api.user_is_anonymous)
 
     def get_list(self, user_allowed_corpora):
         """

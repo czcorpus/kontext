@@ -202,8 +202,8 @@ class LiveData {
                     }
                 });
 
-                self.pluginApi.ajax('bibliography?corpname=' + self.pluginApi.getConf('corpname')
-                    + '&id=' + $(target).attr('data-bib-id'),
+                self.pluginApi.ajax(self.pluginApi.createActionUrl('/corpora/bibliography?corpname=' + self.pluginApi.getConf('corpname')
+                    + '&id=' + $(target).attr('data-bib-id')),
                     {
                         dataType: 'json',
                         success: function (data) {
