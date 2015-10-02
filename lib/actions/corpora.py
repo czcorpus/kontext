@@ -103,3 +103,8 @@ class Corpora(Kontext):
         else:
             ans = tag_loader.get_initial_values()
         return ans
+
+    @exposed(return_type='json', legacy=True)
+    def bibliography(self, id=''):
+        bib_data = plugins.get('live_attributes').get_bibliography(self._corp(), item_id=id)
+        return {'bib_data': bib_data}

@@ -170,11 +170,12 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         raise NotImplementedError()
 
-    def custom_filter(self, corpus_info, permitted_corpora):
+    def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
         """
         An optional custom filter to exclude specific items from results.
 
         arguments:
+        plugin_api -- a controller.PluginApi instance
         corpus_info -- a CorpusInfo object
         permitted_corpora -- a dict (canonical_corp_id, corp_id) as returned
                              by auth.permitted_corpora
@@ -198,13 +199,16 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         pass
 
-    def customize_search_result_item(self, item, corpus_info):
+    def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
         """
         An optional method allowing customization of search result item (= a dict)
         using full_data (= custom CorpusInfo implementation).
 
         arguments:
+        plugin_api -- a controller.PluginApi instance
         item -- a dict containing corpus information as required by client-side
+        permitted_corpora -- list of permitted corpora as returned by the 'auth' plug-in
+                             (i.e. a dict canonical_corpus_id=>corpus_id)
         corpus_info -- a CorpusInfo instance
         """
         pass
