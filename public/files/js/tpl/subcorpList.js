@@ -124,10 +124,10 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
         fieldset1 = $(window.document.createElement('fieldset'));
         fieldset1.addClass('subcorp-action-field');
-        fieldset1.append('<legend>' + lib.layoutModel.translate('undelete') + '</legend>');
-        fieldset1.append('<p>' + lib.layoutModel.translate('The subcorpus will be created again using the original query.') + '</p>');
+        fieldset1.append('<legend>' + lib.layoutModel.translate('global__undelete') + '</legend>');
+        fieldset1.append('<p>' + lib.layoutModel.translate('global__subcorpus_will_be_restored_using_orig_query') + '</p>');
         fieldset1Submit = $(window.document.createElement('button'));
-        fieldset1Submit.text(lib.layoutModel.translate('undelete'));
+        fieldset1Submit.text(lib.layoutModel.translate('global__undelete'));
         fieldset1.append(fieldset1Submit);
         wrappingElm.append(fieldset1);
 
@@ -161,7 +161,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             self = this;
 
         $(actionButton)
-            .text(lib.layoutModel.translate('delete forever'))
+            .text(lib.layoutModel.translate('global__delete_forever'))
             .on('click', function () {
                 var prom;
 
@@ -184,8 +184,8 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
 
         jqFieldset.addClass('subcorp-action-field');
-        jqFieldset.append('<legend>' + lib.layoutModel.translate('wipe') + '</legend>');
-        jqFieldset.append('<p>' + lib.layoutModel.translate('All the remaining information regarding this subcorpus will be deleted. It will be impossible to restore the subcorpus.') + '</p>');
+        jqFieldset.append('<legend>' + lib.layoutModel.translate('global__wipe') + '</legend>');
+        jqFieldset.append('<p>' + lib.layoutModel.translate('global__subcorpus_wipe_warning') + '</p>');
         jqFieldset.append(actionButton);
         wrappingElm.append(jqFieldset);
     };
@@ -208,10 +208,10 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
         jqFieldset = $(window.document.createElement('fieldset'));
         jqFieldset.addClass('subcorp-action-field');
-        jqFieldset.append('<legend>' + self.layoutModel.translate('re-use query') + '</legend>');
+        jqFieldset.append('<legend>' + self.layoutModel.translate('global__reuse_query') + '</legend>');
 
         jqFieldset.append('<span class="subcname-label">'
-                + self.layoutModel.translate('New subcorpus name') + ':</span>');
+                + self.layoutModel.translate('global__new_subcorpus_name_lab') + ':</span>');
 
         $(subcnameInput).addClass('subcname')
                 .val(this.subcorpusName);
@@ -235,7 +235,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
         jqFieldset.append(withinBox);
 
-        $(submitButton).text(self.layoutModel.translate('create'))
+        $(submitButton).text(self.layoutModel.translate('global__create'))
             .on('click', function () {
                 var prom = self.createSubcorpus($(subcnameInput).val(), $(structInput).val(),
                                                 $(conditionInput).val());
@@ -330,7 +330,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
                 );
 
             } else {
-                popupBox.bind($(self), lib.layoutModel.translate('No backup data available.'), {
+                popupBox.bind($(self), lib.layoutModel.translate('global__no_backup_data'), {
                     expandLeft: true
                 });
             }

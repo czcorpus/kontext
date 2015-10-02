@@ -1937,6 +1937,18 @@ msgstr "Předchozí dotazy lze zobrazit také pomocí šipky dolů"
 msgid "In CQL mode you can use Shift+ENTER to enter a new line"
 msgstr "V dotazu CQL můžete vložit další řádek stisknutím klávesy Shift+ENTER"
 
+msgid "Show also deleted items"
+msgstr "Zobrazit též smazané položky"
+
+msgid "backed up"
+msgstr "zálohováno"
+
+msgid "actions"
+msgstr "akce"
+
+msgid "deleted"
+msgstr "smazáno"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
