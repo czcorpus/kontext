@@ -336,8 +336,7 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
                             function (ans) {
                                 if (!ans.error) {
                                     self.pluginApi.showMessage('info',
-                                        self.pluginApi.translate('Your request has been sent. '
-                                            + 'You will be informed by e-mail once it is resolved.'));
+                                        self.pluginApi.translate('ucnkCorparch__your_message_sent'));
                                     self.notifyChangeListeners();
 
                                 } else {
@@ -347,9 +346,7 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
                             },
                             function (jqXHR, textStatus, errorThrown) {
                                 self.pluginApi.showMessage('error',
-                                    self.pluginApi.translate(
-                                        'Failed to send the request. Please try again '
-                                        + 'later or contact support.'));
+                                    self.pluginApi.translate('ucnkCorparch__your_message_failed'));
                                 self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, errorThrown);
                             }
                         );
