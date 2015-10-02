@@ -1558,11 +1558,6 @@ class Actions(Kontext):
             return {}
 
     @exposed(return_type='json', legacy=True)
-    def bibliography(self, id=''):
-        bib_data = plugins.get('live_attributes').get_bibliography(self._corp(), item_id=id)
-        return {'bib_data': bib_data}
-
-    @exposed(return_type='json', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         import json
 

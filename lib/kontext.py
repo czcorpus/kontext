@@ -272,14 +272,14 @@ class Kontext(Controller):
             options['shuffle'] = 1
 
     def _setup_user_paths(self, user_file_id):
-        if not self._user_is_anonymous():
+        if not self.user_is_anonymous():
             self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
         excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get(
             'excluded_users', ())]
-        return self._session_get('user', 'id') not in excluded_users and not self._user_is_anonymous()
+        return self._session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
     def _load_user_settings(self):
         """
@@ -619,7 +619,7 @@ class Kontext(Controller):
 
         if len(path) > 0:
             access_level = action_metadata.get('access_level', 0)  # by default, each action is public
-            if access_level and self._user_is_anonymous():
+            if access_level and self.user_is_anonymous():
                 from plugins.abstract import auth
                 raise auth.AuthException(_('Access forbidden'))
         # plugins setup
@@ -632,7 +632,7 @@ class Kontext(Controller):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
-        if self._user_is_anonymous():
+        if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
@@ -1021,7 +1021,7 @@ class Kontext(Controller):
         result['root_url'] = self.get_root_url()
         result['static_url'] = '%sfiles/' % self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
-        result['_anonymous'] = self._user_is_anonymous()
+        result['_anonymous'] = self.user_is_anonymous()
 
         if plugins.has_plugin('auth'):
             result['login_url'] = plugins.get('auth').get_login_url(self.return_url)

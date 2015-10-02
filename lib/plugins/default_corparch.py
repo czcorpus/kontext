@@ -463,7 +463,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     substrs.append(t)
         return substrs, query_keywords
 
-    def customize_search_result_item(self, item, full_data):
+    def customize_search_result_item(self, plugin_api, item, permitted_corpora, full_data):
         pass
 
     def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
@@ -539,14 +539,14 @@ class CorpTree(AbstractSearchableCorporaArchive):
                     else:
                         hits.append(False)
                 hits.append(matches_size(corp))
-                hits.append(self.custom_filter(full_data, permitted_corpora))
+                hits.append(self.custom_filter(plugin_api, full_data, permitted_corpora))
 
                 if matches_all(hits):
                     corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
                     corp['user_item'] = is_fav(corp['id'])
-                    self.customize_search_result_item(corp, full_data)
+                    self.customize_search_result_item(plugin_api, corp, permitted_corpora, full_data)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
 
