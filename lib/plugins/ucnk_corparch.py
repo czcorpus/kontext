@@ -181,7 +181,7 @@ class UcnkCorpArch(CorpTree):
             except Exception as ex:
                 errors.append('Failed to send an e-email to <%s>, error: %r' % (recipient, ex))
         s.quit()
-        if len(errors) < len(self.access_req_recipients):
+        if 0 < len(errors) < len(self.access_req_recipients):
             logging.getLogger(__name__).warn(
                 'There were errors sending corpus access request e-mail(s): %s' % ', '.join(errors))
             return True
