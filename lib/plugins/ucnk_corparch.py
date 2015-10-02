@@ -99,7 +99,7 @@ class UcnkCorpusInfo(CorpusInfo):
         self.requestable = False
 
 
-@exposed(acess_level=1, return_type='json')
+@exposed(acess_level=1, return_type='json', skip_corpus_init=True)
 def ask_corpus_access(controller, request):
     ans = {}
     status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
@@ -184,6 +184,8 @@ class UcnkCorpArch(CorpTree):
         if 0 < len(errors) < len(self.access_req_recipients):
             logging.getLogger(__name__).warn(
                 'There were errors sending corpus access request e-mail(s): %s' % ', '.join(errors))
+            return True
+        elif len(errors) == 0:
             return True
         else:
             return False
