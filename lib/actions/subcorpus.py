@@ -94,8 +94,9 @@ class Subcorpus(Kontext):
         try:
             ans = self._create_subcorpus(request)
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except Exception:
-            ans = self.subcorp_form(request)
+        except Exception as e:
+            self.add_system_message('error', e.__repr__())
+            ans = self.subcorp_form(request, None)
         return ans
 
     @exposed(access_level=1, argmappings=(ConcArgsMapping,))

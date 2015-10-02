@@ -891,7 +891,7 @@ class Actions(Kontext):
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)
         saved_filename = self._canonical_corpname(self.args.corpname)
-
+        output = None
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % \

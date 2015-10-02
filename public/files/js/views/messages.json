@@ -45,7 +45,16 @@
 		"global__sorting_backwards_explanation": "Comparison starts with the last characters of words",
 		"global__add_aligned_corpus": "Add a corpus",
 		"global__size_warning": "Due to the large size, the concordance has been truncated to the first {size} lines.",
-        "global__next_tip": "next tip"
+        "global__next_tip": "next tip",
+		"global__no_backup_data": "No backup data available.",
+		"global__undelete": "undelete",
+		"global__subcorpus_will_be_restored_using_orig_query": "The subcorpus will be created again using the original query.",
+		"global__wipe": "wipe",
+		"global__subcorpus_wipe_warning": "All the remaining information regarding this subcorpus will be deleted. It will be impossible to restore the subcorpus.",
+		"global__delete_forever_btn": "Delete forever",
+		"global__reuse_query": "Re-use query",
+		"global__new_subcorpus_name_lab": "New subcorpus name",
+		"global__create": "Create"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -93,6 +102,15 @@
 		"global__sorting_backwards_explanation": "Porovnání slov začíná od jejich posledního písmene.",
 		"global__add_aligned_corpus": "Přidat korpus",
 		"global__size_warning": "Kvůli nadměrnému rozsahu byla konkordance zredukována na prvních {size} řádek.",
-        "global__next_tip": "další tip"
+        "global__next_tip": "další tip",
+		"global__no_backup_data": "Záložní data nejsou k dispozici.",
+		"global__undelete": "obnovit",
+		"global__subcorpus_will_be_restored_using_orig_query": "Subkorpus bude vytvořen znovu s použitím původních parametrů.",
+		"global__wipe": "trvale smazat",
+		"global__subcorpus_wipe_warning": "Všechny informace o subkorpusu budou trvale smazány a korpus již nebude možné obnovit.",
+		"global__delete_forever_btn": "Úplně smazat",
+		"global__reuse_query": "Znovu použít dotaz",
+		"global__new_subcorpus_name_lab": "Název nového subkorpusu",
+		"global__create": "Vytvořit"
 	}
 }
