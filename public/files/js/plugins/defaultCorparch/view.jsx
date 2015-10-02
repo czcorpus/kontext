@@ -293,19 +293,25 @@ define(['vendor/react'], function (React) {
          * A keyword link from the filter form
          */
         var KeywordLink = React.createClass({
+
             mixins: mixins,
-            changeHandler: function () {
+
+            _changeHandler: function (store, action) {
                 this.setState({active: formStore.getKeywordState(this.props.keyword)});
             },
+
             getInitialState: function () {
                 return {active: Boolean(this.props.isActive)};
             },
+
             componentDidMount: function () {
-                formStore.addChangeListener(this.changeHandler);
+                formStore.addChangeListener(this._changeHandler);
             },
+
             componentWillUnmount: function () {
-                formStore.removeChangeListener(this.changeHandler);
+                formStore.removeChangeListener(this._changeHandler);
             },
+
             _handleClick: function (active) {
                 var self = this;
 
@@ -321,6 +327,7 @@ define(['vendor/react'], function (React) {
                     });
                 };
             },
+
             render: function () {
                 let link;
                 let style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
