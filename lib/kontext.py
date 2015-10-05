@@ -933,7 +933,6 @@ class Kontext(Controller):
 
     def _apply_theme(self, data):
         theme_name = settings.get('theme', 'name')
-
         theme_css = settings.get('theme', 'css', None)
         if theme_css is None:
             theme_css = []
@@ -947,16 +946,14 @@ class Kontext(Controller):
             logo_alt_img = logo_img
 
         if settings.contains('theme', 'logo_href'):
-            logo_href = settings.get('theme', 'logo_href')
+            logo_href = unicode(settings.get('theme', 'logo_href'))
         else:
-            logo_href = self.get_root_url() + 'first_form?corpname={corpname}' \
-                                            + '&usesubcorp={usesubcorp}'
-        logo_href = logo_href.format(**self.args.__dict__)
+            logo_href = self.get_root_url()
 
         if theme_name == 'default':
             logo_title = _('Click to enter a new query')
         else:
-            logo_title = logo_href
+            logo_title = unicode(logo_href)
 
         fonts = settings.get('theme', 'fonts', None)
         if fonts is None:

@@ -66,8 +66,9 @@ class AttrMappingInfoProxy(object):
         self._mapping = mapping
 
     def get_params(self, persistence=None):
-        is_param = lambda m: isinstance(m, Parameter) and (persistence is None
-                                                           or m.meets_persistence(persistence))
+        def is_param(m):
+            return isinstance(m, Parameter) and (persistence is None or
+                                                 m.meets_persistence(persistence))
         return inspect.getmembers(self._mapping.__class__, predicate=is_param)
 
     def get_names(self, persistence=None):
