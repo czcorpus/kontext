@@ -161,7 +161,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             self = this;
 
         $(actionButton)
-            .text(lib.layoutModel.translate('global__delete_forever'))
+            .text(lib.layoutModel.translate('global__delete_forever_btn'))
             .on('click', function () {
                 var prom;
 
