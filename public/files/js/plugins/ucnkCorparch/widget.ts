@@ -539,11 +539,13 @@ export class SearchTab implements WidgetTab {
                             + ' <span class="num">(size: ' + item.raw_size + ')</span></p>');
                     }
                 },
-                footer: function () {
-                    return $('<p class="hint">'
-                        + self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
-                                {maxNum: self.maxNumHints, link: self.pluginApi.createActionUrl('/corpora/corplist')})
-                        + '</p>');
+                footer: function (info) {
+                    if (info.suggestions.length === self.maxNumHints) {
+                        return $('<p class="hint">'
+                            + self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
+                                    {maxNum: self.maxNumHints, link: self.pluginApi.createActionUrl('/corpora/corplist')})
+                            + '</p>');
+                    }
                 }
             }
         });
