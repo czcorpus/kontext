@@ -39,25 +39,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}kontext.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
-#else
-<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css#if $deployment_id#?v=$deployment_id#end if#" />
-#end if
+<link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jscrollpane.css" />
 #for $theme_css in $theme.css
 <link rel="stylesheet" type="text/css" href="$theme_css" />
 #end for
+#else
+<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css#if $deployment_id#?v=$deployment_id#end if#" />
+#end if
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
 #if $app_bar_css
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
 #end if
-<link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
 #if $qunit_test
 <link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
 #end if
-<!--[if lte IE 7]>
-<link rel="stylesheet" type="text/css" href="$app_bar_css_ie" media="all">
-<![endif]-->
 
 <script type="text/javascript" src="$files_path/js/vendor/modernizr.custom.min.js"></script>
 #if $debug
@@ -65,7 +63,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end if
 <script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
 <script type="text/javascript" src="$files_path/js/min/vendor/intl.min.js"></script>
-<script type="text/javascript" src="$files_path/js/min/vendor/common.js"></script>
+<script type="text/javascript" src="$files_path/js/min/vendor/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
 #block headers
 #end block
 

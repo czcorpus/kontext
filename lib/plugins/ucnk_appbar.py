@@ -21,7 +21,6 @@ Required config.xml/plugin entries:
 <application_bar>
     <module>ucnk_appbar</module>
     <css_url>[URL of an external CSS file specifying imported HTML visuals]</css_url>
-    <css_url_ie>[IE specific CSS]</css_url_ie>
 </application_bar>
 """
 from plugins import inject
@@ -30,10 +29,9 @@ from abstract.appbar import AbstractApplicationBar
 
 class ApplicationBar(AbstractApplicationBar):
 
-    def __init__(self, auth, css_url, css_url_ie):
+    def __init__(self, auth, css_url):
         self._auth = auth
         self.css_url = css_url
-        self.css_url_ie = css_url_ie
 
     def get_contents(self, plugin_api, return_url):
         return plugin_api.session.get(self._auth.get_toolbar_session_key(), self.get_fallback_content())
@@ -45,5 +43,4 @@ class ApplicationBar(AbstractApplicationBar):
 @inject('auth')
 def create_instance(settings, auth):
     return ApplicationBar(auth=auth,
-                          css_url=settings.get('plugins', 'application_bar')['ucnk:css_url'],
-                          css_url_ie=settings.get('plugins', 'application_bar')['ucnk:css_url_ie'])
+                          css_url=settings.get('plugins', 'application_bar')['ucnk:css_url'])
