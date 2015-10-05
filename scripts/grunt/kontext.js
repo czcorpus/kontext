@@ -33,6 +33,45 @@
         merge = require('merge');
 
     /**
+     *
+     */
+    module.exports.getThemeStyles = function (confPath) {
+        var xmldom = require('xmldom');
+        var data = fs.readFileSync(confPath, {encoding: 'utf8'});
+        var kontextNode = new xmldom.DOMParser().parseFromString(data).getElementsByTagName('kontext')[0];
+        var themeNode = null;
+        var cssNode = null;
+        var styles = [];
+
+        var themeName = (function (root) {
+            var srch = root.getElementsByTagName('name')[0];
+            if (srch) {
+                return srch.textContent.trim();
+            }
+            return null;
+        }(kontextNode));
+
+        for (var i = 0; i < kontextNode.childNodes.length; i += 1) {
+            if (kontextNode.childNodes[i].nodeName === 'theme') {
+                themeNode = kontextNode.childNodes[i];
+                 break;
+            }
+        }
+        if (themeNode) {
+            cssNode = themeNode.getElementsByTagName('css')[0];
+            if (cssNode) {
+                for (var i = 0; i < cssNode.childNodes.length; i += 1) {
+                    if (cssNode.childNodes[i].nodeType === 1 || cssNode.childNodes[i].nodeType === 3) {
+                        styles.push('public/files/themes/' + themeName + '/'
+                            + cssNode.childNodes[i].textContent.trim());
+                    }
+                }
+            }
+        }
+        return styles;
+    }
+
+    /**
      * Produces mapping for specific modules:
      * 1) modules which should be excluded from optimization
      *    - JQuery and similar (vendor) stuff

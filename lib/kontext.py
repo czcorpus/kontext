@@ -1032,11 +1032,9 @@ class Kontext(Controller):
             result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
                                                              return_url=self.return_url)
             result['app_bar_css'] = application_bar.css_url
-            result['app_bar_css_ie'] = application_bar.css_url_ie
         else:
             result['app_bar'] = None
             result['app_bar_css'] = None
-            result['app_bar_css_ie'] = None
 
         self._apply_theme(result)
         self._init_custom_menu_items(result)
