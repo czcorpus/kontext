@@ -32,6 +32,7 @@ import re
 from functools import partial
 from collections import OrderedDict
 import types
+import hashlib
 
 import werkzeug.urls
 
@@ -369,6 +370,8 @@ class Controller(object):
         except ValueError:
             pass
         result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
+        deployment_id = settings.get('global', 'deployment_id', None)
+        result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[:6] if deployment_id else None
 
     def _get_template_class(self, name):
         """
