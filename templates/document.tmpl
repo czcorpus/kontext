@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
 #else
-<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css#if $deployment_id#?v=$deployment_id#end if#" />
 #end if
 #for $theme_css in $theme.css
 <link rel="stylesheet" type="text/css" href="$theme_css" />
@@ -88,6 +88,7 @@ paths['vendor/QUnit'] = './vendor/qunit'
 requirejs.config({
     baseUrl : '../files/js/min',
     paths: paths,
+    #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
     shim : {
         'vendor/jscrollpane' : {
             deps: ['jquery']

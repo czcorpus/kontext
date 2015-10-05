@@ -25,6 +25,7 @@
         </fonts>
     </theme>
     <global>
+        <deployment_id>20151031_v4</deployment_id>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
         <log_path>/var/log/bonito/application.log</log_path>
         <log_file_size>1000000</log_file_size>
