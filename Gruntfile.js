@@ -56,11 +56,16 @@
             "less": {
                 production: {
                     files: {
-                        "public/files/css/kontext.min.css": [
-                            "public/files/css/kontext.less",
-                            "public/files/css/view.less",
-                            "public/files/css/widgets.less"
-                        ]
+                        "public/files/css/kontext.min.css": (function () {
+                            var ans = [
+                                "public/files/css/kontext.less",
+                                "public/files/css/view.less",
+                                "public/files/css/widgets.less",
+                                "public/files/css/keyboard.css",
+                                "public/files/css/jscrollpane.css"
+                            ];
+                            return ans.concat(kontext.getThemeStyles('./conf/config.xml'));
+                        }())
                     },
                     options: {
                         compress: true
