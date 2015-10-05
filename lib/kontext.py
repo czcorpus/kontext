@@ -933,7 +933,6 @@ class Kontext(Controller):
 
     def _apply_theme(self, data):
         theme_name = settings.get('theme', 'name')
-
         theme_css = settings.get('theme', 'css', None)
         if theme_css is None:
             theme_css = []
@@ -947,16 +946,14 @@ class Kontext(Controller):
             logo_alt_img = logo_img
 
         if settings.contains('theme', 'logo_href'):
-            logo_href = settings.get('theme', 'logo_href')
+            logo_href = unicode(settings.get('theme', 'logo_href'))
         else:
-            logo_href = self.get_root_url() + 'first_form?corpname={corpname}' \
-                                            + '&usesubcorp={usesubcorp}'
-        logo_href = logo_href.format(**self.args.__dict__)
+            logo_href = self.get_root_url()
 
         if theme_name == 'default':
             logo_title = _('Click to enter a new query')
         else:
-            logo_title = logo_href
+            logo_title = unicode(logo_href)
 
         fonts = settings.get('theme', 'fonts', None)
         if fonts is None:
@@ -1035,11 +1032,9 @@ class Kontext(Controller):
             result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
                                                              return_url=self.return_url)
             result['app_bar_css'] = application_bar.css_url
-            result['app_bar_css_ie'] = application_bar.css_url_ie
         else:
             result['app_bar'] = None
             result['app_bar_css'] = None
-            result['app_bar_css_ie'] = None
 
         self._apply_theme(result)
         self._init_custom_menu_items(result)

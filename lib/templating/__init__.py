@@ -28,11 +28,9 @@ class StateGlobals(object):
     def __init__(self, data):
         self._data = {}
         if type(data) is dict:
-            data = data.items()
-        for k, v in data:
-            if type(v) is unicode:
-                v = v.encode('utf-8')
-            self._data[k] = v
+            self._data = data
+        else:
+            self._data = dict(data)
 
     def __iter__(self):
         return iter(self._data)
