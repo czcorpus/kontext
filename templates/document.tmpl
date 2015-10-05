@@ -65,7 +65,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end if
 <script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
 <script type="text/javascript" src="$files_path/js/min/vendor/intl.min.js"></script>
-<script type="text/javascript" src="$files_path/js/min/vendor/common.js"></script>
+<script type="text/javascript" src="$files_path/js/min/vendor/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
 #block headers
 #end block
 
