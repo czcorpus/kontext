@@ -88,6 +88,7 @@ paths['vendor/QUnit'] = './vendor/qunit'
 requirejs.config({
     baseUrl : '../files/js/min',
     paths: paths,
+    #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
     shim : {
         'vendor/jscrollpane' : {
             deps: ['jquery']
