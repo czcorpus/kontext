@@ -358,7 +358,7 @@ export class SearchTab implements WidgetTab {
      *
      */
     private getTagQuery():string {
-        var ans = [];
+        let ans = [];
 
         for (var p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)) {
@@ -374,8 +374,8 @@ export class SearchTab implements WidgetTab {
      * @param skipId
      */
     private resetTagSelection(skipId?:Array<string>|string):void {
-        var toReset = [],
-            skipIds:Array<string>;
+        let toReset = [];
+        let skipIds:Array<string>;
 
         if (typeof skipId === 'string') {
             skipIds = [skipId];
@@ -387,14 +387,14 @@ export class SearchTab implements WidgetTab {
             skipIds = [];
         }
 
-        for (var p in this.selectedTags) {
+        for (let p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)
                 && this.selectedTags[p]
                 && skipIds.indexOf(p) === -1) {
                 toReset.push(p);
             }
         }
-        for (var i = 0; i < toReset.length; i += 1) {
+        for (let i = 0; i < toReset.length; i += 1) {
             $(this.selectedTags[toReset[i]]).removeClass('selected');
             delete this.selectedTags[toReset[i]];
         }
@@ -428,7 +428,6 @@ export class SearchTab implements WidgetTab {
         $(this.srchField).focus();          // that the input actually changed
         this.bloodhound.clear();
         $(this.srchField).data('ttTypeahead').menu.datasets[0].update($(this.srchField).val());
-
     }
 
     /**
@@ -457,8 +456,8 @@ export class SearchTab implements WidgetTab {
      *
      */
     private initLabels():void {
-        var div = window.document.createElement('div'),
-            self = this;
+        let div = window.document.createElement('div');
+        let self = this;
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
@@ -488,8 +487,8 @@ export class SearchTab implements WidgetTab {
     }
 
     private initTypeahead():void {
-        var self = this;
-        var remoteOptions:Bloodhound.RemoteOptions<string> = {
+        let self = this;
+        let remoteOptions:Bloodhound.RemoteOptions<string> = {
             url : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora',
             prepare: function (query, settings) {
                 settings.url += '?query=' + encodeURIComponent(self.getTagQuery() + ' ' + query);
@@ -499,7 +498,7 @@ export class SearchTab implements WidgetTab {
                 return response.rows;
             }
         };
-        var bhOptions:Bloodhound.BloodhoundOptions<string> = {
+        let bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
                 return Bloodhound.tokenizers.whitespace(d.name);
             },
@@ -509,7 +508,7 @@ export class SearchTab implements WidgetTab {
         this.bloodhound = new Bloodhound(bhOptions);
         this.bloodhound.initialize();
 
-        var options:Twitter.Typeahead.Options = {
+        let options:Twitter.Typeahead.Options = {
             name: 'corplist',
             hint: true,
             highlight: true,
@@ -560,11 +559,16 @@ export class SearchTab implements WidgetTab {
             $(self.ajaxLoader).removeClass('hidden');
             if (!self.loaderKiller) {
                 self.loaderKiller = setInterval(function () {
-                    if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH
-                        && $.isEmptyObject(self.selectedTags)) {
-                        $(self.ajaxLoader).addClass('hidden');
+                    if ($(self.srchField).val().length === 0) {
+                        if (!$.isEmptyObject(self.selectedTags)) {
+                            self.triggerTypeaheadSearch();
+                        }
                         clearInterval(self.loaderKiller);
+
+                    } else if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH) {
+                        $(self.ajaxLoader).addClass('hidden');
                     }
+
                 }, 250);
             }
         });
