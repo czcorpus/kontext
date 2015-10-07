@@ -468,11 +468,8 @@ define(['vendor/react'], function (React) {
             },
 
             render: function () {
-                var hiddenInputs = this.props.currKeywords.map(function (v, i) {
-                    return <input key={i} type="hidden" name="keyword" value={v} />;
-                });
-                var fields;
-                var fieldsetClasses;
+                let fields;
+                let fieldsetClasses;
 
                 if (this.state.expanded) {
                     fieldsetClasses = 'advanced-filter';
@@ -500,7 +497,6 @@ define(['vendor/react'], function (React) {
                 return (
                     <fieldset className={fieldsetClasses}>
                         <legend onClick={this._handleLegendClick}>{this.translate('defaultCorparch__advanced_filters')}</legend>
-                        {hiddenInputs}
                         {fields}
                     </fieldset>
                 );
@@ -520,7 +516,6 @@ define(['vendor/react'], function (React) {
                             keywords={this.props.keywords}
                             label={this.translate('defaultCorparch__keywords_field_label')} />
                         <FilterInputFieldset
-                            currKeywords={this.props.currKeywords}
                             filters={this.props.filters} />
                     </section>
                 )

@@ -30,7 +30,7 @@ class Corpora(Kontext):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         return dict(
             corplist_params=plugins.get('corparch').initial_search_params(request.args.get('query'),
-                                                                   request.args),
+                                                                          request.args),
             corplist_data=plugins.get('corparch').search(plugin_api=self._plugin_api,
                                                          user_id=self._session_get('user', 'id'),
                                                          query=False,

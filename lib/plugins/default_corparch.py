@@ -32,9 +32,12 @@ Required config.xml/plugins entries:
         [a spec. character specifying that the following string is a tag/label]
     </tag_prefix>
     <max_num_hints>
-        [the maximum number of hints corpus selection widget shows (even if there are more results
+        [maximum number of hints corpus selection widget shows (even if there are more results
          available]
     </max_num_hints>
+    <default_page_list_size>
+        [number of items to be shown on 'available corpora' page]
+    </default_page_list_size>
 </corparch>
 
 How does the corpus list specification XML entry looks like:
@@ -67,7 +70,7 @@ except ImportError:
 from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
-from plugins.abstract.corpora import CorpusInfo, BrokenCorpusInfo
+from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
@@ -88,6 +91,10 @@ def translate_markup(s):
 
 
 class ManateeCorpusInfo(object):
+    """
+    Represents information available via manatee module
+    (i.e. information defined in corpus registry file)
+    """
     def __init__(self, corpus, canonical_id):
         self.encoding = corpus.get_conf('ENCODING')
         import_string = partial(l10n.import_string, from_encoding=self.encoding)
@@ -98,6 +105,9 @@ class ManateeCorpusInfo(object):
 
 
 class ManateeCorpora(object):
+    """
+    A caching source of ManateeCorpusInfo instances.
+    """
     def __init__(self):
         self._cache = {}
 
@@ -113,7 +123,149 @@ class ManateeCorpora(object):
                                      canonical_corpus_id)
 
 
-class CorpTree(AbstractSearchableCorporaArchive):
+def parse_query(tag_prefix, query):
+    """
+    Parses a search query:
+
+    <query> ::= <label> | <desc_part>
+    <label> ::= <tag_prefix> <desc_part>
+
+    returns:
+    2-tuple (list of description substrings, list of labels/keywords)
+    """
+    if query is not None:
+        tokens = re.split(r'\s+', query.strip())
+    else:
+        tokens = []
+    query_keywords = []
+    substrs = []
+    for t in tokens:
+        if len(t) > 0:
+            if t[0] == tag_prefix:
+                query_keywords.append(t[1:])
+            else:
+                substrs.append(t)
+    return substrs, query_keywords
+
+
+class CorpSearch(object):
+    """
+    Corpus listing and filtering service
+    """
+    def __init__(self, plugin_api, auth, corparch, tag_prefix):
+        """
+        arguments:
+        plugin_api -- a controller.PluginApi instance
+        auth -- an auth plug-in instance
+        corparch -- a plugins.abstract.corpora.AbstractSearchableCorporaArchive instance
+        tag_prefix -- a string determining how a tag (= keyword or label) is recognized
+        """
+        self._plugin_api = plugin_api
+        self._auth = auth
+        self._corparch = corparch
+        self._tag_prefix = tag_prefix
+
+    @staticmethod
+    def cut_result(res, offset, limit):
+            right_lim = offset + int(limit)
+            new_res = res[offset:right_lim]
+            if right_lim >= len(res):
+                right_lim = None
+            return new_res, right_lim
+
+    @staticmethod
+    def matches_all(d):
+        return reduce(lambda prev, curr: prev and curr, d, True)
+
+    @staticmethod
+    def matches_size(d, min_size, max_size):
+        item_size = d.get('size', None)
+        return (item_size is not None and
+                (not min_size or int(item_size) >= int(min_size)) and
+                (not max_size or int(item_size) <= int(max_size)))
+
+    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+        if query is False:  # False means 'use default values'
+            query = ''
+        ans = {'rows': []}
+        permitted_corpora = self._auth.permitted_corpora(user_id)
+        used_keywords = set()
+        all_keywords_map = dict(self._corparch.all_keywords)
+        if filter_dict.get('minSize'):
+            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        else:
+            min_size = 0
+        if filter_dict.get('maxSize'):
+            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
+        else:
+            max_size = None
+
+        if offset is None:
+            offset = 0
+        else:
+            offset = int(offset)
+
+        if limit is None:
+            limit = int(self._corparch.max_page_size)
+        else:
+            limit = int(limit)
+
+        user_items = self._corparch.user_items.get_user_items(user_id)
+
+        def is_fav(corpus_id):
+            for item in user_items:
+                if isinstance(item, CorpusItem) and item.corpus_id == corpus_id:
+                    return True
+            return False
+
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+
+        normalized_query_substrs = [s.lower() for s in query_substrs]
+        for corp in self._corparch.get_list(permitted_corpora):
+            full_data = self._corparch.get_corpus_info(corp['id'], self._corparch.lang)
+            if not isinstance(full_data, BrokenCorpusInfo):
+                keywords = [k for k in full_data['metadata']['keywords'].keys()]
+                tests = []
+                found_in = []
+
+                tests.extend([k in keywords for k in query_keywords])
+                for s in normalized_query_substrs:
+                    # the name must be tested first to prevent the list 'found_in'
+                    # to be filled in case item matches both name and description
+                    if s in corp['name'].lower():
+                        tests.append(True)
+                    elif s in (corp['desc'].lower() if corp['desc'] else ''):
+                        tests.append(True)
+                        found_in.append(_('description'))
+                    else:
+                        tests.append(False)
+                tests.append(self.matches_size(corp, min_size, max_size))
+                tests.append(self._corparch.custom_filter(self._plugin_api, full_data, permitted_corpora))
+
+                if self.matches_all(tests):
+                    corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
+                    corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
+                    corp['found_in'] = found_in
+                    corp['user_item'] = is_fav(corp['id'])
+                    self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,
+                                                                full_data)
+                    ans['rows'].append(corp)
+                    used_keywords.update(keywords)
+                    # we have to fetch +1 item to know if there is another page/offset, that's why we use '>'
+                    if len(ans['rows']) > offset + limit:
+                        break
+
+        corp_cmp_key = lambda c: c.get('name') if c.get('name') is not None else ''
+        ans['rows'], ans['nextOffset'] = self.cut_result(l10n.sort(ans['rows'], loc=self._corparch.lang,
+                                                         key=corp_cmp_key), offset, limit)
+        ans['keywords'] = l10n.sort(used_keywords, loc=self._corparch.lang)
+        ans['query'] = query
+        ans['current_keywords'] = query_keywords
+        ans['filters'] = dict(filter_dict)
+        return ans
+
+
+class CorpusArchive(AbstractSearchableCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -125,7 +277,7 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
                  max_page_size):
-        super(CorpTree, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
+        super(CorpusArchive, self).__init__(('lang', 'featured_corpora'))  # <- thread local attributes
         self._auth = auth
         self._user_items = user_items
         self._corplist = None
@@ -139,6 +291,37 @@ class CorpTree(AbstractSearchableCorporaArchive):
         self._colors = {}
         self._manatee_corpora = ManateeCorpora()
 
+    @property
+    def max_page_size(self):
+        return self._max_page_size
+
+    @property
+    def all_keywords(self):
+        ans = []
+        if self._keywords is None:
+            self._load()
+        lang_key = self._get_iso639lang()
+        for label_key, item in self._keywords.items():
+            if lang_key in item:
+                ans.append((label_key, item[lang_key]))
+        return ans
+
+    @property
+    def user_items(self):
+        return self._user_items
+
+    @property
+    def raw_list(self):
+        return self._raw_list()
+
+    @property
+    def manatee_corpora(self):
+        return self._manatee_corpora
+
+    @property
+    def lang(self):
+        return self._lang()
+
     @staticmethod
     def _decode_bool(v):
         ans = False
@@ -150,6 +333,49 @@ class CorpTree(AbstractSearchableCorporaArchive):
             elif v.lower() == 'false':
                 ans = False
         return ans
+
+    def get_list(self, user_allowed_corpora):
+        """
+        arguments:
+        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
+                                accessible by the current user
+        """
+        simple_names = set(user_allowed_corpora.keys())
+        cl = []
+        for item in self.raw_list.values():
+            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if canonical_id in simple_names:
+                try:
+                    corp_id = user_allowed_corpora[canonical_id]
+                    corp_info = self.manatee_corpora.get_info(corp_id)
+                    cl.append({'id': corp_id,
+                               'canonical_id': canonical_id,
+                               'name': l10n.import_string(corp_info.name,
+                                                          from_encoding=corp_info.encoding),
+                               'desc': l10n.import_string(corp_info.description,
+                                                          from_encoding=corp_info.encoding),
+                               'size': corp_info.size,
+                               'path': path
+                               })
+                except Exception, e:
+                    import logging
+                    logging.getLogger(__name__).warn(
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
+                                                                               type(e).__name__, e))
+                    cl.append({
+                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
+        return cl
+
+    @staticmethod
+    def search_via_service(search_service, user_id, query, offset=0, limit=None, filter_dict=None):
+        return search_service.search(user_id=user_id, query=query, offset=offset, limit=limit,
+                                     filter_dict=filter_dict)
+
+    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+        return self.search_via_service(CorpSearch(plugin_api, self._auth, self, self._tag_prefix),
+                                       user_id=user_id, query=query, offset=offset, limit=limit,
+                                       filter_dict=filter_dict)
 
     def _get_corplist_title(self, elm):
         """
@@ -235,17 +461,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
-
-    @property
-    def all_keywords(self):
-        ans = []
-        if self._keywords is None:
-            self._load()
-        lang_key = self._get_iso639lang()
-        for label_key, item in self._keywords.items():
-            if lang_key in item:
-                ans.append((label_key, item[lang_key]))
-        return ans
 
     def _process_corpus_node(self, node, path, data):
         corpus_id = node.attrib['ident'].lower()
@@ -383,39 +598,6 @@ class CorpTree(AbstractSearchableCorporaArchive):
     def _get_iso639lang(self):
         return self._lang().split('_')[0]
 
-    def get_list(self, user_allowed_corpora):
-        """
-        arguments:
-        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
-                                accessible by the current user
-        """
-        simple_names = set(user_allowed_corpora.keys())
-        cl = []
-        for item in self._raw_list().values():
-            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
-            if canonical_id in simple_names:
-                try:
-                    corp_id = user_allowed_corpora[canonical_id]
-                    corp_info = self._manatee_corpora.get_info(corp_id)
-                    cl.append({'id': corp_id,
-                               'canonical_id': canonical_id,
-                               'name': l10n.import_string(corp_info.name,
-                                                          from_encoding=corp_info.encoding),
-                               'desc': l10n.import_string(corp_info.description,
-                                                          from_encoding=corp_info.encoding),
-                               'size': corp_info.size,
-                               'path': path
-                               })
-                except Exception, e:
-                    import logging
-                    logging.getLogger(__name__).warn(
-                        u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
-                                                                               type(e).__name__, e))
-                    cl.append({
-                        'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
-                        'path': path, 'desc': '', 'size': None})
-        return cl
-
     def setup(self, controller_obj):
         """
         Interface method expected by KonText if a module wants to be set-up by
@@ -428,7 +610,10 @@ class CorpTree(AbstractSearchableCorporaArchive):
 
     def _export_featured(self, user_id):
         permitted_corpora = self._auth.permitted_corpora(user_id)
-        is_featured = lambda o: o['metadata'].get('featured', False)
+
+        def is_featured(o):
+            return o['metadata'].get('featured', False)
+
         featured = []
         for x in self._raw_list().values():
             if x['id'] in permitted_corpora and is_featured(x):
@@ -448,124 +633,15 @@ class CorpTree(AbstractSearchableCorporaArchive):
             'max_num_hints': self._max_num_hints
         }
 
-    def _parse_query(self, query):
-        if query is not None:
-            tokens = re.split(r'\s+', query.strip())
-        else:
-            tokens = []
-        query_keywords = []
-        substrs = []
-        for t in tokens:
-            if len(t) > 0:
-                if t[0] == self._tag_prefix:
-                    query_keywords.append(t[1:])
-                else:
-                    substrs.append(t)
-        return substrs, query_keywords
-
     def customize_search_result_item(self, plugin_api, item, permitted_corpora, full_data):
         pass
 
-    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
-        if query is False:  # False means 'use default values'
-            query = ''
-        ans = {'rows': []}
-        permitted_corpora = self._auth.permitted_corpora(user_id)
-        user_items = self._user_items.get_user_items(user_id)
-        used_keywords = set()
-        all_keywords_map = dict(self.all_keywords)
-        if filter_dict.get('minSize'):
-            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
-        else:
-            min_size = 0
-        if filter_dict.get('maxSize'):
-            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
-        else:
-            max_size = None
-        corplist = self.get_list(permitted_corpora)
-
-        if offset is None:
-            offset = 0
-        else:
-            offset = int(offset)
-
-        if limit is None:
-            limit = self._max_page_size
-
-        def cut_result(res):
-            if limit is not None:
-                right_lim = offset + int(limit)
-                new_res = res[offset:right_lim]
-                if right_lim >= len(res):
-                    right_lim = None
-            else:
-                right_lim = None
-                new_res = res
-            return new_res, right_lim
-
-        def is_fav(corpus_id):
-            for item in user_items:
-                if isinstance(item, CorpusItem) and item.corpus_id == corpus_id:
-                    return True
-            return False
-
-        query_substrs, query_keywords = self._parse_query(query)
-        matches_all = lambda d: reduce(lambda prev, curr: prev and curr, d, True)
-
-        def matches_size(d):
-            item_size = d.get('size', None)
-            return (item_size is not None and
-                    (not min_size or int(item_size) >= int(min_size)) and
-                    (not max_size or int(item_size) <= int(max_size)))
-
-        normalized_query_substrs = [s.lower() for s in query_substrs]
-
-        for corp in corplist:
-            full_data = self.get_corpus_info(corp['id'], self.getlocal('lang'))
-            if not isinstance(full_data, BrokenCorpusInfo):
-                keywords = [k for k in full_data['metadata']['keywords'].keys()]
-                hits = []
-                found_in = []
-
-                hits.extend([k in keywords for k in query_keywords])
-                for s in normalized_query_substrs:
-                    # the name must be tested first to prevent the list 'found_in'
-                    # to be filled in case item matches both name and description
-                    if s in corp['name'].lower():
-                        hits.append(True)
-                    elif s in (corp['desc'].lower() if corp['desc'] else ''):
-                        hits.append(True)
-                        found_in.append(_('description'))
-                    else:
-                        hits.append(False)
-                hits.append(matches_size(corp))
-                hits.append(self.custom_filter(plugin_api, full_data, permitted_corpora))
-
-                if matches_all(hits):
-                    corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
-                    corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
-                    corp['found_in'] = found_in
-                    corp['user_item'] = is_fav(corp['id'])
-                    self.customize_search_result_item(plugin_api, corp, permitted_corpora, full_data)
-                    ans['rows'].append(corp)
-                    used_keywords.update(keywords)
-
-        corp_cmp_key = lambda c: c.get('name') if c.get('name') is not None else ''
-        ans['rows'], ans['nextOffset'] = cut_result(l10n.sort(ans['rows'], loc=self._lang(),
-                                                              key=corp_cmp_key))
-        ans['keywords'] = l10n.sort(used_keywords, loc=self._lang())
-        ans['query'] = query
-        ans['current_keywords'] = query_keywords
-        ans['filters'] = dict(filter_dict)
-        return ans
-
     def initial_search_params(self, query, filter_dict=None):
-        query_substrs, query_keywords = self._parse_query(query)
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         all_keywords = self.all_keywords
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k)) for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
-            'currKeywords': [],  # TODO
             'filters': {
                 'maxSize': filter_dict.getlist('maxSize'),
                 'minSize': filter_dict.getlist('minSize')
@@ -578,11 +654,11 @@ def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance
     """
-    return CorpTree(auth=auth,
-                    user_items=user_items,
-                    file_path=conf.get('plugins', 'corparch')['file'],
-                    root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
-                    tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                    max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
-                    max_page_size=conf.get('plugins', 'corparch').get(
-                        'default:default_page_list_size', None))
+    return CorpusArchive(auth=auth,
+                         user_items=user_items,
+                         file_path=conf.get('plugins', 'corparch')['file'],
+                         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
+                                                                           None))

@@ -49,6 +49,9 @@ Required config.xml/plugins entries:
         [a list of recipients/adminstrators who will be notified about request; use child
          elements here]
     </access_req_recipients>
+    <default_label extension-by="ucnk">
+        [corpus label to be selected by default in case user has not already selected anything]
+    </default_label>
 </corparch>
 
 How does the corpus list specification XML entry looks like:
@@ -80,7 +83,7 @@ import logging
 
 import plugins
 from plugins import inject
-from plugins.default_corparch import CorpTree
+from plugins.default_corparch import CorpusArchive, CorpSearch, parse_query
 from plugins.abstract.corpora import CorpusInfo
 import l10n
 from controller import exposed
@@ -112,7 +115,7 @@ def ask_corpus_access(controller, request):
     return ans
 
 
-class UcnkCorpArch(CorpTree):
+class UcnkCorpArch(CorpusArchive):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -142,14 +145,16 @@ class UcnkCorpArch(CorpTree):
         initial_query = query
         if query is False:
             query = ''
-        query_substrs, query_keywords = self._parse_query(query)
+        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         if len(query_keywords) == 0 and initial_query is False:
             query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
         else:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
-        return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
+        search_obj = CorpSearch(plugin_api, self._auth, self, self._tag_prefix)
+        return super(UcnkCorpArch, self).search_via_service(search_obj, user_id, query, offset,
+                                                            limit, filter_dict)
 
     def send_request_email(self, corpus_id, user, user_id, custom_message):
         """
