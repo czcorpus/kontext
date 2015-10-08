@@ -270,18 +270,18 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 return (
                     <div className={classes}>
+                        <div className="button-box">
+                            <a className="close-icon">
+                                <img src="../files/img/close-icon.png"
+                                    onClick={this._handleCloseClick } />
+                            </a>
+                        </div>
                         <div className="icon-box">
                             <img className="icon" alt="message"
                                  src={ typeIconMap[this.props.messageType] } />
                         </div>
                         <div className="message-text">
                             <span>{ this.props.messageText }</span>
-                        </div>
-                        <div className="button-box">
-                            <a className="close-icon">
-                                <img src="../files/img/close-icon.png"
-                                    onClick={this._handleCloseClick } />
-                            </a>
                         </div>
                     </div>
                 );

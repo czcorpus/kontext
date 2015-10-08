@@ -161,19 +161,16 @@ button, input[type='button'], input[type='submit'] {
 
 .message .icon-box {
   float: left;
-  width: 10%;
+  padding-right: 1em;
 }
 
 .message .message-text {
   display: inline-block;
-  vertical-align: middle;
-  width: 76%;
-  padding: 0 2%;
 }
 
 .message .button-box {
   float: right;
-  width: 10%;
+  padding-left: 1em;
   text-align: right;
 }
 
@@ -926,6 +923,10 @@ table.envelope {
 
 table.envelope table {
   border-spacing: 0;
+}
+
+table.envelope tr.attrib-name th.focused {
+  color: @color-logo-pink;
 }
 
 table.envelope table td,

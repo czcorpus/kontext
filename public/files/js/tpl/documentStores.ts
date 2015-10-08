@@ -72,9 +72,18 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
     pluginApi:Kontext.PluginApi;
 
     addMessage(messageType:string, messageText:string) {
-        var msgId = String(Math.random()),
-            timeout,
-            self = this;
+        let msgId = String(Math.random());
+        let timeout;
+        let viewTime = -1;
+        let self = this;
+
+
+        if (messageType === 'warning') {
+            viewTime = self.pluginApi.getConf('messageAutoHideInterval') * 1.5;
+
+        } else if (messageType !== 'error') {
+            viewTime = self.pluginApi.getConf('messageAutoHideInterval');
+        }
 
         this.messages.push({
             messageType: messageType,
@@ -82,7 +91,7 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
             messageId: msgId
         });
 
-        if (messageType !== 'error') {
+        if (viewTime > 0) {
             timeout = win.setTimeout(function () {
                 self.removeMessage(msgId);
                 win.clearTimeout(timeout);
