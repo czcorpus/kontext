@@ -462,6 +462,30 @@ button#reset-tag-button {
   margin-top: 12px;
 }
 
+.range-selector div {
+  padding: 0.3em 0;
+}
+
+table.envelope.locked .define-range {
+  color: @color-light-text;
+}
+
+table.envelope a.define-range {
+  display: block;
+  cursor: pointer;
+  color: @color-logo-blue;
+  text-align: center;
+}
+
+table.envelope a.define-range.locked {
+  cursor: default;
+  text-decoration: none;
+}
+
+table.envelope a.define-range:hover {
+  text-decoration: none;
+}
+
 // ---------------- typeahead plugin --------------------
 
 .tt-menu  {

@@ -72,6 +72,10 @@ def create_str_vector():
     return manatee.StrVector()
 
 
+def conf_bool(v):
+    return v in ('y', 'yes', 'true', 't', '1')
+
+
 class CorpusManager(object):
 
     def __init__(self, subcpath=()):
@@ -328,6 +332,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
                 'label': corp.get_conf(n + '.LABEL') or n,
                 'attr_doc': corp.get_conf(n + '.ATTRDOC'),
                 'attr_doc_label': corp.get_conf(n + '.ATTRDOCLABEL'),
+                'numeric': conf_bool(corp.get_conf(n + '.NUMERIC'))
             }
             hsep = corp.get_conf(n + '.HIERARCHICAL')
             multisep = corp.get_conf(n + '.MULTISEP')
@@ -339,7 +344,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
                                             or 24)
             else:  # list of values
-                if corp.get_conf(n + '.NUMERIC'):
+                if conf_bool(corp.get_conf(n + '.NUMERIC')):
                     vals = []
                     for i in range(attr.id_range()):
                         try:
@@ -362,6 +367,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
                 if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
+                elif conf_bool(corp.get_conf(n + '.NUMERIC')):
+                    attrval['Values'] = sorted(vals, key=lambda x: x['v'])
                 else:
                     attrval['Values'] = sorted(vals, cmp=lambda x, y: cmp(x['v'].lower(), y['v'].lower()))
             attrvals.append(attrval)

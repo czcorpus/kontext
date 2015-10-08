@@ -19,11 +19,12 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
-import popupBox = require("popupbox");
+import popupBox = require('popupbox');
+import $ = require('jquery');
 
 function stripPrefix(s: string): string {
-    var x = /^sca_(.+)$/,
-        ans: RegExpExecArray;
+    let x = /^sca_(.+)$/;
+    let ans:RegExpExecArray;
 
     ans = x.exec(s);
     if (ans) {
@@ -96,9 +97,9 @@ class LiveData {
      *
      */
     private renderBibliography(data:Array<string>, rootElm:HTMLElement):void {
-        var jqRootElm:JQuery = $(rootElm);
+        let jqRootElm:JQuery = $(rootElm);
 
-        for (var p in data) {
+        for (let p in data) {
             if (data.hasOwnProperty(p) && data[p]) {
                 jqRootElm.append('<strong>' + p + '</strong>: ' + data[p] + '<br />');
             }
@@ -109,7 +110,7 @@ class LiveData {
      *
      */
     private createSelectAllBib():HTMLElement {
-        var wrapper:HTMLElement = window.document.createElement('label');
+        let wrapper:HTMLElement = window.document.createElement('label');
 
         $(wrapper).append(' <input type="checkbox" /> ' + this.pluginApi.translate('global__select_all'))
                   .addClass('select-all');
@@ -125,17 +126,17 @@ class LiveData {
      * @returns {*|HTMLElement} created data table
      */
     private createDataTable(rows, defaultRowIdKey:string, bibConf:BibConf, checkedItems) {
-        var table:HTMLElement = window.document.createElement('table'),
-            rowIdentKey:string,   // specifies data key which uniquely identifies data rows
-            rowIdentValue:string, // specifies unique value which identifies respective data row
-            rowIdentTitle:string;
+        let table:HTMLElement = window.document.createElement('table');
+        let rowIdentKey:string;   // specifies data key which uniquely identifies data rows
+        let rowIdentValue:string; // specifies unique value which identifies respective data row
+        let rowIdentTitle:string;
 
         $(table).addClass('dynamic');
         $.each(rows, function (i:number, row:any) {
-            var checked = $.inArray(typeof row === 'object' ? row[1] : row, checkedItems) > -1,
-                bibLink,
-                itemLabel,
-                labelAttrName;
+            let checked = $.inArray(typeof row === 'object' ? row[1] : row, checkedItems) > -1;
+            let bibLink;
+            let itemLabel;
+            let labelAttrName;
 
             if ($.isArray(row)) { // => value and label differ
                 itemLabel = row[0];
@@ -182,11 +183,11 @@ class LiveData {
      * @param {HTMLElement|string|jQuery} target
      */
     private bindBibLink(target: HTMLElement) {
-        var self = this;
+        let self = this;
 
         popupBox.bind(target,
             function (tooltipBox, finalizeCallback) {
-                var ajaxAnimElm = self.pluginApi.ajaxAnim();
+                let ajaxAnimElm = self.pluginApi.ajaxAnim();
 
                 $(ajaxAnimElm).css({
                     'position': 'absolute',
@@ -207,7 +208,7 @@ class LiveData {
                     {
                         dataType: 'json',
                         success: function (data) {
-                            var bibHtml = document.createElement('div');
+                            let bibHtml = document.createElement('div');
 
                             $(ajaxAnimElm).remove();
                             self.renderBibliography(data['bib_data'], bibHtml);
@@ -231,18 +232,18 @@ class LiveData {
      * Updates current state according to the 'data' argument
      */
     update(data:AttributesMap) {
-        var self = this;
+        let self = this;
 
         self.attrFieldsetWrapper.find('.raw-selection').each(function () {
-            var ident = stripPrefix($(this).attr('name')),
-                dataItem:AvailAttrValues = data[ident],
-                inputElm = this,
-                attrTable:JQuery = $(this).closest('table.envelope'),
-                checkedItems = [],
-                selectAll:HTMLElement,
-                dataTable:HTMLElement,
-                msg = self.pluginApi.translate('ucnkLA__num_of_matching_items'),
-                helpLink = window.document.createElement('a');
+            let ident = stripPrefix($(this).attr('name'));
+            let dataItem:AvailAttrValues = data[ident];
+            let inputElm = this;
+            let attrTable:JQuery = $(this).closest('table.envelope');
+            let checkedItems = [];
+            let selectAll:HTMLElement;
+            let dataTable:HTMLElement;
+            let msg = self.pluginApi.translate('ucnkLA__num_of_matching_items');
+            let helpLink = window.document.createElement('a');
 
             attrTable.find('table.dynamic .attr-selector:checked').each(function () {
                 checkedItems.push($(this).val());
@@ -315,7 +316,7 @@ class Checkboxes {
      * @returns {any}
      */
     private attrValsContain(value:string, vals:Array<any>):boolean {
-        var ans:boolean;
+        let ans:boolean;
 
         if (vals.length === 0) {
             ans = false;
@@ -327,7 +328,7 @@ class Checkboxes {
             ans = false;
             $.each(vals, function (i, item) {
                 // (0 = shortened, 1 = id, 2 = full title)
-                if (item[1] === value) {
+                if (String(item[1]) === String(value)) {
                     ans = true;
                     return false;
                 }
@@ -340,13 +341,13 @@ class Checkboxes {
      * Updates the checkboxes according to provided 'data' argument
      */
     update(data):void {
-        var self = this;
+        let self = this;
 
         this.attrFieldsetWrapper.find('.attr-selector').each(function () {
-            var id,
-                trElm = $(this).closest('tr'),
-                labelElm = $(this).closest('label'),
-                inputVal = $(this).val() !== self.pluginApi.getConf('emptyAttrValuePlaceholder') ? $(this).val() : '';
+            let id;
+            let trElm = $(this).closest('tr');
+            let labelElm = $(this).closest('label');
+            let inputVal = $(this).val() !== self.pluginApi.getConf('emptyAttrValuePlaceholder') ? $(this).val() : '';
 
 
             if ($(this).attr('data-virt-name')) {
@@ -355,6 +356,7 @@ class Checkboxes {
             } else {
                 id = stripPrefix($(this).attr('name'));
             }
+
             if (!self.attrValsContain(inputVal, data[id])) {
                 trElm.addClass('excluded');
                 labelElm.removeClass('locked');
@@ -408,10 +410,10 @@ class Checkboxes {
      * @returns {{}}
      */
     exportStatus():AttributesMap {
-        var ans:AttributesMap = {};
+        let ans:AttributesMap = {};
 
         this.attrFieldsetWrapper.find('.attr-selector:checked').each(function () {
-            var key:string = stripPrefix($(this).attr('name'));
+            let key:string = stripPrefix($(this).attr('name'));
 
             if (!ans.hasOwnProperty(key)) {
                 ans[key] = [];
@@ -583,30 +585,188 @@ class SelectionSteps {
  */
 class StructTables {
 
+    pluginApi:Kontext.QueryPagePluginApi;
+
     attrFieldsetWrapper:JQuery;
 
     selectionSteps:SelectionSteps;
+
+    checkboxes:Checkboxes;
+
+    tables:{[attribute:string]:HTMLElement};
+
+    numericFlags:{[attribute:string]:boolean};
 
     /**
      *
      * @param attrFieldsetWrapper
      * @param selectionSteps
      */
-    constructor(attrFieldsetWrapper:JQuery, selectionSteps:SelectionSteps) {
+    constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:JQuery,
+            selectionSteps:SelectionSteps, checkboxes:Checkboxes) {
+        this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
         this.selectionSteps = selectionSteps;
+        this.checkboxes = checkboxes;
+        this.tables = {};
+        this.numericFlags = {};
+    }
+
+    init():void {
+        let self = this;
+        this.attrFieldsetWrapper.find('table.envelope').each(function () {
+            let attribName = $(this).attr('data-attr');
+            self.tables[attribName] = this;
+            self.numericFlags[attribName] = Boolean(parseInt($(this).attr('data-is-numeric')));
+            if (self.tableIsNumeric(attribName)) {
+                self.createRangePanel(attribName);
+            }
+        });
+    }
+
+    private getTableHeadingRow(attribName:string):HTMLElement {
+        if (this.tables.hasOwnProperty(attribName)) {
+            return $(this.tables[attribName]).find('tr.attrib-name:nth-child(1)').get(0);
+        }
+        return undefined;
+    }
+
+    private setTableHighlight(attribName:string, state:boolean) {
+        let tr = this.getTableHeadingRow(attribName);
+
+        if (tr) {
+            if (state) {
+                $(tr).find('th').addClass('focused');
+
+            } else {
+                $(tr).find('th').removeClass('focused');
+            }
+        }
+    }
+
+    private checkRange(attribName:string, from:number, to:number, overwrite:boolean):number {
+        let tab = this.tables[attribName];
+        let numChecked = 0;
+        if (tab) {
+            $(tab).find('input.attr-selector').each(function () {
+                let v = parseInt($(this).val());
+                if ((v >= from || isNaN(from)) && (v <= to || isNaN(to))) {
+                    $(this).prop('checked', true);
+                    numChecked += 1;
+
+                } else if (overwrite) {
+                    $(this).prop('checked', false);
+                }
+            });
+        }
+        return numChecked;
+    }
+
+    private createRangeButton(attribName:string):HTMLElement {
+        let actionLink:HTMLElement = window.document.createElement('a');
+        let self = this;
+
+        $(actionLink)
+            .addClass('define-range')
+            .text(this.pluginApi.translate('ucnkLA__select_range'));
+
+        popupBox.bind(
+            actionLink,
+            function (tooltipBox:popupBox.TooltipBox, finalizeCallback) {
+                let rootElm:HTMLElement = tooltipBox.getRootElement();
+
+                $(rootElm).append(
+                    '<h3>' + self.pluginApi.translate('ucnkLA__define_range{attrib}', {attrib: attribName})
+                    + '</h3>'
+                    + '<div><label><input class="overwrite-current" type="checkbox" checked="checked" />'
+                        + self.pluginApi.translate('ucnkLA__reset_current_selection') + '</label>'
+                    + '<label></div><div>'
+                    + self.pluginApi.translate('ucnkLA__from') + ':&nbsp;'
+                    + '<input class="from-value" type="text" style="width: 5em" />'
+                    + '</label>&nbsp;'
+                    + '<label>'
+                    + self.pluginApi.translate('ucnkLA__to') + ':&nbsp;'
+                    + '<input class="to-value" type="text" style="width: 5em" />'
+                    + '</label>'
+                    + '</div>'
+                    + '<button class="default-button confirm-range" type="button">'
+                    + self.pluginApi.translate('ucnkLA__OK') + '</button>'
+                );
+                $(rootElm).find('button.confirm-range').on('click', function (evt) {
+                    let fromVal = parseInt($(rootElm).find('input.from-value').val());
+                    let toVal = parseInt($(rootElm).find('input.to-value').val());
+                    let numChecked;
+
+                    if (isNaN(fromVal) && isNaN(toVal)) {
+                        self.pluginApi.showMessage('warning',
+                                self.pluginApi.translate('ucnkLA__at_least_one_required'));
+
+                    } else {
+                        numChecked = self.checkRange(
+                            attribName,
+                            fromVal,
+                            toVal,
+                            $(rootElm).find('input.overwrite-current').is(':checked')
+                        );
+
+                        if (numChecked > 0) {
+                            tooltipBox.close();
+
+                        } else {
+                            self.pluginApi.showMessage('warning',
+                                self.pluginApi.translate('ucnkLA__nothing_selected'));
+                        }
+                    }
+                });
+                finalizeCallback();
+            },
+            {
+                type: 'plain',
+                closeIcon: true,
+                htmlClass: 'range-selector',
+                onClose: function () {
+                    self.setTableHighlight(attribName, false);
+                },
+                onShow : function () {
+                    self.setTableHighlight(attribName, true);
+                },
+                timeout: 0
+            }
+        );
+
+        return actionLink;
+    }
+
+    private createRangePanel(attribName:string) {
+        let table = this.tables[attribName];
+        if (table) {
+            let firstRow = $(table).find('tr.attrib-name:nth-child(1)');
+            let tr = window.document.createElement('tr');
+            let td = window.document.createElement('td');
+            firstRow.after(tr);
+            $(tr).append(td);
+            $(td).append(this.createRangeButton(attribName));
+        }
+    }
+
+    tableIsNumeric(attribName:string) {
+        return this.numericFlags[attribName];
     }
 
     /**
      *
      */
     update():void {
-        var self = this;
+        let self = this;
 
         $.each(this.selectionSteps.usedAttributes(), function (i, v) {
             self.attrFieldsetWrapper.find('table[data-attr="' + v + '"]').each(function () {
                 $(this).addClass('locked');
                 $(this).find('tr.last-line label').hide();
+                let tab = self.tables[v];
+                if (tab && self.tableIsNumeric(v)) {
+                    $(tab).find('a.define-range').off('click').addClass('locked');
+                }
             });
         });
     }
@@ -725,8 +885,8 @@ class Plugin {
         this.alignedCorpora = new AlignedCorpora(pluginApi);
         this.checkboxes = new Checkboxes(pluginApi, this.attrFieldsetWrapper);
         this.selectionSteps = new SelectionSteps(pluginApi);
-        this.structTables = new StructTables(this.attrFieldsetWrapper,
-            this.selectionSteps);
+        this.structTables = new StructTables(this.pluginApi, this.attrFieldsetWrapper,
+            this.selectionSteps, this.checkboxes);
     }
 
     resetAll = () => { // using lexical scope here
@@ -777,14 +937,13 @@ class Plugin {
      *
      */
     loadData(successAction:(d, s) => void, ajaxAnimation:AjaxAnimation, selectedCheckboxes:AttributesMap) {
-        var self = this,
-            requestURL:string,
-            alignedCorpnames;
+        let self = this;
+        let requestURL:string;
+        let alignedCorpnames;
+        let ajaxProm;
 
-        requestURL = self.pluginApi.getConf('rootURL')
-                + 'filter_attributes?corpname='
-                + this.pluginApi.getConf('corpname');
-
+        requestURL = self.pluginApi.createActionUrl('filter_attributes?corpname='
+                        + this.pluginApi.getConf('corpname'));
         alignedCorpnames = this.alignedCorpora.findSelected();
         if (alignedCorpnames) {
             requestURL += '&aligned=' + JSON.stringify(alignedCorpnames);
@@ -792,19 +951,28 @@ class Plugin {
 
         ajaxAnimation.start();
 
-        this.pluginApi.ajax(requestURL, {
+        ajaxProm = $.ajax(requestURL, {
             type: 'POST',
             dataType: 'json',
             data: 'attrs=' + JSON.stringify(selectedCheckboxes),
-            success: function (data) {
-                successAction(data, selectedCheckboxes);
+        });
+
+        ajaxProm.then(
+            function (data) {
+                if (!data.error) {
+                    successAction(data, selectedCheckboxes);
+
+                } else {
+                    self.pluginApi.showMessage('error', data.error);
+                }
                 ajaxAnimation.stop();
+
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            function (jqXHR, textStatus, errorThrown) {
                 ajaxAnimation.stop();
                 self.pluginApi.showMessage('error', errorThrown);
             }
-        });
+        );
     }
 
     /**
@@ -844,11 +1012,11 @@ class Plugin {
      *
      */
     initializeSearchAttrFiledsets(): void {
-        var self = this,
-            fieldset = $('#specify-query-metainformation'),
-            ajaxAnimation:AjaxAnimation,
-            bibAttr:string = fieldset.find('.text-type-params').attr('data-bib-attr'),
-            bibTable:JQuery = null;
+        let self = this;
+        let fieldset = $('#specify-query-metainformation');
+        let ajaxAnimation:AjaxAnimation;
+        let bibAttr:string = fieldset.find('.text-type-params').attr('data-bib-attr');
+        let bibTable:JQuery = null;
 
         if (bibAttr) {
             fieldset.find('table.envelope').each(function (i, table) {
@@ -885,7 +1053,7 @@ class Plugin {
      * are ready.
      */
     init(): void {
-        var self = this;
+        let self = this;
 
         this.attrFieldsetWrapper.find('.attr-selector').on('click', function () {
             if ($(this).is(':checked')) {
@@ -906,6 +1074,7 @@ class Plugin {
                 self.initializeSearchAttrFiledsets();
             }
         });
+        this.structTables.init();
     }
 }
 
@@ -919,6 +1088,6 @@ class Plugin {
 export function init(pluginApi:Kontext.QueryPagePluginApi,
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement) {
-    var plugin = new Plugin(pluginApi, attrFieldsetWrapper, updateButton, resetButton);
+    let plugin = new Plugin(pluginApi, attrFieldsetWrapper, updateButton, resetButton);
     plugin.init();
 }

@@ -41,8 +41,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     #for $t in $TextTypeSel['Blocks']  ## f1
     #for $l in $t['Line'] ## f2
 
-    <table class="envelope" data-attr="$_($l['label'])" border="0">
-        <tr>
+    <table class="envelope" data-attr="$_($l['label'])" data-is-numeric="$int($l['numeric'])" border="0">
+        <tr class="attrib-name">
             <th>
                 $_($l['label'])
                 #if 'label_hint' in $l ## 1
@@ -95,7 +95,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                 </ul>
                             </td>
                         </tr>
-                        #else
+                        #else  ## non-hierarchical
                         #set $i = 0
                         #for $v in $l['Values'] ## f3
                         #if 'v' in $v ## 3
