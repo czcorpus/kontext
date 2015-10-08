@@ -298,7 +298,7 @@ class LiveAttributes(AbstractLiveAttributes):
                         ans[attr].add((self.shorten_value(unicode(v)),
                                        item[srch_attr_map[bib_id]], unicode(v)))
                     elif type(ans[attr]) is set:
-                        ans[attr].add((self.shorten_value(v), v, v))
+                        ans[attr].add((self.shorten_value(unicode(v)), v, v))
                     elif type(ans[attr]) is int:
                         ans[attr] += int(v)
 

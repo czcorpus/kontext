@@ -2,7 +2,7 @@
   "name": "KonText",
   "description": "An alternative web front-end for the Manatee corpus search engine",
   "license": "GPL-2.0",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/tomachalek/kontext.git"
@@ -23,9 +23,5 @@
     "xmldom": "~0.1.19",
     "grunt-babel": "~5.0.1",
     "merge": "~1.2.0"
-  },
-  "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/ucnk/kontext"
   }
 }
