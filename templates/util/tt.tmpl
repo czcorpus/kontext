@@ -110,9 +110,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                 #end if ## -4
                                 <label><input id="sca.$i.$l['name']" class="attr-selector" type="checkbox"
                                               name="sca_$l['name']"
-                                              value="#if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#"
+                                              value="#if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#"
                                               $checked />
-                                    #if $v['v']#$_($v['v'])#else#$empty_attr_value_placeholder#end if#</label>
+                                    #if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#</label>
                             </td>
                             #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical') ## 4
                             <td class="num">$v.get('xcnt', '')</td>
