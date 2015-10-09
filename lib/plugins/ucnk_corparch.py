@@ -198,8 +198,14 @@ class UcnkCorpArch(CorpusArchive):
     def create_corpus_info(self):
         return UcnkCorpusInfo()
 
+    def _get_range_attributes(self, corp_info, corp_node):
+        root = corp_node.find('metadata/range_attrs')
+        if root is not None:
+            corp_info.metadata.range_attrs = [x.text for x in root.findall('*')]
+
     def customize_corpus_info(self, corpus_info, node):
         corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))
+        self._get_range_attributes(corpus_info, node)
 
     def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
         item['requestable'] = corpus_info.requestable and corpus_info.id not in permitted_corpora \

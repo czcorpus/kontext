@@ -597,6 +597,8 @@ class StructTables {
 
     numericFlags:{[attribute:string]:boolean};
 
+    rangeFlags:{[attribute:string]:boolean};
+
     /**
      *
      * @param attrFieldsetWrapper
@@ -610,6 +612,7 @@ class StructTables {
         this.checkboxes = checkboxes;
         this.tables = {};
         this.numericFlags = {};
+        this.rangeFlags = {};
     }
 
     init():void {
@@ -618,6 +621,7 @@ class StructTables {
             let attribName = $(this).attr('data-attr');
             self.tables[attribName] = this;
             self.numericFlags[attribName] = Boolean(parseInt($(this).attr('data-is-numeric')));
+            self.rangeFlags[attribName] = Boolean(parseInt($(this).attr('data-is-range')));
             if (self.tableIsNumeric(attribName)) {
                 self.createRangePanel(attribName);
             }
@@ -662,6 +666,89 @@ class StructTables {
         return numChecked;
     }
 
+    private checkIntervalRange(attribName:string, from:number, to:number, strictMode:boolean, overwrite:boolean):number {
+        let tab = this.tables[attribName];
+        let numChecked = 0;
+        if (tab) {
+            $(tab).find('input.attr-selector').each(function () {
+                let v = $(this).val();
+                let lft;
+                let rgt;
+
+                if (v.indexOf('/') > -1) {
+                    let range;
+                    let center;
+
+                    [center, range] = v.split('/');
+                    if (range.indexOf('+') === 0) {
+                        lft = parseInt(center);
+                        rgt = parseInt(center) + parseInt(range);
+
+                    } else {
+                        lft = parseInt(center) - parseInt(range);
+                        rgt = parseInt(center) + parseInt(range);
+                    }
+
+                } else {
+                    lft = parseInt(v);
+                    rgt = lft;
+                }
+                if (strictMode) {
+                    if ((lft >= from && rgt >= from && lft <= to && rgt <= to)
+                            || (lft <= to && rgt <= to && isNaN(from))
+                            || (lft >= from && rgt >= from && isNaN(to))) {
+                        $(this).prop('checked', true);
+                        numChecked += 1;
+
+                    } else if (overwrite) {
+                        $(this).prop('checked', false);
+                    }
+
+                } else {
+                    if ((lft >= from && lft <= to) || (lft >= from && isNaN(to)) || (rgt >= from && isNaN(to))
+                            || (rgt >= from && rgt <= to) || (lft <= to && isNaN(from)) || (rgt <= to && isNaN(from))) {
+                        $(this).prop('checked', true);
+                        numChecked += 1;
+
+                    } else {
+                        $(this).prop('checked', false);
+                    }
+                }
+            });
+        }
+        return numChecked;
+    }
+
+    private createIntervalLimitsSwitch():HTMLElement {
+        let div = window.document.createElement('div');
+        let select = window.document.createElement('select');
+        let hintDiv = window.document.createElement('div');
+        let label = window.document.createElement('span');
+
+        $(label)
+            .addClass('label')
+            .text(this.pluginApi.translate('ucnkLA__interval_inclusion_policy') + ': ');
+
+        $(div).append(label);
+        $(select)
+            .addClass('interval-behavior')
+            .append('<option value="strict">' + this.pluginApi.translate('ucnkLA__strict_interval') + '</option>')
+            .append('<option value="relaxed">' + this.pluginApi.translate('ucnkLA__partial_interval') + '</option>');
+        $(div).append(select);
+        $(hintDiv).addClass('hint-diagram');
+        $(div).append(hintDiv);
+        $(select).on('change', function (event:JQueryEventObject) {
+            if ($(event.target).val() === 'strict') {
+                $(hintDiv).removeClass('alt');
+
+            } else {
+                $(hintDiv).addClass('alt');
+            }
+        });
+
+        return div;
+    }
+
     private createRangeButton(attribName:string):HTMLElement {
         let actionLink:HTMLElement = window.document.createElement('a');
         let self = this;
@@ -680,7 +767,9 @@ class StructTables {
                     + '</h3>'
                     + '<div><label><input class="overwrite-current" type="checkbox" checked="checked" />'
                         + self.pluginApi.translate('ucnkLA__reset_current_selection') + '</label>'
-                    + '<label></div><div>'
+                    + '<label></div>'
+                    + '<div class="interval-switch"></div>'
+                    + '<div>'
                     + self.pluginApi.translate('ucnkLA__from') + ':&nbsp;'
                     + '<input class="from-value" type="text" style="width: 5em" />'
                     + '</label>&nbsp;'
@@ -692,6 +781,9 @@ class StructTables {
                     + '<button class="default-button confirm-range" type="button">'
                     + self.pluginApi.translate('ucnkLA__OK') + '</button>'
                 );
+                if (self.tableIsRange(attribName)) {
+                    $(rootElm).find('div.interval-switch').append(self.createIntervalLimitsSwitch());
+                }
                 $(rootElm).find('button.confirm-range').on('click', function (evt) {
                     let fromVal = parseInt($(rootElm).find('input.from-value').val());
                     let toVal = parseInt($(rootElm).find('input.to-value').val());
@@ -702,12 +794,25 @@ class StructTables {
                                 self.pluginApi.translate('ucnkLA__at_least_one_required'));
 
                     } else {
-                        numChecked = self.checkRange(
-                            attribName,
-                            fromVal,
-                            toVal,
-                            $(rootElm).find('input.overwrite-current').is(':checked')
-                        );
+                        let intervalSwitch = $(rootElm).find('select.interval-behavior');
+
+                        if (intervalSwitch.length > 0) {
+                            numChecked = self.checkIntervalRange(
+                                attribName,
+                                fromVal,
+                                toVal,
+                                intervalSwitch.val() === 'strict',
+                                $(rootElm).find('input.overwrite-current').is(':checked')
+                            );
+
+                        } else {
+                            numChecked = self.checkRange(
+                                attribName,
+                                fromVal,
+                                toVal,
+                                $(rootElm).find('input.overwrite-current').is(':checked')
+                            );
+                        }
 
                         if (numChecked > 0) {
                             tooltipBox.close();
@@ -750,7 +855,11 @@ class StructTables {
     }
 
     tableIsNumeric(attribName:string) {
-        return this.numericFlags[attribName];
+        return this.numericFlags[attribName] || this.rangeFlags[attribName];
+    }
+
+    tableIsRange(attribName:string) {
+        return this.rangeFlags[attribName];
     }
 
     /**
