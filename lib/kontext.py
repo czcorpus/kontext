@@ -1296,7 +1296,7 @@ class Kontext(Controller):
             ans['bib_attr'] = None
             list_none = ()
         tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
-        self._add_text_type_hints(tt)
+        self._add_tt_custom_metadata(tt)
 
         if ret_nums:
             basestructname = subcorpattrs.split('.')[0]
@@ -1423,14 +1423,18 @@ class Kontext(Controller):
         return self._texttype_query_OLD(obj=request, access=lambda o, x: apply(o.form.getlist, (x,)),
                                         attr_producer=lambda o: o.form.keys())
 
-    @staticmethod
-    def _add_text_type_hints(tt):
+    def _add_tt_custom_metadata(self, tt):
+        metadata = plugins.get('corparch').get_corpus_info(
+                               self.args.corpname, language=self.ui_lang)['metadata']
         if settings.contains('external_links', 'corpora_related'):
             hints = dict([(x[1]['key'], x[0]) for x in settings.get_full('external_links', 'corpora_related')])
-            for line in tt:
-                for item in line.get('Line', ()):
-                    if 'label' in item and item['label'] in hints:
-                        item['label_hint'] = hints[item['label']]
+        else:
+            hints = {}
+        for line in tt:
+            for item in line.get('Line', ()):
+                if 'label' in item and item['label'] in hints:
+                    item['label_hint'] = hints[item['label']]
+                item['is_range'] = int(item['label'] in metadata.get('range_attrs', []))
 
     @staticmethod
     def _store_checked_text_types(src_obj, out):

@@ -46,9 +46,9 @@ ITEM_COLS = [
     ('corpus_id', unicode),
     ('doc_titul', unicode),
     ('doc_autor', unicode),
-    #('doc_rok', int),
-    ('doc_rok_zacatek', int),
-    ('doc_rok_konec', int),
+    ('doc_rok', unicode),
+    ('doc_rok_lft', int),
+    ('doc_rok_rgt', int),
     ('doc_diakorp', unicode),
     ('wordcount', int),
     ('poscount', int)
@@ -72,10 +72,8 @@ SCHEMA = (
     %s
     );""" % (', '.join(['%s %s' % (col, type_to_sql(col_type)) for col, col_type in ITEM_COLS])),
 
-    #"""CREATE VIEW bibliography as SELECT doc_titul as id, doc_titul, doc_autor, doc_rok,
-    # doc_diakorp from item"""
-    """CREATE VIEW bibliography as SELECT doc_titul as id, doc_titul, doc_autor, doc_rok_zacatek,
-       doc_rok_konec, doc_diakorp from item"""
+    """CREATE VIEW bibliography as SELECT doc_titul as id, doc_titul, doc_autor, doc_rok,
+     doc_diakorp from item"""
 )
 
 
@@ -139,7 +137,20 @@ def dump_stack(stack):
     return ans
 
 
-def parse_file(f, item_tag, virtual_tags, corpname, encoding):
+def apply_range_attribs(tag_name, attrs, range_attrs):
+    for k in attrs.keys():
+        if '%s.%s' % (tag_name, k) in range_attrs:
+            if '/' in attrs[k]:
+                c, r = map(lambda x: int(x), attrs[k].split('/'))
+
+            else:
+                c = int(attrs[k])
+                r = 0
+            attrs['%s_lft' % k] = c - r
+            attrs['%s_rgt' % k] = c + r
+
+
+def parse_file(f, item_tag, virtual_tags, range_attrs, corpname, encoding):
     """
     Parses a corpus vertical file (or its stripped version containing only tags)
 
@@ -148,6 +159,7 @@ def parse_file(f, item_tag, virtual_tags, corpname, encoding):
     item_tag -- an atomic structure used as a database record (all upper structures are added,
                 all children structures are ignored)
     virtual_tags -- a list of tags to be interpreted as common positions
+    range_attrs -- a list of attributes with uncertain value (= a center and a range)
     corpname -- a corpus id
     encoding -- vertical file encoding (the identifier must be known to Python)
 
@@ -163,13 +175,12 @@ def parse_file(f, item_tag, virtual_tags, corpname, encoding):
         tag, start, attrs = parser.parse_line(line)
         if start is True:
             if tag in virtual_tags:
-                print('ignoring %s' % tag)
                 pos_count += 1
             else:
+                apply_range_attribs(tag, attrs, range_attrs)
                 stack.append((tag, attrs))
         elif start is False:
             if tag in virtual_tags:
-                print('ignoring /%s' % tag)
                 pos_count += 1
             else:
                 if tag == item_tag:
@@ -207,7 +218,8 @@ if __name__ == '__main__':
 
     with open(vert_path, 'r') as f:
         item_gen = parse_file(f, item_tag=conf['atomStructure'], corpname=corpus_id,
-                              encoding=conf['encoding'], virtual_tags=conf.get('virtualTags', []))
+                              encoding=conf['encoding'], virtual_tags=conf.get('virtualTags', []),
+                              range_attrs=conf.get('rangeAttrs', []))
         i = 0
         for div in item_gen:
             insert_record(db, div)
