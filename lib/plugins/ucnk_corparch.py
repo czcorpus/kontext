@@ -199,9 +199,9 @@ class UcnkCorpArch(CorpusArchive):
         return UcnkCorpusInfo()
 
     def _get_range_attributes(self, corp_info, corp_node):
-        root = corp_node.find('metadata/range_attrs')
+        root = corp_node.find('metadata/interval_attrs')
         if root is not None:
-            corp_info.metadata.range_attrs = [x.text for x in root.findall('*')]
+            corp_info.metadata.interval_attrs = [x.text for x in root.findall('*')]
 
     def customize_corpus_info(self, corpus_info, node):
         corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))

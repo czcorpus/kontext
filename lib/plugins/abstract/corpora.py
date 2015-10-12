@@ -44,7 +44,7 @@ class CorpusMetadata(DictLike):
         self.id_attr = None
         self.desc = {}
         self.keywords = {}
-        self.range_attrs = []
+        self.interval_attrs = []
 
 
 class CitationInfo(DictLike):

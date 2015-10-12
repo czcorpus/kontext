@@ -150,7 +150,7 @@ def apply_range_attribs(tag_name, attrs, range_attrs):
             attrs['%s_rgt' % k] = c + r
 
 
-def parse_file(f, item_tag, virtual_tags, range_attrs, corpname, encoding):
+def parse_file(f, item_tag, virtual_tags, interval_attrs, corpname, encoding):
     """
     Parses a corpus vertical file (or its stripped version containing only tags)
 
@@ -159,7 +159,7 @@ def parse_file(f, item_tag, virtual_tags, range_attrs, corpname, encoding):
     item_tag -- an atomic structure used as a database record (all upper structures are added,
                 all children structures are ignored)
     virtual_tags -- a list of tags to be interpreted as common positions
-    range_attrs -- a list of attributes with uncertain value (= a center and a range)
+    interval_attrs -- a list of attributes with uncertain value (= a center and a range)
     corpname -- a corpus id
     encoding -- vertical file encoding (the identifier must be known to Python)
 

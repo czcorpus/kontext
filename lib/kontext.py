@@ -1434,7 +1434,7 @@ class Kontext(Controller):
             for item in line.get('Line', ()):
                 if 'label' in item and item['label'] in hints:
                     item['label_hint'] = hints[item['label']]
-                item['is_range'] = int(item['label'] in metadata.get('range_attrs', []))
+                item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
 
     @staticmethod
     def _store_checked_text_types(src_obj, out):
