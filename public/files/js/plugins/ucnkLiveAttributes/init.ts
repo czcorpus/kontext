@@ -648,25 +648,34 @@ class StructTables {
         }
     }
 
-    private checkRange(attribName:string, from:number, to:number, overwrite:boolean):number {
+    private applyOnCheckboxes(attribName:string, callback:{(i:number, item:HTMLElement):void}):void {
         let tab = this.tables[attribName];
-        let numChecked = 0;
-        if (tab) {
-            $(tab).find('input.attr-selector').each(function () {
-                let v = parseInt($(this).val());
-                if ((v >= from || isNaN(from)) && (v <= to || isNaN(to))) {
-                    $(this).prop('checked', true);
-                    numChecked += 1;
 
-                } else if (overwrite) {
-                    $(this).prop('checked', false);
-                }
-            });
+        if (tab) {
+            $(tab).find('input.attr-selector').each(callback);
+
+        } else {
+            throw new Error('no such attribute table: ' + attribName);
         }
+    }
+
+    private checkRange(attribName:string, from:number, to:number, keepCurrent:boolean):number {
+        let numChecked = 0;
+        this.applyOnCheckboxes(attribName, function (i, item) {
+            let v = parseInt($(item).val());
+            if ((v >= from || isNaN(from)) && (v <= to || isNaN(to))) {
+                $(item).prop('checked', true);
+                numChecked += 1;
+
+            } else if (!keepCurrent) {
+                $(item).prop('checked', false);
+            }
+         });
         return numChecked;
     }
 
-    private checkIntervalRange(attribName:string, from:number, to:number, strictMode:boolean, overwrite:boolean):number {
+    private checkIntervalRange(attribName:string, from:number, to:number,
+            strictMode:boolean, keepCurrent:boolean):number {
         let tab = this.tables[attribName];
         let numChecked = 0;
         if (tab) {
@@ -700,7 +709,7 @@ class StructTables {
                         $(this).prop('checked', true);
                         numChecked += 1;
 
-                    } else if (overwrite) {
+                    } else if (!keepCurrent) {
                         $(this).prop('checked', false);
                     }
 
@@ -761,13 +770,19 @@ class StructTables {
             actionLink,
             function (tooltipBox:popupBox.TooltipBox, finalizeCallback) {
                 let rootElm:HTMLElement = tooltipBox.getRootElement();
+                let numSelected = 0;
+
+                self.applyOnCheckboxes(attribName,
+                        (i, item) => numSelected += $(item).is(':checked') ? 1 : 0);
 
                 $(rootElm).append(
                     '<h3>' + self.pluginApi.translate('ucnkLA__define_range{attrib}', {attrib: attribName})
                     + '</h3>'
-                    + '<div><label><input class="overwrite-current" type="checkbox" checked="checked" />'
-                        + self.pluginApi.translate('ucnkLA__reset_current_selection') + '</label>'
-                    + '<label></div>'
+                    + (numSelected > 0 ?
+                        '<div><label><input class="keep-current" type="checkbox" checked="checked" />'
+                            + self.pluginApi.translate('ucnkLA__keep_current_selection') + '</label>'
+                            + '<label></div>'
+                        : '')
                     + '<div class="interval-switch"></div>'
                     + '<div>'
                     + self.pluginApi.translate('ucnkLA__from') + ':&nbsp;'
@@ -802,7 +817,7 @@ class StructTables {
                                 fromVal,
                                 toVal,
                                 intervalSwitch.val() === 'strict',
-                                $(rootElm).find('input.overwrite-current').is(':checked')
+                                $(rootElm).find('input.keep-current').is(':checked')
                             );
 
                         } else {
@@ -810,7 +825,7 @@ class StructTables {
                                 attribName,
                                 fromVal,
                                 toVal,
-                                $(rootElm).find('input.overwrite-current').is(':checked')
+                                $(rootElm).find('input.keep-current').is(':checked')
                             );
                         }
 
