@@ -476,32 +476,32 @@ define(['win', 'jquery'], function (win, $) {
                 box = $(elm).data('popupBox');
                 box.close();
                 $(elm).data('popupBox', true);
-
-            } else {
-                elmOffset = $(event.target).offset();
-                box = new TooltipBox({
-                    left: elmOffset.left,
-                    top: elmOffset.top,
-                    height: $(event.target).height()
-                }, beforeOpenValue, $(elm).get(0));
-                $(elm).data('popupBox', box);
-                box.open(whereElm, contents, options);
-
-                windowClickHandler = function (event) {
-                    if (event.target !== box.rootElm) {
-                        $(win.document).off('click', windowClickHandler);
-                        box.close();
-                        $(elm).data('popupBox', true);
-                    }
-                };
-
-                if (box.jqCloseIcon) { // explicit closing element is defined
-                    box.jqCloseIcon.on('click', windowClickHandler);
-
-                } else { // click anywhere closes the box
-                    $(win.document).on('click', windowClickHandler);
-                }
             }
+
+            elmOffset = $(event.target).offset();
+            box = new TooltipBox({
+                left: elmOffset.left,
+                top: elmOffset.top,
+                height: $(event.target).height()
+            }, beforeOpenValue, $(elm).get(0));
+            $(elm).data('popupBox', box);
+            box.open(whereElm, contents, options);
+
+            windowClickHandler = function (event) {
+                if (event.target !== box.rootElm) {
+                    $(win.document).off('click', windowClickHandler);
+                    box.close();
+                    $(elm).data('popupBox', true);
+                }
+            };
+
+            if (box.jqCloseIcon) { // explicit closing element is defined
+                box.jqCloseIcon.on('click', windowClickHandler);
+
+            } else { // click anywhere closes the box
+                $(win.document).on('click', windowClickHandler);
+            }
+
             event.preventDefault();
             event.stopPropagation();
         });
