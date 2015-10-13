@@ -45,11 +45,9 @@ import vertparser
 ITEM_COLS = [
     ('corpus_id', unicode),
     ('doc_titul', unicode),
-    ('doc_autor', unicode),
     ('doc_rok', unicode),
     ('doc_rok_lft', int),
     ('doc_rok_rgt', int),
-    ('doc_diakorp', unicode),
     ('wordcount', int),
     ('poscount', int)
 ]
@@ -72,8 +70,7 @@ SCHEMA = (
     %s
     );""" % (', '.join(['%s %s' % (col, type_to_sql(col_type)) for col, col_type in ITEM_COLS])),
 
-    """CREATE VIEW bibliography as SELECT doc_titul as id, doc_titul, doc_autor, doc_rok,
-     doc_diakorp from item"""
+    """CREATE VIEW bibliography as SELECT doc_titul as id, doc_titul, doc_rok FROM item"""
 )
 
 
@@ -137,20 +134,31 @@ def dump_stack(stack):
     return ans
 
 
-def apply_range_attribs(tag_name, attrs, range_attrs):
+def apply_range_attribs(tag_name, attrs, range_attrs, interval_chars):
     for k in attrs.keys():
         if '%s.%s' % (tag_name, k) in range_attrs:
-            if '/' in attrs[k]:
-                c, r = map(lambda x: int(x), attrs[k].split('/'))
-
+            for ic in interval_chars.keys():
+                if ic in attrs[k]:
+                    c, r = map(lambda x: int(x), attrs[k].split(ic))
+                    if interval_chars[ic] == 'left':
+                        r1 = r
+                        r2 = 0
+                    elif interval_chars[ic] == 'right':
+                        r1 = 0
+                        r2 = r
+                    elif interval_chars[ic] == 'both':
+                        r1 = r
+                        r2 = r
+                    break
             else:
                 c = int(attrs[k])
-                r = 0
-            attrs['%s_lft' % k] = c - r
-            attrs['%s_rgt' % k] = c + r
+                r1 = 0
+                r2 = 0
+            attrs['%s_lft' % k] = c - r1
+            attrs['%s_rgt' % k] = c + r2
 
 
-def parse_file(f, item_tag, virtual_tags, interval_attrs, corpname, encoding):
+def parse_file(f, item_tag, virtual_tags, range_attrs, interval_chars, corpname, encoding):
     """
     Parses a corpus vertical file (or its stripped version containing only tags)
 
@@ -159,14 +167,14 @@ def parse_file(f, item_tag, virtual_tags, interval_attrs, corpname, encoding):
     item_tag -- an atomic structure used as a database record (all upper structures are added,
                 all children structures are ignored)
     virtual_tags -- a list of tags to be interpreted as common positions
-    interval_attrs -- a list of attributes with uncertain value (= a center and a range)
+    range_attrs -- a list of attributes with uncertain value (= a center and a range)
+    interval_chars -- a map 'char'=>left|right|both
     corpname -- a corpus id
     encoding -- vertical file encoding (the identifier must be known to Python)
 
     yields:
     a dict until all the rows are processed
     """
-
     pos_count = 0
     parser = vertparser.Parser(encoding=encoding)
     stack = []
@@ -177,7 +185,7 @@ def parse_file(f, item_tag, virtual_tags, interval_attrs, corpname, encoding):
             if tag in virtual_tags:
                 pos_count += 1
             else:
-                apply_range_attribs(tag, attrs, range_attrs)
+                apply_range_attribs(tag, attrs, range_attrs, interval_chars)
                 stack.append((tag, attrs))
         elif start is False:
             if tag in virtual_tags:
@@ -192,6 +200,17 @@ def parse_file(f, item_tag, virtual_tags, interval_attrs, corpname, encoding):
                 stack.pop()
         else:
             pos_count += 1
+
+
+def create_interval_char_map(conf):
+    ans = {}
+    if 'intervalChar' in conf:
+        ans[conf['intervalChar']] = 'both'
+    if 'rightIntervalChar' in conf:
+        ans[conf['rightIntervalChar']] = 'right'
+    if 'leftIntervalChar' in conf:
+        ans[conf['leftIntervalChar']] = 'left'
+    return ans
 
 
 if __name__ == '__main__':
@@ -219,7 +238,8 @@ if __name__ == '__main__':
     with open(vert_path, 'r') as f:
         item_gen = parse_file(f, item_tag=conf['atomStructure'], corpname=corpus_id,
                               encoding=conf['encoding'], virtual_tags=conf.get('virtualTags', []),
-                              range_attrs=conf.get('rangeAttrs', []))
+                              range_attrs=conf.get('rangeAttrs', []),
+                              interval_chars=create_interval_char_map(conf))
         i = 0
         for div in item_gen:
             insert_record(db, div)
