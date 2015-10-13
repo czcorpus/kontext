@@ -599,17 +599,20 @@ class StructTables {
 
     rangeFlags:{[attribute:string]:boolean};
 
+    intervalChars:Array<string>;
+
     /**
      *
      * @param attrFieldsetWrapper
      * @param selectionSteps
      */
     constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:JQuery,
-            selectionSteps:SelectionSteps, checkboxes:Checkboxes) {
+            selectionSteps:SelectionSteps, checkboxes:Checkboxes, intervalChars:Array<string>) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
         this.selectionSteps = selectionSteps;
         this.checkboxes = checkboxes;
+        this.intervalChars = intervalChars;
         this.tables = {};
         this.numericFlags = {};
         this.rangeFlags = {};
@@ -674,34 +677,63 @@ class StructTables {
         return numChecked;
     }
 
+    private decodeRange(s:string):{lft:number, rgt:number} {
+        let center:number;
+        let ans:{lft:number; rgt:number};
+        let parsed:Array<string>;
+        let defines = (ic) => this.intervalChars[ic] && s.indexOf(this.intervalChars[ic]) > -1;
+
+
+        if (defines(IntervalChar.LEFT)) {
+            parsed = s.split(this.intervalChars[IntervalChar.LEFT]);
+            center = parseInt(parsed[0]);
+            ans = {
+                lft: center - parseInt(parsed[1]),
+                rgt: center
+            };
+
+        } else if (defines(IntervalChar.BOTH)) {
+            parsed = s.split(this.intervalChars[IntervalChar.BOTH]);
+            center = parseInt(parsed[0]);
+            ans = {
+                lft: center - parseInt(parsed[1]),
+                rgt: center + parseInt(parsed[1])
+            };
+
+        } else if (defines(IntervalChar.RIGHT)) {
+            parsed = s.split(this.intervalChars[IntervalChar.RIGHT]);
+            center: parseInt(parsed[0]);
+            ans = {
+                lft: center,
+                rgt: center + parseInt(parsed[1])
+            };
+
+        } else if (/^\d+$/.exec(s)) {
+            ans = {
+                lft: parseInt(s),
+                rgt: parseInt(s)
+            };
+
+        } else {
+            ans = null;
+        }
+        return ans;
+    }
+
     private checkIntervalRange(attribName:string, from:number, to:number,
             strictMode:boolean, keepCurrent:boolean):number {
         let tab = this.tables[attribName];
         let numChecked = 0;
+        let self = this;
+
         if (tab) {
             $(tab).find('input.attr-selector').each(function () {
-                let v = $(this).val();
-                let lft;
-                let rgt;
-
-                if (v.indexOf('/') > -1) {
-                    let range;
-                    let center;
-
-                    [center, range] = v.split('/');
-                    if (range.indexOf('+') === 0) {
-                        lft = parseInt(center);
-                        rgt = parseInt(center) + parseInt(range);
-
-                    } else {
-                        lft = parseInt(center) - parseInt(range);
-                        rgt = parseInt(center) + parseInt(range);
-                    }
-
-                } else {
-                    lft = parseInt(v);
-                    rgt = lft;
+                let interval = self.decodeRange($(this).val());
+                if (!interval) {
+                    return true; // silently ignore unknown entries
                 }
+                let [lft, rgt] = [interval.lft, interval.rgt];
+
                 if (strictMode) {
                     if ((lft >= from && rgt >= from && lft <= to && rgt <= to)
                             || (lft <= to && rgt <= to && isNaN(from))
@@ -839,6 +871,7 @@ class StructTables {
                     }
                 });
                 finalizeCallback();
+                $(rootElm).find('input.from-value').focus();
             },
             {
                 type: 'plain',
@@ -969,6 +1002,10 @@ class AlignedCorpora {
     }
 }
 
+enum IntervalChar {
+    LEFT, BOTH, RIGHT
+}
+
 /**
  * Plugin's main class
  */
@@ -992,6 +1029,8 @@ class Plugin {
 
     structTables:StructTables;
 
+    private intervalChars:Array<string>;
+
     /**
      *
      * @param pluginApi
@@ -999,8 +1038,8 @@ class Plugin {
      * @param updateButton
      * @param resetButton
      */
-    constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:HTMLElement,
-                updateButton:HTMLElement, resetButton:HTMLElement) {
+    constructor(pluginApi:Kontext.QueryPagePluginApi, pluginConf:{[key:string]:any},
+                attrFieldsetWrapper:HTMLElement, updateButton:HTMLElement, resetButton:HTMLElement) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
         this.updateButton = $(updateButton);
@@ -1009,8 +1048,9 @@ class Plugin {
         this.alignedCorpora = new AlignedCorpora(pluginApi);
         this.checkboxes = new Checkboxes(pluginApi, this.attrFieldsetWrapper);
         this.selectionSteps = new SelectionSteps(pluginApi);
+        this.intervalChars = pluginConf['interval_chars'];
         this.structTables = new StructTables(this.pluginApi, this.attrFieldsetWrapper,
-            this.selectionSteps, this.checkboxes);
+            this.selectionSteps, this.checkboxes, this.intervalChars);
     }
 
     resetAll = () => { // using lexical scope here
@@ -1210,8 +1250,13 @@ class Plugin {
  * @param attrFieldsetWrapper
  */
 export function init(pluginApi:Kontext.QueryPagePluginApi,
+                     conf:{[key:string]:string},
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement) {
-    let plugin = new Plugin(pluginApi, attrFieldsetWrapper, updateButton, resetButton);
+    let pluginConf:{[key:string]:any} = conf['pluginData']['live_attributes'];
+    if (!pluginConf) {
+        throw new Error('Missing configuration for live_attributes');
+    }
+    let plugin = new Plugin(pluginApi, pluginConf, attrFieldsetWrapper, updateButton, resetButton);
     plugin.init();
 }

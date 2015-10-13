@@ -167,8 +167,8 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
         lib.initSubcCreationVariantSwitch();
         lib.initAttributeHints();
         lib.sizeUnitsSafeSwitch();
-        liveAttributes.init(lib.extendedApi, '#live-attrs-update', '#live-attrs-reset',
-            '.text-type-params');
+        liveAttributes.init(lib.extendedApi, conf, '#live-attrs-update',
+                '#live-attrs-reset', '.text-type-params');
     };
 
 

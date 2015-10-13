@@ -142,13 +142,14 @@ class AttrArgs(object):
 class LiveAttributes(AbstractLiveAttributes):
 
     def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
-                 max_attr_visible_chars):
+                 max_attr_visible_chars, interval_chars):
         self.corparch = corparch
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
         self.shorten_value = partial(Shortener().filter,
                                      length=int(max_attr_visible_chars), nice=True)
+        self._interval_chars = interval_chars
 
     def db(self, corpname):
         """
@@ -170,6 +171,9 @@ class LiveAttributes(AbstractLiveAttributes):
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         return self.db(corpname) is not None
+
+    def export(self, plugin_api, user_id, lang):
+        return {'interval_chars': self._interval_chars}
 
     @staticmethod
     def apply_prefix(values, prefix):
@@ -348,8 +352,14 @@ def create_instance(settings, corparch):
     arguments:
     corparch -- corparch plugin
     """
-    return LiveAttributes(corparch,
-                          settings.get_int('global', 'max_attr_list_size'),
-                          settings.get('corpora', 'empty_attr_value_placeholder'),
-                          settings.get('plugins', 'live_attributes')
-                          .get('ucnk:max_attr_visible_chars', 20))
+    la_settings = settings.get('plugins', 'live_attributes')
+    interval_chars = (
+        la_settings.get('ucnk:left_interval_char', None),
+        la_settings.get('ucnk:interval_char', None),
+        la_settings.get('ucnk:right_interval_char', None),
+    )
+    return LiveAttributes(corparch=corparch,
+                          max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
+                          empty_val_placeholder=settings.get('corpora', 'empty_attr_value_placeholder'),
+                          max_attr_visible_chars=la_settings.get('ucnk:max_attr_visible_chars', 20),
+                          interval_chars=interval_chars)
