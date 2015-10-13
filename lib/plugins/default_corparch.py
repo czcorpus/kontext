@@ -71,6 +71,7 @@ from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
+from plugins.abstract.corpora import CorplistProvider
 from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
@@ -148,7 +149,7 @@ def parse_query(tag_prefix, query):
     return substrs, query_keywords
 
 
-class CorpSearch(object):
+class DeafultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
@@ -183,6 +184,11 @@ class CorpSearch(object):
         return (item_size is not None and
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
+
+    def sort(self, data, *fields):
+        def corp_cmp_key(c):
+            return c.get('name') if c.get('name') is not None else ''
+        return l10n.sort(data, loc=self._corparch.lang, key=corp_cmp_key)
 
     def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
@@ -255,9 +261,7 @@ class CorpSearch(object):
                     if len(ans['rows']) > offset + limit:
                         break
 
-        corp_cmp_key = lambda c: c.get('name') if c.get('name') is not None else ''
-        ans['rows'], ans['nextOffset'] = self.cut_result(l10n.sort(ans['rows'], loc=self._corparch.lang,
-                                                         key=corp_cmp_key), offset, limit)
+        ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(ans['rows']), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=self._corparch.lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -367,15 +371,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         'path': path, 'desc': '', 'size': None})
         return cl
 
-    @staticmethod
-    def search_via_service(search_service, user_id, query, offset=0, limit=None, filter_dict=None):
-        return search_service.search(user_id=user_id, query=query, offset=offset, limit=limit,
-                                     filter_dict=filter_dict)
-
-    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
-        return self.search_via_service(CorpSearch(plugin_api, self._auth, self, self._tag_prefix),
-                                       user_id=user_id, query=query, offset=offset, limit=limit,
-                                       filter_dict=filter_dict)
+    def create_corplist_provider(self, plugin_api):
+        return DeafultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
 
     def _get_corplist_title(self, elm):
         """
