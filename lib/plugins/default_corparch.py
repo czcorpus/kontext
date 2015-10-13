@@ -22,39 +22,29 @@ interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 Required config.xml/plugins entries:
 
-<corparch>
-    <module>corparch</module>
-    <file>[a path to a configuration XML file]</file>
-    <root_elm_path>
-        [an XPath query leading to a root element where configuration can be found]
-    </root_elm_path>
-    <tag_prefix extension-by="default">
-        [a spec. character specifying that the following string is a tag/label]
-    </tag_prefix>
-    <max_num_hints>
-        [maximum number of hints corpus selection widget shows (even if there are more results
-         available]
-    </max_num_hints>
-    <default_page_list_size>
-        [number of items to be shown on 'available corpora' page]
-    </default_page_list_size>
-</corparch>
-
-How does the corpus list specification XML entry looks like:
-
-<a_root_elm>
-  <corpus sentence_struct="p" ident="SUSANNE" collator_locale="cs_CZ" tagset="pp_tagset"
-      web="http://www.korpus.cz/syn2010.php">
-    <metadata>
-      <featured />
-      <keywords>
-        <item>foreign_language_corpora</item>
-        <item>written_corpora</item>
-      </keywords>
-    </metadata>
-  </corpus>
-   ...
-</a_root_elm>
+element corparch {
+    element module { text }
+    element js_file { text }
+    element file { text }  # a path to a configuration XML file
+    element root_elm_path { text } # an XPath query leading to a root element where configuration can be found
+    element tag_prefix {
+        attribute extension-by { "default" }
+        text  # a spec. character specifying that the following string is a tag/label
+    }
+    element max_num_hints {
+        attribute extension-by { "default" }
+        text  # maximum number of hints corpus selection widget shows
+              # (even if there are more results available)
+    }
+    element default_page_list_size {
+        attribute extension-by { "default" }
+        text  # number of items to be shown on 'available corpora' page
+    }
+    element max_num_favorites {
+        attribute extension-by { "default" }
+        xsd:integer
+    }
+}
 
 """
 
@@ -493,6 +483,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
+            ans.metadata.avg_label_attr_len = getattr(meta_elm.find('avg_label_attr_len'), 'text', None)
+            if ans.metadata.avg_label_attr_len is not None:
+                ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
         data.append(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):

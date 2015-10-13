@@ -19,9 +19,10 @@ Expected factory method signature: create_instance(config, db)
 """
 
 from structures import ThreadLocalData
+from controller import UserActionException
 
 
-class UserItemException(Exception):
+class UserItemException(UserActionException):
     """
     General error related to
     the plug-in

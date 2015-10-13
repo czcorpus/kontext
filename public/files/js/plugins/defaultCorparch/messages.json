@@ -35,7 +35,8 @@
     "defaultCorparch__filters": "Filters",
     "defaultCorparch__corpus_name_input_label": "corpus name",
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Please note that the list only displays first {maxNum} items. If you cannot find your corpus, please refine your search or visit the <a href=\"{link}\">full list page</a>.",
-    "defaultCorparch__no_keyword": "Reset"
+    "defaultCorparch__no_keyword": "Reset",
+    "defaultCorparch__err001": "Maximum allowed number ({maxNum}) of favorite corpora exceeded. To add a new item, please remove an existing item first."
 
   },
   "cs-CZ": {
@@ -74,6 +75,7 @@
     "defaultCorparch__filters": "Filtry",
     "defaultCorparch__corpus_name_input_label": "název korpusu",
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Berte prosím na vědomí, že seznam zobrazuje pouze prvních {maxNum} položek. Nemůžete-li najít hledaný korpus, zkuste zpřesnit zadání nebo použijte <a href=\"{link}\">úplný seznam korpusů</a>.",
-    "defaultCorparch__no_keyword": "Zrušit výběr"
+    "defaultCorparch__no_keyword": "Zrušit výběr",
+    "defaultCorparch__err001": "Byl překročen maximální povolený počet oblíbených korpusů ({maxNum}). Pro přidání nové položky je třeba nejdříve smazat některou z existujících."
   }
 }

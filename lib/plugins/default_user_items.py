@@ -101,6 +101,10 @@ class UserItems(AbstractUserItems):
         """
         self.setlocal('lang', getattr(controller_obj, 'ui_lang', None))
 
+    @property
+    def max_num_favorites(self):
+        return int(self._settings.get('plugins', 'corparch')['default:max_num_favorites'])
+
     @staticmethod
     def _mk_key(user_id):
         return 'favitems:user:%d' % user_id
@@ -120,6 +124,10 @@ class UserItems(AbstractUserItems):
         return ans
 
     def add_user_item(self, user_id, item):
+        if len(self.get_user_items(user_id)) >= self.max_num_favorites:
+            raise UserItemException('Max. number of fav. items exceeded',
+                                    error_code='defaultCorparch__err001',
+                                    error_args={'maxNum': self.max_num_favorites})
         data_json = self.to_json(item)
         self._db.hash_set(self._mk_key(user_id), item.id, data_json)
 

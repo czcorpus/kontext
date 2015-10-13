@@ -41,6 +41,7 @@ class CorpusMetadata(DictLike):
     def __init__(self):
         self.database = None
         self.label_attr = None
+        self.avg_label_attr_len = None
         self.id_attr = None
         self.desc = {}
         self.keywords = {}

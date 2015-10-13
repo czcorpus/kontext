@@ -138,7 +138,7 @@ def apply_range_attribs(tag_name, attrs, range_attrs, interval_chars):
     for k in attrs.keys():
         if '%s.%s' % (tag_name, k) in range_attrs:
             for ic in interval_chars.keys():
-                if ic in attrs[k]:
+                if ic is not None and ic in attrs[k]:
                     c, r = map(lambda x: int(x), attrs[k].split(ic))
                     if interval_chars[ic] == 'left':
                         r1 = r
@@ -235,6 +235,7 @@ if __name__ == '__main__':
     if not vert_path[0] == '/':
         vert_path = os.path.abspath(vert_path)
 
+    val_lengths = vertparser.ValLengthCalculator(conf)
     with open(vert_path, 'r') as f:
         item_gen = parse_file(f, item_tag=conf['atomStructure'], corpname=corpus_id,
                               encoding=conf['encoding'], virtual_tags=conf.get('virtualTags', []),
@@ -243,7 +244,11 @@ if __name__ == '__main__':
         i = 0
         for div in item_gen:
             insert_record(db, div)
+            val_lengths.insert(div)
             i += 1
+        val_lengths.finish(i)
         print('-------------------------')
         print('>>> Processed %d <%s> element(s)' % (i, conf['atomStructure']))
+        print('')
+        print(val_lengths.format_result())
     db.commit()
