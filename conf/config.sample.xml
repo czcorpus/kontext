@@ -92,6 +92,13 @@
             <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
+        <live_attributes>
+            <module>acme_live_attributes</module>
+            <js_module>acmeLiveAttributes</js_module>
+            <right_interval_char extension-by="acme">+</right_interval_char>
+            <left_interval_char extension-by="acme">-</left_interval_char>
+            <interval_char extension-by="acme">±</interval_char>
+        </live_attributes>
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users>
