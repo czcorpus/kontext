@@ -154,7 +154,15 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                                     </optional>
                                     <zeroOrMore>
                                         <element name="desc">
-                                            <attribute name="lang"><text /></attribute>
+                                            <choice>
+                                                <group>
+                                                    <attribute name="lang"><text /></attribute>
+                                                    <optional>
+                                                        <attribute name="ident"><text /></attribute>
+                                                    </optional>
+                                                </group>
+                                                <attribute name="ref"><text /></attribute>
+                                            </choice>
                                             <text />
                                         </element>
                                     </zeroOrMore>
