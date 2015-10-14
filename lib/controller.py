@@ -167,9 +167,11 @@ class UserActionException(Exception):
     """
     This exception should cover general errors occurring in Controller's action methods'
     """
-    def __init__(self, message, code=200):
+    def __init__(self, message, code=200, error_code=None, error_args=None):
         self.message = message
         self.code = code
+        self.error_code = error_code
+        self.error_args = error_args
 
     def __repr__(self):
         return self.message
@@ -863,7 +865,9 @@ class Controller(object):
                 else:
                     json_msg = _('Failed to process your request. '
                                  'Please try again later or contact system support.')
-                return methodname, None, {'error': json_msg, 'contains_errors': True}
+                return methodname, None, {'error': json_msg, 'contains_errors': True,
+                                          'error_code': getattr(e, 'error_code', None),
+                                          'error_args': getattr(e, 'error_args', {})}
             else:
                 if not self._exceptmethod and self.is_template(methodname + '_form'):
                     self._exceptmethod = methodname + '_form'

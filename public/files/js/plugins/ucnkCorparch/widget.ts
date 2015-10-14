@@ -1043,11 +1043,12 @@ class StarComponent {
      * @param flag
      */
     setFavorite(flag:common.Favorite) {
-        var self = this,
-            prom:JQueryXHR,
-            newItem:common.CorplistItem,
-            message:string,
-            postDispatch:(data:any)=>void;
+        let self = this;
+        let prom:JQueryXHR;
+        let newItem:common.CorplistItem;
+        let message:string;
+        let postDispatch:(data:any)=>void;
+        let updateStar:()=>void;
 
         if (flag === common.Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
@@ -1057,6 +1058,7 @@ class StarComponent {
             postDispatch = function (data) {
                 self.starSwitch.setItemId(data.id);
             };
+            updateStar = () => self.starSwitch.setStarState(true);
 
         } else {
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
@@ -1065,6 +1067,7 @@ class StarComponent {
             postDispatch = function (data) {
                 self.starSwitch.setItemId(null);
             };
+            updateStar = () => self.starSwitch.setStarState(false);
         }
 
         prom.then(
@@ -1072,22 +1075,31 @@ class StarComponent {
                 if (!data.error) {
                     self.pageModel.showMessage('info', message);
                     postDispatch(data);
-                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+                    updateStar();
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                    if (data.error_code) {
+                        self.pageModel.showMessage('error', self.pageModel.translate(data.error_code, data.error_args || {}));
+
+                    } else {
+                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                    }
                 }
+                return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
             },
-            function (err) {
+            function (err, textStatus) {
                 self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                throw new Error(textStatus);
             }
         ).then(
             function (favItems) {
-                if (favItems && !favItems.error) {
-                    self.favoriteItemsTab.reinit(favItems);
+                if (favItems) {
+                    if (!favItems.error) {
+                        self.favoriteItemsTab.reinit(favItems);
 
-                } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                    } else {
+                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                    }
                 }
             },
             function (err) {
@@ -1202,11 +1214,9 @@ class StarComponent {
         if (this.editable) {
             $(this.starImg).on('click', function (e) {
                 if (!self.starSwitch.isStarred()) {
-                    self.starSwitch.setStarState(true);
                     self.setFavorite(common.Favorite.FAVORITE);
 
                 } else {
-                    self.starSwitch.setStarState(false);
                     self.setFavorite(common.Favorite.NOT_FAVORITE);
                 }
             });
