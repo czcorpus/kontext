@@ -34,11 +34,20 @@ define(['jquery', 'tpl/document'], function ($, documentModule) {
         var jqHeadingInput = $(jqForm).find('input[name="heading"]'),
             jqHeadingRow = jqHeadingInput.closest('tr'),
             jqAlignKwicInput = $(jqForm).find('input[name="align_kwic"]'),
-            jqAlignKwicRow = jqAlignKwicInput.closest('tr');
+            jqAlignKwicRow = jqAlignKwicInput.closest('tr'),
+            exportType = $(currentElement).val();
 
-        if ($(currentElement).val() === 'csv') {
+
+
+        if (exportType === 'csv' || exportType === 'xlsx') {
             jqHeadingInput.prop('disabled', true);
             jqHeadingRow.hide();
+            jqAlignKwicInput.prop('disabled', true);
+            jqAlignKwicRow.hide();
+
+        } else if (exportType === 'xml') {
+            jqHeadingInput.prop('disabled', false);
+            jqHeadingRow.show();
             jqAlignKwicInput.prop('disabled', true);
             jqAlignKwicRow.hide();
 
@@ -66,7 +75,7 @@ define(['jquery', 'tpl/document'], function ($, documentModule) {
      * @param conf
      */
     lib.init = function (conf) {
-        lib.layoutModel = documentModule.PageModel(conf);
+        lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
 
         $('input[type="submit"]').focus();

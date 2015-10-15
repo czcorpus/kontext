@@ -897,11 +897,17 @@ class Actions(Kontext):
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % \
                                                    saved_filename
             output = result
+            output['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-freq-distrib.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             writer = plugins.get('export').load_plugin(saveformat, subtype='freq')
-            writer.set_col_types(int, unicode, int)
+
+            # Here we expect that when saving multi-block items, all the block have
+            # the same number of columns which is quite bad. But currently there is
+            # no better common 'denominator'.
+            num_word_cols = len(result['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
+            writer.set_col_types(*([int] + num_word_cols * [unicode] + [float, float]))
 
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -915,8 +921,8 @@ class Actions(Kontext):
                     writer.add_block('')  # TODO block name
 
                 if colheaders or heading:
-                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]]
-                                        + ['freq', 'freq [%]'])
+                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                        ['freq', 'freq [%]'])
                 i = 1
                 for item in block['Items']:
                     writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
@@ -939,6 +945,7 @@ class Actions(Kontext):
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
+        result['freqml_args'] = []
         self._session['last_freq_level'] = freqlevel
         return result
 
@@ -1364,6 +1371,7 @@ class Actions(Kontext):
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % (
                 saved_filename,)
             out_data = ans
+            out_data['pattern'] = self.args.wlpat
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-word-list.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
@@ -1375,8 +1383,15 @@ class Actions(Kontext):
                 mkfilename(saveformat),)
 
             # write the header first, if required
-            if colheaders or heading:
+            if colheaders:
                 writer.writeheading(('', self.args.wlattr, 'freq'))
+            elif heading:
+                writer.writeheading({
+                    'corpus': self._human_readable_corpname(),
+                    'subcorpus': self.args.usesubcorp,
+                    'pattern': self.args.wlpat
+                })
+
             i = 1
             for item in ans['Items']:
                 writer.writerow(i, (item['str'], str(item['freq'])))
@@ -1405,7 +1420,7 @@ class Actions(Kontext):
         return {'from_line': from_line, 'to_line': to_line}
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def saveconc(self, saveformat='text', from_line=0, to_line='', align_kwic=0, numbering=0,
+    def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
                  leftctx='40', rightctx='40'):
 
         def merge_conc_line_parts(items):
@@ -1469,6 +1484,7 @@ class Actions(Kontext):
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
                     mkfilename('txt'),)
                 output.update(data)
+                output['Desc'] = self.concdesc_json()['Desc']
             elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.get('export').load_plugin(saveformat, subtype='concordance')
 
@@ -1504,6 +1520,15 @@ class Actions(Kontext):
                         if 'Align' in line:
                             lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key)
                         writer.writerow(row_num, *lang_rows)
+                if heading:
+                    writer.writeheading({
+                        'corpus': self._human_readable_corpname(),
+                        'subcorpus': self.args.usesubcorp,
+                        'concordance_size': data['concsize'],
+                        'arf': data['result_arf'],
+                        'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
+                                  for x in self.concdesc_json().get('Desc', [])]
+                    })
                 output = writer.raw_content()
             else:
                 raise UserActionException(_('Unknown export data type'))
