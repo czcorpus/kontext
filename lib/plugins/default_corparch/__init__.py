@@ -20,10 +20,10 @@ are passed through via the 'export' method which is recognized by KonText and th
 interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
-Required config.xml/plugins entries:
+Required config.xml/plugins entries (RelaxNG compact format):
 
 element corparch {
-    element module { text }
+    element module { "default_corparch" }
     element js_file { text }
     element file { text }  # a path to a configuration XML file
     element root_elm_path { text } # an XPath query leading to a root element where configuration can be found
