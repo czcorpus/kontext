@@ -28,6 +28,7 @@ class GeneralDocument(object):
 
     def __init__(self, root_name):
         self._root = etree.Element(root_name)
+        self._heading = etree.SubElement(self._root, 'heading')
 
     @staticmethod
     def add_line_number(elm, num):
@@ -38,12 +39,29 @@ class GeneralDocument(object):
     def tostring(self):
         return etree.tostring(self._root, pretty_print=True, encoding='UTF-8')
 
+    def _auto_add_heading(self, data):
+        if data is None:
+            items = []
+        elif type(data) in (list, tuple):
+            items = [('item', x) for x in data]
+        else:
+            items = data.items()
+        for k, v in items:
+            elm = etree.Element(k)
+            self._heading.append(elm)
+            if hasattr(v, '__iter__'):
+                for item in v:
+                    item_elm = etree.Element('item')
+                    item_elm.text = item
+                    elm.append(item_elm)
+            else:
+                elm.text = unicode(v)
+
 
 class CollDocument(GeneralDocument):
 
     def __init__(self):
         super(CollDocument, self).__init__('collocations')
-        self._heading = etree.SubElement(self._root, 'heading')
         self._items = etree.SubElement(self._root, 'items')
 
     def add_heading(self, data):
@@ -68,7 +86,6 @@ class WordlistDocument(GeneralDocument):
 
     def __init__(self):
         super(WordlistDocument, self).__init__('word_list')
-        self._heading = etree.SubElement(self._root, 'heading')
         self._items = etree.SubElement(self._root, 'items')
 
     def add_line(self, data, line_num=None):
@@ -82,7 +99,7 @@ class WordlistDocument(GeneralDocument):
         freq_elm.text = str(data[1])
 
     def add_heading(self, data):
-        pass
+        self._auto_add_heading(data)
 
 
 class FreqDocument(GeneralDocument):
@@ -106,16 +123,17 @@ class FreqDocument(GeneralDocument):
             line_num_elm = etree.SubElement(item_elm, 'num')
             line_num_elm.text = str(line_num)
 
-        str_elm = etree.SubElement(item_elm, 'str')
-        str_elm.text = data[0]
+        for i in range(len(data) - 2):
+            str_elm = etree.SubElement(item_elm, 'str')
+            str_elm.text = data[0]
         freq_elm = etree.SubElement(item_elm, 'freq')
-        freq_elm.text = data[1]
+        freq_elm.text = data[-2]
         if len(data) > 2:
             freq_pc_elm = etree.SubElement(item_elm, 'freq_pc')
-            freq_pc_elm.text = data[2]
+            freq_pc_elm.text = data[-1]
 
     def add_heading(self, data):
-        pass
+        self._auto_add_heading(data)
 
 
 class ConcDocument(GeneralDocument):
@@ -143,7 +161,7 @@ class ConcDocument(GeneralDocument):
         pass
 
     def add_heading(self, data):
-        pass
+        self._auto_add_heading(data)
 
     def add_line(self, data, line_num=None):
         """
