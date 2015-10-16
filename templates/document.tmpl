@@ -141,7 +141,7 @@ define('conf', [], function () {
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = $bib_conf.to_json();
-    conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
+    conf.stateParams = "$join_params($q, $globals)";
     conf.currentArgs = $Globals.to_json();
     conf.uiLang = "$uiLang";
     conf.isDebug = #if $debug#true#else#false#end if#;

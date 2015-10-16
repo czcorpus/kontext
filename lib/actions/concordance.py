@@ -59,12 +59,21 @@ class Actions(Kontext):
         """
         return '/'
 
-    def _import_aligned_form_param_names(self, aligned_corp):
+    def _export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
+        """
+        Collects aligned corpora-related arguments with dynamic names
+        (i.e. the names with corpus name as a suffix)
+        """
+        if name_filter is None:
+            name_filter = lambda v: True
+        args = ('include_empty', 'pcq_pos_neg')
+        if not state_only:
+            args += ('queryselector',)
         ans = {}
-        for param_name in ('filfpos', 'filtpos', 'queryselector'):  # TODO where to store this?
+        for param_name in args:
             full_name = '%s_%s' % (param_name, aligned_corp)
-            if hasattr(self, full_name):
-                ans[param_name] = getattr(self, full_name)
+            if full_name in self._request.args and name_filter(param_name):
+                ans[full_name] = self._request.args[full_name]
         return ans
 
     def _store_semi_persistent_attrs(self, attr_list):
@@ -94,8 +103,9 @@ class Actions(Kontext):
         if self.args.sel_aligned:
             sess_key = 'aligned_forms:%s' % self.args.corpname
             tmp = self._session.get(sess_key, {})
+            # TODO restore this
             for aligned_lang in self.args.sel_aligned:
-                tmp[aligned_lang] = self._import_aligned_form_param_names(aligned_lang)
+                tmp[aligned_lang] = self._export_aligned_form_params(aligned_lang, state_only=False)
             self._session[sess_key] = tmp
 
     def _restore_aligned_forms(self):
@@ -112,6 +122,15 @@ class Actions(Kontext):
         if segment_str:
             return tuple(segment_str.split('.'))
         return None
+
+    def _add_globals(self, result, methodname, action_metadata):
+        super(Actions, self)._add_globals(result, methodname, action_metadata)
+        args = {}
+        if self.args.sel_aligned:
+            for aligned_lang in self.args.sel_aligned:
+                args.update(self._export_aligned_form_params(aligned_lang, state_only=True))
+        result['globals'] += '&' + self.urlencode(args)
+        result['Globals'] = result['Globals'].update(args)
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
@@ -492,17 +511,6 @@ class Actions(Kontext):
         self.args.q = [qbase + self._compile_query()]
         return self.view()
 
-    def _fetch_pcq_args(self):
-        """
-        Loads form values of "contain"/"does not contain" select elements located in
-        aligned languages' fieldsets.
-        """
-        ans = {}
-        for k, v in self._request.args.items():
-            if k.startswith('pcq_pos_neg_'):
-                ans[k] = v
-        return ans
-
     def _set_first_query(self, fc_lemword_window_type='',
                          fc_lemword_wsize=0,
                          fc_lemword_type='',
@@ -547,8 +555,9 @@ class Actions(Kontext):
             ttquery = u''
         par_query = ''
         nopq = []
-        pcq_args = self._fetch_pcq_args()
         for al_corpname in self.args.sel_aligned:
+            pcq_args = self._export_aligned_form_params(al_corpname, state_only=False,
+                                                        name_filter=lambda v: v.startswith('pcq_pos_neg'))
             if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos':
                 wnot = ''
             else:

@@ -228,10 +228,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #if $suff
 <tbody><tr><td colspan="2">
     <input type="checkbox" name="include_empty$suff" id="include_empty$suff"
-    #if $getVar('include_empty'+$suff, '')
-    checked#slurp
-    #end if
-    />
+    #if $getVar('include_empty'+$suff, '')#checked#end if# value="1" />
     <label for="include_empty$suff">$_('include empty lines')</label>
 </td></tr></tbody>
 #end if
