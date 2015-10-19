@@ -1949,6 +1949,9 @@ msgstr "akce"
 msgid "deleted"
 msgstr "smazáno"
 
+msgid "active"
+msgstr "aktivní"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

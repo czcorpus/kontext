@@ -539,6 +539,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #filter None#$user_item_opt($c)#end filter#
       #end for
     </select>
+    <span id="subcorp-selector-wrapper">
     #if $SubcorpList
     <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
         #for $subc in $SubcorpList
@@ -546,6 +547,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #end for
     </select>
     #end if ## SubcorpList
+    </span>
     #if not $_anonymous
     <div class="starred">
     </div>

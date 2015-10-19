@@ -237,7 +237,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = conc_args.getlist('sel_aligned')
-        self._export_subcorpora_list(out)
+        self._export_subcorpora_list(conc_args.corpname, out)
         self._attach_query_metadata(out)
         return out
 
@@ -1144,7 +1144,7 @@ class Actions(Kontext):
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
         out['freq_figures'] = self.FREQ_FIGURES
-        self._export_subcorpora_list(out)
+        self._export_subcorpora_list(self.corpname, out)
         return out
 
     #(upl_file='wlfile', cache_file='wlcache')

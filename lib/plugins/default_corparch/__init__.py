@@ -456,6 +456,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
+        ans.name = self._manatee_corpora.get_info(ans.id).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
