@@ -47,6 +47,22 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
             layoutModel.mouseOverImages(boxInst.getRootElement());
         };
 
+            $('a#ctx-link').each(function () {
+                $(this).bind('click', function (event) {
+                    detail.showDetail($(this).data('url'), $(this).data('params'),
+                        function (jqXHR, textStatus, errorThrown) {
+                            layoutModel.showMessage('error', errorThrown);
+                        },
+                        function(d) {
+                            alert(d);
+
+                        }
+                        );
+                    event.preventDefault();
+                });
+            });
+
+
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
             var jqRealTarget = null;
 
