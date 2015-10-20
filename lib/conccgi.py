@@ -733,9 +733,7 @@ class ConcCGI(CGIPublisher):
             result['app_bar'] = plugins.application_bar.get_contents(cookies=self._cookies,
                                                                      curr_lang=os.environ['LANG'],
                                                                      return_url=self.return_url)
-            result['app_bar_css'] = plugins.application_bar.css_url
-            result['app_bar_css1'] = plugins.application_bar.css_url1 \
-                if hasattr(plugins.application_bar, "css_url1") else None
+            result['app_bar_css_arr'] = plugins.application_bar.css_urls
             result['app_bar_css_ie'] = plugins.application_bar.css_url_ie
             result['app_bar_js'] = plugins.application_bar.js_url
         else:

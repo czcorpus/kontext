@@ -47,11 +47,10 @@ $text
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jquery-ui.custom.css" />
-#if $app_bar_css
+#if $app_bar_css_arr
+#for $app_bar_css in $app_bar_css_arr
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
-#end if
-#if $app_bar_css1
-<link rel="stylesheet" type="text/css" href="$app_bar_css1" />
+#end for
 #end if
 #if $foot_bar_css
 <link rel="stylesheet" type="text/css" href="$foot_bar_css" />
@@ -184,7 +183,7 @@ _gaq.push(['_trackPageview']);
 #end if
 
 </head>
-<body id="lindat-services">
+<body id="lindat-tools">
 #if $varExists('_ca_topbar')
 $_ca_topbar
 #else

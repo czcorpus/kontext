@@ -253,3 +253,12 @@ a.icon-link {
     border-bottom: solid 1px #eeeeee;
     margin-bottom: 10px;
 }
+
+.selected img {
+    border: 2px solid rgb(102, 175, 233) !important;
+}
+
+#localization-bar {
+    margin-left:40px;
+}
+
