@@ -263,6 +263,8 @@ class Kontext(Controller):
                     log_data['request'] = {}
                 k = val.split(':')[-1]
                 log_data['request'][k] = self.environ.get(k)
+            elif val == 'pid':
+                log_data['pid'] = os.getpid()
 
         logging.getLogger('QUERY').info(json.dumps(log_data))
 
