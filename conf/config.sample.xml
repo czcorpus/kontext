@@ -54,7 +54,8 @@
             <item>action</item>
             <item>params</item>
             <item>settings</item>
-            <item>proc_time</item>  
+            <item>proc_time</item>
+            <item>pid</item>
         </logged_values>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
     </global>
