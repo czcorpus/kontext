@@ -102,7 +102,7 @@ define(['win', 'jquery'], function (win, $) {
      * @returns {null|Element|*}
      */
     TooltipBox.prototype.getContentElement = function () {
-        return this.headerElm;
+        return this.contentElm;
     };
 
     /**
