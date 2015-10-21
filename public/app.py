@@ -262,7 +262,6 @@ class App(object):
         if request.session.should_save:
             sessions.save(request.session)
             response.set_cookie(sessions.get_cookie_name(), request.session.sid)
-        start_response(status, headers)
         return response(environ, start_response)
 
 
