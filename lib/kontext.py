@@ -674,19 +674,24 @@ class Kontext(Controller):
         if 'conc' in self._session:
             del(self._session['conc'])
 
-    def _export_subcorpora_list(self, out):
+    def _export_subcorpora_list(self, corpname, out):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
+        If there is a list already present in 'out' then it is extended
+        by the new values.
 
         arguments:
+        corpname -- corpus id
         out -- a dictionary used by templating system
         """
-        basecorpname = self.args.corpname.split(':')[0]
+        basecorpname = corpname.split(':')[0]
         subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
-        out['SubcorpList'] = subcorp_list
+        if 'SubcorpList' not in out or out['SubcorpList'] is None:
+            out['SubcorpList'] = []
+        out['SubcorpList'].extend(subcorp_list)
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):

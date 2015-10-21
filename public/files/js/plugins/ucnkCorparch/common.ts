@@ -28,6 +28,12 @@ export enum Favorite {
     FAVORITE = 1
 }
 
+export class CorplistItemType {
+    static CORPUS:string = 'corpus';
+    static SUBCORPUS:string = 'subcorpus';
+    static ALIGNED_CORPORA:string = 'aligned_corpora';
+}
+
 /**
  * Generalized corplist item which may refer to a single
  * corpus, subcorpus, corpus with aligned corpora.

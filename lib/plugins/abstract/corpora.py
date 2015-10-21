@@ -64,6 +64,7 @@ class CorpusInfo(DictLike):
     """
     def __init__(self):
         self.id = None
+        self.name = None
         self.path = None
         self.web = None
         self.sentence_struct = None
