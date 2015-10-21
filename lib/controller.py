@@ -459,8 +459,12 @@ class Controller(object):
             action_module_path = module[:-len(self.get_mapping_url_prefix())]
         if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
             action_module_path = action_module_path[1:]
+        if 'HTTP_X_FORWARDED_PROTO' in self.environ:
+            protocol = self.environ['HTTP_X_FORWARDED_PROTO']
+        else:
+            protocol = self.environ['wsgi.url_scheme']
         return '%(protocol)s://%(server)s/%(script)s' % {
-            'protocol': self.environ['wsgi.url_scheme'],
+            'protocol': protocol,
             'server': self.environ.get('HTTP_HOST'),
             'script': action_module_path
         }
