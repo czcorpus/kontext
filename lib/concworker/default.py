@@ -32,23 +32,14 @@ class BackgroundCalc(GeneralWorker):
     below).
     """
 
-    def __init__(self, sending_pipe, corpus, pid_dir, subchash, q):
+    def __init__(self, sending_pipe):
         """
         arguments:
         sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its
                         parent
-        corpus -- a manatee.Corpus instance
-        pid_dir -- a directory where "pidfile" (= file containing information about background
-                   calculation) will be temporarily stored
-        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
-        q -- a tuple/list containing current query
         """
         super(BackgroundCalc, self).__init__()
         self._pipe = sending_pipe
-        self._corpus = corpus
-        self._pid_dir = pid_dir
-        self._subchash = subchash
-        self._q = q
 
     @staticmethod
     def _create_pid_file():
@@ -69,18 +60,24 @@ class BackgroundCalc(GeneralWorker):
                 pf)
         return pidfile
 
-    def __call__(self, samplesize, fullsize):
+    def __call__(self, corpus, subchash, query, samplesize):
+        """
+        corpus -- a manatee.Corpus instance
+        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
+        query -- a tuple/list containing current query
+        samplesize -- ???
+        """
         sleeptime = None
         try:
-            cache_map = self._cache_factory.get_mapping(self._corpus)
+            cache_map = self._cache_factory.get_mapping(corpus)
             pidfile = self._create_pid_file()
-            cachefile, stored_pidfile = cache_map.add_to_map(self._subchash, self._q, 0, pidfile)
+            cachefile, stored_pidfile = cache_map.add_to_map(subchash, query, 0, pidfile)
 
             if not stored_pidfile:
                 self._pipe.send(cachefile + '\n' + pidfile)
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
-                conc = self.compute_conc(self._corpus, self._q, samplesize)
+                conc = self.compute_conc(corpus, query, samplesize)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
                 conc.save(cachefile, False, True, False)  # partial
@@ -91,7 +88,7 @@ class BackgroundCalc(GeneralWorker):
                     os.rename(tmp_cachefile, cachefile)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
-                    sizes = self.get_cached_conc_sizes(self._corpus, self._q, cachefile)
+                    sizes = self.get_cached_conc_sizes(corpus, query, cachefile)
                     self._update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime,
                                          finished=sizes['finished'], concsize=sizes['concsize'],
                                          fullsize=sizes['fullsize'], relconcsize=sizes['relconcsize'])
@@ -99,7 +96,7 @@ class BackgroundCalc(GeneralWorker):
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, cachefile)
                 # update size in map file
-                cache_map.add_to_map(self._subchash, self._q, conc.size())
+                cache_map.add_to_map(subchash, query, conc.size())
                 os.remove(pidfile)
         except Exception as e:
             # Please note that there is no need to clean any mess (pidfile of failed calculation,

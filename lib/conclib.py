@@ -172,16 +172,15 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     return ans
 
 
-def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, minsize):
+def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used
     """
     from concworker.default import BackgroundCalc
     parent_conn, child_conn = Pipe(duplex=False)
-    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, pid_dir=pid_dir, subchash=subchash,
-                          q=q)
-    proc = Process(target=calc, args=(samplesize, fullsize))
+    calc = BackgroundCalc(sending_pipe=child_conn)
+    proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
     proc.start()
 
     cachefile, pidfile = parent_conn.recv().split('\n')
@@ -198,7 +197,7 @@ def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, mins
     return PyConc(corp, 'l', cachefile)
 
 
-def _get_sync_conc(corp, q, save, subchash, samplesize, fullsize, pid_dir):
+def _get_sync_conc(corp, q, save, subchash, samplesize):
     from concworker import GeneralWorker
     conc = GeneralWorker().compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
@@ -244,12 +243,12 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, s
     if not conc:
         toprocess = 1
         if async and len(q) == 1:  # asynchronous processing
-            conc = _get_async_conc(corp=corp, q=q, save=save, pid_dir=pid_dir, subchash=subchash,
+            conc = _get_async_conc(corp=corp, q=q, save=save, subchash=subchash,
                                    samplesize=samplesize, fullsize=fullsize, minsize=minsize)
 
         else:
-            conc = _get_sync_conc(corp=corp, q=q, save=save, pid_dir=pid_dir, subchash=subchash,
-                                  samplesize=samplesize, fullsize=fullsize)
+            conc = _get_sync_conc(corp=corp, q=q, save=save, subchash=subchash,
+                                  samplesize=samplesize)
     # process subsequent concordance actions (e.g. sample)
     for act in range(toprocess, len(q)):
         command = q[act][0]
