@@ -216,15 +216,18 @@ export class CorplistTableStore extends util.SimplePageStore {
                         }
                         prom.then(
                             function (data) {
-                                if (!data.error) {
-                                    self.updateDataItem(payload.props['corpusId'], {user_item: payload.props['isFav']});
-                                    self.notifyChangeListeners();
-                                    self.pluginApi.showMessage('info', message);
+                                if (data.error_code) {
+                                    self.pluginApi.showMessage('error', self.pluginApi.translate(data.error_code, data.error_args || {}));
 
-                                } else {
+                                } else if (data.error) {
                                     self.pluginApi.showMessage('error',
                                         self.pluginApi.translate('failed to update item'));
                                     self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, data.error);
+
+                                } else {
+                                    self.updateDataItem(payload.props['corpusId'], {user_item: payload.props['isFav']});
+                                    self.notifyChangeListeners();
+                                    self.pluginApi.showMessage('info', message);
                                 }
                             },
                             function (jqXHR, textStatus, errorThrown) {
