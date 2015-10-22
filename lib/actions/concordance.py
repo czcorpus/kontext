@@ -243,8 +243,9 @@ class Actions(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def get_cached_conc_sizes(self):
+        from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
-        cs = self.call_function(conclib.get_cached_conc_sizes, (self._corp(),))
+        cs = self.call_function(GeneralWorker().get_cached_conc_sizes, (self._corp(),))
         return {
             'finished': cs["finished"],
             'concsize': cs["concsize"],
