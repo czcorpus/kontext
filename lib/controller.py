@@ -734,7 +734,6 @@ class Controller(object):
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
-
         if 'Query evaluation error' in text:
             srch = re.match(r'.+ at position (\d+):', text)
             if srch:
@@ -749,6 +748,8 @@ class Controller(object):
             else:
                 text = _('Attribute not found.')
             new_err = UserActionException(text)
+        elif 'EvalQueryException' in text:
+            new_err = UserActionException(_('Failed to evaluate the query. Please check the syntax and used attributes.'))
         else:
             new_err = err
         return new_err
@@ -865,7 +866,7 @@ class Controller(object):
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
                 if settings.is_debug_mode() or type(e) is UserActionException:
-                    json_msg = str(e).decode('utf-8')
+                    json_msg = str(e2).decode('utf-8')
                 else:
                     json_msg = _('Failed to process your request. '
                                  'Please try again later or contact system support.')
