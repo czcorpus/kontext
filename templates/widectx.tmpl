@@ -67,9 +67,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$join_params($rightlink,
         'corpname='+$corpname, $widectx_globals)">
 <img class="over-img" src="../files/img/next-page.png" alt="$_("expand right")" title="$_("expand right")" data-alt-img="../files/img/next-page_s.png" /></a>
+
   #if $getVar('struct_ctx', '')
-    <br/>
-    <a href="\#end" id="ctx-link" data-url="structctx" data-params="corpname=$corpname;pos=$pos;struct=$struct_ctx">$_("display whole document")</a>
+    <div class="footer">
+    (<a href="\#end" id="ctx-link" data-url="structctx" data-params="corpname=$corpname&pos=$pos&struct=$struct_ctx">$_("display whole document")</a>)
+    </div>
   #end if
 #end unless
 #end filter

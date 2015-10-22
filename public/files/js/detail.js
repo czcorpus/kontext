@@ -150,16 +150,44 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
         });
     };
 
+    function attachDisplayWholeDocumentTrigger(layoutModel, tooltipBox, triggerElm) {
+        var prom = $.ajax(
+            $(triggerElm).data('url') + '?' + $(triggerElm).data('params'),
+            {
+                type : 'GET',
+            }
+        );
+        $(tooltipBox.getContentElement())
+            .empty()
+            .append('<img src="' + layoutModel.createStaticUrl('img/ajax-loader.gif')
+                    + '" class="ajax-loader" />');
+        prom.then(
+            function (data) {
+                $(tooltipBox.getContentElement())
+                    .addClass('whole-document')
+                    .empty()
+                    .html(data);
+            },
+            function (err) {
+                layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
     /**
      * @param {HTMLElement|jQuery|string} eventTarget
      * @param {String} url
      * @param {{}} params
-     * @param {Function} errorCallback
+     * @param layoutModel
      * @param {Function} [callback] function called after the ajax's complete event is triggered
-     * @param {jQuery} [ajaxLoaderNotification]
      */
-    lib.showDetail = function (eventTarget, url, params, errorCallback, callback, ajaxLoaderNotification) {
-        enableAjaxLoadingNotification(ajaxLoaderNotification);
+    lib.showDetail = function (eventTarget, url, params, layoutModel, callback) {
+
+        function errorHandler(jqXHR, textStatus, error) {
+            lib.layoutModel.showMessage('error', error);
+        }
+        var ajaxAnim = layoutModel.createAjaxLoader();
+        enableAjaxLoadingNotification(ajaxAnim);
 
         $.ajax({
             url : url,
@@ -168,7 +196,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             success: function (data) {
                 var leftPos;
 
-                disableAjaxLoadingNotification(ajaxLoaderNotification);
+                disableAjaxLoadingNotification(ajaxAnim);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -190,6 +218,12 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active').addClass('prev-active');
                         lib.currentDetail = null;
+                    },
+                    onShow : function () {
+                        var self = this;
+                        $('#ctx-link').on('click', function (evt) {
+                            attachDisplayWholeDocumentTrigger(layoutModel, self, evt.target);
+                        });
                     }
                 });
                 lib.currentDetail.setCss('width', '700px');
@@ -202,8 +236,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(ajaxLoaderNotification);
-                errorCallback(jqXHR, textStatus, errorThrown);
+                disableAjaxLoadingNotification(ajaxAnim);
+                errorHandler(jqXHR, textStatus, errorThrown);
             }
         });
     };

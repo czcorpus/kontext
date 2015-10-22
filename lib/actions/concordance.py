@@ -1088,8 +1088,8 @@ class Actions(Kontext):
         s = self._corp().get_struct(struct)
         struct_id = s.num_at_pos(pos)
         beg, end = s.beg(struct_id), s.end(struct_id)
-        self.detail_left_ctx = pos - beg
-        self.detail_right_ctx = end - pos - 1
+        self.args.detail_left_ctx = pos - beg
+        self.args.detail_right_ctx = end - pos - 1
         result = self.widectx(pos)
         result['no_display_links'] = True
         return result
