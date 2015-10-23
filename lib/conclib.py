@@ -177,13 +177,13 @@ def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used
     """
-    from concworker.default import BackgroundCalc
-    parent_conn, child_conn = Pipe(duplex=False)
-    calc = BackgroundCalc(sending_pipe=child_conn)
+    from concworker.default import BackgroundCalc, NotifierFactory
+    receiver, sender = NotifierFactory()()
+    calc = BackgroundCalc(notification_sender=sender)
     proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
     proc.start()
 
-    cachefile, pidfile = parent_conn.recv().split('\n')
+    cachefile, pidfile = receiver.receive().split('\n')
     try:
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                        cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)

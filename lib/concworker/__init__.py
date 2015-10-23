@@ -20,9 +20,38 @@ import logging
 import time
 import cPickle
 import os
+import settings
+import uuid
 
 import plugins
 from conclib import PyConc
+
+
+class Sender(object):
+    """
+    Sends initial calculation data (pidfile etc.). This is
+    used by the worker process to inform KonText that the
+    calculation started (or failed to start).
+    """
+    def send(self, data):
+        raise NotImplementedError()
+
+
+class Receiver(object):
+    """
+    Receives calculation data from worker.
+    """
+    def receive(self):
+        raise NotImplementedError()
+
+
+class InitialNotifierFactory(object):
+    """
+    A factory returning a 2-tuple containing receiver and sender. This is
+    in fact a generalization of multiprocessing's Pipe function.
+    """
+    def __call__(self):
+        return Receiver(), Sender()
 
 
 class GeneralWorker(object):
@@ -31,12 +60,41 @@ class GeneralWorker(object):
         self._cache_factory = plugins.get('conc_cache')
         self._lock_factory = plugins.get('locking')
 
-    def _update_pidfile(self, file_path, **kwargs):
+    def __call__(self, corpus, subchash, query, samplesize):
+        """
+        corpus -- a manatee.Corpus instance
+        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
+        query -- a tuple/list containing current query
+        samplesize -- ???
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def _update_pidfile(file_path, **kwargs):
         with open(file_path, 'r') as pf:
             data = cPickle.load(pf)
         data.update(kwargs)
         with open(file_path, 'w') as pf:
             cPickle.dump(data, pf)
+
+    @staticmethod
+    def _create_pid_file():
+        pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
+                                                  uuid.uuid1()))
+        with open(pidfile, 'wb') as pf:
+            cPickle.dump(
+                {
+                    'pid': os.getpid(),
+                    'last_check': int(time.time()),
+                    # in case we check status before any calculation (represented by the
+                    # BackgroundCalc class) starts (the calculation updates curr_wait as it
+                    # runs), we want to be sure the limit is big enough for BackgroundCalc to
+                    # be considered alive
+                    'curr_wait': 100,
+                    'error': None
+                },
+                pf)
+        return pidfile
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
         """

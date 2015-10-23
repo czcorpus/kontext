@@ -16,14 +16,41 @@
 # 02110-1301, USA.
 
 import os
-import cPickle
-import uuid
 import time
 import logging
 import sys
+from multiprocessing import Pipe
 
-import settings
-from concworker import GeneralWorker
+import concworker
+from concworker import GeneralWorker, InitialNotifierFactory
+
+
+class Sender(concworker.Sender):
+    """
+    A Pipe-based sender
+    """
+    def __init__(self, child_conn):
+        self._child_conn = child_conn
+
+    def send(self, data):
+        self._child_conn.send(data)
+
+
+class Receiver(concworker.Receiver):
+    """
+    A Pipe-based receiver
+    """
+    def __init__(self, parent_conn):
+        self._parent_conn = parent_conn
+
+    def receive(self):
+        return self._parent_conn.recv()
+
+
+class NotifierFactory(InitialNotifierFactory):
+    def __call__(self):
+        parent_conn, child_conn = Pipe(duplex=False)
+        return Receiver(parent_conn), Sender(child_conn)
 
 
 class BackgroundCalc(GeneralWorker):
@@ -32,41 +59,15 @@ class BackgroundCalc(GeneralWorker):
     below).
     """
 
-    def __init__(self, sending_pipe):
+    def __init__(self, notification_sender):
         """
         arguments:
-        sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its
-                        parent
+        sender -- a concworker.Sender implementation to send initial calculation data
         """
         super(BackgroundCalc, self).__init__()
-        self._pipe = sending_pipe
-
-    @staticmethod
-    def _create_pid_file():
-        pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
-                                                  uuid.uuid1()))
-        with open(pidfile, 'wb') as pf:
-            cPickle.dump(
-                {
-                    'pid': os.getpid(),
-                    'last_check': int(time.time()),
-                    # in case we check status before any calculation (represented by the
-                    # BackgroundCalc class) starts (the calculation updates curr_wait as it
-                    # runs), we want to be sure the limit is big enough for BackgroundCalc to
-                    # be considered alive
-                    'curr_wait': 100,
-                    'error': None
-                },
-                pf)
-        return pidfile
+        self._notification_sender = notification_sender
 
     def __call__(self, corpus, subchash, query, samplesize):
-        """
-        corpus -- a manatee.Corpus instance
-        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
-        query -- a tuple/list containing current query
-        samplesize -- ???
-        """
         sleeptime = None
         try:
             cache_map = self._cache_factory.get_mapping(corpus)
@@ -74,7 +75,7 @@ class BackgroundCalc(GeneralWorker):
             cachefile, stored_pidfile = cache_map.add_to_map(subchash, query, 0, pidfile)
 
             if not stored_pidfile:
-                self._pipe.send(cachefile + '\n' + pidfile)
+                self._notification_sender.send(cachefile + '\n' + pidfile)
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
                 conc = self.compute_conc(corpus, query, samplesize)
