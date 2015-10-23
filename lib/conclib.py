@@ -15,7 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
-
 import os
 import sys
 import time
@@ -177,13 +176,23 @@ def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used
     """
-    from concworker.default import BackgroundCalc, NotifierFactory
-    receiver, sender = NotifierFactory()()
-    calc = BackgroundCalc(notification_sender=sender)
-    proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
-    proc.start()
+    if False:  # TODO this will be configurable
+        from concworker.default import BackgroundCalc, NotifierFactory
+        receiver, sender = NotifierFactory()()
+        calc = BackgroundCalc(notification_sender=sender)
+        proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
+        proc.start()
+    else:
+        from concworker.wcelery import NotifierFactory
+        import celery
+        import imp
+        # TODO path from conf
+        celeryconfig = imp.load_source('celeryconfig', '/home/tomas/work/kontext.dev/celeryconfig.py')
+        app = celery.Celery('tasks', config_source=celeryconfig)
+        res = app.send_task('worker.register', (corp.corpname, subchash, q, samplesize))
+        receiver, sender = NotifierFactory(res)()
+    cachefile, pidfile = receiver.receive()
 
-    cachefile, pidfile = receiver.receive().split('\n')
     try:
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                        cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)

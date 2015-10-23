@@ -60,15 +60,6 @@ class GeneralWorker(object):
         self._cache_factory = plugins.get('conc_cache')
         self._lock_factory = plugins.get('locking')
 
-    def __call__(self, corpus, subchash, query, samplesize):
-        """
-        corpus -- a manatee.Corpus instance
-        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
-        query -- a tuple/list containing current query
-        samplesize -- ???
-        """
-        raise NotImplementedError()
-
     @staticmethod
     def _update_pidfile(file_path, **kwargs):
         with open(file_path, 'r') as pf:

@@ -44,7 +44,7 @@ class Receiver(concworker.Receiver):
         self._parent_conn = parent_conn
 
     def receive(self):
-        return self._parent_conn.recv()
+        return self._parent_conn.recv().split('\n')
 
 
 class NotifierFactory(InitialNotifierFactory):
