@@ -167,9 +167,11 @@ class UserActionException(Exception):
     """
     This exception should cover general errors occurring in Controller's action methods'
     """
-    def __init__(self, message, code=200):
+    def __init__(self, message, code=200, error_code=None, error_args=None):
         self.message = message
         self.code = code
+        self.error_code = error_code
+        self.error_args = error_args
 
     def __repr__(self):
         return self.message
@@ -457,8 +459,12 @@ class Controller(object):
             action_module_path = module[:-len(self.get_mapping_url_prefix())]
         if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
             action_module_path = action_module_path[1:]
+        if 'HTTP_X_FORWARDED_PROTO' in self.environ:
+            protocol = self.environ['HTTP_X_FORWARDED_PROTO']
+        else:
+            protocol = self.environ['wsgi.url_scheme']
         return '%(protocol)s://%(server)s/%(script)s' % {
-            'protocol': self.environ['wsgi.url_scheme'],
+            'protocol': protocol,
             'server': self.environ.get('HTTP_HOST'),
             'script': action_module_path
         }
@@ -728,7 +734,6 @@ class Controller(object):
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
-
         if 'Query evaluation error' in text:
             srch = re.match(r'.+ at position (\d+):', text)
             if srch:
@@ -743,6 +748,8 @@ class Controller(object):
             else:
                 text = _('Attribute not found.')
             new_err = UserActionException(text)
+        elif 'EvalQueryException' in text:
+            new_err = UserActionException(_('Failed to evaluate the query. Please check the syntax and used attributes.'))
         else:
             new_err = err
         return new_err
@@ -859,11 +866,13 @@ class Controller(object):
             return_type = self._get_method_metadata(methodname, 'return_type')
             if return_type == 'json':
                 if settings.is_debug_mode() or type(e) is UserActionException:
-                    json_msg = str(e).decode('utf-8')
+                    json_msg = str(e2).decode('utf-8')
                 else:
                     json_msg = _('Failed to process your request. '
                                  'Please try again later or contact system support.')
-                return methodname, None, {'error': json_msg, 'contains_errors': True}
+                return methodname, None, {'error': json_msg, 'contains_errors': True,
+                                          'error_code': getattr(e, 'error_code', None),
+                                          'error_args': getattr(e, 'error_args', {})}
             else:
                 if not self._exceptmethod and self.is_template(methodname + '_form'):
                     self._exceptmethod = methodname + '_form'

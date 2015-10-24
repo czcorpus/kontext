@@ -72,6 +72,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 #set $states = []
                 #if $item.deleted# $states.append('<span class="deleted">' + $_('deleted') + '</span>') #end if#
                 #if $item.condition# $states.append($_('backed up')) #end if#
+                #if $len($states) == 0
+                  $states.append($_('active'))
+                #end if
                 #set $states = ', '.join($states)
                 #filter None# $states #end filter#
                 </td>
@@ -81,10 +84,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                      data-condition="$item.condition"
                      data-struct_name="$item.struct_name"
                      data-subcname="$item.usesubcorp"
-                     data-corpname="$item.corpname">$_('actions')</a>
+                     data-corpname="$item.corpname"
+                     data-human_corpname="$item.human_corpname">$_('actions')</a>
                 </td>
                 <td>
-                    <input type="checkbox" name="selected_subc" value="$item.n" />
+                    #if not $item.deleted
+                    <input class="selected-subc" type="checkbox" name="selected_subc" value="$item.internal_n" />
+                    #end if
                 </td>
             </tr>
             #end for
@@ -92,7 +98,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         </table>
         <label class="show-deleted">$_('Show also deleted items') <input type="checkbox" class="show-deleted" #if $show_deleted#checked="checked"#end if# /></label>
         <p>
-            <button type="submit" class="default-button" name="action" value="delete">$_('Delete selected')</button>
+            <button type="submit" class="default-button delete-selected"
+                    name="action" value="delete" style="display:none">$_('Delete selected')</button>
         </p>
     </form>
 </section>

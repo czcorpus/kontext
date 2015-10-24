@@ -141,7 +141,7 @@ define('conf', [], function () {
     conf.loginUrl = "$login_url";
     conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = $bib_conf.to_json();
-    conf.stateParams = "$q&amp;$globals#if $align#&align=$align#end if#";
+    conf.stateParams = "$join_params($q, $globals)";
     conf.currentArgs = $Globals.to_json();
     conf.uiLang = "$uiLang";
     conf.isDebug = #if $debug#true#else#false#end if#;
@@ -539,6 +539,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #filter None#$user_item_opt($c)#end filter#
       #end for
     </select>
+    <span id="subcorp-selector-wrapper">
     #if $SubcorpList
     <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
         #for $subc in $SubcorpList
@@ -546,6 +547,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #end for
     </select>
     #end if ## SubcorpList
+    </span>
     #if not $_anonymous
     <div class="starred">
     </div>

@@ -1,12 +1,34 @@
 {
-	"en-US": {
-		"ucnkLA__bib_list_warning": "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection.",
-		"ucnkLA__num_positions":"{num_pos} positions",
-		"ucnkLA__num_of_matching_items": "number of matching items"
-	},
-	"cs-CZ": {
-		"ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
-		"ucnkLA__num_positions":"{num_pos} pozic",
-		"ucnkLA__num_of_matching_items": "počet odpovídajících položek"
+    "en-US": {
+        "ucnkLA__bib_list_warning": "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection.",
+        "ucnkLA__num_positions":"{num_pos} positions",
+        "ucnkLA__num_of_matching_items": "number of matching items",
+        "ucnkLA__keep_current_selection": "Add to my current selection.",
+        "ucnkLA__define_range{attrib}": "Select a range for &quot;{attrib}&quot;",
+        "ucnkLA__select_range": "Select a range",
+        "ucnkLA__from": "from",
+        "ucnkLA__to": "to",
+        "ucnkLA__nothing_selected": "No matching items found.",
+        "ucnkLA__at_least_one_required": "At least one numeric value is required.",
+        "ucnkLA__OK": "OK",
+        "ucnkLA__interval_inclusion_policy": "interval inclusion",
+        "ucnkLA__strict_interval": "strict",
+        "ucnkLA__partial_interval": "partial"
+    },
+    "cs-CZ": {
+        "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
+        "ucnkLA__num_positions":"{num_pos} pozic",
+        "ucnkLA__num_of_matching_items": "počet odpovídajících položek",
+        "ucnkLA__keep_current_selection": "Přidat k mému stávajícímu výběru.",
+        "ucnkLA__define_range{attrib}": "Vybrat rozsah hodnot z &quot;{attrib}&quot;",
+        "ucnkLA__select_range": "Vybrat rozsah",
+        "ucnkLA__from": "od",
+        "ucnkLA__to": "do",
+        "ucnkLA__nothing_selected": "Nebyly nalezeny žádné odpovídající položky.",
+        "ucnkLA__at_least_one_required": "Je vyžadována alespoň jedna číselná hodnota.",
+        "ucnkLA__OK": "OK",
+        "ucnkLA__interval_inclusion_policy": "zahrnování intervalů",
+        "ucnkLA__strict_interval": "striktní",
+        "ucnkLA__partial_interval": "částečné"
 	}
 }

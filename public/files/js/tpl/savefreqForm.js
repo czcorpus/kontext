@@ -36,7 +36,7 @@ define(['jquery', 'tpl/document'], function ($, documentModule) {
             jqHeadingInput2 = $(jqForm).find('input[name="heading"]'),
             jqHeadingRow2 = jqHeadingInput2.closest('tr');
 
-        if ($(currentElement).val() === 'csv') {
+        if ($(currentElement).val() === 'csv' || $(currentElement).val() === 'xlsx') {
             jqHeadingInput.prop('disabled', false);
             jqHeadingRow.show();
             jqHeadingInput2.prop('disabled', true);

@@ -10,7 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -67,15 +67,15 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
      * @param corpusSelector
      * @constructor
      */
-    function SubcorpActions(layoutModel, tooltipBox, dataRow, corpusId, subcorpusName,
+    function SubcorpActions(layoutModel, widget, tooltipBox, dataRow, corpusId, subcorpusName,
                             corpusSelectorWrapper) {
         this.layoutModel = layoutModel;
+        this.widget = widget;
         this.tooltipBox = tooltipBox;
         this.dataRow = dataRow;
         this.corpusId = corpusId;
         this.subcorpusName = subcorpusName;
         this.corpusSelectorWrapper = corpusSelectorWrapper;
-        this.corpusSelector = $(corpusSelectorWrapper).find('select').get(0);
     }
 
     /**
@@ -127,7 +127,9 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         fieldset1.append('<legend>' + lib.layoutModel.translate('global__undelete') + '</legend>');
         fieldset1.append('<p>' + lib.layoutModel.translate('global__subcorpus_will_be_restored_using_orig_query') + '</p>');
         fieldset1Submit = $(window.document.createElement('button'));
-        fieldset1Submit.text(lib.layoutModel.translate('global__undelete'));
+        fieldset1Submit
+            .addClass('default-button')
+            .text(lib.layoutModel.translate('global__undelete'));
         fieldset1.append(fieldset1Submit);
         wrappingElm.append(fieldset1);
 
@@ -138,7 +140,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             prom.then(
                 function (ans) {
                     if (!ans.error) {
-                        window.location = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
+                        window.location.href = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
 
                     } else {
                         self.layoutModel.showMessage('error', ans.error);
@@ -161,6 +163,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             self = this;
 
         $(actionButton)
+            .addClass('default-button')
             .text(lib.layoutModel.translate('global__delete_forever_btn'))
             .on('click', function () {
                 var prom;
@@ -196,10 +199,10 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
      * @param triggerElm
      * @param tooltipBox
      */
-    SubcorpActions.prototype.createReuseForm = function (wrappingElm, triggerElm) {
+    SubcorpActions.prototype.createReuseForm = function (wrappingElm, triggerElm, selection) {
         var self = this,
             jqFieldset,
-            subcnameInput = window.document.createElement('input'),
+            subcnameInput = $('#new-subcname').get(0),
             structInput = window.document.createElement('input'),
             conditionInput = window.document.createElement('input'),
             submitArea = window.document.createElement('div'),
@@ -209,14 +212,6 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         jqFieldset = $(window.document.createElement('fieldset'));
         jqFieldset.addClass('subcorp-action-field');
         jqFieldset.append('<legend>' + self.layoutModel.translate('global__reuse_query') + '</legend>');
-
-        jqFieldset.append('<span class="subcname-label">'
-                + self.layoutModel.translate('global__new_subcorpus_name_lab') + ':</span>');
-
-        $(subcnameInput).addClass('subcname')
-                .val(this.subcorpusName);
-        jqFieldset.append(subcnameInput);
-        jqFieldset.append('<br />');
 
         $(structInput)
             .addClass('struct')
@@ -235,24 +230,39 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
         jqFieldset.append(withinBox);
 
-        $(submitButton).text(self.layoutModel.translate('global__create'))
-            .on('click', function () {
-                var prom = self.createSubcorpus($(subcnameInput).val(), $(structInput).val(),
-                                                $(conditionInput).val());
-                prom.then(
-                    function (data) {
-                        if (data.contains_errors) {
-                            self.layoutModel.showMessage('error', data.error);
+        // we have to overwrite item selection callback of shared
+        // corpus selection widget
+        selection.callback = function (corpusId, corpusName) {
+            self.corpusId = corpusId;
+        };
+        // and also set widget's initial value to the one matching
+        // the data line which triggered this box
+        this.widget.setCurrentValue($(triggerElm).data('corpname'),
+                                    $(triggerElm).data('human_corpname'));
+        this.corpusId = $(triggerElm).data('corpname');
 
-                        } else {
-                            window.location = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
+        $(submitButton)
+            .addClass('default-button')
+            .attr('type', 'button')
+            .text(self.layoutModel.translate('global__create'))
+                .on('click', function (evt) {
+                    var prom = self.createSubcorpus($(subcnameInput).val(), $(structInput).val(),
+                                                    $(conditionInput).val());
+                    prom.then(
+                        function (data) {
+                            if (data.contains_errors) {
+                                self.layoutModel.showMessage('error', data.error);
+
+                            } else {
+                                window.location.href = self.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list'
+                            }
+                        },
+                        function (jqXHR, textStatus, errorThrown) {
+                            self.layoutModel.showMessage('error', errorThrown);
                         }
-                    },
-                    function (jqXHR, textStatus, errorThrown) {
-                        self.layoutModel.showMessage('error', errorThrown);
-                    }
-                );
-            });
+                    );
+                    evt.preventDefault();
+                });
 
         $(submitArea)
             .addClass('submit-area')
@@ -262,13 +272,6 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
         $(this.corpusSelectorWrapper).show();
         jqFieldset.prepend(this.corpusSelectorWrapper);
-        corplist.create(this.corpusSelector, lib, {
-            editable: false,
-            submitMethod: 'GET',
-            itemClickAction: function (corpusId) {
-                self.corpusId = corpusId;
-            }
-        });
         wrappingElm.append(jqFieldset);
     };
 
@@ -276,8 +279,15 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
      * Creates a pop-up box containing miscellaneous functions related to a general subcorpus record
      * (undelete, wipe, re-use query).
      */
-    function subcInfo() {
+    function subcInfo(widget, selection) {
         var corpusSelectorWrapper = $('#corpus-selection');
+        var subcnameInput = window.document.createElement('input');
+        $(subcnameInput).addClass('subcname')
+                .attr('id', 'new-subcname')
+                .attr('name', 'subcname');
+
+        $('#subcorp-selector-wrapper').before(subcnameInput);
+        $('#subcorp-selector-wrapper').remove();
 
         $('table.data td .subc-actions').each(function () {
             var self = this;
@@ -290,19 +300,21 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
                             triggerElm = tooltipBox.getTriggerElm(),
                             component = new SubcorpActions(
                                 lib.layoutModel,
+                                widget,
                                 tooltipBox,
                                 $(triggerElm).closest('tr').get(0),
                                 $(triggerElm).data('corpname'),
-                                $(triggerElm).data('subcname'),
+                                decodeURIComponent($(triggerElm).data('subcname')),
                                 corpusSelectorWrapper
                             );
+                            $(component.corpusSelector).val($(triggerElm).data('corpname'));
 
                         if (hasDeletedFlag(self)) {
                             component.createUndeleteForm(divElm, triggerElm);
                             component.createWipeForm(divElm);
                         }
                         if (hasDefinedSubcorpus(self)) {
-                            component.createReuseForm(divElm, triggerElm);
+                            component.createReuseForm(divElm, triggerElm, selection);
                         }
 
                         tooltipBox.importElement(divElm);
@@ -337,17 +349,50 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         });
     }
 
+    function updateSelectionButtons() {
+        if ($('#mainform').find('input[name="selected_subc"]:checked').length > 0) {
+            $('#mainform').find('button.delete-selected').show();
+
+        } else {
+            $('#mainform').find('button.delete-selected').hide();
+        }
+    }
+
     /**
      * Functions related to the subcorpus list
      */
     function initList() {
         $('section input.show-deleted').on('change', function (e) {
             if ($(e.currentTarget).is(':checked')) {
-                window.location = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=1';
+                window.location.href = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=1';
 
             } else {
-                window.location = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=0';
+                window.location.href = lib.layoutModel.conf['rootURL'] + 'subcorpus/subcorp_list?show_deleted=0';
             }
+        });
+
+        $('#mainform').find('input[name="selected_subc"]').on('change', function () {
+            updateSelectionButtons();
+        });
+    }
+
+    /*
+     * Corpus selection widget is shared among all the subcorpus lines' action links.
+     * It makes some related actions not very straightforward (like overwriting of
+     * the item selection callback - see the 'selection' argument).
+     */
+    function createCorpusSelector(origSelectElm, selection) {
+        return corplist.create(origSelectElm, lib, {
+            editable: false,
+            submitMethod: 'GET',
+            itemClickAction: function (corpusId, corpusName) {
+                selection.callback(corpusId, corpusName);
+                this.hide();
+            },
+            favoriteItemsFilter : function (item) {
+                return item.type === 'corpus';
+            },
+            disableStarComponent: true
         });
     }
 
@@ -358,8 +403,16 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
     lib.init = function (conf) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
-        subcInfo();
+        // corpusSelection stores a callback of currently opened action link
+        // (i.e. only one at a time)
+        lib.corpusSelection = {
+            callback: function (corpusId, corpusName) {}
+        }
+        var widget = createCorpusSelector($('#corpus-selection').find('select[name="corpname"]').get(0),
+                             lib.corpusSelection);
+        subcInfo(widget, lib.corpusSelection);
         initList();
+        updateSelectionButtons();
     };
 
 

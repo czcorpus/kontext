@@ -41,9 +41,11 @@ class CorpusMetadata(DictLike):
     def __init__(self):
         self.database = None
         self.label_attr = None
+        self.avg_label_attr_len = None
         self.id_attr = None
         self.desc = {}
         self.keywords = {}
+        self.interval_attrs = []
 
 
 class CitationInfo(DictLike):
@@ -62,6 +64,7 @@ class CorpusInfo(DictLike):
     """
     def __init__(self):
         self.id = None
+        self.name = None
         self.path = None
         self.web = None
         self.sentence_struct = None
@@ -137,6 +140,33 @@ class AbstractCorporaArchive(ThreadLocalData):
         raise NotImplementedError()
 
 
+class CorplistProvider(object):
+    """
+    An object providing actual corpus list based on passed arguments.
+    """
+    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+        """
+        arguments:
+        user_id -- database user ID
+        query -- raw query entered by user (possibly modified by client-side code)
+        offset -- zero-based offset specifying returned data
+        limit -- number of items to return
+        filter_dict -- a dictionary containing additional search parameters
+        """
+        raise NotImplementedError()
+
+    def sort(self, data, *fields):
+        """
+        arguments:
+        data -- a list of dicts to be sorted
+        *fields -- zero or more keys to be used to sort the data
+
+        returns:
+        sorted original data or their shallow copy
+        """
+        raise NotImplementedError()
+
+
 class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     """
     An extended version supporting search by user query
@@ -160,6 +190,20 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
         returns:
         a JSON-serializable dictionary a concrete plug-in implementation understands
+        """
+        service = self.create_corplist_provider(plugin_api)
+        return service.search(user_id=user_id, query=query, offset=offset, limit=limit,
+                              filter_dict=filter_dict)
+
+    def create_corplist_provider(self, plugin_api):
+        """
+        A factory function producing search service
+
+        arguments:
+        plugin_api -- a controller.PluginApi instance
+
+        returns:
+        A CorplistProvider instance
         """
         raise NotImplementedError()
 

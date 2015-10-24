@@ -29,18 +29,40 @@ stores the received HTML code into user's session where it is available for
 later pick-up. (Please note that KonText plug-ins cannot send user/request
 data to each other). This prevents additional HTTP request from ucnk_appbar.
 
-Required config.xml/plugins entries:
+Required config.xml/plugins entries (RelaxNG compact format):
 
-<auth>
-    <module>ucnk__remote_auth2</module>
-    <auth_cookie_name>[name of a cookie used to store KonText's internal auth ID]</auth_cookie_name>
-    <central_auth_cookie_name extension-by="ucnk">[name of a cookie used by a central-authentication service]</central_auth_cookie_name>
-    <login_url>[URL where KonText redirects user to log her in; placeholders can be used]</login_url>
-    <logout_url>[URL where KonText redirects user to log her out; placeholders can be used]</logout_url>
-    <toolbar_server>[service address (without path part)]</toolbar_server>
-    <toolbar_port>[TCP port used by the external service]</toolbar_port>
-    <toolbar_path>[path part of the service; placeholders are supported]</toolbar_path>
-</auth>
+element auth {
+    element module { "ucnk_remote_auth2" }
+    element auth_cookie_name {
+        text  # name of a cookie used to store KonText's internal auth ID
+    }
+    element central_auth_cookie_name {
+        attribute extension-by { "ucnk"}
+        text  # name of a cookie used by a central-authentication service
+    }
+    element login_url {
+        text  # URL where KonText redirects user to log her in; placeholders can be used
+    }
+    element logout_url {
+        text  # URL where KonText redirects user to log her out; placeholders can be used
+    }
+    element toolbar_server {
+        attribute extension-by { "ucnk" }
+        text  # authentication service address (without path part)
+    }
+    element toolbar_port {
+        attribute extension-by { "ucnk" }
+        text  # TCP port used by the external service
+    }
+    element toolbar_path {
+        attribute extension-by { "ucnk" }
+        text  # path part of the service; placeholders are supported
+    }
+    element toolbar_server_timeout {
+        attribute extension-by { "ucnk" }
+        xsd:integer  # number of seconds to wait for the response
+    }
+}
 """
 
 import urllib
@@ -69,6 +91,7 @@ class AuthConf(object):
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
         self.anonymous_user_id = conf.get_int('global', 'anonymous_user_id')
+        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
 
 
 class CentralAuth(AbstractRemoteAuth):
@@ -117,13 +140,13 @@ class CentralAuth(AbstractRemoteAuth):
             ticket_id = None
         return ticket_id
 
-    def _fetch_ucnk_toolbar(self, cookies, curr_lang, timeout=2):
+    def _fetch_ucnk_toolbar(self, cookies, curr_lang):
         if not curr_lang:
             curr_lang = 'en'
         curr_lang = curr_lang.split('_')[0]
         ticket_id = self.get_ticket(cookies)
         connection = httplib.HTTPConnection(self._toolbar_conf.server,
-                                            port=self._toolbar_conf.port, timeout=timeout)
+                                            port=self._toolbar_conf.port, timeout=self._conf.toolbar_server_timeout)
         connection.request('GET', self._toolbar_conf.path % {
             'id': ticket_id,
             'lang': curr_lang,

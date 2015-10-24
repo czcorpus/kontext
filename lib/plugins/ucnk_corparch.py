@@ -83,7 +83,7 @@ import logging
 
 import plugins
 from plugins import inject
-from plugins.default_corparch import CorpusArchive, CorpSearch, parse_query
+from plugins.default_corparch import CorpusArchive, DeafultCorplistProvider, parse_query
 from plugins.abstract.corpora import CorpusInfo
 import l10n
 from controller import exposed
@@ -115,6 +115,15 @@ def ask_corpus_access(controller, request):
     return ans
 
 
+class UcnkCorplistProvider(DeafultCorplistProvider):
+
+    def __init__(self, plugin_api, auth, corparch, tag_prefix):
+        super(UcnkCorplistProvider, self).__init__(plugin_api, auth, corparch, tag_prefix)
+
+    def sort(self, data, *fields):
+        return data
+
+
 class UcnkCorpArch(CorpusArchive):
     """
     Loads and provides access to a hierarchical list of corpora
@@ -139,6 +148,9 @@ class UcnkCorpArch(CorpusArchive):
         ans['initial_keywords'] = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
 
+    def create_corplist_provider(self, plugin_api):
+        return UcnkCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+
     def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
         if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
@@ -152,9 +164,7 @@ class UcnkCorpArch(CorpusArchive):
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
-        search_obj = CorpSearch(plugin_api, self._auth, self, self._tag_prefix)
-        return super(UcnkCorpArch, self).search_via_service(search_obj, user_id, query, offset,
-                                                            limit, filter_dict)
+        return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, user, user_id, custom_message):
         """
@@ -198,8 +208,14 @@ class UcnkCorpArch(CorpusArchive):
     def create_corpus_info(self):
         return UcnkCorpusInfo()
 
+    def _get_range_attributes(self, corp_info, corp_node):
+        root = corp_node.find('metadata/interval_attrs')
+        if root is not None:
+            corp_info.metadata.interval_attrs = [x.text for x in root.findall('*')]
+
     def customize_corpus_info(self, corpus_info, node):
         corpus_info.requestable = self._decode_bool(node.attrib.get('requestable'))
+        self._get_range_attributes(corpus_info, node)
 
     def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
         item['requestable'] = corpus_info.requestable and corpus_info.id not in permitted_corpora \
