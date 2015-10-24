@@ -85,6 +85,7 @@ class GeneralWorker(object):
                     'error': None
                 },
                 pf)
+        os.chmod(pidfile, 0o664)
         return pidfile
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):

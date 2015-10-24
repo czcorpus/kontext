@@ -31,7 +31,9 @@ initializer.init_plugin('conc_cache')
 
 from concworker import wcelery
 
-app = Celery('tasks', config_source='celeryconfig')
+
+_, conf = settings.get_full('global', 'conc_calc_backend')
+app = Celery('kontext', config_source=wcelery.load_config_module(conf['conf']))
 
 
 @app.task

@@ -19,9 +19,14 @@ import time
 import os
 import logging
 import sys
+import imp
 
 import concworker
 from corplib import CorpusManager
+
+
+def load_config_module(path):
+    return imp.load_source('celeryconfig', path)
 
 
 class Sender(concworker.Sender):
@@ -57,6 +62,11 @@ class InitialArgs(object):
         self.cachefile = kwargs.get('cachefile')
         self.pidfile = kwargs.get('pidfile')
         self.stored_pidfile = kwargs.get('stored_pidfile')
+
+    def __repr__(self):
+        return 'InitialArgs{cachefile: %s, pidfile: %s, stored_pidfile: %s}' % (self.cachefile,
+                                                                                self.pidfile,
+                                                                                self.stored_pidfile)
 
 
 class TaskRegistration(concworker.GeneralWorker):

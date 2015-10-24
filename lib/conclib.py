@@ -122,7 +122,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     start_time = time.time()
     q = tuple(q)
     if not os.path.isdir(pid_dir):
-        os.makedirs(pid_dir)
+        os.makedirs(pid_dir, mode=0o775)
 
     cache_map = cache_factory.get_mapping(corp)
     cache_map.refresh_map()
@@ -174,25 +174,25 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
 def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
-    currently not used
+    currently not used ----- TODO remove it
     """
-    if False:  # TODO this will be configurable
+    backend, conf = settings.get_full('global', 'conc_calc_backend')
+    if backend == 'multiprocessing':
         from concworker.default import BackgroundCalc, NotifierFactory
         receiver, sender = NotifierFactory()()
         calc = BackgroundCalc(notification_sender=sender)
         proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
         proc.start()
-    else:
-        from concworker.wcelery import NotifierFactory
+    elif backend == 'celery':
+        from concworker.wcelery import NotifierFactory, load_config_module
         import celery
-        import imp
-        # TODO path from conf
-        celeryconfig = imp.load_source('celeryconfig', '/home/tomas/work/kontext.dev/celeryconfig.py')
-        app = celery.Celery('tasks', config_source=celeryconfig)
+        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
         res = app.send_task('worker.register', (corp.corpname, subchash, q, samplesize))
         receiver, sender = NotifierFactory(res)()
-    cachefile, pidfile = receiver.receive()
+    else:
+        raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
+    cachefile, pidfile = receiver.receive()
     try:
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                        cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)
