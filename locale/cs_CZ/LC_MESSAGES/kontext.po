@@ -1880,6 +1880,9 @@ msgstr "Dotaz selhal: Syntaktická chyba na pozici %s."
 msgid "Query failed: Syntax error."
 msgstr "Dotaz selhal: Syntaktická chyba."
 
+msgid "Failed to evaluate the query. Please check the syntax and used attributes."
+msgstr "Dotaz se nepodařilo provést. Zkontrolujte prosím syntaxi a použité atributy."
+
 msgid "Attribute \"%s\" not found."
 msgstr "Atribut \"%s\" nebyl nalezen."
 
@@ -1948,6 +1951,9 @@ msgstr "akce"
 
 msgid "deleted"
 msgstr "smazáno"
+
+msgid "active"
+msgstr "aktivní"
 
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"

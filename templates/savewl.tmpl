@@ -19,64 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #from translation import ugettext as _
 
 #encoding UTF-8
-#if $saveformat == 'xml'
-#filter WebSafe
-## XML formatsavewl
-<?xml version='1.0' encoding='utf-8'?>
-#if $keywords
-<keywords>
-#else
-<word_list>
-#end if
-#if $heading
-  <heading>
-    <corpus>$human_corpname</corpus>
-  #if $usesubcorp
-    <subcorpus>$usesubcorp</subcorpus>
-  #end if
-  #if $keywords
-    <ref_corpus>$ref_corpname</ref_corpus>
-    #if $ref_usesubcorp
-    <ref_subcorpus>$ref_usesubcorp</ref_subcorpus>
-    #end if
-  #end if
-  </heading>
-#end if
-#if $Items
-  <items attr="$wlattr">
-  #for $i in $Items
-    <item>
-      <str>$i.str</str>
-      <freq>$i.freq</freq>
-    </item>
-  #end for
-  </items>
-#else
-#if $Keywords
-  <items attr="$wlattr">
-  #for $k in $Keywords
-    <item>
-      <str>$k.str</str>
-      <freq>$k.freq</freq>
-      <arf>$k.arf</arf>
-      <arf_mill>$k.arf_mill</arf_mill>
-      <freq_ref>$k.get('freq_ref', '0')</freq_ref>
-      <arf_ref>$k.arf_ref</arf_ref>
-      <arf_mill_ref>$k.arf_mill_ref</arf_mill_ref>
-      <score>$k.score</score>
-    </item>
-  #end for
-</items>
-#end if
-#end if
-#if $keywords
-</keywords>
-#else
-</word_list>
-#end if
 
-#end filter
-#elif $saveformat == 'text'
+#if $saveformat == 'text'
 ## Text format
 #if $heading
   #if $keywords
@@ -87,6 +31,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 \# Corpus: $human_corpname
   #if $usesubcorp
 \# Subcorpus: $usesubcorp
+  #end if
+  #if $pattern
+\# Pattern: $pattern
   #end if
   #if $keywords
 \# Reference corpus: $ref_corpname

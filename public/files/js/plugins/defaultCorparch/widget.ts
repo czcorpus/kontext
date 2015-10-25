@@ -19,23 +19,32 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
+/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import $ = require('jquery');
 import common = require('./common');
+import popupBox = require('popupbox');
 
 
 /**
  *
  */
-export interface CorplistSrchItemClick {
+interface CorplistSrchItemClick {
     (corpId:string, corpName:string):void;
 }
 
 /**
  *
  */
-export interface CorplistFavItemClick {
-    (itemId:string, href:string):void;
+interface CorplistFavItemClick {
+    (itemId:string, itemName:string, href:string):void;
+}
+
+/**
+ * A general click action performed on featured/favorite/searched item
+ */
+export interface CorplistItemClick {
+    (itemId:string, itemName:string, widget:Corplist):void;
 }
 
 /**
@@ -115,11 +124,20 @@ export interface Options {
     submitMethod?:string;
 
     /**
-     * Using custom action disables implicit form submission which means
-     * formTarget and submitMethod options have no effect unless you use
+     * Handles click on favorite/featured/searched item.
+     *
+     * Using custom action disables implicit form submission (or location.href update)
+     * which means formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:CorplistSrchItemClick;
+    itemClickAction?:CorplistItemClick;
+
+    /**
+     * A custom filter allowing filtering displayed favorite (i.e. featured/searched items
+     * are not affected!) items. This allows e.g. displaying only items of a certain
+     * type. Default filter returns 'true' on each item.
+     */
+    favoriteItemsFilter?:(item:common.CorplistItem)=>boolean;
 
     /**
      * A HTML class to be used for widget's wrapping container.
@@ -144,6 +162,8 @@ export interface Options {
      * (i.e. user cannot add remove her favorite items).
      */
     editable?:boolean;
+
+    disableStarComponent?:boolean;
 }
 
 
@@ -302,7 +322,7 @@ class WidgetMenu {
 /**
  * This class represents the SearchTab tab
  */
-export class SearchTab implements WidgetTab {
+class SearchTab implements WidgetTab {
 
     pluginApi:Kontext.PluginApi;
 
@@ -356,7 +376,7 @@ export class SearchTab implements WidgetTab {
      *
      */
     private getTagQuery():string {
-        var ans = [];
+        let ans = [];
 
         for (var p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)) {
@@ -372,8 +392,8 @@ export class SearchTab implements WidgetTab {
      * @param skipId
      */
     private resetTagSelection(skipId?:Array<string>|string):void {
-        var toReset = [],
-            skipIds:Array<string>;
+        let toReset = [];
+        let skipIds:Array<string>;
 
         if (typeof skipId === 'string') {
             skipIds = [skipId];
@@ -385,14 +405,14 @@ export class SearchTab implements WidgetTab {
             skipIds = [];
         }
 
-        for (var p in this.selectedTags) {
+        for (let p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)
                 && this.selectedTags[p]
                 && skipIds.indexOf(p) === -1) {
                 toReset.push(p);
             }
         }
-        for (var i = 0; i < toReset.length; i += 1) {
+        for (let i = 0; i < toReset.length; i += 1) {
             $(this.selectedTags[toReset[i]]).removeClass('selected');
             delete this.selectedTags[toReset[i]];
         }
@@ -426,7 +446,6 @@ export class SearchTab implements WidgetTab {
         $(this.srchField).focus();          // that the input actually changed
         this.bloodhound.clear();
         $(this.srchField).data('ttTypeahead').menu.datasets[0].update($(this.srchField).val());
-
     }
 
     /**
@@ -455,8 +474,8 @@ export class SearchTab implements WidgetTab {
      *
      */
     private initLabels():void {
-        var div = window.document.createElement('div'),
-            self = this;
+        let div = window.document.createElement('div');
+        let self = this;
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
@@ -486,8 +505,8 @@ export class SearchTab implements WidgetTab {
     }
 
     private initTypeahead():void {
-        var self = this;
-        var remoteOptions:Bloodhound.RemoteOptions<string> = {
+        let self = this;
+        let remoteOptions:Bloodhound.RemoteOptions<string> = {
             url : self.pluginApi.getConf('rootURL') + 'corpora/ajax_list_corpora',
             prepare: function (query, settings) {
                 settings.url += '?query=' + encodeURIComponent(self.getTagQuery() + ' ' + query);
@@ -497,7 +516,7 @@ export class SearchTab implements WidgetTab {
                 return response.rows;
             }
         };
-        var bhOptions:Bloodhound.BloodhoundOptions<string> = {
+        let bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
                 return Bloodhound.tokenizers.whitespace(d.name);
             },
@@ -507,7 +526,7 @@ export class SearchTab implements WidgetTab {
         this.bloodhound = new Bloodhound(bhOptions);
         this.bloodhound.initialize();
 
-        var options:Twitter.Typeahead.Options = {
+        let options:Twitter.Typeahead.Options = {
             name: 'corplist',
             hint: true,
             highlight: true,
@@ -528,8 +547,8 @@ export class SearchTab implements WidgetTab {
                             + ' <span class="num">('
                             + self.pluginApi.translate('global__size')
                             + ': ' + item.raw_size + ', '
-                            + self.pluginApi.translate('defaultCorparch__found_in')
-                            + ': ' + item.found_in.join(', ')
+                            + self.pluginApi.translate('defaultCorparch__found_in_{values}',
+                                {values: item.found_in.join(', ')})
                             + ')</span></p>');
 
                     } else {
@@ -551,11 +570,16 @@ export class SearchTab implements WidgetTab {
             $(self.ajaxLoader).removeClass('hidden');
             if (!self.loaderKiller) {
                 self.loaderKiller = setInterval(function () {
-                    if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH
-                        && $.isEmptyObject(self.selectedTags)) {
-                        $(self.ajaxLoader).addClass('hidden');
+                    if ($(self.srchField).val().length === 0) {
+                        if (!$.isEmptyObject(self.selectedTags)) {
+                            self.triggerTypeaheadSearch();
+                        }
                         clearInterval(self.loaderKiller);
+
+                    } else if ($(self.srchField).val().length <= SearchTab.TYPEAHEAD_MIN_LENGTH) {
+                        $(self.ajaxLoader).addClass('hidden');
                     }
+
                 }, 250);
             }
         });
@@ -631,17 +655,20 @@ class FavoritesTab implements WidgetTab {
 
     private wrapperFeat:HTMLElement;
 
-    itemClickCallback:CorplistSrchItemClick;
+    itemClickCallback:CorplistFavItemClick;
 
     editMode:boolean;
 
     onListChange:Array<(trigger:FavoritesTab)=>void>;  // list of registered callbacks
 
+    customListFilter:(item:common.CorplistItem)=>boolean;
+
     /**
      *
      */
     constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
-                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick) {
+                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
+                customListFilter?:(item:common.CorplistItem)=>boolean) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
@@ -675,6 +702,13 @@ class FavoritesTab implements WidgetTab {
         $(this.wrapperFeat).addClass('featured-list')
             .append('<tr><th colspan="2">' + this.pageModel.translate('defaultCorparch__featured_corpora') + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFeat);
+
+        if (customListFilter) {
+            this.customListFilter = customListFilter;
+
+        } else {
+            this.customListFilter = (item:any) => true;
+        }
     }
 
     registerChangeListener(fn:(trigger:FavoritesTab)=>void) {
@@ -689,14 +723,18 @@ class FavoritesTab implements WidgetTab {
      * @returns true on success else false
      */
     containsItem(item:common.CorplistItem):boolean {
-        for (var i = 0; i < this.dataFav.length; i += 1) {
-            if (this.dataFav[i].id == item.id) {
+        for (let i = 0; i < this.dataFav.length; i += 1) {
+            if (this.dataFav[i].id === item.id) {
                 return true;
             }
         }
         return false;
     }
 
+    /**
+     * Switches widget edit mode from 'on' to 'off' and from 'off' to 'on'.
+     * When 'on' then user can remove her favorite items.
+     */
     switchItemEditMode() {
         if (this.editMode === false) {
             $(this.wrapperFav).find('img.remove').removeClass('disabled');
@@ -718,10 +756,10 @@ class FavoritesTab implements WidgetTab {
         var rootPath = this.pageModel.createActionUrl('/first_form'),
             params = ['corpname=' + itemData.corpus_id];
 
-        if (itemData.type === 'subcorpus') {
+        if (itemData.type === common.CorplistItemType.SUBCORPUS) {
             params.push('usesubcorp=' + itemData.subcorpus_id);
         }
-        if (itemData.type === 'aligned_corpora') {
+        if (itemData.type === common.CorplistItemType.ALIGNED_CORPORA) {
             for (var i = 0; i < itemData.corpora.length; i++) {
                 params.push('sel_aligned=' + itemData.corpora[i].corpus_id);
             }
@@ -783,17 +821,19 @@ class FavoritesTab implements WidgetTab {
 
         if (!this.pageModel.getConf('anonymousUser')) {
             $.each(this.dataFav, function (i, item) {
-                jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
-                    + ' title="' + item.description + '"'
-                    + ' href="' + self.generateItemUrl(item)
-                    + '" data-id="' + item.id + '">' + item.name + '</a></td>'
-                    + '<td class="num">' + item.size_info + '</td>'
-                    + '<td class="tools"><img class="remove over-img disabled" '
-                    + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                    + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                    + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
-                    + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
-                    + '</td></tr>');
+                if (self.customListFilter(item)) {
+                    jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
+                        + ' title="' + item.description + '"'
+                        + ' href="' + self.generateItemUrl(item)
+                        + '" data-id="' + item.id + '">' + item.name + '</a></td>'
+                        + '<td class="num">' + item.size_info + '</td>'
+                        + '<td class="tools"><img class="remove over-img disabled" '
+                        + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
+                        + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
+                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
+                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                        + '</td></tr>');
+                }
             });
 
             jqWrapper.find('td.tools img.remove').on('click', function (e:JQueryEventObject) {
@@ -808,6 +848,7 @@ class FavoritesTab implements WidgetTab {
                         self.itemClickCallback.call(
                             self,
                             $(e.currentTarget).data('id'),
+                            $(e.currentTarget).text(),
                             $(e.currentTarget).attr('href')
                             );
                         e.stopPropagation();
@@ -850,7 +891,9 @@ class FavoritesTab implements WidgetTab {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
                         self.itemClickCallback.call(self,
-                            $(e.currentTarget).data('id'), $(e.currentTarget).attr('href'));
+                            $(e.currentTarget).data('id'),
+                            $(e.currentTarget).text(),
+                            $(e.currentTarget).attr('href'));
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -1030,11 +1073,12 @@ class StarComponent {
      * @param flag
      */
     setFavorite(flag:common.Favorite) {
-        var self = this,
-            prom:JQueryXHR,
-            newItem:common.CorplistItem,
-            message:string,
-            postDispatch:(data:any)=>void;
+        let self = this;
+        let prom:JQueryXHR;
+        let newItem:common.CorplistItem;
+        let message:string;
+        let postDispatch:(data:any)=>void;
+        let updateStar:()=>void;
 
         if (flag === common.Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
@@ -1044,6 +1088,7 @@ class StarComponent {
             postDispatch = function (data) {
                 self.starSwitch.setItemId(data.id);
             };
+            updateStar = () => self.starSwitch.setStarState(true);
 
         } else {
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
@@ -1052,6 +1097,7 @@ class StarComponent {
             postDispatch = function (data) {
                 self.starSwitch.setItemId(null);
             };
+            updateStar = () => self.starSwitch.setStarState(false);
         }
 
         prom.then(
@@ -1059,22 +1105,31 @@ class StarComponent {
                 if (!data.error) {
                     self.pageModel.showMessage('info', message);
                     postDispatch(data);
-                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+                    updateStar();
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                    if (data.error_code) {
+                        self.pageModel.showMessage('error', self.pageModel.translate(data.error_code, data.error_args || {}));
+
+                    } else {
+                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                    }
                 }
+                return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
             },
-            function (err) {
+            function (err, textStatus) {
                 self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                throw new Error(textStatus);
             }
         ).then(
             function (favItems) {
-                if (favItems && !favItems.error) {
-                    self.favoriteItemsTab.reinit(favItems);
+                if (favItems) {
+                    if (!favItems.error) {
+                        self.favoriteItemsTab.reinit(favItems);
 
-                } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                    } else {
+                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                    }
                 }
             },
             function (err) {
@@ -1130,20 +1185,20 @@ class StarComponent {
 
 
             if (subcorpus_id) {
-                ans.type = 'subcorpus';
+                ans.type = common.CorplistItemType.SUBCORPUS;
                 ans.subcorpus_id = subcorpus_id;
                 ans.id = ans.corpus_id + ':' + ans.subcorpus_id;
                 ans.name = this.pageModel.getConf('humanCorpname') + ':' + this.getCurrentSubcorpus();
 
             } else if (aligned_corpora.length > 0) {
-                ans.type = 'aligned_corpora';
+                ans.type = common.CorplistItemType.ALIGNED_CORPORA;
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
                 ans.name = this.pageModel.getConf('humanCorpname') + '+'
                     + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
-                ans.type = 'corpus';
+                ans.type = common.CorplistItemType.CORPUS;
                 ans.id = ans.canonical_id;
                 ans.name = this.pageModel.getConf('humanCorpname');
             }
@@ -1172,7 +1227,7 @@ class StarComponent {
             subcorpName = $('#subcorp-selector').val();
         }
         $('div.parallel-corp-lang:visible').each(function () {
-            alignedCorpora.push($(this).data('corpus-id'));
+            alignedCorpora.push($(this).attr('data-corpus-id'));
         });
 
         item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
@@ -1189,11 +1244,9 @@ class StarComponent {
         if (this.editable) {
             $(this.starImg).on('click', function (e) {
                 if (!self.starSwitch.isStarred()) {
-                    self.starSwitch.setStarState(true);
                     self.setFavorite(common.Favorite.FAVORITE);
 
                 } else {
-                    self.starSwitch.setStarState(false);
                     self.setFavorite(common.Favorite.NOT_FAVORITE);
                 }
             });
@@ -1249,7 +1302,7 @@ export class Corplist {
 
     private starComponent:StarComponent;
 
-    searchBox:SearchTab;
+    private searchBox:SearchTab;
 
     private favoritesBox:FavoritesTab;
 
@@ -1259,28 +1312,9 @@ export class Corplist {
 
     onShow:(widget:Corplist)=>void;
 
+    private onSrchItemClick:CorplistSrchItemClick;
 
-    onSrchItemClick:CorplistSrchItemClick = (corpusId:string, corpusName:string) => {
-        $(this.hiddenInput).val(corpusId);
-        this.setButtonLabel(corpusName);
-
-        if (this.options.itemClickAction) {
-            this.options.itemClickAction.call(this, corpusId, corpusName);
-
-        } else {
-            if (this.options.formTarget) {
-                $(this.parentForm).attr('action', this.options.formTarget);
-            }
-            if (this.options.submitMethod) {
-                $(this.parentForm).attr('method', this.options.submitMethod);
-            }
-            $(this.parentForm).submit();
-        }
-    };
-
-    onFavItemClick:CorplistFavItemClick = (itemId:string, href:string) => {
-        window.location.href = href;
-    };
+    private onFavItemClick:CorplistFavItemClick;
 
     /**
      *
@@ -1298,6 +1332,41 @@ export class Corplist {
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
         this.onHide = this.options.onHide ? this.options.onHide : null;
         this.onShow = this.options.onShow ? this.options.onShow : null;
+
+        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
+            this.setCurrentValue(corpusId, corpusName);
+
+            if (this.options.itemClickAction) {
+                this.options.itemClickAction.call(this, corpusId, corpusName);
+
+            } else {
+                if (this.options.formTarget) {
+                    $(this.parentForm).attr('action', this.options.formTarget);
+                }
+                if (this.options.submitMethod) {
+                    $(this.parentForm).attr('method', this.options.submitMethod);
+                }
+                $(this.parentForm).submit();
+            }
+        };
+
+        this.onFavItemClick = (itemId:string, itemName:string, href:string) => {
+            this.setCurrentValue(itemId, itemName);
+            if (this.options.itemClickAction) {
+                this.options.itemClickAction.call(this, itemId, itemName);
+
+            } else {
+                window.location.href = href;
+            }
+        };
+    }
+
+    /**
+     *
+     */
+    setCurrentValue(itemId:string, itemLabel:string):void {
+         $(this.hiddenInput).val(itemId);
+         this.setButtonLabel(itemLabel);
     }
 
     /**
@@ -1405,7 +1474,8 @@ export class Corplist {
         this.searchBox.init();
 
         this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick);
+            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick,
+            this.options.favoriteItemsFilter);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');
@@ -1421,9 +1491,12 @@ export class Corplist {
 
         this.bindOutsideClick();
         $(this.triggerButton).on('click', this.onButtonClick);
-        this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
-            this.options.editable !== undefined ? this.options.editable : true);
-        this.starComponent.init();
+
+        if (!this.options.disableStarComponent) {
+            this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
+                this.options.editable !== undefined ? this.options.editable : true);
+            this.starComponent.init();
+        }
 
         this.switchComponentVisibility(Visibility.HIDDEN);
     }

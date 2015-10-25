@@ -159,7 +159,7 @@ class Subcorpus(Kontext):
     def _create_full_subc_list(self, queries, subc_files):
         pass
 
-    @exposed(access_level=1)
+    @exposed(access_level=1, skip_corpus_init=True)
     def subcorp_list(self, request):
         """
         Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
@@ -170,25 +170,24 @@ class Subcorpus(Kontext):
 
         sort = 'n'  # TODO
         show_deleted = int(request.args.get('show_deleted', 0))
-        current_corp = self.args.corpname
         if self.get_http_method() == 'POST':
             selected_subc = request.form.getlist('selected_subc')
             self._delete_subcorpora(selected_subc)
 
         data = []
-        for corp in plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values():
+        user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values()
+        for corp in user_corpora:
             try:
-                self.cm.get_Corpus(corp)
-                basecorpname = corp.split(':')[0]
-                for item in self.cm.subcorp_names(basecorpname):
+                for item in self.cm.subcorp_names(corp):
                     sc = self.cm.get_Corpus(corp, item['n'])
-                    subc_id = '%s:%s' % (self._canonical_corpname(corp), item['n'])
                     data.append({
-                        'n': subc_id,
+                        'n': '%s:%s' % (self._canonical_corpname(corp), item['n']),
+                        'internal_n': '%s:%s' % (corp, item['n']),
                         'v': item['n'],
                         'size': sc.search_size(),
                         'created': sc.created,
                         'corpname': corp,
+                        'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
                         'deleted': False
                     })
@@ -203,6 +202,7 @@ class Subcorpus(Kontext):
             try:
                 full_list = plugins.get('subc_restore').extend_subc_list(
                     data, self._session_get('user', 'id'),
+                    self._canonical_corpname,
                     bool(show_deleted), 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
@@ -223,16 +223,13 @@ class Subcorpus(Kontext):
         else:
             sort_keys[sort_key] = (sort_key, '&#8595;')
 
-        # this is necessary to reset manatee module back to its original state
-        self.cm.get_Corpus(current_corp)
-
         ans = {
+            'SubcorpList': [],   # this is used by subcorpus SELECT element; no need for that here
             'subcorp_list': full_list,
             'sort_keys': sort_keys,
             'show_deleted': show_deleted,
             'rev': rev
         }
-        self._export_subcorpora_list(ans)
         return ans
 
     @exposed(access_level=1, return_type='json', legacy=True)

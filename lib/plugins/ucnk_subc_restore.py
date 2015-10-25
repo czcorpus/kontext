@@ -39,15 +39,13 @@ required entry in config.xml:
 """
 
 import time
-import logging
 import urllib
-LOG = logging.getLogger(__name__).debug
 
 from sqlalchemy import create_engine
 import werkzeug.urls
-
 from abstract.subc_restore import AbstractSubcRestore
 import datetime
+from plugins import inject
 
 
 class UCNKSubcRestore(AbstractSubcRestore):
@@ -57,8 +55,9 @@ class UCNKSubcRestore(AbstractSubcRestore):
 
     COLS = ('id', 'user_id', 'corpname', 'subcname', 'struct_name', 'condition', 'timestamp')
 
-    def __init__(self, conf):
+    def __init__(self, conf, corparch):
         self._conf = conf
+        self._corparch = corparch
         self._db = create_engine('sqlite:///%s' % self._conf.get('plugins')['subc_restore']['ucnk:db_path'])
 
     def store_query(self, user_id, corpname, subcname, structname, condition):
@@ -88,7 +87,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             return None
 
-    def extend_subc_list(self, subc_list, user_id, show_deleted, from_idx, to_idx=None):
+    def extend_subc_list(self, subc_list, user_id, corpname_canonizer, show_deleted, from_idx, to_idx=None):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
@@ -98,6 +97,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         subc_list -- an original subcorpora list as produced by KonText's respective action
                      (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
         user_id -- a database user ID
+        corpname_canonizer -- a function providing a canonized version of a corpus name
         show_deleted -- if True then the method includes removed subcorpora too (though without
                         some properties obtained from subcorpora files which are not available in such
                         case)
@@ -110,22 +110,24 @@ class UCNKSubcRestore(AbstractSubcRestore):
         subc_queries = self.list_queries(user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
-            subc_queries_map['%s:%s' % (x['corpname'], x['subcname'])] = x
+            subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
 
         if show_deleted:
-            deleted_keys = set(subc_queries_map.keys()) - (set([x['n'] for x in subc_list]))
+            deleted_keys = set(subc_queries_map.keys()) - (set([x['internal_n'] for x in subc_list]))
         else:
             deleted_keys = []
 
         escape_subcname = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
-
         deleted_items = []
         for dk in deleted_keys:
+            corpus_info = self._corparch.get_corpus_info(subc_queries_map[dk]['corpname'])
             deleted_items.append({
-                'n': dk,
+                'n': corpname_canonizer(dk),
+                'internal_n': subc_queries_map[dk]['corpname'],
                 'v': dk,
                 'size': None,
                 'created': datetime.datetime.fromtimestamp(subc_queries_map[dk]['timestamp']),
+                'human_corpname': corpus_info.name,
                 'corpname': subc_queries_map[dk]['corpname'],
                 'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
                 'struct_name': subc_queries_map[dk]['struct_name'],
@@ -134,9 +136,9 @@ class UCNKSubcRestore(AbstractSubcRestore):
             })
 
         for subc in subc_list:
-            if subc['n'] in subc_queries_map:
-                subc['struct_name'] = subc_queries_map[subc['n']]['struct_name']
-                subc['condition'] = urllib.quote(subc_queries_map[subc['n']]['condition'].encode('utf-8'))
+            if subc['internal_n'] in subc_queries_map:
+                subc['struct_name'] = subc_queries_map[subc['internal_n']]['struct_name']
+                subc['condition'] = urllib.quote(subc_queries_map[subc['internal_n']]['condition'].encode('utf-8'))
             else:
                 subc['struct_name'] = None
                 subc['condition'] = None
@@ -145,5 +147,6 @@ class UCNKSubcRestore(AbstractSubcRestore):
         return sorted(subc_list + deleted_items, key=lambda t: t['n'])
 
 
-def create_instance(conf):
-    return UCNKSubcRestore(conf)
+@inject('corparch')
+def create_instance(conf, corparch):
+    return UCNKSubcRestore(conf, corparch)

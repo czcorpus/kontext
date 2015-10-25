@@ -20,41 +20,31 @@ are passed through via the 'export' method which is recognized by KonText and th
 interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
-Required config.xml/plugins entries:
+Required config.xml/plugins entries (RelaxNG compact format):
 
-<corparch>
-    <module>corparch</module>
-    <file>[a path to a configuration XML file]</file>
-    <root_elm_path>
-        [an XPath query leading to a root element where configuration can be found]
-    </root_elm_path>
-    <tag_prefix extension-by="default">
-        [a spec. character specifying that the following string is a tag/label]
-    </tag_prefix>
-    <max_num_hints>
-        [maximum number of hints corpus selection widget shows (even if there are more results
-         available]
-    </max_num_hints>
-    <default_page_list_size>
-        [number of items to be shown on 'available corpora' page]
-    </default_page_list_size>
-</corparch>
-
-How does the corpus list specification XML entry looks like:
-
-<a_root_elm>
-  <corpus sentence_struct="p" ident="SUSANNE" collator_locale="cs_CZ" tagset="pp_tagset"
-      web="http://www.korpus.cz/syn2010.php">
-    <metadata>
-      <featured />
-      <keywords>
-        <item>foreign_language_corpora</item>
-        <item>written_corpora</item>
-      </keywords>
-    </metadata>
-  </corpus>
-   ...
-</a_root_elm>
+element corparch {
+    element module { "default_corparch" }
+    element js_file { text }
+    element file { text }  # a path to a configuration XML file
+    element root_elm_path { text } # an XPath query leading to a root element where configuration can be found
+    element tag_prefix {
+        attribute extension-by { "default" }
+        text  # a spec. character specifying that the following string is a tag/label
+    }
+    element max_num_hints {
+        attribute extension-by { "default" }
+        text  # maximum number of hints corpus selection widget shows
+              # (even if there are more results available)
+    }
+    element default_page_list_size {
+        attribute extension-by { "default" }
+        text  # number of items to be shown on 'available corpora' page
+    }
+    element max_num_favorites {
+        attribute extension-by { "default" }
+        xsd:integer
+    }
+}
 
 """
 
@@ -71,6 +61,7 @@ from lxml import etree
 
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
+from plugins.abstract.corpora import CorplistProvider
 from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
@@ -148,7 +139,7 @@ def parse_query(tag_prefix, query):
     return substrs, query_keywords
 
 
-class CorpSearch(object):
+class DeafultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
@@ -183,6 +174,11 @@ class CorpSearch(object):
         return (item_size is not None and
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
+
+    def sort(self, data, *fields):
+        def corp_cmp_key(c):
+            return c.get('name') if c.get('name') is not None else ''
+        return l10n.sort(data, loc=self._corparch.lang, key=corp_cmp_key)
 
     def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
@@ -255,9 +251,7 @@ class CorpSearch(object):
                     if len(ans['rows']) > offset + limit:
                         break
 
-        corp_cmp_key = lambda c: c.get('name') if c.get('name') is not None else ''
-        ans['rows'], ans['nextOffset'] = self.cut_result(l10n.sort(ans['rows'], loc=self._corparch.lang,
-                                                         key=corp_cmp_key), offset, limit)
+        ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(ans['rows']), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=self._corparch.lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -367,15 +361,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         'path': path, 'desc': '', 'size': None})
         return cl
 
-    @staticmethod
-    def search_via_service(search_service, user_id, query, offset=0, limit=None, filter_dict=None):
-        return search_service.search(user_id=user_id, query=query, offset=offset, limit=limit,
-                                     filter_dict=filter_dict)
-
-    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
-        return self.search_via_service(CorpSearch(plugin_api, self._auth, self, self._tag_prefix),
-                                       user_id=user_id, query=query, offset=offset, limit=limit,
-                                       filter_dict=filter_dict)
+    def create_corplist_provider(self, plugin_api):
+        return DeafultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
 
     def _get_corplist_title(self, elm):
         """
@@ -469,6 +456,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
+        ans.name = self._manatee_corpora.get_info(ans.id).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -496,6 +484,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
+            ans.metadata.avg_label_attr_len = getattr(meta_elm.find('avg_label_attr_len'), 'text', None)
+            if ans.metadata.avg_label_attr_len is not None:
+                ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
         data.append(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):

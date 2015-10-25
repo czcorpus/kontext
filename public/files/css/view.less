@@ -123,6 +123,35 @@ i.coll {
   height: auto;
 }
 
+#detail-frame {
+
+  .whole-document {
+    overflow-y: scroll;
+    height: 500px;
+  }
+
+  .footer {
+    padding-top: 1em;
+    text-align: center;
+    font-size: 80%;
+    color: @color-light-text;
+
+    a {
+      text-decoration: none;
+      color: @color-light-text;
+    }
+  }
+
+  .footer:hover a {
+    text-decoration: underline;
+  }
+
+  .ajax-loader {
+    display: block;
+    margin: 0 auto;
+  }
+}
+
 .query-overview {
   padding: 1.5em;
   background-color: #E9F7FC;

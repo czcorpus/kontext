@@ -271,11 +271,8 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 event.currentTarget,
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
-                function (jqXHR, textStatus, error) {
-                    lib.layoutModel.showMessage('error', error);
-                },
-                lib.viewDetailDoneCallback,
-                lib.layoutModel.createAjaxLoader()
+                lib.layoutModel,
+                lib.viewDetailDoneCallback
             );
             event.stopPropagation();
         });
@@ -349,13 +346,10 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     event.currentTarget,
                     $(this).data('url'),
                     $(this).data('params'),
-                    function (jqXHR, textStatus, errorThrown) {
-                        lib.layoutModel.showMessage('error', errorThrown);
-                    },
+                    lib.layoutModel,
                     // Expand link, when clicked, must bind the same event handler
                     // for the new expand link. That's why this 'callback recursion' is present.
-                    lib.viewDetailDoneCallback,
-                    lib.layoutModel.createAjaxLoader()
+                    lib.viewDetailDoneCallback
                 );
                 event.preventDefault();
             });

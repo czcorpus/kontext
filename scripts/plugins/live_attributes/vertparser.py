@@ -15,6 +15,7 @@
 A set of helper functions for parsing a vertical corpus file
 """
 import re
+from collections import defaultdict
 
 
 class Parser(object):
@@ -98,3 +99,29 @@ class Parser(object):
             start = None
 
         return name, start, attrs
+
+
+class ValLengthCalculator(object):
+
+    def __init__(self, conf):
+        self._attr_lengths = defaultdict(lambda: 0)
+        if 'calcAvgLen' in conf:
+            self._measured_attrs = conf['calcAvgLen'] if hasattr(conf['calcAvgLen'], '__iter__') \
+                else [conf['calcAvgLen']]
+        else:
+            self._measured_attrs = []
+        self._measured_attrs = map(lambda x: x.replace('.', '_', 1), self._measured_attrs)
+
+    def insert(self, item):
+        for a in self._measured_attrs:
+            self._attr_lengths[a] += len(item.get(a, ''))
+
+    def finish(self, total_length):
+        for k in self._attr_lengths.keys():
+            self._attr_lengths[k] /= float(total_length)
+
+    def format_result(self):
+        ans = 'Attributes average lengths:\n'
+        ans += '\n  '.join('%s: %s' % (k, round(v, 1)) for k, v in self._attr_lengths.items())
+        ans += '\n'
+        return ans

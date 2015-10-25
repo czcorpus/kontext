@@ -81,6 +81,8 @@ class XLSXExport(AbstractExport):
             out_type = unicode
         if out_type not in format_map:
             raise ExportPluginException('Unsupported cell type %s' % out_type)
+        if out_type is not unicode and v is None or v == '':
+            out_type = unicode
         return out_type(v), format_map[out_type]
 
     def writerow(self, line_num, *lang_rows):

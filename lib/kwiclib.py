@@ -479,9 +479,10 @@ class Kwic(object):
                              rightsize=rightsize)
             line_data[leftlabel] = leftwords
             line_data[rightlabel] = rightwords
-            line_data['leftspace'] = ' ' * (maxleftsize - line_data['leftsize'])
-            line_data['rightspace'] = ' ' * (maxrightsize - line_data['rightsize'])
             lines.append(line_data)
+        for line in lines:
+            line['leftspace'] = ' ' * (maxleftsize - line['leftsize'])
+            line['rightspace'] = ' ' * (maxrightsize - line['rightsize'])
         return lines
 
     def get_sort_idx(self, q=[], pagesize=20):

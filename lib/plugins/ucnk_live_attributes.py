@@ -142,13 +142,14 @@ class AttrArgs(object):
 class LiveAttributes(AbstractLiveAttributes):
 
     def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
-                 max_attr_visible_chars):
+                 max_attr_visible_chars, interval_chars):
         self.corparch = corparch
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
-        self.shorten_value = partial(Shortener().filter,
-                                     length=int(max_attr_visible_chars), nice=True)
+        self.shorten_value = partial(Shortener().filter, nice=True)
+        self._max_attr_visible_chars = max_attr_visible_chars
+        self._interval_chars = interval_chars
 
     def db(self, corpname):
         """
@@ -157,7 +158,7 @@ class LiveAttributes(AbstractLiveAttributes):
         arguments:
         corpname -- vanilla corpus name (i.e. without any path-like prefixes)
         """
-        if not corpname in self.databases:
+        if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = create_engine('sqlite:///%s' % db_path)
@@ -170,6 +171,15 @@ class LiveAttributes(AbstractLiveAttributes):
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         return self.db(corpname) is not None
+
+    def export(self, plugin_api, user_id, lang):
+        return {'interval_chars': self._interval_chars}
+
+    def calc_max_attr_val_visible_chars(self, corpus_info):
+        if corpus_info.metadata.avg_label_attr_len:
+            return corpus_info.metadata.avg_label_attr_len
+        else:
+            return self._max_attr_visible_chars
 
     @staticmethod
     def apply_prefix(values, prefix):
@@ -290,15 +300,16 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[attr] = set()
 
+        max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
         for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
                     if attr == bib_label:
-                        ans[attr].add((self.shorten_value(unicode(v)),
+                        ans[attr].add((self.shorten_value(unicode(v), length=max_visible_chars),
                                        item[srch_attr_map[bib_id]], unicode(v)))
                     elif type(ans[attr]) is set:
-                        ans[attr].add((self.shorten_value(unicode(v)), v, v))
+                        ans[attr].add((self.shorten_value(unicode(v), length=max_visible_chars), v, v))
                     elif type(ans[attr]) is int:
                         ans[attr] += int(v)
 
@@ -348,8 +359,14 @@ def create_instance(settings, corparch):
     arguments:
     corparch -- corparch plugin
     """
-    return LiveAttributes(corparch,
-                          settings.get_int('global', 'max_attr_list_size'),
-                          settings.get('corpora', 'empty_attr_value_placeholder'),
-                          settings.get('plugins', 'live_attributes')
-                          .get('ucnk:max_attr_visible_chars', 20))
+    la_settings = settings.get('plugins', 'live_attributes')
+    interval_chars = (
+        la_settings.get('ucnk:left_interval_char', None),
+        la_settings.get('ucnk:interval_char', None),
+        la_settings.get('ucnk:right_interval_char', None),
+    )
+    return LiveAttributes(corparch=corparch,
+                          max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
+                          empty_val_placeholder=settings.get('corpora', 'empty_attr_value_placeholder'),
+                          max_attr_visible_chars=la_settings.get('ucnk:max_attr_visible_chars', 20),
+                          interval_chars=interval_chars)
