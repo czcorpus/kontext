@@ -116,6 +116,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
 
+    def get_user_info(self, user_id):
+        user_key = self._mk_user_key(user_id)
+        info = self.db.get(user_key)
+        info.pop('pwd_hash', None)
+        info.pop('recovery_hash', None)
+        return info
+
     def is_administrator(self, user_id):
         """
         Tests whether the current user's name belongs to the 'administrators' group
