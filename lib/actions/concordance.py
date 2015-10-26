@@ -1144,7 +1144,7 @@ class Actions(Kontext):
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
         out['freq_figures'] = self.FREQ_FIGURES
-        self._export_subcorpora_list(self.corpname, out)
+        self._export_subcorpora_list(self.args.corpname, out)
         return out
 
     #(upl_file='wlfile', cache_file='wlcache')
