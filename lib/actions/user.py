@@ -22,6 +22,9 @@ import l10n
 
 class User(Kontext):
 
+    def __init__(self, request, ui_lang):
+        super(User, self).__init__(request, ui_lang)
+
     def get_mapping_url_prefix(self):
         return '/user/'
 

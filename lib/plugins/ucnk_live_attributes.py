@@ -368,5 +368,5 @@ def create_instance(settings, corparch):
     return LiveAttributes(corparch=corparch,
                           max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
                           empty_val_placeholder=settings.get('corpora', 'empty_attr_value_placeholder'),
-                          max_attr_visible_chars=la_settings.get('ucnk:max_attr_visible_chars', 20),
+                          max_attr_visible_chars=int(la_settings.get('ucnk:max_attr_visible_chars', 20)),
                           interval_chars=interval_chars)

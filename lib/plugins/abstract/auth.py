@@ -88,6 +88,14 @@ class AbstractAuth(object):
         """
         raise NotImplementedError()
 
+    def get_user_info(self, user_id):
+        """
+        Returns a dictionary containing all the data about a user.
+        Sensitive information like password hashes, recovery questions
+        etc. are not expected/required to be present there.
+        """
+        raise NotImplementedError()
+
 
 class AbstractInternalAuth(AbstractAuth):
     """

@@ -259,11 +259,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             render: function () {
-                var keywords = this.props.row.keywords.map(function (k, i) {
+                let keywords = this.props.row.keywords.map(function (k, i) {
                     return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
                 });
 
-                var detailBox;
+                let detailBox;
 
                 if (this.state.detail) {
                     detailBox = <layoutViews.PopupBox
@@ -277,17 +277,20 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     detailBox = null;
                 }
 
-                var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
-                var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
-                var userAction = null;
+                let link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+                let size = this.props.row.raw_size ? this.props.row.raw_size : '-';
+                let userAction = null;
+                let corpLink;
 
                 if (this.props.enableUserActions) {
                     if (this.props.row.requestable) {
+                        corpLink = <span className="inaccessible">{this.props.row.name}</span>;
                         userAction = <LockIcon isUnlockable={this.props.row.requestable}
                                          corpusId={this.props.row.id}
                                          corpusName={this.props.row.name} />;
 
                     } else {
+                        corpLink = <a href={link}>{this.props.row.name}</a>;
                         userAction = <FavStar corpusId={this.props.row.id}
                                            corpusName={this.props.row.name}
                                            isFav={this.props.row.user_item} />;
@@ -295,8 +298,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 }
                 return (
                     <tr>
-                        <td className="corpname"><a
-                            href={link}>{this.props.row.name}</a></td>
+                        <td className="corpname">{corpLink}</td>
                         <td className="num">{size}</td>
                         <td>
                             {keywords}
