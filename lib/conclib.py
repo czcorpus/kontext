@@ -15,7 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
-
 import os
 import sys
 import time
@@ -23,7 +22,6 @@ import logging
 from multiprocessing import Process, Pipe
 import cPickle
 import math
-import uuid
 
 import manatee
 import settings
@@ -48,54 +46,6 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     ctxs.extend([{'n': _('%iR') % c, 'ctx': '%i>0' % c}
                 for c in range(1, max_ctx + 1)])
     return ctxs
-
-
-def get_cached_conc_sizes(corp, q=None, cachefile=None):
-    """
-    arguments:
-    corp -- manatee.Corpus instance
-    q -- a list containing preprocessed query
-    cachefile -- if not provided then the path is determined automatically
-    using CACHE_ROOT_DIR and corpus name, corpus name and the query
-
-    returns:
-    a dictionary {
-        finished : 0/1,
-        concsize : int,
-        fullsize : int,
-        relconcsize : float (concordance size recalculated to a million corpus)
-    }
-    """
-    import struct
-
-    if q is None:
-        q = []
-    ans = {'finished': False, 'concsize': None, 'fullsize': None, 'relconcsize': None}
-    if not cachefile:  # AJAX call
-        q = tuple(q)
-        subchash = getattr(corp, 'subchash', None)
-        cache_map = cache_factory.get_mapping(corp)
-        cachefile = cache_map.cache_file_path(subchash, q)
-
-    if cachefile and os.path.isfile(cachefile):
-        with lock_factory.create(cachefile):
-            cache = open(cachefile, 'rb')
-            cache.seek(15)
-            finished = bool(ord(cache.read(1)))
-            (fullsize,) = struct.unpack('q', cache.read(8))
-            cache.seek(32)
-            (concsize,) = struct.unpack('i', cache.read(4))
-
-        if fullsize > 0:
-            relconcsize = 1000000.0 * fullsize / corp.search_size()
-        else:
-            relconcsize = 1000000.0 * concsize / corp.search_size()
-
-        ans['finished'] = finished
-        ans['concsize'] = concsize
-        ans['fullsize'] = fullsize
-        ans['relconcsize'] = relconcsize
-    return ans
 
 
 def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
@@ -172,7 +122,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     start_time = time.time()
     q = tuple(q)
     if not os.path.isdir(pid_dir):
-        os.makedirs(pid_dir)
+        os.makedirs(pid_dir, mode=0o775)
 
     cache_map = cache_factory.get_mapping(corp)
     cache_map.refresh_map()
@@ -221,122 +171,28 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     return ans
 
 
-def _compute_conc(corp, q, samplesize):
-    start_time = time.time()
-    q = tuple(q)
-    if q[0][0] != 'R':
-        ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
-    else:
-        raise NotImplementedError('Function "online sample" is not supported')
-    logging.getLogger(__name__).debug('compute_conc(%s, [%s]) -> %01.4f' %
-                                      (corp.corpname, ','.join(q), time.time() - start_time))
-    return ans_conc
-
-
-def _update_pidfile(file_path, **kwargs):
-    with open(file_path, 'r') as pf:
-        data = cPickle.load(pf)
-    data.update(kwargs)
-    with open(file_path, 'w') as pf:
-        cPickle.dump(data, pf)
-
-
-class BackgroundCalc(object):
-    """
-    This class wraps background calculation of a concordance (see _get_async_conc() function
-    below).
-    """
-
-    def __init__(self, sending_pipe, corpus, pid_dir, subchash, q):
-        """
-        arguments:
-        sending_pipe -- a multiprocessing.Pipe instance used to send data from this process to its
-                        parent
-        corpus -- a manatee.Corpus instance
-        pid_dir -- a directory where "pidfile" (= file containing information about background
-                   calculation) will be temporarily stored
-        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
-        q -- a tuple/list containing current query
-        """
-        self._pipe = sending_pipe
-        self._corpus = corpus
-        self._pid_dir = pid_dir
-        self._subchash = subchash
-        self._q = q
-
-    @staticmethod
-    def _create_pid_file():
-        pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
-                                                  uuid.uuid1()))
-        with open(pidfile, 'wb') as pf:
-            cPickle.dump(
-                {
-                    'pid': os.getpid(),
-                    'last_check': int(time.time()),
-                    # in case we check status before any calculation (represented by the
-                    # BackgroundCalc class) starts (the calculation updates curr_wait as it
-                    # runs), we want to be sure the limit is big enough for BackgroundCalc to
-                    # be considered alive
-                    'curr_wait': 100,
-                    'error': None
-                },
-                pf)
-        return pidfile
-
-    def __call__(self, samplesize, fullsize):
-        sleeptime = None
-        try:
-            cache_map = cache_factory.get_mapping(self._corpus)
-            pidfile = self._create_pid_file()
-            cachefile, stored_pidfile = cache_map.add_to_map(self._subchash, self._q, 0, pidfile)
-
-            if not stored_pidfile:
-                self._pipe.send(cachefile + '\n' + pidfile)
-                # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
-                # not be ready yet (this is checked by the 'finished()' method).
-                conc = _compute_conc(self._corpus, self._q, samplesize)
-                sleeptime = 0.1
-                time.sleep(sleeptime)
-                conc.save(cachefile, False, True, False)  # partial
-                while not conc.finished():
-                    # TODO it looks like append=True does not work with Manatee 2.121.1 properly
-                    tmp_cachefile = cachefile + '.tmp'
-                    conc.save(tmp_cachefile, False, True, False)
-                    os.rename(tmp_cachefile, cachefile)
-                    time.sleep(sleeptime)
-                    sleeptime += 0.1
-                    sizes = get_cached_conc_sizes(self._corpus, self._q, cachefile)
-                    _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime,
-                                    finished=sizes['finished'], concsize=sizes['concsize'],
-                                    fullsize=sizes['fullsize'], relconcsize=sizes['relconcsize'])
-                tmp_cachefile = cachefile + '.tmp'
-                conc.save(tmp_cachefile)  # whole
-                os.rename(tmp_cachefile, cachefile)
-                # update size in map file
-                cache_map.add_to_map(self._subchash, self._q, conc.size())
-                os.remove(pidfile)
-        except Exception as e:
-            # Please note that there is no need to clean any mess (pidfile of failed calculation,
-            # unfinished cached concordance etc.) here as this is performed by _get_cached_conc()
-            # function in case it detects a problem.
-            import traceback
-            logging.getLogger(__name__).error('Background calculation error: %s' % e)
-            logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
-            _update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
-
-
-def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, minsize):
+def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
-    currently not used
+    currently not used ----- TODO remove it
     """
-    parent_conn, child_conn = Pipe(duplex=False)
-    calc = BackgroundCalc(sending_pipe=child_conn, corpus=corp, pid_dir=pid_dir, subchash=subchash,
-                          q=q)
-    proc = Process(target=calc, args=(samplesize, fullsize))
-    proc.start()
+    backend, conf = settings.get_full('global', 'conc_calc_backend')
+    if backend == 'multiprocessing':
+        from concworker.default import BackgroundCalc, NotifierFactory
+        receiver, sender = NotifierFactory()()
+        calc = BackgroundCalc(notification_sender=sender)
+        proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
+        proc.start()
+    elif backend == 'celery':
+        from concworker.wcelery import NotifierFactory, load_config_module
+        import celery
+        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
+        res = app.send_task('worker.register', (corp.corpname, subchash, q, samplesize))
+        receiver, sender = NotifierFactory(res)()
+    else:
+        raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
-    cachefile, pidfile = parent_conn.recv().split('\n')
+    cachefile, pidfile = receiver.receive()
     try:
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                        cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)
@@ -350,8 +206,9 @@ def _get_async_conc(corp, q, save, pid_dir, subchash, samplesize, fullsize, mins
     return PyConc(corp, 'l', cachefile)
 
 
-def _get_sync_conc(corp, q, save, subchash, samplesize, fullsize, pid_dir):
-    conc = _compute_conc(corp, q, samplesize)
+def _get_sync_conc(corp, q, save, subchash, samplesize):
+    from concworker import GeneralWorker
+    conc = GeneralWorker().compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
     if save:
         os.close(0)  # PID file will have fd 1
@@ -395,12 +252,12 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, s
     if not conc:
         toprocess = 1
         if async and len(q) == 1:  # asynchronous processing
-            conc = _get_async_conc(corp=corp, q=q, save=save, pid_dir=pid_dir, subchash=subchash,
+            conc = _get_async_conc(corp=corp, q=q, save=save, subchash=subchash,
                                    samplesize=samplesize, fullsize=fullsize, minsize=minsize)
 
         else:
-            conc = _get_sync_conc(corp=corp, q=q, save=save, pid_dir=pid_dir, subchash=subchash,
-                                  samplesize=samplesize, fullsize=fullsize)
+            conc = _get_sync_conc(corp=corp, q=q, save=save, subchash=subchash,
+                                  samplesize=samplesize)
     # process subsequent concordance actions (e.g. sample)
     for act in range(toprocess, len(q)):
         command = q[act][0]
