@@ -97,7 +97,6 @@ class CeleryCalculation(concworker.GeneralWorker):
         query -- a tuple/list containing current query
         samplesize -- ???
         """
-        logging.getLogger(__name__).warn('STARTING>>>>>>>>> %s ' % (initial_args,))
         sleeptime = None
         try:
             corpus_manager = CorpusManager()
