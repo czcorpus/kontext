@@ -126,11 +126,11 @@ define(['vendor/react'], function (React) {
             },
 
             render: function () {
-                var keywords = this.props.row.keywords.map(function (k, i) {
+                let keywords = this.props.row.keywords.map(function (k, i) {
                     return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
                 });
 
-                var detailBox;
+                let detailBox;
 
                 if (this.state.detail) {
                     detailBox = <layoutViews.PopupBox
@@ -144,9 +144,9 @@ define(['vendor/react'], function (React) {
                     detailBox = null;
                 }
 
-                var link = this.createActionLink('first_form?corpname=' + this.props.row.id);
-                var size = this.props.row.raw_size ? this.props.row.raw_size : '-';
-                var favStar = null;
+                let link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+                let size = this.props.row.raw_size ? this.props.row.raw_size : '-';
+                let favStar = null;
 
                 if (this.props.enableUserActions) {
                     favStar = <FavStar corpusId={this.props.row.id}

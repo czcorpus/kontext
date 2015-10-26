@@ -106,8 +106,7 @@ class UcnkCorpusInfo(CorpusInfo):
 def ask_corpus_access(controller, request):
     ans = {}
     status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
-                                                        user=controller._session_get('user', 'user'),
-                                                        user_id=controller._session_get('user', 'id'),
+                                                        plugin_api=getattr(controller, '_plugin_api'),
                                                         custom_message=request.form['customMessage'])
     if status is False:
         ans['error'] = _(
@@ -166,23 +165,28 @@ class UcnkCorpArch(CorpusArchive):
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
         return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
 
-    def send_request_email(self, corpus_id, user, user_id, custom_message):
+    def send_request_email(self, corpus_id, plugin_api, custom_message):
         """
         returns:
         True if at least one recipient has been reached else False
         """
         errors = []
 
+        user_id = plugin_api.session['user']['id']
+        user_info = self._auth.get_user_info(user_id)
+        user_email = user_info['email']
+        username = user_info['username']
+
         text = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
         text += u'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += u'uživatel: %s (ID = %s)\n' % (user, user_id)
+        text += u'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, user_id, user_email)
         text += u'korpus ID: %s\n' % corpus_id
 
         if custom_message:
             text += u'Doplňující zpráva od uživatele:\n\n'
             text += custom_message + '\n\n'
 
-        text += u'\n---------------------\nNa tento e-mail prosím neodpovídejte.\n'
+        text += u'\n---------------------\n'
 
         s = smtplib.SMTP(self.access_req_smtp_server)
 
@@ -191,6 +195,7 @@ class UcnkCorpArch(CorpusArchive):
             msg['Subject'] = u'Žádost o zpřístupnění korpusu zaslaná z KonTextu'
             msg['From'] = self.access_req_sender
             msg['To'] = recipient
+            msg.add_header('Reply-To', user_email)
             try:
                 s.sendmail(self.access_req_sender, [recipient], msg.as_string())
             except Exception as ex:
