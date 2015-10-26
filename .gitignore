@@ -18,6 +18,7 @@ node_modules/
 conf/
 !conf/config.sample.xml
 !conf/main-menu.sample.json
+public/files/.vscode/
 public/files/js/min/
 public/files/js/compiled/
 public/files/css/kontext.min.css

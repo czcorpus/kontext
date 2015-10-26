@@ -217,6 +217,13 @@ class CentralAuth(AbstractRemoteAuth):
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
 
+    def get_user_info(self, user_id):
+        user_key = self._mk_user_key(user_id)
+        info = self._db.get(user_key)
+        info.pop('pwd_hash', None)
+        info.pop('recovery_hash', None)
+        return info
+
     def is_administrator(self, user_id):
         """
         Currently not supported (always returns False)
