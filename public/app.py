@@ -202,6 +202,10 @@ settings.load(path=CONF_PATH)
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
+# please note that some environments may provide umask setting themselves
+if settings.get('global', 'umask', None):
+    os.umask(int(settings.get('global', 'umask'), 8))
+
 if not settings.contains('corpora', 'calc_pid_dir'):
     raise Exception('Missing configuration: calc_pid_dir')
 elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
