@@ -1,0 +1,12 @@
+{
+  "en-US": {
+    "defaultSubcmixer__missing_subcname": "Missing subcorpus name",
+    "defaultSubcmixer__current_ratios_heading": "Current representations",
+    "defaultSubcmixer__current_ratios_{values}": "{values} (in percent, last value = other)"
+  },
+  "cs-CZ": {
+	"defaultSubcmixer__missing_subcname": "Chybí jméno subkorpusu",
+  "defaultSubcmixer__current_ratios_heading": "Aktuální zastoupení",
+  "defaultSubcmixer__current_ratios_{values}": "{values} (v procentech, poslední hodnota = ostatní)"
+  }
+}
