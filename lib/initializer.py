@@ -88,3 +88,4 @@ def setup_plugins():
     init_plugin('query_mod', optional=True)
     init_plugin('subc_restore', optional=True)
     init_plugin('taghelper', optional=True)
+    init_plugin('subcmixer', optional=True)

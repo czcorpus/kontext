@@ -33,6 +33,12 @@ class Subcorpus(Kontext):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
+    def prepare_subc_path(self, corpname, subcname):
+        path = os.path.join(self.subcpath[-1], corpname)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        return os.path.join(path, subcname) + '.subc'
+
     def _create_subcorpus(self, request):
         """
         req. arguments:
@@ -57,11 +63,7 @@ class Subcorpus(Kontext):
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
             raise ConcError(_('No subcorpus name specified!'))
-
-        path = os.path.join(self.subcpath[-1], basecorpname)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        path = os.path.join(path, subcname) + '.subc'
+        path = self.prepare_subc_path(basecorpname, subcname)
         if not tt_query:
             raise ConcError(_('Nothing specified!'))
 
@@ -88,6 +90,7 @@ class Subcorpus(Kontext):
             return {}
         else:
             raise ConcError(_('Empty subcorpus!'))
+
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm')
     def subcorp(self, request):
@@ -125,6 +128,11 @@ class Subcorpus(Kontext):
         out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
             self._store_checked_text_types(request.form, out)
+
+        if plugins.has_plugin('subcmixer'):
+            out['subcmixer_form_data'] = plugins.get('subcmixer').form_data(self._plugin_api)
+        else:
+            out['subcmixer_form_data'] = {}
 
         out.update({
             'TextTypeSel': tt_sel,

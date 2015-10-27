@@ -663,5 +663,98 @@ fieldset.subcorp-action-field {
     font-size: 20pt;
     vertical-align: middle;
   }
+}
+
+// --------------------------- subcmixer widget (TODO move to a separate file)
+
+.text-structure-box {
+  border: @input-border-style;
+  margin: 10pt;
+
+  .structure-heading {
+    padding: 4pt 6pt;
+    background-color: @color-default-green;
+    text-align: center;
+
+    .orientation {
+      display: inline-block;
+      font-size: 21pt;
+      margin-right: 10pt;
+    }
+
+    > * {
+      vertical-align: middle;
+    }
+  }
+
+  .close-icon {
+    cursor: pointer;
+  }
+
+  .util-button {
+    cursor: pointer;
+  }
+
+  select.util-button {
+    border-width: 1px;
+    border-radius: 6px;
+    height: 20pt;
+    padding-left: 0;
+  }
+
+  select:disabled {
+    color: @color-light-text;
+  }
+
+  select:disabled:hover {
+    background-color: inherit;
+  }
+
+  .structure {
+    padding: 10pt;
+  }
+}
+
+.text-structure-box .text-structure-box {
+  display: inline-block;
+}
+
+.text-structure-box.new-subset {
+    text-align: center;
+    border: 1px dashed @color-light-grey;
+
+    .structure-heading {
+      background-color: transparent;
+    }
+  }
+
+.text-structure-box img.close-icon {
+  display: inline-block;
+  margin-left: 10pt;
+}
+
+
+// ------------------------------ range slider -------
+
+.slider-box {
+  margin: 10pt;
+  box-shadow: 5px 5px 7px #aaa;
+  border: @input-border-style;
+  width: 90%;
+  padding: 5pt;
+
+  .slider-wrapper {
+    display: inline-block;
+    width: 90%;
+  }
+
+  .close-icon {
+    padding-top: 5pt;
+    float: right;
+  }
+
+  h3 {
+    margin: 0;
+  }
 
 }

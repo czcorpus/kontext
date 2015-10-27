@@ -20,8 +20,9 @@
 /**
  * This module contains functionality related directly to the subcorp_form.tmpl template
  */
-define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/liveAttributes/init'], function (
-        $, documentModule, corplistComponent, popupBox, liveAttributes) {
+define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/liveAttributes/init',
+        'plugins/subcmixer/init'], function (
+        $, documentModule, corplistComponent, popupBox, liveAttributes, subcMixer) {
     'use strict';
 
     var lib = {
@@ -82,16 +83,36 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
      *
      */
     lib.subcCreationVariantSwitch = function (value) {
+        var widgetMap = {
+            'raw': '#subc-within-row',
+            'gui': '.text-type-params',
+            'mixer': '#subc-mixer-row'
+        };
+        var jqSubmitBtn = $('#subcorp-form').find('input[type=submit]');
+        (function () {
+            var p;
+            for (p in widgetMap) {
+                if (widgetMap.hasOwnProperty(p)) {
+                    $(widgetMap[p]).hide();
+                }
+            }
+        }());
         if (value === 'raw') {
-            $('#subc-within-row').css({ display: 'table-row' });
+            $('#subc-within-row').show();
             $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
-            $('.text-type-params').css('display', 'none');
+            jqSubmitBtn.show();
+
 
         } else if (value === 'gui') {
-            $('#subc-within-row').css({ display: 'none' });
             $('.text-type-params')
-                .css('display', 'inherit')
+                .show()
                 .find('input[type="checkbox"]').attr('disabled', null);
+            jqSubmitBtn.show();
+
+        } else if (value === 'mixer') {
+            $(widgetMap['mixer']).show();
+            jqSubmitBtn.hide(); // subcmixer uses its own button (nested React component); not sure about this
+            subcMixer.create($(widgetMap['mixer']).find('.widget').get(0), lib.layoutModel.pluginApi());
         }
     };
 
@@ -117,14 +138,9 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
     };
 
     lib.initSubcCreationVariantSwitch = function () {
-        $('subc-within-row').css({ display : 'none' });
-
-        $('input.method-select').each(function (i, item) {
-            $(item).bind('click', function (event) {
-                lib.subcCreationVariantSwitch($(event.target).val());
-            });
+        $('input.method-select').on('click', function (event) {
+            lib.subcCreationVariantSwitch($(event.target).val());
         });
-
         lib.subcCreationVariantSwitch($('input[name="method"]:checked').val());
     };
 
