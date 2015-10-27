@@ -910,7 +910,6 @@ class Kontext(Controller):
 
         def get_val(k):
             return force_values[k] if k in force_values else getattr(self.args, k, None)
-
         ans = []
         for attr in attr_names:
             v_tmp = get_val(attr)
@@ -1238,7 +1237,7 @@ class Kontext(Controller):
         here: structs & structattrs where the former is the one used in URL and the latter
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """
-        return '%s,%s' % (self.args.structs, ','.join(self.args.structattrs))
+        return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
 
     @staticmethod
     def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
