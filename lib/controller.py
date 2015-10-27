@@ -243,7 +243,7 @@ class Controller(object):
         self._css_prefix = ''
         self.args = Args()
         self._uses_valid_sid = True
-        self._plugin_api = PluginApi(self, self._cookies, self._request.session)
+        self._plugin_api = None  # must be implemented in a descendant
 
         # initialize all the Parameter attributes
         for k, v in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
@@ -980,30 +980,3 @@ class Controller(object):
         Error page
         """
         return {'error': {'message': error, 'reset': reset}}
-
-
-class PluginApi(object):
-
-    def __init__(self, controller, cookies, session):
-        self._controller = controller
-        self._cookies = cookies
-        self._session = session
-
-    @property
-    def cookies(self):
-        return self._cookies
-
-    @property
-    def session(self):
-        return self._session
-
-    def refresh_session_id(self):
-        return self._controller.refresh_session_id()
-
-    @property
-    def user_lang(self):
-        return self._controller.ui_lang
-
-    @property
-    def user_is_anonymous(self):
-        return self._controller.user_is_anonymous()

@@ -321,6 +321,9 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
         return []
     attrlines = []
 
+    if shrink_list is False:
+        shrink_list = ()
+
     for subcorpline in subcorpattrs.split(','):
         attrvals = []
         for n in subcorpline.split('|'):
@@ -339,8 +342,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
             is_multival = corp.get_conf(n + '.MULTIVAL') in ('y', 'yes')
 
             if not hsep \
-                and (corp.get_conf(n + '.TEXTBOXLENGTH')
-                     or attr.id_range() > maxlistsize or n in shrink_list):
+                and (corp.get_conf(n + '.TEXTBOXLENGTH') or
+                             attr.id_range() > maxlistsize or n in shrink_list):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
                                             or 24)
             else:  # list of values

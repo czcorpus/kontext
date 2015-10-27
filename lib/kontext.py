@@ -157,6 +157,7 @@ class Kontext(Controller):
         self.save_menu = []
         self.contains_within = False
         self.subcpath = []
+        self._plugin_api = PluginApi(self, self._cookies, self._request.session)
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -1470,3 +1471,47 @@ class Kontext(Controller):
 
     def _uses_internal_user_pages(self):
         return isinstance(plugins.get('auth'), AbstractInternalAuth)
+
+
+class PluginApi(object):
+
+    def __init__(self, controller, cookies, session):
+        self._controller = controller
+        self._cookies = cookies
+        self._session = session
+
+    @property
+    def cookies(self):
+        return self._cookies
+
+    @property
+    def session(self):
+        return self._session
+
+    def refresh_session_id(self):
+        return self._controller.refresh_session_id()
+
+    @property
+    def user_lang(self):
+        return self._controller.ui_lang
+
+    @property
+    def user_is_anonymous(self):
+        return self._controller.user_is_anonymous()
+
+    @property
+    def current_corpus(self):
+        return getattr(self._controller, '_corp')()
+
+    @property
+    def text_types(self):
+        ans = {}
+        maxlistsize = settings.get_int('global', 'max_attr_list_size')
+        subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
+        if not subcorpattrs:
+            subcorpattrs = self.current_corpus.get_conf('FULLREF')
+        tt = corplib.texttype_values(self.current_corpus, subcorpattrs, maxlistsize)
+        for item in tt:
+            for tt2 in item['Line']:
+                ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}
+        return ans
