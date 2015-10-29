@@ -23,30 +23,16 @@ A script to archive outdated concordance queries from Redis to a SQLite3 databas
 
 import os
 import sys
-import logging
-import logging.handlers
 import argparse
 import time
 import json
+import logging
 
 import redis
 from sqlalchemy import create_engine
 
-sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(__file__)))
-import autoconf
-settings = autoconf.settings
-logger = autoconf.logger
-
-
 MAX_NUM_SHOW_ERRORS = 10
 MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24 * 3   # empirical value
-
-import plugins
-
-from plugins import redis_db
-plugins.install_plugin('db', redis_db, autoconf.settings)
-
-from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
 
 
 def redis_connection(host, port, db_id):
@@ -63,55 +49,33 @@ def sqlite_connection(db_path):
     return create_engine('sqlite:///%s' % db_path)
 
 
-def time_based_prefix(interval):
-    """
-    Generates a single character key prefix for chunked key processing.
-    The calculation is based on expected execution interval (typically controlled
-    by crond) and on the size of an alphabet used for keys.
-
-    For example (a simplified one - as the script itself operates with UNIX timestamps)
-    if the alphabet is {A,B,C,D,E} and the interval is 10 minutes then:
-        at 00:00 hours, A is returned
-        at 00:10 hours, B is returned
-        ...
-        at 00:40 hours, E is returned
-        at 00:50 hours, A (again) is returned
-        ...
-
-    arguments:
-    interval -- interval in MINUTES
-
-    returns:
-    a character from alphabet (here a,...,z,A,...,Z,0,...,9) used for keys
-    """
-    return KEY_ALPHABET[int(time.time() / (interval * 60)) % len(KEY_ALPHABET)]
-
-
 class Archiver(object):
     """
     A class which actually performs the process of archiving records
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db, to_db, match, count, ttl_range, dry_run=False):
+    def __init__(self, from_db, to_db, count, ttl_range, persist_level_key,
+                 key_alphabet):
         """
         arguments:
         from_db -- a Redis connection
         to_db -- a SQLite3 connection
-        match -- a pattern (for syntax, see Redis documentation) to be used for key selection
+        count -- ???
         ttl_range -- a tuple (min_accepted_ttl, max_accepted_ttl)
-        dry_run -- if True then on writing operations are performed
+        persist_level_key -- ???
+        key_alphabet -- ???
         """
         self._from_db = from_db
         self._to_db = to_db
-        self._match = match
         self._count = count
         self._ttl_range = ttl_range
         self._num_processed = 0
         self._num_new_type = 0  # just to check old type records ratio
         self._num_archived = 0
         self._errors = []
-        self._dry_run = dry_run
+        self._persist_level_key = persist_level_key
+        self._key_alphabet = key_alphabet
 
     def _archive_item(self, key, data):
         prefix = 'concordance:'
@@ -121,19 +85,41 @@ class Archiver(object):
                             (key, data, int(time.time()), 0))
         logger.debug('archived %s => %s' % (key, data))
 
-    @staticmethod
-    def _is_new_type(data):
-        return PERSIST_LEVEL_KEY in data
+    def time_based_prefix(self, interval):
+        """
+        Generates a single character key prefix for chunked key processing.
+        The calculation is based on expected execution interval (typically controlled
+        by crond) and on the size of an alphabet used for keys.
+
+        For example (a simplified one - as the script itself operates with UNIX timestamps)
+        if the alphabet is {A,B,C,D,E} and the interval is 10 minutes then:
+            at 00:00 hours, A is returned
+            at 00:10 hours, B is returned
+            ...
+            at 00:40 hours, E is returned
+            at 00:50 hours, A (again) is returned
+            ...
+
+        arguments:
+        interval -- interval in MINUTES
+
+        returns:
+        a character from alphabet (here a,...,z,A,...,Z,0,...,9) used for keys
+        """
+        return self._key_alphabet[int(time.time() / (interval * 60)) % len(self._key_alphabet)]
+
+    def _is_new_type(self, data):
+        return self._persist_level_key in data
 
     def _is_archivable(self, data, item_ttl):
         if self._is_new_type(data):
             # current calc. method
-            return data[PERSIST_LEVEL_KEY] == 1 and item_ttl < MAX_INTERVAL_BETWEEN_ITEM_VISITS
+            return data[self._persist_level_key] == 1 and item_ttl < MAX_INTERVAL_BETWEEN_ITEM_VISITS
         else:
             # legacy calc. method
             return self._ttl_range[0] <= item_ttl <= self._ttl_range[1]
 
-    def _process_chunk(self, data_keys):
+    def _process_chunk(self, data_keys, dry_run):
         for key in data_keys:
             self._num_processed += 1
             ttl = self._from_db.ttl(key)
@@ -142,42 +128,93 @@ class Archiver(object):
                 self._num_new_type += 1
             if self._is_archivable(data, item_ttl=ttl):
                 try:
-                    if not self._dry_run:
+                    if not dry_run:
                         self._archive_item(key, json.dumps(data))
                         self._from_db.delete(key)
                     self._num_archived += 1
                 except Exception as e:
                     self._errors.append(e)
 
-    def run(self):
+    def run(self, key_prefix, cron_interval, dry_run):
         """
         Performs actual archiving process according to the parameters passed
         in constructor.
+
+        arguments:
+        dry_run -- if True then on writing operations are performed
 
         returns:
         a dict containing some information about processed data (num_processed,
          num_archived, num_errors, match)
         """
-        cursor, data = self._from_db.scan(match=self._match, count=self._count)
-        self._process_chunk(data)
+        if key_prefix:
+            match_prefix = 'concordance:%s*' % key_prefix
+        elif cron_interval:
+            match_prefix = 'concordance:%s*' % self.time_based_prefix(cron_interval)
+        else:
+            match_prefix = 'concordance:*'
+
+        cursor, data = self._from_db.scan(match=match_prefix, count=self._count)
+        self._process_chunk(data, dry_run)
         while cursor > 0:
-            cursor, data = self._from_db.scan(cursor=cursor, match=self._match, count=self._count)
-            self._process_chunk(data)
+            cursor, data = self._from_db.scan(cursor=cursor, match=match_prefix, count=self._count)
+            self._process_chunk(data, dry_run)
 
         return {
             'num_processed': self._num_processed,
             'num_archived': self._num_archived,
             'num_new_type': self._num_new_type,
             'num_errors': len(self._errors),
-            'match': self._match,
-            'dry_run': self._dry_run
+            'match': match_prefix,
+            'dry_run': dry_run
         }
 
     def get_errors(self):
         return self._errors
 
 
+def run(conf, key_prefix, cron_interval, dry_run, persist_level_key, key_alphabet):
+    from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
+                               conf.get('plugins', 'db')['default:port'],
+                               conf.get('plugins', 'db')['default:id'])
+
+    to_db = sqlite_connection(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+    default_ttl = conf.get('plugins', 'conc_persistence')['default:ttl_days']
+    try:
+        # if 1/3 of TTL is reached then archiving is possible
+        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)
+        min_ttl = 3600 * 24 * 7  # smaller TTL then this is understood as non-preserved; TODO: this is a weak concept
+    except Exception as e:
+        print(e)
+        default_ttl = int(3600 * 24 * 7 / 3.)
+        min_ttl = 3600 * 24 * 1
+
+    archiver = Archiver(from_db=from_db, to_db=to_db, count=50, ttl_range=(min_ttl, default_ttl),
+                        persist_level_key=persist_level_key, key_alphabet=key_alphabet)
+    info = archiver.run(key_prefix, cron_interval, dry_run)
+    logging.getLogger(__name__).info(json.dumps(info))
+    errors = archiver.get_errors()
+    for err in errors[:MAX_NUM_SHOW_ERRORS]:
+        logging.getLogger(__name__).error(err)
+    if len(errors) > MAX_NUM_SHOW_ERRORS:
+        logging.getLogger(__name__).warn('More than %d errors occured.' % MAX_NUM_SHOW_ERRORS)
+    if len(errors) == 0:
+        return info
+    else:
+        return errors
+
+
 if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
+    import autoconf
+    settings = autoconf.settings
+    logger = autoconf.logger
+
+    import plugins
+    from plugins import redis_db
+    plugins.install_plugin('db', redis_db, autoconf.settings)
+    from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
+
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
     parser.add_argument('-k', '--key-prefix', type=str,
                         help='Processes just keys with defined prefix')
@@ -191,36 +228,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     autoconf.setup_logger(log_path=args.log_file, logger_name='conc_archive')
-
-    from_db = redis_connection(settings.get('plugins', 'db')['default:host'],
-                               settings.get('plugins', 'db')['default:port'],
-                               settings.get('plugins', 'db')['default:id'])
-
-    to_db = sqlite_connection(settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
-    default_ttl = settings.get('plugins', 'conc_persistence')['default:ttl_days']
-    try:
-        # if 1/3 of TTL is reached then archiving is possible
-        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)
-        min_ttl = 3600 * 24 * 7  # smaller TTL then this is understood as non-preserved; TODO: this is a weak concept
-    except Exception as e:
-        print(e)
-        default_ttl = int(3600 * 24 * 7 / 3.)
-        min_ttl = 3600 * 24 * 1
-
-    if args.key_prefix:
-        match_prefix = 'concordance:%s*' % args.key_prefix
-    elif args.cron_interval:
-        match_prefix = 'concordance:%s*' % time_based_prefix(args.cron_interval)
-    else:
-        match_prefix = 'concordance:*'
-
-
-    archiver = Archiver(from_db=from_db, to_db=to_db, match=match_prefix, count=50, ttl_range=(min_ttl, default_ttl),
-                        dry_run=args.dry_run)
-    info = archiver.run()
-    logger.info(json.dumps(info))
-    errors = archiver.get_errors()
-    for err in errors[:MAX_NUM_SHOW_ERRORS]:
-        logger.error(err)
-    if len(errors) > MAX_NUM_SHOW_ERRORS:
-        logger.warn('More than %d errors occured.' % MAX_NUM_SHOW_ERRORS)
+    run(conf=settings, key_prefix=args.key_prefix, cron_interval=args.cron_interval, dry_run=args.dry_run,
+        persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)

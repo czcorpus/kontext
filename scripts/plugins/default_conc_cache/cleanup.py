@@ -29,20 +29,8 @@ import time
 import cPickle
 import collections
 import json
+import logging
 
-sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
-import autoconf
-
-import plugins
-
-from plugins import redis_db
-plugins.install_plugin('db', redis_db, autoconf.settings)
-
-from plugins import redis_locking
-plugins.install_plugin('locking', redis_locking, autoconf.settings)
-
-
-from plugins import default_conc_cache
 
 DEFAULT_TTL = 60  # in minutes
 
@@ -56,10 +44,11 @@ def shorten_path(p):
 
 class CacheFiles(object):
 
-    def __init__(self, root_path, subdir, corpus):
+    def __init__(self, root_path, subdir, corpus, cache_map_filename):
         self._root_path = root_path
         self._subdir = subdir
         self._corpus = corpus
+        self._cache_map_filename = cache_map_filename
         self._curr_time = time.time()
 
     def list_dir(self):
@@ -85,8 +74,10 @@ class CacheFiles(object):
                                                                                     self._subdir))
         if self._corpus:
             corpora_dirs = [self._corpus]
-        else:
+        elif os.path.isdir(path):
             corpora_dirs = os.listdir(path)
+        else:
+            corpora_dirs = []
 
         ans = collections.defaultdict(list)
         for corpus_dir in corpora_dirs:
@@ -96,7 +87,7 @@ class CacheFiles(object):
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = '%s/%s' % (corp_full_path, cache_file)
                 if os.path.isdir(cache_full_path) \
-                        or cache_file in ('run', default_conc_cache.CacheMapping.CACHE_FILENAME):
+                        or cache_file in ('run', self._cache_map_filename):
                     continue
                 ans[os.path.dirname(cache_full_path)].append(
                     (cache_full_path,
@@ -108,8 +99,8 @@ class CacheFiles(object):
 
 class CacheCleanup(CacheFiles):
 
-    def __init__(self, root_path, corpus, ttl, subdir, lock_fact):
-        super(CacheCleanup, self).__init__(root_path, subdir, corpus)
+    def __init__(self, root_path, corpus, ttl, subdir, lock_fact, cache_map_filename):
+        super(CacheCleanup, self).__init__(root_path, subdir, corpus, cache_map_filename)
         self._root_path = root_path
         self._ttl = ttl
         self._subdir = subdir
@@ -117,9 +108,10 @@ class CacheCleanup(CacheFiles):
         self._num_removed = 0
         self._lock_factory = lock_fact
 
-    def _log_stats(self, files):
+    @staticmethod
+    def _log_stats(files):
         for k, v in files.items():
-            autoconf.logger.info(json.dumps({
+            logging.getLogger(__name__).info(json.dumps({
                 'type': 'file_count',
                 'directory': k,
                 'count': len(v)
@@ -158,8 +150,7 @@ class CacheCleanup(CacheFiles):
                 if self._ttl < cache_entry[1] / 60.:
                     to_del[item_key] = cache_entry[0]
 
-            map_path = os.path.normpath('%s/%s' % (base_path,
-                                                   default_conc_cache.CacheMapping.CACHE_FILENAME))
+            map_path = os.path.normpath('%s/%s' % (base_path, self._cache_map_filename))
             if os.path.isfile(map_path):
                 with self._lock_factory.create(map_path):
                     cache_map = cPickle.load(open(map_path, 'rb'))
@@ -188,11 +179,26 @@ class CacheCleanup(CacheFiles):
                 if not dry_run:
                     os.unlink(unbound_file)
                 autoconf.logger.warn('deleted unbound cache file: %s' % unbound_file)
-        autoconf.logger.info(json.dumps({'type': 'summary', 'processed': num_processed,
-                                         'deleted': num_deleted}))
+        ans = {'type': 'summary', 'processed': num_processed, 'deleted': num_deleted}
+        logging.getLogger(__name__).info(json.dumps(ans))
+        return ans
+
+
+def run(root_dir, corpus_id, ttl, subdir, dry_run, cache_map_filename, locking_plugin):
+    proc = CacheCleanup(root_dir, corpus_id, ttl, subdir, locking_plugin, cache_map_filename)
+    return proc.run(dry_run=dry_run)
 
 
 if __name__ == '__main__':
+    sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
+    import autoconf
+    import plugins
+    from plugins import redis_db
+    plugins.install_plugin('db', redis_db, autoconf.settings)
+    from plugins import redis_locking
+    plugins.install_plugin('locking', redis_locking, autoconf.settings)
+    from plugins import default_conc_cache
+
     parser = argparse.ArgumentParser(description='A script to control UCNK metadata cache')
     parser.add_argument('--dry-run', '-d', action='store_true',
                         help='Just analyze, do not modify anything')
@@ -216,6 +222,8 @@ if __name__ == '__main__':
                           logging_level=autoconf.LOG_LEVELS[args.log_level])
     root_dir = autoconf.settings.get('plugins', 'conc_cache')['default:cache_dir']
 
-    proc = CacheCleanup(root_dir, args.corpus, args.ttl, args.subdir, plugins.get('locking'))
-    proc.run(dry_run=args.dry_run)
+    run(root_dir=root_dir, corpus_id=args.corpus, ttl=args.ttl, subdir=args.subdir,
+        dry_run=args.dry_run, cache_map_filename=default_conc_cache.CacheMapping.CACHE_FILENAME,
+        locking_plugin=plugins.get('locking'))
+
 
