@@ -47,7 +47,7 @@ DEFAULT_LOG_OUT = sys.stderr
 import settings
 settings.load('%s/conf/config.xml' % APP_PATH)
 
-logger = logging.getLogger('kontext_script')
+logger = logging.getLogger()
 
 
 def setup_logger(log_path=None, logger_name=None, logging_level=None):

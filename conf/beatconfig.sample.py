@@ -1,0 +1,21 @@
+from celery.schedules import crontab
+
+BROKER_URL = 'redis://localhost:6379/2'
+
+CELERYBEAT_SCHEDULE = {
+    'sync-user-database': {
+        'task': 'worker.sync_user_db',
+        'schedule': crontab(minute='*/5'),
+        'kwargs': dict(interval=5, dry_run=False)
+    },
+    'archive-old-concordances': {
+        'task': 'worker.archive_concordance',
+        'schedule': crontab(hour='*/1'),
+        'kwargs': dict(cron_interval=20, key_prefix=None, dry_run=False)
+    },
+    'conc-cache-cleanup': {
+        'task': 'worker.conc_cache_cleanup',
+        'schedule': crontab(hour='*/12'),
+        'kwargs': dict(ttl=120, subdir='student', dry_run=False)
+    }
+}

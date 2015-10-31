@@ -20,24 +20,11 @@ import sys
 import logging
 import json
 from datetime import datetime
+import time
 
-sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
-import autoconf
-
-import plugins
-
-from plugins import redis_db
-plugins.install_plugin('db', redis_db, autoconf.settings)
-
-from plugins import default_sessions
-plugins.install_plugin('sessions', default_sessions, autoconf.settings)
-
-from plugins import ucnk_remote_auth2
-plugins.install_plugin('auth', ucnk_remote_auth2, autoconf.settings)
-
-import mysql2redis as m2r
-
-logger = logging.getLogger('syncdb')
+from plugins.ucnk_remote_auth2 import mysql2redis as m2r
+#import MySQLdb
+import mysql_mock as MySQLdb
 
 DEFAULT_CHECK_INTERVAL = 5
 
@@ -169,8 +156,47 @@ class DbSync(object):
         return changed_users
 
 
+def run(syncdb_conf_path, kontext_conf, interval, dry_run):
+    mysql_conf = json.load(open(syncdb_conf_path, 'rb'))['mysql']
+    mysql_conn = MySQLdb.connect(host=mysql_conf['hostname'], user=mysql_conf['user'],
+                                 passwd=mysql_conf['passwd'], db=mysql_conf['dbname'],
+                                 use_unicode=mysql_conf['use_unicode'], charset=mysql_conf['charset'])
+    redis_params = kontext_conf.get('plugins', 'db')
+    redis_params = dict(host=redis_params['default:host'],
+                        port=redis_params['default:port'],
+                        db_id=redis_params['default:id'])
+    w = DbSync(mysql_conn=mysql_conn,
+               redis_params=redis_params,
+               check_interval=interval,
+               db_name=mysql_conf['dbname'],
+               default_user_corpora=kontext_conf.get('default_corpora', ('susanne',)))
+    t = time.time()
+    changed = w(dry_run=dry_run)
+    t = time.time() - t
+    if changed > 0:
+        logger.info('Synchronized %d users in %01.1f sec.' % (changed, t))
+        return {'synced_users': changed}
+    else:
+        return {'synced_users': 0}
+
+
 if __name__ == '__main__':
-    import time
+    sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.abspath(__file__))))
+    print(os.path.realpath('%s/../..' % os.path.dirname(os.path.abspath(__file__))))
+    import autoconf
+
+    import plugins
+
+    from plugins import redis_db
+    plugins.install_plugin('db', redis_db, autoconf.settings)
+
+    from plugins import default_sessions
+    plugins.install_plugin('sessions', default_sessions, autoconf.settings)
+
+    from plugins import ucnk_remote_auth2
+    plugins.install_plugin('auth', ucnk_remote_auth2, autoconf.settings)
+
+    logger = logging.getLogger('syncdb')
 
     parser = argparse.ArgumentParser(description='Check for changes in UCNK database and'
                                      'synchronize with KonText')
@@ -182,24 +208,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     conf = json.load(open(args.conf_path))
 
-    autoconf.setup_logger(log_path=conf['logging']['path'],
-                          logger_name='user_db_sync',
-                          logging_level=autoconf.LOG_LEVELS[conf['logging']['level']])
-
-    mysql_params = ucnk_remote_auth2.create_auth_db_params(
-            autoconf.settings.get('plugins', 'auth'))
-    mysql_params.update(dict(charset='utf8', use_unicode=True))
-    redis_params = autoconf.settings.get('plugins', 'db')
-    redis_params = dict(host=redis_params['default:host'],
-                        port=redis_params['default:port'],
-                        db_id=redis_params['default:id'])
-    w = DbSync(mysql_conn=ucnk_remote_auth2.connect_auth_db(**mysql_params),
-               redis_params=redis_params,
-               check_interval=args.interval,
-               db_name=mysql_params['db'],
-               default_user_corpora=conf.get('default_corpora', ('susanne',)))
-    t = time.time()
-    changed = w(dry_run=args.dry_run)
-    t = time.time() - t
-    if changed > 0:
-        logger.info('Synchronized %d users in %01.1f sec.' % (changed, t))
+    if 'logging' in conf:
+        autoconf.setup_logger(log_path=conf['logging']['path'],
+                              logger_name='user_db_sync',
+                              logging_level=autoconf.LOG_LEVELS[conf['logging']['level']])
+    run(args.conf_path, autoconf.settings, interval=args.interval, dry_run=args.dry_run)
