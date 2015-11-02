@@ -1238,7 +1238,7 @@ class Kontext(Controller):
         here: structs & structattrs where the former is the one used in URL and the latter
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """
-        return '%s,%s' % (self.args.structs, ','.join(self.args.structattrs))
+        return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
 
     @staticmethod
     def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
