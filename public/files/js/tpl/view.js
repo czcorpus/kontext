@@ -31,6 +31,58 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     lib.layoutModel = null;
 
 
+    // TODO this is an experimental touch event handler.
+    // Default behavior of the 'view' component should be observed carefully first.
+    function TouchHandler() {
+
+        this.startX = null;
+        this.startY = null;
+        this.currX = null;
+        this.currY = null;
+        this.area = null;
+
+        this._getPos = function (evt) {
+            var touch = evt.originalEvent.changedTouches[0];
+            if (touch) {
+                return [touch.clientX, touch.clientY];
+
+            } else {
+                return [null, null];
+            }
+        }
+
+
+        this.attachTouchEvents = function (area, fn) {
+            var pos;
+            var self = this;
+            var deltaX = 0;
+
+            this.area = area;
+
+            $(area).on('touchstart', function (evt) {
+                pos = self._getPos(evt);
+                this.startX = pos.clientX;
+                this.startY = pos.clientY;
+                this.currX = this.startX;
+                this.currY = this.startY;
+            });
+            $(area).on('touchmove', function (evt) {
+                pos = self._getPos(evt);
+                deltaX = pos[0] - this.currX;
+                fn(deltaX);
+                this.currX = pos[0];
+                this.currY = pos[1];
+                evt.preventDefault();
+            });
+            $(area).on('touchend', function (evt) {
+                pos = self._getPos(evt);
+                this.startX = null;
+                this.startY = null;
+            });
+        }
+    }
+
+
     /**
      * According to the data found in sessionStorage iterates over current page's
      * lines and (un)checks them appropriately. In case sessionStorage is not
@@ -200,6 +252,13 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         box.setCss('height', '70px');
     }
 
+    function attachMouseWheelEvents(area, fn) {
+        area = $(area).get(0);
+        area.addEventListener("mousewheel", fn, false);
+	    // Firefox
+	    area.addEventListener("DOMMouseScroll", fn, false);
+    }
+
     /**
      * This function is taken from jscrollpane demo page
      */
@@ -224,6 +283,18 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                     api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.2, 1));
                 }
             }
+        });
+
+        attachMouseWheelEvents(elm, function (evt) {
+            if (evt.shiftKey) {
+                var delta = Math.max(-1, Math.min(1, (evt.wheelDelta || -evt.detail)));
+                api.scrollBy(delta * 40, 0, false);
+                evt.preventDefault();
+            }
+        });
+
+        lib.touchHandler.attachTouchEvents(elm, function (delta) {
+            api.scrollBy(-delta, 0, false);
         });
     }
 
@@ -434,6 +505,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     lib.init = function (conf) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
+        lib.touchHandler = new TouchHandler();
         misc();
         addWarnings();
         initConcViewScrollbar();

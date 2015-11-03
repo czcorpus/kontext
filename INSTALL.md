@@ -1,15 +1,11 @@
 Installation instructions
 =========================
 
-Web server configuration
-------------------------
+Standalone server application
+-----------------------------
 
-KonText can be run in two modes:
-
-### Standalone server application
-
-In this case a web-server functionality is provided by KonText itself. Such solution is best suited for
-testing/development purposes and for low-load deployments. This mode can be activated by a following command::
+KonText can serve itself without any external web server but such a setup is recommended only
+for testing and development purposes. The application can be activated by a following command::
 
 ```shell
   python public/app.py --address [IP address] --port [TCP port]
@@ -17,10 +13,13 @@ testing/development purposes and for low-load deployments. This mode can be acti
 
 (*--address* and *--port* parameters are optional; default serving address is 127.0.0.1:5000)
 
-### WSGI application within a web-server
 
-KonText can be run within a WSGI-enabled web server (e.g. Apache 2.x + [mod_wsgi](https://code.google.com/p/modwsgi/)).
-This is the recommended mode for production deployments.
+WSGI application
+----------------
+
+KonText can be run within a WSGI-enabled web server (e.g. Apache 2.x + [mod_wsgi](https://code.google.com/p/modwsgi/)). This is the recommended mode for production deployments. Here we show two tested, production-ready setups.
+
+### mod_wsgi
 
 Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
 configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
@@ -43,12 +42,17 @@ is */etc/apache2/sites-available/*):
 </VirtualHost>
 ```
 
-*Important notice*: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this concrete
-form as in other case you may experience occasional error responses from Apache server
-(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API) for details).
+*Important note*: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this concrete form as in other case you may experience occasional error responses from Apache server
+(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API) for details). Also note that such a configuration
+does not provide the best performance *mod_wsgi* can offer. 
 
-Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also possible.
-Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
+Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
+
+
+### Gunicorn + a reverse proxy (Apache, Nginx)
+
+This configuration is best suited for high load environments.
+
 
 Please always keep in mind to have only *public* directory accessible by web clients to prevent them viewing
 configuration files, source code and other sensitive data.

@@ -11,9 +11,9 @@
         "ucnkLA__nothing_selected": "No matching items found.",
         "ucnkLA__at_least_one_required": "At least one numeric value is required.",
         "ucnkLA__OK": "OK",
-        "ucnkLA__interval_inclusion_policy": "interval inclusion",
-        "ucnkLA__strict_interval": "strict",
-        "ucnkLA__partial_interval": "partial"
+        "ucnkLA__interval_inclusion_policy": "partially included values",
+        "ucnkLA__strict_interval": "exclude",
+        "ucnkLA__partial_interval": "include"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -27,8 +27,8 @@
         "ucnkLA__nothing_selected": "Nebyly nalezeny žádné odpovídající položky.",
         "ucnkLA__at_least_one_required": "Je vyžadována alespoň jedna číselná hodnota.",
         "ucnkLA__OK": "OK",
-        "ucnkLA__interval_inclusion_policy": "zahrnování intervalů",
-        "ucnkLA__strict_interval": "striktní",
-        "ucnkLA__partial_interval": "částečné"
+        "ucnkLA__interval_inclusion_policy": "částečně vyhovující hodnoty",
+        "ucnkLA__strict_interval": "vyřadit",
+        "ucnkLA__partial_interval": "zahrnout"
 	}
 }
