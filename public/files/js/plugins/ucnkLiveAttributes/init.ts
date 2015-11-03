@@ -255,7 +255,7 @@ class LiveData {
             $(inputElm).show();
 
             if ($.isArray(dataItem)) {
-                attrTable.find('.metadata').empty();
+                attrTable.find('tr.metadata td').empty();
                 dataTable = self.createDataTable(dataItem, ident, self.pluginApi.getConf('bibConf'), checkedItems);
 
                 $(inputElm).after(dataTable);
@@ -273,8 +273,8 @@ class LiveData {
 
 
             } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
-                attrTable.find('.metadata').html(msg + ': <strong>' + dataItem.length + '</strong>');
-                attrTable.find('.metadata').append(helpLink);
+                attrTable.find('tr.metadata td').html(msg + ': <strong>' + dataItem.length + '</strong>');
+                attrTable.find('tr.metadata td').append(helpLink);
                 self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('ucnkLA__bib_list_warning'));
             }
         });
@@ -285,7 +285,7 @@ class LiveData {
      */
     reset():void {
         this.attrFieldsetWrapper.find('table.dynamic').remove();
-        this.attrFieldsetWrapper.find('.metadata').empty();
+        this.attrFieldsetWrapper.find('tr.metadata td').empty();
         this.attrFieldsetWrapper.find('input.raw-selection').show();
         this.attrFieldsetWrapper.find('label.select-all.dynamic').hide().removeClass('dynamic');
     }
@@ -702,7 +702,7 @@ class StructTables {
 
         } else if (defines(IntervalChar.RIGHT)) {
             parsed = s.split(this.intervalChars[IntervalChar.RIGHT]);
-            center: parseInt(parsed[0]);
+            center = parseInt(parsed[0]);
             ans = {
                 lft: center,
                 rgt: center + parseInt(parsed[1])
@@ -778,12 +778,14 @@ class StructTables {
         $(div).append(select);
         $(hintDiv).addClass('hint-diagram');
         $(div).append(hintDiv);
-        $(select).on('change', function (event:JQueryEventObject) {
-            if ($(event.target).val() === 'strict') {
-                $(hintDiv).removeClass('alt');
+        $(select).on('change keyup', function (event:JQueryEventObject) {
+            if (!event.keyCode || event.keyCode === 38 || event.keyCode === 40) {
+                if ($(select).val() === 'strict') {
+                    $(hintDiv).removeClass('alt');
 
-            } else {
-                $(hintDiv).addClass('alt');
+                } else {
+                    $(hintDiv).addClass('alt');
+                }
             }
         });
 
@@ -795,7 +797,7 @@ class StructTables {
         let self = this;
 
         $(actionLink)
-            .addClass('define-range')
+            .addClass('util-button')
             .text(this.pluginApi.translate('ucnkLA__select_range'));
 
         popupBox.bind(
@@ -877,6 +879,8 @@ class StructTables {
                 type: 'plain',
                 closeIcon: true,
                 htmlClass: 'range-selector',
+                calculatePosition: true,
+                top: 'attached-bottom',
                 onClose: function () {
                     self.setTableHighlight(attribName, false);
                 },
@@ -893,11 +897,13 @@ class StructTables {
     private createRangePanel(attribName:string) {
         let table = this.tables[attribName];
         if (table) {
-            let firstRow = $(table).find('tr.attrib-name:nth-child(1)');
+            let lastRow = $(table).find('tr.last-line');
             let tr = window.document.createElement('tr');
             let td = window.document.createElement('td');
-            firstRow.after(tr);
-            $(tr).append(td);
+            lastRow.before(tr);
+            $(tr)
+                .addClass('define-range')
+                .append(td);
             $(td).append(this.createRangeButton(attribName));
         }
     }
@@ -922,7 +928,7 @@ class StructTables {
                 $(this).find('tr.last-line label').hide();
                 let tab = self.tables[v];
                 if (tab && self.tableIsNumeric(v)) {
-                    $(tab).find('a.define-range').off('click').addClass('locked');
+                    $(tab).find('tr.define-range a.util-button').off('click').addClass('locked');
                 }
             });
         });
@@ -932,9 +938,14 @@ class StructTables {
      *
      */
     reset():void {
+        let self = this;
         this.attrFieldsetWrapper.find('table.envelope').each(function () {
+            let attribName = $(this).attr('data-attr');
             $(this).filter('.locked').find('tr.last-line label').show();
             $(this).removeClass('locked');
+            $(this).find('tr.define-range td')
+                .empty()
+                .append(self.createRangeButton(attribName));
         });
     }
 }
@@ -1059,6 +1070,7 @@ class Plugin {
         this.rawInputs.reset();
         this.selectionSteps.reset();
         this.structTables.reset();
+
     };
 
     /**

@@ -470,10 +470,10 @@ button#reset-tag-button {
   display: inline-block;
   vertical-align: middle;
   width: 150px;
-  height: 25px;
+  height: 28px;
   margin-left: 1em;
   background-image: url('../img/value_ranges.png');
-  background-position: 0 -42px;
+  background-position: 0 -41px;
   background-repeat: no-repeat;
 }
 
@@ -487,31 +487,28 @@ button#reset-tag-button {
 }
 
 .range-selector div.interval-switch .hint-diagram.alt {
-  background-position: 0 0;
+  background-position: 0 5px;
 }
 
 .range-selector .confirm-range {
   margin-top: 1em;
 }
 
-table.envelope.locked .define-range {
-  color: @color-light-text;
-}
-
-table.envelope a.define-range {
-  display: block;
-  cursor: pointer;
+table.envelope .define-range {
   color: @color-logo-blue;
   text-align: center;
 }
 
-table.envelope a.define-range.locked {
-  cursor: default;
-  text-decoration: none;
+table.envelope.locked .define-range a {
+  color: @color-light-text;
 }
 
-table.envelope a.define-range:hover {
-  text-decoration: none;
+table.envelope.locked .define-range a.locked,
+table.envelope.locked .define-range a.locked:hover {
+  color: @color-light-text;
+  text-decoration: line-through;
+  cursor: default;
+  background-color: transparent;
 }
 
 // ---------------- typeahead plugin --------------------
