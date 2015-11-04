@@ -18,9 +18,11 @@
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
+/// <reference path="../../../ts/declarations/common.d.ts" />
 
 import popupBox = require('popupbox');
 import $ = require('jquery');
+import rangeSelector = require('./rangeSelector');
 
 function stripPrefix(s: string): string {
     let x = /^sca_(.+)$/;
@@ -583,7 +585,7 @@ class SelectionSteps {
  * Handles state of tables wrapping listed values of individual attributes.
  *
  */
-class StructTables {
+class StructTables implements rangeSelector.CheckboxLists {
 
     pluginApi:Kontext.QueryPagePluginApi;
 
@@ -631,6 +633,10 @@ class StructTables {
         });
     }
 
+    getTable(name:string):HTMLElement {
+        return this.tables[name];
+    }
+
     private getTableHeadingRow(attribName:string):HTMLElement {
         if (this.tables.hasOwnProperty(attribName)) {
             return $(this.tables[attribName]).find('tr.attrib-name:nth-child(1)').get(0);
@@ -638,20 +644,7 @@ class StructTables {
         return undefined;
     }
 
-    private setTableHighlight(attribName:string, state:boolean) {
-        let tr = this.getTableHeadingRow(attribName);
-
-        if (tr) {
-            if (state) {
-                $(tr).find('th').addClass('focused');
-
-            } else {
-                $(tr).find('th').removeClass('focused');
-            }
-        }
-    }
-
-    private applyOnCheckboxes(attribName:string, callback:{(i:number, item:HTMLElement):void}):void {
+    applyOnCheckboxes(attribName:string, callback:{(i:number, item:HTMLElement):void}):void {
         let tab = this.tables[attribName];
 
         if (tab) {
@@ -662,234 +655,27 @@ class StructTables {
         }
     }
 
-    private checkRange(attribName:string, from:number, to:number, keepCurrent:boolean):number {
-        let numChecked = 0;
-        this.applyOnCheckboxes(attribName, function (i, item) {
-            let v = parseInt($(item).val());
-            if ((v >= from || isNaN(from)) && (v <= to || isNaN(to))) {
-                $(item).prop('checked', true);
-                numChecked += 1;
-
-            } else if (!keepCurrent) {
-                $(item).prop('checked', false);
-            }
-         });
-        return numChecked;
-    }
-
-    private decodeRange(s:string):{lft:number, rgt:number} {
-        let center:number;
-        let ans:{lft:number; rgt:number};
-        let parsed:Array<string>;
-        let defines = (ic) => this.intervalChars[ic] && s.indexOf(this.intervalChars[ic]) > -1;
-
-
-        if (defines(IntervalChar.LEFT)) {
-            parsed = s.split(this.intervalChars[IntervalChar.LEFT]);
-            center = parseInt(parsed[0]);
-            ans = {
-                lft: center - parseInt(parsed[1]),
-                rgt: center
-            };
-
-        } else if (defines(IntervalChar.BOTH)) {
-            parsed = s.split(this.intervalChars[IntervalChar.BOTH]);
-            center = parseInt(parsed[0]);
-            ans = {
-                lft: center - parseInt(parsed[1]),
-                rgt: center + parseInt(parsed[1])
-            };
-
-        } else if (defines(IntervalChar.RIGHT)) {
-            parsed = s.split(this.intervalChars[IntervalChar.RIGHT]);
-            center = parseInt(parsed[0]);
-            ans = {
-                lft: center,
-                rgt: center + parseInt(parsed[1])
-            };
-
-        } else if (/^\d+$/.exec(s)) {
-            ans = {
-                lft: parseInt(s),
-                rgt: parseInt(s)
-            };
-
-        } else {
-            ans = null;
-        }
-        return ans;
-    }
-
-    private checkIntervalRange(attribName:string, from:number, to:number,
-            strictMode:boolean, keepCurrent:boolean):number {
-        let tab = this.tables[attribName];
-        let numChecked = 0;
-        let self = this;
-
-        if (tab) {
-            $(tab).find('input.attr-selector').each(function () {
-                let interval = self.decodeRange($(this).val());
-                if (!interval) {
-                    return true; // silently ignore unknown entries
-                }
-                let [lft, rgt] = [interval.lft, interval.rgt];
-
-                if (strictMode) {
-                    if ((lft >= from && rgt >= from && lft <= to && rgt <= to)
-                            || (lft <= to && rgt <= to && isNaN(from))
-                            || (lft >= from && rgt >= from && isNaN(to))) {
-                        $(this).prop('checked', true);
-                        numChecked += 1;
-
-                    } else if (!keepCurrent) {
-                        $(this).prop('checked', false);
-                    }
-
-                } else {
-                    if ((lft >= from && lft <= to) || (lft >= from && isNaN(to)) || (rgt >= from && isNaN(to))
-                            || (rgt >= from && rgt <= to) || (lft <= to && isNaN(from)) || (rgt <= to && isNaN(from))) {
-                        $(this).prop('checked', true);
-                        numChecked += 1;
-
-                    } else {
-                        $(this).prop('checked', false);
-                    }
-                }
-            });
-        }
-        return numChecked;
-    }
-
-    private createIntervalLimitsSwitch():HTMLElement {
-        let div = window.document.createElement('div');
-        let select = window.document.createElement('select');
-        let hintDiv = window.document.createElement('div');
-        let label = window.document.createElement('span');
-
-        $(label)
-            .addClass('label')
-            .text(this.pluginApi.translate('ucnkLA__interval_inclusion_policy') + ': ');
-
-        $(div).append(label);
-        $(select)
-            .addClass('interval-behavior')
-            .append('<option value="strict">' + this.pluginApi.translate('ucnkLA__strict_interval') + '</option>')
-            .append('<option value="relaxed">' + this.pluginApi.translate('ucnkLA__partial_interval') + '</option>');
-        $(div).append(select);
-        $(hintDiv).addClass('hint-diagram');
-        $(div).append(hintDiv);
-        $(select).on('change keyup', function (event:JQueryEventObject) {
-            if (!event.keyCode || event.keyCode === 38 || event.keyCode === 40) {
-                if ($(select).val() === 'strict') {
-                    $(hintDiv).removeClass('alt');
-
-                } else {
-                    $(hintDiv).addClass('alt');
-                }
-            }
-        });
-
-        return div;
-    }
-
     private createRangeButton(attribName:string):HTMLElement {
         let actionLink:HTMLElement = window.document.createElement('a');
+        let table = this.tables[attribName];
         let self = this;
+        let rSel:rangeSelector.RangeSelector;
 
         $(actionLink)
             .addClass('util-button')
             .text(this.pluginApi.translate('ucnkLA__select_range'));
 
-        popupBox.bind(
+        rSel = rangeSelector.create(this.pluginApi, this, $(table).find('tr.data-rows').get(0), attribName,
+                    this.intervalChars);
+        rSel.init(
             actionLink,
-            function (tooltipBox:popupBox.TooltipBox, finalizeCallback) {
-                let rootElm:HTMLElement = tooltipBox.getRootElement();
-                let numSelected = 0;
-
-                self.applyOnCheckboxes(attribName,
-                        (i, item) => numSelected += $(item).is(':checked') ? 1 : 0);
-
-                $(rootElm).append(
-                    '<h3>' + self.pluginApi.translate('ucnkLA__define_range{attrib}', {attrib: attribName})
-                    + '</h3>'
-                    + (numSelected > 0 ?
-                        '<div><label><input class="keep-current" type="checkbox" checked="checked" />'
-                            + self.pluginApi.translate('ucnkLA__keep_current_selection') + '</label>'
-                            + '<label></div>'
-                        : '')
-                    + '<div class="interval-switch"></div>'
-                    + '<div>'
-                    + self.pluginApi.translate('ucnkLA__from') + ':&nbsp;'
-                    + '<input class="from-value" type="text" style="width: 5em" />'
-                    + '</label>&nbsp;'
-                    + '<label>'
-                    + self.pluginApi.translate('ucnkLA__to') + ':&nbsp;'
-                    + '<input class="to-value" type="text" style="width: 5em" />'
-                    + '</label>'
-                    + '</div>'
-                    + '<button class="default-button confirm-range" type="button">'
-                    + self.pluginApi.translate('ucnkLA__OK') + '</button>'
-                );
-                if (self.tableIsRange(attribName)) {
-                    $(rootElm).find('div.interval-switch').append(self.createIntervalLimitsSwitch());
-                }
-                $(rootElm).find('button.confirm-range').on('click', function (evt) {
-                    let fromVal = parseInt($(rootElm).find('input.from-value').val());
-                    let toVal = parseInt($(rootElm).find('input.to-value').val());
-                    let numChecked;
-
-                    if (isNaN(fromVal) && isNaN(toVal)) {
-                        self.pluginApi.showMessage('warning',
-                                self.pluginApi.translate('ucnkLA__at_least_one_required'));
-
-                    } else {
-                        let intervalSwitch = $(rootElm).find('select.interval-behavior');
-
-                        if (intervalSwitch.length > 0) {
-                            numChecked = self.checkIntervalRange(
-                                attribName,
-                                fromVal,
-                                toVal,
-                                intervalSwitch.val() === 'strict',
-                                $(rootElm).find('input.keep-current').is(':checked')
-                            );
-
-                        } else {
-                            numChecked = self.checkRange(
-                                attribName,
-                                fromVal,
-                                toVal,
-                                $(rootElm).find('input.keep-current').is(':checked')
-                            );
-                        }
-
-                        if (numChecked > 0) {
-                            tooltipBox.close();
-
-                        } else {
-                            self.pluginApi.showMessage('warning',
-                                self.pluginApi.translate('ucnkLA__nothing_selected'));
-                        }
-                    }
-                });
-                finalizeCallback();
-                $(rootElm).find('input.from-value').focus();
+            function () {
+                $(table).find('label.select-all').hide();
             },
-            {
-                type: 'plain',
-                closeIcon: true,
-                htmlClass: 'range-selector',
-                calculatePosition: true,
-                top: 'attached-bottom',
-                onClose: function () {
-                    self.setTableHighlight(attribName, false);
-                },
-                onShow : function () {
-                    self.setTableHighlight(attribName, true);
-                },
-                timeout: 0
+            function () {
+                $(table).find('label.select-all').show();
             }
-        );
+         );
 
         return actionLink;
     }
@@ -912,7 +698,7 @@ class StructTables {
         return this.numericFlags[attribName] || this.rangeFlags[attribName];
     }
 
-    tableIsRange(attribName:string) {
+    tableIsRange(attribName:string):boolean {
         return this.rangeFlags[attribName];
     }
 
@@ -1011,10 +797,6 @@ class AlignedCorpora {
         });
         return ans;
     }
-}
-
-enum IntervalChar {
-    LEFT, BOTH, RIGHT
 }
 
 /**
