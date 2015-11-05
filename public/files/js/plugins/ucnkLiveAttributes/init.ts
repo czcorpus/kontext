@@ -597,6 +597,10 @@ class StructTables implements rangeSelector.CheckboxLists {
 
     tables:{[attribute:string]:HTMLElement};
 
+    onLockCallbacks:{[attribute:string]:()=>void};
+
+    rangeWidgets:{[attribute:string]:rangeSelector.RangeSelector};
+
     numericFlags:{[attribute:string]:boolean};
 
     rangeFlags:{[attribute:string]:boolean};
@@ -616,6 +620,8 @@ class StructTables implements rangeSelector.CheckboxLists {
         this.checkboxes = checkboxes;
         this.intervalChars = intervalChars;
         this.tables = {};
+        this.onLockCallbacks = {};
+        this.rangeWidgets = {};
         this.numericFlags = {};
         this.rangeFlags = {};
     }
@@ -655,7 +661,7 @@ class StructTables implements rangeSelector.CheckboxLists {
         }
     }
 
-    private createRangeButton(attribName:string):HTMLElement {
+    private createRangeWidget(attribName:string):HTMLElement {
         let actionLink:HTMLElement = window.document.createElement('a');
         let table = this.tables[attribName];
         let self = this;
@@ -673,9 +679,17 @@ class StructTables implements rangeSelector.CheckboxLists {
                 $(table).find('label.select-all').hide();
             },
             function () {
-                $(table).find('label.select-all').show();
+                if (!$(table).hasClass('locked')) {
+                    $(table).find('label.select-all').show();
+                }
             }
-         );
+        );
+
+        this.onLockCallbacks[attribName] = () => {
+             rSel.hide();
+        }
+
+        this.rangeWidgets[attribName] = rSel;
 
         return actionLink;
     }
@@ -690,7 +704,7 @@ class StructTables implements rangeSelector.CheckboxLists {
             $(tr)
                 .addClass('define-range')
                 .append(td);
-            $(td).append(this.createRangeButton(attribName));
+            $(td).append(this.createRangeWidget(attribName));
         }
     }
 
@@ -711,10 +725,12 @@ class StructTables implements rangeSelector.CheckboxLists {
         $.each(this.selectionSteps.usedAttributes(), function (i, v) {
             self.attrFieldsetWrapper.find('table[data-attr="' + v + '"]').each(function () {
                 $(this).addClass('locked');
+                (self.onLockCallbacks[v] || (()=>undefined)).apply(self);
                 $(this).find('tr.last-line label').hide();
-                let tab = self.tables[v];
-                if (tab && self.tableIsNumeric(v)) {
-                    $(tab).find('tr.define-range a.util-button').off('click').addClass('locked');
+                let widget = self.rangeWidgets[v];
+                if (widget) {
+                    widget.hide();
+                    widget.lockSwitchLink();
                 }
             });
         });
@@ -729,9 +745,11 @@ class StructTables implements rangeSelector.CheckboxLists {
             let attribName = $(this).attr('data-attr');
             $(this).filter('.locked').find('tr.last-line label').show();
             $(this).removeClass('locked');
-            $(this).find('tr.define-range td')
-                .empty()
-                .append(self.createRangeButton(attribName));
+            let widget = self.rangeWidgets[attribName];
+            if (widget) {
+                widget.show();
+                widget.unLockSwitchLink();
+            }
         });
     }
 }

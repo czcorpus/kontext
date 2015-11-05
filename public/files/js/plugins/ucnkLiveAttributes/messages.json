@@ -14,7 +14,8 @@
         "ucnkLA__OK": "OK",
         "ucnkLA__interval_inclusion_policy": "partially included values",
         "ucnkLA__strict_interval": "exclude",
-        "ucnkLA__partial_interval": "include"
+        "ucnkLA__partial_interval": "include",
+        "ucnkLA__range_help_text": "(TODO) Zahrnutím částečně vyhovujících hodnot budou do zvoleného rozsahu vybrány i texty datované přibližně (s tolerančním intervalem). Např. do rozmezí let 1400 až 1500 bude při volbě „zahrnout“ vybrán i text datovaný 1375±25 (2. polovina 14. století) či 1390±10 (konec 14. století), při volbě „vyřadit“ bude vybrán až text z roku 1400."
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -31,6 +32,7 @@
         "ucnkLA__OK": "OK",
         "ucnkLA__interval_inclusion_policy": "částečně vyhovující hodnoty",
         "ucnkLA__strict_interval": "vyřadit",
-        "ucnkLA__partial_interval": "zahrnout"
+        "ucnkLA__partial_interval": "zahrnout",
+        "ucnkLA__range_help_text": "Zahrnutím částečně vyhovujících hodnot budou do zvoleného rozsahu vybrány i texty datované přibližně (s tolerančním intervalem). Např. do rozmezí let 1400 až 1500 bude při volbě „zahrnout“ vybrán i text datovaný 1375±25 (2. polovina 14. století) či 1390±10 (konec 14. století), při volbě „vyřadit“ bude vybrán až text z roku 1400."
 	}
 }

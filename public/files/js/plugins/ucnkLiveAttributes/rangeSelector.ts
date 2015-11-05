@@ -18,7 +18,9 @@
 
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
+import popupBox = require('popupbox');
 
 /**
  * A minimal interface required by RangeSelector to cooperate with
@@ -89,15 +91,73 @@ export class RangeSelector {
         this.onHide = ()=>undefined;
 	}
 
+    private submitHandler(evt:JQueryEventObject):void {
+        let fromVal = parseInt($(this.rootElm).find('input.from-value').val());
+        let toVal = parseInt($(this.rootElm).find('input.to-value').val());
+        let numChecked;
+
+        if (isNaN(fromVal) && isNaN(toVal)) {
+            this.pluginApi.showMessage('warning',
+                    this.pluginApi.translate('ucnkLA__at_least_one_required'));
+
+        } else {
+            let intervalSwitch = $(this.rootElm).find('select.interval-behavior');
+
+            if (intervalSwitch.length > 0) {
+                numChecked = this.checkIntervalRange(
+                    fromVal,
+                    toVal,
+                    intervalSwitch.val() === 'strict',
+                    $(this.rootElm).find('input.keep-current').is(':checked')
+                );
+
+            } else {
+                numChecked = this.checkRange(
+                    this.attribName,
+                    fromVal,
+                    toVal,
+                    $(this.rootElm).find('input.keep-current').is(':checked')
+                );
+            }
+
+            if (numChecked > 0) {
+                this.hide();
+
+            } else {
+                this.pluginApi.showMessage('warning',
+                    this.pluginApi.translate('ucnkLA__nothing_selected'));
+            }
+        }
+    }
+
+    keyEventHandler(e:JQueryEventObject):void {
+        let inputs = $(this.rootElm).find('input,select').toArray();
+        if (this.isActive && e.keyCode === 13
+                && inputs.indexOf(document.activeElement) > - 1) {
+            this.submitHandler(e);
+            e.preventDefault();
+        }
+    }
+
+    private attachHelp(triggerElm:HTMLElement):void {
+        console.log('bind: ', triggerElm);
+        popupBox.bind(
+            triggerElm,
+            this.pluginApi.translate('ucnkLA__range_help_text'),
+            {
+                width: 'nice'
+            }
+        );
+    }
+
     private createIntervalLimitsSwitch():HTMLElement {
         let div = window.document.createElement('div');
         let select = window.document.createElement('select');
-        let hintDiv = window.document.createElement('div');
         let label = window.document.createElement('span');
 
         $(label)
             .addClass('label')
-            .text(this.pluginApi.translate('ucnkLA__interval_inclusion_policy') + ': ');
+            .html(this.pluginApi.translate('ucnkLA__interval_inclusion_policy') + ':&nbsp;');
 
         $(div).append(label);
         $(select)
@@ -105,18 +165,12 @@ export class RangeSelector {
             .append('<option value="strict">' + this.pluginApi.translate('ucnkLA__strict_interval') + '</option>')
             .append('<option value="relaxed">' + this.pluginApi.translate('ucnkLA__partial_interval') + '</option>');
         $(div).append(select);
-        $(hintDiv).addClass('hint-diagram');
-        $(div).append(hintDiv);
-        $(select).on('change keyup', function (event:JQueryEventObject) {
-            if (!event.keyCode || event.keyCode === 38 || event.keyCode === 40) {
-                if ($(select).val() === 'strict') {
-                    $(hintDiv).removeClass('alt');
 
-                } else {
-                    $(hintDiv).addClass('alt');
-                }
-            }
-        });
+        $(select).after('<a class="context-help">'
+                + '<img class="over-img" src="../files/img/question-mark.png" '
+                + 'data-alt-img="../files/img/question-mark_s.png" /></a>');
+        this.attachHelp($(div).find('a.context-help').get(0));
+
         return div;
     }
 
@@ -223,7 +277,18 @@ export class RangeSelector {
         return numChecked;
     }
 
-    private hide():void {
+    lockSwitchLink():void {
+        $(this.switchLink)
+            .addClass('locked')
+            .off('click');
+    }
+
+    unLockSwitchLink():void {
+        $(this.switchLink).removeClass('locked');
+        this.bindSwitchLink();
+    }
+
+    hide():void {
         $(this.rootElm).hide();
         $(this.altElm).show();
         if (this.switchLink) {
@@ -232,9 +297,10 @@ export class RangeSelector {
         this.isActive = false;
         this.onHide.call(this);
         this.focusFirstChecked();
+        $(this.rootElm).off('keydown.rangeSubmit');
     }
 
-    private show():void {
+    show():void {
         let numSelected = 0;
         let keepCurrBox = $(this.rootElm).find('div.keep-current');
 
@@ -257,6 +323,7 @@ export class RangeSelector {
         this.isActive = true;
         this.onShow.call(this);
         $(this.rootElm).find('input.from-value').focus();
+        $(this.rootElm).on('keydown.rangeSubmit', this.keyEventHandler.bind(this));
     }
 
     private bindSwitchLink():void {
@@ -316,44 +383,7 @@ export class RangeSelector {
         if (this.checkboxLists.tableIsRange(this.attribName)) {
             $(tdElm).find('div.interval-switch').append(this.createIntervalLimitsSwitch());
         }
-        $(tdElm).find('button.confirm-range').on('click', function (evt) {
-            let fromVal = parseInt($(tdElm).find('input.from-value').val());
-            let toVal = parseInt($(tdElm).find('input.to-value').val());
-            let numChecked;
-
-            if (isNaN(fromVal) && isNaN(toVal)) {
-                self.pluginApi.showMessage('warning',
-                        self.pluginApi.translate('ucnkLA__at_least_one_required'));
-
-            } else {
-                let intervalSwitch = $(tdElm).find('select.interval-behavior');
-
-                if (intervalSwitch.length > 0) {
-                    numChecked = self.checkIntervalRange(
-                        fromVal,
-                        toVal,
-                        intervalSwitch.val() === 'strict',
-                        $(tdElm).find('input.keep-current').is(':checked')
-                    );
-
-                } else {
-                    numChecked = self.checkRange(
-                        self.attribName,
-                        fromVal,
-                        toVal,
-                        $(tdElm).find('input.keep-current').is(':checked')
-                    );
-                }
-
-                if (numChecked > 0) {
-                    self.hide();
-
-                } else {
-                    self.pluginApi.showMessage('warning',
-                        self.pluginApi.translate('ucnkLA__nothing_selected'));
-                }
-            }
-        });
+        $(tdElm).find('button.confirm-range').on('click', this.submitHandler.bind(this));
         this.show();
         this.bindSwitchLink();
     }
