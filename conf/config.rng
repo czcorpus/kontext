@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+
+    <a:documentation>A schema describing KonText main configuration file</a:documentation>
+
+    <define name="plugin_common">
+        <element name="module">
+            <text />
+        </element>
+        <optional>
+            <element name="js_module">
+                <text />
+            </element>
+        </optional>
+    </define>
+
+    <define name="customSimpleElement">
+        <a:documentation>An atomic configuration element representing a key=&gt;value pair.</a:documentation>
+        <element>
+            <anyName/>
+            <attribute name="extension-by">
+                <text />
+            </attribute>
+            <text />
+        </element>
+    </define>
+
+    <define name="customArrayElement">
+        <a:documentation>An element containing a list of atomic configuration elements</a:documentation>
+        <element>
+            <anyName />
+            <attribute name="extension-by">
+                <text />
+            </attribute>
+            <oneOrMore>
+                <element>
+                    <anyName />
+                    <text />
+                </element>
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="customPluginConfiguration">
+        <a:documentation>Non-core configuration of a plug-in</a:documentation>
+        <zeroOrMore>
+            <choice>
+                <ref name="customSimpleElement" />
+                <ref name="customArrayElement" />
+            </choice>
+        </zeroOrMore>
+    </define>
+
+    <start>
+        <element name="kontext">
+            <optional>
+                <element name="theme">
+                    <a:documentation>Optional visual theme configuration</a:documentation>
+                    <interleave>
+                        <element name="name">
+                            <a:documentation>Theme identifier</a:documentation>
+                            <text />
+                        </element>
+                        <element name="logo">
+                            <a:documentation>Path to a logo</a:documentation>
+                            <text />
+                        </element>
+                        <element name="logo_mouseover">
+                            <a:documentation>Path to a logo (mouseover variant)</a:documentation>
+                            <text />
+                        </element>
+                        <element name="logo_href">
+                            <a:documentation>Logo link activated on click</a:documentation>
+                            <text />
+                        </element>
+                        <element name="logo_style">
+                            <a:documentation>custom inline logo CSS (e.g. width &amp; height)</a:documentation>
+                            <text />
+                        </element>
+                        <optional>
+                            <element name="fonts">
+                                <a:documentation>Custom theme fonts URLs</a:documentation>
+                                <choice>
+                                    <oneOrMore>
+                                        <element name="item">
+                                            <text />
+                                        </element>
+                                    </oneOrMore>
+                                    <text />
+                                </choice>
+                            </element>
+                        </optional>
+                        <optional>
+                            <element name="css">
+                                <a:documentation>Theme stylesheet(s) URL(s)</a:documentation>
+                                <choice>
+                                    <oneOrMore>
+                                        <element name="item">
+                                            <text />
+                                        </element>
+                                    </oneOrMore>
+                                    <text />
+                                </choice>
+                            </element>
+                        </optional>
+                    </interleave>
+                </element>
+            </optional>
+            <element name="global">
+                <a:documentation>Main configuration section</a:documentation>
+                <interleave>
+                    <optional>
+                        <element name="deployment_id">
+                            <a:documentation>an identifier to modify static files URLs to flush browser cache</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
+                    <element name="manatee_path">
+                        <a:documentation>a path to Manatee Python libs (empty value is OK too)</a:documentation>
+                        <text />
+                    </element>
+                    <optional>
+                        <element name="umask">
+                            <a:documentation>An optional umask used when creating new files. Sometimes this is
+                            configured externally (e.g. Apache + mod_wsgi).</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
+                    <element name="log_path">
+                        <a:documentation>Path to KonText application log</a:documentation>
+                        <text />
+                    </element>
+                    <optional>
+                        <element name="log_file_size">
+                            <a:documentation>Maximum size of a log file (log rotation)</a:documentation>
+                            <data type="integer" />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="log_num_files">
+                            <a:documentation>Maximum number of log files (log rotation</a:documentation>
+                            <data type="integer" />
+                        </element>
+                    </optional>
+                    <element name="debug">
+                        <a:documentation>Debugging mode: 0/false = no debugging,
+                            1/true = standard debugging, 2 = debugging + profiling information (slowest)
+                        </a:documentation>
+                        <choice>
+                            <value>false</value>
+                            <value>true</value>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>2</value>
+                        </choice>
+                    </element>
+                    <optional>
+                        <element name="profile_log_path">
+                            <a:documentation>Path to a file where profiling information is stored
+                            (applies only if debug is 2)</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
+                    <element name="maintenance">
+                        <a:documentation>Switches KonText into a special mode when only a static page
+                        is presented to a user and all the plug-in dependencies are disabled (i.e.
+                        it should work even if KonText components are down).</a:documentation>
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
+                    <optional>
+                        <element name="error_report_url">
+                            <a:documentation>A page footer link to make reporting errors easier for users.</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="error_report_params">
+                            <a:documentation>Optional parameters to be passed to the error_report_url (either static ones
+                                or @[controller_attr] ones).</a:documentation>
+                            <oneOrMore>
+                                <element name="param">
+                                    <attribute name="name">
+                                        <text />
+                                    </attribute>
+                                    <text />
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </optional>
+                    <element name="max_attr_list_size">
+                        <a:documentation>Defines a maximum number of items in the checkbox table
+                        in the text types component</a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <optional>
+                        <element name="ui_state_ttl">
+                            <a:documentation>Specifies a number of seconds some client-side specific settings
+                            are stored</a:documentation>
+                            <data type="integer" />
+                        </element>
+                    </optional>
+                    <element name="logged_values">
+                        <a:documentation>Specifies values written to the application log
+                        (date, user_id, action, param, proc_time, pid, environ:*)
+                        </a:documentation>
+                        <zeroOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                    <element name="translations">
+                        <a:documentation>Languages activated in user interface (use [language]_[region]
+                            format, e.g. en_US)
+                        </a:documentation>
+                        <oneOrMore>
+                            <element name="language">
+                                <attribute name="label">
+                                    <text />
+                                </attribute>
+                                <text />
+                            </element>
+                        </oneOrMore>
+                    </element>
+                    <element name="conc_summary_session_ttl">
+                        <a:documentation>KonText stores current concordance summary to user session
+                        to be able to show it even if the user visits other views of the interface
+                        (e.g. filter, sorting etc.). It is even able to keep multiple results at
+                        once (user may use multiple browser tabs etc.). These results are flushed
+                        eventually to keep session size small. This value specifies number of seconds
+                        to keep such a result in session.
+                        </a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <optional>
+                        <element name="periodic_tasks">
+                            <a:documentation>Configures Celery beat. This is not needed if
+                            respective plug-ins support scripts are run by Cron</a:documentation>
+                            <attribute name="conf">
+                                <text />
+                            </attribute>
+                            <text />
+                        </element>
+                    </optional>
+                    <element name="upload_cache_dir">
+                        <a:documentation>A path where uploaded file (e.g. whitelists/blacklists)
+                        are temporarily stored before being processed</a:documentation>
+                        <text />
+                    </element>
+                </interleave>
+            </element>
+            <element name="plugins">
+                <interleave>
+                    <element name="db">
+                        <a:documentation>Main key=&gt;value storage configuration</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="auth">
+                        <a:documentation>Authentication plug-in configuration</a:documentation>
+                        <ref name="plugin_common" />
+                        <interleave>
+                            <element name="anonymous_user_id">
+                                <data type="integer" />
+                            </element>
+                            <element name="auth_cookie_name">
+                                <text />
+                            </element>
+                            <element name="login_url">
+                                <text />
+                            </element>
+                            <element name="logout_url">
+                                <text />
+                            </element>
+                        </interleave>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="getlang">
+                        <a:documentation>A plug-in to detect user language</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="query_storage">
+                        <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
+                        <ref name="plugin_common" />
+                        <element name="history_max_query_size">
+                            <data type="integer" />
+                        </element>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="conc_persistence">
+                        <a:documentation>Storing (possibly long) queries under a simple code</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="conc_cache">
+                        <a:documentation>Path to a directory where cached concordances are stored
+                            (this typically requires quite a lot of space and some regular clean-up)</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="settings_storage">
+                        <a:documentation>A plug-in to store and retrieve user settings</a:documentation>
+                        <ref name="plugin_common" />
+                        <element name="excluded_users">
+                            <zeroOrMore>
+                                <element name="item">
+                                    <text />
+                                </element>
+                            </zeroOrMore>
+                        </element>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="sessions">
+                        <a:documentation>A plug-in for handling web sessions.</a:documentation>
+                        <ref name="plugin_common" />
+                        <element name="ttl">
+                            <a:documentation>number of seconds of inactivity</a:documentation>
+                            <data type="integer" />
+                        </element>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="corparch">
+                        <a:documentation>A plug-in for searching available corpora</a:documentation>
+                        <ref name="plugin_common" />
+                        <element name="file"> <!-- TODO: this is debatable -->
+                            <text />
+                        </element>
+                        <element name="root_elm_path">
+                            <text /> <!-- TODO: this is debatable as others may not need this -->
+                        </element>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="live_attributes">
+                        <a:documentation>Interactive text types selection</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="export">
+                        <a:documentation>Dataset export modules</a:documentation>
+                        <interleave>
+                            <optional>
+                                <element name="csv">
+                                    <text />
+                                </element>
+                            </optional>
+                            <optional>
+                                <element name="xlsx">
+                                    <text />
+                                </element>
+                            </optional>
+                            <optional>
+                                <element name="xml">
+                                    <text />
+                                </element>
+                            </optional>
+                        </interleave>
+                        <zeroOrMore>
+                            <element>
+                                <anyName />
+                                <text />
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                    <element name="subc_restore">
+                        <a:documentation>Backup/restore of subcorpora</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="locking">
+                        <a:documentation>Internal locking mechanism used when calculating a concordance</a:documentation>
+                        <element name="module">
+                            <text />
+                        </element>
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="taghelper">
+                        <a:documentation>An interactive builder of positional tags</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="user_items">
+                        <a:documentation>User favorite items (this is coupled with &quot;corparch&quot; plug-in)</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <element name="menu_items">
+                        <a:documentation>Handles custom menu items</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
+                    <optional>
+                        <element name="subcmixer">
+                            <a:documentation>Generates subcorpora with defined text type ratios (experimental)</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </element>
+                    </optional>
+                </interleave>
+            </element>
+            <element name="corpora">
+                <interleave>
+                    <element name="conc_calc_backend">
+                        <a:documentation>Selects a backend used to calculate concordances</a:documentation>
+                        <attribute name="conf">
+                            <text />
+                        </attribute>
+                        <choice>
+                            <value>multiprocessing</value>
+                            <value>celery</value>
+                        </choice>
+                    </element>
+                    <element name="calc_pid_dir">
+                        <a:documentation>Specifies a directory where concordance calculation
+                        auxiliary files are temporarily created.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="manatee_registry">
+                        <a:documentation>A directory where Manatee registry files are located.
+                        This one is very important.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="users_subcpath">
+                        <a:documentation>A directory where user subcorpora are stored</a:documentation>
+                        <text />
+                    </element>
+                    <element name="conc_dir">
+                        <!-- TODO -->
+                        <a:documentation>???</a:documentation>
+                        <text />
+                    </element>
+                    <element name="freqs_cache_dir">
+                        <a:documentation>A directory where precalculated data related to frequency
+                        information is stored</a:documentation>
+                        <text />
+                    </element>
+                    <element name="default_corpora">
+                        <a:documentation>Specifies a default corpous to be offered to a user
+                        in case she does not specify anything. A list can be used to define
+                        some fallback items (e.g. some users may not have the permissions to
+                        access 1st corpus but they can use 2nd etc.).</a:documentation>
+                        <oneOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </oneOrMore>
+                    </element>
+                    <element name="speech_files_path">
+                        <a:documentation>A directory where sound files for individual corpora
+                        are stored.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="use_db_whitelist">
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
+                    <element name="empty_attr_value_placeholder">
+                        <a:documentation>A placeholder used to represent empty value in text type
+                        attribute values</a:documentation>
+                        <text />
+                    </element>
+                    <element name="multilevel_freq_dist_max_levels">
+                        <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
+                        <data type="integer" />
+                    </element>
+                </interleave>
+            </element>
+        </element>
+    </start>
+</grammar>

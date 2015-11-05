@@ -28,6 +28,8 @@ import plugins
 settings.load('%s/conf/config.xml' % CURR_PATH)
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
+initializer.init_plugin('sessions')
+initializer.init_plugin('auth')
 initializer.init_plugin('locking')
 initializer.init_plugin('conc_cache')
 initializer.init_plugin('conc_persistence')
@@ -35,7 +37,7 @@ initializer.init_plugin('sessions')
 
 from concworker import wcelery
 
-_, conf = settings.get_full('global', 'conc_calc_backend')
+_, conf = settings.get_full('corpora', 'conc_calc_backend')
 app = Celery('kontext', config_source=wcelery.load_config_module(conf['conf']))
 
 

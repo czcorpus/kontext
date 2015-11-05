@@ -24,7 +24,7 @@ def validate_corplist(schema, conf):
     relax = etree.RelaxNG(schema)
     try:
         relax.assertValid(conf)
-        print('OK')
+        print('\nOK. The file conforms the schema.')
     except etree.DocumentInvalid as e:
         print(e)
 
@@ -36,9 +36,9 @@ if __name__ == '__main__':
                         help='a path to a RelaxNG schema file')
     args = parser.parse_args()
     with open(args.schema_file, 'rb') as schema_f, open(args.config_file, 'rb') as conf_f:
-        print('testing file "%s" against schema "%s"' % (os.path.basename(args.config_file),
-                                                     os.path.basename(args.schema_file)))
-        print(80 * '=')
+        print('Testing file "%s" against schema "%s"...' % (os.path.basename(args.config_file),
+                                                            os.path.basename(args.schema_file)))
         schema = etree.parse(schema_f)
         conf = etree.parse(conf_f)
         validate_corplist(schema, conf)
+        print(80 * '=')

@@ -959,7 +959,7 @@ class Controller(object):
             outf.write(str(result))
 
     def user_is_anonymous(self):
-        return self._session_get('user', 'id') == settings.get_int('global', 'anonymous_user_id')
+        return plugins.get('auth').is_anonymous(self._session_get('user', 'id'))
 
     @exposed()
     def nop(self, request, *args):

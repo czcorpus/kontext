@@ -176,7 +176,7 @@ def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used ----- TODO remove it
     """
-    backend, conf = settings.get_full('global', 'conc_calc_backend')
+    backend, conf = settings.get_full('corpora', 'conc_calc_backend')
     if backend == 'multiprocessing':
         from concworker.default import BackgroundCalc, NotifierFactory
         receiver, sender = NotifierFactory()()

@@ -30,7 +30,7 @@ class User(Kontext):
 
     @staticmethod
     def _is_anonymous_id(user_id):
-        return settings.get_int('global', 'anonymous_user_id') == user_id
+        return plugins.get('auth').is_anonymous(user_id)
 
     @exposed(skip_corpus_init=True)
     def login(self, request):

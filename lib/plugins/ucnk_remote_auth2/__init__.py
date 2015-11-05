@@ -86,11 +86,11 @@ class ToolbarConf(object):
 
 class AuthConf(object):
     def __init__(self, conf):
-        self.admins = conf.get('global', 'ucnk:administrators')
+        self.admins = conf.get('plugins', 'auth').get('ucnk:administrators', [])
         self.login_url = conf.get('plugins', 'auth')['login_url']
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
-        self.anonymous_user_id = conf.get_int('global', 'anonymous_user_id')
+        self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
 
 
