@@ -140,7 +140,6 @@ export class RangeSelector {
     }
 
     private attachHelp(triggerElm:HTMLElement):void {
-        console.log('bind: ', triggerElm);
         popupBox.bind(
             triggerElm,
             this.pluginApi.translate('ucnkLA__range_help_text'),
@@ -162,8 +161,8 @@ export class RangeSelector {
         $(div).append(label);
         $(select)
             .addClass('interval-behavior')
-            .append('<option value="strict">' + this.pluginApi.translate('ucnkLA__strict_interval') + '</option>')
-            .append('<option value="relaxed">' + this.pluginApi.translate('ucnkLA__partial_interval') + '</option>');
+            .append('<option value="relaxed">' + this.pluginApi.translate('ucnkLA__partial_interval') + '</option>')
+            .append('<option value="strict">' + this.pluginApi.translate('ucnkLA__strict_interval') + '</option>');
         $(div).append(select);
 
         $(select).after('<a class="context-help">'
@@ -248,7 +247,7 @@ export class RangeSelector {
                         $(this).prop('checked', true);
                         numChecked += 1;
 
-                    } else {
+                    } else if (!keepCurrent) {
                         $(this).prop('checked', false);
                     }
                 }
