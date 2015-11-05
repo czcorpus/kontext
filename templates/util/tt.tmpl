@@ -46,9 +46,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <tr class="attrib-name">
             <th>
                 $_($l['label'])
-                #if 'label_hint' in $l ## 1
-                <a class="external-help" href="${l['label_hint']}" target="_blank"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
-                #end if  ## -1
+                #if $l.attr_doc
+                <a class="external-help" title="$l.attr_doc_label" href="${l.attr_doc}" target="_blank"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
+                #end if
             </th>
         </tr>
         <tr>
@@ -56,9 +56,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <div class="scrollable">
                     <table>
                         <tbody>
-                        #if $l.attr_doc ## 1
-                        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
-                        #end if ## -1
                         #if $l.has_key('Values') ## 1
                         #if $l.has_key('hierarchical') ## 2
                         <tr>
@@ -155,11 +152,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         </tr>
     </table>
 
-    #if $l.attr_doc
-    <table>
-        <tr><td><i><a href="$l.attr_doc">$l.attr_doc_label</a></i></td></tr>
-    </table>
-    #end if
     #end for ## -f2
     #end for ## -f1
 

@@ -32,7 +32,7 @@ _conf = {}  # contains parsed data, it should not be accessed directly (use set,
 _meta = {}  # contains data of attributes of XML elements representing configuration values
 _state = ConfState()
 
-SECTIONS = ('global', 'theme', 'external_links', 'plugins', 'cache', 'corpora')
+SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora')
 
 
 def contains(section, key=None):
