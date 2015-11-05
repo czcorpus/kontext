@@ -1433,14 +1433,8 @@ class Kontext(Controller):
     def _add_tt_custom_metadata(self, tt):
         metadata = plugins.get('corparch').get_corpus_info(
                                self.args.corpname, language=self.ui_lang)['metadata']
-        if settings.contains('external_links', 'corpora_related'):
-            hints = dict([(x[1]['key'], x[0]) for x in settings.get_full('external_links', 'corpora_related')])
-        else:
-            hints = {}
         for line in tt:
             for item in line.get('Line', ()):
-                if 'label' in item and item['label'] in hints:
-                    item['label_hint'] = hints[item['label']]
                 item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
 
     @staticmethod
