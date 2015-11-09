@@ -295,6 +295,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                            corpusName={this.props.row.name}
                                            isFav={this.props.row.user_item} />;
                     }
+
+                } else {
+                    corpLink = <a href={link}>{this.props.row.name}</a>;
                 }
                 return (
                     <tr>
