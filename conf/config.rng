@@ -282,6 +282,13 @@
                         </interleave>
                         <ref name="customPluginConfiguration" />
                     </element>
+                    <element name="application_bar">
+                        <a:documentation>An optional plug-in proving 3rd party HTML code
+                            inserted into KonText pages (e.g. an application switch &amp;
+                            authentication module)</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
                     <element name="getlang">
                         <a:documentation>A plug-in to detect user language</a:documentation>
                         <ref name="plugin_common" />
