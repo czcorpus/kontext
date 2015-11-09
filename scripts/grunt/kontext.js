@@ -24,11 +24,13 @@
     'use strict';
 
     var fs = require('fs'),
+        // a mapping between configuration plug-in names and JavaScript module names
         jsModules = { // TODO this should be dynamic
             'application_bar' : 'applicationBar',
             'query_storage' : 'queryStorage',
             'live_attributes' : 'liveAttributes',
-            'corparch' : 'corparch'
+            'corparch' : 'corparch',
+            'subcmixer': 'subcmixer'
         },
         merge = require('merge');
 

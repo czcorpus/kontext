@@ -54,6 +54,9 @@ class AbstractAuth(object):
         """
         return '%slogoutx' % self.root_url
 
+    def is_anonymous(self, user_id):
+        return user_id == self._anonymous_id
+
     def is_administrator(self, user_id):
         """
         Should return True if user has administrator's privileges

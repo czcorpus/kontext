@@ -21,11 +21,7 @@ required config.xml entries:
 <sessions>
     <module>default_sessions</module>
     <ttl>14400</ttl>
-    <cleanup_probability>[a value from 0 to 1]</cleanup_probability>
 </sessions>
-
-Please note that if you use redis_db storage plug-in then <cleanup_probability> setting
-has no effect as RedisDB removes keys with set TTL automatically.
 
 Important note: Werkzeug's session store listens for data change (callbacks on __setitem__,
 __delitem__). But this of course does not apply if you change some nested object:
@@ -60,8 +56,6 @@ class DefaultSessions(SessionStore):
 
     DEFAULT_TTL = 7200
 
-    DEFAULT_CLEANUP_PROBABILITY = 0.5
-
     def __init__(self, settings, db):
         """
         Initialization according to the 'settings' object/module
@@ -70,8 +64,6 @@ class DefaultSessions(SessionStore):
         self.db = db
         self._cookie_name = settings.get('plugins', 'auth')['auth_cookie_name']
         self.ttl = int(settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL))
-        self.cleanup_probability = settings.get('plugins', 'sessions').get('cleanup_probability',
-                                                                           DefaultSessions.DEFAULT_CLEANUP_PROBABILITY)
 
     def get_cookie_name(self):
         return self._cookie_name

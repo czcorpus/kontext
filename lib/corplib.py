@@ -479,12 +479,8 @@ def corp_freqs_cache_path(corp, attrname):
     if hasattr(corp, 'spath'):
         ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
-        if settings.contains('corpora', 'freqs_cache_dir'):
-            cache_dir = os.path.abspath(settings.get('corpora', 'freqs_cache_dir'))
-            subdirs = (corp.corpname,)
-        else:
-            cache_dir = os.path.abspath(settings.get('corpora', 'cache_dir'))
-            subdirs = (corp.corpname, 'freqs')
+        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_cache_dir'))
+        subdirs = (corp.corpname,)
         for d in subdirs:
             cache_dir = '%s/%s' % (cache_dir, d)
             if not os.path.exists(cache_dir):

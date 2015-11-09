@@ -1,25 +1,11 @@
 <kontext>
     <theme>
-        <!--
-        paths are relative to the theme directory (which must be equal to the
-        value in <name> element)
-        -->
         <name>autumn_mood</name>
-        <!--
-        <css> is optional and can have also a list form:
-        <css><item>...</item><item>...</item>...</css>
-        -->
         <css>style.css</css>
         <logo>logo.png</logo>
-        <!--
-        <logo_mouseover> is optional ('logo' is used here by default)
-        -->
         <logo_mouseover>logo_s.png</logo_mouseover>
         <logo_href>http://our.kontext.localhost</logo_href>
         <logo_style>width: 300px;height: 150px</logo_style>
-        <!--
-        <fonts> are optional and can be both single value or a list of values
-        -->
         <fonts>
             <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
         </fonts>
@@ -27,25 +13,23 @@
     <global>
         <deployment_id>20151031_v4</deployment_id>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
-        <umask>002</umask> <!-- the value is interpreted as octal -->
+        <umask>002</umask>
         <log_path>/var/log/bonito/application.log</log_path>
         <log_file_size>1000000</log_file_size>
         <log_num_files>5</log_num_files>
-        <debug>true</debug>
+        <debug>false</debug>
+        <maintenance>false</maintenance>
         <profile_log_path>/optional/path/used/for/profiling/output/if/debug/level/is/2</profile_log_path>
         <max_attr_list_size>30</max_attr_list_size>
-        <history_max_query_size>250</history_max_query_size>
         <translations>
             <language label="česky">cs_CZ</language>
             <language label="English">en_US</language>
             <language label="slovensky">sk_SK</language>
         </translations>
-        <conc_persistence_time>1800</conc_persistence_time>
-        <error_report_url>http://acmecorpora.org/support</error_report_url>      
-        <error_report_params>    
+        <error_report_url>http://acmecorpora.org/support</error_report_url>
+        <error_report_params>
           <param name="queryurl">@_get_current_url</param>
         </error_report_params>
-        <anonymous_user_id>0</anonymous_user_id>
         <logged_values>
             <item>environ:REMOTE_ADDR</item>
             <item>environ:HTTP_USER_AGENT</item>
@@ -59,6 +43,8 @@
             <item>pid</item>
         </logged_values>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
+        <conc_summary_session_ttl>3600</conc_summary_session_ttl>
+        <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
     </global>
     <plugins>
         <db>
@@ -68,6 +54,9 @@
         <auth>
             <module>default_auth</module>
             <auth_cookie_name>kontext_session</auth_cookie_name>
+            <anonymous_user_id>0</anonymous_user_id>
+            <login_url>http://korpus.test/user/login?continue=%s</login_url>
+            <logout_url>http://korpus.test/user/logout?continue=%s</logout_url>
         </auth>
         <getlang>
             <module>default_getlang</module>
@@ -76,6 +65,7 @@
         <query_storage>
             <module>default_query_storage</module>
             <js_module>ucnkQueryStorage</js_module>
+            <history_max_query_size>250</history_max_query_size>
             <page_num_records extension-by="ucnk">10</page_num_records>
             <page_append_records extension-by="ucnk">5</page_append_records>
             <num_kept_records extension-by="default">10</num_kept_records>
@@ -111,7 +101,6 @@
         <sessions>
             <module>default_sessions</module>
             <ttl>14400</ttl>
-            <cleanup_probability>0.9</cleanup_probability>
         </sessions>
         <corparch>
             <module>default_corparch</module>
@@ -128,75 +117,37 @@
         <subc_restore>
             <module>acme_subc_restore</module>
         </subc_restore>
+        <taghelper>
+            <module>default_taghelper</module>
+            <clear_interval extension-by="default">86400</clear_interval>
+            <tags_cache_dir extension-by="default">/path/to/tags/cache</tags_cache_dir>
+            <taglist_path extension-by="default">/path/to/tag/xml/def</taglist_path>
+            <tags_src_dir extension-by="default">/path/to/tag/src/data</tags_src_dir>
+        </taghelper>
+        <user_items>
+            <module>default_user_items</module>
+        </user_items>
+        <menu_items>
+            <module>default_menu_items</module>
+            <data_path extension-by="default">/home/tomas/work/kontext.dev/conf/main-menu.sample.json</data_path>
+        </menu_items>
     </plugins>
-    <cache>
-        <clear_interval>3600</clear_interval>
-    </cache>
     <corpora>
+        <conc_calc_backend conf="/path/to/celeryconfig.py">celery</conc_calc_backend>
+        <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
-        <subcpath>/var/local/corpora/subcorp/GLOBAL</subcpath>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
-        <tags_src_dir>/var/local/corpora/tags/data</tags_src_dir>
-        <cache_dir>/var/local/corpora/cache</cache_dir>
-        <tags_cache_dir>/var/local/corpora/tags/cache</tags_cache_dir>
-        <!-- freqs_cache_dir is optional; if omitted then cache_dir value is used -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
-        <calc_pid_dir>/tmp/kontext-calc</calc_pid_dir>
-        <wseval_dir></wseval_dir>
         <default_corpora>
             <item>susanne</item>
             <item>spec/susanne</item>
             <item>anothercorpus</item>
         </default_corpora>
         <speech_files_path>/var/www/data</speech_files_path>
-        <kwicline_max_context>500</kwicline_max_context>
         <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
         <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
-
-        <corplist title="">
-            <corplist title="Our corpora">
-		        <corpus ident="ORWELL" sentence_struct="s" tagset="czech_tagset" collator_locale="en_US"
-                        sample_size="1000000">
-                    <metadata>
-                        <database>/path/to/a/sqlite/database/metadata-orwell.db</database>
-                        <label_attr>opus.title</label_attr>
-                        <id_attr>opus.id</id_attr>
-                        <desc lang="en">The work of George Orwell</desc>
-                    </metadata>
-                </corpus>
-	        </corplist>
-            <corplist title="Foreign corpora">
-                <corpus ident="SUSANNE" sentence_struct="p" tagset="czech_tagset"  collator_locale="en_GB"  />
-		        <corpus ident="BNC" sentence_struct="s">
-                    <reference>
-                        <default>main bib. entry...</default>
-                        <article>secondary bib. entry (e.g. a paper)</article>
-                        <other_bibliography>other bib. info</other_bibliography>
-                    </reference>
-                </corpus>
-            </corplist>
-            <corpus ident="spoken_stuff" sentence_struct="p" tagset="czech_tagset"
-                    speech_segment="seg.soundfile"  collator_locale="cs_CZ" />
-        </corplist>
-
-        <tagsets>
-            <tagset ident="default" num_pos="4">
-            <position index="0">
-                <label>
-                    <desc lang="en">Position 1</desc>
-                    <desc lang="cs">Pozice 1</desc>
-                </label>
-                <value ident="A">
-                    <desc lang="en">adjective</desc>
-                    <desc lang="cs">adjektivum (přídavné jméno)</desc>
-                </value>
-                <!-- ... etc ... -->
-            </position>
-            <!-- ... etc ... -->
-            </tagset>
-            <!-- ... etc ... -->
-        </tagsets>
+        <use_db_whitelist>1</use_db_whitelist>
     </corpora>
 </kontext>
 

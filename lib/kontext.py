@@ -931,7 +931,7 @@ class Kontext(Controller):
                 for param_val, param_meta in params_def:
                     if param_val[0] == '@':
                         attr = getattr(self, param_val[1:])
-                        real_val = apply(attr) if callable(attr) else attr
+                        real_val = attr() if callable(attr) else attr
                     else:
                         real_val = param_val
                     err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
@@ -1064,7 +1064,8 @@ class Kontext(Controller):
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
 
-        result['history_max_query_size'] = settings.get_int('global', 'history_max_query_size')
+        hmqs = settings.get('plugins', 'query_storage').get('history_max_query_size', None)
+        result['history_max_query_size'] = int(hmqs) if hmqs else None
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         # util functions
@@ -1135,7 +1136,7 @@ class Kontext(Controller):
         conc_data = self._session.get('conc', {})
 
         curr_time = int(time.time())
-        conc_info_ttl = settings.get_int('global', 'conc_persistence_time')
+        conc_info_ttl = settings.get_int('global', 'conc_summary_session_ttl')
         record_timestamp = lambda rec_key: conc_data[rec_key]['__timestamp__']
         record_is_old = lambda rec_key: curr_time - record_timestamp(k) > conc_info_ttl
         # let's clean-up too old records to keep session data reasonably big

@@ -103,7 +103,7 @@ class ConcPersistence(AbstractConcPersistence):
 
     DEFAULT_CONC_ID_LENGTH = 8
 
-    def __init__(self, settings, db):
+    def __init__(self, settings, db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
         ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self.ttl = ttl_days * 24 * 3600
@@ -111,19 +111,19 @@ class ConcPersistence(AbstractConcPersistence):
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
 
         self.db = db
+        self._auth = auth
         self._archive = create_engine('sqlite:///%s' % settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
-        self._anonymous_user_id = settings.get_int('global', 'anonymous_user_id')
 
     def _mk_key(self, code):
         return 'concordance:%s' % (code, )
 
     def _get_ttl_for(self, user_id):
-        if user_id == self._anonymous_user_id:
+        if self._auth.is_anonymous(user_id):
             return self.anonymous_user_ttl
         return self.ttl
 
     def _get_persist_level_for(self, user_id):
-        if user_id == self._anonymous_user_id:
+        if self._auth.is_anonymous(user_id):
             return 0
         else:
             return 1
@@ -187,9 +187,9 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
-@inject('db')
-def create_instance(settings, db):
+@inject('db', 'auth')
+def create_instance(settings, db, auth):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(settings, db)
+    return ConcPersistence(settings, db, auth)

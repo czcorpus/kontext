@@ -47,9 +47,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         });
 
         addLevelButton = $('#add-freq-level-button');
-        if (addLevelButton.attr('disabled') === 'disabled' && lib.getCurrNumLevels() < lib.maxNumLevels) {
-            addLevelButton.attr('disabled', null);
-            addLevelButton.attr('title', null);
+        if (!addLevelButton.is(':visible') && lib.getCurrNumLevels() < lib.maxNumLevels) {
+            addLevelButton.show();
         }
 
         kwicAlignUtils.fix();
@@ -89,10 +88,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         newLine.find('td:last a.remove-level').on('click', function (event) {
             lib.removeLevel($(event.target).closest('tr'));
         });
-
         if (lib.getCurrNumLevels() === lib.maxNumLevels) {
-            $('#add-freq-level-button').attr('disabled', 'disabled');
-            $('#add-freq-level-button').attr('title', lib.layoutModel.translate('global__max_level_reached'));
+            $('#add-freq-level-button').hide();
         }
 
         kwicAlignUtils.fix(newLine);

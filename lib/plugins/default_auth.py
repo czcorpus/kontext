@@ -177,5 +177,5 @@ def create_instance(conf, db, sessions):
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
-    return DefaultAuthHandler(db, sessions, conf.get_int('global', 'anonymous_user_id'))
+    return DefaultAuthHandler(db, sessions, int(conf.get('plugins', 'auth')['anonymous_user_id']))
 
