@@ -31,10 +31,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required">
         <th></th>
         <td>
+            <!-- this cannot be used at the moment due to a bug in newer (approx 2.129) Manatee versions
             <select name="pcq_pos_neg$suff">
                 <option value="pos">$_('Contains')</option>
                 <option value="neg">$_('Does NOT contain')</option>
             </select>
+            -->
+            <input type="hidden" name="pcq_pos_neg$suff" value="pos" />
         </td>
     </tr>
     #end if
