@@ -1340,7 +1340,7 @@ export class Corplist {
         this.onHide = this.options.onHide ? this.options.onHide : null;
         this.onShow = this.options.onShow ? this.options.onShow : null;
 
-        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
+        function handleClick(corpusId:string, corpusName:string) {
             this.setCurrentValue(corpusId, corpusName);
 
             if (this.options.itemClickAction) {
@@ -1355,16 +1355,14 @@ export class Corplist {
                 }
                 $(this.parentForm).submit();
             }
+        }
+
+        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
+            handleClick.call(this, corpusId, corpusName);
         };
 
         this.onFavItemClick = (itemId:string, itemName:string, href:string) => {
-            this.setCurrentValue(itemId, itemName);
-            if (this.options.itemClickAction) {
-                this.options.itemClickAction.call(this, itemId, itemName);
-
-            } else {
-                window.location.href = href;
-            }
+            handleClick.call(this, itemId, itemName);
         };
     }
 
