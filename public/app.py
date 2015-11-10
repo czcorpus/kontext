@@ -117,9 +117,7 @@ def load_controller_class(path_info):
     returns:
     a class matching provided path_info
     """
-    if settings.get_bool('global', 'maintenance'):
-        from maintenance import MaintenanceController as ControllerClass
-    elif path_info.startswith('/fcs'):
+    if path_info.startswith('/fcs'):
         from actions.fcs import Actions as ControllerClass
     elif path_info.startswith('/user'):
         from actions.user import User as ControllerClass
@@ -134,6 +132,24 @@ def load_controller_class(path_info):
     else:
         from actions.concordance import Actions as ControllerClass
     return ControllerClass
+
+
+class MaintenanceApp(object):
+    def __init__(self):
+        setup_logger(settings)
+        translation.load_translations(settings.get('global', 'translations'))
+        l10n.configure(settings.get('global', 'translations'))
+
+    def __call__(self, environ, start_response):
+        from maintenance import MaintenanceController
+        ui_lang = get_lang(environ)
+        translation.activate(ui_lang)
+        l10n.activate(ui_lang)
+        request = Request(environ)
+        app = MaintenanceController(request=request, ui_lang=ui_lang)
+        status, headers, sid_is_valid, body = app.run(request)
+        response = Response(response=body, status=status, headers=headers)
+        return response(environ, start_response)
 
 
 class App(object):
@@ -211,7 +227,10 @@ if not settings.contains('corpora', 'calc_pid_dir'):
 elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
     os.makedirs(settings.get('corpora', 'calc_pid_dir'))
 
-application = App()
+if not settings.get_bool('global', 'maintenance'):
+    application = App()
+else:
+    application = MaintenanceApp()
 
 robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
 if os.path.isfile(robots_path):
