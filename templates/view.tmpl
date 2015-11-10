@@ -178,6 +178,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #filter WebSafe
 
 <div id="conc-wrapper">
+    <ul id="query-overview-bar">
+    #for $item in $getVar('query_overview', [])
+    <li><a data-url="$item.tourl">$item.op: $item.arg</a> ($item.size)</li>
+    #end for
+    </ul>
     <div id="conc-top-bar">
         <div id="result-info">
             #if $usesubcorp

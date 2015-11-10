@@ -8,10 +8,21 @@
 }
 
 #conc-top-bar,
-#conc-bottom-bar {
+#conc-bottom-bar,
+#query-overview-bar {
   overflow: hidden;
   background-color: @color-default-green;
   padding: 5px 20px;
+}
+
+ul#query-overview-bar {
+  margin: 0;
+  list-style-type: none;
+}
+
+ul#query-overview-bar li {
+    display: inline-block;
+    margin: 0;
 }
 
 #conc-bottom-bar.minimized {

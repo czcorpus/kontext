@@ -131,6 +131,7 @@ class Actions(Kontext):
                 args.update(self._export_aligned_form_params(aligned_lang, state_only=True))
         result['globals'] += '&' + self.urlencode(args)
         result['Globals'] = result['Globals'].update(args)
+        result['query_overview'] = self.concdesc_json().get('Desc', [])
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
@@ -280,24 +281,9 @@ class Actions(Kontext):
                     fullsize=fullsize, finished=conc.finished())
 
     @exposed(return_type='json', legacy=True)
-    def concdesc_json(self, query_id=''):
+    def concdesc_json(self):
         self.disabled_menu_items = (MainMenu.SAVE,)
         out = {'Desc': []}
-
-        query_desc = ''
-        query_desc_raw = ''
-        is_public = True
-        if query_id and plugins.has_plugin('query_storage'):
-            query_storage = plugins.get('query_storage')
-            ans = query_storage.get_user_query(self._session_get('user', 'id'), query_id)
-            if ans:
-                query_desc_raw = ans['description']
-                query_desc = query_storage.decode_description(query_desc_raw)
-                is_public = ans['public']
-            else:
-                self.add_system_message('error', _('Cannot access recorded query.'))
-                query_id = None  # we have to invalidate the query_id (to render HTML properly)
-
         conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.args.q,
                                           subchash=getattr(self._corp(), "subchash", None))
 
@@ -311,15 +297,6 @@ class Actions(Kontext):
                 'churl': self.urlencode(u1),
                 'tourl': self.urlencode(u2),
                 'size': s})
-
-        out.update({
-            'supports_query_save': plugins.has_plugin('query_storage'),
-            'query_desc': query_desc,
-            'query_desc_raw': query_desc_raw,
-            'query_id': query_id,
-            'export_url': '%sto?q=%s' % (self.get_root_url(), query_id),
-            'is_public': is_public
-        })
         return out
 
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
