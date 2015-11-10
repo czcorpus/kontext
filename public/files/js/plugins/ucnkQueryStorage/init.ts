@@ -35,7 +35,7 @@ function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
                 ans.push(document.createElement('br'))
             }
             newItem = document.createElement('span');
-            $(newItem).append(line);
+            $(newItem).text(line);
             ans.push(newItem);
             line = '';
 
@@ -48,7 +48,7 @@ function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
             ans.push(document.createElement('br'));
         }
         newItem = document.createElement('span');
-        $(newItem).append(line);
+        $(newItem).text(line);
         ans.push(newItem);
     }
 
@@ -430,7 +430,6 @@ export class QueryHistory {
             listItem.attr('data-query-type', v.query_type);
 
             link = $(window.document.createElement('em'));
-            link.attr('href', v.url);
             link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.getConf('historyMaxQuerySize')),
                 self.splitQueryIfSize));
 
