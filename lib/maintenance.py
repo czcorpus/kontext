@@ -65,7 +65,6 @@ class MaintenanceController(object):
             'theme_logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
             'theme_fonts': fonts
         }
-        return data
 
     def load_topbar(self):
         if plugins.has_plugin('application_bar'):
@@ -81,7 +80,7 @@ class MaintenanceController(object):
         return html, css
 
     def run(self, *args):
-        status = '500 Internal Server Error'
+        status = '503 Service Unavailable'
         headers = [('Content-Type', 'text/html')]
 
         with open('%s/../public/files/maintenance.html' % os.path.dirname(__file__)) as f:
@@ -96,5 +95,5 @@ class MaintenanceController(object):
             variables.update(self._apply_theme())
             body = body % variables
             f.close()
-        return status, headers, body.encode('utf-8')
+        return status, headers, True, body.encode('utf-8')
 
