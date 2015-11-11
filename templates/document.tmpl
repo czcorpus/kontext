@@ -307,28 +307,6 @@ define('conf', [], function () {
         </ul>
     </div>
 
-    #if $human_corpname
-    <div id="active-corpus">
-        $_('corpus')
-        <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
-        <div id="corp-size-information">
-        #if $usesubcorp
-            <strong>$subcorp_size</strong> ($($_('of total %s) positions') % $corp_size)
-        #else
-            #filter None
-            $($_('<strong>%s</strong> positions') % $corp_size)<a id="positions-help-link" class="context-help">
-            <img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>
-            #end filter
-        #end if
-        </div>
-        #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
-        <div id="corpus-citation-link">
-            <a href="#">$_('How to cite the corpus')</a>
-        </div>
-        #end if
-    </div>
-    #end if
-
     #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
     <div id="corpus-citation-box">
         <h3>$_('How to cite the corpus')</h3>
@@ -360,96 +338,10 @@ define('conf', [], function () {
     #filter None
     #block concordance
 
-    #if $display_closed_conc and not $contains_errors
-    <div id="conc-wrapper">
-        <div id="conc-top-bar">
-            <div id="result-info">
-                #if $usesubcorp
-                    $_("Subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
-                #end if
+    #filter None
+    $query_overview_bar()
+    #end filter
 
-                #if $cached['conc_persist']
-                $_('Hits'): <span id="loader"></span>
-                <strong id="fullsize" title="$cached['fullsize']">$format_number($cached['fullsize'], mask='%d')
-                </strong>#if $cached['sampled_size']# <span class="separ">|</span> $_("random sample of size") <strong>$cached['sampled_size']</strong>
-                #end if
-                <span class="separ">|</span>
-                <abbr title="$_('instances per million positions') $cached['result_relative_freq_rel_to']">i.p.m.</abbr>:
-                <span class="ipm">$format_number($cached['result_relative_freq'], mask='%01.2f')</span>
-                $cached['result_relative_freq_rel_to']
-                #if $cached['result_arf']
-                <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-                <strong id="arf">$format_number($cached['result_arf'], mask='%01.2f')</strong>
-                #end if
-                <span class="separ">|</span>
-                <span class="notice-shuffled">
-                #if $cached['result_shuffled']#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
-                </span>
-                #else
-                &nbsp;
-                #end if
-            </div>
-
-
-            #block navigation($navid="navigation_form", $nextid="next")
-            ## navigation
-            #if $cached['numofpages']
-                <div class="bonito-pagination">
-                <form action="view" id="$navid">
-                #if $cached['prevlink']
-                    <div class="bonito-pagination-left">
-                    <a href="${root_url}view?$join_params($q, $cached['firstlink'], $globals)"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                    <a href="${root_url}view?$join_params($q, $cached['prevlink'], $globals)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
-                    </div>
-                #end if
-
-                <div class="bonito-pagination-core">
-                  #filter None
-                  $input_hidden
-                  #end filter
-                  <input type="text" name="fromp" value="$cached['fromp']" size="2" />
-                  / <span class="numofpages" title="$cached['numofpages']">$format_number($cached['numofpages'], mask='%d')</span>
-                </div>
-
-                #if $cached['nextlink']
-                    <div class="bonito-pagination-right">
-                    <a href="${root_url}view?$join_params($q, $cached['nextlink'], $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
-                    <a id="lastpage" href="${root_url}view?$join_params($q, $cached['lastlink'], $globals)"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
-                    </div>
-                #else
-                    <a id="$nextid"></a>
-                #end if
-
-                #if $cached['Sort_idx']
-                    <div class="jump-to">
-                        $_("Jump to"):
-                        <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-                        #for $idx in $cached['Sort_idx']
-                            <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
-                            #filter $Shortener
-                            ${idx.label, length=20}
-                            #end filter
-                            </option>
-                        #end for
-                        </select>
-                    </div>
-                #end if
-                </form>
-                </div>
-            #end if
-            #end block
-
-        </div>
-        <div id="conclines-wrapper">
-            &nbsp;
-        </div>
-        <div id="conc-bottom-bar" class="minimized">
-            <a class="expand-conc" href="${root_url}view?$join_params($q, $globals)" title="$_('click to show current concordance')">
-                <img class="over-img" src="$files_path/img/expand-conc.png" data-alt-img="../files/img/expand-conc_s.png" />
-            </a>
-        </div>
-    </div>
-    #end if
     #end block
 
     #block main
@@ -624,4 +516,51 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     <li class="separ"><a href="$menu_item.url">$menu_item.label</a></li>
     #end for
     #end if
+#end def
+
+## ***************************************** ##
+#def query_overview_bar()
+<section class="corpus-and-query">
+
+#if $human_corpname
+<div id="active-corpus">
+    <strong>$_('Corpus'):</strong>
+    <a id="corpus-desc-link" class="corpus-desc" href="#" title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<strong>:<span title="$_('subcorpus')">$usesubcorp</span></strong>#end if#
+    | <span class="corp-size-information">
+    <strong>$_('Size'):</strong>
+    #if $usesubcorp
+        <span>$subcorp_size</span> ($($_('of total %s) positions') % $corp_size)
+    #else
+        #filter None
+        $($_('<span>%s</span> positions') % $corp_size)<a id="positions-help-link" class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" />
+        </a>
+        #end filter
+    #end if
+    </span> |
+    #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
+    <span id="corpus-citation-link">
+        <a href="#">$_('How to cite the corpus')?</a>
+    </span>
+    #end if
+</div>
+#end if
+
+<ul id="query-overview-bar">
+    #set $i = 0
+    #for $item in $getVar('query_overview', [])
+    <li>
+    #if $i > 0#<span class="transition">&\#9654;</span>#end if#
+    <strong>$item.op:</strong>
+    <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
+    title="#filter $HtmlEscape#$item.arg#end filter#">
+    #filter $HtmlEscape
+    #filter $Shortener#${item.nicearg, nice=True, length=20}#end filter#
+    #end filter
+    </a>
+    ($item.size $_('hits'))
+    </li>
+    #set $i += 1
+    #end for
+</ul>
+</section>
 #end def

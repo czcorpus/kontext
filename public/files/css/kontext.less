@@ -22,7 +22,6 @@ body {
   display: inline-block;
   vertical-align: top;
   margin: 1.5em 0 0 0;
-  padding: 0;
   background-color: @color-section-bg;
   box-shadow: @portal-box-shadow;
   min-width: 46%;
@@ -49,16 +48,57 @@ section.inner {
   padding-bottom: 20px;
 }
 
-section > * {
-  margin: 20px;
+#content > section.corpus-and-query {
+  display: block;
+  margin: 1em 0 0 0;
+  border: 2px solid @color-logo-blue;
+  border-radius: @border-radius-default;
+  background-color: @color-bg-light-blue;
+  box-shadow: @portal-box-shadow;
+}
+
+section.corpus-and-query > * {
+  margin: 0.5em 1em;
+}
+
+section.corpus-and-query {
+
+  strong {
+    font-size: 80%;
+  }
+
+  ul#query-overview-bar {
+    padding: 0;
+    margin-top: 0;
+    list-style-type: none;
+  }
+
+  ul#query-overview-bar li {
+      display: inline-block;
+      margin: 0;
+
+      a.args {
+        text-decoration: none;
+        color: @color-logo-blue;
+      }
+
+      a.args:hover {
+        text-decoration: underline;
+      }
+
+      .transition {
+        font-size: 120%;
+        color: @color-light-text;
+      }
+  }
 }
 
 section h2 {
   margin: 0;
-  padding: 0.2em 20px;
+  padding: 0.4em 1em;
   background-color: @color-light-frame;
   border-radius: 6px 6px 0 0;
-  font-size: 180%;
+  font-size: 140%;
   font-weight: 300;
 }
 
@@ -216,6 +256,7 @@ a#logo-wrapper {
   display: inline-block;
   position: relative;
   top: -4px;
+  left: -3pt;
 }
 
 #add-searched-lang-widget {
@@ -343,10 +384,10 @@ a#logo-wrapper {
   display: inline-block;
   min-width: 680px;
   width: auto;
-  margin: 0 20px;
+  margin: 0;
 }
 
-#menu-bar a:hover, #active-corpus a.corpus-desc:hover {
+#menu-bar a:hover {
   text-decoration: none;
 }
 
@@ -463,25 +504,16 @@ a#logo-wrapper {
 }
 
 #active-corpus {
-  font-size: 11pt;
-  color: @color-default-text;
-  display: inline-block;
-  padding: 4px 10px;
-  margin: 0;
-  text-align: right;
-  border: 2px solid @color-logo-blue;
-  border-radius: @border-radius-default;
-  background-color: @color-bg-light-blue;
-  box-shadow: @portal-box-shadow;
-}
-
-#active-corpus a.corpus-desc {
-  text-decoration: underline;
+  margin-bottom: 0;
 }
 
 #active-corpus a {
-  color: @color-default-text;
+  color: @color-logo-blue;
   text-decoration: none;
+}
+
+#active-corpus a:hover {
+  text-decoration: underline;
 }
 
 #corpus-details-box {
@@ -578,6 +610,10 @@ fieldset h4 {
 
 .bonito-pagination {
   background-color: @color-light-frame;
+}
+
+section > * {
+  margin: 1em;
 }
 
 section > .bonito-pagination {
@@ -1350,12 +1386,12 @@ fieldset.options input[type='text'] {
     margin-left: 5pt;
 }
 
-#corp-size-information {
-  font-size: 8pt;
+.corp-size-information {
+  display: inline-block;
 }
 
 #corpus-citation-link {
-  font-size: 8pt;
+  display: inline-block;
 }
 
 #corpus-citation-box {
