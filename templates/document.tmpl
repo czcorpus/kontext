@@ -556,7 +556,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">
     #filter $Shortener
-    ${item.nicearg, nice=True, length=20}
+    ${item.nicearg, nice=True, length=20, escape=True}
     #end filter
     </a>
     ($item.size $_('hits'))
