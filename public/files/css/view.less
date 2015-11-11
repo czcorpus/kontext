@@ -3,26 +3,20 @@
 #conc-wrapper {
   border-radius: 9px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 1em;
+  margin-top: 1em;
   box-shadow: @portal-box-shadow;
 }
 
 #conc-top-bar,
-#conc-bottom-bar,
-#query-overview-bar {
+#conc-bottom-bar {
   overflow: hidden;
-  background-color: @color-default-green;
   padding: 5px 20px;
 }
 
-ul#query-overview-bar {
-  margin: 0;
-  list-style-type: none;
-}
-
-ul#query-overview-bar li {
-    display: inline-block;
-    margin: 0;
+#conc-top-bar,
+#conc-bottom-bar {
+  background-color: @color-default-green;
 }
 
 #conc-bottom-bar.minimized {

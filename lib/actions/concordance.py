@@ -287,6 +287,10 @@ class Actions(Kontext):
         conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.args.q,
                                           subchash=getattr(self._corp(), "subchash", None))
 
+        def nicearg(arg):
+            srch = re.match(r'([^\[]+),(.+)', arg)
+            return srch.group(2) if srch else arg
+
         for o, a, u1, u2, s in conc_desc:
             u2.append(('corpname', self.args.corpname))
             if self.args.usesubcorp:
@@ -294,6 +298,7 @@ class Actions(Kontext):
             out['Desc'].append({
                 'op': o,
                 'arg': a,
+                'nicearg': nicearg(a),
                 'churl': self.urlencode(u1),
                 'tourl': self.urlencode(u2),
                 'size': s})
