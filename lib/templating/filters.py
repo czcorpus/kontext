@@ -68,6 +68,7 @@ class Shortener(Filter):
     length -- the length of a resulting string (excluding suffix)
     suffix -- a custom saffix to be used (default is '...')
     nice -- if True then words are respected (and the length is not guaranteed to be exact)
+    escape -- escape HTML-special characters
     """
     def filter(self, val, **kw):
         length = kw['length'] if 'length' in kw else 8
@@ -83,6 +84,8 @@ class Shortener(Filter):
                 s = val[:length]
         else:
             s = val[:length]
+        if kw.get('escape', False):
+            s = HtmlEscape().filter(s)
         return '%s%s' % (s, suff)
 
 
