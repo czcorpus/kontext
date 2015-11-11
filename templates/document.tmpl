@@ -338,9 +338,11 @@ define('conf', [], function () {
     #filter None
     #block concordance
 
+    #if $corpname
     #filter None
     $query_overview_bar()
     #end filter
+    #end if
 
     #end block
 
@@ -536,9 +538,9 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         </a>
         #end filter
     #end if
-    </span> |
+    </span>
     #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
-    <span id="corpus-citation-link">
+    | <span id="corpus-citation-link">
         <a href="#">$_('How to cite the corpus')?</a>
     </span>
     #end if
@@ -553,8 +555,8 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     <strong>$item.op:</strong>
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">
-    #filter $HtmlEscape
-    #filter $Shortener#${item.nicearg, nice=True, length=20}#end filter#
+    #filter $Shortener
+    ${item.nicearg, nice=True, length=20}
     #end filter
     </a>
     ($item.size $_('hits'))
