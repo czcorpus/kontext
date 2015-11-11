@@ -66,7 +66,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </tr>
     #for $row in $data
         <tr class="data-item">
-            <td class="query">#filter $Shortener#${row.query, nice=True, length=$history_max_query_size}#end filter</td>
+            <td class="query">#filter $Shortener#${row.query, nice=True, escape=True, length=$history_max_query_size}#end filter</td>
             <td class="corpname">$row.humanCorpname#if $row.subcorpname #:$row.subcorpname#end if#</td>
             <td>$row.query_type_translated</td>
             <td class="details">$row.get('details', '')</td>
