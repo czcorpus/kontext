@@ -100,6 +100,21 @@ def get_int(section, key):
     return int(get(section, key))
 
 
+def get_list(section, key):
+    """
+    Returns a list of values stored within a (section, key) pair. In case
+    a concrete value is scalar, a list of size 1 is returned. Empty
+    value is represented by an empty list.
+    """
+    tmp = get(section, key)
+    if not tmp:
+        return []
+    elif hasattr(tmp, '__iter__'):
+        return [x for x in tmp]
+    else:
+        return [tmp]
+
+
 def set(section, key, value):
     """
     Sets a configuration value. Please note that this action is neither
