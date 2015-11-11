@@ -280,8 +280,7 @@ class Kontext(Controller):
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
-        excluded_users = [int(x) for x in settings.get('plugins', 'settings_storage').get(
-            'excluded_users', ())]
+        excluded_users = settings.get_list('plugins', 'settings_storage')
         return self._session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
     def _load_user_settings(self):
