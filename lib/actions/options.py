@@ -74,7 +74,7 @@ class Options(Kontext):
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         structattrs = defaultdict(list)
-        reflist = self.args.refs.split(',')
+        reflist = self.args.refs.split(',') if self.args.refs else []
 
         def ref_is_allowed(r):
             return r and r not in (
