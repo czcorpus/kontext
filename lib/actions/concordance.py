@@ -141,6 +141,9 @@ class Actions(Kontext):
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.args.q))
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
+        if not self.args.refs:
+            self.args.refs = self._corp().get_conf('SHORTREF')
+
         self.args.righttoleft = False
         if self._corp().get_conf('RIGHTTOLEFT'):
             self.args.righttoleft = True
@@ -213,7 +216,6 @@ class Actions(Kontext):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
-
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
         else:
