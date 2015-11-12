@@ -562,7 +562,8 @@ class Kontext(Controller):
     # TODO: decompose this method (phase 2)
     def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
         """
-        Runs before main action is processed
+        Runs before main action is processed. The action includes
+        mapping of URL/form parameters to self.args.
         """
         super(Kontext, self)._pre_dispatch(path, selectorname, named_args, action_metadata)
 
@@ -604,8 +605,6 @@ class Kontext(Controller):
             self._map_args_to_attrs(form, selectorname, named_args)
 
         self.cm = corplib.CorpusManager(self.subcpath)
-        if getattr(self.args, 'refs') is None:
-            self.args.refs = corpus_get_conf(self._corp(), 'SHORTREF')
 
         # return url (for 3rd party pages etc.)
         args = {}
@@ -618,7 +617,6 @@ class Kontext(Controller):
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in args.items()]))
         self._restore_prev_conc_params()
-
         if len(path) > 0:
             access_level = action_metadata.get('access_level', 0)  # by default, each action is public
             if access_level and self.user_is_anonymous():
@@ -897,7 +895,7 @@ class Kontext(Controller):
     def _get_attrs(self, attr_names, force_values=None):
         """
         Returns required attributes (= passed attr_names) and their respective values found
-        in 'self'. Only attributes initiated via class attributes and the Parameter class
+        in 'self.args'. Only attributes initiated via class attributes and the Parameter class
         are considered valid.
 
         Note: this should not be used with new-style actions.

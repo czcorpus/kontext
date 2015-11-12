@@ -68,33 +68,30 @@ class Options(Kontext):
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = self.args.structs.split(',')
         out['Availstructs'] = [{'n': n,
-                                'sel': (((n in structlist)
-                                         and 'selected') or ''),
+                                'sel': 'selected' if n in structlist else '',
                                 'label': corp.get_conf(n + '.LABEL')}
                                for n in availstruct if n and n != '#']
 
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         structattrs = defaultdict(list)
-        reflist = self.args.refs.split(',')
+        reflist = self.args.refs.split(',') if self.args.refs else []
 
-        ref_is_allowed = lambda r: r and r not in (
-            '#', plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment'))
+        def ref_is_allowed(r):
+            return r and r not in (
+                '#', plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment'))
 
         for item in availref:
             if ref_is_allowed(item):
                 k, v = item.split('.', 1)
                 structattrs[k].append(v)
-                if not k in reflist:
-                    reflist.append(k)
-
         out['Availrefs'] = [{
                             'n': '#',
                             'label': _('Token number'),
-                            'sel': ((('#' in reflist) and 'selected') or '')
+                            'sel': 'selected' if '#' in reflist else ''
                             }] + \
                            [{
                             'n': '=' + n,
-                            'sel': ((('=' + n in reflist) and 'selected') or ''),
+                            'sel': 'selected' if ('=' + n) in reflist else '',
                             'label': (corp.get_conf(n + '.LABEL') or n)
                             }
                             for n in availref if ref_is_allowed(n)

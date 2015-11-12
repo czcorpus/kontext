@@ -141,6 +141,9 @@ class Actions(Kontext):
         self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.args.q))
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
+        if not self.args.refs:
+            self.args.refs = self._corp().get_conf('SHORTREF')
+
         self.args.righttoleft = False
         if self._corp().get_conf('RIGHTTOLEFT'):
             self.args.righttoleft = True
@@ -213,7 +216,6 @@ class Actions(Kontext):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
-
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
         else:
@@ -966,17 +968,17 @@ class Actions(Kontext):
         return out
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def collx(self, csortfn='d', cbgrfns=('t', 'm', 'd'), line_offset=0, num_lines=None):
+    def collx(self, line_offset=0, num_lines=None):
         """
         list collocations
         """
-        self.args.cbgrfns = ''.join(cbgrfns)
+        self.args.cbgrfns = ''.join(self.args.cbgrfns)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
 
         collstart = (self.args.collpage - 1) * self.args.citemsperpage + line_offset
 
-        if csortfn is '' and cbgrfns:
-            self.args.csortfn = cbgrfns[0]
+        if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
+            self.args.csortfn = self.args.cbgrfnscbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
         num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
