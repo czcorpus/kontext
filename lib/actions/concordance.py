@@ -985,17 +985,17 @@ class Actions(Kontext):
         return out
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def collx(self, csortfn='d', cbgrfns=('t', 'm', 'd'), line_offset=0, num_lines=None):
+    def collx(self, line_offset=0, num_lines=None):
         """
         list collocations
         """
-        self.args.cbgrfns = ''.join(cbgrfns)
+        self.args.cbgrfns = ''.join(self.args.cbgrfns)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
 
         collstart = (self.args.collpage - 1) * self.args.citemsperpage + line_offset
 
-        if csortfn is '' and cbgrfns:
-            self.args.csortfn = cbgrfns[0]
+        if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
+            self.args.csortfn = self.args.cbgrfnscbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
 
         num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
