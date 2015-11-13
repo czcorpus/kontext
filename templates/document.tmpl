@@ -567,11 +567,15 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     <strong>$item.op:</strong>
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">
-    #filter $Shortener
-    ${item.nicearg, nice=True, length=20, escape=True}
-    #end filter
+    #if $item.nicearg
+    ${item.nicearg}
+    #else
+    &#10003;
+    #end if
     </a>
+    #if $item.size
     (#filter $FloatFormatter#$item.size#end filter# $_('hits'))
+    #end if
     </li>
     #set $i += 1
     #end for
