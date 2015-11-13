@@ -826,14 +826,14 @@ class Kontext(Controller):
         result['human_corpname'] = self._human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()
-        result['corp_size'] = format_number(self._corp().size())
+        result['corp_size'] = self._corp().size()
         corp_conf_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
         if corp_conf_info is not None:
             result['corp_web'] = corp_conf_info.get('web', None)
         else:
             result['corp_web'] = ''
         if self.args.usesubcorp:
-            result['subcorp_size'] = format_number(self._corp().search_size())
+            result['subcorp_size'] = self._corp().search_size()
         else:
             result['subcorp_size'] = None
         attrlist = corpus_get_conf(maincorp, 'ATTRLIST').split(',')

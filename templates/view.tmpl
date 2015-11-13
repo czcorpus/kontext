@@ -174,12 +174,15 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #end if
 #end def
 
-#def concordance
-#filter WebSafe
-
+#def state_navigation
 #filter None
 $query_overview_bar()
 #end filter
+#end def
+
+
+#def concordance
+#filter WebSafe
 
 <div id="conc-wrapper">
     <div id="conc-top-bar">
