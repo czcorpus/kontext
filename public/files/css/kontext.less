@@ -48,10 +48,14 @@ section.inner {
   padding-bottom: 20px;
 }
 
-#content > section.corpus-and-query {
+header .navig-wrapper {
+  display: inline-block;
+}
+
+section.corpus-and-query {
   display: block;
   margin: 1em 0 0 0;
-  border: 2px solid @color-logo-blue;
+  border: 1px solid @color-bg-light-blue;
   border-radius: @border-radius-default;
   background-color: @color-bg-light-blue;
   box-shadow: @portal-box-shadow;
@@ -254,6 +258,7 @@ a#logo-wrapper {
 
 #logo-wrapper img {
   display: inline-block;
+  vertical-align: top;
   position: relative;
   top: -4px;
   left: -3pt;
@@ -378,10 +383,11 @@ a#logo-wrapper {
 }
 
 #menu-bar {
+  display: inline-block;
+  vertical-align: top;
   white-space: nowrap;
   height: 50px;
   font-size: 11pt;
-  display: inline-block;
   min-width: 680px;
   width: auto;
   margin: 0;
@@ -514,6 +520,11 @@ a#logo-wrapper {
 
 #active-corpus a:hover {
   text-decoration: underline;
+}
+
+#active-corpus .subcorpus {
+  color: @color-logo-blue;
+  font-weight: bold;
 }
 
 #corpus-details-box {

@@ -290,8 +290,19 @@ class Actions(Kontext):
                                           subchash=getattr(self._corp(), "subchash", None))
 
         def nicearg(arg):
-            srch = re.match(r'([^\[]+),(.+)', arg)
-            return srch.group(2) if srch else arg
+            args = arg.split('"')
+            niceargs = []
+            niceargsset = set()
+            for i in range(len(args)):
+                if i % 2:
+                    tmparg = args[i].strip('\\').replace('(?i)', '')
+                    if tmparg not in niceargsset:
+                        niceargs.append(tmparg)
+                        niceargsset.add(tmparg)
+                else:
+                    if args[i].startswith('within'):
+                        niceargs.append('within')
+            return ', '.join(niceargs)
 
         for o, a, u1, u2, s in conc_desc:
             u2.append(('corpname', self.args.corpname))
