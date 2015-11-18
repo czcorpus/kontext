@@ -1582,8 +1582,7 @@ class Actions(Kontext):
             else:
                 aligned = json.loads(aligned)
 
-            ans = plugins.get('live_attributes').get_attr_values(self._corp(), attrs, aligned)
-            return ans
+            return plugins.get('live_attributes').get_attr_values(self._corp(), attrs, aligned)
         else:
             return {}
 
