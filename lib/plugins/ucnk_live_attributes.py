@@ -38,6 +38,7 @@ import json
 from functools import wraps
 from hashlib import md5
 from functools import partial
+from collections import defaultdict
 
 import l10n
 from plugins import inject
@@ -300,18 +301,30 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[attr] = set()
 
+        poscounts = defaultdict(lambda: defaultdict(lambda: 0))
+
         max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
         for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
+                    attr_val = None
                     if attr == bib_label:
-                        ans[attr].add((self.shorten_value(unicode(v), length=max_visible_chars),
-                                       item[srch_attr_map[bib_id]], unicode(v)))
+                        attr_val = (self.shorten_value(unicode(v), length=max_visible_chars),
+                                    item[srch_attr_map[bib_id]], unicode(v))
                     elif type(ans[attr]) is set:
-                        ans[attr].add((self.shorten_value(unicode(v), length=max_visible_chars), v, v))
+                        attr_val = (self.shorten_value(unicode(v), length=max_visible_chars), v, v)
                     elif type(ans[attr]) is int:
                         ans[attr] += int(v)
+
+                    if attr_val is not None:
+                        poscounts[attr][attr_val] += item['poscount']
+
+        # here we append position count information to the respective items
+        for attr, v in poscounts.items():
+            for k, c in v.items():
+                ans[attr].add(k + (l10n.format_number(c),))
+            del poscounts[attr]
 
         exported = {}
         collator_locale = corpus_info.collator_locale
@@ -328,6 +341,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
             else:
                 exported[self.export_key(k)] = ans[k]
+        exported['poscount'] = l10n.format_number(exported['poscount'])
         exported['aligned'] = aligned_corpora
         return exported
 

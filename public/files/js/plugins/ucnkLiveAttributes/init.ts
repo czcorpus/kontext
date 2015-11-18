@@ -317,26 +317,36 @@ class Checkboxes {
      * @param vals
      * @returns {any}
      */
-    private attrValsContain(value:string, vals:Array<any>):boolean {
-        let ans:boolean;
+    private getAttrVal<T>(value:T, vals:Array<T>):T {
+        let ans:T;
 
         if (vals.length === 0) {
-            ans = false;
+            ans = null;
 
         } else if (typeof vals[0] === 'string') {
-            ans = $.inArray(value, vals) > -1;
+            ans = null;
+            $.each(vals, function (i, item) {
+                if (item === value) {
+                    ans = item;
+                    return false;
+                }
+            });
 
         } else if (typeof vals[0] === 'object') {
-            ans = false;
+            ans = null;
             $.each(vals, function (i, item) {
                 // (0 = shortened, 1 = id, 2 = full title)
                 if (String(item[1]) === String(value)) {
-                    ans = true;
+                    ans = item;
                     return false;
                 }
             });
         }
         return ans;
+    }
+
+    private updateNumberOfPositions(trElm:JQuery, value:string) {
+        trElm.find('td.num').text(value);
     }
 
     /**
@@ -359,7 +369,8 @@ class Checkboxes {
                 id = stripPrefix($(this).attr('name'));
             }
 
-            if (!self.attrValsContain(inputVal, data[id])) {
+            let attrVal:Array<string> = self.getAttrVal(inputVal, data[id]);
+            if (!attrVal) {
                 trElm.addClass('excluded');
                 labelElm.removeClass('locked');
 
@@ -371,7 +382,8 @@ class Checkboxes {
                     $(this).after('<input class="checkbox-substitute" type="hidden" '
                     + 'name="' + $(this).attr('name') + '" value="' + $(this).attr('value') + '" />');
 
-                } else {
+                } else { // available checkbox
+                    self.updateNumberOfPositions(trElm, attrVal[3]);
                     labelElm.removeClass('locked');
                 }
             }
