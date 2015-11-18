@@ -943,7 +943,7 @@ class Actions(Kontext):
         """
         fcrit = ' '.join([Kontext.onelevelcrit('',
                                                kwargs.get('ml%dattr' % i, 'word'),
-                                               kwargs.get('ml%dctx' % i, 0),
+                                               kwargs.get('ml%dctx' % i, '0'),
                                                kwargs.get('ml%dpos' % i, 1),
                                                kwargs.get('ml%dfcode' % i, 'rc'),
                                                kwargs.get('ml%dicase' % i, ''), 'e')
