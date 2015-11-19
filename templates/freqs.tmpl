@@ -106,7 +106,7 @@ $_("Frequency list")#slurp
         <thead>
         <tr>
             <th></th>
-            <th></th>
+            <th>$_('Filter')</th>
             #for $h in $b.Head
             <th colspan="2">
                 <a href="freqs?$join_params($q, $globals, $fcrit, [('flimit', $flimit),
@@ -124,9 +124,9 @@ $_("Frequency list")#slurp
             #set $rowNum += 1
             <td class="nowrap">
                 #if $i.get('pfilter', '')
-                <a href="view?$join_params($q, $globals, $i.get('pfilter'))">p</a>/#slurp
+                <a href="view?$join_params($q, $globals, $i.get('pfilter'))" title="$_('positive filter')">p</a>/#slurp
                 #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
-                <a href="view?$join_params($q, $globals, $i.get('nfilter'))">n</a>
+                <a href="view?$join_params($q, $globals, $i.get('nfilter'))" title="$_('negative filter')">n</a>
             </td>
                 #else
                 <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
