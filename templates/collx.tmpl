@@ -88,7 +88,7 @@ $_("Collocations")#slurp
     <p><strong>$_('Total'):</strong> $Total ($TotalPages $_('pages'))</p>
     <table class="data">
     #set $rowNum = 1
-      <tr><th></th><th></th>
+      <tr><th></th><th>$_('Filter')</th>
       #for $h in $Head
         <th
         #if $h.has_key('style')
@@ -109,7 +109,7 @@ $_("Collocations")#slurp
         <tr>
             <td style="text-align: right">$($rowNum +  ($collpage - 1) * $fmaxitems).</td>
         #set $rowNum += 1
-          <td><a href="view?$join_params($globals, $q, $i.pfilter)">p</a>/<a href="view?$join_params($globals, $q, $i.nfilter)">n</a></td>
+          <td><a href="view?$join_params($globals, $q, $i.pfilter)" title="$_('positive filter')">p</a>/<a href="view?$join_params($globals, $q, $i.nfilter)" title="$_('negative filter')">n</a></td>
           <td class='left monospace'>$i.str</td><td class="num"> $i.freq</td>
           #for $s in $i.Stats
             <td class="num"> $s.s</td>

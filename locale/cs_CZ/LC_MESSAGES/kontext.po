@@ -1955,6 +1955,12 @@ msgstr "smazáno"
 msgid "active"
 msgstr "aktivní"
 
+msgid "positive filter"
+msgstr "pozitivní filtr"
+
+msgid "negative filter"
+msgstr "negativní filtr"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
