@@ -374,6 +374,7 @@ class Controller(object):
         result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
         deployment_id = settings.get('global', 'deployment_id', None)
         result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[:6] if deployment_id else None
+        result['current_action'] = '/'.join(filter(lambda x: bool(x), self.get_current_action()))
 
     def _get_template_class(self, name):
         """
@@ -445,6 +446,15 @@ class Controller(object):
 
         parsed_url[4] = urllib.urlencode(new_params)
         return urlparse.urlunparse(parsed_url)
+
+    def get_current_action(self):
+        """
+        Returns a 2-tuple where:
+        1st item = module name (or an empty string if an implicit one is in use)
+        2nd item = action method name
+        """
+        prefix, action = self.environ.get('PATH_INFO').rsplit('/', 1)
+        return prefix.rsplit('/', 1)[-1], action
 
     def get_root_url(self):
         """
