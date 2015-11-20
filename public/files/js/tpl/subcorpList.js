@@ -387,6 +387,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             submitMethod: 'GET',
             itemClickAction: function (corpusId, corpusName) {
                 selection.callback(corpusId, corpusName);
+                this.setCurrentValue(corpusId, corpusName); // = update widget's trigger button
                 this.hide();
             },
             favoriteItemsFilter : function (item) {

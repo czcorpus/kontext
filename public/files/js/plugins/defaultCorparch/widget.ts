@@ -746,14 +746,14 @@ class FavoritesTab implements WidgetTab {
     }
 
     /**
-     * Generates first_form's URL along with all the necessary parameters
+     * Generates current action URL along with all the necessary parameters
      * (depends on type of item - corpus vs. subcorpus vs. aligned corpora).
      *
      * @param itemData
      * @returns {string}
      */
     generateItemUrl(itemData):string {
-        var rootPath = this.pageModel.createActionUrl('/first_form'),
+        var rootPath = this.pageModel.createActionUrl(this.pageModel.getConf('currentAction')),
             params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === common.CorplistItemType.SUBCORPUS) {
@@ -875,7 +875,9 @@ class FavoritesTab implements WidgetTab {
             $.each(this.dataFeat, function (i, item:FeaturedItem) {
                 $(self.wrapperFeat).append('<tr class="data-item"><td>'
                     + '<a class="featured-item"'
-                    + ' href="' + self.pageModel.createActionUrl('first_form?corpname=') + item.id + '"'
+                    + ' href="' + self.pageModel.createActionUrl(
+                            self.pageModel.getConf('currentAction'))
+                    + '?corpname=' + item.id + '"'
                     + ' data-id="' + item.id + '"'
                     + ' title="' + item.description + '"'
                     + ' >'
@@ -1333,29 +1335,33 @@ export class Corplist {
         this.onHide = this.options.onHide ? this.options.onHide : null;
         this.onShow = this.options.onShow ? this.options.onShow : null;
 
-        function handleClick(corpusId:string, corpusName:string) {
+        function defaultHandleClick(corpusId:string, corpusName:string) {
             this.setCurrentValue(corpusId, corpusName);
+            if (this.options.formTarget) {
+                $(this.parentForm).attr('action', this.options.formTarget);
+            }
+            if (this.options.submitMethod) {
+                $(this.parentForm).attr('method', this.options.submitMethod);
+            }
+            $(this.parentForm).submit();
+        }
 
+        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
             if (this.options.itemClickAction) {
                 this.options.itemClickAction.call(this, corpusId, corpusName);
 
             } else {
-                if (this.options.formTarget) {
-                    $(this.parentForm).attr('action', this.options.formTarget);
-                }
-                if (this.options.submitMethod) {
-                    $(this.parentForm).attr('method', this.options.submitMethod);
-                }
-                $(this.parentForm).submit();
+                defaultHandleClick.call(this, corpusId, corpusName);
             }
-        }
-
-        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
-            handleClick.call(this, corpusId, corpusName);
         };
 
         this.onFavItemClick = (itemId:string, itemName:string, href:string) => {
-            handleClick.call(this, itemId, itemName);
+            if (this.options.itemClickAction) {
+                this.options.itemClickAction.call(this, itemId, itemName, href);
+
+            } else {
+                window.location.href = href;
+            }
         };
     }
 
