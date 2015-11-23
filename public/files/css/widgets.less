@@ -462,19 +462,20 @@ button#reset-tag-button {
   margin-top: 12px;
 }
 
+table.envelope .range-selector {
+  padding: 5px 8px 5px 12px;
+}
+
 .range-selector div {
   padding: 0.3em 0;
 }
 
-.range-selector div.interval-switch .hint-diagram {
-  display: inline-block;
-  vertical-align: middle;
-  width: 150px;
-  height: 25px;
-  margin-left: 1em;
-  background-image: url('../img/value_ranges.png');
-  background-position: 0 -42px;
-  background-repeat: no-repeat;
+.range-selector h3 {
+  margin: 1em 0;
+}
+
+.range-selector label.date {
+  font-weight: bold;
 }
 
 .range-selector div.interval-switch select {
@@ -483,35 +484,29 @@ button#reset-tag-button {
 }
 
 .range-selector div.interval-switch .label {
+  display: inline-block;
   vertical-align: middle;
-}
-
-.range-selector div.interval-switch .hint-diagram.alt {
-  background-position: 0 0;
 }
 
 .range-selector .confirm-range {
   margin-top: 1em;
 }
 
-table.envelope.locked .define-range {
-  color: @color-light-text;
-}
-
-table.envelope a.define-range {
-  display: block;
-  cursor: pointer;
+table.envelope .define-range {
   color: @color-logo-blue;
   text-align: center;
 }
 
-table.envelope a.define-range.locked {
-  cursor: default;
-  text-decoration: none;
+table.envelope.locked .define-range a {
+  color: @color-light-text;
 }
 
-table.envelope a.define-range:hover {
-  text-decoration: none;
+table.envelope.locked .define-range a.locked,
+table.envelope.locked .define-range a.locked:hover {
+  color: @color-light-text;
+  text-decoration: line-through;
+  cursor: default;
+  background-color: transparent;
 }
 
 // ---------------- typeahead plugin --------------------
@@ -662,6 +657,99 @@ fieldset.subcorp-action-field {
   span.big {
     font-size: 20pt;
     vertical-align: middle;
+  }
+}
+
+// --------------------------- subcmixer widget (TODO move to a separate file)
+
+.text-structure-box {
+  border: @input-border-style;
+  margin: 10pt;
+
+  .structure-heading {
+    padding: 4pt 6pt;
+    background-color: @color-default-green;
+    text-align: center;
+
+    .orientation {
+      display: inline-block;
+      font-size: 21pt;
+      margin-right: 10pt;
+    }
+
+    > * {
+      vertical-align: middle;
+    }
+  }
+
+  .close-icon {
+    cursor: pointer;
+  }
+
+  .util-button {
+    cursor: pointer;
+  }
+
+  select.util-button {
+    border-width: 1px;
+    border-radius: 6px;
+    height: 20pt;
+    padding-left: 0;
+  }
+
+  select:disabled {
+    color: @color-light-text;
+  }
+
+  select:disabled:hover {
+    background-color: inherit;
+  }
+
+  .structure {
+    padding: 10pt;
+  }
+}
+
+.text-structure-box .text-structure-box {
+  display: inline-block;
+}
+
+.text-structure-box.new-subset {
+    text-align: center;
+    border: 1px dashed @color-light-grey;
+
+    .structure-heading {
+      background-color: transparent;
+    }
+  }
+
+.text-structure-box img.close-icon {
+  display: inline-block;
+  margin-left: 10pt;
+}
+
+
+// ------------------------------ range slider -------
+
+.slider-box {
+  margin: 10pt;
+  box-shadow: 5px 5px 7px #aaa;
+  border: @input-border-style;
+  width: 90%;
+  padding: 5pt;
+
+  .slider-wrapper {
+    display: inline-block;
+    width: 90%;
+  }
+
+  .close-icon {
+    padding-top: 5pt;
+    float: right;
+  }
+
+  h3 {
+    margin: 0;
   }
 
 }
