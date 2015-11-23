@@ -1110,18 +1110,6 @@ class Actions(Kontext):
         """
         return self.call_function(conclib.get_full_ref, (self._corp(), pos))
 
-    @exposed(template='wordlist.tmpl', legacy=True)
-    def build_arf_db(self, corpname='', attrname=''):
-        if not corpname:
-            corpname = self.args.corpname
-        if os.path.isfile(corplib.corp_freqs_cache_path(self._corp(), attrname) + '.arf'):
-            return 'Finished'
-        out = corplib.build_arf_db(self._corp(), attrname)
-        if out:
-            return {'processing': out[1].strip('%')}
-        else:
-            return {'processing': 0}
-
     @exposed(access_level=1, vars=('LastSubcorp',), legacy=True)
     def wordlist_form(self, ref_corpname=''):
         """
