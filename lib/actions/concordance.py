@@ -985,9 +985,7 @@ class Actions(Kontext):
         """
         self.args.cbgrfns = ''.join(self.args.cbgrfns)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
-
-        collstart = (self.args.collpage - 1) * self.args.citemsperpage + line_offset
-
+        collstart = (int(self.args.collpage) - 1) * int(self.args.citemsperpage) + int(line_offset)
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
         conc = self.call_function(conclib.get_conc, (self._corp(),))
@@ -1019,11 +1017,14 @@ class Actions(Kontext):
         """
         """
         self.disabled_menu_items = (MainMenu.SAVE, )
-
         self.args.citemsperpage = sys.maxint
-        result = self.collx(csortfn, cbgrfns)
+        self.args.collpage = 1  # we must reset this manually because user may have been on any page before
+
+        # to get total num of lines, it is enough to fetch just one
+        # because there is always the 'Total' value available
+        result = self.collx(line_offset=0, num_lines=1)
         if to_line == '':
-            to_line = len(result['Items'])
+            to_line = result['Total']
         return {
             'from_line': from_line,
             'to_line': to_line,
@@ -1031,24 +1032,22 @@ class Actions(Kontext):
         }
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def savecoll(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'), saveformat='text',
-                 heading=0, colheaders=0):
+    def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
         save collocations
         """
         from_line = int(from_line)
         if to_line == '':
-            to_line = len(self.collx(csortfn, cbgrfns)['Items'])
+            to_line = sys.maxint
         else:
             to_line = int(to_line)
         num_lines = to_line - from_line + 1
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
-
         self.args.collpage = 1
-        self.args.citemsperpage = sys.maxint
-        result = self.collx(csortfn, cbgrfns, line_offset=(from_line - 1), num_lines=num_lines)
+        self.args.citemsperpage = sys.maxint  # to make sure we include everything
+        result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self._canonical_corpname(self.args.corpname)
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
