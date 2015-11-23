@@ -493,24 +493,43 @@ class MissingSubCorpFreqFile(Exception):
     pass
 
 
-def frq_db(corp, attrname, nums='frq'):
-    import array
+def subcorp_base_file(corp, attrname):
+    if hasattr(corp, 'spath'):
+        return corp.spath[:-4].decode('utf-8') + attrname
+    else:
+        return corp.get_conf('PATH').decode('utf-8') + attrname
 
-    filename = (corp_freqs_cache_path(corp, attrname).decode('utf-8') + '.' + nums).encode('utf-8')
+
+def frq_db(corp, attrname, nums='frq', id_range=0):
+    import array
+    import exceptions
+    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    if not id_range:
+        id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
         frq = array.array('f')
         try:
-            frq.fromfile(open(filename), corp.get_attr(attrname).id_range())
+            frq.fromfile(open(filename), id_range)
         except IOError:
+            raise MissingSubCorpFreqFile(corp)
+        except exceptions.EOFError:
+            os.remove(filename.rsplit('.', 1)[0] + '.docf')
             raise MissingSubCorpFreqFile(corp)
     else:
         try:
+            if corp.get_conf('VIRTUAL') and not hasattr(corp, 'spath') and nums == 'frq':
+                raise IOError
             frq = array.array('i')
-            frq.fromfile(open(filename), corp.get_attr(attrname).id_range())
+            frq.fromfile(open(filename), id_range)
+        except exceptions.EOFError:
+            os.remove(filename.rsplit('.', 1)[0] + '.docf')
+            os.remove(filename.rsplit('.', 1)[0] + '.arf')
+            os.remove(filename.rsplit('.', 1)[0] + '.frq')
+            raise MissingSubCorpFreqFile(corp)
         except IOError:
             try:
                 frq = array.array('l')
-                frq.fromfile(open(filename + '64'), corp.get_attr(attrname).id_range())
+                frq.fromfile(open(filename + '64'), id_range)
             except IOError:
                 if not hasattr(corp, 'spath') and nums == 'frq':
                     a = corp.get_attr(attrname)
@@ -584,83 +603,46 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     logfile -- an optional file where current calculation status is written
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
-    outfilename = corp_freqs_cache_path(corp, attrname)
+    outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return
+    path = ''
     if hasattr(corp, 'spath'):
-        sys.stderr.write('trying find_same_subcorp_file: %s\n' % outfilename)
-        same = corp.cm.find_same_subcorp_file(corp, attrname,
-                                              ('arf', 'frq', 'docf', 'build.old'))
-        sys.stderr.write('find_same_subcorp_file: %s\n' % same)
+        path = corp.spath
+        same = corp.cm.find_same_subcorp_file(corp, attrname, ('arf', 'frq', 'docf', 'build.old'))
         if same:
             same = same[:-4] + attrname
-            from shutil import copyfile
-
-            for suff in ('.arf', '.frq', '.frq64', '.docf'):
-                copyfile(same + suff, outfilename + suff)
-            return
-
-    import array
-
-    outarf = array.array('f')
-    outfrq = array.array('i')
-    outdocf = array.array('i')
-    frqsize = {'i': "", 'l': "64"}
-    attr = corp.get_attr(attrname)
-
-    try:
-        doc = corp.get_struct(corp.get_conf('DOCSTRUCTURE'))
-    except:
-        doc = None
+            complete = True
+            for suff in ('.arf', '.frq', '.docf'):
+                if not os.path.isfile(same + suff):
+                    complete = False
+            if complete:
+                from shutil import copyfile
+                for suff in ('.arf', '.frq', '.docf'):
+                    copyfile(same + suff, outfilename + suff)
+                    try:
+                        copyfile(same + '.frq64', outfilename + '.frq64')
+                    except Exception as e:
+                        logging.getLogger(__name__).error(e)
+                return
 
     if logfile:
-        toprocessids = float(attr.id_range())
-        nextidslog = logstep * toprocessids
-        open(logfile, 'w').write('%d\n%s\n0%%' %
-                                 (os.getpid(), corp.search_size()))
-    for i in xrange(attr.id_range()):
-        freq = corp.count_rest(attr.id2poss(i))
-        arf = corp.count_ARF(attr.id2poss(i), freq)
-
-        # docf
-        if doc is not None:
-            rs = corp.filter_query(doc.whole())
-            docf = corp.compute_docf(attr.id2poss(i), rs)
-            outdocf.append(docf)
-
-        # word freq
-        try:
-            outfrq.append(freq)
-        except OverflowError:
-            outfrq = array.array('l', outfrq)
-            outfrq.append(freq)
-
-        # arf
-        outarf.append(arf)
-
-        if logfile:
-            if i >= nextidslog:
-                open(logfile, 'a').write('\n%s%%' %
-                                         round((i / toprocessids) * 100))
-                nextidslog += logstep * toprocessids
+        open(logfile, 'w').write('%d\n%s\n0 %%'
+                                 % (os.getpid(), corp.search_size()))
+        log = " 2>> '%s'" % logfile
+    else:
+        log = ""
+    if path:
+        cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
+                                                  path.decode('utf-8'), log.decode('utf-8'))
+        cmd = cmd.encode('utf-8')
+    else:
+        cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
+    import subprocess
+    subprocess.call(cmd % 'frq', shell=True)
+    subprocess.call(cmd % 'docf', shell=True)
+    subprocess.call(cmd % 'arf', shell=True)
     if logfile:
-        open(logfile, 'a').write('\n100%')
-
-
-    outarf.tofile(open(outfilename + '.arf.tmp', 'wb'))
-    os.rename(outfilename + '.arf.tmp', outfilename + '.arf')
-
-    outfrq.tofile(open(outfilename + '.frq.tmp', 'wb'))
-    os.rename(outfilename + '.frq.tmp', outfilename + '.frq' +
-                                        frqsize[outfrq.typecode])
-
-    if doc is not None:
-        outdocf.tofile(open(outfilename + '.docf.tmp', 'wb'))
-        os.rename(outfilename + '.docf.tmp', outfilename + '.docf')
-
-    if logfile:
-        open(logfile, 'a').write('\nfreq:%s\narf:%s\ndocf:%s' %
-                                 (sum(outfrq), sum(outarf), sum(outdocf)))
         os.rename(logfile, logfile + '.old')
 
 
