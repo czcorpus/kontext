@@ -190,7 +190,9 @@ class LiveAttributes(AbstractLiveAttributes):
     def format_data_types(data):
         if type(data) is dict:
             for k in data.keys():
-                if type(data[k]) is int or type(data[k]) is float or (type(data[k]) is str and data[k].isdigit()):
+                if type(data[k]) is str and data[k].isdigit():
+                    data[k] = int(data[k])
+                if type(data[k]) is int or type(data[k]) is float:
                     data[k] = l10n.format_number(data[k])
         return data
 
