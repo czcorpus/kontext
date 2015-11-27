@@ -882,6 +882,7 @@ class Plugin {
         this.rawInputs.reset();
         this.selectionSteps.reset();
         this.structTables.reset();
+        this.initializeSearchAttrFiledsets();
 
     };
 
@@ -948,7 +949,13 @@ class Plugin {
         ajaxProm.then(
             function (data) {
                 if (!data.error) {
-                    successAction(data, selectedCheckboxes);
+                    if (data.poscount == 0) {
+                        self.pluginApi.showMessage('error',
+                                self.pluginApi.translate('ucnkLA__no_matching_data'));
+
+                    } else {
+                        successAction(data, selectedCheckboxes);
+                    }
 
                 } else {
                     self.pluginApi.showMessage('error', data.error);
