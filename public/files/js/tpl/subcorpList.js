@@ -134,7 +134,8 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         wrappingElm.append(fieldset1);
 
         fieldset1Submit.on('click', function () {
-            var prom = self.createSubcorpus($(triggerElm).data('subcname'),
+            var prom = self.createSubcorpus(
+                    decodeURIComponent($(triggerElm).data('subcname')),
                     $(triggerElm).data('struct_name'), $(triggerElm).data('condition'));
 
             prom.then(
