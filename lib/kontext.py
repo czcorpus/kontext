@@ -1294,8 +1294,8 @@ class Kontext(Controller):
             list_none = (ans['bib_attr'], )
             tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
 
-            if ans['bib_attr'] and ans['bib_attr'] not in tmp:
-                tmp.insert(0, ans['bib_attr'])
+            if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
+                tmp.append(ans['bib_attr'])                     # we add it there
                 subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
         else:
             ans['bib_attr'] = None
