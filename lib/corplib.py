@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os.path
-import sys
+import re
 import glob
 from types import UnicodeType
 from hashlib import md5
@@ -592,7 +592,7 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     return items[:wlmaxitems]
 
 
-def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
+def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     """
     Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
     is quite computationally demanding the function is typically called in background by KonText.
@@ -600,13 +600,12 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
     arguments:
     corp -- a corpus instance
     attrname -- name of a positional or structure's attribute
-    logfile -- an optional file where current calculation status is written
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
     outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
-        return
-    path = ''
+        return None
+    path = None
     if hasattr(corp, 'spath'):
         path = corp.spath
         same = corp.cm.find_same_subcorp_file(corp, attrname, ('arf', 'frq', 'docf', 'build.old'))
@@ -624,26 +623,46 @@ def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
                         copyfile(same + '.frq64', outfilename + '.frq64')
                     except Exception as e:
                         logging.getLogger(__name__).error(e)
-                return
+                return None
+    return path
 
-    if logfile:
-        open(logfile, 'w').write('%d\n%s\n0 %%'
-                                 % (os.getpid(), corp.search_size()))
-        log = " 2>> '%s'" % logfile
-    else:
-        log = ""
-    if path:
-        cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                  path.decode('utf-8'), log.decode('utf-8'))
-        cmd = cmd.encode('utf-8')
-    else:
-        cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
-    import subprocess
-    subprocess.call(cmd % 'frq', shell=True)
-    subprocess.call(cmd % 'docf', shell=True)
-    subprocess.call(cmd % 'arf', shell=True)
-    if logfile:
-        os.rename(logfile, logfile + '.old')
+
+def arf_calc_create_log_path(base_path, calc_type):
+    return '%s.%s.build' % (base_path, calc_type)
+
+
+def arf_calc_log_last_line(path):
+    with open(path, 'r') as f:
+        s = f.read()
+        if len(s) > 0:
+            return re.split(r'[\r\n]', s.strip())[-1]
+        return None
+
+
+def _get_arf_calc_total_status(base_path):
+    items = []
+    for m in ('frq', 'arf', 'docf'):
+        try:
+            log_file = arf_calc_create_log_path(base_path, m)
+            last_line = arf_calc_log_last_line(log_file)
+            p = int(re.split(r'\s+', last_line)[0])
+        except:
+            p = 0
+        items.append(p)
+    return sum(items) / 3.
+
+
+def arf_calc_runs(base_path, calc_type=None):
+    to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
+    for m in to_check:
+        if os.path.isfile(arf_calc_create_log_path(base_path, m)):
+            return True
+    return False
+
+
+def _arf_calc_write_log_header(corp, logfile):
+    with open(logfile, 'w') as f:
+        f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
 
 
 def build_arf_db(corp, attrname):
@@ -651,45 +670,38 @@ def build_arf_db(corp, attrname):
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run.
     """
-    from multiprocessing import Process
+    base_path = corp_freqs_cache_path(corp, attrname)
+    if arf_calc_runs(base_path):
+        curr_status = _get_arf_calc_total_status(base_path)
+        if curr_status < 100:
+            return curr_status
 
-    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
-    if os.path.isfile(logfilename):
-        log = open(logfilename).read().split('\n')
-        return log[0], log[-1].split('\r')[-1]
+    subc_path = prepare_arf_calc_paths(corp, attrname)
+    backend, conf = settings.get_full('corpora', 'conc_calc_backend')
+    if backend == 'celery':
+        from concworker.wcelery import load_config_module
+        import celery
+        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
 
-    def background_calc():
-        os.nice(10)
-        create_arf_db(corp, attrname, logfilename)
+        for m in ('frq', 'arf', 'docf'):
+            logfilename_m = arf_calc_create_log_path(base_path, m)
+            res = app.send_task('worker.compile_%s' % m, (corp.corpname, subc_path, attrname, logfilename_m))
 
-    p = Process(target=background_calc)
-    p.start()
+    elif backend == 'multiprocessing':
+        import subprocess
+
+        for m in ('frq', 'arf', 'docf'):
+            logfilename_m = arf_calc_create_log_path(base_path, m)
+            open(logfilename_m, 'w').write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
+            log = " 2>> '%s'" % logfilename_m
+            if subc_path:
+                cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
+                                                      subc_path.decode('utf-8'), log.decode('utf-8'))
+                cmd = cmd.encode('utf-8')
+            else:
+                cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
+            subprocess.call(cmd % 'frq', shell=True)
 
 
 def build_arf_db_status(corp, attrname):
-    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
-    if os.path.isfile(logfilename):
-        log = open(logfilename).read().split('\n')
-        return log[0], log[-1].split('\r')[-1]
-    else:
-        return 0, '100%'
-
-
-if __name__ == '__main__':
-    import manatee
-
-    if sys.argv[2:] and sys.argv[1] == '--create-arf-db':
-        # ./corplib.py --create-arf-db CORPNAME [ATTRNAME]
-        corp = manatee.Corpus(sys.argv[2])
-        if sys.argv[3:]:
-            attrnames = [sys.argv[3]]
-        else:
-            attrnames = corp.get_conf('ATTRLIST').split(',')
-        for attrn in attrnames:
-            print 'Creating ARF database:', sys.argv[2], attrn
-            create_arf_db(corp, attrn)
-    else:
-        cm = CorpusManager(subcpath=['/home/pary/corp/run/subcorp/GLOBAL'])
-        os.environ['MANATEE_REGISTRY'] = '/home/pary/corp/registry'
-        c = cm.get_Corpus('bnc:written')
-        sc = cm.get_Corpus('bnc:academic')
+    return _get_arf_calc_total_status(corp_freqs_cache_path(corp, attrname))
