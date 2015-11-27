@@ -31,11 +31,15 @@ define(['jquery', 'tpl/document', 'win'], function ($, documentModule, win) {
         return $('table.query-history tr.data-item').length;
     }
 
+    function escapeHTML(s) {
+        return $('<div />').text(s).html();
+    }
+
     function appendData(data) {
         $.each(data.data, function () {
             $('table.query-history .expand-line').before('<tr class="data-item">'
                 + '<td class="query">'
-                + lib.layoutModel.shortenText(this.query, lib.layoutModel.conf.historyMaxQuerySize)
+                + escapeHTML(lib.layoutModel.shortenText(this.query, lib.layoutModel.conf.historyMaxQuerySize))
                 + '</td>'
                 + '<td class="corpname">' + this.humanCorpname + (this.subcorpname ? '+' + this.subcorpname : '') + '</td>'
                 + '<td>' + this.query_type_translated + '</td>'
