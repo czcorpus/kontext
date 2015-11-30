@@ -15,7 +15,7 @@
         "ucnkLA__interval_inclusion_policy": "partially included values",
         "ucnkLA__strict_interval": "exclude",
         "ucnkLA__partial_interval": "include",
-        "ucnkLA__range_help_text": "(TODO) Zahrnutím částečně vyhovujících hodnot budou do zvoleného rozsahu vybrány i texty datované přibližně (s tolerančním intervalem). Např. do rozmezí let 1400 až 1500 bude při volbě „zahrnout“ vybrán i text datovaný 1375±25 (2. polovina 14. století) či 1390±10 (konec 14. století), při volbě „vyřadit“ bude vybrán až text z roku 1400.",
+        "ucnkLA__range_help_text": "Ambiguously dated documents may meet the selected time range only partially, e.g. the time range 1800-1850 can be specified to include or exclude a document dated 1795±10 (1785-1805).",
         "ucnkLA__no_matching_data": "No matching data found."
     },
     "cs-CZ": {
@@ -34,7 +34,7 @@
         "ucnkLA__interval_inclusion_policy": "částečně vyhovující hodnoty",
         "ucnkLA__strict_interval": "vyřadit",
         "ucnkLA__partial_interval": "zahrnout",
-        "ucnkLA__range_help_text": "Zahrnutím částečně vyhovujících hodnot budou do zvoleného rozsahu vybrány i texty datované přibližně (s tolerančním intervalem). Např. do rozmezí let 1400 až 1500 bude při volbě „zahrnout“ vybrán i text datovaný 1375±25 (2. polovina 14. století) či 1390±10 (konec 14. století), při volbě „vyřadit“ bude vybrán až text z roku 1400.",
+        "ucnkLA__range_help_text": "Texty s přibližnou datací mohou zvolenému časovému rozsahu vyhovovat jen částečně: např. do rozmezí let 1800-1850 tak může, nebo nemusí být zahrnut i text datovaný 1795±10 (1785-1805).",
         "ucnkLA__no_matching_data": "Nebyla nalezena žádná vyhovující data."
 	}
 }
