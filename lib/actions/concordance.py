@@ -984,7 +984,7 @@ class Actions(Kontext):
                'Pos_ctxs': conclib.pos_ctxs(1, 1)}
         return out
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
+    @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=None):
         """
         list collocations
@@ -994,28 +994,48 @@ class Actions(Kontext):
         collstart = (int(self.args.collpage) - 1) * int(self.args.citemsperpage) + int(line_offset)
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
 
-        num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
-        result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
-                              cbgrfns=self.args.cbgrfns, cfromw=self.args.cfromw,
-                              ctow=self.args.ctow, cminfreq=self.args.cminfreq,
-                              cminbgr=self.args.cminbgr, from_idx=collstart,
-                              max_lines=num_fetch_lines)
-        if collstart + self.args.citemsperpage < result['Total']:
-            result['lastpage'] = 0
-        else:
-            result['lastpage'] = 1
+        try:
+            corplib.frq_db(self._corp(), self.args.cattr)  # try to fetch precalculated data
+            conc = self.call_function(conclib.get_conc, (self._corp(),))
 
-        for item in result['Items']:
-            item['pfilter'] = [('q', item['pfilter'])]
-            item['nfilter'] = [('q', item['nfilter'])]
-            item['str'] = import_string(item['str'],
-                                        from_encoding=self._corp().get_conf('ENCODING'))
+            num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
+            result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
+                                  cbgrfns=self.args.cbgrfns, cfromw=self.args.cfromw,
+                                  ctow=self.args.ctow, cminfreq=self.args.cminfreq,
+                                  cminbgr=self.args.cminbgr, from_idx=collstart,
+                                  max_lines=num_fetch_lines)
+            if collstart + self.args.citemsperpage < result['Total']:
+                result['lastpage'] = 0
+            else:
+                result['lastpage'] = 1
 
-        result['cmaxitems'] = 10000
-        result['to_line'] = 10000  # TODO
-        return result
+            for item in result['Items']:
+                item['pfilter'] = [('q', item['pfilter'])]
+                item['nfilter'] = [('q', item['nfilter'])]
+                item['str'] = import_string(item['str'],
+                                            from_encoding=self._corp().get_conf('ENCODING'))
+            result['cmaxitems'] = 10000
+            result['to_line'] = 10000  # TODO
+            result['attrname'] = self.args.cattr
+            return result
+
+        except corplib.MissingSubCorpFreqFile as e:
+            out = corplib.build_arf_db(e.args[0], self.args.cattr)
+            if out:
+                processing = out[1].strip('%')
+            else:
+                processing = '0'
+            return {
+                'processing': processing == '100' and '99' or processing,
+                'cmaxitems': 0,
+                'to_line': None,
+                'lastpage': 0,
+                'Total': 0,
+                'TotalPages': 0,
+                'Head': [],
+                'attrname': self.args.cattr
+            }
 
     @exposed(access_level=1, legacy=True)
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'),
