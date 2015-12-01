@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os.path
-import re
 import glob
 from types import UnicodeType
 from hashlib import md5
@@ -28,7 +27,7 @@ from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
-import settings
+import freq_precalc
 
 
 def manatee_version():
@@ -461,49 +460,14 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
     return candidates
 
 
-def corp_freqs_cache_path(corp, attrname):
-    """
-    Generates an absolute path to an 'attribute' directory/file. The path
-    consists of two parts: 1) absolute path to corpus indexed data
-    2) filename given by the 'attrname' argument. It is also dependent
-    on whether you pass a subcorpus (files are created in user's assigned directory)
-    or a regular corpus (files are created in the 'cache' directory).
-
-    arguments:
-    corp -- manatee corpus instance
-    attrname -- name of an attribute
-
-    returns:
-    a path encoded as an 8-bit string (i.e. unicode paths are encoded)
-    """
-    if hasattr(corp, 'spath'):
-        ans = corp.spath.decode('utf-8')[:-4] + attrname
-    else:
-        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_cache_dir'))
-        subdirs = (corp.corpname,)
-        for d in subdirs:
-            cache_dir = '%s/%s' % (cache_dir, d)
-            if not os.path.exists(cache_dir):
-                os.makedirs(cache_dir)
-        ans = '%s/%s' % (cache_dir, attrname)
-    return ans.encode('utf-8')
-
-
 class MissingSubCorpFreqFile(Exception):
     pass
-
-
-def subcorp_base_file(corp, attrname):
-    if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
-    else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
 
 
 def frq_db(corp, attrname, nums='frq', id_range=0):
     import array
     import exceptions
-    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (freq_precalc.subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
@@ -592,116 +556,3 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     return items[:wlmaxitems]
 
 
-def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
-    """
-    Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
-    is quite computationally demanding the function is typically called in background by KonText.
-
-    arguments:
-    corp -- a corpus instance
-    attrname -- name of a positional or structure's attribute
-    logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
-    """
-    outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
-    if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
-        return None
-    path = None
-    if hasattr(corp, 'spath'):
-        path = corp.spath
-        same = corp.cm.find_same_subcorp_file(corp, attrname, ('arf', 'frq', 'docf', 'build.old'))
-        if same:
-            same = same[:-4] + attrname
-            complete = True
-            for suff in ('.arf', '.frq', '.docf'):
-                if not os.path.isfile(same + suff):
-                    complete = False
-            if complete:
-                from shutil import copyfile
-                for suff in ('.arf', '.frq', '.docf'):
-                    copyfile(same + suff, outfilename + suff)
-                    try:
-                        copyfile(same + '.frq64', outfilename + '.frq64')
-                    except Exception as e:
-                        logging.getLogger(__name__).error(e)
-                return None
-    return path
-
-
-def arf_calc_create_log_path(base_path, calc_type):
-    return '%s.%s.build' % (base_path, calc_type)
-
-
-def arf_calc_log_last_line(path):
-    with open(path, 'r') as f:
-        s = f.read()
-        if len(s) > 0:
-            return re.split(r'[\r\n]', s.strip())[-1]
-        return None
-
-
-def _get_arf_calc_total_status(base_path):
-    items = []
-    for m in ('frq', 'arf', 'docf'):
-        try:
-            log_file = arf_calc_create_log_path(base_path, m)
-            last_line = arf_calc_log_last_line(log_file)
-            p = int(re.split(r'\s+', last_line)[0])
-        except:
-            p = 0
-        items.append(p)
-    return sum(items) / 3.
-
-
-def arf_calc_runs(base_path, calc_type=None):
-    to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
-    for m in to_check:
-        if os.path.isfile(arf_calc_create_log_path(base_path, m)):
-            return True
-    return False
-
-
-def _arf_calc_write_log_header(corp, logfile):
-    with open(logfile, 'w') as f:
-        f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
-
-
-def build_arf_db(corp, attrname):
-    """
-    Provides a higher level wrapper to create_arf_db(). Function creates
-    a background process where create_arf_db() is run.
-    """
-    base_path = corp_freqs_cache_path(corp, attrname)
-    if arf_calc_runs(base_path):
-        curr_status = _get_arf_calc_total_status(base_path)
-        if curr_status < 100:
-            return curr_status
-
-    subc_path = prepare_arf_calc_paths(corp, attrname)
-    backend, conf = settings.get_full('corpora', 'conc_calc_backend')
-    if backend == 'celery':
-        from concworker.wcelery import load_config_module
-        import celery
-        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
-
-        for m in ('frq', 'arf', 'docf'):
-            logfilename_m = arf_calc_create_log_path(base_path, m)
-            res = app.send_task('worker.compile_%s' % m, (corp.corpname, subc_path, attrname, logfilename_m))
-
-    elif backend == 'multiprocessing':
-        import subprocess
-
-        for m in ('frq', 'arf', 'docf'):
-            logfilename_m = arf_calc_create_log_path(base_path, m)
-            open(logfilename_m, 'w').write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
-            log = " 2>> '%s'" % logfilename_m
-            if subc_path:
-                cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                      subc_path.decode('utf-8'), log.decode('utf-8'))
-                cmd = cmd.encode('utf-8')
-            else:
-                cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
-            subprocess.call(cmd % 'frq', shell=True)
-
-
-def build_arf_db_status(corp, attrname):
-    return _get_arf_calc_total_status(corp_freqs_cache_path(corp, attrname))

@@ -29,7 +29,7 @@ import settings
 import initializer
 import plugins
 import manatee
-import corplib
+import freq_precalc
 import translation
 from stderr2f import stderr_redirector
 
@@ -123,7 +123,7 @@ def _compile_frq(corp, attr, logfile):
         return {'message': 'freq already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_frq(attr)
-    return {'message': 'OK', 'last_log_record': corplib.arf_calc_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
 
 
 @app.task
@@ -137,9 +137,9 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     corp = _load_corp(corp_id, subcorp_path)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
-        base_path = corplib.corp_freqs_cache_path(corp, attr)
+        base_path = freq_precalc.corp_freqs_cache_path(corp, attr)
         frq_data_file = '%s.frq' % base_path
-        while num_wait > 0 and corplib.arf_calc_runs(base_path, 'frq'):
+        while num_wait > 0 and freq_precalc.calc_is_running(base_path, 'frq'):
             if os.path.isfile(frq_data_file):
                 break
             time.sleep(1)
@@ -151,7 +151,7 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
         return {'message': 'arf already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_arf(attr)
-    return {'message': 'OK', 'last_log_record': corplib.arf_calc_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
 
 
 @app.task
@@ -164,7 +164,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
         doc = corp.get_struct(doc_struct)
         with stderr_redirector(open(logfile, 'a')):
             corp.compile_docf(attr, doc.name)
-        return {'message': 'OK', 'last_log_record': corplib.arf_calc_log_last_line(logfile)}
+        return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
         raise WorkerTaskException('Failed to compile docf: attribute %s.%s not found in %s' % (
                                   doc_struct, attr, corp_id))

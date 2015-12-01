@@ -17,7 +17,6 @@ import os
 import sys
 import re
 
-import werkzeug
 from werkzeug.datastructures import MultiDict
 
 from kontext import Kontext, ConcError, MainMenu
@@ -25,6 +24,7 @@ from controller import UserActionException, exposed
 import settings
 import conclib
 import corplib
+import freq_precalc
 import plugins
 import butils
 from kwiclib import Kwic
@@ -1269,7 +1269,7 @@ class Actions(Kontext):
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
-            out = corplib.build_arf_db(e.args[0], self.args.wlattr)
+            out = freq_precalc.build_arf_db(e.args[0], self.args.wlattr)
             if out:
                 processing = out
             else:
@@ -1395,7 +1395,7 @@ class Actions(Kontext):
     @exposed(legacy=True)
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
-        return corplib.build_arf_db_status(self._corp(), attrname)
+        return freq_precalc.build_arf_db_status(self._corp(), attrname)
 
     @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):
