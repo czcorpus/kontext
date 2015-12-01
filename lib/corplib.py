@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os.path
-import sys
 import glob
 from types import UnicodeType
 from hashlib import md5
@@ -28,7 +27,7 @@ from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
-import settings
+import freq_precalc
 
 
 def manatee_version():
@@ -461,49 +460,14 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
     return candidates
 
 
-def corp_freqs_cache_path(corp, attrname):
-    """
-    Generates an absolute path to an 'attribute' directory/file. The path
-    consists of two parts: 1) absolute path to corpus indexed data
-    2) filename given by the 'attrname' argument. It is also dependent
-    on whether you pass a subcorpus (files are created in user's assigned directory)
-    or a regular corpus (files are created in the 'cache' directory).
-
-    arguments:
-    corp -- manatee corpus instance
-    attrname -- name of an attribute
-
-    returns:
-    a path encoded as an 8-bit string (i.e. unicode paths are encoded)
-    """
-    if hasattr(corp, 'spath'):
-        ans = corp.spath.decode('utf-8')[:-4] + attrname
-    else:
-        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_cache_dir'))
-        subdirs = (corp.corpname,)
-        for d in subdirs:
-            cache_dir = '%s/%s' % (cache_dir, d)
-            if not os.path.exists(cache_dir):
-                os.makedirs(cache_dir)
-        ans = '%s/%s' % (cache_dir, attrname)
-    return ans.encode('utf-8')
-
-
 class MissingSubCorpFreqFile(Exception):
     pass
-
-
-def subcorp_base_file(corp, attrname):
-    if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
-    else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
 
 
 def frq_db(corp, attrname, nums='frq', id_range=0):
     import array
     import exceptions
-    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (freq_precalc.subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
@@ -592,104 +556,3 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     return items[:wlmaxitems]
 
 
-def create_arf_db(corp, attrname, logfile=None, logstep=0.02):
-    """
-    Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
-    is quite computationally demanding the function is typically called in background by KonText.
-
-    arguments:
-    corp -- a corpus instance
-    attrname -- name of a positional or structure's attribute
-    logfile -- an optional file where current calculation status is written
-    logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
-    """
-    outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
-    if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
-        return
-    path = ''
-    if hasattr(corp, 'spath'):
-        path = corp.spath
-        same = corp.cm.find_same_subcorp_file(corp, attrname, ('arf', 'frq', 'docf', 'build.old'))
-        if same:
-            same = same[:-4] + attrname
-            complete = True
-            for suff in ('.arf', '.frq', '.docf'):
-                if not os.path.isfile(same + suff):
-                    complete = False
-            if complete:
-                from shutil import copyfile
-                for suff in ('.arf', '.frq', '.docf'):
-                    copyfile(same + suff, outfilename + suff)
-                    try:
-                        copyfile(same + '.frq64', outfilename + '.frq64')
-                    except Exception as e:
-                        logging.getLogger(__name__).error(e)
-                return
-
-    if logfile:
-        open(logfile, 'w').write('%d\n%s\n0 %%'
-                                 % (os.getpid(), corp.search_size()))
-        log = " 2>> '%s'" % logfile
-    else:
-        log = ""
-    if path:
-        cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                  path.decode('utf-8'), log.decode('utf-8'))
-        cmd = cmd.encode('utf-8')
-    else:
-        cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
-    import subprocess
-    subprocess.call(cmd % 'frq', shell=True)
-    subprocess.call(cmd % 'docf', shell=True)
-    subprocess.call(cmd % 'arf', shell=True)
-    if logfile:
-        os.rename(logfile, logfile + '.old')
-
-
-def build_arf_db(corp, attrname):
-    """
-    Provides a higher level wrapper to create_arf_db(). Function creates
-    a background process where create_arf_db() is run.
-    """
-    from multiprocessing import Process
-
-    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
-    if os.path.isfile(logfilename):
-        log = open(logfilename).read().split('\n')
-        return log[0], log[-1].split('\r')[-1]
-
-    def background_calc():
-        os.nice(10)
-        create_arf_db(corp, attrname, logfilename)
-
-    p = Process(target=background_calc)
-    p.start()
-
-
-def build_arf_db_status(corp, attrname):
-    logfilename = corp_freqs_cache_path(corp, attrname) + '.build'
-    if os.path.isfile(logfilename):
-        log = open(logfilename).read().split('\n')
-        return log[0], log[-1].split('\r')[-1]
-    else:
-        return 0, '100%'
-
-
-if __name__ == '__main__':
-    import manatee
-
-    if sys.argv[2:] and sys.argv[1] == '--create-arf-db':
-        # ./corplib.py --create-arf-db CORPNAME [ATTRNAME]
-        corp = manatee.Corpus(sys.argv[2])
-        if sys.argv[3:]:
-            attrnames = [sys.argv[3]]
-        else:
-            attrnames = corp.get_conf('ATTRLIST').split(',')
-        for attrn in attrnames:
-            print 'Creating ARF database:', sys.argv[2], attrn
-            create_arf_db(corp, attrn)
-    else:
-        cm = CorpusManager(subcpath=['/home/pary/corp/run/subcorp/GLOBAL'])
-        os.environ['MANATEE_REGISTRY'] = '/home/pary/corp/registry'
-        c = cm.get_Corpus('bnc:written')
-        sc = cm.get_Corpus('bnc:academic')

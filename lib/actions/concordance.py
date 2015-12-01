@@ -17,7 +17,6 @@ import os
 import sys
 import re
 
-import werkzeug
 from werkzeug.datastructures import MultiDict
 
 from kontext import Kontext, ConcError, MainMenu
@@ -25,6 +24,7 @@ from controller import UserActionException, exposed
 import settings
 import conclib
 import corplib
+import freq_precalc
 import plugins
 import butils
 from kwiclib import Kwic
@@ -1243,6 +1243,7 @@ class Actions(Kontext):
                 logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
 
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.args.wlnums, '?'))
+            result['processing'] = None
 
             params = {
                 'colheaders': 0,
@@ -1268,12 +1269,12 @@ class Actions(Kontext):
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
-            out = corplib.build_arf_db(e.args[0], self.args.wlattr)
+            out = freq_precalc.build_arf_db(e.args[0], self.args.wlattr)
             if out:
-                processing = out[1].strip('%')
+                processing = out
             else:
-                processing = '0'
-            result.update({'processing': processing == '100' and '99' or processing})
+                processing = 0
+            result.update({'processing': 99 if processing == 100 else processing})
             return result
 
     def _make_wl_query(self):
@@ -1394,7 +1395,7 @@ class Actions(Kontext):
     @exposed(legacy=True)
     def wordlist_process(self, attrname=''):
         self._headers['Content-Type'] = 'text/plain'
-        return corplib.build_arf_db_status(self._corp(), attrname)[1]
+        return freq_precalc.build_arf_db_status(self._corp(), attrname)
 
     @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):
