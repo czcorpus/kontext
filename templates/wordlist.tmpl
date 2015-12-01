@@ -135,9 +135,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
               #if '.' in $wlattr
                 $i.freq
               #else
+                #set $wlattr_q = 'cql=%5B' + $wlattr + '=%22' + $url_str + '%22%5D'
                 <a href="first?$join_params([('corpname', $corpname), ('usesubcorp', $usesubcorp),
-                    ('cql', '%5B$wlattr%3D%3D%22' + $url_str + '%22%5D'), ('default_attr', $wlattr),
-                    ('qmcase', 1), ('queryselector', 'cqlrow')])">$i.freq</a>
+                ('default_attr', $wlattr), ('qmcase', 1), ('queryselector', 'cqlrow')], $wlattr_q)">$i.freq</a>
               #end if
               </td>
             </tr>
