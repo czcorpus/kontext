@@ -29,7 +29,6 @@
 		"global__cancel": "Cancel",
 		"global__remove_item": "Remove item",
 		"global__this_applies_only_for_mk": "This counts only for multi-word KWICs",
-		"global__max_level_reached": "Maximum level reached.",
 		"global__calc_warning": "Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus.",
 		"global__are_you_sure_to_leave": "You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost.",
 		"global__using_first_k_lines": "Using first {num_lines} lines",
