@@ -91,5 +91,7 @@ export class CollPage {
 
 
 export function init(conf:Kontext.Conf) {
-    return new CollPage(new document.PageModel(conf));
+    let layoutModel = new document.PageModel(conf);
+    layoutModel.init();
+    return new CollPage(layoutModel);
 }
