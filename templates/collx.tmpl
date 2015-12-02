@@ -18,14 +18,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #from translation import ugettext as _
 #from cmpltmpl.document import document
+#from templating.filters import *
 #extends document
 
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.attrname = "$attrname";
+    conf.workerTasks = #filter $Jsonize#$tasks#end filter#;
     var page = pageSelf.init(conf);
-    #if $processing
+    #if $processing is not None
     page.startWatching();
     #end if
 });
@@ -37,7 +39,7 @@ $_("Collocations")#slurp
 #end def
 
 #def custom_save
-#if not $processing
+#if $processing is None
     #set global $new_maxitems = $cmaxitems / $collpage
     #filter WebSafe
     #set $common_save_args = [('cattr', $cattr), ('cfromw', $cfromw), ('ctow', $ctow), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cmaxitems', $new_maxitems), ('cbgrfns', $cbgrfns), ('csortfn', $csortfn), ('collpage', $collpage)]
@@ -57,7 +59,7 @@ $_("Collocations")#slurp
     #filter WebSafe
     <h2>$_("Collocation candidates")</h2>
 
-    #if $processing
+    #if $processing is not None
         <div id="progress_message">
            <div class="progress-info">
                 <div>$_('calculating ...')
