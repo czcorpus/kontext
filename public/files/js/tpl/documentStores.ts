@@ -69,9 +69,11 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
     messages:Array<{messageType:string; messageText:string, messageId:string}>;
 
+    onClose:{[id:string]:()=>void};
+
     pluginApi:Kontext.PluginApi;
 
-    addMessage(messageType:string, messageText:string) {
+    addMessage(messageType:string, messageText:string, onClose:()=>void) {
         let msgId = String(Math.random());
         let timeout;
         let viewTime = -1;
@@ -91,6 +93,10 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
             messageId: msgId
         });
 
+        if (onClose) {
+            this.onClose[msgId] = onClose;
+        }
+
         if (viewTime > 0) {
             timeout = win.setTimeout(function () {
                 self.removeMessage(msgId);
@@ -107,12 +113,18 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
     removeMessage(messageId:string) {
         this.messages = this.messages.filter(function (x) { return x.messageId !== messageId; });
+        if (typeof this.onClose[messageId] === 'function') {
+            let fn = this.onClose[messageId];
+            delete(this.onClose[messageId]);
+            fn();
+        }
     }
 
     constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
         super(dispatcher);
         var self = this;
         this.messages = [];
+        this.onClose = {};
         this.pluginApi = pluginApi;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {

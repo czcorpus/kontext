@@ -453,14 +453,14 @@ export class PageModel implements Kontext.PluginProvider {
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
      * @param message - text of the message
      */
-    showMessage = (msgType:string, message:string) => {
+    showMessage = (msgType:string, message:string, onClose?:()=>void) => {
         var timeout,
             self = this;
 
         if (typeof message === 'object' && msgType === 'error') {
             message = message['message'];
         }
-        this.messageStore.addMessage(msgType, message);
+        this.messageStore.addMessage(msgType, message, onClose);
     };
 
     /**
@@ -761,7 +761,7 @@ export class PageModel implements Kontext.PluginProvider {
                 jqMessage.hide(200);
                 win.clearTimeout(timeout);
                 if (jqMessage.data('next-url')) {
-                    win.location = jqMessage.data('next-url');
+                    win.location.href = jqMessage.data('next-url');
                 }
             }, this.conf['messageAutoHideInterval']);
         }
@@ -774,7 +774,7 @@ export class PageModel implements Kontext.PluginProvider {
             this.layoutViews.Messages, $('#content .messages-mount').get(0));
 
         $.each(this.conf['notifications'], function (i, msg) {
-            self.messageStore.addMessage(msg[0], msg[1]);
+            self.messageStore.addMessage(msg[0], msg[1], null);
         });
     }
 
