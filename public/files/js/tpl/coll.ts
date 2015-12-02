@@ -51,7 +51,7 @@ export class CollPage {
 
         prom.then(
             function (data) {
-                let m = /(\d+)\s*%/.exec(data);
+                let m = /(\d+)(\s*%)?/.exec(data);
 
                 if (m) {
                     $('#processbar').css('width', m[1] + '%');
@@ -91,5 +91,7 @@ export class CollPage {
 
 
 export function init(conf:Kontext.Conf) {
-    return new CollPage(new document.PageModel(conf));
+    let layoutModel = new document.PageModel(conf);
+    layoutModel.init();
+    return new CollPage(layoutModel);
 }
