@@ -74,26 +74,10 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
-    path = None
-    if hasattr(corp, 'spath'):
-        path = corp.spath
-        same = corp.cm.find_same_subcorp_file(corp, attrname, ('arf', 'frq', 'docf', 'build.old'))
-        if same:
-            same = same[:-4] + attrname
-            complete = True
-            for suff in ('.arf', '.frq', '.docf'):
-                if not os.path.isfile(same + suff):
-                    complete = False
-            if complete:
-                from shutil import copyfile
-                for suff in ('.arf', '.frq', '.docf'):
-                    copyfile(same + suff, outfilename + suff)
-                    try:
-                        copyfile(same + '.frq64', outfilename + '.frq64')
-                    except Exception as e:
-                        logging.getLogger(__name__).error(e)
-                return None
-    return path
+    elif hasattr(corp, 'spath'):
+        return corp.spath
+    else:
+        return None
 
 
 def create_log_path(base_path, calc_type):

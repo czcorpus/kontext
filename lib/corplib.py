@@ -162,35 +162,6 @@ class CorpusManager(object):
         return [{'n': os.path.splitext(os.path.basename(s))[0]}
                 for t, s in subc[:maxitems]]
 
-    def find_same_subcorp_file(self, subcorp, wanted_infix,
-                               wanted_suff=('arf', 'frq', 'docf')):
-        basedir = os.path.dirname(self.subcpath[0].rstrip('/'))
-        scpath = subcorp.spath
-        scsize = os.path.getsize(scpath)
-        scdata = open(scpath).read()
-
-        subc_dir = '%s/*/%s/*.subc' % (basedir, subcorp.corpname)
-        if type(subc_dir) == unicode:
-            subc_dir = subc_dir.encode('utf-8')
-        if type(scpath) == unicode:
-            scpath = scpath.encode('utf-8')
-        if type(wanted_infix) == unicode:
-            wanted_infix = wanted_infix.encode('utf-8')
-
-        for f in glob.glob(subc_dir):
-            if f == scpath:
-                continue
-            if os.path.getsize(f) != scsize:
-                continue
-            f_no_suff = (f.decode('utf-8')[:-4]).encode('utf-8')
-
-            if [s for s in wanted_suff if not os.path.isfile(f_no_suff + wanted_infix + '.' + s)]:
-                continue
-                # now, f has same size and all wanted suffixes exist
-            if open(f).read() == scdata:
-                return f
-        return None
-
 
 def add_block_items(items, attr='class', val='even', block_size=3):
     for i in [i for i in range(len(items)) if (i / block_size) % 2]:
