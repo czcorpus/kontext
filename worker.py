@@ -50,9 +50,10 @@ translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
 
 from concworker import wcelery
+import task
 
 _, conf = settings.get_full('corpora', 'conc_calc_backend')
-app = Celery('kontext', config_source=wcelery.load_config_module(conf['conf']))
+app = task.get_celery_app(conf['conf'])
 
 
 def load_script_module(name, path):

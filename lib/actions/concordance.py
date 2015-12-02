@@ -1416,13 +1416,12 @@ class Actions(Kontext):
     def wordlist_process(self, attrname='', worker_tasks=None):
         backend, conf = settings.get_full('corpora', 'conc_calc_backend')
         if worker_tasks and backend == 'celery':
-            from concworker.wcelery import get_celery_app
-            app = get_celery_app(conf['conf'])
+            import task
+            app = task.get_celery_app(conf['conf'])
             for t in worker_tasks:
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
-                    from concworker.wcelery import ExternalTaskError
-                    raise ExternalTaskError('Task %s failed' % (t,))
+                    raise task.ExternalTaskError('Task %s failed' % (t,))
         return {'status': freq_precalc.build_arf_db_status(self._corp(), attrname)}
 
     @exposed(legacy=True)

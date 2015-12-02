@@ -184,9 +184,9 @@ def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
         proc = Process(target=calc, args=(corp, subchash, q, samplesize,))
         proc.start()
     elif backend == 'celery':
-        from concworker.wcelery import NotifierFactory, load_config_module
-        import celery
-        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
+        from concworker.wcelery import NotifierFactory
+        import task
+        app = task.get_celery_app(conf['conf'])
         res = app.send_task('worker.register', (corp.corpname, subchash, q, samplesize))
         receiver, sender = NotifierFactory(res)()
     else:

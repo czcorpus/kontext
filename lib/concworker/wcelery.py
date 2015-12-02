@@ -19,24 +19,9 @@ import time
 import os
 import logging
 import sys
-import imp
-
-import celery
 
 import concworker
 from corplib import CorpusManager
-
-
-def load_config_module(path):
-    return imp.load_source('celeryconfig', path)
-
-
-def get_celery_app(conf_path):
-    return celery.Celery('tasks', config_source=load_config_module(conf_path))
-
-
-class ExternalTaskError(Exception):
-    pass
 
 
 class Sender(concworker.Sender):
