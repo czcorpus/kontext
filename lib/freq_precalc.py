@@ -17,8 +17,13 @@
 import os
 import logging
 import re
+from datetime import datetime
+import time
 
 import settings
+
+
+MAX_LOG_FILE_AGE = 1800  # in seconds
 
 
 def corp_freqs_cache_path(corp, attrname):
@@ -118,8 +123,13 @@ def _get_total_calc_status(base_path):
 
 def calc_is_running(base_path, calc_type=None):
     to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
+
+    def is_fresh(fx):
+        return time.mktime(datetime.now().timetuple()) - os.path.getmtime(fx) <= MAX_LOG_FILE_AGE
+
     for m in to_check:
-        if os.path.isfile(create_log_path(base_path, m)):
+        log_path = create_log_path(base_path, m)
+        if os.path.isfile(log_path) and is_fresh(log_path):
             return True
     return False
 

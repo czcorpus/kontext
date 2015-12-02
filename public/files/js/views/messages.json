@@ -29,6 +29,7 @@
 		"global__cancel": "Cancel",
 		"global__remove_item": "Remove item",
 		"global__this_applies_only_for_mk": "This counts only for multi-word KWICs",
+		"global__max_level_reached": "Maximum level reached.",
 		"global__calc_warning": "Given frequency figures are related to the whole corpus, not only its part specified by the attribute values that have been entered to restrict the query results. Figures related to a given part of the corpus are displayed only when querying a pre-defined subcorpus.",
 		"global__are_you_sure_to_leave": "You have unfinished line selection (no filter applied yet). Leaving the page may cause the selection to be lost.",
 		"global__using_first_k_lines": "Using first {num_lines} lines",
@@ -53,7 +54,8 @@
 		"global__delete_forever_btn": "Delete forever",
 		"global__reuse_query": "Re-use query",
 		"global__new_subcorpus_name_lab": "New subcorpus name",
-		"global__create": "Create"
+		"global__create": "Create",
+        "global__failed_to_watch_coll_calc": "Failed to watch the calculation. Please reload the page."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -85,6 +87,7 @@
 		"global__cancel": "Zrušit",
 		"global__remove_item": "Odstranit položku",
 		"global__this_applies_only_for_mk": "Platí pouze pro víceslovná KWIC",
+		"global__max_level_reached": "Bylo dosaženo maximální povolené úrovně.",
 		"global__calc_warning": "Uváděné frekvenční údaje jsou vztažené k celému korpusu, ne pouze k jeho části specifikované hodnotami zadaných atributů, na níž jsou výsledky vyhledávání omezeny. Údaje vztažené na část korpusu se zobrazují pouze při vyhledávání v předem definovaném subkorpusu.",
 		"global__are_you_sure_to_leave": "Nemáte dokončený výběr řádků (nebyl dosud použit žádný filtr). Opuštěním stránky můžete o tento výběr přijít.",
 		"global__using_first_k_lines": "Používám prvních {num_lines} řádků",
@@ -109,6 +112,7 @@
 		"global__delete_forever_btn": "Úplně smazat",
 		"global__reuse_query": "Znovu použít dotaz",
 		"global__new_subcorpus_name_lab": "Název nového subkorpusu",
-		"global__create": "Vytvořit"
+		"global__create": "Vytvořit",
+        "global__failed_to_watch_coll_calc": "Při sledování stavu výpočtu došlo k chybě. Načtěte prosím znovu tuto stránku."
 	}
 }
