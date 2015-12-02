@@ -34,10 +34,22 @@ export class WordlistPage {
 
     private numErrors:number;
 
-    static MAX_NUM_ERRORS = 3;
+    private numNoChange:number;
+
+    private lastStatus:number;
+
+    static MAX_NUM_NO_CHANGE = 20;
 
     constructor(pageModel:document.PageModel) {
         this.pageModel = pageModel;
+    }
+
+    private stopWithError():void {
+        this.stopWatching();
+        this.pageModel.showMessage(
+                'error',
+                this.pageModel.translate('global__bg_calculation_failed'),
+                () => {window.history.back();});
     }
 
     private checkStatus():void {
@@ -45,43 +57,43 @@ export class WordlistPage {
         let args = {
             'corpname': this.pageModel.getConf('corpname'),
             'usesubcorp': this.pageModel.getConf('subcorpname'),
-            'attrname': this.pageModel.getConf('attrname')
+            'attrname': this.pageModel.getConf('attrname'),
+            'worker_tasks': this.pageModel.getConf('workerTasks')
         };
         let prom:JQueryXHR = $.ajax(this.pageModel.createActionUrl('wordlist_process'), {
-            data: args
+            data: args,
+            dataType: 'json',
+            traditional: true
         });
 
         prom.then(
             function (data) {
-                let m = /(\d+)(\s*%)?/.exec(data);
-                if (m) {
-                    $('#processbar').css('width', m[1] + '%');
-                    if (parseInt(m[1]) === 100) {
-                        self.stopWatching(); // just for sure
-                        window.location.href = self.pageModel.getConf('reloadUrl');
-                    }
+                if (data.contains_errors) {
+                    self.stopWithError();
 
                 } else {
-                    if (self.numErrors > WordlistPage.MAX_NUM_ERRORS) {
-                        self.stopWatching();
-                        self.pageModel.showMessage('error',
-                                self.pageModel.translate('global__failed_to_watch_coll_calc'));
+                    $('#processbar').css('width', data.status + '%');
+                    if (data.status === 100) {
+                        self.stopWatching(); // just for sure
+                        window.location.href = self.pageModel.getConf('reloadUrl');
 
-                    } else {
-                        self.numErrors += 1;
+                    } else if (self.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
+                        self.stopWithError();
+
+                    } else if (data.status === self.lastStatus) {
+                        self.numNoChange += 1;
                     }
+                    self.lastStatus = data.status;
                 }
             },
             function (err) {
-                self.stopWatching();
-                self.pageModel.showMessage('error',
-                    self.pageModel.translate('global__failed_to_watch_coll_calc'));
+                self.stopWithError();
             }
         );
     }
 
     startWatching():void {
-        this.numErrors = 0;
+        this.numNoChange = 0;
         this.checkIntervalId = setInterval(this.checkStatus.bind(this), 2000);
     }
 

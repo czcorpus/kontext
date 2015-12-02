@@ -19,14 +19,9 @@ import time
 import os
 import logging
 import sys
-import imp
 
 import concworker
 from corplib import CorpusManager
-
-
-def load_config_module(path):
-    return imp.load_source('celeryconfig', path)
 
 
 class Sender(concworker.Sender):

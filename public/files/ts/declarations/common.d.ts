@@ -131,7 +131,7 @@ declare module Kontext {
      *
      */
     export interface MessagePageStore extends PageStore {
-        addMessage(messageType:string, messageText:string);
+        addMessage(messageType:string, messageText:string, onClose:()=>void);
     }
 
     /**

@@ -1015,15 +1015,17 @@ class Actions(Kontext):
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
+            ans = {'attrname': self.args.cattr, 'tasks': []}
             out = freq_precalc.build_arf_db(e.args[0], self.args.cattr)
-            if out:
+            if type(out) is list:
+                processing = 0
+                ans['tasks'].extend(out)
+            elif out:
                 processing = out
             else:
-                processing = '0'
-            return {
-                'processing': processing == '100' and '99' or processing,
-                'attrname': self.args.cattr
-            }
+                processing = 0
+            ans['processing'] = processing
+            return ans
 
     @exposed(access_level=1, legacy=True)
     def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'),
@@ -1283,12 +1285,16 @@ class Actions(Kontext):
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
+            result.update({'attrname': self.args.cattr, 'tasks': []})
             out = freq_precalc.build_arf_db(e.args[0], self.args.wlattr)
-            if out:
+            if type(out) is list:
+                processing = 0
+                result['tasks'].extend(out)
+            elif out:
                 processing = out
             else:
                 processing = 0
-            result.update({'processing': 99 if processing == 100 else processing})
+            result['processing'] = processing
             return result
 
     def _make_wl_query(self):
@@ -1406,10 +1412,17 @@ class Actions(Kontext):
             out_data = writer.raw_content()
         return out_data
 
-    @exposed(legacy=True)
-    def wordlist_process(self, attrname=''):
-        self._headers['Content-Type'] = 'text/plain'
-        return freq_precalc.build_arf_db_status(self._corp(), attrname)
+    @exposed(legacy=True, return_type='json')
+    def wordlist_process(self, attrname='', worker_tasks=None):
+        backend, conf = settings.get_full('corpora', 'conc_calc_backend')
+        if worker_tasks and backend == 'celery':
+            import task
+            app = task.get_celery_app(conf['conf'])
+            for t in worker_tasks:
+                tr = app.AsyncResult(t)
+                if tr.status == 'FAILURE':
+                    raise task.ExternalTaskError('Task %s failed' % (t,))
+        return {'status': freq_precalc.build_arf_db_status(self._corp(), attrname)}
 
     @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):

@@ -137,14 +137,15 @@ def build_arf_db(corp, attrname):
     subc_path = prepare_arf_calc_paths(corp, attrname)
     backend, conf = settings.get_full('corpora', 'conc_calc_backend')
     if backend == 'celery':
-        from concworker.wcelery import load_config_module
-        import celery
-        app = celery.Celery('tasks', config_source=load_config_module(conf['conf']))
-
+        import task
+        app = task.get_celery_app(conf['conf'])
+        task_ids = []
         for m in ('frq', 'arf', 'docf'):
             logfilename_m = create_log_path(base_path, m)
             write_log_header(corp, logfilename_m)
             res = app.send_task('worker.compile_%s' % m, (corp.corpname, subc_path, attrname, logfilename_m))
+            task_ids.append(res.id)
+        return task_ids
 
     elif backend == 'multiprocessing':
         import subprocess
@@ -160,6 +161,7 @@ def build_arf_db(corp, attrname):
             else:
                 cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
             subprocess.call(cmd % 'frq', shell=True)
+        return []
 
 
 def build_arf_db_status(corp, attrname):

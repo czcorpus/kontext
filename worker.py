@@ -28,13 +28,15 @@ sys.path.insert(0, '%s/lib' % CURR_PATH)
 import settings
 import initializer
 import plugins
-import manatee
 import freq_precalc
 import translation
 from stderr2f import stderr_redirector
 
-
 settings.load('%s/conf/config.xml' % CURR_PATH)
+if settings.get('global', 'manatee_path', None):
+    sys.path.insert(0, settings.get('global', 'manatee_path'))
+import manatee
+
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
 initializer.init_plugin('sessions')
@@ -48,9 +50,10 @@ translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
 
 from concworker import wcelery
+import task
 
 _, conf = settings.get_full('corpora', 'conc_calc_backend')
-app = Celery('kontext', config_source=wcelery.load_config_module(conf['conf']))
+app = task.get_celery_app(conf['conf'])
 
 
 def load_script_module(name, path):
