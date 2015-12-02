@@ -28,13 +28,15 @@ sys.path.insert(0, '%s/lib' % CURR_PATH)
 import settings
 import initializer
 import plugins
-import manatee
 import freq_precalc
 import translation
 from stderr2f import stderr_redirector
 
-
 settings.load('%s/conf/config.xml' % CURR_PATH)
+if settings.get('global', 'manatee_path', None):
+    sys.path.insert(0, settings.get('global', 'manatee_path'))
+import manatee
+
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
 initializer.init_plugin('sessions')
