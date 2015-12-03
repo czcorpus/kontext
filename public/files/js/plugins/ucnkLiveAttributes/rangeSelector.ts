@@ -216,6 +216,19 @@ export class RangeSelector {
         return ans;
     }
 
+    containsFuzzyItems(attribName:string):boolean {
+        let tab = this.checkboxLists.getTable(this.attribName);
+        let self = this;
+        let ans = false;
+        $(tab).find('input.attr-selector').each(function () {
+            if ($(this).val().indexOf(self.intervalChars[1]) > -1) {
+                ans = true;
+                return false;
+            }
+        });
+        return ans;
+    }
+
     private checkIntervalRange(from:number, to:number,
             strictMode:boolean, keepCurrent:boolean):number {
         let tab = this.checkboxLists.getTable(this.attribName);
@@ -379,7 +392,7 @@ export class RangeSelector {
             + '<button class="default-button confirm-range" type="button">'
             + this.pluginApi.translate('ucnkLA__OK') + '</button>'
         );
-        if (this.checkboxLists.tableIsRange(this.attribName)) {
+        if (this.containsFuzzyItems(this.attribName)) {
             $(tdElm).find('div.interval-switch').append(this.createIntervalLimitsSwitch());
         }
         $(tdElm).find('button.confirm-range').on('click', this.submitHandler.bind(this));
