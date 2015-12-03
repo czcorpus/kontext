@@ -123,6 +123,8 @@ def _load_corp(corp_id, subc_path):
 
 def _compile_frq(corp, attr, logfile):
     if is_compiled(corp, attr, 'freq'):
+        with open(logfile, 'a') as f:
+            f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'freq already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_frq(attr)
@@ -151,6 +153,8 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
             _compile_frq(corp, attr, logfile)
         corp = _load_corp(corp_id, subcorp_path)  # must reopen freq files
     if is_compiled(corp, attr, 'arf'):
+        with open(logfile, 'a') as f:
+            f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'arf already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_arf(attr)
@@ -161,6 +165,8 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     corp = _load_corp(corp_id, subcorp_path)
     if is_compiled(corp, attr, 'docf'):
+        with open(logfile, 'a') as f:
+            f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'docf already compiled'}
     doc_struct = corp.get_conf('DOCSTRUCTURE')
     try:

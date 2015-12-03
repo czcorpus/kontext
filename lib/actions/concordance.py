@@ -1012,6 +1012,7 @@ class Actions(Kontext):
             result['cmaxitems'] = 10000
             result['to_line'] = 10000  # TODO
             result['attrname'] = self.args.cattr
+            result['processing'] = None
             return result
 
         except corplib.MissingSubCorpFreqFile as e:

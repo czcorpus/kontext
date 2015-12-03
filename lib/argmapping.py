@@ -282,7 +282,6 @@ class GlobalArgs(GeneralArgs):
     fmaxitems = Parameter(50)
     ftt_include_empty = Parameter(u'')
     subcsize = Parameter(0)
-    processing = Parameter(0)
     ref_usesubcorp = Parameter(u'')
     wlsort = Parameter(u'')
     keywords = Parameter(u'')
