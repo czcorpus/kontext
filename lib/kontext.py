@@ -57,7 +57,7 @@ def join_params(*args):
         if a is None:
             continue
         if isinstance(a, StateGlobals):
-            a = [(k, quote(v)) for k, v in a.items()]
+            a = [(k, v) for k, v in a.items()]
         if type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()
