@@ -15,8 +15,6 @@ A simple config is required:
 
 """
 import argparse
-import os
-import sys
 import logging
 import json
 from datetime import datetime
