@@ -43,7 +43,6 @@
             <item>pid</item>
         </logged_values>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
-        <conc_summary_session_ttl>3600</conc_summary_session_ttl>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
     </global>
     <plugins>

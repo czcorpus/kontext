@@ -34,7 +34,6 @@ import l10n
 from l10n import format_number, corpus_get_conf, export_string
 from translation import ugettext as _
 import scheduled
-from structures import Nicedict
 from templating import StateGlobals, join_params
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy, GlobalArgs
@@ -91,14 +90,6 @@ class Kontext(Controller):
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                            MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
                            MainMenu.CORPORA('new-subcorpus'))
-
-    # A list of parameters needed to make concordance result parameters (e.g. size, currently
-    # viewed page,..) persistent. It is used to keep showing these values to a user even if he is
-    # outside the concordance view page.
-    CONC_RESULT_ATTRS = ('sampled_size', 'fullsize', 'concsize', 'numofpages', 'fromp',
-                         'result_relative_freq', 'result_relative_freq_rel_to', 'result_arf',
-                         'result_shuffled', 'Sort_idx', 'nextlink', 'lastlink', 'prevlink',
-                         'firstlink')
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
                        'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize')
@@ -1058,12 +1049,6 @@ class Kontext(Controller):
         else:
             result['ui_state_ttl'] = 3600 * 12
 
-        # we will store specific information (e.g. concordance parameters)
-        # to keep user informed about data he is working with on any page
-        cached_values = Nicedict(empty_val='')
-        self._restore_conc_results(cached_values)
-        result['cached'] = cached_values
-
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}
@@ -1073,47 +1058,6 @@ class Kontext(Controller):
                                                              self._session_get('user', 'id'),
                                                              self.ui_lang)
         return result
-
-    def _restore_conc_results(self, storage):
-        """
-        Restores current concordance's parameters from session and stores
-        them into a passed dict.
-
-        arguments:
-        storage: a dict or a dict-like object
-        """
-        conc_key = '#'.join(self.args.q)
-        if 'conc' in self._session and conc_key in self._session['conc']:
-            tmp = self._session['conc']
-
-            storage['conc_persist'] = True
-            for k in Kontext.CONC_RESULT_ATTRS:
-                storage[k] = tmp[conc_key].get(k)
-        else:
-            storage['conc_persist'] = False
-
-    def _store_conc_results(self, src):
-        """
-        Stores passed data as current concordance parameters
-
-        arguments:
-        src -- a dict or a dict-like object
-        """
-        conc_data = self._session.get('conc', {})
-
-        curr_time = int(time.time())
-        conc_info_ttl = settings.get_int('global', 'conc_summary_session_ttl')
-        record_timestamp = lambda rec_key: conc_data[rec_key]['__timestamp__']
-        record_is_old = lambda rec_key: curr_time - record_timestamp(k) > conc_info_ttl
-        # let's clean-up too old records to keep session data reasonably big
-        for k in conc_data.keys():
-            if '__timestamp__' in conc_data or record_is_old(k):
-                conc_data.pop(k)
-        data = dict([(k, src.get(k)) for k in Kontext.CONC_RESULT_ATTRS])
-        data['__timestamp__'] = int(curr_time)
-        conc_data['#'.join(self.args.q)] = data
-
-        self._session['conc'] = conc_data  # Werkzeug sets 'should_save' thanks to this
 
     @staticmethod
     def _canonical_corpname(c):
