@@ -35,41 +35,11 @@ from l10n import format_number, corpus_get_conf, export_string
 from translation import ugettext as _
 import scheduled
 from structures import Nicedict
-from templating import StateGlobals
+from templating import StateGlobals, join_params
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
-
-
-def join_params(*args):
-    """
-    This is a convenience function used by HTML templates.
-    It allows joining URL parameters in various formats
-    (strings, lists of (key,value) pairs, dicts).
-
-    returns:
-    a string of the form param1=value1&param2=value2&....
-    """
-    tmp = []
-    quote = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
-    for a in args:
-        if a is None:
-            continue
-        if isinstance(a, StateGlobals):
-            a = [(k, v) for k, v in a.items()]
-        if type(a) in (tuple, list, dict):
-            if type(a) is dict:
-                a = a.items()
-            tmp.extend(['%s=%s' % (k, quote(v) if v is not None else '')
-                        for k, v in a])
-        elif type(a) in (str, unicode):
-            tmp.append(a)
-        else:
-            raise TypeError(
-                'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
-                    type(a)))
-    return '&'.join(tmp)
 
 
 def update_params(params, key, value):
@@ -583,9 +553,9 @@ class Kontext(Controller):
         form = LegacyForm(self._request.form, self._request.args)
         if not is_legacy_method:
             for arg_mapping in action_metadata.get('argmappings', []):
-                self._args_mappings[arg_mapping] = AttrMappingProxy(arg_mapping(),
-                    self._request.args, MultiDict(self._session.get('semi_persistent_attrs')))
-                    # TODO what about forms?
+                self._args_mappings[arg_mapping] = AttrMappingProxy(
+                        arg_mapping(), self._request.args, MultiDict(self._session.get('semi_persistent_attrs')))
+                # TODO what about forms?
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
@@ -644,8 +614,9 @@ class Kontext(Controller):
         arguments:
         tpl_out -- dict data to be used when building an output page from a template
         """
-        tag_support = lambda c: (plugins.has_plugin('taghelper')
-                                 and plugins.get('taghelper').tag_variants_file_exists(c))
+        def tag_support(c):
+            return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
+
         tpl_out['tag_builder_support'] = {
             '': tag_support(self.args.corpname)
         }
@@ -791,11 +762,10 @@ class Kontext(Controller):
                                                                                   'subcname')):
                     self._curr_corpus = self.cm.get_Corpus(self.args.corpname,
                                                            self.args.usesubcorp)
-                    # TODO opravit poradne!
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
-            except Exception as e:
-                return fallback_corpus.ErrorCorpus(e)
+            except Exception as ex:
+                return fallback_corpus.ErrorCorpus(ex)
         else:
             return fallback_corpus.EmptyCorpus()
 
@@ -885,8 +855,8 @@ class Kontext(Controller):
                 plugin_obj = plugins.get(opt_plugin)
                 # if the plug-in is "always on" or "sometimes off but currently on"
                 # then it must configure JavaScript
-                if (not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin)
-                        or plugin_obj.is_enabled_for(self.args.corpname)):
+                if (not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or
+                        plugin_obj.is_enabled_for(self.args.corpname)):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
                     if js_file:
                         ans[opt_plugin] = js_file
@@ -987,7 +957,6 @@ class Kontext(Controller):
         Controller._add_globals(self, result, methodname, action_metadata)
 
         result['files_path'] = self._files_path
-        result['css_prefix'] = self._css_prefix
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
@@ -1144,29 +1113,7 @@ class Kontext(Controller):
         data['__timestamp__'] = int(curr_time)
         conc_data['#'.join(self.args.q)] = data
 
-        self._session['conc'] = conc_data  # Werkzeug sets should_save thanks to this
-
-    def _add_undefined(self, result, methodname, vars):
-        result['methodname'] = methodname
-        if len(vars) == 0:
-            return
-
-        if 'TextTypeSel' in vars:
-            result['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
-        if 'LastSubcorp' in vars:
-            if self.cm:
-                result['LastSubcorp'] = self.cm.subcorp_names(self.args.corpname)
-            else:
-                # this should apply only in case of an error
-                result['LastSubcorp'] = ''
-            result['lastSubcorpSize'] = min(len(result['LastSubcorp']) + 1, 20)
-
-        if 'orig_query' in vars:
-            conc_desc = conclib.get_conc_desc(corpus=self._corp(),
-                                              q=self.args.q,
-                                              subchash=getattr(self._corp(), "subchash", None))
-            if len(conc_desc) > 1:
-                result['tourl'] = self.urlencode(conc_desc[0][3])
+        self._session['conc'] = conc_data  # Werkzeug sets 'should_save' thanks to this
 
     @staticmethod
     def _canonical_corpname(c):
@@ -1192,18 +1139,10 @@ class Kontext(Controller):
 
     def _has_configured_speech(self):
         """
-        Tests whether the provided corpus contains
-        structural attributes compatible with current application's configuration
-        (e.g. corpus contains structural attribute seg.id and the configuration INI
-        file contains line speech_segment_struct_attr = seg.id).
-
-        Parameters
-        ----------
-        corpus : manatee.Corpus
-          corpus object we want to test
+        Tests whether the current corpus contains structural attributes compatible which are
+        interpreted as ones containing speech data reference.
         """
-        speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get(
-            'speech_segment')
+        speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
         return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
 
     @staticmethod
@@ -1225,7 +1164,7 @@ class Kontext(Controller):
                     % (actual_range + max_range)
             else:
                 msg = _('Range [%s, %s] is invalid. It must be non-empty and left value must be greater or equal '
-                        'than %s' % (actual_range + (max_range[0], )))
+                        'than %s' % (actual_range[0], actual_range[1], max_range))
             return UserActionException(msg)
         return None
 
@@ -1261,8 +1200,8 @@ class Kontext(Controller):
         corp = self._corp()
         ans = {}
 
-        def compute_norm(attrname, attr, val):
-            valid = attr.str2id(export_string(unicode(val), to_encoding=self._corp().get_conf('ENCODING')))
+        def compute_norm(attrname, attr, value):
+            valid = attr.str2id(export_string(unicode(value), to_encoding=self._corp().get_conf('ENCODING')))
             r = corp.filter_query(struct.attr_val(attrname, valid))
             cnt = 0
             while not r.end():
@@ -1350,12 +1289,11 @@ class Kontext(Controller):
         normslist = [{'n': 'freq', 'label': _('Document counts')},
                      {'n': 'tokens', 'label': _('Tokens')}]
         if normsliststr:
-            normslist += [{'n': n, 'label': corp.get_conf(structname + '.'
-                                                          + n + '.LABEL') or n}
+            normslist += [{'n': n, 'label': corp.get_conf(structname + '.' + n + '.LABEL') or n}
                           for n in normsliststr.split(',')]
         else:
             try:
-                corp.get_attr(structname + ".wordcount")
+                corp.get_attr(structname + '.wordcount')
                 normslist.append({'n': 'wordcount', 'label': _('Word counts')})
             except:
                 pass
@@ -1367,7 +1305,7 @@ class Kontext(Controller):
         a subcorpus or selecing ad-hoc metadata in the query form.
 
         Because currently there are two ways how action methods access URL/form parameters
-        this method is able to extract the values either from 'self' (= old style) or from
+        this method is able to extract the values either from 'self.args' (= old style) or from
         the 'request' (new style) object. In the latter case you have to provide item access
         function and attribute producer (= function which returns an iterable providing names
         of at least all the relevant attributes). For the latter case, method _texttype_query()

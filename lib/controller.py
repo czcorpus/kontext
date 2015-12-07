@@ -15,6 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+KonText controller and related auxiliary objects
+"""
+
 import os
 import sys
 from types import MethodType, DictType, ListType, TupleType
@@ -35,6 +39,7 @@ import types
 import hashlib
 
 import werkzeug.urls
+import werkzeug.http
 
 import plugins
 import settings
@@ -43,10 +48,7 @@ from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs
 
 
-def replace_dot_error_handler(err):
-    return u'.', err.end
-
-codecs.register_error('replacedot', replace_dot_error_handler)
+codecs.register_error('replacedot', lambda err: (u'.', err.end))
 
 
 def exposed(**kwargs):
@@ -73,19 +75,22 @@ def exposed(**kwargs):
 
 
 def function_defaults(fun):
-    """action_url
     """
-    defs = {}
+    Returns a dictionary containing default argument names and
+    their respective values. This is used when invoking legacy
+    action method for URL -> func mapping.
+
+    arguments:
+    fun -- an action method with some default arguments
+    """
     if isclass(fun):
         fun = fun.__init__
     try:
-        dl = fun.func_defaults or ()
+        default_vals = fun.func_defaults or ()
     except AttributeError:
         return {}
-    nl = fun.func_code.co_varnames
-    for a, v in zip(nl[fun.func_code.co_argcount - len(dl):], dl):
-        defs[a] = v
-    return defs
+    default_varnames = fun.func_code.co_varnames
+    return dict(zip(default_varnames[fun.func_code.co_argcount - len(default_vals):], default_vals))
 
 
 def convert_types(args, defaults, del_nondef=0, selector=0):
@@ -96,7 +101,7 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     """
     # TODO - there is a potential conflict between global Parameter types and function defaults
     corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
-    for full_k, v in args.items():
+    for full_k, value in args.items():
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
         else:
@@ -105,12 +110,12 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
             del args[full_k]
         elif k in defaults.keys():
             default_type = type(defaults[k])
-            if default_type is not TupleType and type(v) is TupleType:
-                args[k] = v = v[-1]
-            elif default_type is TupleType and type(v) is ListType:
-                v = tuple(v)
-            if type(v) is not default_type:
-                args[full_k] = corr_func.get(default_type, lambda x: x)(v)
+            if default_type is not TupleType and type(value) is TupleType:
+                args[k] = value = value[-1]
+            elif default_type is TupleType and type(value) is ListType:
+                value = tuple(value)
+            if type(value) is not default_type:
+                args[full_k] = corr_func.get(default_type, lambda x: x)(value)
         else:
             if del_nondef:
                 del args[full_k]
@@ -148,8 +153,11 @@ class KonTextCookie(Cookie.BaseCookie):
 
 
 class CheetahResponseFile(object):
+    """
+    Provides utf-8 compatible output for Cheetah renderer
+    """
     def __init__(self, outfile):
-        self.outfile = codecs.getwriter("utf-8")(outfile)
+        self.outfile = codecs.getwriter('utf-8')(outfile)
 
     def response(self):
         return self.outfile
@@ -168,7 +176,7 @@ class UserActionException(Exception):
     This exception should cover general errors occurring in Controller's action methods'
     """
     def __init__(self, message, code=200, error_code=None, error_args=None):
-        self.message = message
+        super(UserActionException, self).__init__(message)
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
@@ -210,17 +218,6 @@ class Controller(object):
 
     NO_OPERATION = 'nop'
 
-    STATUS_MAP = {
-        200: 'OK',
-        301: 'Moved Permanently',
-        303: 'See Other',
-        304: 'Not Modified',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        500: 'Internal Server Error'
-    }
-
     def __init__(self, request, ui_lang):
         """
         arguments:
@@ -239,15 +236,13 @@ class Controller(object):
         self._args_mappings = OrderedDict()
         self._exceptmethod = None
         self._template_dir = u'../cmpltmpl/'
-        self._tmp_dir = u'/tmp'
-        self._css_prefix = ''
         self.args = Args()
         self._uses_valid_sid = True
         self._plugin_api = None  # must be implemented in a descendant
 
         # initialize all the Parameter attributes
-        for k, v in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
-            setattr(self.args, k, v.unwrap())
+        for k, value in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
+            setattr(self.args, k, value.unwrap())
 
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
@@ -270,9 +265,9 @@ class Controller(object):
         if hasattr(plugins.get('auth'), 'revalidate'):
             try:
                 auth.revalidate(self._plugin_api)
-            except Exception as e:
+            except Exception as ex:
                 self._session['user'] = auth.anonymous_user()
-                logging.getLogger(__name__).error('Revalidation error: %s' % e)
+                logging.getLogger(__name__).error('Revalidation error: %s' % ex)
                 self.add_system_message('error', _('User authentication error. Please try to reload the page or '
                                                    'contact system administrator.'))
 
@@ -305,7 +300,7 @@ class Controller(object):
         """
         self._uses_valid_sid = False
 
-    def add_validator(self, fn):
+    def add_validator(self, func):
         """
         Adds a function which is run after pre_dispatch but before action processing.
         If the function returns an instance of Exception then Controller raises this value.
@@ -313,9 +308,9 @@ class Controller(object):
         This is intended for ancestors to inject pre-run checks.
 
         arguments:
-        fn -- a callable instance
+        func -- a callable instance
         """
-        self._validators.append(fn)
+        self._validators.append(func)
 
     def add_system_message(self, msg_type, text):
         """
@@ -334,7 +329,7 @@ class Controller(object):
         Tests whether the provided template name corresponds
         to a respective python module (= compiled template).
 
-        Arguments:
+        arguments:
         template -- template name (e.g. document, first_form,...)
         """
         try:
@@ -350,14 +345,11 @@ class Controller(object):
 
         TODO: values not found in the STATUS_MAP should be treated in a better way
         """
-        s = Controller.STATUS_MAP.get(self._status, '')
+        s = werkzeug.http.HTTP_STATUS_CODES.get(self._status, '')
         return '%s  %s' % (self._status, s)
 
     def self_encoding(self):
         return 'iso-8859-1'
-
-    def _add_undefined(self, result, methodname, vars):
-        pass
 
     def _add_globals(self, result, methodname, action_metadata):
         """
@@ -365,16 +357,10 @@ class Controller(object):
         (e.g. each page contains user name or current corpus).
         It is called after an action is processed but before any output starts.
         """
-        ppath = self.environ.get('REQUEST_URI', '/')
-        try:
-            ppath = ppath[:ppath.index('?')]
-            ppath = ppath[:ppath.rindex('/')]
-        except ValueError:
-            pass
-        result['hrefbase'] = self.environ.get('HTTP_HOST', '') + ppath
+        result['methodname'] = methodname
         deployment_id = settings.get('global', 'deployment_id', None)
         result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[:6] if deployment_id else None
-        result['current_action'] = '/'.join(filter(lambda x: bool(x), self.get_current_action()))
+        result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
     def _get_template_class(self, name):
         """
@@ -397,12 +383,12 @@ class Controller(object):
             template_dir = self._template_dir
             name = name[0]
         try:
-            f, pathname, description = imp.find_module(name, [template_dir])
+            tpl_file, pathname, description = imp.find_module(name, [template_dir])
         except ImportError:
             # if some non-root action (e.g. /user/login) calls a root one (e.g. /message)
             # then we have to look for root actions' templates too
-            f, pathname, description = imp.find_module(name, ['%s/..' % template_dir])
-        module = imp.load_module(name, f, pathname, description)
+            tpl_file, pathname, description = imp.find_module(name, ['%s/..' % template_dir])
+        module = imp.load_module(name, tpl_file, pathname, description)
         return getattr(module, name)
 
     def _get_current_url(self):
@@ -463,10 +449,12 @@ class Controller(object):
             The app is installed in http://127.0.0.1/app/ and it is currently processing
             http://127.0.0.1/app/user/login then root URL is still http://127.0.0.1/app/
         """
-        module, action = self.environ.get('PATH_INFO').rsplit('/', 1)
+        module, _ = self.environ.get('PATH_INFO').rsplit('/', 1)
         module = '%s/' % module
         if module.endswith(self.get_mapping_url_prefix()):
             action_module_path = module[:-len(self.get_mapping_url_prefix())]
+        else:
+            action_module_path = ''
         if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
             action_module_path = action_module_path[1:]
         if 'HTTP_X_FORWARDED_PROTO' in self.environ:
@@ -491,7 +479,9 @@ class Controller(object):
         """
         root = self.get_root_url()
 
-        convert_val = lambda x: str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
+        def convert_val(x):
+            return str(x) if type(x) not in (str, unicode) else x.encode('utf-8')
+
         params_str = '&'.join(['%s=%s' % (k, quote(convert_val(v))) for k, v in params.items()])
         if len(params_str) > 0:
             return '%s%s?%s' % (root, action, params_str)
@@ -534,7 +524,7 @@ class Controller(object):
         else:
             del_nondef = 1
         convert_types(na, function_defaults(action), del_nondef=del_nondef)
-        return apply(action, args[1:], na)
+        return action(*args[1:], **na)
 
     def call_function(self, func, args, **named_args):
         """
@@ -554,14 +544,14 @@ class Controller(object):
         na = self.clone_args()
         na.update(named_args)
         convert_types(na, function_defaults(func), 1)
-        return apply(func, args, na)
+        return func(*args, **na)
 
     def clone_args(self):
         """
         Creates a shallow copy of self.args.
         """
         na = {}
-        for a in dir(self.args):  # + dir(self.__class__): TODO
+        for a in dir(self.args):
             if not a.startswith('_') and not callable(getattr(self.args, a)):
                 na[a] = getattr(self.args, a)
         return na
@@ -654,14 +644,17 @@ class Controller(object):
     def get_http_method(self):
         return self.environ.get('REQUEST_METHOD', '')
 
-    def _get_attrs_by_persistence(self, persistence_types):
+    @staticmethod
+    def _get_attrs_by_persistence(persistence_types):
         """
         Returns list of object's attributes which (along with their values) will be preserved.
         A persistent parameter is the one which meets the following properties:
         1. is of the Parameter type
         2. has a matching persistence flag
         """
-        is_valid_parameter = lambda m: isinstance(m, Parameter) and m.meets_persistence(persistence_types)
+        def is_valid_parameter(m):
+            return isinstance(m, Parameter) and m.meets_persistence(persistence_types)
+
         attrs = inspect.getmembers(GlobalArgs, predicate=is_valid_parameter)
         return tuple([x[0] for x in attrs])
 
@@ -714,7 +707,8 @@ class Controller(object):
             result['messages'] = self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
 
-    def _method_is_exposed(self, metadata):
+    @staticmethod
+    def _method_is_exposed(metadata):
         return '__exposed__' in metadata
 
     def is_action(self, action_name):
@@ -750,7 +744,8 @@ class Controller(object):
                 text = _('Query failed: Syntax error at position %s.') % srch.groups()[0]
             else:
                 text = _('Query failed: Syntax error.')
-            new_err = UserActionException(_('%s Please make sure the query and selected query type are correct.') % text)
+            new_err = UserActionException(
+                    _('%s Please make sure the query and selected query type are correct.') % text)
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
@@ -759,7 +754,8 @@ class Controller(object):
                 text = _('Attribute not found.')
             new_err = UserActionException(text)
         elif 'EvalQueryException' in text:
-            new_err = UserActionException(_('Failed to evaluate the query. Please check the syntax and used attributes.'))
+            new_err = UserActionException(
+                        _('Failed to evaluate the query. Please check the syntax and used attributes.'))
         else:
             new_err = err
         return new_err
@@ -774,7 +770,12 @@ class Controller(object):
         """
         This method wraps all the processing of an HTTP request.
 
-        Returns:
+        arguments:
+        request -- Werkzeug request object
+        path -- path part of URL
+        selectorname -- ???
+
+        returns:
         a 4-tuple: HTTP status, HTTP headers, valid SID flag, response body
         """
         self._install_plugin_actions()
@@ -793,22 +794,22 @@ class Controller(object):
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
-        except AuthException as e:
+        except AuthException as ex:
             self._status = 401
-            self.add_system_message('error', u'%s' % fetch_exception_msg(e))
+            self.add_system_message('error', u'%s' % fetch_exception_msg(ex))
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
-        except (UserActionException, RuntimeError) as e:
-            if hasattr(e, 'code'):
-                self._status = e.code
-            self.add_system_message('error',  fetch_exception_msg(e))
+        except (UserActionException, RuntimeError) as ex:
+            if hasattr(ex, 'code'):
+                self._status = ex.code
+            self.add_system_message('error', fetch_exception_msg(ex))
             methodname, tmpl, result = self.process_method('message', request, path, named_args)
 
-        except Exception as e:  # we assume that this means some kind of a fatal error
+        except Exception as ex:  # we assume that this means some kind of a fatal error
             self._status = 500
-            logging.getLogger(__name__).error(u'%s\n%s' % (e, ''.join(get_traceback())))
+            logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             if settings.is_debug_mode():
-                self.add_system_message('error', fetch_exception_msg(e))
+                self.add_system_message('error', fetch_exception_msg(ex))
             else:
                 self.add_system_message('error',
                                         _('Failed to process your request. '
@@ -825,14 +826,50 @@ class Controller(object):
         # response rendering
         resp_time = time.time()
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
-        output = StringIO.StringIO()
 
+        output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
         ans_body = output.getvalue()
         output.close()
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         return self._export_status(), headers, self._uses_valid_sid, ans_body
+
+    def create_error_response(self, ex, action_name, request, pos_args, named_args):
+        """
+        arguments:
+        ex -- a risen exception
+        action_name -- a name of the original processed method
+        request -- a request object
+        pos_args -- positional arguments of the action method
+        named_args -- key=>value arguments of the action method
+        """
+        e2 = self._analyze_error(ex)
+        if not isinstance(e2, UserActionException):
+            logging.getLogger(__name__).error(''.join(get_traceback()))
+
+        return_type = self._get_method_metadata(action_name, 'return_type')
+        if return_type == 'json':
+            if settings.is_debug_mode() or type(ex) is UserActionException:
+                json_msg = str(e2).decode('utf-8')
+            else:
+                json_msg = _('Failed to process your request. '
+                             'Please try again later or contact system support.')
+            return action_name, None, {'error': json_msg, 'contains_errors': True,
+                                       'error_code': getattr(ex, 'error_code', None),
+                                       'error_args': getattr(ex, 'error_args', {})}
+        else:
+            if not self._exceptmethod and self.is_template(action_name + '_form'):
+                self._exceptmethod = action_name + '_form'
+            if not self._exceptmethod:  # let general error handlers in run() handle the error
+                raise e2
+            else:
+                self.add_system_message('error', e2.message)
+
+            self._pre_dispatch(self._exceptmethod, None, named_args,
+                               self._get_method_metadata(self._exceptmethod))
+            em, self._exceptmethod = self._exceptmethod, None
+            return self.process_method(em, request, pos_args, named_args)
 
     def process_method(self, methodname, request, pos_args, named_args):
         """
@@ -847,7 +884,6 @@ class Controller(object):
           1 = template name
           2 = template data dict
         """
-        reload = {'headers': 'wordlist_form'}
         # reload parameter returns user from a result page
         # to a respective form preceding the result (by convention,
         # this is usually encoded as [action] -> [action]_form
@@ -855,7 +891,7 @@ class Controller(object):
         if getattr(self.args, 'reload', None):
             self.args.reload = None
             if methodname != 'subcorp':
-                reload_template = reload.get(methodname, methodname + '_form')
+                reload_template = methodname + '_form'
                 if self.is_template(reload_template):
                     return self.process_method(reload_template, request, pos_args, named_args)
         method = getattr(self, methodname)
@@ -864,37 +900,12 @@ class Controller(object):
             if not action_metadata.get('legacy', False):
                 # new-style actions use werkzeug.wrappers.Request
                 args = [request] + self._args_mappings.values()
-                method_ans = apply(method, args)
+                method_ans = method(*args)
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
-        except Exception as e:
-            e2 = self._analyze_error(e)
-            if not isinstance(e2, UserActionException):
-                logging.getLogger(__name__).error(''.join(get_traceback()))
-
-            return_type = self._get_method_metadata(methodname, 'return_type')
-            if return_type == 'json':
-                if settings.is_debug_mode() or type(e) is UserActionException:
-                    json_msg = str(e2).decode('utf-8')
-                else:
-                    json_msg = _('Failed to process your request. '
-                                 'Please try again later or contact system support.')
-                return methodname, None, {'error': json_msg, 'contains_errors': True,
-                                          'error_code': getattr(e, 'error_code', None),
-                                          'error_args': getattr(e, 'error_args', {})}
-            else:
-                if not self._exceptmethod and self.is_template(methodname + '_form'):
-                    self._exceptmethod = methodname + '_form'
-                if not self._exceptmethod:  # let general error handlers in run() handle the error
-                    raise e2
-                else:
-                    self.add_system_message('error', e2.message)
-
-                self._pre_dispatch(self._exceptmethod, None, named_args,
-                                   self._get_method_metadata(self._exceptmethod))
-                em, self._exceptmethod = self._exceptmethod, None
-                return self.process_method(em, request, pos_args, named_args)
+        except Exception as ex:
+            return self.create_error_response(ex, methodname, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
@@ -920,9 +931,11 @@ class Controller(object):
         Generates proper content-type signature and
         creates a cookie to store user's settings
 
-        Returns
-        -------
-        bool : True if content should follow else False
+        arguments:
+        return_type -- action return type (json, html, xml,...)
+
+        returns:
+        bool -- True if content should follow else False
         """
         if return_type == 'json':
             self._headers['Content-Type'] = 'text/x-json'
@@ -930,7 +943,7 @@ class Controller(object):
             self._headers['Content-Type'] = 'application/xml'
 
         ans = []
-        for k, v in sorted(filter(lambda x: bool(x[1]), self._headers.items()), key=lambda x: x[0]):
+        for k, v in sorted([x for x in self._headers.items() if bool(x[1])], key=lambda item: item[0]):
             if type(v) is unicode:
                 v = v.encode('utf-8')
             ans.append((k, v))
@@ -955,10 +968,9 @@ class Controller(object):
         # Template
         elif type(result) is DictType:
             self._add_globals(result, methodname, action_metadata)
-            self._add_undefined(result, methodname, action_metadata.get('vars', ()))
             if template.endswith('.tmpl'):
-                TemplateClass = self._get_template_class(template[:-5])
-                result = TemplateClass(searchList=[result, self.args])
+                template_class = self._get_template_class(template[:-5])
+                result = template_class(searchList=[result, self.args])
             else:
                 result = Template(template, searchList=[result, self.args])
             if return_template:

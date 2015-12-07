@@ -36,11 +36,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end filter
 
 #if $debug
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}kontext.less" />
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}view.less" />
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/${css_prefix}widgets.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/kontext.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/view.less" />
+<link rel="stylesheet/less" type="text/css" href="$files_path/css/widgets.less" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
-<link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jscrollpane.css" />
+<link rel="stylesheet" type="text/css" href="$files_path/css/jscrollpane.css" />
 #for $theme_css in $theme.css
 <link rel="stylesheet" type="text/css" href="$theme_css" />
 #end for
@@ -474,31 +474,6 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     </tbody>
     #end filter
 #end def  ## corp_sel_node
-## ***************************************** ##
-#def subcorp_sel($nameid='usesubcorp')
-    ## Select subcorpus
-
-    #if $LastSubcorp
-      <select name="$nameid" id="$nameid">
-        <option value="">$_("whole corpus")</option>
-        #for $l in $LastSubcorp
-          <option
-          #if $l.n == $getVar($nameid, '')
-            selected
-          #end if
-          >$l.n</option>
-        #end for
-        </select>
-        <i>
-        <a href="${root_url}subcorp?$corpname_url">$_("info")</a>
-        </i>
-    #end if
-    <i>
-    #if not $_anonymous
-      <a href="${root_url}subcorp_form?$corpname_url">$_("create new")</a>
-    #end if
-    </i>
-#end def  ## subcorp_sel
 ## ***************************************** ##
 #def input_hidden($exclude=())
     ## Global form parameters

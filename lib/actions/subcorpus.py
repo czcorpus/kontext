@@ -91,7 +91,6 @@ class Subcorpus(Kontext):
         else:
             raise ConcError(_('Empty subcorpus!'))
 
-
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm')
     def subcorp(self, request):
         try:

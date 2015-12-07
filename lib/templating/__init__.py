@@ -14,6 +14,8 @@ import urllib
 import json
 import copy
 
+import werkzeug.urls
+
 
 class StateGlobals(object):
     """
@@ -62,3 +64,36 @@ class StateGlobals(object):
         elif len(args) == 2:
             new_data[args[0]] = args[1]
         return StateGlobals(data=new_data)
+
+
+def join_params(*args):
+    """
+    This is a convenience function used by HTML templates.
+    It allows joining URL parameters in various formats
+    (strings, lists of (key,value) pairs, dicts).
+
+    returns:
+    a string of the form param1=value1&param2=value2&....
+    """
+    tmp = []
+
+    def quote(s):
+        return werkzeug.urls.url_quote(s, unsafe='+')
+
+    for a in args:
+        if a is None:
+            continue
+        if isinstance(a, StateGlobals):
+            a = [(k, v) for k, v in a.items()]
+        if type(a) in (tuple, list, dict):
+            if type(a) is dict:
+                a = a.items()
+            tmp.extend(['%s=%s' % (k, quote(v) if v is not None else '')
+                        for k, v in a])
+        elif type(a) in (str, unicode):
+            tmp.append(a)
+        else:
+            raise TypeError(
+                'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
+                    type(a)))
+    return '&'.join(tmp)
