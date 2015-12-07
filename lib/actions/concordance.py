@@ -211,7 +211,7 @@ class Actions(Kontext):
         self._store_conc_results(out)
         return out
 
-    @exposed(vars=('TextTypeSel',), argmappings=(ConcArgsMapping, QueryInputs))
+    @exposed(argmappings=(ConcArgsMapping, QueryInputs))
     def first_form(self, request, conc_args, query_input_args):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
@@ -240,6 +240,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = conc_args.getlist('sel_aligned')
+        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
         self._export_subcorpora_list(conc_args.corpname, out)
         self._attach_query_metadata(out)
         return out
@@ -603,8 +604,7 @@ class Actions(Kontext):
                 self.args.q.append('p0 0 1 []')
                 self.args.q.append('x-%s' % self.args.corpname)
 
-    @exposed(template='view.tmpl', vars=('TextTypeSel', 'LastSubcorp'), page_model='view',
-             legacy=True)
+    @exposed(template='view.tmpl', page_model='view', legacy=True)
     def first(self):
 
         ans = {}
@@ -623,12 +623,13 @@ class Actions(Kontext):
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.q.append('f')
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
+            ans['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
             ans.update(self.view())
         except ConcError as e:
             raise UserActionException(e.message)
         return ans
 
-    @exposed(access_level=1, vars=('TextTypeSel', 'LastSubcorp', 'concsize'), legacy=True)
+    @exposed(access_level=1, legacy=True)
     def filter_form(self, within=0):
         self.disabled_menu_items = (MainMenu.SAVE,)
 
@@ -639,6 +640,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
+        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
