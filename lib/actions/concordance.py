@@ -29,7 +29,7 @@ import plugins
 import butils
 from kwiclib import Kwic
 import l10n
-from l10n import import_string
+from l10n import import_string, export_string
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
 
@@ -138,7 +138,6 @@ class Actions(Kontext):
         """
         KWIC view
         """
-        self.contains_within = butils.CQLDetectWithin().contains_within(' '.join(self.args.q))
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
         if not self.args.refs:
@@ -179,6 +178,7 @@ class Actions(Kontext):
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
+        out['cql_within_part'] = butils.CQLDetectWithin().get_within_part(' '.join(self.args.q))
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
@@ -1633,3 +1633,11 @@ class Actions(Kontext):
             'id': q_id,
             'next_url': self.create_url('view', params)
         }
+
+    @exposed(return_type='json')
+    def ajax_get_within_max_hits(self, request):
+        import manatee
+        q = export_string(request.args.get('query', ''), to_encoding=self._corp().get_conf('ENCODING'))
+        conc = manatee.Concordance(self._corp(), q, 1, -1)
+        conc.sync()
+        return {'total': conc.fullsize() if conc else None}

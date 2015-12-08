@@ -166,7 +166,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
 #def num_hits($c_size, $f_size)
 #if $c_size == $f_size:
-<span id="loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
+<span id="conc-loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
 #else
 <a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="../files/img/warning-icon.png" /></a>
 <span id="loader"></span>
@@ -205,17 +205,22 @@ $query_overview_bar()
             #end if
             </span>
 
-            <span class="separ">|</span> <abbr title="$_('instances per million positions') $result_relative_freq_rel_to">i.p.m.</abbr>:
-            <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
-            $result_relative_freq_rel_to
+            <span class="separ">|</span>
+            <abbr title="$_('instances per million positions') $result_relative_freq_rel_to">i.p.m.</abbr>:
+
+            #if $getVar('cql_within_part', None) is None:
+                <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
+                $result_relative_freq_rel_to
+            #else
+                <a class="calculate-ipm" data-total-hits="$fullsize"
+                        data-query="#filter $URLEncode#$cql_within_part#end filter#">$_('calculate')</a>
+            #end if
+
+
+
             #if $result_arf
             <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
             <strong id="arf">$format_number($result_arf, mask='%01.2f')</strong>
-            #end if
-
-            #if $contains_within
-            <span class="separ">|</span>
-            <a class="calc-warning" href="#"><img src="../files/img/warning-icon.png" /></a>
             #end if
 
             <span class="separ">|</span>

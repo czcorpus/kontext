@@ -116,7 +116,6 @@ class Kontext(Controller):
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
         self.save_menu = []
-        self.contains_within = False
         self.subcpath = []
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
 
@@ -966,7 +965,6 @@ class Kontext(Controller):
         result['empty_attr_value_placeholder'] = self._empty_attr_value_placeholder
         result['disabled_menu_items'] = self.disabled_menu_items
         result['save_menu'] = self.save_menu
-        result['contains_within'] = self.contains_within
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)
