@@ -180,7 +180,8 @@ class Kwic(object):
         out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
 
-        out.result_relative_freq_rel_to = _('related to the whole %s') % self.corpus.get_conf('NAME')
+        out.result_relative_freq_rel_to = _(u'related to the whole %s') % import_string(
+                self.corpus.get_conf('NAME'), from_encoding=self.corpus.get_conf('ENCODING'))
         if hasattr(self.corpus, 'subcname'):
             out.result_relative_freq_rel_to += ':%s' % getattr(self.corpus, 'subcname', '')
         out.result_relative_freq_rel_to = '(%s)' % out.result_relative_freq_rel_to
