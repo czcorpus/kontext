@@ -55,7 +55,10 @@
 		"global__reuse_query": "Re-use query",
 		"global__new_subcorpus_name_lab": "New subcorpus name",
 		"global__create": "Create",
-        "global__failed_to_watch_coll_calc": "Failed to watch the calculation. Please reload the page."
+        "global__failed_to_watch_coll_calc": "Failed to watch the calculation. Please reload the page.",
+        "global__bg_calculation_failed": "Failed to finish the calculation. Please try again later or contact system support.",
+        "global__failed_to_calc_ipm": "Failed to calculate i.p.m.",
+        "global__no_data_found": "No data found."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -113,6 +116,9 @@
 		"global__reuse_query": "Znovu použít dotaz",
 		"global__new_subcorpus_name_lab": "Název nového subkorpusu",
 		"global__create": "Vytvořit",
-        "global__failed_to_watch_coll_calc": "Při sledování stavu výpočtu došlo k chybě. Načtěte prosím znovu tuto stránku."
+        "global__failed_to_watch_coll_calc": "Při sledování stavu výpočtu došlo k chybě. Načtěte prosím znovu tuto stránku.",
+        "global__bg_calculation_failed": "Nepodařilo se dokončit výpočet. Zkuste prosím akci opakovat později nebo kontaktujte podporu.",
+        "global__failed_to_calc_ipm": "Při výpočtu i.p.m. nastala chyba.",
+        "global__no_data_found": "Nebyla nalezena žádná data"
 	}
 }
