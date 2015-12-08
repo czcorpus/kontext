@@ -23,6 +23,7 @@
 import popupBox = require('popupbox');
 import $ = require('jquery');
 import rangeSelector = require('./rangeSelector');
+import rsvp = require('vendor/rsvp');
 
 function stripPrefix(s: string): string {
     let x = /^sca_(.+)$/;
@@ -1042,6 +1043,45 @@ class Plugin {
         }
     }
 
+    private isElementInViewport(testElm:JQuery|HTMLElement):boolean {
+        let elm:HTMLElement = $(testElm).get(0);
+        let rect = elm.getBoundingClientRect();
+
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
+    private autoButtonPosition(fieldset:HTMLElement) {
+        let self = this;
+
+        function onVisibilityChange (el) {
+            return function () {
+
+                if (!self.isElementInViewport(el)) {
+                    let liveAttrsBox = $(fieldset).find('.live-attributes');
+                    let controlsBox = $(fieldset).find('.controls');
+
+                    if (!liveAttrsBox.data('position') || liveAttrsBox.data('position') === 'bottom') {
+                        $(fieldset).find('.text-type-top-bar').before(liveAttrsBox);
+                        $(fieldset).find('.steps').before(controlsBox);
+                        liveAttrsBox.data('position', 'top');
+
+                    } else {
+                        $(fieldset).append(liveAttrsBox);
+                        $(fieldset).find('.steps').after(controlsBox);
+                        liveAttrsBox.data('position', 'bottom');
+                    }
+                }
+            };
+        }
+
+        $(window).on('DOMContentLoaded load resize scroll', onVisibilityChange(this.updateButton));
+    }
+
 
     /**
      * This function initializes the plug-in. It must be run after all the page dependencies
@@ -1056,6 +1096,12 @@ class Plugin {
 
             } else {
                 $(this).removeClass('user-selected');
+            }
+        });
+        this.pluginApi.bindFieldsetReadyEvent(function (fieldset) {
+            if ($(fieldset).attr('id') === 'specify-query-metainformation'
+                    && !$(fieldset).hasClass('inactive')) {
+                self.autoButtonPosition(fieldset);
             }
         });
         this.bindSelectionUpdateEvent(this.updateAttrTables);
@@ -1089,5 +1135,13 @@ export function init(pluginApi:Kontext.QueryPagePluginApi,
         throw new Error('Missing configuration for live_attributes');
     }
     let plugin = new Plugin(pluginApi, pluginConf, attrFieldsetWrapper, updateButton, resetButton);
-    plugin.init();
+    return new rsvp.Promise(function (resolve, reject) {
+        try {
+            plugin.init();
+            resolve(plugin);
+
+        } catch (e) {
+            reject(e);
+        }
+    });
 }

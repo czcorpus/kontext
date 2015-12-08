@@ -483,6 +483,11 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqLink.attr('title', self.pluginApi.translate('global__click_to_expand'));
                 jqSwitchLink.removeClass('collapse').addClass('expand');
             }
+
+            self.pluginApi.queryFieldsetReadyEvents.forEach(function (item) {
+                item.call(self, $(jqFieldset).get(0));
+            });
+
         });
         defer.resolve();
         return defer.promise();
@@ -560,12 +565,17 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     lib.extendedApi = function (pluginApi) {
         var ExtendedApi = function () {
             this.queryFieldsetToggleEvents = [];
+            this.queryFieldsetReadyEvents = [];
         };
 
         ExtendedApi.prototype = pluginApi;
 
         ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
             this.queryFieldsetToggleEvents.push(fn);
+        };
+
+        ExtendedApi.prototype.bindFieldsetReadyEvent = function (fn) {
+            this.queryFieldsetReadyEvents.push(fn);
         };
 
         return new ExtendedApi();
