@@ -357,7 +357,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
                 function (jqXHR, textStatus, errorThrown) {
                     lib.layoutModel.showMessage('error', errorThrown);
                 },
-                lib.layoutModel.createAjaxLoader()
+                lib.layoutModel
             );
             event.stopPropagation();
         });

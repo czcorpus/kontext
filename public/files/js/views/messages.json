@@ -55,7 +55,8 @@
 		"global__create": "Create",
         "global__bg_calculation_failed": "Failed to finish the calculation. Please try again later or contact system support.",
         "global__failed_to_calc_ipm": "Failed to calculate i.p.m.",
-        "global__ipm_calc_may_take_time": "Please note that the calculation may take some time depending on the size of your ad-hoc subcorpus (typically units to tens of seconds)."
+        "global__ipm_calc_may_take_time": "Please note that the calculation may take some time depending on the size of your ad-hoc subcorpus (typically units to tens of seconds).",
+        "global__no_data_found": "No data found."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -114,6 +115,7 @@
 		"global__create": "Vytvořit",
         "global__bg_calculation_failed": "Nepodařilo se dokončit výpočet. Zkuste prosím akci opakovat později nebo kontaktujte podporu.",
         "global__failed_to_calc_ipm": "Při výpočtu i.p.m. nastala chyba.",
-        "global__ipm_calc_may_take_time": "Berte prosím na vědomí, že výpočet může chvíli trvat v závislosti na velikosti vašeho ad-hoc subkorpusu (typicky jednotky až desítky vteřin)."
+        "global__ipm_calc_may_take_time": "Berte prosím na vědomí, že výpočet může chvíli trvat v závislosti na velikosti vašeho ad-hoc subkorpusu (typicky jednotky až desítky vteřin).",
+        "global__no_data_found": "Nebyla nalezena žádná data"
 	}
 }
