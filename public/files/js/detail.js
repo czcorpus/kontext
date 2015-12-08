@@ -26,24 +26,16 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     lib.currentDetail = null;
 
 
-    function renderDetailFunc(data) {
+    function renderDetailFunc(data, layoutModel) {
         return function (tooltipBox, finalize) {
             var i = 0,
                 j,
-                html = '<table class="full-ref">',
+                html,
                 currRefs,
                 step,
-                parentElm = tooltipBox.getRootElement(),
-                refRender;
+                parentElm = tooltipBox.getRootElement();
 
-            if (data.Refs.length > 8) {
-                step = 2;
-
-            } else {
-                step = 1;
-            }
-
-            refRender = function () {
+            function refRender() {
                 if (this.name) {
                     html += '<th>' + this.name + ':</th><td class="data">';
                     if (/https?:\/\//.exec(this.val)) {
@@ -57,26 +49,38 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 } else {
                     html += '<th></th><td></td>';
                 }
-            };
-
-            while (i < data.Refs.length) {
-                currRefs = [];
-                for (j = 0; j < step; j += 1) {
-                    if (data.Refs[i + j]) {
-                        currRefs.push(data.Refs[i + j]);
-
-                    } else {
-                        currRefs.push({name: null, val: null});
-                    }
-                }
-                html += '<tr>';
-
-                $.each(currRefs, refRender);
-                html += '</tr>';
-                i += step;
             }
-            html += '</table>';
 
+            if (data['Refs']) {
+                if (data.Refs.length > 8) {
+                    step = 2;
+
+                } else {
+                    step = 1;
+                }
+
+                html = '<table class="full-ref">';
+                while (i < data.Refs.length) {
+                    currRefs = [];
+                    for (j = 0; j < step; j += 1) {
+                        if (data.Refs[i + j]) {
+                            currRefs.push(data.Refs[i + j]);
+
+                        } else {
+                            currRefs.push({name: null, val: null});
+                        }
+                    }
+                    html += '<tr>';
+
+                    $.each(currRefs, refRender);
+                    html += '</tr>';
+                    i += step;
+                }
+                html += '</table>';
+
+            } else {
+                html += '<tr><td>' + layoutModel.translate('global__no_data_found') + '</td></tr>';
+            }
             $(parentElm).html(html);
             finalize();
         };
@@ -107,10 +111,12 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
      * @param {String} url
      * @param {{}} params
      * @param {Function} errorCallback
-     * @param {jQuery} ajaxLoaderNotification
+     * @param {PageModel} layoutModel
      */
-    lib.showRefDetail = function (eventTarget, url, params, errorCallback, ajaxLoaderNotification) {
-        enableAjaxLoadingNotification(ajaxLoaderNotification);
+    lib.showRefDetail = function (eventTarget, url, params, errorCallback, layoutModel) {
+        var ajaxLoader = layoutModel.createAjaxLoader();
+
+        enableAjaxLoadingNotification(ajaxLoader);
 
         $.ajax({
             url : url,
@@ -118,10 +124,10 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             data : params,
             dataType : 'json',
             success: function (data) {
-                var render = renderDetailFunc(data),
+                var render = renderDetailFunc(data, layoutModel),
                     leftPos;
 
-                disableAjaxLoadingNotification(ajaxLoaderNotification);
+                disableAjaxLoadingNotification(ajaxLoader);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
@@ -144,7 +150,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(ajaxLoaderNotification);
+                disableAjaxLoadingNotification(ajaxLoader);
                 errorCallback(jqXHR, textStatus, errorThrown);
             }
         });
