@@ -1961,6 +1961,9 @@ msgstr "pozitivní filtr"
 msgid "negative filter"
 msgstr "negativní filtr"
 
+msgid "calculate"
+msgstr "spočítat"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

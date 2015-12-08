@@ -20,17 +20,25 @@ import re
 
 class CQLDetectWithin(object):
     """
+    A simplified parser to detect 'within' part of a CQL query.
     """
-    def split_by_parentheses(self, s):
-        if s is None:
-            return [None]
+
+    @staticmethod
+    def split_by_parentheses(s):
+        if type(s) is tuple:
+            return [s]
         return [v1 for v2 in [re.split(r'(\])', x) for x in re.split(r'(\[)', s)] for v1 in v2]
+
+    @staticmethod
+    def split_by_whitespace(s):
+        items = re.split(r'\s+', s)
+        return [item for sublist in zip(items, len(items) * [' ']) for item in sublist][:-1]
 
     def parse_lex_elems(self, s):
         i = 0
         ans = []
         curr_piece = ''
-        state = 0   # 1 = opened ", 2 = opened '
+        state = 0   # '1' = opened ", '2' = opened '
         while i < len(s):
             if s[i] == '\\':
                 curr_piece += s[i+1]
@@ -38,22 +46,22 @@ class CQLDetectWithin(object):
                 continue
             if s[i] == '"':
                 if state == 0:
-                    ans.extend(re.split(r'\s+', curr_piece))
+                    ans.extend(self.split_by_whitespace(curr_piece))
                     curr_piece = ''
                     state = 1
                 elif state == 1:
-                    ans.append(None)  # use None instead of quoted text
+                    ans.append((curr_piece, 's'))  # tuple => string part of the query
                     curr_piece = ''
                     state = 0
                 else:
                     raise Exception('syntax error')
             elif s[i] == '\'':
                 if state == 0:
-                    ans.extend(re.split(r'\s+', curr_piece))
+                    ans.extend(self.split_by_whitespace(curr_piece))
                     curr_piece = ''
                     state = 2
                 elif state == 2:
-                    ans.append(None)  # use None instead of quoted text
+                    ans.append((curr_piece, 's'))  # tuple => string part of the query
                     curr_piece = ''
                     state = 0
                 else:
@@ -62,14 +70,32 @@ class CQLDetectWithin(object):
                 curr_piece += s[i]
             i += 1
         if len(curr_piece) > 0:
-            ans.extend(re.split(r'\s+', curr_piece))
+            ans.extend(self.split_by_whitespace(curr_piece))
         return ans
 
-    def empty_tag_next(self, struct, start_pos):
+    @staticmethod
+    def empty_tag_next(struct, start_pos):
         return start_pos < len(struct) - 1 and re.match(r'\s*/>', struct[start_pos])
 
-    def contains_within(self, s):
-        struct = self.parse(s)
+    def get_within_part(self, s):
+        def join_items(contains, items, idx):
+            if idx is None:
+                return None
+            ans = []
+            for item in items[idx:]:
+                if type(item) is tuple:
+                    ans.append(u'"%s"' % (item[0],))
+                else:
+                    ans.append(item)
+            return u''.join(ans)
+
+        return self.analyze(s, join_items)
+
+    def analyze(self, s, on_hit):
+        if type(s) in (str, unicode):
+            struct = self.parse(s)
+        else:
+            struct = s
         last_p = None
 
         for i in range(len(struct)):
@@ -78,14 +104,15 @@ class CQLDetectWithin(object):
                 continue
             if item in (']', '['):
                 last_p = item
-            elif 'within' in item:
+            elif 'within' == item:
                 if i + 1 < len(struct) - 1 and re.match(r'\w+:',  struct[i + 1]):
-                    return False
+                    pass
                 elif i + 1 < len(struct) - 1 and re.match(r'<.+', struct[i + 1]):
-                    return not self.empty_tag_next(struct, i + 2)
+                    if not self.empty_tag_next(struct, i + 2):
+                        return on_hit(True, struct, i)
                 elif last_p in (']', None):
-                    return True
-        return False
+                    return on_hit(True, struct, i)
+        return on_hit(False, struct, None)
 
     def parse(self, s):
         result = []
@@ -123,4 +150,4 @@ def log_stack(level='debug'):
     import logging
     fn = getattr(logging.getLogger('STACK'), level)
     stack = '\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)])
-    apply(fn, ('(thread %s) --> %s' % (threading.current_thread().ident, stack),))
+    fn(*('(thread %s) --> %s' % (threading.current_thread().ident, stack),))

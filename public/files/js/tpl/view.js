@@ -377,15 +377,6 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     function addWarnings() {
         var jqTriggerElm;
 
-        popupBox.bind(
-            $('.calc-warning'),
-            lib.layoutModel.translate('global__calc_warning'),
-            {
-                type: 'warning',
-                width: 'nice'
-            }
-        );
-
         jqTriggerElm = $('#result-info').find('.size-warning');
         popupBox.bind(
             jqTriggerElm,
@@ -434,7 +425,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
     lib.reloadHits = function () {
         var freq = 500;
 
-        $('#loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
+        $('#conc-loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
             + lib.layoutModel.translate('global__calculating')
             + '" title="' + lib.layoutModel.translate('global__calculating')
             + '" style="width: 24px; height: 24px" />');
@@ -472,7 +463,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
 
                     if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
-                        $('#loader').empty();
+                        $('#conc-loader').empty();
                         /* We are unable to update ARF on the fly which means we
                          * have to reload the page after all the server calculations are finished.
                          */
@@ -498,6 +489,52 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         }
     }
 
+    function attachIpmCalcTrigger(layoutModel) {
+        $('#conc-top-bar').find('.calculate-ipm').on('click', function (event) {
+            var q = '[] ' + decodeURIComponent($(event.target).data('query')),
+                totalHits = parseInt($(event.target).data('total-hits')),
+                prom,
+                loaderBox = window.document.createElement('span'),
+                loaderImg = window.document.createElement('img'),
+                userConfirm;
+
+            userConfirm = window.confirm(layoutModel.translate('global__ipm_calc_may_take_time'));
+
+            if (userConfirm) {
+                $(loaderImg)
+                    .attr('src', layoutModel.createStaticUrl('img/ajax-loader.gif'));
+
+                prom = $.ajax(
+                        layoutModel.createActionUrl('ajax_get_within_max_hits'),
+                        {
+                            data: {
+                                query: q,
+                                corpname: layoutModel.getConf('corpname')
+                            },
+                            dataType: 'json'
+                        }
+                );
+                $(loaderBox)
+                    .attr('id', 'ipm-loader')
+                    .css('position', 'inherit')
+                    .append(loaderImg)
+                    .append(layoutModel.translate('global__calculating'));
+                $(event.target).replaceWith(loaderBox);
+
+                prom.then(
+                    function (data) {
+                        var ipm = (totalHits / data.total * 1e6).toFixed(2);
+                        $(loaderBox).replaceWith('<span class="ipm">' + ipm + '</span>');
+                    },
+                    function (err) {
+                        $(loaderBox).remove();
+                        layoutModel.showMessage('error', layoutModel.translate('global__failed_to_calc_ipm'));
+                    }
+                );
+            }
+        });
+    }
+
     /**
      *
      * @param conf
@@ -520,6 +557,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         grantPaginationPageLeave();
         soundManagerInit();
         makePageReusable(conf);
+        attachIpmCalcTrigger(lib.layoutModel);
     };
 
     return lib;

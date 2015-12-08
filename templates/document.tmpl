@@ -283,22 +283,22 @@ define('conf', [], function () {
                         <li class="separ $menu_status('menu-view:kwic-sentence')">
                         #if not $align
                             #if $viewmode == 'sen'
-                            <a title="$_("Show KWICs")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','kwic'), 'fromp='+$to_str($cached['fromp']))">$_('KWIC')/$_('Sentence')</a>
+                            <a title="$_("Show KWICs")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','kwic'), 'fromp='+$to_str($fromp))">$_('KWIC')/$_('Sentence')</a>
                             #else
-                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($q, $Globals.update('viewmode', 'sen'), 'fromp='+$to_str($cached['fromp']))">$_('KWIC')/$_("Sentence")</a>
+                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($q, $Globals.update('viewmode', 'sen'), 'fromp='+$to_str($fromp))">$_('KWIC')/$_("Sentence")</a>
                             #end if
                         #else
                             #if $viewmode == 'kwic'
-                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','sen'), 'fromp='+$to_str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','sen'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
                             #elif $viewmode == 'sen'
-                            <a title="$_("Show aligned segments")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','align'), 'fromp='+$to_str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                            <a title="$_("Show aligned segments")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','align'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
                             #elif $viewmode == 'align'
-                            <a title="$_("Show KWICSs")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','kwic'), 'fromp='+$to_str($cached['fromp']))">$_("KWIC/Sentence/Alignment")</a>
+                            <a title="$_("Show KWICSs")" href="${root_url}view?$join_params($q, $Globals.update('viewmode','kwic'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
                             #end if
                         #end if
                         </li>
-                        <li class="separ $menu_status('menu-view:viewattrs')"><a href="${root_url}options/viewattrs?$join_params($q, $globals, 'fromp='+$to_str($cached['fromp']))">$_("Attributes, structures and references")&#8230;</a></li>
-                        <li class="$menu_status('menu-view:viewopts')"><a href="${root_url}options/viewopts?$join_params($q, $globals, 'fromp='+$to_str($cached['fromp']))">$_("General view options")&#8230;</a></li>
+                        <li class="separ $menu_status('menu-view:viewattrs')"><a href="${root_url}options/viewattrs?$join_params($q, $globals, 'fromp='+$to_str($fromp))">$_("Attributes, structures and references")&#8230;</a></li>
+                        <li class="$menu_status('menu-view:viewopts')"><a href="${root_url}options/viewopts?$join_params($q, $globals, 'fromp='+$to_str($fromp))">$_("General view options")&#8230;</a></li>
                     </ul>
                 </li>
 

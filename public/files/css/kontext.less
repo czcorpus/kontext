@@ -360,12 +360,26 @@ a#logo-wrapper {
   width: 30%;
 }
 
-#result-info #loader img {
+#result-info #ipm-loader img,
+#result-info #conc-loader img {
   background-color: white;
   border-radius: 3px;
   opacity: 0.7;
   padding: 3px 20px;
+}
+
+#result-info #conc-loader img {
   position: absolute;
+}
+
+#result-info #ipm-loader img {
+  position: absolute;
+  //display: inline-block;
+  //vertical-align: middle;
+}
+
+#result-info .ipm {
+  font-weight: bold;
 }
 
 #result-info {
@@ -1434,16 +1448,6 @@ a.context-help img {
 
 #conc-top-bar {
   line-height: 21pt;
-}
-
-#conc-top-bar a.calc-warning {
-  display: inline-block;
-  padding: 0;
-  vertical-align: middle;
-}
-
-.calc-warning img {
-  padding: 0;
 }
 
 #show-help-format-link img {

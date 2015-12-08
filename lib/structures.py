@@ -22,64 +22,6 @@ import threading
 import inspect
 
 
-class Nicedict(object):
-    """
-    A dictionary which does not throw KeyError in case user
-    accesses a non-existing key.
-
-    arguments:
-    data -- an optional dict or Nicedict to insert initial data
-    strict -- if True then Nicedict behaves just like regular
-              'dict' in terms of a value access; default is False
-    empty_val -- a value to be returned if a key is not found; default is None
-    """
-    def __init__(self, data=None, strict=False, empty_val=None):
-        self.data = {}
-        if data is not None:
-            self.update(data)
-        self.strict = strict
-        self.empty_val = empty_val
-
-    def __getitem__(self, k):
-        if not self.strict:
-            return self.data.get(k, self.empty_val)
-        else:
-            return self.data[k]
-
-    def __setitem__(self, k, v):
-        self.data[k] = v
-
-    def __contains__(self, k):
-        return self.data.__contains__(k)
-
-    def __delitem__(self, k):
-        return self.data.__delitem__(k)
-
-    def __len__(self):
-        return self.data.__len__()
-
-    def __iter__(self):
-        return self.data.__iter__()
-
-    def __str__(self):
-        return self.data.__str__()
-
-    def items(self):
-        return self.data.items()
-
-    def update(self, data):
-        """
-        Updates self using the passed data (dict or Nicedict)
-
-        arguments:
-        data -- a Python dict or Nicedict
-        """
-        if isinstance(data, Nicedict):
-            self.data.update(data.data)
-        else:
-            self.data.update(data)
-
-
 class ThreadLocalData(object):
     """
     A class which provides a way to store and retrieve thread-local properties
