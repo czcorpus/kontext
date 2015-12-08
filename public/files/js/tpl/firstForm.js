@@ -293,13 +293,11 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
         lib.alignedCorpora = conf.alignedCorpora.slice();
         queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi, lib.layoutModel.userSettings,
                 $('#mainform').get(0), lib.layoutModel.getPlugin.bind(lib.layoutModel));
-
         promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(queryFormTweaks),
             bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),
             bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
             bindParallelCorporaCheckBoxes : lib.bindParallelCorporaCheckBoxes(queryFormTweaks),
-            updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
             makePrimaryButtons : lib.makePrimaryButtons(),
             queryStorage : queryStorage.createInstance(lib.layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(extendedApi, conf, '#live-attrs-update',
@@ -310,6 +308,9 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
             initQuerySwitching : queryFormTweaks.initQuerySwitching(),
             fixFormSubmit : queryFormTweaks.fixFormSubmit(),
             bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
+        });
+        promises.doAfter('liveAttributesInit', function () {
+            queryFormTweaks.updateToggleableFieldsets();
         });
         lib.layoutModel.registerPlugin('queryStorage', promises.get('queryStorage'));
         lib.layoutModel.mouseOverImages();

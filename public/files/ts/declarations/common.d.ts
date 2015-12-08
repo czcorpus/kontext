@@ -88,7 +88,22 @@ declare module Kontext {
      * This contains extensions required by pages which contain query input form
      */
     export interface QueryPagePluginApi extends PluginApi {
+        /**
+         * Adds a callback which is fired after user changes visibility
+         * of advanced settings fieldsets on the query page (= "Specify context",
+         * "Specify query according to the meta-information").
+         *
+         * Initial setup of these fieldsets is not included here
+         * (see bindFieldsetReadyEvent()).
+         */
         bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void);
+
+        /**
+         * Adds a callback which is fired after the advanced settings fieldsets on
+         * the query page (= "Specify context", "Specify query according to the
+         * meta-information") are initialized.
+         */
+        bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void);
     }
 
     /**

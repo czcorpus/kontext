@@ -1254,6 +1254,9 @@ export class InitActions {
     /**
      * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
      * Returns self.
+     *
+     * Please note that actions added simultaneously are considered
+     * as independent. To chain actions together use doAfter() method.
      */
     add<T>(arg0:string, arg1:RSVP.Promise<T>):InitActions;
     add(arg0:{[name:string]:any}, arg1?):InitActions;
@@ -1263,7 +1266,7 @@ export class InitActions {
         if (typeof arg0 === 'object' && arg1 === undefined) {
             for (prop in arg0) {
                 if (arg0.hasOwnProperty(prop)) {
-                    this.add(prop, arg0[prop]);
+                    this.prom[prop] = arg0[prop];
                 }
             }
 
