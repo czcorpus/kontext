@@ -74,8 +74,18 @@ class CQLDetectWithin(object):
         return ans
 
     @staticmethod
-    def empty_tag_next(struct, start_pos):
-        return start_pos < len(struct) - 1 and re.match(r'\s*/>', struct[start_pos])
+    def get_next_token(struct, start):
+        for i in range(start + 1, len(struct)):
+            if len(struct[i].strip()) > 0:
+                return struct[i]
+        return None
+
+    @staticmethod
+    def next_token_matches(struct, start, pattern):
+        token = CQLDetectWithin.get_next_token(struct, start)
+        if token:
+            return re.match(pattern, token) is not None
+        return False
 
     def get_within_part(self, s):
         def join_items(contains, items, idx):
@@ -97,7 +107,6 @@ class CQLDetectWithin(object):
         else:
             struct = s
         last_p = None
-
         for i in range(len(struct)):
             item = struct[i]
             if item is None:
@@ -105,11 +114,10 @@ class CQLDetectWithin(object):
             if item in (']', '['):
                 last_p = item
             elif 'within' == item:
-                if i + 1 < len(struct) - 1 and re.match(r'\w+:',  struct[i + 1]):
-                    pass
-                elif i + 1 < len(struct) - 1 and re.match(r'<.+', struct[i + 1]):
-                    if not self.empty_tag_next(struct, i + 2):
-                        return on_hit(True, struct, i)
+                if self.next_token_matches(struct, i, r'\w+:'):
+                    pass  # aligned corpus search
+                elif self.next_token_matches(struct, i, r'<.+'):
+                    return on_hit(True, struct, i)
                 elif last_p in (']', None):
                     return on_hit(True, struct, i)
         return on_hit(False, struct, None)

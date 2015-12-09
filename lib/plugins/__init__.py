@@ -14,6 +14,14 @@ def install_plugin(name, module, config):
         _plugins[name] = apply(module.create_instance, (config,))
 
 
+def inject_plugin(name, obj):
+    """
+    Inject a plug-in object directly. This is mainly
+    for testing.
+    """
+    _plugins[name] = obj
+
+
 def add_missing_plugin(name):
     _plugins[name] = None
 

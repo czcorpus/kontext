@@ -44,6 +44,10 @@ suites.append(unittest.TestLoader().loadTestsFromTestCase(FiltersTest))
 from lib import main_menu_test
 suites.append(unittest.TestLoader().loadTestsFromModule(main_menu_test))
 
+# ############# butils
+from lib import butils_test
+suites.append(unittest.TestLoader().loadTestsFromModule(butils_test))
+
 if __name__ == '__main__':
     verbosity = 2  # TODO
 
