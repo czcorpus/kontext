@@ -21,20 +21,8 @@
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import popupBox = require('popupbox');
-
-/**
- * A minimal interface required by RangeSelector to cooperate with
- * text types checkboxes.
- */
-export interface CheckboxLists {
-
-    applyOnCheckboxes(attribName:string, callback:{(i:number, item:HTMLElement):void}):void;
-
-    tableIsRange(attribName:string):boolean;
-
-    getTable(name:string):HTMLElement;
-}
-
+import rsvp = require('vendor/rsvp');
+import common = require('./common');
 
 enum IntervalChar {
     LEFT, BOTH, RIGHT
@@ -50,7 +38,9 @@ export class RangeSelector {
 
     private pluginApi:Kontext.PluginApi;
 
-    private checkboxLists:CheckboxLists;
+    private checkboxLists:common.CheckboxLists;
+
+    private liveAttributesApi:common.LiveAttributesApi;
 
     private altElm:HTMLElement;
 
@@ -71,16 +61,20 @@ export class RangeSelector {
     /**
      * @param pluginApi
      * @param checkboxLists - an object providing access to text type checkboxes (see init.ts)
+     * @param liveAttributesApi - an object providing access to server data using proper filter
+     *                       arguments based on current state of text type checkboxes
      * @param altElm - an alternative content element for the widget
      *                 (= default TD containing a list of checkboxes)
      * @param attribName - a text type attribute bound to this range selector (e.g. "doc.year")
      * @param intervalChars - a triple ([left_interval_str, interval_str, right_interval_str],
      *                        e.g. ['-', '+/-', '+'])
      */
-	constructor(pluginApi:Kontext.PluginApi, checkboxLists:CheckboxLists, altElm:HTMLElement,
+	constructor(pluginApi:Kontext.PluginApi, checkboxLists:common.CheckboxLists,
+            liveAttributesApi:common.LiveAttributesApi, altElm:HTMLElement,
             attribName:string, intervalChars:Array<string>) {
         this.pluginApi = pluginApi;
         this.checkboxLists = checkboxLists;
+        this.liveAttributesApi = liveAttributesApi;
         this.altElm = altElm;
         this.rootElm = null;
         this.attribName = attribName;
@@ -91,42 +85,68 @@ export class RangeSelector {
         this.onHide = ()=>undefined;
 	}
 
+    private loadFromServer(attribName:string, from:number, to:number):rsvp.Promise<any> {
+        let self = this;
+        let args:{[key:string]:any} = {};
+        args[attribName] = {from: from, to: to};
+        return this.liveAttributesApi.replaceRawInput(
+                $(this.checkboxLists.getTable(attribName)).find('.raw-selection').get(0), args);
+    }
+
     private submitHandler(evt:JQueryEventObject):void {
         let fromVal = parseInt($(this.rootElm).find('input.from-value').val());
         let toVal = parseInt($(this.rootElm).find('input.to-value').val());
         let numChecked;
+        let self = this;
 
         if (isNaN(fromVal) && isNaN(toVal)) {
             this.pluginApi.showMessage('warning',
                     this.pluginApi.translate('ucnkLA__at_least_one_required'));
 
         } else {
-            let intervalSwitch = $(this.rootElm).find('select.interval-behavior');
-
-            if (intervalSwitch.length > 0) {
-                numChecked = this.checkIntervalRange(
-                    fromVal,
-                    toVal,
-                    intervalSwitch.val() === 'strict',
-                    $(this.rootElm).find('input.keep-current').is(':checked')
-                );
+            let prom:rsvp.Promise<any>;
+            let anim:common.AjaxAnimation = this.liveAttributesApi.createAnimation();
+            if (this.isEmpty(this.attribName)) {
+                prom = this.loadFromServer(this.attribName, fromVal, toVal);
 
             } else {
-                numChecked = this.checkRange(
-                    this.attribName,
-                    fromVal,
-                    toVal,
-                    $(this.rootElm).find('input.keep-current').is(':checked')
-                );
+                prom = new rsvp.Promise((resolve:()=>void, reject:()=>void) => { resolve(); });
             }
 
-            if (numChecked > 0) {
-                this.hide();
+            prom.then(
+                function () {
+                    let intervalSwitch = $(self.rootElm).find('select.interval-behavior');
+                    if (intervalSwitch.length > 0) {
+                        numChecked = self.checkIntervalRange(
+                            fromVal,
+                            toVal,
+                            intervalSwitch.val() === 'strict',
+                            $(self.rootElm).find('input.keep-current').is(':checked')
+                        );
 
-            } else {
-                this.pluginApi.showMessage('warning',
-                    this.pluginApi.translate('ucnkLA__nothing_selected'));
-            }
+                    } else {
+                        numChecked = self.checkRange(
+                            self.attribName,
+                            fromVal,
+                            toVal,
+                            $(self.rootElm).find('input.keep-current').is(':checked')
+                        );
+                    }
+
+                    if (numChecked > 0) {
+                        self.hide();
+
+                    } else {
+                        self.pluginApi.showMessage('warning',
+                            self.pluginApi.translate('ucnkLA__nothing_selected'));
+                    }
+                    anim.stop();
+                },
+                function (err) {
+                    self.pluginApi.showMessage('error', self.pluginApi.translate('ucnkLA__failed_to_calc_range'));
+                    anim.stop();
+                }
+            );
         }
     }
 
@@ -214,6 +234,11 @@ export class RangeSelector {
             ans = null;
         }
         return ans;
+    }
+
+    private isEmpty(attributeName:string):boolean {
+        let tab = this.checkboxLists.getTable(this.attribName);
+        return $(tab).find('input.attr-selector').length === 0;
     }
 
     containsFuzzyItems(attribName:string):boolean {
@@ -353,7 +378,8 @@ export class RangeSelector {
     /**
      * Creates the widget.
      */
-	init(switchLink:HTMLElement, onShow?:()=>void, onHide?:()=>void):void {
+	init(switchLink:HTMLElement, onShow?:()=>void,
+            onHide?:()=>void, onDataRequest?:(data)=>void):void {
         let self = this;
         this.rootElm = document.createElement('tr');
         let tdElm = document.createElement('td');
@@ -392,7 +418,7 @@ export class RangeSelector {
             + '<button class="default-button confirm-range" type="button">'
             + this.pluginApi.translate('ucnkLA__OK') + '</button>'
         );
-        if (this.containsFuzzyItems(this.attribName)) {
+        if (this.isEmpty(this.attribName) || this.containsFuzzyItems(this.attribName)) {
             $(tdElm).find('div.interval-switch').append(this.createIntervalLimitsSwitch());
         }
         $(tdElm).find('button.confirm-range').on('click', this.submitHandler.bind(this));
@@ -404,7 +430,9 @@ export class RangeSelector {
 /**
  * A factory function used to create a RangeSelector instance
  */
-export function create(pluginApi:Kontext.PluginApi, checkboxLists:CheckboxLists, altElm:HTMLElement,
+export function create(pluginApi:Kontext.PluginApi, checkboxLists:common.CheckboxLists,
+            dataProvider:common.LiveAttributesApi, altElm:HTMLElement,
             attribName:string, intervalChars:Array<string>):RangeSelector {
-    return new RangeSelector(pluginApi, checkboxLists, altElm, attribName, intervalChars);
+    return new RangeSelector(pluginApi, checkboxLists, dataProvider, altElm, attribName,
+            intervalChars);
 }
