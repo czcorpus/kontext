@@ -13,11 +13,15 @@
 import unittest
 
 
-from plugins.default_user_items import create_instance
+import plugins
 from mocks.storage import TestingKeyValueStorage
 from plugins.abstract.user_items import CorpusItem, SubcorpusItem, AlignedCorporaItem
-from plugins.default_user_items import ItemEncoder, import_from_json
 import json
+
+plugins.inject_plugin('db', TestingKeyValueStorage({}))
+plugins.inject_plugin('auth', object())
+from plugins.default_user_items import create_instance
+from plugins.default_user_items import ItemEncoder, import_from_json
 
 
 def create_corpus_obj(name='korpus syn 2010', corpus_id='public/syn2010', canonical_id='syn2010'):
@@ -29,8 +33,8 @@ def create_corpus_obj(name='korpus syn 2010', corpus_id='public/syn2010', canoni
 
 class TestCommon(unittest.TestCase):
     def setUp(self):
-        self._db = TestingKeyValueStorage({})
-        self._plugin = create_instance({}, self._db)
+        plugins.get('db').reset()
+        self._plugin = create_instance({})
 
 
 class TestCorpusItemIdReadOnly(TestCommon):

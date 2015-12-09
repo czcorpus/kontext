@@ -21,6 +21,9 @@ class TestingKeyValueStorage(KeyValueStorage):
     def __init__(self, data=None):
         self._data = data if data is not None else {}
 
+    def reset(self):
+        self._data.clear()
+
     def list_get(self, key, from_idx=0, to_idx=-1):
         return self._data[key][from_idx:to_idx]
 
