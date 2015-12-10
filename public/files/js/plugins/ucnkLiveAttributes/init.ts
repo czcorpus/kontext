@@ -226,7 +226,6 @@ class LiveData {
             });
 
             $(inputElm)
-                .removeClass('raw-selection') // <- to prevent reloading of inserted items (see this.update())
                 .hide();
 
             selectAll = self.createSelectAllBib();
@@ -248,8 +247,7 @@ class LiveData {
      */
     update(data:common.AttributesMap):void {
         let self = this;
-
-        self.attrFieldsetWrapper.find('.raw-selection').each(function () {
+        this.attrFieldsetWrapper.find('.raw-selection:visible').each(function () {
             self.replaceRawInputWithData(this, data);
         });
     }
@@ -1088,11 +1086,10 @@ class Plugin implements common.LiveAttributesApi {
 
     private autoButtonPosition(fieldset:HTMLElement) {
         let self = this;
-
-        function onVisibilityChange (el) {
-            return function () {
-
-                if (!self.isElementInViewport(el)) {
+        let autoUpdateHandler = {
+            timeout: null,
+            flip : function () {
+                if (!self.isElementInViewport(self.updateButton)) {
                     let liveAttrsBox = $(fieldset).find('.live-attributes');
                     let controlsBox = $(fieldset).find('.controls');
 
@@ -1107,10 +1104,24 @@ class Plugin implements common.LiveAttributesApi {
                         liveAttrsBox.data('position', 'bottom');
                     }
                 }
-            };
+            },
+            postponeFlip : function () {
+                if (autoUpdateHandler.timeout) {
+                    clearTimeout(autoUpdateHandler.timeout);
+                }
+                autoUpdateHandler.timeout = setTimeout(function() {
+                    autoUpdateHandler.flip();
+                    clearTimeout(autoUpdateHandler.timeout);
+                    autoUpdateHandler.timeout = null;
+                }, 100);
+            }
+        };
+
+        function onVisibilityChange () {
+            autoUpdateHandler.postponeFlip();
         }
 
-        $(window).on('DOMContentLoaded load resize scroll', onVisibilityChange(this.updateButton));
+        $(window).on('DOMContentLoaded load resize scroll', onVisibilityChange);
     }
 
 
