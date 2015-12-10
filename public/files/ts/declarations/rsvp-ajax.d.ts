@@ -16,17 +16,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare module RSVP {
+/// <reference path="./rsvp.d.ts" />
 
-    export class Promise<T> {
 
-        constructor(action:(resolve:(v:T)=>void, reject:(e:any)=>void)=>void);
+declare module RsvpAjax {
 
-        then<V>(onFulfilled?:(v:T)=>V, onRejected?:(err:any)=>any):Promise<V>;
+    export interface RequestOptions {
+        method:string;
+        url:string;
+        requestBody:string;
+        contentType:string;
+        accept: string;
     }
+
+    export function request<T>(httpMethod:string, url:string):RSVP.Promise<T>;
+
+    export function requestObject<T>(options:RequestOptions):RSVP.Promise<T>;
 }
 
 
-declare module "vendor/rsvp" {
-    export = RSVP;
+declare module "vendor/rsvp-ajax" {
+    export = RsvpAjax;
 }

@@ -122,13 +122,11 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 } else {
                     loaderGIF = self.pluginApi.appendLoader(box.getRootElement());
 
-                    self.pluginApi.ajax({
-                        url: self.pluginApi.getConf('rootPath') + 'corpora/ajax_get_structs_details?corpname='
-                                + self.pluginApi.getConf('corpname'),
-                        data: {},
-                        method: 'get',
-                        dataType: 'json',
-                        success: function (data) {
+                    var prom = self.pluginApi.ajax('GET',
+                        self.pluginApi.createActionUrl('corpora/ajax_get_structs_details'),
+                        {corpname: self.pluginApi.getConf('corpname')});
+                    prom.then(
+                        function (data) {
                             var prop,
                                 html,
                                 i;
@@ -153,13 +151,13 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
 
                             finalize();
                         },
-                        error: function () {
+                        function () {
                             box.close();
                             self.pluginApi.showMessage('error',
                                 self.pluginApi.translate('global__failed_to_contact_server'));
                             finalize();
                         }
-                    });
+                    );
                 }
             },
             {

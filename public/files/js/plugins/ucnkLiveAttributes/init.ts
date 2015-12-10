@@ -169,23 +169,27 @@ class LiveData {
                     }
                 });
 
-                self.pluginApi.ajax(self.pluginApi.createActionUrl('/corpora/bibliography?corpname=' + self.pluginApi.getConf('corpname')
-                    + '&id=' + $(target).attr('data-bib-id')),
-                    {
-                        dataType: 'json',
-                        success: function (data) {
-                            let bibHtml = document.createElement('div');
+                let args = {
+                    corpname: self.pluginApi.getConf('corpname'),
+                    id: $(target).attr('data-bib-id')
+                };
+                let prom = self.pluginApi.ajax('GET', self.pluginApi.createActionUrl('/corpora/bibliography'),
+                        args, {accept: 'application/json'});
 
+                prom.then(
+                    (data) => {
+                        let bibHtml = document.createElement('div');
+
+                        $(ajaxAnimElm).remove();
+                        self.renderBibliography(data['bib_data'], bibHtml);
+                        tooltipBox.importElement(bibHtml);
+                        finalizeCallback();
+                     },
+                     (error) => {
                             $(ajaxAnimElm).remove();
-                            self.renderBibliography(data['bib_data'], bibHtml);
-                            tooltipBox.importElement(bibHtml);
-                            finalizeCallback();
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            $(ajaxAnimElm).remove();
-                            self.pluginApi.showMessage("error", errorThrown);
-                        }
-                    });
+                            self.pluginApi.showMessage("error", error.message);
+                     }
+                );
             },
             {
                 type: 'plain'
@@ -222,7 +226,7 @@ class LiveData {
 
             $(inputElm).after(dataTable);
             $(dataTable).find('.bib-info').each(function () {
-                self.bindBibLink(inputElm);
+                self.bindBibLink(this);
             });
 
             $(inputElm)
