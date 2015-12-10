@@ -935,7 +935,7 @@ class Plugin implements common.LiveAttributesApi {
 
             prom.then(
                 function (data) {
-                    if (!data.containsErrors) {
+                    if (!data['contains_errors']) {
                         self.rawInputs.replaceRawInputWithData(inputElm, data);
                         fullfill(data);
 
