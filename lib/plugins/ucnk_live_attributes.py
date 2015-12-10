@@ -42,8 +42,11 @@ from collections import defaultdict
 
 import l10n
 from plugins import inject
+import plugins
 from abstract.live_attributes import AbstractLiveAttributes
 from templating.filters import Shortener
+from controller import exposed
+from actions import concordance
 
 
 def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora):
@@ -82,6 +85,13 @@ def cached(f):
             self.to_cache(db, key, ans)
         return self.format_data_types(ans)
     return wrapper
+
+
+@exposed(return_type='json')
+def filter_attributes(ctrl, request):
+    attrs = json.loads(request.args.get('attrs', '{}'))
+    aligned = json.loads(request.args.get('aligned', '[]'))
+    return plugins.get('live_attributes').get_attr_values(ctrl._corp(), attrs, aligned)
 
 
 class AttrArgs(object):
@@ -129,14 +139,17 @@ class AttrArgs(object):
                 for value in values:
                     cnf_item.append('%s.%s = ?' % (item_prefix, key))
                     sql_values.append(self.import_value(value))
+            elif type(values) is dict:
+                pass  # a range query  TODO
             else:
                 cnf_item.append('%s.%s = ?' % (item_prefix, key))
                 sql_values.append(self.import_value(values))
-            where.append('(%s)' % ' OR '.join(cnf_item))
+
+            if len(cnf_item) > 0:
+                where.append('(%s)' % ' OR '.join(cnf_item))
 
         where.append('%s.corpus_id = ?' % item_prefix)
         sql_values.append(corpus_id)
-
         return ' AND '.join(where), sql_values
 
 
@@ -151,6 +164,9 @@ class LiveAttributes(AbstractLiveAttributes):
         self.shorten_value = partial(Shortener().filter, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
         self._interval_chars = interval_chars
+
+    def export_actions(self):
+        return {concordance.Actions: [filter_attributes]}
 
     def db(self, corpname):
         """
@@ -265,7 +281,8 @@ class LiveAttributes(AbstractLiveAttributes):
         if bib_label and bib_label not in attrs:
             attrs.append(bib_label)
 
-        srch_attrs = set(attrs) - set(attr_map.keys())
+        srch_attrs = set(attrs) - set(self.import_key(k)
+                                      for k in attr_map.keys() if type(attr_map[k]) is not dict)
         srch_attrs.add('poscount')
 
         hidden_attrs = set()
@@ -275,7 +292,10 @@ class LiveAttributes(AbstractLiveAttributes):
             hidden_attrs.add('id')
 
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
+
+        # a map [db_col_name]=>[db_col_idx]
         srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
+
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
         where_sql, where_values = attr_items.export_sql('t1', corpname)
 
@@ -295,7 +315,14 @@ class LiveAttributes(AbstractLiveAttributes):
                            % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
 
         ans = {}
-        ans.update(attr_map)
+        # already selected items are part of the answer; no need to fetch them from db
+        ans.update(dict([(self.import_key(k), v) for k, v in attr_map.items()]))
+        range_attrs = set()
+
+        for attr in ans.keys():
+            if type(ans[attr]) is dict:
+                ans[attr] = set()   # currently we throw away the range and load all the stuff
+                range_attrs.add(attr)
 
         for attr in srch_attrs:
             if attr in ('poscount',):
@@ -304,8 +331,8 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[attr] = set()
 
         poscounts = defaultdict(lambda: defaultdict(lambda: 0))
-
         max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
+
         for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
@@ -330,9 +357,10 @@ class LiveAttributes(AbstractLiveAttributes):
 
         exported = {}
         collator_locale = corpus_info.collator_locale
+
         for k in ans.keys():
             if type(ans[k]) is set:
-                if len(ans[k]) <= self.max_attr_list_size:
+                if len(ans[k]) <= self.max_attr_list_size or k in range_attrs:
                     if k == bib_label:
                         out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
                     else:

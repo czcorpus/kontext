@@ -1585,25 +1585,6 @@ class Actions(Kontext):
             return None
 
     @exposed(return_type='json', legacy=True)
-    def filter_attributes(self, attrs=None, aligned=None):
-        import json
-
-        if plugins.has_plugin('live_attributes'):
-            if attrs is None:
-                attrs = {}
-            else:
-                attrs = json.loads(attrs)
-
-            if aligned is None:
-                aligned = []
-            else:
-                aligned = json.loads(aligned)
-
-            return plugins.get('live_attributes').get_attr_values(self._corp(), attrs, aligned)
-        else:
-            return {}
-
-    @exposed(return_type='json', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         import json
 

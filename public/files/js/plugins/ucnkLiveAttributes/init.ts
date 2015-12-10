@@ -24,6 +24,7 @@ import popupBox = require('popupbox');
 import $ = require('jquery');
 import rangeSelector = require('./rangeSelector');
 import rsvp = require('vendor/rsvp');
+import common = require('./common');
 
 function stripPrefix(s: string): string {
     let x = /^sca_(.+)$/;
@@ -34,44 +35,6 @@ function stripPrefix(s: string): string {
         return ans[1];
     }
     return null;
-}
-
-
-/**
- * Specifies a bibliography item
- */
-interface BibConf {
-    id_attr: string;
-    label_attr: string;
-}
-
-/**
- * This is just a pre-1.4 way to specify either
- * an array (= list of attributes) or an object with length property
- * (= too long list replacement)
- */
-interface AvailAttrValues {
-    length: number;
-    push?: (value:any) => void;
-}
-
-/**
- * Stores attributes and their respective values
- */
-interface AttributesMap {
-    poscount?: number;
-    aligned?: Array<string>;
-    contains_errors?: boolean;
-    //[attr: string]: AvailAttrValues;
-}
-
-/**
- *
- */
-interface AjaxAnimation {
-    start(): void;
-    stop(): void;
-    animElm:HTMLElement;
 }
 
 
@@ -128,7 +91,7 @@ class LiveData {
      * @param checkedItems
      * @returns {*|HTMLElement} created data table
      */
-    private createDataTable(rows, defaultRowIdKey:string, bibConf:BibConf, checkedItems) {
+    private createDataTable(rows, defaultRowIdKey:string, bibConf:common.BibConf, checkedItems) {
         let table:HTMLElement = window.document.createElement('table');
         let rowIdentKey:string;   // specifies data key which uniquely identifies data rows
         let rowIdentValue:string; // specifies unique value which identifies respective data row
@@ -230,56 +193,64 @@ class LiveData {
         );
     }
 
+    /**
+     * Updates a single raw input field by an actual set of checkable items
+     */
+    replaceRawInputWithData(inputElm:HTMLElement, data:common.AttributesMap):void {
+        let self = this;
+        let ident = stripPrefix($(inputElm).attr('name'));
+        let dataItem:common.AvailAttrValues = data[ident];
+        let attrTable:JQuery = $(inputElm).closest('table.envelope');
+        let checkedItems = [];
+        let selectAll:HTMLElement;
+        let dataTable:HTMLElement;
+        let msg = this.pluginApi.translate('ucnkLA__num_of_matching_items');
+        let helpLink = window.document.createElement('a');
+
+        attrTable.find('table.dynamic .attr-selector:checked').each(function () {
+            checkedItems.push($(inputElm).val());
+        });
+
+
+        attrTable.find('table.dynamic').remove();
+        attrTable.find('.select-all').css('display', 'none');
+        $(inputElm).show();
+
+        if ($.isArray(dataItem)) {
+            attrTable.find('tr.metadata td').empty();
+            dataTable = this.createDataTable(dataItem, ident, this.pluginApi.getConf('bibConf'), checkedItems);
+
+            $(inputElm).after(dataTable);
+            $(dataTable).find('.bib-info').each(function () {
+                self.bindBibLink(inputElm);
+            });
+
+            $(inputElm)
+                .removeClass('raw-selection') // <- to prevent reloading of inserted items (see this.update())
+                .hide();
+
+            selectAll = self.createSelectAllBib();
+            attrTable.find('.last-line td').append(selectAll);
+
+            $(selectAll).addClass('dynamic').css('display', 'inherit');
+            self.pluginApi.applySelectAll($(selectAll).find('input').get(0), attrTable.get(0));
+
+        } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
+            attrTable.find('tr.metadata td').html(msg + ': <strong>' + dataItem.length + '</strong>');
+            attrTable.find('tr.metadata td').append(helpLink);
+            self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('ucnkLA__bib_list_warning'));
+        }
+    }
+
 
     /**
-     * Updates current state according to the 'data' argument
+     * Replaces raw inputs with actual data according to the 'data' argument.
      */
-    update(data:AttributesMap) {
+    update(data:common.AttributesMap):void {
         let self = this;
 
         self.attrFieldsetWrapper.find('.raw-selection').each(function () {
-            let ident = stripPrefix($(this).attr('name'));
-            let dataItem:AvailAttrValues = data[ident];
-            let inputElm = this;
-            let attrTable:JQuery = $(this).closest('table.envelope');
-            let checkedItems = [];
-            let selectAll:HTMLElement;
-            let dataTable:HTMLElement;
-            let msg = self.pluginApi.translate('ucnkLA__num_of_matching_items');
-            let helpLink = window.document.createElement('a');
-
-            attrTable.find('table.dynamic .attr-selector:checked').each(function () {
-                checkedItems.push($(this).val());
-            });
-
-
-            attrTable.find('table.dynamic').remove();
-            attrTable.find('.select-all').css('display', 'none');
-            $(inputElm).show();
-
-            if ($.isArray(dataItem)) {
-                attrTable.find('tr.metadata td').empty();
-                dataTable = self.createDataTable(dataItem, ident, self.pluginApi.getConf('bibConf'), checkedItems);
-
-                $(inputElm).after(dataTable);
-                $(dataTable).find('.bib-info').each(function () {
-                    self.bindBibLink(this);
-                });
-
-                $(inputElm).hide();
-
-                selectAll = self.createSelectAllBib();
-                attrTable.find('.last-line td').append(selectAll);
-
-                $(selectAll).addClass('dynamic').css('display', 'inherit');
-                self.pluginApi.applySelectAll($(selectAll).find('input').get(0), attrTable.get(0));
-
-
-            } else if (Object.prototype.toString.call(dataItem) === '[object Object]') {
-                attrTable.find('tr.metadata td').html(msg + ': <strong>' + dataItem.length + '</strong>');
-                attrTable.find('tr.metadata td').append(helpLink);
-                self.pluginApi.contextHelp(helpLink, self.pluginApi.translate('ucnkLA__bib_list_warning'));
-            }
+            self.replaceRawInputWithData(this, data);
         });
     }
 
@@ -424,8 +395,8 @@ class Checkboxes {
      *
      * @returns {{}}
      */
-    exportStatus():AttributesMap {
-        let ans:AttributesMap = {};
+    exportStatus():common.AttributesMap {
+        let ans:common.AttributesMap = {};
 
         this.attrFieldsetWrapper.find('.attr-selector:checked').each(function () {
             let key:string = stripPrefix($(this).attr('name'));
@@ -576,7 +547,7 @@ class SelectionSteps {
      * @param selectedAttrs
      * @returns {string}
      */
-    private createStepTable(data:AttributesMap, selectedAttrs:AttributesMap) {
+    private createStepTable(data:common.AttributesMap, selectedAttrs:common.AttributesMap) {
         var ansHtml: string = null,
             usedAttrs = this.usedAttributes(),
             positionInfo = '',
@@ -598,7 +569,7 @@ class SelectionSteps {
  * Handles state of tables wrapping listed values of individual attributes.
  *
  */
-class StructTables implements rangeSelector.CheckboxLists {
+class StructTables implements common.CheckboxLists {
 
     pluginApi:Kontext.QueryPagePluginApi;
 
@@ -607,6 +578,8 @@ class StructTables implements rangeSelector.CheckboxLists {
     selectionSteps:SelectionSteps;
 
     checkboxes:Checkboxes;
+
+    liveAttributesApi:common.LiveAttributesApi;
 
     tables:{[attribute:string]:HTMLElement};
 
@@ -622,15 +595,15 @@ class StructTables implements rangeSelector.CheckboxLists {
 
     /**
      *
-     * @param attrFieldsetWrapper
-     * @param selectionSteps
      */
     constructor(pluginApi:Kontext.QueryPagePluginApi, attrFieldsetWrapper:JQuery,
-            selectionSteps:SelectionSteps, checkboxes:Checkboxes, intervalChars:Array<string>) {
+            selectionSteps:SelectionSteps, checkboxes:Checkboxes,
+            liveAttributesApi:common.LiveAttributesApi, intervalChars:Array<string>) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = attrFieldsetWrapper;
         this.selectionSteps = selectionSteps;
         this.checkboxes = checkboxes;
+        this.liveAttributesApi = liveAttributesApi;
         this.intervalChars = intervalChars;
         this.tables = {};
         this.onLockCallbacks = {};
@@ -674,6 +647,10 @@ class StructTables implements rangeSelector.CheckboxLists {
         }
     }
 
+    updateCheckboxes(data:any) {
+        this.checkboxes.update(data);
+    }
+
     private createRangeWidget(attribName:string):HTMLElement {
         let actionLink:HTMLElement = window.document.createElement('a');
         let table = this.tables[attribName];
@@ -684,8 +661,8 @@ class StructTables implements rangeSelector.CheckboxLists {
             .addClass('util-button')
             .text(this.pluginApi.translate('ucnkLA__select_range'));
 
-        rSel = rangeSelector.create(this.pluginApi, this, $(table).find('tr.data-rows').get(0), attribName,
-                    this.intervalChars);
+        rSel = rangeSelector.create(this.pluginApi, this, this.liveAttributesApi,
+                $(table).find('tr.data-rows').get(0), attribName, this.intervalChars);
         rSel.init(
             actionLink,
             function () {
@@ -833,7 +810,7 @@ class AlignedCorpora {
 /**
  * Plugin's main class
  */
-class Plugin {
+class Plugin implements common.LiveAttributesApi {
 
     pluginApi:Kontext.QueryPagePluginApi;
 
@@ -874,7 +851,7 @@ class Plugin {
         this.selectionSteps = new SelectionSteps(pluginApi);
         this.intervalChars = pluginConf['interval_chars'];
         this.structTables = new StructTables(this.pluginApi, this.attrFieldsetWrapper,
-            this.selectionSteps, this.checkboxes, this.intervalChars);
+            this.selectionSteps, this.checkboxes, this, this.intervalChars);
     }
 
     resetAll = () => { // using lexical scope here
@@ -912,6 +889,72 @@ class Plugin {
         this.rawInputs.update(data);
     };
 
+    /**
+     * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
+     * @param ajaxAnimation An animation object notyfying that the operation is in progress
+     */
+    loadData(attribArgs:{[key:string]:any}, ajaxAnimation?:common.AjaxAnimation):JQueryXHR {
+        let self = this;
+        let requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
+        let alignedCorpnames;
+        let ajaxProm;
+        let args = {corpname: this.pluginApi.getConf('corpname')};
+
+        alignedCorpnames = this.alignedCorpora.findSelected();
+        if (alignedCorpnames) {
+            args['aligned'] = JSON.stringify(alignedCorpnames);
+        }
+
+        let attrs = this.checkboxes.exportStatus();
+        for (let p in attribArgs) {
+            attrs[p] = attribArgs[p];
+        }
+        args['attrs'] = JSON.stringify(attrs);
+
+        if (ajaxAnimation) {
+            ajaxAnimation.start();
+        }
+
+        return $.ajax(requestURL, {
+            type: 'GET',
+            dataType: 'json',
+            data: args
+        });
+    }
+
+    /**
+     *
+     */
+    replaceRawInput(inputElm:HTMLElement, queryArgs:{[key:string]:any}):rsvp.Promise<any> {
+        let self = this;
+
+        return new rsvp.Promise((fullfill:(d)=>void, reject:(err)=>void) => {
+            let prom = this.loadData(queryArgs);
+
+            prom.then(
+                function (data) {
+                    if (!data.containsErrors) {
+                        self.rawInputs.replaceRawInputWithData(inputElm, data);
+                        fullfill(data);
+
+                    } else {
+                        reject(data.error || '');
+                    }
+                },
+                function (err) {
+                    reject(err);
+                }
+            );
+        });
+    }
+
+    /**
+     *
+     */
+    createAnimation():common.AjaxAnimation {
+        return this.createLoadingAnimation();
+    }
+
 
     /**
      * Loads valid attributes values according to the current selection.
@@ -926,27 +969,13 @@ class Plugin {
      * }
      *
      */
-    loadData(successAction:(d, s) => void, ajaxAnimation:AjaxAnimation, selectedCheckboxes:AttributesMap) {
+    loadAndApplyData(successAction:(d, s) => void, ajaxAnimation:common.AjaxAnimation) {
         let self = this;
         let requestURL:string;
         let alignedCorpnames;
         let ajaxProm;
 
-        requestURL = self.pluginApi.createActionUrl('filter_attributes?corpname='
-                        + this.pluginApi.getConf('corpname'));
-        alignedCorpnames = this.alignedCorpora.findSelected();
-        if (alignedCorpnames) {
-            requestURL += '&aligned=' + JSON.stringify(alignedCorpnames);
-        }
-
-        ajaxAnimation.start();
-
-        ajaxProm = $.ajax(requestURL, {
-            type: 'POST',
-            dataType: 'json',
-            data: 'attrs=' + JSON.stringify(selectedCheckboxes),
-        });
-
+        ajaxProm = this.loadData({}, ajaxAnimation);
         ajaxProm.then(
             function (data) {
                 if (!data.error) {
@@ -955,7 +984,7 @@ class Plugin {
                                 self.pluginApi.translate('ucnkLA__no_matching_data'));
 
                     } else {
-                        successAction(data, selectedCheckboxes);
+                        successAction(data, self.checkboxes.exportStatus());
                     }
 
                 } else {
@@ -971,33 +1000,35 @@ class Plugin {
         );
     }
 
+    createLoadingAnimation():common.AjaxAnimation {
+        let self = this;
+        let ans = {
+            animElm: null,
+            start: function () {
+                ans.animElm = self.pluginApi.ajaxAnim().get(0);
+                $(ans.animElm).css({
+                    'position': 'absolute',
+                    'left': ($(window).width() / 2 - $(ans.animElm).width() / 2) + 'px',
+                    'top': ($(window).height() / 2) + 'px'
+                });
+                $('#content').append(ans.animElm);
+            },
+            stop: function () {
+                $(ans.animElm).remove();
+            }
+        };
+        return ans;
+    }
+
+    updateAvailableValues(successAction:(data, attrs) => void) {
+        this.loadAndApplyData(successAction, this.createLoadingAnimation());
+    }
+
     /**
      *
      */
     bindSelectionUpdateEvent(successAction:(data, attrs) => void) { // TODO types
-        var self = this;
-
-        this.updateButton.on('click', function () {
-            var ajaxAnimation:AjaxAnimation;
-
-            ajaxAnimation = {
-                animElm: null,
-                start: function () {
-                    this.animElm = self.pluginApi.ajaxAnim();
-                    $(this.animElm).css({
-                        'position': 'absolute',
-                        'left': ($(window).width() / 2 - $(this.animElm).width() / 2) + 'px',
-                        'top': ($(window).height() / 2) + 'px'
-                    });
-                    $('#content').append(this.animElm);
-                },
-                stop: function () {
-                    $(this.animElm).remove();
-                }
-            };
-
-            self.loadData(successAction, ajaxAnimation, self.checkboxes.exportStatus());
-        });
+        this.updateButton.on('click', this.updateAvailableValues.bind(this, successAction));
     }
 
     /**
@@ -1010,7 +1041,7 @@ class Plugin {
     initializeSearchAttrFiledsets(): void {
         let self = this;
         let fieldset = $('#specify-query-metainformation');
-        let ajaxAnimation:AjaxAnimation;
+        let ajaxAnimation:common.AjaxAnimation;
         let bibAttr:string = fieldset.find('.text-type-params').attr('data-bib-attr');
         let bibTable:JQuery = null;
 
@@ -1037,7 +1068,7 @@ class Plugin {
                     }
                 };
                 if (!fieldset.hasClass('inactive')) {
-                    self.loadData(this.initAttrTables, ajaxAnimation, {});
+                    self.loadAndApplyData(this.initAttrTables, ajaxAnimation);
                 }
             }
         }
