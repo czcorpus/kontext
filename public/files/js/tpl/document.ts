@@ -21,6 +21,7 @@
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../ts/declarations/rsvp-ajax.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
@@ -32,6 +33,7 @@ import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
 import React = require('vendor/react');
 import RSVP = require('vendor/rsvp');
+import rsvpAjax = require('vendor/rsvp-ajax');
 import util = require('util');
 import docStores = require('./documentStores');
 import translations = require('translations');
@@ -89,6 +91,8 @@ export interface ComponentCoreMixins {
     getConf(k:string):any;
 
     createActionLink(path:string):string;
+
+    createStaticUrl(path:string):string;
 }
 
 
@@ -398,55 +402,77 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     /**
-     * Wrapper for jQuery's $.ajax function which is able
-     * to handle error states using client's capabilities
-     * (error messages, page reload etc.).
+     * JQuery-independent AJAX call.
      *
-     * @param url
-     * @param options
-     * @deprecated promise-based solutions should be preferred
+     * @param method A HTTP method (GET, POST, PUT,...)
+     * @param url A URL of the resource
+     * @param args Parameters to be passed along with request
+     * @param options Additional settings
      */
-    ajax(url:string, options:JQueryAjaxSettings):void {
-        var self = this,
-            succWrapper,
-            origSucc;
-
-        if (arguments.length === 1) {
-            options = url;
+    ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
+        if (!options) {
+            options = {};
+        }
+        if (!options.accept) {
+            options.accept = 'application/json';
+        }
+        if (!options.contentType) {
+            options.contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
         }
 
-        if (!options.error) {
-            options.error = function (jqXHR, textStatus, errorThrown) {
-                self.showMessage('error', errorThrown);
-            };
-        }
-
-        origSucc = options.success;
-        succWrapper = function (data, textStatus, jqXHR) {
-            var error;
-
-            if (data.hasOwnProperty('error')) {
-                error = self.unpackError(data.error);
-
-                if (error.reset === true) {
-                    win.location = self.createActionUrl('first_form');
-
-                } else {
-                    options.error(null, null, error.message || 'error');
+        function encodeArgs(obj) {
+            let ans = [];
+            for (let p in obj) {
+                if (obj.hasOwnProperty(p)) {
+                    ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
                 }
+            }
+            return ans.join('&');
+        }
+
+        function decodeArgs(s) {
+            let ans = {};
+            s.split('&').map((s2)=>s2.split('=').map((s3)=>decodeURIComponent(s3))).forEach((item) => {
+                ans[item[0]] = item[1];
+            });
+        }
+
+        let body;
+        if (typeof args === 'object') {
+            if (options.contentType === 'application/json') {
+                body = JSON.stringify(args);
 
             } else {
-                origSucc(data, textStatus, jqXHR);
+                body = encodeArgs(args);
             }
-        };
-        options.success = succWrapper;
-
-        if (arguments.length === 1) {
-            $.ajax(options);
-
-        } else {
-            $.ajax(url, options);
         }
+
+        if (method === 'GET') {
+            let elms = url.split('?');
+            if (!elms[1]) {
+                url += '?' + body;
+
+            } else {
+                url += '&' + body;
+            }
+        }
+
+        return rsvpAjax.requestObject<string>({
+            accept: options.accept,
+            contentType: options.contentType,
+            method: method,
+            requestBody: body,
+            url: url
+        }).then<T>(
+            function (data:string) {
+                if (options.accept === 'application/json') {
+                    return JSON.parse(data);
+
+                } else {
+                    return decodeArgs(data);
+                }
+            }
+        );
     }
 
     /**
@@ -1149,8 +1175,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createActionUrl(path);
     }
 
-    ajax() {
-        return this.pageModel.ajax.apply(this.pageModel, arguments);
+    ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
+        return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
     ajaxAnim() {
@@ -1327,20 +1353,7 @@ export class InitActions {
             });
 
         } else {
-            return prom1.then(
-                function (v:T) {
-                    var prom2:RSVP.Promise<U> = new RSVP.Promise(function (resolve, reject) {
-                        try {
-                            resolve(fn(v));
-
-                        } catch (err) {
-                            reject(err);
-                        }
-                    });
-                    return prom2;
-                }
-                // TODO on reject?
-            );
+            return prom1.then<U>((v:T) => fn(v));
         }
     }
 }

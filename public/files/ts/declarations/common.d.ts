@@ -18,6 +18,7 @@
 
 /// <reference path="./react.d.ts" />
 /// <reference path="./flux.d.ts" />
+/// <reference path="./rsvp.d.ts" />
 
 /**
  *
@@ -51,7 +52,7 @@ declare module Kontext {
         getConf(key:string):any;
         createStaticUrl(path:string):string;
         createActionUrl(path:string):string;
-        ajax(...args:any[]);
+        ajax<T>(method:string, url:string, args:any, options:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader();
@@ -152,7 +153,7 @@ declare module Kontext {
     /**
      *
      */
-    export interface StoreListener{
+    export interface StoreListener {
         (store:Kontext.PageStore, eventType:string, err?:Error):void;
     }
 
@@ -176,7 +177,13 @@ declare module Kontext {
 
     export interface LayoutStores {
         corpusInfoStore:PageStore,
-        messageStore:MessagePageStore
+        messageStore:MessagePageStore,
+        queryHintStore:PageStore
+    }
+
+    export interface AjaxOptions {
+        contentType?:string;
+        accept?:string;
     }
 }
 
@@ -213,7 +220,7 @@ declare module "plugins/applicationBar/init" {
  *
  */
 declare module "win" {
-    var win:Window;
+    var win:typeof window;
 
     export = win;
 }

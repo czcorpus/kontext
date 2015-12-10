@@ -124,6 +124,7 @@
                 'jquery',
                 'popupbox',
                 'vendor/rsvp',
+                'vendor/rsvp-ajax',
                 'vendor/react',
                 'vendor/Dispatcher',
                 'SoundManager',
