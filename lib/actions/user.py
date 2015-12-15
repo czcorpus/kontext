@@ -115,7 +115,7 @@ class User(Kontext):
                 offset=offset, limit=limit,
                 query_type=query_type, corpname=corpname,
                 from_date=from_date, to_date=to_date)
-            rows = [exporter.export_row(row) for row in rows]
+            rows = filter(lambda x: x is not None, [exporter.export_row(row) for row in rows])
         else:
             rows = ()
         return rows
