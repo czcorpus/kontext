@@ -16,6 +16,7 @@ from translation import ugettext as _
 import l10n
 from datetime import datetime
 import manatee
+import logging
 
 
 class Export(object):
@@ -88,13 +89,19 @@ class Export(object):
         return self._url_creator('first_form', args)
 
     def export_row(self, row):
-        out_row = {}
-        out_row.update(row)
-        out_row['query_form_url'] = self._action_url(row)
-        created_dt = datetime.fromtimestamp(row['created'])
-        out_row['humanCorpname'] = self._canonize_corpname(row['corpname'])
-        out_row['created'] = (created_dt.strftime(l10n.date_formatting()),
-                              created_dt.strftime(l10n.time_formatting()))
-        out_row['details'] = self._action_details(row['corpname'], row['query_type'], out_row.get('params', None))
-        out_row['query_type_translated'] = Export.types.get(row['query_type'], '?')
-        return out_row
+        try:
+            out_row = {}
+            out_row.update(row)
+            out_row['query_form_url'] = self._action_url(row)
+            created_dt = datetime.fromtimestamp(row['created'])
+            out_row['humanCorpname'] = self._canonize_corpname(row['corpname'])
+            out_row['created'] = (created_dt.strftime(l10n.date_formatting()),
+                                  created_dt.strftime(l10n.time_formatting()))
+            out_row['details'] = self._action_details(row['corpname'], row['query_type'], out_row.get('params', None))
+            out_row['query_type_translated'] = Export.types.get(row['query_type'], '?')
+            return out_row
+        except manatee.CorpInfoNotFound:
+            return None
+        except Exception as e:
+            logging.getLogger(__name__).warning(e)
+            return None
