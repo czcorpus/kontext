@@ -38,7 +38,7 @@ import json
 from functools import wraps
 from hashlib import md5
 from functools import partial
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import l10n
 from plugins import inject
@@ -378,9 +378,9 @@ class LiveAttributes(AbstractLiveAttributes):
     def get_bibliography(self, corpus, item_id):
         db = self.db(vanilla_corpname(corpus.corpname))
         col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
-        col_map = dict([(x[1], x[0]) for x in col_map])
+        col_map = OrderedDict([(x[1], x[0]) for x in col_map])
         ans = db.execute('SELECT * FROM bibliography WHERE id = ?', item_id).fetchone()
-        return dict([(k, ans[i]) for k, i in col_map.items()])
+        return [(k, ans[i]) for k, i in col_map.items()]
 
     def get_bib_size(self, corpus):
         """
