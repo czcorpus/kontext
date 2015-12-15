@@ -98,14 +98,15 @@ class LiveData {
     /**
      *
      */
-    private renderBibliography(data:Array<string>, rootElm:HTMLElement):void {
+    private renderBibliography(data:Array<Array<string>>, rootElm:HTMLElement):void {
         let jqRootElm:JQuery = $(rootElm);
 
-        for (let p in data) {
-            if (data.hasOwnProperty(p) && data[p]) {
-                jqRootElm.append('<strong>' + p + '</strong>: ' + data[p] + '<br />');
+        data.forEach(function (item:Array<string>) {
+            if (item[0] !== 'id') {
+                jqRootElm.append('<strong>' + item[0].replace(/_([^_]+)$/, '.$1')
+                        + '</strong>: ' + item[1] + '<br />');
             }
-        }
+        });
     }
 
     /**
