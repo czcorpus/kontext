@@ -47,4 +47,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         raise NotImplementedError()
 
     def get_bibliography(self, corpus, item_id):
+        """
+        Returns a list of 2-tuples (attr_name, attr_value).
+        """
         raise NotImplementedError()
