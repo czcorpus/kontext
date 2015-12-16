@@ -820,9 +820,13 @@ class Kontext(Controller):
                  for n in corpus_get_conf(maincorp, listname.upper()).split(',')
                  if n]
         result['tagsetdoc'] = corpus_get_conf(maincorp, 'TAGSETDOC')
-        result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a) for a in
-                                           corpus_get_conf(maincorp, 'SUBCORPATTRS')
-                                           .replace('|', ',').split(',') if a])
+
+        if corpus_get_conf(maincorp, 'FREQTTATTRS'):
+            ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')
+        else:
+            ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
+        result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a)
+                                           for a in ttcrit_attrs.replace('|', ',').split(',') if a])
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
