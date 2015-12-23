@@ -93,11 +93,17 @@ def get_bool(section, key, default=None):
     }[fixed_key]
 
 
-def get_int(section, key):
+def get_int(section, key, default=-1):
     """
-    The same as get() but returns an int type
+    arguments:
+    section -- configuration section (global, corpora,...)
+    key -- configuration key
+    default -- default value to be returned in case nothing is found
+
+    The same as get() but returns an int type. In case a value
+    is not found, -1 is returned.
     """
-    return int(get(section, key))
+    return int(get(section, key, default))
 
 
 def get_list(section, key):
