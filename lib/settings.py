@@ -32,7 +32,9 @@ _conf = {}  # contains parsed data, it should not be accessed directly (use set,
 _meta = {}  # contains data of attributes of XML elements representing configuration values
 _state = ConfState()
 
-SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora')
+SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora', 'logging')
+
+DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 def contains(section, key=None):

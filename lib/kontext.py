@@ -197,7 +197,7 @@ class Kontext(Controller):
         import json
         import datetime
         
-        logged_values = settings.get('global', 'logged_values', ())
+        logged_values = settings.get('logging', 'values', ())
         log_data = {} 
 
         params = {}
@@ -206,7 +206,7 @@ class Kontext(Controller):
 
         for val in logged_values:
             if val == 'date':
-                log_data['date'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+                log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
             elif val == 'action':
                 log_data['action'] = action_name
             elif val == 'user_id':

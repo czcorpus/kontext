@@ -59,10 +59,10 @@ def setup_logger(conf):
     maximum file size (optional, default is 8MB): /kontext/global/log_file_size
     number of backed-up files (optional, default is 10): /kontext/global/log_num_files
     """
-    handler = handlers.RotatingFileHandler(conf.get('global', 'log_path'),
-                                           maxBytes=conf.get_int('global', 'log_file_size', 8000000),
-                                           backupCount=conf.get_int('global', 'log_num_files', 10))
-    handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+    handler = handlers.RotatingFileHandler(conf.get('logging', 'path'),
+                                           maxBytes=conf.get_int('logging', 'file_size', 8000000),
+                                           backupCount=conf.get_int('logging', 'num_files', 10))
+    handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 

@@ -37,7 +37,7 @@ class Admin(Kontext):
         if plugins.get('auth').is_administrator(self._session_get('user', 'id')):
             import system_stats
 
-            data = system_stats.load(settings.get('global', 'log_path'), from_date=from_date,
+            data = system_stats.load(settings.get('logging', 'path'), from_date=from_date,
                                      to_date=to_date, min_occur=min_occur)
             maxmin = {}
             for label, section in data.items():

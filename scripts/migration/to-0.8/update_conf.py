@@ -125,14 +125,43 @@ def update_10(doc):
         remove_element(x)
 
 
-def process_document(xml_doc):
+def update_11(doc):
+
+    x = etree.SubElement(doc.getroot(), 'logging')
+    e1 = doc.find('/global/log_path')
+    if e1 is not None:
+        tmp = etree.SubElement(x, 'path')
+        tmp.text = e1.text
+    e2 = doc.find('/global/log_file_size')
+    if e2 is not None:
+        tmp = etree.SubElement(x, 'file_size')
+        tmp.text = e2.text
+    e3 = doc.find('/global/log_num_files')
+    if e2 is not None:
+        tmp = etree.SubElement(x, 'num_files')
+        tmp.text = e3.text
+    e4 = doc.find('/global/logged_values')
+    if e4 is not None:
+        x.append(e4)
+        e4.tag = 'values'
+
+
+def process_document(xml_doc, single_upd=None):
     func_name = lambda j: 'update_%d' % j
-    i = 1
-    while func_name(i) in dir(sys.modules[__name__]):
-        fn = getattr(sys.modules[__name__], func_name(i))
+
+    if single_upd is not None:
+        fn = getattr(sys.modules[__name__], func_name(single_upd))
         if callable(fn):
             fn(xml_doc)
-        i += 1
+        else:
+            raise Exception('ERROR: update %s not found' % single_upd)
+    else:
+        i = 1
+        while func_name(i) in dir(sys.modules[__name__]):
+            fn = getattr(sys.modules[__name__], func_name(i))
+            if callable(fn):
+                fn(xml_doc)
+            i += 1
 
 
 if __name__ == '__main__':
@@ -141,12 +170,13 @@ if __name__ == '__main__':
                                                     'to the version 0.8')
     argparser.add_argument('conf_file', metavar='CONF_FILE',
                            help='an XML configuration file')
+    argparser.add_argument('-u', '--update', type=int, help='Perform a single update (identified by a number)')
     argparser.add_argument('-p', '--print', action='store_const', const=True,
                            help='Print result instead of writing it to a file')
     args = argparser.parse_args()
 
     doc = etree.parse(args.conf_file)
-    process_document(doc)
+    process_document(doc, getattr(args, 'update'))
 
     result_xml = etree.tostring(doc, encoding='utf-8', pretty_print=True)
     if getattr(args, 'print'):
