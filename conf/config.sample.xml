@@ -10,6 +10,20 @@
             <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
         </fonts>
     </theme>
+    <logging>
+        <path>/home/tomas/work/kontext.dev/log/development.log</path>
+        <file_size>8000000</file_size>
+        <num_files>100</num_files>
+        <values>
+            <item>environ:REMOTE_ADDR</item>
+            <item>environ:HTTP_USER_AGENT</item>
+            <item>date</item>
+            <item>user_id</item>
+            <item>action</item>
+            <item>params</item>
+            <item>proc_time</item>
+        </values>
+    </logging>
     <global>
         <deployment_id>20151031_v4</deployment_id>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
