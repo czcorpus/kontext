@@ -19,15 +19,13 @@ KonText currently understands only "menu-help" section.
 
 required XML structure:
 
-<plugins>
-...
-  <menu_items>
-     <module>default_menu_items</module>
-     <data_path extension-by="default">/path/to/a/json/file/containing/menu_items.json</data_path>
-  </menu_items>
-...
-</plugins>
-
+element menu_items {
+  element module { "default_menu_items" }
+  element data_path {
+    attribute extension-by { "default" }
+    text # path to a json file containing menu_items.json
+  }
+}
 
 required menu data format (JSON):
 

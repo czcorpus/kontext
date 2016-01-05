@@ -19,13 +19,10 @@ A simple implementation of conc_persistence plug-in based on KeyValueStorage
 as a back-end.
 
 required config.xml entries:
-<plugins>
-...
-    <conc_persistence>
-        <module>default_conc_persistence</module>
-    </conc_persistence>
-...
-</plugins>
+
+element conc_persistence {
+  element module { "default_conc_persistence" }
+}
 """
 
 import hashlib

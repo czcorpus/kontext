@@ -15,15 +15,18 @@ A custom solution to obtain language settings from a cookie.
 
 Required config.xml/plugins entries:
 
-<getlang>
-    <module>ucnk_setlang</module>
-    <cookie extension-by="ucnk">[name of the cookie]</cookie>
-</getlang>
+element getlang {
+  element module { "ucnk_getlang" }
+  element cookie {
+    attribute extension-by { "ucnk" }
+    text # name of the cookie
+  }
+}
 """
 import os
 import Cookie
 
-from abstract.getlang import AbstractGetLang
+from ..abstract.getlang import AbstractGetLang
 
 
 class GetLang(AbstractGetLang):

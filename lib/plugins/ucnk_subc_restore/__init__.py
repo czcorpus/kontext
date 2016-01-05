@@ -43,7 +43,7 @@ import urllib
 
 from sqlalchemy import create_engine
 import werkzeug.urls
-from abstract.subc_restore import AbstractSubcRestore
+from ..abstract.subc_restore import AbstractSubcRestore
 import datetime
 from plugins import inject
 

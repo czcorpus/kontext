@@ -23,52 +23,46 @@ interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 Required config.xml/plugins entries:
 
-<corparch>
-    <module>corparch</module>
-    <file>[a path to a configuration XML file]</file>
-    <root_elm_path>
-        [an XPath query leading to a root element where configuration can be found]
-    </root_elm_path>
-    <tag_prefix extension-by="default">
-        [a spec. character specifying that the following string is a tag/label]
-    </tag_prefix>
-    <max_num_hints>
-        [the maximum number of hints corpus selection widget shows (even if there are more results
-         available]
-    </max_num_hints>
-    <default_page_list_size extension-by="default">
-        [number of items on the 'corplist' page]
-    </default_page_list_size>
-    <access_req_smtp_server extension-by="ucnk">
-        [an address of a SMTP server KonText will send corpus access request through]
-    </access_req_smtp_server>
-    <access_req_sender extension-by="ucnk">
-        [an e-email sender address user will see once she gets the message]
-    </access_req_sender>
-    <access_req_recipients extension-by="ucnk">
-        [a list of recipients/adminstrators who will be notified about request; use child
-         elements here]
-    </access_req_recipients>
-    <default_label extension-by="ucnk">
-        [corpus label to be selected by default in case user has not already selected anything]
-    </default_label>
-</corparch>
+element corparch {
+  element module { "corparch" }
+  element file { text } # a path to a configuration XML file
+  element root_elm_path {
+        text # an XPath query leading to a root element where configuration can be found
+  }
+  element tag_prefix {
+    attribute extension-by { "default" }
+    text # a spec. character specifying that the following string is a tag/label
+  }
+  element max_num_hints {
+    text # the maximum number of hints corpus selection widget shows
+         # even if there are more results available
+  }
+  element default_page_list_size {
+    attribute extension-by { "default" }
+    text # number of items on the 'corplist' page
+  }
+  element access_req_smtp_server {
+    attribute extension-by { "ucnk" }
+    text # an address of a SMTP server KonText will send corpus access request through
+  }
+  element access_req_sender {
+    attribute extension-by { "ucnk" }
+    text # an e-email sender address user will see once she gets the message
+  }
+  element access_req_recipients {
+    attribute extension-by { "ucnk" }
+    element item {  # a list of recipients/adminstrators who will be notified about request
+      text  # an e-mail address
+    }+
+  }
+  element default_label {
+      attribute extension-by { "ucnk" }
+      text # corpus label to be selected by default in case user has not already selected anything
+  }
+}
 
-How does the corpus list specification XML entry looks like:
-
-<a_root_elm>
-  <corpus sentence_struct="p" ident="SUSANNE" collator_locale="cs_CZ" tagset="pp_tagset"
-      web="http://www.korpus.cz/syn2010.php">
-    <metadata>
-      <featured />
-      <keywords>
-        <item>foreign_language_corpora</item>
-        <item>written_corpora</item>
-      </keywords>
-    </metadata>
-  </corpus>
-   ...
-</a_root_elm>
+To see the format of the "corplist.xml" file please
+see default_corparch/resources/corplist.rng.
 
 """
 

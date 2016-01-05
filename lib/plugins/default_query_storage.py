@@ -15,16 +15,21 @@ A plugin providing a storage for user's queries for services such as 'query hist
 
 Required config.xml/plugins entries:
 
-<plugins>
-...
-    <query_storage>
-        <module>default_query_storage</module>
-        <num_kept_records extension-by="default">[how many records to keep stored per user]</num_kept_records>
-        <page_num_records extension-by="default">[how many records to show in 'recent queries' page]</page_num_records>
-        <page_append_records extension-by="default">[how many records to load in case user clicks 'more']</page_append_records>
-    </query_storage>
-...
-</plugins>
+element query_storage {
+  element module { "default_query_storage" }
+  element num_kept_records {
+    attribute extension-by { "default" }
+    text # how many records to keep stored per user
+  }
+  element page_num_records {
+    attribute extension-by { "default" }
+    text # how many records to show in 'recent queries' page
+  }
+  element page_append_records {
+    attribute extension-by { "default" }
+    text # how many records to load in case user clicks 'more'
+  }
+}
 """
 
 from datetime import datetime

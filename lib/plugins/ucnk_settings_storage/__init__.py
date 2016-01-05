@@ -12,7 +12,7 @@
 
 import json
 
-from abstract.settings_storage import AbstractSettingsStorage
+from ..abstract.settings_storage import AbstractSettingsStorage
 from plugins import inject
 
 
@@ -23,10 +23,8 @@ class SettingsStorage(AbstractSettingsStorage):
 
     def __init__(self, conf, db_provider):
         """
-        Parameters
-        ----------
-
-        conf : the 'settings' module (or some compatible object)
+        arguments:
+        conf -- the 'settings' module (or some compatible object)
         """
         self.db_provider = db_provider
 
@@ -47,16 +45,12 @@ class SettingsStorage(AbstractSettingsStorage):
         """
         Loads user individual settings.
 
-        Parameters
-        ----------
-        current_settings : dict
-          if provided then instead of returning new dictionary method updates this one
-          and returns it
+        arguments:
+        current_settings -- if provided then instead of returning new dictionary method updates this one
+                            and returns it
 
-        Returns
-        -------
-        current_settings : dict
-          new or updated settings dictionary provided as a parameter
+        returns:
+        new or updated settings dictionary provided as a parameter
         """
         if current_settings is None:
             current_settings = {}
