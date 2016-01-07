@@ -18,13 +18,13 @@ ucnk_remote_auth2 does (among others).
 
 Required config.xml/plugin entries:
 
-<application_bar>
-    <module>ucnk_appbar</module>
-    <css_url>[URL of an external CSS file specifying imported HTML visuals]</css_url>
-</application_bar>
+element application_bar {
+  element module { "ucnk_appbar" }
+  element css_url { text } # URL of an external CSS file specifying imported HTML visuals
+}
 """
 from plugins import inject
-from abstract.appbar import AbstractApplicationBar
+from ..abstract.appbar import AbstractApplicationBar
 
 
 class ApplicationBar(AbstractApplicationBar):

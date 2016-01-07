@@ -18,10 +18,10 @@ The plug-in implements
 
 required config.xml entries:
 
-<sessions>
-    <module>default_sessions</module>
-    <ttl>14400</ttl>
-</sessions>
+element sessions {
+  element module { "default_sessions" }
+  element ttl { xsd:integer }
+}
 
 Important note: Werkzeug's session store listens for data change (callbacks on __setitem__,
 __delitem__). But this of course does not apply if you change some nested object:

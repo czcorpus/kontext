@@ -18,6 +18,10 @@
 """
 Functions for handling cache file mapping between (query, subcorpus) key
 and filename containing respective saved concordances.
+
+Please note that the current version uses a 2-tuple as a cache keys
+which prevents Celery worker backend to use JSON as a message format
+(i.e. pickle must be used).
 """
 import os
 import logging
@@ -155,6 +159,7 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
 
     def get_mapping(self, corpus):
         return CacheMapping(self._cache_dir, corpus, self._lock_factory)
+
 
 @inject('locking')
 def create_instance(settings, lock_factory):

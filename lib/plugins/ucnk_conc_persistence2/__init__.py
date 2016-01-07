@@ -20,14 +20,14 @@ a secondary archive in case a key is not found. It is expected that an external
 script archives old/unused/whatever records from main to the secondary db.
 
 required config.xml entries:
-<plugins>
-...
-    <conc_persistence>
-        <module>ucnk_conc_persistence2</module>
-        <archive_db_path extension-by="ucnk">/path/to/a/sqlite3/database</archive_db_path>
-    </conc_persistence>
-...
-</plugins>
+
+element conc_persistence {
+  element module { "ucnk_conc_persistence2" }
+  element archive_db_path {
+    attribute extension-by { "ucnk" }
+    { text } # a path to a sqlite3 database (see SQL below)
+  }
+}
 
 archive db:
 
@@ -48,7 +48,7 @@ import json
 
 from sqlalchemy import create_engine
 
-from abstract.conc_persistence import AbstractConcPersistence
+from ..abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
 
 

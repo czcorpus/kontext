@@ -25,13 +25,18 @@ gender = character 1, case = character 2,...)
 Please note that this module requires a proper Corptree plug-in configuration and data.
 
 Required XML:
-<plugins>
-...
-  <module>default_taghelper</module>
-  <clear_interval extension-by="default">[TTL - number of seconds]</clear_interval>
-  <tags_cache_dir extension-by="default">/path/to/a/dir/where/files/are/cached</tags_cache_dir>
-...
-</plugins>
+
+element taghelper {
+  element module { "default_taghelper" }
+  element clear_interval {
+    attribute extension-by { "default" }
+    text # TTL - number of seconds
+  }
+  element tags_cache_dir {
+    attribute extension-by { "default" }
+    text #  a path to a dir where files are cached
+  }
+}
 """
 
 import os

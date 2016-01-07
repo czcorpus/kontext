@@ -19,17 +19,14 @@ Interactive (ad hoc) subcorpus selection.
 
 Required XML configuration:
 
-<kontext>
-  <plugins>
-    ...
-    <live_attributes>
-      <module>ucnk_live_attributes</module>
-      <js_module>ucnkLiveAttributes</js_module>
-      <max_attr_visible_chars extension-by="ucnk">30</max_attr_visible_chars>
-    </live_attributes>
-    ...
-  </plugins>
-</kontext>
+element live_attributes {
+  element module { "ucnk_live_attributes" }
+  element js_module { "ucnkLiveAttributes" }
+  element max_attr_visible_chars {
+    attribute extension-by { "ucnk" }
+    xsd:integer
+  }
+}
 """
 
 import re
@@ -43,7 +40,7 @@ from collections import defaultdict, OrderedDict
 import l10n
 from plugins import inject
 import plugins
-from abstract.live_attributes import AbstractLiveAttributes
+from ..abstract.live_attributes import AbstractLiveAttributes
 from templating.filters import Shortener
 from controller import exposed
 from actions import concordance
