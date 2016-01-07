@@ -57,7 +57,7 @@ class GetLang(AbstractGetLang):
         """
         def fetch_translations():
             ans = {}
-            root_dir = '%s/../../locale' % os.path.dirname(__file__)
+            root_dir = '%s/../../../locale' % os.path.dirname(__file__)
             for item in os.listdir(root_dir):
                 c = item.split('_')[0]
                 if not c in ans:
