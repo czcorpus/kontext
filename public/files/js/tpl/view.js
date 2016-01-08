@@ -190,7 +190,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
             top;
 
         box = popupBox.open(lib.layoutModel.translate('global__anonymous_user_warning',
-                {login_url: lib.layoutModel.getConf('login_url')}),
+                {login_url: lib.layoutModel.getConf('loginUrl')}),
                 {top: 0, left: 0}, {type: 'warning'});
         left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
