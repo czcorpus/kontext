@@ -64,6 +64,10 @@ def create_subcorpus(path, corpus, structname, subquery):
     return manatee.create_subcorpus(path, corpus, structname, subquery)
 
 
+def subcorpus_from_conc(path, conc):
+    return manatee.create_subcorpus(path, conc.RS())
+
+
 def create_str_vector():
     """
     Creates a new manatee.StrVector instance

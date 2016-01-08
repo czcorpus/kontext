@@ -22,6 +22,7 @@ import plugins
 import l10n
 from l10n import export_string, import_string, format_number
 import corplib
+import conclib
 from argmapping import ConcArgsMapping
 
 
@@ -48,41 +49,33 @@ class Subcorpus(Kontext):
         within_struct -- a structure the within_condition will be applied to
         """
         subcname = request.form['subcname']
-        within_condition = request.form['within_condition']
-        within_struct = request.form['within_struct']
+        within_cql = request.form['within_cql']
         corp_encoding = self._corp().get_conf('ENCODING')
 
-        if within_condition and within_struct:  # user entered a subcorpus query manually
-            tt_query = [(export_string(within_struct, to_encoding=corp_encoding),
-                        export_string(within_condition, to_encoding=corp_encoding))]
+        if within_cql:  # user entered a subcorpus query manually
+            full_cql = u'aword,[] within %s' % within_cql
         else:
             tt_query = self._texttype_query(request)
-            within_struct = import_string(tt_query[0][0], from_encoding=corp_encoding)
-            within_condition = import_string(tt_query[0][1], from_encoding=corp_encoding)
+            full_cql = ' & '.join(['<%s %s />' % item for item in tt_query])
+            full_cql = u'aword,[] within %s' % full_cql
 
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
             raise ConcError(_('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname)
-        if not tt_query:
-            raise ConcError(_('Nothing specified!'))
 
-        # Even if _texttype_query() parsed multiple structures into tt_query,
-        # Manatee can accept directly only one (but with arbitrarily complex attribute
-        # condition).
-        # For this reason, we choose only the first struct+condition pair.
-        # It is up to the user interface to deal with it.
-        structname, subquery = tt_query[0]
         if type(path) == unicode:
             path = path.encode("utf-8")
-        if corplib.create_subcorpus(path, self._corp(), structname, subquery):
+
+        conc = conclib.get_conc(self._corp(), q=(export_string(full_cql, to_encoding=corp_encoding),))
+        conc.sync()
+        if corplib.subcorpus_from_conc(path, conc):
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
                                                             corpname=self.args.corpname,
                                                             subcname=subcname,
-                                                            structname=within_struct,
-                                                            condition=within_condition)
+                                                            cql=full_cql)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',

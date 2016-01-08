@@ -221,12 +221,15 @@ def _get_sync_conc(corp, q, save, subchash, samplesize):
 
 
 def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
+    """
+    q -- a tuple/list containing an extended query representation (e.g. aword,[] within  <opus id="foo" />)
+    """
     if not q:
         return None
     q = tuple(q)
     if not minsize:
         if len(q) > 1:  # subsequent concordance processing by its methods
-                       # needs whole concordance
+                        # needs whole concordance
             minsize = -1
         else:
             minsize = fromp * pagesize

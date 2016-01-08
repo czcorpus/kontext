@@ -125,18 +125,6 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
         );
     };
 
-    lib.initAttributeHints = function () {
-        popupBox.bind($('#struct-hint'), function (tooltipBox, finalize) {
-            var v;
-
-            v = $('#within-struct-selector').find('option[value="' + $('#within-struct-selector').val() + '"]').attr('title');
-            $(tooltipBox.getRootElement()).append('<strong>' + lib.layoutModel.translate('global__available_attributes')
-                                                    + '</strong>: ');
-            $(tooltipBox.getRootElement()).append(v);
-            finalize();
-        }, {width : 'nice'});
-    };
-
     lib.initSubcCreationVariantSwitch = function () {
         $('input.method-select').on('click', function (event) {
             lib.subcCreationVariantSwitch($(event.target).val());
@@ -181,7 +169,6 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox', 'plugins/
 
         lib.initTreeComponent();
         lib.initSubcCreationVariantSwitch();
-        lib.initAttributeHints();
         lib.sizeUnitsSafeSwitch();
         liveAttributes.init(lib.extendedApi, conf, '#live-attrs-update',
                 '#live-attrs-reset', '.text-type-params');
