@@ -1051,6 +1051,8 @@ class Kontext(Controller):
         else:
             result['ui_state_ttl'] = 3600 * 12
 
+        result['has_subcmixer'] = plugins.has_plugin('subcmixer')
+
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}
