@@ -65,18 +65,46 @@ class WorkerTaskException(Exception):
 
 
 @app.task
-def register(corpus, subchash, query, samplesize):
+def register(user_id, corpus_id, subc_name, subchash, query, samplesize):
+    """
+    Register concordance calculation and initiate the calculation.
+
+    arguments:
+    user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
+    corpus_id -- a corpus identifier
+    subc_name -- a sub-corpus identifier (None if not used)
+    subchash -- a MD5 checksum of the sub-corpus data file
+    query -- a query tuple
+    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+
+    returns:
+    InitialArgs instance (contains information about calculation and cache)
+    """
     c = wcelery.TaskRegistration()
-    initial_args = c(corpus, subchash, query, samplesize)
+    initial_args = c(corpus_id, subc_name, subchash, query, samplesize)
     if not initial_args.stored_pidfile:   # we are first trying to calc this
-        calculate.delay(initial_args, corpus, subchash, query, samplesize)
+        calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args
 
 
 @app.task(ignore_result=True)  # TODO ignore? what about errors?
-def calculate(initial_args, corpus, subchash, query, samplesize):
+def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+    """
+    Perform actual concordance calculation.
+    This is called automatically by the 'register()' function above.
+
+    arguments:
+    initial_args -- an instance of InitialArgs as obtained from register()
+    user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
+    corpus_id -- a corpus identifier
+    subc_name -- a sub-corpus identifier (None if not used)
+    subchash -- a MD5 checksum of the sub-corpus data file
+    query -- a query tuple
+    samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
+    """
     task = wcelery.CeleryCalculation()
-    return task(initial_args, corpus, subchash, query, samplesize)
+    subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
+    return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
 
 
 @app.task

@@ -64,8 +64,19 @@ def create_subcorpus(path, corpus, structname, subquery):
     return manatee.create_subcorpus(path, corpus, structname, subquery)
 
 
-def subcorpus_from_conc(path, conc):
-    return manatee.create_subcorpus(path, conc.RS())
+def subcorpus_from_conc(path, conc, struct=None):
+    """
+    Creates a subcorpus from provided concordance. In case
+    a struct is provided then only positions located wihtin
+    the provided structure are included.
+
+    arguments:
+
+    path -- path to the subcorpus we want to create
+    conc -- a manatee.Concordance instance
+    struct -- an optional structure to restrict the result to
+    """
+    return manatee.create_subcorpus(path, conc.RS(), struct)
 
 
 def create_str_vector():

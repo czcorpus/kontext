@@ -164,7 +164,8 @@ class Actions(Kontext):
                 del self.args.q[i]
             i += 1
 
-        conc = self.call_function(conclib.get_conc, (self._corp(),), samplesize=corpus_info.sample_size)
+        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
+                                  samplesize=corpus_info.sample_size)
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -274,7 +275,7 @@ class Actions(Kontext):
                         'relconcsize': 0, 'fullsize': fullsize,
                         'finished': conc.finished()}
         if sampled_size:
-            orig_conc = self.call_function(conclib.get_conc, (self._corp(),),
+            orig_conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                            q=self.args.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
@@ -742,7 +743,7 @@ class Actions(Kontext):
             rel_mode = 0
         corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
-        conc = self.call_function(conclib.get_conc, (self._corp(),))
+        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
         result = {
             'fcrit': [('fcrit', cr) for cr in fcrit],
             'FCrit': [{'fcrit': cr} for cr in fcrit],
@@ -834,7 +835,7 @@ class Actions(Kontext):
         freq = conc.size() - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
             pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-            cc = self.call_function(conclib.get_conc, (self._corp(),),
+            cc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                     q=self.args.q + [pfilter[0][1]])
             freq = cc.size()
             err_nfilter, corr_nfilter = '', ''
@@ -992,7 +993,7 @@ class Actions(Kontext):
 
         try:
             corplib.frq_db(self._corp(), self.args.cattr)  # try to fetch precalculated data
-            conc = self.call_function(conclib.get_conc, (self._corp(),))
+            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
 
             num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
             result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
@@ -1435,7 +1436,8 @@ class Actions(Kontext):
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-        conc = self.call_function(conclib.get_conc, (self._corp(), corpus_info.sample_size))
+        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
+                                                     corpus_info.sample_size))
         if not to_line:
             to_line = conc.size()
             # TODO Save menu should be active here
@@ -1475,7 +1477,8 @@ class Actions(Kontext):
 
         try:
             corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-            conc = self.call_function(conclib.get_conc, (self._corp(), corpus_info.sample_size))
+            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
+                                                         corpus_info.sample_size))
             kwic = Kwic(self._corp(), self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)

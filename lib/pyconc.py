@@ -87,9 +87,7 @@ class PyConc(manatee.Concordance):
         elif action == 's':
             # stored in _conc_dir
             manatee.Concordance.__init__(self, corp,
-                                         os.path.join(self.pycorp._conc_dir,
-                                                      corp.corpname,
-                                                      params + '.conc'))
+                                         os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc'))
         else:
             raise RuntimeError(_('Unknown action: %s') % action)
 

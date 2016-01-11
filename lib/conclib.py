@@ -171,7 +171,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     return ans
 
 
-def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
+def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, minsize):
     """
     Note: 'save' argument is present because of bonito-open-3.45.11 compatibility but it is
     currently not used ----- TODO remove it
@@ -187,7 +187,8 @@ def _get_async_conc(corp, q, save, subchash, samplesize, fullsize, minsize):
         from concworker.wcelery import NotifierFactory
         import task
         app = task.get_celery_app(conf['conf'])
-        res = app.send_task('worker.register', (corp.corpname, subchash, q, samplesize))
+        res = app.send_task('worker.register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
+                                                subchash, q, samplesize))
         receiver, sender = NotifierFactory(res)()
     else:
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
@@ -220,7 +221,7 @@ def _get_sync_conc(corp, q, save, subchash, samplesize):
     return conc
 
 
-def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
+def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, samplesize=0):
     """
     q -- a tuple/list containing an extended query representation (e.g. aword,[] within  <opus id="foo" />)
     """
@@ -255,7 +256,7 @@ def get_conc(corp, minsize=None, q=None, fromp=0, pagesize=0, async=0, save=0, s
     if not conc:
         toprocess = 1
         if async and len(q) == 1:  # asynchronous processing
-            conc = _get_async_conc(corp=corp, q=q, save=save, subchash=subchash,
+            conc = _get_async_conc(corp=corp, user_id=user_id, q=q, save=save, subchash=subchash,
                                    samplesize=samplesize, fullsize=fullsize, minsize=minsize)
 
         else:

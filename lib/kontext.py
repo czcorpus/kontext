@@ -1263,7 +1263,8 @@ class Kontext(Controller):
         attr_producer -- a function returning an iterable containing parameter names
 
         returns:
-        a list of tuples (struct, condition)
+        a list of tuples (struct, condition); strings are encoded to the encoding current
+        corpus uses!
         """
         if obj is None:
             obj = self.args

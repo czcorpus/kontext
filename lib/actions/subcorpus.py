@@ -53,23 +53,34 @@ class Subcorpus(Kontext):
         corp_encoding = self._corp().get_conf('ENCODING')
 
         if within_cql:  # user entered a subcorpus query manually
-            full_cql = u'aword,[] within %s' % within_cql
+            tt_query = ()
+            full_cql = 'aword,[] within %s' % within_cql
+            imp_cql = (full_cql,)
         else:
             tt_query = self._texttype_query(request)
-            full_cql = ' & '.join(['<%s %s />' % item for item in tt_query])
-            full_cql = u'aword,[] within %s' % full_cql
-
+            full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
+            full_cql = 'aword,[] within %s' % full_cql
+            full_cql = import_string(full_cql, from_encoding=corp_encoding)
+            imp_cql = (full_cql,)
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
-            raise ConcError(_('No subcorpus name specified!'))
+            raise UserActionException(_('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname)
 
         if type(path) == unicode:
-            path = path.encode("utf-8")
+            path = path.encode('utf-8')
 
-        conc = conclib.get_conc(self._corp(), q=(export_string(full_cql, to_encoding=corp_encoding),))
-        conc.sync()
-        if corplib.subcorpus_from_conc(path, conc):
+        if len(tt_query) == 1:
+            result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
+        elif len(tt_query) > 1 or within_cql:
+            conc = conclib.get_conc(self._corp(), self._session_get('user', 'user'), q=imp_cql)
+            conc.sync()
+            struct = self._corp().get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
+            result = corplib.subcorpus_from_conc(path, conc, struct)
+        else:
+            raise UserActionException(_('Nothing specified!'))
+
+        if result:
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
@@ -89,7 +100,7 @@ class Subcorpus(Kontext):
         try:
             ans = self._create_subcorpus(request)
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except Exception as e:
+        except (ConcError, UserActionException) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
             ans = self.subcorp_form(request, None)
         return ans
