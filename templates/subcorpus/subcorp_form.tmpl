@@ -58,15 +58,15 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             </td>
         </tr>
         <tr id="subc-within-row" style="display: none">
-            <th>$_('Condition within'):</th>
+            <th>$_('Custom CQL \'within\' condition'):</th>
             <td>
-                <strong>&lt;</strong><select id="within-struct-selector" name="within_struct">
-                    #for key, value in $structs_and_attrs.items()
-                    <option value="$key" title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</option>
-                    #end for
-                </select><a id="struct-hint"><img data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png" class="over-img"></a>
-                <input id="within-condition-input" type="text" name="within_condition" size="50" value="#filter $HtmlEscape #$within_condition#end filter#" />
-                <strong>/&gt;</strong>
+                <textarea name="within_cql" rows="3" cols="60">#filter $HtmlEscape #$within_condition#end filter#</textarea>
+                <div>
+                #for key, value in $structs_and_attrs.items()
+                    <span title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</span>
+                #end for
+                </div>
+
             </td>
         </tr>
         <tr id="subc-mixer-row" style="display: none">

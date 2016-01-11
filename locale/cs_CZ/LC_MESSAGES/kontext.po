@@ -403,8 +403,8 @@ msgid "Attribute list"
 msgstr "Seznam atributů"
 
 #: cmpltmpl/subcorp_form.py:250
-msgid "Condition within"
-msgstr "Podmínka 'within'"
+msgid "Custom CQL 'within' condition"
+msgstr "Vlastní CQL 'within' podmínka"
 
 #: cmpltmpl/addlngrouplabel.py:133
 msgid "Add next"

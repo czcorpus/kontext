@@ -20,7 +20,7 @@ Expected factory method signature: create_instance(config, db)
 
 class AbstractSubcRestore(object):
 
-    def store_query(self, user_id, corpname, subcname, structname, condition):
+    def store_query(self, user_id, corpname, subcname, cql):
         """
         Stores user's subcorpus query. Please note that the method should
         also:
@@ -31,9 +31,7 @@ class AbstractSubcRestore(object):
         user_id -- int, ID of a user
         corpname -- a name of a corpus
         subcname -- a name of a subcorpus
-        structname -- name of a structure used to define a subcorpus
-        condition -- a CQL-compatible conjunctive normal form describing required attribute values
-                     e.g.: srclang="en" & (txtype="FAC" | txtype="IMA") & txtype_group="fiction"
+        cql -- a query used to define the subcorpus
         returns:
         None
         """

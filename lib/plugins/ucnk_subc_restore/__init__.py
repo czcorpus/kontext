@@ -20,8 +20,7 @@ CREATE TABLE subc_archive (
   user_id INTEGER NOT NULL,
   corpname TEXT NOT NULL,
   subcname TEXT NOT NULL,
-  struct_name TEXT NOT NULL,
-  condition TEXT NOT NULL,
+  cql TEXT NOT NULL,
   timestamp INTEGER NOT NULL
 );
 
@@ -60,10 +59,9 @@ class UCNKSubcRestore(AbstractSubcRestore):
         self._corparch = corparch
         self._db = create_engine('sqlite:///%s' % self._conf.get('plugins')['subc_restore']['ucnk:db_path'])
 
-    def store_query(self, user_id, corpname, subcname, structname, condition):
-        self._db.execute('INSERT INTO subc_archive (user_id, corpname, subcname, struct_name, condition, timestamp) '
-                         'VALUES (?, ?, ?, ?, ?, ?)', (user_id, corpname, subcname, structname, condition,
-                                                       int(time.time())))
+    def store_query(self,  user_id, corpname, subcname, cql):
+        self._db.execute('INSERT INTO subc_archive (user_id, corpname, subcname, cql, timestamp) '
+                         'VALUES (?, ?, ?, ?, ?)', (user_id, corpname, subcname, cql, int(time.time())))
 
     def delete_query(self, user_id, corpname, subcname):
         self._db.execute('DELETE FROM subc_archive WHERE user_id = ? AND corpname = ? AND subcname = ?',

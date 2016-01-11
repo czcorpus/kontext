@@ -22,6 +22,7 @@ import plugins
 import l10n
 from l10n import export_string, import_string, format_number
 import corplib
+import conclib
 from argmapping import ConcArgsMapping
 
 
@@ -48,41 +49,44 @@ class Subcorpus(Kontext):
         within_struct -- a structure the within_condition will be applied to
         """
         subcname = request.form['subcname']
-        within_condition = request.form['within_condition']
-        within_struct = request.form['within_struct']
+        within_cql = request.form['within_cql']
         corp_encoding = self._corp().get_conf('ENCODING')
 
-        if within_condition and within_struct:  # user entered a subcorpus query manually
-            tt_query = [(export_string(within_struct, to_encoding=corp_encoding),
-                        export_string(within_condition, to_encoding=corp_encoding))]
+        if within_cql:  # user entered a subcorpus query manually
+            tt_query = ()
+            full_cql = 'aword,[] within %s' % within_cql
+            imp_cql = (full_cql,)
         else:
             tt_query = self._texttype_query(request)
-            within_struct = import_string(tt_query[0][0], from_encoding=corp_encoding)
-            within_condition = import_string(tt_query[0][1], from_encoding=corp_encoding)
-
+            full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
+            full_cql = 'aword,[] within %s' % full_cql
+            full_cql = import_string(full_cql, from_encoding=corp_encoding)
+            imp_cql = (full_cql,)
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
-            raise ConcError(_('No subcorpus name specified!'))
+            raise UserActionException(_('No subcorpus name specified!'))
         path = self.prepare_subc_path(basecorpname, subcname)
-        if not tt_query:
-            raise ConcError(_('Nothing specified!'))
 
-        # Even if _texttype_query() parsed multiple structures into tt_query,
-        # Manatee can accept directly only one (but with arbitrarily complex attribute
-        # condition).
-        # For this reason, we choose only the first struct+condition pair.
-        # It is up to the user interface to deal with it.
-        structname, subquery = tt_query[0]
         if type(path) == unicode:
-            path = path.encode("utf-8")
-        if corplib.create_subcorpus(path, self._corp(), structname, subquery):
+            path = path.encode('utf-8')
+
+        if len(tt_query) == 1:
+            result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
+        elif len(tt_query) > 1 or within_cql:
+            conc = conclib.get_conc(self._corp(), self._session_get('user', 'user'), q=imp_cql)
+            conc.sync()
+            struct = self._corp().get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
+            result = corplib.subcorpus_from_conc(path, conc, struct)
+        else:
+            raise UserActionException(_('Nothing specified!'))
+
+        if result:
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
                                                             corpname=self.args.corpname,
                                                             subcname=subcname,
-                                                            structname=within_struct,
-                                                            condition=within_condition)
+                                                            cql=full_cql)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
@@ -96,7 +100,7 @@ class Subcorpus(Kontext):
         try:
             ans = self._create_subcorpus(request)
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except Exception as e:
+        except (ConcError, UserActionException) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
             ans = self.subcorp_form(request, None)
         return ans

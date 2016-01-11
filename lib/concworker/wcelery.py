@@ -68,9 +68,9 @@ class TaskRegistration(concworker.GeneralWorker):
     def __init__(self):
         super(TaskRegistration, self).__init__()
 
-    def __call__(self, corpus, subchash, query, samplesize):
+    def __call__(self, corpus_name, subc_name, subchash, query, samplesize):
         corpus_manager = CorpusManager()
-        corpus_obj = corpus_manager.get_Corpus(corpus)
+        corpus_obj = corpus_manager.get_Corpus(corpus_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         pidfile = self._create_pid_file()
         cachefile, stored_pidfile = cache_map.add_to_map(subchash, query, 0, pidfile)
@@ -84,18 +84,20 @@ class CeleryCalculation(concworker.GeneralWorker):
         """
         super(CeleryCalculation, self).__init__()
 
-    def __call__(self, initial_args, corpus, subchash, query, samplesize):
+    def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
         """
         initial_args -- InitialArgs instance
+        subc_dir -- a directory where user's subcorpora are stored
         corpus -- a corpus identifier
+        subc_name -- subcorpus name (should be None if not present)
         subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
         query -- a tuple/list containing current query
-        samplesize -- ???
+        samplesize -- row limit
         """
         sleeptime = None
         try:
-            corpus_manager = CorpusManager()
-            corpus_obj = corpus_manager.get_Corpus(corpus)
+            corpus_manager = CorpusManager(subcpath=(subc_dir,))
+            corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
 
             if not initial_args.stored_pidfile:
