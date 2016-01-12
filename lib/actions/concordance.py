@@ -671,13 +671,13 @@ class Actions(Kontext):
             else:
                 raise ConcError(_('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
+        query = import_string(query, from_encoding=self._corp().get_conf('ENCODING'))
         if within:
             wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
             self.args.q[0] += wquery
             self.args.q.append('x-' + (self.args.maincorp or self.args.corpname))
         else:
-            self.args.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos,
-                                             rank, query))
+            self.args.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos, rank, query))
         try:
             return self.view()
         except:
