@@ -111,7 +111,7 @@ interface SearchResponse {
 /**
  *
  */
-export interface Options {
+export interface Options extends CorpusArchive.Options {
 
     /**
      * form's action attribute; if omitted then form's current one is used
@@ -324,7 +324,7 @@ class WidgetMenu {
  */
 class SearchTab implements WidgetTab {
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:Kontext.FirstFormPage;
 
     widgetWrapper:HTMLElement;
 
@@ -641,7 +641,7 @@ class SearchTab implements WidgetTab {
  */
 class FavoritesTab implements WidgetTab {
 
-    pageModel:Kontext.PluginApi;
+    pageModel:Kontext.FirstFormPage;
 
     widgetWrapper:HTMLElement;
 
@@ -666,7 +666,7 @@ class FavoritesTab implements WidgetTab {
     /**
      *
      */
-    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
+    constructor(pageModel:Kontext.FirstFormPage, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
                 dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
                 customListFilter?:(item:common.CorplistItem)=>boolean) {
         var self = this;
@@ -931,13 +931,13 @@ class FavoritesTab implements WidgetTab {
  */
 class StarSwitch {
 
-    pageModel:Kontext.PluginApi;
+    pageModel:Kontext.FirstFormPage;
 
     triggerElm:HTMLElement;
 
     itemId:string;
 
-    constructor(pageModel:Kontext.PluginApi, triggerElm:HTMLElement, itemId:string) {
+    constructor(pageModel:Kontext.FirstFormPage, triggerElm:HTMLElement, itemId:string) {
         this.pageModel = pageModel;
         this.triggerElm = triggerElm;
         this.itemId = itemId;
@@ -1270,7 +1270,7 @@ class StarComponent {
  * Corplist widget class. In most situations it is easier
  * to instantiate this via an exported function create().
  */
-export class Corplist {
+export class Corplist implements CorpusArchive.Widget {
 
     selectElm:HTMLElement;
 

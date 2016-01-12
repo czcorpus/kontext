@@ -1277,7 +1277,7 @@ class StarComponent {
  * Corplist widget class. In most situations it is easier
  * to instantiate this via an exported function create().
  */
-export class Corplist {
+export class Corplist implements CorpusArchive.Widget {
 
     selectElm:HTMLElement;
 

@@ -1176,7 +1176,7 @@ class Plugin implements common.LiveAttributesApi {
 export function init(pluginApi:Kontext.QueryPagePluginApi,
                      conf:{[key:string]:string},
                      updateButton:HTMLElement, resetButton:HTMLElement,
-                     attrFieldsetWrapper:HTMLElement) {
+                     attrFieldsetWrapper:HTMLElement):rsvp.Promise<LiveAttributes.Widget> {
     let pluginConf:{[key:string]:any} = conf['pluginData']['live_attributes'];
     if (!pluginConf) {
         throw new Error('Missing configuration for live_attributes');

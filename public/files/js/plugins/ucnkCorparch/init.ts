@@ -20,6 +20,7 @@
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../common/plugins/corparch.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
@@ -49,7 +50,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  * @param options A configuration for the widget
  */
 export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
-                       options:widget.Options):widget.Corplist {
+                       options:CorpusArchive.Options):CorpusArchive.Widget {
     var corplist:widget.Corplist,
         data:Array<common.CorplistItem>;
 

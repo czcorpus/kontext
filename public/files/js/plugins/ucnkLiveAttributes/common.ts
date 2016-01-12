@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../common/plugins/liveAttributes.ts" />
+
 import rsvp = require('vendor/rsvp');
 
 /**
@@ -70,7 +72,7 @@ export interface AjaxAnimation {
     animElm:HTMLElement;
 }
 
-export interface LiveAttributesApi {
+export interface LiveAttributesApi extends LiveAttributes.Widget {
     createAnimation():AjaxAnimation;
     replaceRawInput(inputElm:HTMLElement, queryArgs:{[key:string]:any}):rsvp.Promise<any>;
 }
