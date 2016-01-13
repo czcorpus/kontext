@@ -23,6 +23,7 @@
 /// <reference path="../common/plugins/corparch.ts" />
 /// <reference path="../common/plugins/subcmixer.ts" />
 /// <reference path="../common/plugins/liveAttributes.ts" />
+/// <reference path="../views/subcorpForm.d.ts" />
 
 // -- dynamic loading of custom plug-in implementation
 /// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
@@ -32,6 +33,10 @@
 import $ = require('jquery');
 import document = require('tpl/document');
 import popupBox = require('popupbox');
+import subcorpFormViews = require('views/subcorpForm');
+import subcorpFormStoreModule = require('stores/subcorpForm');
+
+// dynamic imports
 declare var subcmixer:Subcmixer.Module;
 declare var corplistComponent:CorpusArchive.Module;
 declare var liveAttributes:LiveAttributes.Module;
@@ -100,9 +105,16 @@ export class SubcorpForm {
 
     private corplistComponent:CorpusArchive.Widget;
 
-    constructor(pageModel:document.PageModel, corplistComponent:CorpusArchive.Widget) {
+    private viewComponents:any; // TODO types
+
+    private subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore;
+
+    constructor(pageModel:document.PageModel, corplistComponent:CorpusArchive.Widget, viewComponents,
+            subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.pageModel = pageModel;
         this.corplistComponent = corplistComponent;
+        this.viewComponents = viewComponents;
+        this.subcorpFormStore = subcorpFormStore;
     }
 
     formChangeCorpus(item:JQueryEventObject):void {
@@ -135,18 +147,26 @@ export class SubcorpForm {
             'mixer': '#subc-mixer-row'
         };
         let jqSubmitBtn = $('#subcorp-form').find('input[type=submit]');
-        (function () {
-            for (let p in widgetMap) {
-                if (widgetMap.hasOwnProperty(p)) {
-                    $(widgetMap[p]).hide();
-                }
+        for (let p in widgetMap) {
+            if (widgetMap.hasOwnProperty(p)) {
+                $(widgetMap[p]).hide();
             }
-        }());
+        }
+        jqSubmitBtn.off('click.customized');
+        let self = this;
         if (value === 'raw') {
             $('#subc-within-row').show();
-            $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
             jqSubmitBtn.show();
-
+            jqSubmitBtn.on('click.customized', (evt:JQueryEventObject) => {
+                $('#within-cql-field').val(self.subcorpFormStore.exportCql());
+            });
+            $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
+            this.pageModel.renderReactComponent(this.viewComponents.WithinBuilder,
+                    $('#subc-within-row .container').get(0),
+                    {
+                        structsAndAttrs: this.pageModel.getConf('structsAndAttrs')
+                    }
+            );
 
         } else if (value === 'gui') {
             $('.text-type-params')
@@ -206,7 +226,13 @@ export function init(conf:any) {
         {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
     );
 
-    let pageModel = new SubcorpForm(layoutModel, corplist);
+    let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
+        layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0]);
+    let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
+            layoutModel.exportMixins(), subcorpFormStore);
+
+    let pageModel = new SubcorpForm(layoutModel, corplist, subcorpFormComponents,
+            subcorpFormStore);
     pageModel.init();
 
     liveAttributes.init(extendedApi, conf, $('#live-attrs-update').get(0),

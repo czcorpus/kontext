@@ -29,6 +29,7 @@ $_("Create Subcorpus")#slurp
 
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.subcmixerFormData = #filter $Jsonize#$subcmixer_form_data#end filter#;
+    conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
     pageSelf.init(conf);
 });
 
@@ -59,16 +60,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             </td>
         </tr>
         <tr id="subc-within-row" style="display: none">
-            <th>$_('Custom CQL \'within\' condition'):</th>
-            <td>
-                <textarea name="within_cql" rows="3" cols="60">#filter $HtmlEscape #$within_condition#end filter#</textarea>
-                <div>
-                #for key, value in $structs_and_attrs.items()
-                    <span title="#echo (', ').join($value) #" #if $key == $within_struct#selected="selected"#end if#>$key</span>
-                #end for
-                </div>
-
-            </td>
+            <th>$_('Custom CQL \'within\' condition'):
+                <input id="within-cql-field" type="hidden" name="within_cql" />
+            </th>
+            <td class="container"></td>
         </tr>
         <tr id="subc-mixer-row" style="display: none">
             <th></th>

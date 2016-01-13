@@ -54,7 +54,7 @@ class Subcorpus(Kontext):
 
         if within_cql:  # user entered a subcorpus query manually
             tt_query = ()
-            full_cql = 'aword,[] within %s' % within_cql
+            full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         else:
             tt_query = self._texttype_query(request)
