@@ -75,8 +75,8 @@ $_("Collocations")#slurp
                     <fieldset class="float">
                         #if $collpage > 1
                         <div class="bonito-pagination-left">
-                            <a href="$allhref"><img class="alt-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                            <a href="$allhref;collpage=$(int($collpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                            <a href="$join_params($allhref, $dict(collpage=1))"><img class="alt-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
+                            <a href="$join_params($allhref, $dict(collpage=int($collpage) - 1))"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
                         </div>
                         #end if
 
