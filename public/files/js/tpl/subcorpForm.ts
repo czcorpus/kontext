@@ -206,9 +206,37 @@ export class SubcorpForm {
         });
     }
 
+    initHints():void {
+        let attrs = this.pageModel.getConf('structsAndAttrs');
+        let msg = this.pageModel.translate('global__within_hint_text');
+        let hintRoot = $(window.document.createElement('div'));
+        let structList = $(window.document.createElement('ul'));
+        let hintAttrs = $(window.document.createElement('p'));
+
+        hintRoot.append('<p>' + msg + '</p>');
+        hintRoot.append(hintAttrs);
+        hintAttrs.append(this.pageModel.translate('global__within_hint_attrs'));
+
+        for (let p in attrs) {
+            if (attrs.hasOwnProperty(p)) {
+                structList.append('<li><strong>' + p + '</strong>: ' + attrs[p].join(', ') + '</li>');
+            }
+        }
+        hintAttrs.append(structList);
+
+        popupBox.bind(
+            $('#custom-within-hint').get(0),
+            hintRoot,
+            {
+                width: 'nice'
+            }
+        );
+    }
+
     init():void {
         this.initSubcCreationVariantSwitch();
         this.sizeUnitsSafeSwitch();
+        this.initHints();
     }
 }
 

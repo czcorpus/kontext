@@ -42,6 +42,32 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        let CloseImg = React.createClass({
+
+            mixins: mixins,
+
+            getInitialState : function () {
+                return {img: this.createStaticUrl('img/close-icon.png')};
+            },
+
+            _onMouseOver : function () {
+                this.setState({img: this.createStaticUrl('img/close-icon_s.png')});
+            },
+
+            _onMouseOut : function () {
+                this.setState({img: this.createStaticUrl('img/close-icon.png')});
+            },
+
+            render : function () {
+                return <img className="remove-line"
+                            onClick={this.props.onClick}
+                            onMouseOver={this._onMouseOver}
+                            onMouseOut={this._onMouseOut}
+                            src={this.state.img}
+                            title={this.translate('global__remove_line')} />
+            }
+        });
+
         let WithinLine = React.createClass({
             mixins : mixins,
 
@@ -70,7 +96,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 });
             },
 
+            _getStructHint : function (structName) {
+                return (this.props.structsAndAttrs[structName] || []).join(', ');
+            },
+
             render : function () {
+                let self = this;
                 return (
                     <tr>
                         <td>
@@ -83,7 +114,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 defaultValue={this.props.lineData.structureName}>
                             {
                                 Object.keys(this.props.structsAndAttrs).map(
-                                    (item) => <option key={item} value={item}>{item}</option>
+                                    (item) => <option key={item}
+                                                      value={item}
+                                                      title={self._getStructHint(item)}>{item}</option>
                                 )
                             }
                             </select>
@@ -95,10 +128,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         </td>
                         <td>
                             { this.props.rowIdx > 0
-                                ?
-                                <img className="remove-line" src={this.createStaticUrl('img/close-icon.png')}
-                                     onClick={this._removeHandler} />
-                                : null
+                                ? <CloseImg onClick={this._removeHandler} /> : null
                             }
                         </td>
                     </tr>
@@ -152,11 +182,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                     <table>
                         <tbody>
-                        {lines.map((line) => this._renderWithinLine(line))}
-                            <tr key="button-row">
-                                <td colSpan="4">
-                                    <button type="button" onClick={this._addLineHandler}>{this.translate('add "within"', {})}</button>
+                            {lines.map((line) => this._renderWithinLine(line))}
+                            <tr key="button-row" className="last-line">
+                                <td>
+                                    <a className="add-within"
+                                        onClick={this._addLineHandler}
+                                        title={this.translate('global__add_within')}>+</a>
                                 </td>
+                                <td colSpan="3"></td>
                             </tr>
                         </tbody>
                     </table>

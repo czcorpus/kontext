@@ -60,7 +60,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             </td>
         </tr>
         <tr id="subc-within-row" style="display: none">
-            <th>$_('Custom CQL \'within\' condition'):
+            <th>$_('Custom \'within\' condition')
+                <a id="custom-within-hint" class="context-help">
+                    <img class="over-img"
+                         data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png">
+                </a>:
                 <input id="within-cql-field" type="hidden" name="within_cql" />
             </th>
             <td class="container"></td>
