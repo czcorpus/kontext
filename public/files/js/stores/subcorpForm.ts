@@ -41,10 +41,18 @@ export class SubcorpFormStore extends util.SimplePageStore {
 
     private lines:Array<WithinLine>;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, initialStructName:string) {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, initialStructName:string,
+            initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
         let self = this;
-        this.lines = [new WithinLine(0, false, initialStructName, '')];
+        this.lines = [];
+
+        (initialState || []).forEach((item) => {
+            self.importLine(item);
+        });
+        if (this.lines.length === 0) {
+            this.lines.push(new WithinLine(this.lines.length, false, initialStructName, ''));
+        }
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'LINE_ADDED':
@@ -66,6 +74,10 @@ export class SubcorpFormStore extends util.SimplePageStore {
         this.lines[i] = new WithinLine(i, data['negated'], data['structureName'], data['attributeCql']);
     }
 
+    importLine(data) {
+        this.lines.push(new WithinLine(this.lines.length, data['negated'], data['structure_name'], data['attribute_cql']));
+    }
+
     addLine(data) {
         this.lines.push(new WithinLine(this.lines.length, data['negated'], data['structureName'], data['attributeCql']));
     }
@@ -84,5 +96,15 @@ export class SubcorpFormStore extends util.SimplePageStore {
                 (v.negated ? '!within' : 'within') + ' <' + v.structureName
                     + ' ' + v.attributeCql + ' />')
         ).join(' ');
+    }
+
+    exportJson():string {
+        return JSON.stringify(this.lines.filter((v)=>v != null).map(
+            (v:WithinLine) => ({
+                    negated: v.negated,
+                    structure_name: v.structureName,
+                    attribute_cql: v.attributeCql
+            })
+        ));
     }
 }

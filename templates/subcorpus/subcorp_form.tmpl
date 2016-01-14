@@ -30,6 +30,7 @@ $_("Create Subcorpus")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.subcmixerFormData = #filter $Jsonize#$subcmixer_form_data#end filter#;
     conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
+    conf.currentWithinJson = #filter $Jsonize#$within_json#end filter#;
     pageSelf.init(conf);
 });
 
@@ -65,7 +66,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                     <img class="over-img"
                          data-alt-img="../files/img/question-mark_s.png" src="../files/img/question-mark.png">
                 </a>:
-                <input id="within-cql-field" type="hidden" name="within_cql" />
+                <input id="within-json-field" type="hidden" name="within_json" />
             </th>
             <td class="container"></td>
         </tr>

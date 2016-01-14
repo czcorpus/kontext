@@ -158,7 +158,7 @@ export class SubcorpForm {
             $('#subc-within-row').show();
             jqSubmitBtn.show();
             jqSubmitBtn.on('click.customized', (evt:JQueryEventObject) => {
-                $('#within-cql-field').val(self.subcorpFormStore.exportCql());
+                $('#within-json-field').val(self.subcorpFormStore.exportJson());
             });
             $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
             this.pageModel.renderReactComponent(this.viewComponents.WithinBuilder,
@@ -255,7 +255,8 @@ export function init(conf:any) {
     );
 
     let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
-        layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0]);
+        layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
+        layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
     let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
 
