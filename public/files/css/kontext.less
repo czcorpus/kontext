@@ -1434,7 +1434,7 @@ fieldset.options input[type='text'] {
 
 a.context-help {
   text-decoration: none;
-  padding: 0em 0.2em;
+  padding: 0;
 }
 
 a.context-help:hover {
@@ -1515,6 +1515,25 @@ footer .debug-warning {
 
 #subc-within-row .code {
     font-family: @monospace-font-family;
+}
+
+#subc-within-row td.container tr.last-line .add-within {
+    background-color: @color-logo-blue;
+    border-color: @color-logo-blue;
+    color: #eeeeee;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15pt;
+    text-decoration: none;
+    padding: 0 0.8em;
+    -moz-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+    -webkit-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+    box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+}
+
+#subc-within-row td.container tr.last-line .add-within:hover {
+    background-color: @color-logo-blue-shining;
 }
 
 .remove-level img {
@@ -1616,17 +1635,17 @@ a.bib-info:hover {
   font-size: 14px;
   color: #ffffff;
   padding: 3px 9px;
-  background-color: #009de0;
+  background-color: @color-logo-blue;
   border-radius: 3px;
-  border: 1px solid #009de0;
+  border: 1px solid @color-logo-blue;
   -moz-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
   -webkit-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
   box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
 }
 
 .default-button:hover {
-  background-color: #00CAF6;
-  border-color: #00CAF6;
+  background-color: @color-logo-blue-shining;
+  border-color: @color-logo-blue-shining;
 }
 
 ul.struct-attrs {
