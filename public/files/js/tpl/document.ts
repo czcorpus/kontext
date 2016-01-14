@@ -970,7 +970,7 @@ export class PageModel implements Kontext.PluginProvider {
         return ans.join('&');
     }
 
-    getConf(item:string):any {
+    getConf<T>(item:string):T {
         return this.conf[item];
     }
 

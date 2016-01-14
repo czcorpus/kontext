@@ -12,6 +12,7 @@
 
 import os
 import logging
+import json
 
 import werkzeug.urls
 
@@ -20,7 +21,7 @@ from kontext import Kontext, ConcError, MainMenu, UserActionException
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import export_string, import_string, format_number
+from l10n import import_string, format_number
 import corplib
 import conclib
 from argmapping import ConcArgsMapping
@@ -40,6 +41,19 @@ class Subcorpus(Kontext):
             os.makedirs(path)
         return os.path.join(path, subcname) + '.subc'
 
+    def _deserialize_custom_within(self, data):
+        """
+         return this.lines.filter((v)=>v != null).map(
+            (v:WithinLine) => (
+                (v.negated ? '!within' : 'within') + ' <' + v.structureName
+                    + ' ' + v.attributeCql + ' />')
+        ).join(' ');
+        }
+        """
+        return ' '.join(map(lambda item: ('!within' if item['negated'] else 'within') + ' <%s %s />' % (
+                item['structure_name'], item['attribute_cql']),
+            filter(lambda item: bool(item), data)))
+
     def _create_subcorpus(self, request):
         """
         req. arguments:
@@ -49,11 +63,12 @@ class Subcorpus(Kontext):
         within_struct -- a structure the within_condition will be applied to
         """
         subcname = request.form['subcname']
-        within_cql = request.form['within_cql']
+        within_json = request.form['within_json']
         corp_encoding = self._corp().get_conf('ENCODING')
 
-        if within_cql:  # user entered a subcorpus query manually
+        if within_json:  # user entered a subcorpus query manually
             tt_query = ()
+            within_cql = self._deserialize_custom_within(json.loads(within_json))
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         else:
@@ -95,12 +110,13 @@ class Subcorpus(Kontext):
         else:
             raise ConcError(_('Empty subcorpus!'))
 
-    @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm')
+    @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
+             http_method='POST')
     def subcorp(self, request):
         try:
             ans = self._create_subcorpus(request)
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except (ConcError, UserActionException) as e:
+        except (ConcError, UserActionException, RuntimeError) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
             ans = self.subcorp_form(request, None)
         return ans
@@ -113,8 +129,7 @@ class Subcorpus(Kontext):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         self._reset_session_conc()
         method = request.form.get('method', 'gui')
-        within_condition = request.form.get('within_condition', None)
-        within_struct = request.form.get('within_struct', None)
+        within_json = request.form.get('within_json', None)
         subcname = request.form.get('subcname', None)
 
         try:
@@ -136,13 +151,11 @@ class Subcorpus(Kontext):
             out['subcmixer_form_data'] = plugins.get('subcmixer').form_data(self._plugin_api)
         else:
             out['subcmixer_form_data'] = {}
-
         out.update({
             'TextTypeSel': tt_sel,
             'structs_and_attrs': structs_and_attrs,
             'method': method,
-            'within_condition': within_condition,
-            'within_struct': within_struct,
+            'within_json': json.loads(within_json) if within_json else None,
             'subcname': subcname
         })
         return out

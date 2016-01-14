@@ -75,7 +75,7 @@ export class WordlistPage {
                     $('#processbar').css('width', data.status + '%');
                     if (data.status === 100) {
                         self.stopWatching(); // just for sure
-                        window.location.href = self.pageModel.getConf('reloadUrl');
+                        window.location.href = self.pageModel.getConf<string>('reloadUrl');
 
                     } else if (self.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
                         self.stopWithError();
