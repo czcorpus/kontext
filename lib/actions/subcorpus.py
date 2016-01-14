@@ -129,7 +129,7 @@ class Subcorpus(Kontext):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         self._reset_session_conc()
         method = request.form.get('method', 'gui')
-        within_json = request.form.get('within_json', None)
+        within_json = request.form.get('within_json', 'null')
         subcname = request.form.get('subcname', None)
 
         try:
@@ -155,7 +155,7 @@ class Subcorpus(Kontext):
             'TextTypeSel': tt_sel,
             'structs_and_attrs': structs_and_attrs,
             'method': method,
-            'within_json': json.loads(within_json) if within_json else None,
+            'within_json': within_json,
             'subcname': subcname
         })
         return out
