@@ -20,48 +20,20 @@
  * Common types and functions used by plug-in objects
  */
 
-/**
- *
- */
-export enum Favorite {
-    NOT_FAVORITE = 0,
-    FAVORITE = 1
-}
-
-export class CorplistItemType {
-    static CORPUS:string = 'corpus';
-    static SUBCORPUS:string = 'subcorpus';
-    static ALIGNED_CORPORA:string = 'aligned_corpora';
-}
+import defaultCorparch = require('../defaultCorparch/common');
 
 /**
  * Generalized corplist item which may refer to a single
  * corpus, subcorpus, corpus with aligned corpora.
  */
-export interface CorplistItem {
-    id?: string;
-    name: string;
-    type: string;
-    corpus_id: string;
-    canonical_id: string;
-    subcorpus_id: string;
-    corpora: Array<string>;
-    description: string;
-    featured: Favorite;
-    user_item: boolean;
-    size: number;
-    /**
-     * A simplified/human readable version of size.
-     * E.g. if the size is 1,200,000 then the size_info is '1M'
-     */
-    size_info: string;
+export interface CorplistItemUcnk extends defaultCorparch.CorplistItem {
     requestable: boolean;
 }
 
 /**
- * A factory for CorplistItem
+ * A factory for CorplistItemUcnk
  */
-export function createEmptyCorplistItem():CorplistItem {
+export function createEmptyCorplistItem():CorplistItemUcnk {
     return {
         id: null, name: null, type: null, corpus_id: null, canonical_id: null,
         subcorpus_id: null, corpora: null, description: null, featured: null,

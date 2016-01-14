@@ -52,7 +52,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
 export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
                        options:CorpusArchive.Options):CorpusArchive.Widget {
     var corplist:widget.Corplist,
-        data:Array<common.CorplistItem>;
+        data:Array<common.CorplistItemUcnk>;
 
     data = widget.fetchDataFromSelect(selectElm);
     corplist = new widget.Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));

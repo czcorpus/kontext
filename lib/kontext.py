@@ -13,7 +13,6 @@
 
 from types import ListType
 import json
-import time
 from functools import partial
 import logging
 import inspect
@@ -21,13 +20,13 @@ import urllib
 import os.path
 import copy
 import re
+import collections
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 
 import corplib
-import conclib
-from controller import Controller, UserActionException, convert_types, exposed
+from controller import Controller, UserActionException, convert_types
 import plugins
 import settings
 import l10n
@@ -1144,24 +1143,9 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True):
+    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
         corp = self._corp()
         ans = {}
-
-        def compute_norm(attrname, attr, value):
-            valid = attr.str2id(export_string(unicode(value), to_encoding=self._corp().get_conf('ENCODING')))
-            r = corp.filter_query(struct.attr_val(attrname, valid))
-            cnt = 0
-            while not r.end():
-                cnt += normvals[r.peek_beg()]
-                r.next()
-            return cnt
-
-        def safe_int(s):
-            try:
-                return int(s)
-            except ValueError:
-                return 0
 
         if not subcorpattrs:
             subcorpattrs = corp.get_conf('SUBCORPATTRS')
@@ -1187,45 +1171,25 @@ class Kontext(Controller):
         else:
             ans['bib_attr'] = None
             list_none = ()
+
         tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:
-            basestructname = subcorpattrs.split('.')[0]
-            struct = corp.get_struct(basestructname)
-            normvals = {}
-            if self.args.subcnorm not in ('freq', 'tokens'):
-                try:
-                    nas = struct.get_attr(self.args.subcnorm).pos2str
-                except conclib.manatee.AttrNotFound, e:
-                    self.add_system_message('error', str(e))
-                    self.args.subcnorm = 'freq'
-            if self.args.subcnorm == 'freq':
-                normvals = dict([(struct.beg(i), 1)
-                                 for i in range(struct.size())])
-            elif self.args.subcnorm == 'tokens':
-                normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
-                                 for i in range(struct.size())])
-            else:
-                normvals = dict([(struct.beg(i), safe_int(nas(i)))
-                                 for i in range(struct.size())])
+            from texttypes import StructNormsCalc
+            struct_calc = collections.OrderedDict()
+            for item in subcorpattrs.split(','):
+                k = item.split('.')[0]
+                struct_calc[k] = StructNormsCalc(self._corp(), k, subcnorm)
 
-            for item in tt:
-                for col in item['Line']:
-                    if 'textboxlength' in col:
-                        continue
-                    if not col['name'].startswith(basestructname):
-                        col['textboxlength'] = 30
-                        continue
-                    attr = corp.get_attr(col['name'])
-                    aname = col['name'].split('.')[-1]
+            for col in reduce(lambda p, c: p + c['Line'], tt, []):
+                if 'textboxlength' not in col:
+                    structname, attrname = col['name'].split('.')
                     for val in col['Values']:
-                        if format_num:
-                            val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
-                        else:
-                            val['xcnt'] = compute_norm(aname, attr, val['v'])
+                        v = struct_calc[structname].compute_norm(attrname, val['v'])
+                        val['xcnt'] = format_number(v) if format_num else v
             ans['Blocks'] = tt
-            ans['Normslist'] = self._get_normslist(basestructname)
+            ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
         else:
             ans['Blocks'] = tt
             ans['Normslist'] = []

@@ -131,9 +131,10 @@ class Subcorpus(Kontext):
         method = request.form.get('method', 'gui')
         within_json = request.form.get('within_json', 'null')
         subcname = request.form.get('subcname', None)
+        subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = self._texttypes_with_norms()
+            tt_sel = self._texttypes_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
@@ -156,7 +157,8 @@ class Subcorpus(Kontext):
             'structs_and_attrs': structs_and_attrs,
             'method': method,
             'within_json': within_json,
-            'subcname': subcname
+            'subcname': subcname,
+            'subcnorm': subcnorm
         })
         return out
 

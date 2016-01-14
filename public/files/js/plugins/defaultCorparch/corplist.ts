@@ -28,23 +28,26 @@ declare var views:any;
  */
 export class CorplistFormStore extends util.SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    protected pluginApi:Kontext.PluginApi;
 
-    private selectedKeywords:{[key:string]:boolean};
+    protected corplistTableStore:CorplistTableStore;
 
-    private searchedCorpName:string;
+    protected selectedKeywords:{[key:string]:boolean};
 
-    private offset:number;
+    protected searchedCorpName:string;
 
-    private tagPrefix:string;
+    protected offset:number;
 
-    private data:any;
+    protected tagPrefix:string;
+
+    protected data:any;
 
     static DispatchToken:string;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
         super(pluginApi.dispatcher());
         var self = this;
+        this.corplistTableStore = corplistTableStore;
         this.pluginApi = pluginApi;
         this.data = {};
         this.selectedKeywords = {};
@@ -62,14 +65,14 @@ export class CorplistFormStore extends util.SimplePageStore {
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                             !self.selectedKeywords[payload.props['keyword']];
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
                     case 'KEYWORD_RESET_CLICKED':
                         self.offset = 0;
                         self.selectedKeywords = {};
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
@@ -77,7 +80,7 @@ export class CorplistFormStore extends util.SimplePageStore {
                         if (payload.props['offset']) {
                             self.offset = payload.props['offset'];
                         }
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
@@ -88,7 +91,7 @@ export class CorplistFormStore extends util.SimplePageStore {
                             delete payload.props['corpusName'];
                         }
                         self.updateFilter(payload.props);
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
@@ -97,7 +100,7 @@ export class CorplistFormStore extends util.SimplePageStore {
             });
     }
 
-    private updateFilter(filter:{[key:string]:string}) {
+    protected updateFilter(filter:{[key:string]:string}) {
         if (!this.data['filters']) {
             this.data['filters'] = {};
         }
@@ -159,9 +162,9 @@ export interface CorplistData {
  */
 export class CorplistTableStore extends util.SimplePageStore {
 
-    pluginApi:Kontext.PluginApi;
+    protected pluginApi:Kontext.PluginApi;
 
-    private data:CorplistData;
+    protected data:CorplistData;
 
     static DispatchToken:string;
 
@@ -231,12 +234,13 @@ export class CorplistTableStore extends util.SimplePageStore {
         );
     }
 
-    public loadData(query:string, filters:string, offset:number):void {
+    public loadData(query:string, filters:string, offset:number, limit?:number):void {
         var self = this;
         var prom = $.ajax(
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
             + '?query=' + encodeURIComponent(query)
             + (offset ? '&offset=' + offset : '')
+            + (limit ? '&limit=' + limit : '')
             + (filters ? '&' + filters : ''));
         prom.then(
             function (data) {
@@ -255,7 +259,7 @@ export class CorplistTableStore extends util.SimplePageStore {
         )
     }
 
-    private updateDataItem(corpusId, data) {
+    protected updateDataItem(corpusId, data) {
         (this.data.rows || []).forEach(function (item:common.CorplistItem) {
             if (item.id === corpusId) {
                 for (var p in data) {
@@ -307,17 +311,16 @@ export class CorplistPage implements Customized.CorplistPage {
 
     pluginApi:Kontext.PluginApi;
 
-    static CorplistFormStore:CorplistFormStore;
+    protected CorplistFormStore:CorplistFormStore;
 
-    static CorplistTableStore:CorplistTableStore;
+    protected CorplistTableStore:CorplistTableStore;
 
     constructor(pluginApi:Kontext.PluginApi) {
-        CorplistPage.CorplistFormStore = new CorplistFormStore(pluginApi);
-        CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
-        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
-            pluginApi.getViews(), CorplistPage.CorplistFormStore,
-            CorplistPage.CorplistTableStore);
         this.pluginApi = pluginApi;
+        this.CorplistTableStore = new CorplistTableStore(pluginApi);
+        this.CorplistFormStore = new CorplistFormStore(pluginApi, this.CorplistTableStore);
+        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+            pluginApi.getViews(), this.CorplistFormStore, this.CorplistTableStore);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {
@@ -326,7 +329,7 @@ export class CorplistPage implements Customized.CorplistPage {
 
     createList(targetElm:HTMLElement, properties:any):void {
         properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        CorplistPage.CorplistTableStore.setData(properties);
+        this.CorplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
 }

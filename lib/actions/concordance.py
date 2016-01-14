@@ -640,7 +640,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
-        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
+        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
