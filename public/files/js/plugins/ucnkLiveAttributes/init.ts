@@ -104,7 +104,9 @@ class LiveData {
         data.forEach(function (item:Array<string>) {
             if (item[0] !== 'id') {
                 jqRootElm.append('<strong>' + item[0].replace(/_([^_]+)$/, '.$1')
-                        + '</strong>: ' + item[1] + '<br />');
+                        + '</strong>: '
+                        + (item[1] != null && item[1] !== '' ? item[1] : '-')
+                        + '<br />');
             }
         });
     }
