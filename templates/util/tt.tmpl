@@ -27,14 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #set $showhiddenlist = $getVar("showhidden", '').split(".")
 <div class="text-type-params" data-bib-attr="$TextTypeSel['bib_attr']">
     <div class="text-type-top-bar">
-        #for $nn in $TextTypeSel['Normslist']
-        #if $nn.n == $subcnorm
-        | <strong>
-        #end if
-        <a href="$methodname?$corpname_url;reload=1;subcnorm=$nn['n']">$nn['label']</a>
-        #if $nn.n == $subcnorm
-    </strong>
-        #end if
+        #for $i, $nn in $enumerate($TextTypeSel['Normslist'])
+        #if $i > 0#|#end if#
+        #if $nn.n == $subcnorm#<strong>#end if#
+        <a href="$methodname?$join_params($corpname_url, $tuple((('reload', 1), ('subcnorm', $nn['n']))))">$nn['label']</a>
+        #if $nn.n == $subcnorm#</strong>#end if#
         #end for
     </div>
 

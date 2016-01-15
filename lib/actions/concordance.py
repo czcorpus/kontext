@@ -32,6 +32,7 @@ import l10n
 from l10n import import_string, export_string
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
+from texttypes import TextTypeCollector
 
 
 class Actions(Kontext):
@@ -544,7 +545,7 @@ class Actions(Kontext):
             qbase = 'a%s,' % self.args.default_attr
         else:
             qbase = 'q'
-        texttypes = self._texttype_query_OLD()
+        texttypes = TextTypeCollector(self._corp(), self.args).get_query()
         if texttypes:
             ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
                                     from_encoding=self._corp().get_conf('ENCODING'))
@@ -640,7 +641,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
-        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
+        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
@@ -656,7 +657,7 @@ class Actions(Kontext):
         if not inclkwic:
             pnfilter = pnfilter.upper()
         rank = {'f': 1, 'l': -1}.get(filfl, 1)
-        texttypes = self._texttype_query_OLD()
+        texttypes = TextTypeCollector(self._corp(), self.args).get_query()
         try:
             query = self._compile_query(cname=self.args.maincorp)
         except ConcError:

@@ -21,38 +21,20 @@
 import $ = require('jquery');
 import util = require('../../util');
 import common = require('./common');
+import corplistDefault = require('../defaultCorparch/corplist');
 declare var views:any;
 
 /**
  * This store handles corplist 'filter' form
  */
-export class CorplistFormStore extends util.SimplePageStore {
-
-    private pluginApi:Kontext.PluginApi;
-
-    private selectedKeywords:{[key:string]:boolean};
-
-    private searchedCorpName:string;
-
-    private offset:number;
-
-    private tagPrefix:string;
+export class CorplistFormStore extends corplistDefault.CorplistFormStore {
 
     private initialKeywords:Array<string>;
 
-    private data:any;
 
-    static DispatchToken:string;
-
-    constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi.dispatcher());
+    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+        super(pluginApi, corplistTableStore);
         let self = this;
-        this.pluginApi = pluginApi;
-        this.data = {};
-        this.selectedKeywords = {};
-        this.searchedCorpName = null;
-        this.offset = 0;
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
         (this.pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []).forEach(function (item) {
             self.selectedKeywords[item] = true;
         });
@@ -67,14 +49,14 @@ export class CorplistFormStore extends util.SimplePageStore {
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                             !self.selectedKeywords[payload.props['keyword']];
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
                     case 'KEYWORD_RESET_CLICKED':
                         self.offset = 0;
                         self.selectedKeywords = {};
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
@@ -82,7 +64,7 @@ export class CorplistFormStore extends util.SimplePageStore {
                         if (payload.props['offset']) {
                             self.offset = payload.props['offset'];
                         }
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset, CorplistTableStore.LoadLimit);
                         self.notifyChangeListeners();
                         break;
@@ -93,7 +75,7 @@ export class CorplistFormStore extends util.SimplePageStore {
                             delete payload.props['corpusName'];
                         }
                         self.updateFilter(payload.props);
-                        CorplistPage.CorplistTableStore.loadData(
+                        self.corplistTableStore.loadData(
                             self.exportQuery(), self.exportFilter(), self.offset);
                         self.notifyChangeListeners();
                         break;
@@ -102,72 +84,13 @@ export class CorplistFormStore extends util.SimplePageStore {
             }
        );
     }
-
-    private updateFilter(filter:{[key:string]:string}) {
-        if (!this.data['filters']) {
-            this.data['filters'] = {};
-        }
-        for (var p in filter) {
-            if (filter.hasOwnProperty(p)) {
-                this.data['filters'][p] = filter[p];
-            }
-        }
-    }
-
-    public exportFilter() {
-        var ans = [];
-
-        if (this.data['filters']) {
-            for (var p in this.data['filters']) {
-                if (this.data['filters'].hasOwnProperty(p)) {
-                    ans.push(p + '=' + encodeURIComponent(this.data['filters'][p]));
-                }
-            }
-        }
-        return ans.join('&');
-    }
-
-    setData(data:any):void {
-        this.data = data;
-    }
-
-    exportQuery():string {
-        var q = [];
-        for (var p in this.selectedKeywords) {
-            if (this.selectedKeywords[p] === true) {
-                q.push(this.tagPrefix + p);
-            }
-        }
-        if (this.searchedCorpName) {
-            q.push(this.searchedCorpName);
-        }
-        return q.join(' ');
-    }
-
-    getKeywordState(keyword:string):boolean {
-        return this.selectedKeywords[keyword];
-    }
-}
-
-
-export interface CorplistData {
-    contains_errors:boolean;
-    filters:{[name:string]:any};
-    keywords:Array<string>;
-    messages:any;
-    nextOffset:number;
-    query:string;
-    rows:Array<any>; // TODO
 }
 
 /**
  * This store handles table dataset
  */
-export class CorplistTableStore extends util.SimplePageStore {
+export class CorplistTableStore extends corplistDefault.CorplistTableStore {
 
-    pluginApi:Kontext.PluginApi;
-
-    private data:CorplistData;
 
     static DispatchToken:string;
 
@@ -178,15 +101,14 @@ export class CorplistTableStore extends util.SimplePageStore {
      * @param pluginApi
      */
     constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi.dispatcher());
-        this.pluginApi = pluginApi;
+        super(pluginApi);
         var self = this;
         CorplistTableStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
                         var prom;
-                        var item:common.CorplistItem;
+                        var item:common.CorplistItemUcnk;
                         var message;
 
                         if (payload.props['isFav']) {
@@ -242,33 +164,8 @@ export class CorplistTableStore extends util.SimplePageStore {
         );
     }
 
-    public loadData(query:string, filters:string, offset:number, limit?:number):void {
-        var self = this;
-        var prom = $.ajax(
-            this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
-            + '?query=' + encodeURIComponent(query)
-            + (offset ? '&offset=' + offset : '')
-            + (limit ? '&limit=' + limit : '')
-            + (filters ? '&' + filters : ''));
-        prom.then(
-            function (data) {
-                if (offset == 0) {
-                    self.setData(data);
-
-                } else {
-                    self.extendData(data);
-                }
-                self.notifyChangeListeners();
-            },
-            function (err) {
-                // TODO error
-                console.error(err);
-            }
-        )
-    }
-
-    private updateDataItem(corpusId, data) {
-        (this.data.rows || []).forEach(function (item:common.CorplistItem) {
+    protected updateDataItem(corpusId, data) {
+        (this.data.rows || []).forEach(function (item:common.CorplistItemUcnk) {
             if (item.id === corpusId) {
                 for (var p in data) {
                     if (data.hasOwnProperty(p)) {
@@ -280,33 +177,12 @@ export class CorplistTableStore extends util.SimplePageStore {
     }
 
     isFav(corpusId:string):boolean {
-        return this.data.rows.some(function (item:common.CorplistItem) {
+        return this.data.rows.some(function (item:common.CorplistItemUcnk) {
             if (item.id === corpusId) {
                 return item.user_item;
             }
             return false;
         });
-    }
-
-    setData(data:CorplistData):void {
-        this.data = data;
-    }
-
-    extendData(data:CorplistData):void {
-        if (!this.data) {
-            this.setData(data);
-
-        } else {
-            this.data.filters = data.filters;
-            this.data.keywords = data.keywords;
-            this.data.nextOffset = data.nextOffset;
-            this.data.query = data.query;
-            this.data.rows = this.data.rows.concat(data.rows);
-        }
-    }
-
-    getData():any {
-        return this.data;
     }
 }
 
@@ -363,36 +239,27 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage implements Customized.CorplistPage {
+export class CorplistPage extends corplistDefault.CorplistPage {
 
     components:any;
 
     pluginApi:Kontext.PluginApi;
 
-    static CorplistFormStore:CorplistFormStore;
-
-    static CorplistTableStore:CorplistTableStore;
-
-    static CorpusAccessRequestStore:CorpusAccessRequestStore;
+    protected CorpusAccessRequestStore:CorpusAccessRequestStore;
 
     constructor(pluginApi:Kontext.PluginApi) {
-        CorplistPage.CorplistFormStore = new CorplistFormStore(pluginApi);
-        CorplistPage.CorplistTableStore = new CorplistTableStore(pluginApi);
-        CorplistPage.CorpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
-        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
-            pluginApi.getViews(), CorplistPage.CorplistFormStore,
-            CorplistPage.CorplistTableStore);
-        this.pluginApi = pluginApi;
+        super(pluginApi);
+        this.CorpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {
         this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
-        CorplistPage.CorplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
+        this.CorplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
     }
 
     createList(targetElm:HTMLElement, properties:any):void {
         properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        CorplistPage.CorplistTableStore.setData(properties);
+        this.CorplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
 }

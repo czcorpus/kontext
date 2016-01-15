@@ -23,6 +23,7 @@
 
 import $ = require('jquery');
 import common = require('./common');
+import commonDefault = require('../defaultCorparch/common');
 import popupBox = require('popupbox');
 
 
@@ -68,9 +69,9 @@ interface FeaturedItem {
  * @param select
  * @returns list of user items related to individual OPTION elements
  */
-export function fetchDataFromSelect(select:HTMLElement):Array<common.CorplistItem> {
+export function fetchDataFromSelect(select:HTMLElement):Array<common.CorplistItemUcnk> {
     var elm:JQuery = $(select),
-        ans:Array<common.CorplistItem> = [];
+        ans:Array<common.CorplistItemUcnk> = [];
 
     elm.find('option').each(function () {
         var itemData = $(this).data('item');
@@ -137,7 +138,7 @@ export interface Options {
      * are not affected!) items. This allows e.g. displaying only items of a certain
      * type. Default filter returns 'true' on each item.
      */
-    favoriteItemsFilter?:(item:common.CorplistItem)=>boolean;
+    favoriteItemsFilter?:(item:common.CorplistItemUcnk)=>boolean;
 
     /**
      * A HTML class to be used for widget's wrapping container.
@@ -654,7 +655,7 @@ class FavoritesTab implements WidgetTab {
 
     tablesWrapper:HTMLElement;
 
-    dataFav:Array<common.CorplistItem>;
+    dataFav:Array<common.CorplistItemUcnk>;
 
     private wrapperFav:HTMLElement;
 
@@ -668,14 +669,14 @@ class FavoritesTab implements WidgetTab {
 
     onListChange:Array<(trigger:FavoritesTab)=>void>;  // list of registered callbacks
 
-    customListFilter:(item:common.CorplistItem)=>boolean;
+    customListFilter:(item:common.CorplistItemUcnk)=>boolean;
 
     /**
      *
      */
-    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
+    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItemUcnk>,
                 dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
-                customListFilter?:(item:common.CorplistItem)=>boolean) {
+                customListFilter?:(item:common.CorplistItemUcnk)=>boolean) {
         var self = this;
         this.editMode = false;
         this.onListChange = [];
@@ -729,7 +730,7 @@ class FavoritesTab implements WidgetTab {
      * @param item
      * @returns true on success else false
      */
-    containsItem(item:common.CorplistItem):boolean {
+    containsItem(item:common.CorplistItemUcnk):boolean {
         for (let i = 0; i < this.dataFav.length; i += 1) {
             if (this.dataFav[i].id === item.id) {
                 return true;
@@ -763,10 +764,10 @@ class FavoritesTab implements WidgetTab {
         var rootPath = this.pageModel.createActionUrl(this.pageModel.getConf('currentAction')),
             params = ['corpname=' + itemData.corpus_id];
 
-        if (itemData.type === common.CorplistItemType.SUBCORPUS) {
+        if (itemData.type === commonDefault.CorplistItemType.SUBCORPUS) {
             params.push('usesubcorp=' + itemData.subcorpus_id);
         }
-        if (itemData.type === common.CorplistItemType.ALIGNED_CORPORA) {
+        if (itemData.type === commonDefault.CorplistItemType.ALIGNED_CORPORA) {
             for (var i = 0; i < itemData.corpora.length; i++) {
                 params.push('sel_aligned=' + itemData.corpora[i].corpus_id);
             }
@@ -914,7 +915,7 @@ class FavoritesTab implements WidgetTab {
         }
     }
 
-    reinit(newData:Array<common.CorplistItem>):void {
+    reinit(newData:Array<common.CorplistItemUcnk>):void {
         $(this.wrapperFav).find('tr.data-item').remove();
         this.dataFav = newData;
         $(this.wrapperFeat).find('tr.data-item').remove();
@@ -1002,7 +1003,7 @@ class StarComponent {
      * in favorites or not.
      */
     onAlignedCorporaAdd = (corpname:string) => {
-        var newItem:common.CorplistItem;
+        var newItem:common.CorplistItemUcnk;
 
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
@@ -1014,7 +1015,7 @@ class StarComponent {
      * in favorites or not.
      */
     onAlignedCorporaRemove = (corpname:string) => {
-        var newItem:common.CorplistItem;
+        var newItem:common.CorplistItemUcnk;
 
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
@@ -1026,7 +1027,7 @@ class StarComponent {
      * already in favorites.
      */
     onSubcorpChange = (subcname:string) => {
-        var newItem:common.CorplistItem;
+        var newItem:common.CorplistItemUcnk;
 
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
@@ -1050,7 +1051,7 @@ class StarComponent {
      * @param pageModel
      */
     constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
-        var currItem:common.CorplistItem;
+        var currItem:common.CorplistItemUcnk;
 
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
@@ -1081,15 +1082,15 @@ class StarComponent {
      *
      * @param flag
      */
-    setFavorite(flag:common.Favorite) {
+    setFavorite(flag:commonDefault.Favorite) {
         let self = this;
         let prom:JQueryXHR;
-        let newItem:common.CorplistItem;
+        let newItem:common.CorplistItemUcnk;
         let message:string;
         let postDispatch:(data:any)=>void;
         let updateStar:()=>void;
 
-        if (flag === common.Favorite.FAVORITE) {
+        if (flag === commonDefault.Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
             prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
                 {method: 'POST', data: newItem, dataType: 'json'});
@@ -1182,8 +1183,8 @@ class StarComponent {
      * @returns an initialized CorplistItem or null if no matching state is detected
      */
     private inferItemCore(corpus_id:string, subcorpus_id:string,
-                          aligned_corpora:Array<string>):common.CorplistItem {
-        var ans:common.CorplistItem,
+                          aligned_corpora:Array<string>):common.CorplistItemUcnk {
+        var ans:common.CorplistItemUcnk,
             self = this;
 
         if (corpus_id) {
@@ -1194,20 +1195,20 @@ class StarComponent {
 
 
             if (subcorpus_id) {
-                ans.type = common.CorplistItemType.SUBCORPUS;
+                ans.type = commonDefault.CorplistItemType.SUBCORPUS;
                 ans.subcorpus_id = subcorpus_id;
                 ans.id = ans.corpus_id + ':' + ans.subcorpus_id;
                 ans.name = this.pageModel.getConf('humanCorpname') + ':' + this.getCurrentSubcorpus();
 
             } else if (aligned_corpora.length > 0) {
-                ans.type = common.CorplistItemType.ALIGNED_CORPORA;
+                ans.type = commonDefault.CorplistItemType.ALIGNED_CORPORA;
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
                 ans.name = this.pageModel.getConf('humanCorpname') + '+'
                     + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
-                ans.type = common.CorplistItemType.CORPUS;
+                ans.type = commonDefault.CorplistItemType.CORPUS;
                 ans.id = ans.canonical_id;
                 ans.name = this.pageModel.getConf('humanCorpname');
             }
@@ -1222,14 +1223,14 @@ class StarComponent {
      * According to the state of the current query form, this method creates
      * a new CorplistItem instance with proper type, id, etc.
      */
-    extractItemFromPage(userItemFlag?:common.Favorite):common.CorplistItem {
+    extractItemFromPage(userItemFlag?:commonDefault.Favorite):common.CorplistItemUcnk {
         var corpName:string,
             subcorpName:string = null,
             alignedCorpora:Array<string> = [],
-            item:common.CorplistItem;
+            item:common.CorplistItemUcnk;
 
         if (userItemFlag === undefined) {
-            userItemFlag = common.Favorite.NOT_FAVORITE;
+            userItemFlag = commonDefault.Favorite.NOT_FAVORITE;
         }
         corpName = this.pageModel.getConf('corpname');
         if ($('#subcorp-selector').length > 0) {
@@ -1253,10 +1254,10 @@ class StarComponent {
         if (this.editable) {
             $(this.starImg).on('click', function (e) {
                 if (!self.starSwitch.isStarred()) {
-                    self.setFavorite(common.Favorite.FAVORITE);
+                    self.setFavorite(commonDefault.Favorite.FAVORITE);
 
                 } else {
-                    self.setFavorite(common.Favorite.NOT_FAVORITE);
+                    self.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
                 }
             });
 
@@ -1289,7 +1290,7 @@ export class Corplist implements CorpusArchive.Widget {
 
     widgetWrapper:HTMLElement;
 
-    private data:Array<common.CorplistItem>;
+    private data:Array<common.CorplistItemUcnk>;
 
     private pageModel:Kontext.FirstFormPage;
 
@@ -1329,7 +1330,7 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<common.CorplistItem>, pageModel:Kontext.FirstFormPage,
+    constructor(options:Options, data:Array<common.CorplistItemUcnk>, pageModel:Kontext.FirstFormPage,
                 parentForm:HTMLElement) {
         this.options = options;
         this.data = data;

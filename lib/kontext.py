@@ -13,7 +13,6 @@
 
 from types import ListType
 import json
-import time
 from functools import partial
 import logging
 import inspect
@@ -21,17 +20,17 @@ import urllib
 import os.path
 import copy
 import re
+import collections
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 
 import corplib
-import conclib
-from controller import Controller, UserActionException, convert_types, exposed
+from controller import Controller, UserActionException, convert_types
 import plugins
 import settings
 import l10n
-from l10n import format_number, corpus_get_conf, export_string
+from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
 from templating import StateGlobals, join_params
@@ -39,6 +38,7 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
+from texttypes import TextTypeCollector
 
 
 def update_params(params, key, value):
@@ -73,6 +73,9 @@ class LegacyForm(object):
         if len(tmp) == 0 and k in self._args:
             tmp = self._args.getlist(k)
         return tmp if len(tmp) > 1 else tmp[0]
+
+
+TextTypeCollector.EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder')
 
 
 class Kontext(Controller):
@@ -111,7 +114,6 @@ class Kontext(Controller):
     def __init__(self, request, ui_lang):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
-        self._empty_attr_value_placeholder = settings.get('corpora', 'empty_attr_value_placeholder')
         self.return_url = None
         self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
         self.disabled_menu_items = []
@@ -966,7 +968,7 @@ class Kontext(Controller):
         result['Globals'] = StateGlobals(global_var_val)
         result['human_corpname'] = None
 
-        result['empty_attr_value_placeholder'] = self._empty_attr_value_placeholder
+        result['empty_attr_value_placeholder'] = TextTypeCollector.EMPTY_VAL_PLACEHOLDER
         result['disabled_menu_items'] = self.disabled_menu_items
         result['save_menu'] = self.save_menu
 
@@ -1144,24 +1146,9 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True):
+    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
         corp = self._corp()
         ans = {}
-
-        def compute_norm(attrname, attr, value):
-            valid = attr.str2id(export_string(unicode(value), to_encoding=self._corp().get_conf('ENCODING')))
-            r = corp.filter_query(struct.attr_val(attrname, valid))
-            cnt = 0
-            while not r.end():
-                cnt += normvals[r.peek_beg()]
-                r.next()
-            return cnt
-
-        def safe_int(s):
-            try:
-                return int(s)
-            except ValueError:
-                return 0
 
         if not subcorpattrs:
             subcorpattrs = corp.get_conf('SUBCORPATTRS')
@@ -1187,45 +1174,25 @@ class Kontext(Controller):
         else:
             ans['bib_attr'] = None
             list_none = ()
+
         tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:
-            basestructname = subcorpattrs.split('.')[0]
-            struct = corp.get_struct(basestructname)
-            normvals = {}
-            if self.args.subcnorm not in ('freq', 'tokens'):
-                try:
-                    nas = struct.get_attr(self.args.subcnorm).pos2str
-                except conclib.manatee.AttrNotFound, e:
-                    self.add_system_message('error', str(e))
-                    self.args.subcnorm = 'freq'
-            if self.args.subcnorm == 'freq':
-                normvals = dict([(struct.beg(i), 1)
-                                 for i in range(struct.size())])
-            elif self.args.subcnorm == 'tokens':
-                normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
-                                 for i in range(struct.size())])
-            else:
-                normvals = dict([(struct.beg(i), safe_int(nas(i)))
-                                 for i in range(struct.size())])
+            from texttypes import StructNormsCalc
+            struct_calc = collections.OrderedDict()
+            for item in subcorpattrs.split(','):
+                k = item.split('.')[0]
+                struct_calc[k] = StructNormsCalc(self._corp(), k, subcnorm)
 
-            for item in tt:
-                for col in item['Line']:
-                    if 'textboxlength' in col:
-                        continue
-                    if not col['name'].startswith(basestructname):
-                        col['textboxlength'] = 30
-                        continue
-                    attr = corp.get_attr(col['name'])
-                    aname = col['name'].split('.')[-1]
+            for col in reduce(lambda p, c: p + c['Line'], tt, []):
+                if 'textboxlength' not in col:
+                    structname, attrname = col['name'].split('.')
                     for val in col['Values']:
-                        if format_num:
-                            val['xcnt'] = format_number(compute_norm(aname, attr, val['v']))
-                        else:
-                            val['xcnt'] = compute_norm(aname, attr, val['v'])
+                        v = struct_calc[structname].compute_norm(attrname, val['v'])
+                        val['xcnt'] = format_number(v) if format_num else v
             ans['Blocks'] = tt
-            ans['Normslist'] = self._get_normslist(basestructname)
+            ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
         else:
             ans['Blocks'] = tt
             ans['Normslist'] = []
@@ -1246,74 +1213,6 @@ class Kontext(Controller):
             except:
                 pass
         return normslist
-
-    def _texttype_query_OLD(self, obj=None, access=None, attr_producer=None):
-        """
-        Extracts all the text-type related form parameters user can access when creating
-        a subcorpus or selecing ad-hoc metadata in the query form.
-
-        Because currently there are two ways how action methods access URL/form parameters
-        this method is able to extract the values either from 'self.args' (= old style) or from
-        the 'request' (new style) object. In the latter case you have to provide item access
-        function and attribute producer (= function which returns an iterable providing names
-        of at least all the relevant attributes). For the latter case, method _texttype_query()
-        is preferred over this one.
-
-        arguments:
-        obj -- object holding argument names and values
-        access -- a function specifying how to extract the value if you know the name and object
-        attr_producer -- a function returning an iterable containing parameter names
-
-        returns:
-        a list of tuples (struct, condition); strings are encoded to the encoding current
-        corpus uses!
-        """
-        if obj is None:
-            obj = self.args
-        if access is None:
-            access = lambda o, att: getattr(o, att)
-        if attr_producer is None:
-            attr_producer = lambda o: dir(o)
-
-        scas = [(a[4:], access(obj, a))
-                for a in attr_producer(obj) if a.startswith('sca_')]
-        structs = {}
-        for sa, v in scas:
-            if type(v) in (str, unicode) and '|' in v:
-                v = v.split('|')
-            s, a = sa.split('.')
-            if type(v) is list:
-                expr_items = []
-                for v1 in v:
-                    if v1 != '':
-                        if v1 == self._empty_attr_value_placeholder:
-                            v1 = ''
-                        expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
-                if len(expr_items) > 0:
-                    query = '(%s)' % ' | '.join(expr_items)
-                else:
-                    query = None
-            else:
-                query = '%s="%s"' % (a, l10n.escape(v))
-
-            if query is not None:  # TODO: is the following encoding change always OK?
-                query = export_string(query, to_encoding=self._corp().get_conf('ENCODING'))
-                if s in structs:
-                    structs[s].append(query)
-                else:
-                    structs[s] = [query]
-        return [(sname, ' & '.join(subquery)) for
-                sname, subquery in structs.items()]
-
-    def _texttype_query(self, request):
-        """
-        Extracts all the text-type related parameters user can access when creating
-        a subcorpus or selecing ad-hoc metadata in the query form.
-
-        This method is compatible with new-style action functions only.
-        """
-        return self._texttype_query_OLD(obj=request, access=lambda o, x: apply(o.form.getlist, (x,)),
-                                        attr_producer=lambda o: o.form.keys())
 
     def _add_tt_custom_metadata(self, tt):
         metadata = plugins.get('corparch').get_corpus_info(

@@ -25,6 +25,7 @@ from l10n import import_string, format_number
 import corplib
 import conclib
 from argmapping import ConcArgsMapping
+from texttypes import TextTypeCollector
 
 
 class Subcorpus(Kontext):
@@ -72,7 +73,7 @@ class Subcorpus(Kontext):
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         else:
-            tt_query = self._texttype_query(request)
+            tt_query = TextTypeCollector(self._corp(), request).get_query()
             full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
             full_cql = 'aword,[] within %s' % full_cql
             full_cql = import_string(full_cql, from_encoding=corp_encoding)
@@ -131,9 +132,10 @@ class Subcorpus(Kontext):
         method = request.form.get('method', 'gui')
         within_json = request.form.get('within_json', 'null')
         subcname = request.form.get('subcname', None)
+        subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = self._texttypes_with_norms()
+            tt_sel = self._texttypes_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
@@ -156,7 +158,8 @@ class Subcorpus(Kontext):
             'structs_and_attrs': structs_and_attrs,
             'method': method,
             'within_json': within_json,
-            'subcname': subcname
+            'subcname': subcname,
+            'subcnorm': subcnorm
         })
         return out
 
