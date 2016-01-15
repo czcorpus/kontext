@@ -102,87 +102,6 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
      */
     constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi);
-        var self = this;
-        CorplistTableStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
-                switch (payload.actionType) {
-                    case 'LIST_STAR_CLICKED':
-                        var prom;
-                        var item:common.CorplistItemUcnk;
-                        var message;
-
-                        if (payload.props['isFav']) {
-                            item = common.createEmptyCorplistItem();
-                            item.corpus_id = payload.props['corpusId'];
-                            item.id = item.corpus_id;
-                            item.name = payload.props['corpusName'];
-                            item.type = payload.props['type'];
-                            prom = $.ajax(self.pluginApi.createActionUrl('user/set_favorite_item'),
-                                {
-                                    method: 'POST',
-                                    dataType: 'json',
-                                    data: item
-                                }
-                            );
-                            message = self.pluginApi.translate('item added to favorites');
-
-                        } else {
-                            prom = $.ajax(self.pluginApi.createActionUrl('user/unset_favorite_item'),
-                                {
-                                    method: 'POST',
-                                    dataType: 'json',
-                                    data: {id: payload.props['corpusId']}
-                                }
-                            );
-                            message = self.pluginApi.translate('item removed from favorites');
-                        }
-                        prom.then(
-                            function (data) {
-                                if (data.error_code) {
-                                    self.pluginApi.showMessage('error', self.pluginApi.translate(data.error_code, data.error_args || {}));
-
-                                } else if (data.error) {
-                                    self.pluginApi.showMessage('error',
-                                        self.pluginApi.translate('failed to update item'));
-                                    self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, data.error);
-
-                                } else {
-                                    self.updateDataItem(payload.props['corpusId'], {user_item: payload.props['isFav']});
-                                    self.notifyChangeListeners();
-                                    self.pluginApi.showMessage('info', message);
-                                }
-                            },
-                            function (jqXHR, textStatus, errorThrown) {
-                                self.pluginApi.showMessage('error',
-                                    self.pluginApi.translate('failed to update item'));
-                                self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, errorThrown);
-                            }
-                        );
-                        break;
-                }
-            }
-        );
-    }
-
-    protected updateDataItem(corpusId, data) {
-        (this.data.rows || []).forEach(function (item:common.CorplistItemUcnk) {
-            if (item.id === corpusId) {
-                for (var p in data) {
-                    if (data.hasOwnProperty(p)) {
-                        item[p] = data[p];
-                    }
-                }
-            }
-        });
-    }
-
-    isFav(corpusId:string):boolean {
-        return this.data.rows.some(function (item:common.CorplistItemUcnk) {
-            if (item.id === corpusId) {
-                return item.user_item;
-            }
-            return false;
-        });
     }
 }
 
@@ -245,21 +164,21 @@ export class CorplistPage extends corplistDefault.CorplistPage {
 
     pluginApi:Kontext.PluginApi;
 
-    protected CorpusAccessRequestStore:CorpusAccessRequestStore;
+    protected corpusAccessRequestStore:CorpusAccessRequestStore;
 
-    constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi);
-        this.CorpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
+    constructor(pluginApi:Kontext.PluginApi, views:any) {
+        super(pluginApi, views);
+        this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {
         this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
-        this.CorplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
+        this.corplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
     }
 
     createList(targetElm:HTMLElement, properties:any):void {
         properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        this.CorplistTableStore.setData(properties);
+        this.corplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
 }

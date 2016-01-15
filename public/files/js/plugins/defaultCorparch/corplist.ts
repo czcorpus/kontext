@@ -16,12 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <amd-dependency path="./view" name="views" />
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
 
 import $ = require('jquery');
 import util = require('../../util');
 import common = require('./common');
-declare var views:any;
 
 /**
  * This store handles corplist 'filter' form
@@ -311,16 +310,16 @@ export class CorplistPage implements Customized.CorplistPage {
 
     pluginApi:Kontext.PluginApi;
 
-    protected CorplistFormStore:CorplistFormStore;
+    protected corplistFormStore:CorplistFormStore;
 
-    protected CorplistTableStore:CorplistTableStore;
+    protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:Kontext.PluginApi, views:any) {
         this.pluginApi = pluginApi;
-        this.CorplistTableStore = new CorplistTableStore(pluginApi);
-        this.CorplistFormStore = new CorplistFormStore(pluginApi, this.CorplistTableStore);
+        this.corplistTableStore = new CorplistTableStore(pluginApi);
+        this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
         this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
-            pluginApi.getViews(), this.CorplistFormStore, this.CorplistTableStore);
+                pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {
@@ -329,7 +328,7 @@ export class CorplistPage implements Customized.CorplistPage {
 
     createList(targetElm:HTMLElement, properties:any):void {
         properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        this.CorplistTableStore.setData(properties);
+        this.corplistTableStore.setData(properties);
         this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
     }
 }

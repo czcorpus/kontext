@@ -59,8 +59,8 @@
         "global__no_data_found": "No data found.",
         "global__remove_line": "Remove line",
         "global__add_within": "Add 'within'",
-        "global__within_hint_text": "Select an appropriate 'within' type and a structure name and then write an expression specifying required values of structural attributes (e.g. 'author=\"Doyle.+\" & translator=\"Henzl.+\"')",
-        "global__within_hint_attrs": "Available attributes:"
+        "global__within_hint_text": "Select an appropriate 'within' condition, structure and input an expression specifying required values of structural attributes (e.g. 'author=\"Doyle.+\" & title=\".*Sherlock.*\"')",
+        "global__within_hint_attrs": "Available structures and their attributes"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -123,7 +123,7 @@
         "global__no_data_found": "Nebyla nalezena žádná data",
         "global__remove_line": "Odstranit řádek",
         "global__add_within": "Přidat 'within'",
-        "global__within_hint_text": "Vyberte příslušný typ 'within' a strukturu a napište výraz určující hodnoty strukturních atributů (např. 'autor=\"Doyle.+\" & preklad=\"Henzl.+\"')",
-        "global__within_hint_attrs": "Dostupné atributy:"
+        "global__within_hint_text": "Vyberte příslušný typ 'within' podminky, strukturu a napište výraz určující hodnoty strukturních atributů (např. 'author=\"Doyle.+\" & title=\".*Sherlock.*\"')",
+        "global__within_hint_attrs": "Dostupné struktury a jejich atributy"
 	}
 }
