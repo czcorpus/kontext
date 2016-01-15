@@ -215,7 +215,7 @@ export class SubcorpForm {
 
         hintRoot.append('<p>' + msg + '</p>');
         hintRoot.append(hintAttrs);
-        hintAttrs.append(this.pageModel.translate('global__within_hint_attrs'));
+        hintAttrs.append(this.pageModel.translate('global__within_hint_attrs') + ':');
 
         for (let p in attrs) {
             if (attrs.hasOwnProperty(p)) {
