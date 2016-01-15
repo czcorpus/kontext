@@ -25,6 +25,7 @@ from l10n import import_string, format_number
 import corplib
 import conclib
 from argmapping import ConcArgsMapping
+from texttypes import TextTypeCollector
 
 
 class Subcorpus(Kontext):
@@ -72,7 +73,7 @@ class Subcorpus(Kontext):
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         else:
-            tt_query = self._texttype_query(request)
+            tt_query = TextTypeCollector(self._corp(), request).get_query()
             full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
             full_cql = 'aword,[] within %s' % full_cql
             full_cql = import_string(full_cql, from_encoding=corp_encoding)
