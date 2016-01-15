@@ -19,16 +19,16 @@
 define(['vendor/react'], function (React) {
     'use strict';
 
-    var lib = {};
+    let lib = {};
 
     lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
         // -------------------------- dataset components -----------------------
 
-        var CorplistHeader = React.createClass({
+        let CorplistHeader = React.createClass({
             mixins: mixins,
             componentDidMount: function () {
-                var self = this;
+                let self = this;
                 listStore.addChangeListener(function () {
                     self.setState({htmlClasses: []});
                 });
@@ -51,12 +51,12 @@ define(['vendor/react'], function (React) {
         });
 
 
-        var FavStar = React.createClass({
+        let FavStar = React.createClass({
 
             mixins: mixins,
 
             _handleClick : function () {
-                var newState = !this.state.isFav;
+                let newState = !this.state.isFav;
 
                 dispatcher.dispatch({
                     actionType: 'LIST_STAR_CLICKED',
@@ -70,7 +70,7 @@ define(['vendor/react'], function (React) {
             },
 
             _changeListener : function (store) {
-                var isFav = store.isFav(this.props.corpusId);
+                let isFav = store.isFav(this.props.corpusId);
                 if (isFav !== this.state.isFav) {
                     this.setState({isFav: isFav});
                 }
@@ -89,7 +89,7 @@ define(['vendor/react'], function (React) {
             },
 
             render: function () {
-                var imgUrl;
+                let imgUrl;
 
                 if (this.state.isFav) {
                     imgUrl = this.createStaticUrl('img/starred_24x24.png');
@@ -104,7 +104,7 @@ define(['vendor/react'], function (React) {
         /**
          * A single dataset row
          */
-        var CorplistRow = React.createClass({
+        let CorplistRow = React.createClass({
 
             mixins: mixins,
 
@@ -181,7 +181,7 @@ define(['vendor/react'], function (React) {
          * Provides a link allowing to load more items with current
          * query and filter settings.
          */
-        var ListExpansion = React.createClass({
+        let ListExpansion = React.createClass({
             mixins : mixins,
             _linkClickHandler : function () {
                 dispatcher.dispatch({
@@ -205,7 +205,7 @@ define(['vendor/react'], function (React) {
         /**
          * dataset table
          */
-        var CorplistTable = React.createClass({
+        let CorplistTable = React.createClass({
 
             changeHandler: function () {
                 this.setState(listStore.getData());
@@ -230,12 +230,12 @@ define(['vendor/react'], function (React) {
             },
 
             render: function () {
-                var self = this;
-                var rows = this.state.rows.map(function (row, i) {
+                let self = this;
+                let rows = this.state.rows.map(function (row, i) {
                     return <CorplistRow key={row.id} row={row}
                                         enableUserActions={!self.props.anonymousUser} />;
                 });
-                var expansion = null;
+                let expansion = null;
                 if (this.state.nextOffset) {
                     expansion = <ListExpansion offset={this.state.nextOffset} />;
                 }
@@ -257,12 +257,12 @@ define(['vendor/react'], function (React) {
         /**
          * a single keyword link shown within a dataset table row
          */
-        var CorpKeywordLink = React.createClass({
+        let CorpKeywordLink = React.createClass({
 
             mixins: mixins,
 
             _handleClick : function (e) {
-                var self = this;
+                let self = this;
 
                 e.preventDefault();
                 dispatcher.dispatch({
@@ -292,7 +292,7 @@ define(['vendor/react'], function (React) {
         /**
          * A keyword link from the filter form
          */
-        var KeywordLink = React.createClass({
+        let KeywordLink = React.createClass({
 
             mixins: mixins,
 
@@ -313,7 +313,7 @@ define(['vendor/react'], function (React) {
             },
 
             _handleClick: function (active) {
-                var self = this;
+                let self = this;
 
                 return function (e) {
                     e.preventDefault();
@@ -358,7 +358,7 @@ define(['vendor/react'], function (React) {
         /**
          * A keyword-like link to reset currently set keywords
          */
-        var ResetLink = React.createClass({
+        let ResetLink = React.createClass({
             mixins: mixins,
             _handleClick: function (e) {
                 e.preventDefault();
@@ -376,13 +376,13 @@ define(['vendor/react'], function (React) {
         /**
          * A form fieldset containing all the available keywords
          */
-        var KeywordsField = React.createClass({
+        let KeywordsField = React.createClass({
             mixins: mixins,
             getInitialState: function () {
                 return {};
             },
             render: function () {
-                var links = this.props.keywords.map(function (keyword, i) {
+                let links = this.props.keywords.map(function (keyword, i) {
                     return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
                                         isActive={keyword[2]} overlayColor={keyword[3]} />;
                 });
@@ -401,7 +401,7 @@ define(['vendor/react'], function (React) {
         /**
          * An input to specify minimum corpus size
          */
-        var MinSizeInput = React.createClass({
+        let MinSizeInput = React.createClass({
             changeHandler: function (e) {
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
@@ -418,7 +418,7 @@ define(['vendor/react'], function (React) {
         /**
          * An input to specify maximum corpus size
          */
-        var MaxSizeInput = React.createClass({
+        let MaxSizeInput = React.createClass({
             _changeHandler: function (e) {
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
@@ -432,7 +432,7 @@ define(['vendor/react'], function (React) {
             }
         });
 
-        var NameSearchInput = React.createClass({
+        let NameSearchInput = React.createClass({
             _timer : null,
             _changeHandler : function (e) {
                 let self = this;
@@ -456,7 +456,7 @@ define(['vendor/react'], function (React) {
         /**
          * A fieldset containing non-keyword filter inputs.
          */
-        var FilterInputFieldset = React.createClass({
+        let FilterInputFieldset = React.createClass({
             mixins: mixins,
 
             getInitialState : function () {
@@ -506,7 +506,7 @@ define(['vendor/react'], function (React) {
         /**
          * Filter form root component
          */
-        var FilterForm = React.createClass({
+        let FilterForm = React.createClass({
             mixins: mixins,
             render: function () {
                 return (
@@ -524,7 +524,10 @@ define(['vendor/react'], function (React) {
 
         return {
             CorplistTable: CorplistTable,
-            FilterForm: FilterForm
+            CorplistHeader: CorplistHeader,
+            FilterForm: FilterForm,
+            FavStar: FavStar,
+            CorpKeywordLink: CorpKeywordLink
         };
     };
 

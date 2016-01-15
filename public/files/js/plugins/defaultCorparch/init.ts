@@ -24,6 +24,8 @@
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
+/// <amd-dependency path="./view" name="views" />
+declare var views:any;
 
 import $ = require('jquery');
 import util = require('../../util');
@@ -37,7 +39,7 @@ import corplist = require('./corplist');
  * @returns {CorplistPage}
  */
 export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
-    return new corplist.CorplistPage(pluginApi);
+    return new corplist.CorplistPage(pluginApi, views);
 }
 
 /**

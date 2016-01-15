@@ -16,95 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['vendor/react', 'jquery'], function (React, $) {
+define(['vendor/react', 'jquery', '../defaultCorparch/view'], function (React, $, defaultView) {
     'use strict';
 
-    var lib = {};
+    let lib = {};
 
     lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
-        // -------------------------- dataset components -----------------------
-
-        var CorplistHeader = React.createClass({
-            mixins: mixins,
-            componentDidMount: function () {
-                var self = this;
-                listStore.addChangeListener(function () {
-                    self.setState({htmlClasses: []});
-                });
-                formStore.addChangeListener(function () {
-                    self.setState({htmlClasses: ["dataset-loading"]});
-                });
-            },
-            getInitialState: function () {
-                return {htmlClasses: []};
-            },
-            render: function () {
-                return (<tr className={this.state.htmlClasses.join(' ')}>
-                    <th>{this.translate('defaultCorparch__corpus_name')}</th>
-                    <th>{this.translate('defaultCorparch__size_in_positions')}</th>
-                    <th>{this.translate('defaultCorparch__corpus_labels')}</th>
-                    <th></th>
-                    <th></th>
-                </tr>);
-            }
-        });
-
-
-        var FavStar = React.createClass({
-
-            mixins: mixins,
-
-            _handleClick : function () {
-                var newState = !this.state.isFav;
-
-                dispatcher.dispatch({
-                    actionType: 'LIST_STAR_CLICKED',
-                    props: {
-                        corpusId: this.props.corpusId,
-                        corpusName: this.props.corpusName,
-                        isFav: newState,
-                        type: 'corpus'
-                    }
-                });
-            },
-
-            _changeListener : function (store) {
-                var isFav = store.isFav(this.props.corpusId);
-                if (isFav !== this.state.isFav) {
-                    this.setState({isFav: isFav});
-                }
-            },
-
-            getInitialState : function () {
-                return {isFav: this.props.isFav};
-            },
-
-            componentDidMount : function () {
-                listStore.addChangeListener(this._changeListener);
-            },
-
-            componentWillUnmount : function () {
-                listStore.removeChangeListener(this._changeListener);
-            },
-
-            render: function () {
-                var imgUrl;
-
-                if (this.state.isFav) {
-                    imgUrl = this.createStaticUrl('img/starred_24x24.png');
-
-                } else {
-                    imgUrl = this.createStaticUrl('img/starred_24x24_grey.png');
-                }
-                return <img className="starred" src={imgUrl} onClick={this._handleClick} />;
-            }
-        });
+        let defaultComponents = defaultView.init(dispatcher, mixins, layoutViews, formStore, listStore);
 
         /**
          *
          */
-        var RequestForm = React.createClass({
+        let RequestForm = React.createClass({
             mixins: mixins,
 
             _submitHandler : function () {
@@ -155,7 +79,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
         /**
          *
          */
-        var LockIcon = React.createClass({
+        let LockIcon = React.createClass({
             mixins: mixins,
 
             getInitialState : function () {
@@ -179,7 +103,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             render : function () {
-                var img,
+                let img,
                     dialog,
                     onBoxReady;
 
@@ -193,8 +117,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                     if (this.state.hasDialog) {
                         onBoxReady = function (elm) {
-                            var rect = elm.getBoundingClientRect();
-                            var newX, newY;
+                            let rect = elm.getBoundingClientRect();
+                            let newX, newY;
 
                             newX = (document.documentElement.clientWidth - rect.width) / 2;
                             newY = document.documentElement.clientHeight / 2;
@@ -237,7 +161,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
         /**
          * A single dataset row
          */
-        var CorplistRow = React.createClass({
+        let CorplistRow = React.createClass({
 
             mixins: mixins,
 
@@ -260,7 +184,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             render: function () {
                 let keywords = this.props.row.keywords.map(function (k, i) {
-                    return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
+                    return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
                 });
 
                 let detailBox;
@@ -291,7 +215,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                     } else {
                         corpLink = <a href={link}>{this.props.row.name}</a>;
-                        userAction = <FavStar corpusId={this.props.row.id}
+                        userAction = <defaultComponents.FavStar corpusId={this.props.row.id}
                                            corpusName={this.props.row.name}
                                            isFav={this.props.row.user_item} />;
                     }
@@ -322,34 +246,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
         });
 
         /**
-         * Provides a link allowing to load more items with current
-         * query and filter settings.
-         */
-        var ListExpansion = React.createClass({
-            mixins : mixins,
-            _linkClickHandler : function () {
-                dispatcher.dispatch({
-                    actionType: 'EXPANSION_CLICKED',
-                    props: {
-                        offset: this.props.offset
-                    }
-                });
-            },
-            render : function () {
-                return (
-                      <tr className="load-more">
-                          <td colSpan="5">
-                              <a onClick={this._linkClickHandler}>{this.translate('ucnkCorparch__load_all')}</a>
-                          </td>
-                      </tr>
-                );
-            }
-        });
-
-        /**
          * dataset table
          */
-        var CorplistTable = React.createClass({
+        let CorplistTable = React.createClass({
 
             changeHandler: function () {
                 this.setState(listStore.getData());
@@ -374,12 +273,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             render: function () {
-                var self = this;
-                var rows = this.state.rows.map(function (row, i) {
+                let self = this;
+                let rows = this.state.rows.map(function (row, i) {
                     return <CorplistRow key={row.id} row={row}
                                         enableUserActions={!self.props.anonymousUser} />;
                 });
-                var expansion = null;
+                let expansion = null;
                 if (this.state.nextOffset) {
                     expansion = <ListExpansion offset={this.state.nextOffset} />;
                 }
@@ -388,7 +287,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <div>
                         <table className="data corplist" border="0">
                             <tbody>
-                                <CorplistHeader />
+                                <defaultComponents.CorplistHeader />
                                 {rows}
                                 {expansion}
                             </tbody>
@@ -399,276 +298,33 @@ define(['vendor/react', 'jquery'], function (React, $) {
         });
 
         /**
-         * a single keyword link shown within a dataset table row
+         * Provides a link allowing to load more items with current
+         * query and filter settings.
          */
-        var CorpKeywordLink = React.createClass({
-
-            mixins: mixins,
-
-            _handleClick : function (e) {
-                var self = this;
-
-                e.preventDefault();
+        let ListExpansion = React.createClass({
+            mixins : mixins,
+            _linkClickHandler : function () {
                 dispatcher.dispatch({
-                    actionType: 'KEYWORD_CLICKED',
+                    actionType: 'EXPANSION_CLICKED',
                     props: {
-                        keyword: self.props.keyword,
-                        status: true,
-                        ctrlKey: e.ctrlKey || e.metaKey
+                        offset: this.props.offset
                     }
                 });
             },
-
-            render: function () {
-                return (
-                    <a className="keyword" onClick={this._handleClick}
-                            data-keyword-id={this.props.keyword}>
-                        <span className="overlay">{this.props.label}</span>
-                    </a>
-                );
-            }
-        });
-
-        // ------------------------------------------------------------------
-        // -------------------------- form components -----------------------
-        // ------------------------------------------------------------------
-
-        /**
-         * A keyword link from the filter form
-         */
-        var KeywordLink = React.createClass({
-
-            mixins: mixins,
-
-            _changeHandler: function (store, action) {
-                this.setState({active: formStore.getKeywordState(this.props.keyword)});
-            },
-
-            getInitialState: function () {
-                return {active: Boolean(this.props.isActive)};
-            },
-
-            componentDidMount: function () {
-                formStore.addChangeListener(this._changeHandler);
-            },
-
-            componentWillUnmount: function () {
-                formStore.removeChangeListener(this._changeHandler);
-            },
-
-            _handleClick: function (active) {
-                var self = this;
-
-                return function (e) {
-                    e.preventDefault();
-                    dispatcher.dispatch({
-                        actionType: 'KEYWORD_CLICKED',
-                        props: {
-                            keyword: self.props.keyword,
-                            status: active,
-                            ctrlKey: e.ctrlKey || e.metaKey
-                        }
-                    });
-                };
-            },
-
-            render: function () {
-                let link;
-                let style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
-
-
-                if (!this.state.active) {
-                    link = this.createActionLink("corplist?keyword="+this.props.keyword);
-                    return (
-                        <a className="keyword" href={link}
-                                data-keyword-id={this.props.keyword}
-                                onClick={this._handleClick(true)}>
-                            <span className="overlay" style={style} >{this.props.label}</span>
-                        </a>
-                    );
-
-                } else {
-                    return (
-                        <span className="keyword current"
-                                  data-keyword-id={this.props.keyword}
-                                  onClick={this._handleClick(false)}>
-                            <span className="overlay" style={style}>{this.props.label}</span>
-                        </span>
-                    );
-                }
-            }
-        });
-
-        /**
-         * A keyword-like link to reset currently set keywords
-         */
-        var ResetLink = React.createClass({
-            mixins: mixins,
-            _handleClick: function (e) {
-                e.preventDefault();
-                dispatcher.dispatch({
-                    actionType: 'KEYWORD_RESET_CLICKED',
-                    props: {}
-                });
-            },
-            render: function () {
-                return <a className="keyword reset"
-                          onClick={this._handleClick}><span className="overlay">{this.translate('defaultCorparch__no_keyword')}</span></a>;
-            }
-        });
-
-        /**
-         * A form fieldset containing all the available keywords
-         */
-        var KeywordsField = React.createClass({
-            mixins: mixins,
-            getInitialState: function () {
-                return {};
-            },
-            render: function () {
-                var links = this.props.keywords.map(function (keyword, i) {
-                    return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
-                                        isActive={keyword[2]} overlayColor={keyword[3]} />;
-                });
-
-                return (
-                    <fieldset className="keywords">
-                        <legend>{this.props.label}</legend>
-                        <ResetLink />
-                        {links}
-                        <div className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</div>
-                    </fieldset>
-                );
-            }
-        });
-
-        /**
-         * An input to specify minimum corpus size
-         */
-        var MinSizeInput = React.createClass({
-            changeHandler: function (e) {
-                dispatcher.dispatch({
-                    actionType: 'FILTER_CHANGED',
-                    props: {minSize: e.target.value}
-                });
-            },
-            render: function () {
-                return <input className="min-max" type="text"
-                              defaultValue={this.props.minSize}
-                              onChange={this.changeHandler} />;
-            }
-        });
-
-        /**
-         * An input to specify maximum corpus size
-         */
-        var MaxSizeInput = React.createClass({
-            _changeHandler: function (e) {
-                dispatcher.dispatch({
-                    actionType: 'FILTER_CHANGED',
-                    props: {maxSize: e.target.value}
-                });
-            },
             render : function () {
-                return <input className="min-max" type="text"
-                              defaultValue={this.props.maxSize}
-                              onChange={this._changeHandler} />;
-            }
-        });
-
-        var NameSearchInput = React.createClass({
-            _timer : null,
-            _changeHandler : function (e) {
-                let self = this;
-
-                if (this._timer) {
-                    clearTimeout(this._timer);
-                }
-                this._timer = setTimeout(((value) => () => {
-                    dispatcher.dispatch({
-                        actionType: 'FILTER_CHANGED',
-                        props: {corpusName: value}
-                    });
-                    clearTimeout(self._timer);
-                })(e.target.value), 300);
-            },
-            render : function () {
-                return <input type="text" defaultValue={''} onChange={this._changeHandler} />;
-            }
-        });
-
-        /**
-         * A fieldset containing non-keyword filter inputs.
-         */
-        var FilterInputFieldset = React.createClass({
-            mixins: mixins,
-
-            getInitialState : function () {
-                return {expanded: false};
-            },
-
-            _handleLegendClick : function () {
-                this.setState(React.addons.update(this.state, {expanded: {$set: !this.state.expanded}}));
-            },
-
-            render: function () {
-                let fields;
-                let fieldsetClasses;
-
-                if (this.state.expanded) {
-                    fieldsetClasses = 'advanced-filter';
-                    fields = (
-                        <div>
-                            <span>{this.translate('defaultCorparch__size_from')}: </span>
-                            <MinSizeInput minSize={this.props.filters.minSize[0]} />
-                            <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
-                            <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
-                            <span className="inline-label">{'(' +
-                            this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
-                            <p>
-                                <span>
-                                {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                                <NameSearchInput />
-                            </p>
-                        </div>
-                    );
-
-                } else {
-                    fieldsetClasses = 'advanced-filter closed';
-                    fields = null;
-                }
-
                 return (
-                    <fieldset className={fieldsetClasses}>
-                        <legend onClick={this._handleLegendClick}>{this.translate('defaultCorparch__advanced_filters')}</legend>
-                        {fields}
-                    </fieldset>
+                      <tr className="load-more">
+                          <td colSpan="5">
+                              <a onClick={this._linkClickHandler}>{this.translate('ucnkCorparch__load_all')}</a>
+                          </td>
+                      </tr>
                 );
-            }
-        });
-
-        /**
-         * Filter form root component
-         */
-        var FilterForm = React.createClass({
-            mixins: mixins,
-            render: function () {
-                return (
-                    <section className="inner">
-                        <h3>{this.translate('defaultCorparch__filters')}</h3>
-                        <KeywordsField
-                            keywords={this.props.keywords}
-                            label={this.translate('defaultCorparch__keywords_field_label')} />
-                        <FilterInputFieldset
-                            filters={this.props.filters} />
-                    </section>
-                )
             }
         });
 
         return {
             CorplistTable: CorplistTable,
-            FilterForm: FilterForm
+            FilterForm: defaultComponents.FilterForm
         };
     };
 
