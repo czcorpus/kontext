@@ -434,6 +434,7 @@ class Kwic(object):
         filter_out_speech_tag = speech_segment and speech_segment[0] not in user_structs \
             and speech_struct_attr_name in all_structs
 
+        i = fromline
         while kl.nextline():
             linegroup = str(kl.get_linegroup() or '_')
             linegroup = labelmap.get(linegroup, '#' + linegroup)
@@ -477,10 +478,12 @@ class Kwic(object):
                              Kwic=kwicwords,
                              linegroup=linegroup,
                              leftsize=leftsize,
-                             rightsize=rightsize)
+                             rightsize=rightsize,
+                             linenum=i)
             line_data[leftlabel] = leftwords
             line_data[rightlabel] = rightwords
             lines.append(line_data)
+            i += 1
         for line in lines:
             line['leftspace'] = ' ' * (maxleftsize - line['leftsize'])
             line['rightspace'] = ' ' * (maxrightsize - line['rightsize'])

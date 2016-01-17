@@ -134,7 +134,11 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
         """
-        if prev_data is None or curr_data['q'] != prev_data['q']:
+        def records_are_same(r1, r2):
+            return (r1['q'] != r2['q'] or
+                    r1.get('lines_groups') != r2.get('lines_groups'))
+
+        if prev_data is None or records_are_same(curr_data, prev_data):
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data['id'] = data_id

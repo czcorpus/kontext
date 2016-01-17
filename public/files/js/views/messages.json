@@ -10,7 +10,7 @@
 		"global__query_type_mismatch": "Possible query type mismatch. Do you want to continue?",
 		"global__select_all": "Select all",
 		"global__what_are_positions": "Positions are basic units for searching the corpus that correspond to tokens: every single occurrence of a word form, number or punctuation symbol in the corpus constitutes a position. Corpus size in positions given by the search interface is therefore higher than corpus size in number of words given on the <a href=\"http://www.korpus.cz/english/struktura.php\" target=\"_blank\">ICNC web pages</a>, where only postions containing at least one alphabetic character are considered.",
-		"global__selected_lines": "Selected lines",
+		"global__selected_lines": "selected",
 		"global__load_more": "Load more",
 		"global__no_more_lines": "No more lines",
 		"global__loading": "Loading...",
@@ -60,7 +60,14 @@
         "global__remove_line": "Remove line",
         "global__add_within": "Add 'within'",
         "global__within_hint_text": "Select an appropriate 'within' condition, structure and input an expression specifying required values of structural attributes (e.g. 'author=\"Doyle.+\" & title=\".*Sherlock.*\"')",
-        "global__within_hint_attrs": "Available structures and their attributes"
+        "global__within_hint_attrs": "Available structures and their attributes",
+        "global__remove_selected_lines": "Remove selected lines from the result",
+        "global__remove_all_but_selected_lines": "Remove all but selected lines from the result",
+        "global__clear_the_selection": "Clear the selection",
+        "global__proceed": "Proceed",
+        "global__selection_actions": "Selection actions",
+        "global__failed_store_conclines_quota_exc": "Failed to store selected concordance lines due to exceeded data limit.",
+        "global__remove_line_groups": "Remove groups assignment"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -73,7 +80,7 @@
 		"global__query_type_mismatch": "Byl detekován možný nesoulad mezi zvoleným a faktickým typem dotazu. Chcete pokračovat?",
 		"global__select_all": "Vybrat vše",
 		"global__what_are_positions": "Pozice jsou základní jednotky pro vyhledávání v korpusu odpovídající tokenům: samostatnou pozici tvoří každý jednotlivý výskyt slovního tvaru, čísla nebo interpunkčního znaménka v korpusu. Velikost korpusu v pozicích udávaná vyhledávacím rozhraním je tedy vždy vyšší než velikost korpusu v počtu slov uváděná na <a href=\"http://www.korpus.cz/struktura.php\" target=\"_blank\">stránkách ÚČNK</a>, kde se slovem rozumí pouze pozice obsahující alespoň jeden alfabetický znak.",
-		"global__selected_lines": "Vybrané řádky",
+		"global__selected_lines": "vybrané",
 		"global__load_more": "Nahrát další",
 		"global__no_more_lines": "Nejsou žádné další řádky",
 		"global__loading": "Nahrávám...",
@@ -124,6 +131,13 @@
         "global__remove_line": "Odstranit řádek",
         "global__add_within": "Přidat 'within'",
         "global__within_hint_text": "Vyberte příslušný typ 'within' podminky, strukturu a napište výraz určující hodnoty strukturních atributů (např. 'author=\"Doyle.+\" & title=\".*Sherlock.*\"')",
-        "global__within_hint_attrs": "Dostupné struktury a jejich atributy"
+        "global__within_hint_attrs": "Dostupné struktury a jejich atributy",
+        "global__remove_selected_lines": "Odstranit z výsledku vybrané řádky",
+        "global__remove_all_but_selected_lines": "Odstranit z výsledku všechny kromě vybraných řádků",
+        "global__clear_the_selection": "Zrušit označení řádků",
+        "global__proceed": "Provést",
+        "global__selection_actions": "Akce s vybranými řádky",
+        "global__failed_store_conclines_quota_exc": "Nepodařilo se uložit vybrané konkordanční řádky kvůli překročení kapacity lokálního úložiště.",
+        "global__remove_line_groups": "Zrušit přiřazení skupin"
 	}
 }
