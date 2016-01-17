@@ -16,6 +16,7 @@ import math
 import os
 import sys
 import re
+import json
 
 from werkzeug.datastructures import MultiDict
 
@@ -167,6 +168,9 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                   samplesize=corpus_info.sample_size)
+        if self._lines_groups:
+            for lg in self._lines_groups:
+                conc.set_linegroup(lg[0], lg[1])
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -1588,20 +1592,10 @@ class Actions(Kontext):
             self._set_not_found()
             return None
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
-        import json
-
-        data = json.loads(rows)
-        expand = lambda x, n: range(x, x + n)
-        sel_lines = []
-        for item in data:
-            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
-        self.args.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
-        q_id = self._store_conc_params()
+    def _collect_conc_next_url_params(self, query_id):
         params = {
             'corpname': self.args.corpname,
-            'q': '~%s' % q_id,
+            'q': '~%s' % query_id,
             'viewmode': self.args.viewmode,
             'attrs': self.args.attrs,
             'attr_allpos': self.args.attr_allpos,
@@ -1614,6 +1608,36 @@ class Actions(Kontext):
             params['usesubcorp'] = self.args.usesubcorp
         if self.args.align:
             params['align'] = self.args.align
+        return params
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_unset_lines_groups(self):
+        self._lines_groups = None
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {'id': q_id, 'next_url': self.create_url('view', params)}
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_apply_lines_groups(self, rows=''):
+        data = json.loads(rows)
+        self._lines_groups = [(x[1], x[3]) for x in data]
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {
+            'id': q_id,
+            'next_url': self.create_url('view', params)
+        }
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
+        data = json.loads(rows)
+        expand = lambda x, n: range(x, x + n)
+        sel_lines = []
+        for item in data:
+            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
+        self.args.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
         return {
             'id': q_id,
             'next_url': self.create_url('view', params)

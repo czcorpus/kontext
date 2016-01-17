@@ -20,13 +20,22 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines',
-        'SoundManager', 'vendor/jscrollpane'], function (win, $, jqueryPeriodic, documentModule, detail,
-                                                                popupBox, conclines, SoundManager) {
+define(function (require, exports, module) {
     'use strict';
 
-    var lib = {},
-        clStorage = conclines.openStorage();
+    var win = require('win');
+    var $ = require('jquery');
+    var jqueryPeriodic = require('vendor/jquery.periodic');
+    var documentModule = require('tpl/document');
+    var detail = require('detail');
+    var popupBox = require('popupbox');
+    var conclines = require('conclines');
+    var concViews = require('views/concordance');
+    var concStores = require('stores/concordance');
+    var SoundManager = require('SoundManager');
+    require('vendor/jscrollpane');
+
+    var lib = {};
 
     lib.layoutModel = null;
 
@@ -82,6 +91,32 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         }
     }
 
+    function getUISelectionMode() {
+        var conclines = $('#conclines');
+        if (conclines.find('td.manual-selection input[type=\'checkbox\']').length > 0) {
+            return 'simple';
+
+        } else if (conclines.find('td.manual-selection input[type=\'text\']').length > 0) {
+            return 'groups';
+        }
+        return null;
+    }
+
+
+    function setDefinedGroups() {
+        $('#selection-mode-switch')
+            .val('groups')
+            .attr('disabled', 'disabled');
+        $('#conclines tr').each(function () {
+            var elm = $(this).find('.manual-selection');
+            var groupElm = window.document.createElement('span');
+            $(groupElm)
+                .text($(this).attr('data-linegroup'))
+                .addClass('group-id');
+            elm.empty().append(groupElm);
+        });
+    }
+
 
     /**
      * According to the data found in sessionStorage iterates over current page's
@@ -89,120 +124,194 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      * supported all the checkboxes are disabled.
      */
     function refreshSelection() {
-        $('#conclines tr input[type=\'checkbox\']').each(function () {
-            if (!clStorage.supportsSessionStorage()) {
-                $(this).attr('disabled', 'disabled');
+        function applyOn(currMode, setValFn) {
+            return function (i, item) {
+                rowSelectionEvent(item, currMode);
+                if (!lib.lineSelectionStore.supportsSessionStorage()) {
+                    $(item).attr('disabled', 'disabled');
 
-            } else if (clStorage.containsLine($(this).val())) {
-                this.checked = true;
-
-            } else {
-                this.checked = false;
+                } else {
+                    setValFn(item);
+                }
             }
-        });
+        }
+        var storeMode = lib.lineSelectionStore.getMode();
+        if (getUISelectionMode() !== storeMode) {
+            switchSelectionModeUI(storeMode);
+        }
+        $('#selection-mode-switch').val(storeMode);
+        if (storeMode === 'simple') {
+            $('#conclines td.manual-selection input[type=\'checkbox\']').each(applyOn(storeMode, function (item) {
+                if (lib.lineSelectionStore.containsLine($(item).attr('data-position'))) {
+                    item.checked = true;
+
+                } else {
+                    item.checked = false;
+                }
+            }));
+
+        } else if (storeMode === 'groups') {
+            $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, function (item) {
+                var data = lib.lineSelectionStore.getLine($(item).attr('data-position'));
+
+                if (data) {
+                    $(item).val(data[2]);
+                }
+            }));
+        }
+        showNumSelectedItems();
     }
 
     /**
      *
      * @param numSelected
      */
-    function showNumSelectedItems(numSelected) {
+    function showNumSelectedItems() {
         var linesSelection = $('#result-info .lines-selection'),
-            createContent;
+            createContent,
+            numSelected = lib.lineSelectionStore.size(),
+            removeGroupsLink;
 
-        createContent = function (box, finalize) {
-            var formElm = $('#selection-actions'),
-                getAction;
+        if (lib.layoutModel.getConf('containsLinesGroups')) {
+            removeGroupsLink = window.document.createElement('a');
+            $(removeGroupsLink).text(lib.layoutModel.translate('global__remove_line_groups'));
+            $(removeGroupsLink).on('click', function () {
+                lib.lineSelectionStore.resetServerLineGroups();
+            });
+            linesSelection.append(removeGroupsLink);
 
-            getAction = function () {
-                return formElm.find('select[name=\'actions\']').val();
+        } else {
+            createContent = function (box, finalize) {
+                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                    }
+                });
+                lib.lineSelectionStore.addActionFinishHandler(function () {
+                    box.close();
+                });
+                lib.layoutModel.renderReactComponent(lib.views.LineSelectionMenu,
+                        box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
             };
 
-            formElm.find('button.confirm').off('click').on('click', function () {
-                var action = getAction(),
-                    prom,
-                    pnfilter,
-                    filterCodeMapping = {'remove' : 'n', 'remove_inverted' : 'p'};
+            linesSelection.text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
+            if (!popupBox.hasAttachedPopupBox(linesSelection)) {
+                popupBox.bind(linesSelection, createContent, {
+                    type : 'plain',
+                    closeIcon : true,
+                    onClose: function () {
+                        lib.layoutModel.unmountReactComponent(this.getRootElement());
+                        lib.lineSelectionStore.removeAllActionFinishHandlers();
+                    }
+                });
+            }
+            if (numSelected === 0) {
+                linesSelection.hide();
+                linesSelection.prev('span.separ').hide();
 
-                if (action === 'clear') {
-                    clStorage.clear();
-                    refreshSelection();
-                    box.close();
+            } else if (!linesSelection.is(':visible')) {
+                linesSelection.show();
+                linesSelection.prev('span.separ').show();
+            }
+        }
+    }
 
-                } else {
-                    pnfilter = filterCodeMapping[action];
-                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + lib.layoutModel.conf.stateParams,
-                        {
-                            dataType : 'json',
-                            type : 'POST',
-                            data : { rows : JSON.stringify(clStorage.getAll())}
-                        }).promise();
-
-                    prom.then(
-                        function (data) {
-                            box.close();
-                            if (!data.error) {
-                                clStorage.clear();
-                                $(win).off('beforeunload.alert_unsaved');
-                                win.location = data.next_url;
-
-                            } else {
-                                lib.layoutModel.showMessage('error', data.error);
-                            }
-                        },
-                        function (jqXHR, textStatus) {
-                            box.close();
-                            lib.layoutModel.showMessage('error', textStatus);
-                        }
-                    );
+    // TODO refactor this (redundant code)
+    function switchSelectionModeUI(mode) {
+        if (mode === 'simple') {
+            $('#conclines').find('td.manual-selection input[type=\'text\']').each(function (item) {
+                var inputElm = window.document.createElement('input');
+                var kwiclen = $(this).attr('data-kwiclen');
+                var position = $(this).attr('data-position');
+                var lineNum = $(this).attr('data-linenum');
+                $(inputElm)
+                    .attr('type', 'checkbox')
+                    .attr('data-kwiclen', kwiclen)
+                    .attr('data-position', position)
+                    .attr('data-linenum', lineNum);
+                if ($(this).val()) {
+                    $(inputElm).prop('checked', true);
                 }
+                $(this).replaceWith(inputElm);
+                rowSelectionEvent(inputElm, 'simple');
             });
-            box.importElement(formElm);
-            finalize();
-        };
 
-        linesSelection.text(lib.layoutModel.translate('global__selected_lines') + ': ' + numSelected);
-        if (!popupBox.hasAttachedPopupBox(linesSelection)) {
-            popupBox.bind(linesSelection, createContent, {
-                type : 'plain',
-                closeIcon : true
+        } else if (mode === 'groups') {
+            $('#conclines').find('td.manual-selection input[type=\'checkbox\']').each(function (item) {
+                var inputElm = window.document.createElement('input');
+                var kwiclen = $(this).attr('data-kwiclen');
+                var position = $(this).attr('data-position');
+                var lineNum = $(this).attr('data-linenum');
+                var defaultGroupid = 1;
+                $(inputElm)
+                    .attr('type', 'text')
+                    .attr('data-kwiclen', kwiclen)
+                    .attr('data-position', position)
+                    .attr('data-linenum', lineNum)
+                    .attr('size', '1');
+                if ($(this).is(':checked')) {
+                    $(inputElm).val(defaultGroupid);
+                }
+                $(this).replaceWith(inputElm);
+                rowSelectionEvent(inputElm, 'groups');
             });
         }
-        if (numSelected === 0) {
-            linesSelection.hide();
-            linesSelection.prev('span.separ').hide();
+    }
 
-        } else if (!linesSelection.is(':visible')) {
-            linesSelection.show();
-            linesSelection.prev('span.separ').show();
-        }
+
+    function bindSelectionModeSwitch() {
+        $('#selection-mode-switch').on('change', function (evt) {
+            var mode = $(evt.currentTarget).val();
+            switchSelectionModeUI(mode);
+            lib.lineSelectionStore.setMode(mode);
+            showNumSelectedItems();
+        });
     }
 
 
     /**
      * Handles clicking on concordance line checkbox
      */
-    function rowSelectionEvent() {
-        $('#conc-wrapper').on('click', 'input[type=\'checkbox\']', function (e) {
-            var id = $(e.currentTarget).attr('value'),
-                kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
+    function rowSelectionEvent(elm, mode) {
+        if (mode === 'simple') {
+            $(elm).on('click', function (e) {
+                var id = $(e.currentTarget).attr('data-position'),
+                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
+                    lineNum = parseInt($(e.currentTarget).attr('data-linenum'), 10);
+                if ($(e.currentTarget).is(':checked')) {
+                    lib.lineSelectionStore.addLine(id, lineNum, kwiclen, null);
 
-            if ($(e.currentTarget).is(':checked')) {
-                clStorage.addLine(id, kwiclen);
+                } else {
+                    lib.lineSelectionStore.removeLine(id);
+                }
+                showNumSelectedItems();
+            });
 
-            } else {
-                clStorage.removeLine(id);
-            }
-            showNumSelectedItems(clStorage.size());
-        });
+        } else if (mode === 'groups') {
+            $(elm).on('change keyup', function (e) {
+                var id = $(e.currentTarget).attr('data-position'),
+                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
+                    lineNum = parseInt($(e.currentTarget).attr('data-linenum'), 10),
+                    groupId = parseInt($(e.currentTarget).val() || 0, 10);
+
+                if ($(e.currentTarget).val() !== '') {
+                    lib.lineSelectionStore.addLine(id, lineNum, kwiclen, groupId);
+
+                } else {
+                    lib.lineSelectionStore.removeLine(id);
+                }
+                showNumSelectedItems();
+            });
+        }
     }
 
     /**
      * Ensures that concordance lines are serialized once user leaves the page.
      */
-    function onUloadSerialize() {
+    function onUnloadSerialize() {
         $(win).on('unload', function () {
-            clStorage.serialize();
+            lib.lineSelectionStore.serialize();
         });
     }
 
@@ -212,7 +321,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      */
     function onBeforeUnloadAsk() {
         $(win).on('beforeunload.alert_unsaved', function (event) {
-            if (clStorage.size() > 0) {
+            if (lib.lineSelectionStore.size() > 0) {
                 event.returnValue = lib.layoutModel.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
@@ -543,23 +652,38 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         lib.touchHandler = new TouchHandler();
+        lib.lineSelectionStore = new concStores.LineSelectionStore(lib.layoutModel,
+                lib.layoutModel.dispatcher, conclines.openStorage(), 'simple');
+
+        lib.lineSelectionStore.addClearSelectionHandler(refreshSelection);
+
+        lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
+                lib.lineSelectionStore);
+
+        if (lib.layoutModel.getConf('containsLinesGroups')) {
+            setDefinedGroups();
+
+        } else {
+            bindSelectionModeSwitch();
+            refreshSelection();
+        }
+        showNumSelectedItems();
+
         misc();
         addWarnings();
         initConcViewScrollbar();
         if (conf.anonymousUser) {
             anonymousUserWarning();
         }
-        rowSelectionEvent();
-        refreshSelection();
-        showNumSelectedItems(clStorage.size());
+
         onBeforeUnloadAsk();
-        onUloadSerialize();
+        onUnloadSerialize();
         grantPaginationPageLeave();
         soundManagerInit();
         makePageReusable(conf);
         attachIpmCalcTrigger(lib.layoutModel);
     };
 
-    return lib;
+    module.exports = lib;
 
 });
