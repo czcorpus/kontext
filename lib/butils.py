@@ -47,17 +47,6 @@ class CQLDetectWithin(object):
                     state = 0
                 else:
                     raise Exception('syntax error')
-            elif s[i] == '\'':
-                if state == 0:
-                    ans.extend(re.split(r'\s+', curr_piece))
-                    curr_piece = ''
-                    state = 2
-                elif state == 2:
-                    ans.append(None)  # use None instead of quoted text
-                    curr_piece = ''
-                    state = 0
-                else:
-                    raise Exception('syntax error')
             else:
                 curr_piece += s[i]
             i += 1
