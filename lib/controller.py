@@ -45,7 +45,7 @@ import plugins
 import settings
 from plugins.abstract.auth import AuthException
 from translation import ugettext as _
-from argmapping import Parameter, GlobalArgs
+from argmapping import Parameter, GlobalArgs, Args
 
 
 codecs.register_error('replacedot', lambda err: (u'.', err.end))
@@ -194,13 +194,6 @@ class NotFoundException(UserActionException):
     """
     def __init__(self, message):
         super(NotFoundException, self).__init__(message, 404)
-
-
-class Args(object):
-    """
-    URL/form parameters are mapped here
-    """
-    pass
 
 
 class Controller(object):
