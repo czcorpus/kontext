@@ -55,17 +55,6 @@ class CQLDetectWithin(object):
                     state = 0
                 else:
                     raise Exception('syntax error')
-            elif s[i] == '\'':
-                if state == 0:
-                    ans.extend(self.split_by_whitespace(curr_piece))
-                    curr_piece = ''
-                    state = 2
-                elif state == 2:
-                    ans.append((curr_piece, 's'))  # tuple => string part of the query
-                    curr_piece = ''
-                    state = 0
-                else:
-                    raise Exception('syntax error')
             else:
                 curr_piece += s[i]
             i += 1
