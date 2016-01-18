@@ -386,3 +386,10 @@ class GlobalArgs(GeneralArgs):
 
     maxsavelines = Parameter(1000)
     fcrit = Parameter([])
+
+
+class Args(object):
+    """
+    URL/form parameters are mapped here
+    """
+    pass

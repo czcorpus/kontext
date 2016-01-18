@@ -18,7 +18,7 @@ specified by attributes values).
 from functools import partial
 
 import l10n
-from argmapping import GlobalArgs
+from argmapping import Args
 from werkzeug.wrappers import Request
 
 
@@ -75,14 +75,14 @@ class TextTypeCollector(object):
         """
         self._corp = corpus
         self._src_obj = src_obj
-        if isinstance(src_obj, GlobalArgs):
+        if isinstance(src_obj, Args):
             self._attr_producer_fn = lambda o: dir(o)
             self._access_fn = lambda o, att: getattr(o, att)
         elif isinstance(src_obj, Request):
             self._attr_producer_fn = lambda o: o.form.keys()
             self._access_fn = lambda o, x: apply(o.form.getlist, (x,))
         else:
-            raise ValueError('Invalid source object (must be either GlobalArgs or Request): %s' % (
+            raise ValueError('Invalid source object (must be either argmapping.Args or Request): %s' % (
                              src_obj.__class__.__name__,))
 
     def get_query(self):
