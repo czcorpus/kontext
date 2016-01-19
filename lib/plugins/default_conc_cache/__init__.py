@@ -160,6 +160,17 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
     def get_mapping(self, corpus):
         return CacheMapping(self._cache_dir, corpus, self._lock_factory)
 
+    def export_tasks(self):
+        from cleanup import run
+
+        def conc_cache_cleanup(ttl, subdir, dry_run):
+            from plugins.default_conc_cache import CacheMapping
+            return run(root_dir=self._cache_dir,
+                       corpus_id=None, ttl=ttl, subdir=subdir, dry_run=dry_run,
+                       cache_map_filename=CacheMapping.CACHE_FILENAME,
+                       locking_plugin=self._lock_factory)
+        return conc_cache_cleanup,
+
 
 @inject('locking')
 def create_instance(settings, lock_factory):
