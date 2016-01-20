@@ -230,10 +230,10 @@ class CentralAuth(AbstractRemoteAuth):
         """
         return False
 
-    def get_login_url(self, return_url):
+    def get_login_url(self, return_url=None):
         return self._auth_conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
 
-    def get_logout_url(self, return_url):
+    def get_logout_url(self, return_url=None):
         return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
     @staticmethod
@@ -241,6 +241,9 @@ class CentralAuth(AbstractRemoteAuth):
         return 'application_bar'
 
     def export_tasks(self):
+        """
+        Export tasks for Celery worker(s)
+        """
         import syncdb
 
         def sync_user_db(interval, dry_run, sync_conf, sync_version):

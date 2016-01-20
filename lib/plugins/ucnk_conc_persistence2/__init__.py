@@ -188,6 +188,9 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
     def export_tasks(self):
+        """
+        Export tasks for Celery worker(s)
+        """
         def archive_concordance(cron_interval, key_prefix, dry_run):
             import archive
             from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY

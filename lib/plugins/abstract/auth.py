@@ -38,21 +38,21 @@ class AbstractAuth(object):
             'fullname': _('anonymous')
         }
 
-    def get_login_url(self):
+    def get_login_url(self, return_url=None):
         """
         Specifies where should KonText redirect a user in case
         he wants to log in. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        return '%slogin' % self.root_url
+        raise NotImplementedError()
 
-    def get_logout_url(self):
+    def get_logout_url(self, return_url=None):
         """
         Specifies where should KonText redirect a user in case
         he wants to log out. In general, it can be KonText's URL
         or a URL of some other authentication application.
         """
-        return '%slogoutx' % self.root_url
+        raise NotImplementedError()
 
     def is_anonymous(self, user_id):
         return user_id == self._anonymous_id
