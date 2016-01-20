@@ -108,11 +108,12 @@ class CentralAuth(AbstractRemoteAuth):
         sessions -- a sessions plug-in
         conf -- a 'settings' module
         """
-        super(CentralAuth, self).__init__(conf.anonymous_user_id)
+        auth_conf = AuthConf(conf)
+        super(CentralAuth, self).__init__(auth_conf.anonymous_user_id)
         self._db = db
         self._sessions = sessions
         self._toolbar_conf = ToolbarConf(conf)
-        self._auth_conf = AuthConf(conf)
+        self._auth_conf = auth_conf
         self._conf = conf
 
     @staticmethod
