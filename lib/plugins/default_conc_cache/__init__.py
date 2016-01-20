@@ -161,6 +161,9 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         return CacheMapping(self._cache_dir, corpus, self._lock_factory)
 
     def export_tasks(self):
+        """
+        Export tasks for Celery worker(s)
+        """
         from cleanup import run
 
         def conc_cache_cleanup(ttl, subdir, dry_run):
