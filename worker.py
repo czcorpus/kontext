@@ -21,8 +21,6 @@ import imp
 import sys
 import time
 
-from celery import Celery
-
 CURR_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '%s/lib' % CURR_PATH)
 import settings
@@ -62,6 +60,54 @@ def load_script_module(name, path):
 
 class WorkerTaskException(Exception):
     pass
+
+
+def is_compiled(corp, attr, method):
+    if attr.endswith('.ngr'):
+        if corp.get_conf('SUBCPATH'):
+            attr = manatee.NGram(corp.get_conf('PATH') + attr,
+                                 corp.get_conf('SUBCPATH') + attr)
+        else:
+            attr = manatee.NGram(corp.get_conf('PATH') + attr)
+        last = attr.size() - 1
+    else:
+        attr = corp.get_attr(attr)
+        last = attr.id_range() - 1
+    if getattr(attr, method)(last) != -1:
+        sys.stdout.write('%s already compiled, skipping.\n' % method)
+        return True
+    return False
+
+
+def _load_corp(corp_id, subc_path):
+    corp = manatee.Corpus(corp_id)
+    if subc_path:
+        corp = manatee.SubCorpus(corp, subc_path)
+    corp.corpname = corp_id
+    return corp
+
+
+def _compile_frq(corp, attr, logfile):
+    if is_compiled(corp, attr, 'freq'):
+        with open(logfile, 'a') as f:
+            f.write('\n100 %\n')  # to get proper calculation of total progress
+        return {'message': 'freq already compiled'}
+    with stderr_redirector(open(logfile, 'a')):
+        corp.compile_frq(attr)
+    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
+
+
+class CustomTasks(object):
+    """
+    Dynamically register tasks exposed by active plug-ins
+    """
+    def __init__(self, plugin_names):
+        for plugin_name in plugin_names:
+            plg = plugins.get(plugin_name)
+            if callable(getattr(plg, 'export_tasks', None)):
+                for tsk in plg.export_tasks():
+                    setattr(self, tsk.__name__,
+                            app.task(tsk, name='%s.%s' % (plugin_name, tsk.__name__,)))
 
 
 @app.task
@@ -108,65 +154,21 @@ def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, sa
 
 
 @app.task
-def archive_concordance(cron_interval, key_prefix, dry_run):
-    from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
-    archive_m = load_script_module('archive', './scripts/plugins/ucnk_conc_persistence2/archive.py')
-    ans = archive_m.run(conf=settings, key_prefix=key_prefix, cron_interval=cron_interval, dry_run=dry_run,
-                        persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)
-    return ans
-
-
-@app.task
-def sync_user_db(interval, dry_run):
-    sync_mysql = load_script_module('syncdb', './scripts/plugins/ucnk_remote_auth2/syncdb.py')
-    ans = sync_mysql.run(syncdb_conf_path='./conf/mysql2redis.json', kontext_conf=settings,
-                         interval=interval, dry_run=dry_run)
-    return ans
-
-
-def is_compiled(corp, attr, method):
-    if attr.endswith('.ngr'):
-        if corp.get_conf('SUBCPATH'):
-            attr = manatee.NGram(corp.get_conf('PATH') + attr,
-                                 corp.get_conf('SUBCPATH') + attr)
-        else:
-            attr = manatee.NGram(corp.get_conf('PATH') + attr)
-        last = attr.size() - 1
-    else:
-        attr = corp.get_attr(attr)
-        last = attr.id_range() - 1
-    if getattr(attr, method)(last) != -1:
-        sys.stdout.write('%s already compiled, skipping.\n' % method)
-        return True
-    return False
-
-
-def _load_corp(corp_id, subc_path):
-    corp = manatee.Corpus(corp_id)
-    if subc_path:
-        corp = manatee.SubCorpus(corp, subc_path)
-    corp.corpname = corp_id
-    return corp
-
-
-def _compile_frq(corp, attr, logfile):
-    if is_compiled(corp, attr, 'freq'):
-        with open(logfile, 'a') as f:
-            f.write('\n100 %\n')  # to get proper calculation of total progress
-        return {'message': 'freq already compiled'}
-    with stderr_redirector(open(logfile, 'a')):
-        corp.compile_frq(attr)
-    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
-
-
-@app.task
 def compile_frq(corp_id, subcorp_path, attr, logfile):
+    """
+    Precalculate freqency data for collocations and wordlists.
+    (see freq_precalc.build_arf_db)worker.py
+    """
     corp = _load_corp(corp_id, subcorp_path)
     return _compile_frq(corp, attr, logfile)
 
 
 @app.task
 def compile_arf(corp_id, subcorp_path, attr, logfile):
+    """
+    Precalculate ARF data for collocations and wordlists.
+    (see freq_precalc.build_arf_db)
+    """
     corp = _load_corp(corp_id, subcorp_path)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
@@ -191,6 +193,10 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
 
 @app.task
 def compile_docf(corp_id, subcorp_path, attr, logfile):
+    """
+    Precalculate document counts data for collocations and wordlists.
+    (see freq_precalc.build_arf_db)
+    """
     corp = _load_corp(corp_id, subcorp_path)
     if is_compiled(corp, attr, 'docf'):
         with open(logfile, 'a') as f:
@@ -207,11 +213,4 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
                                   doc_struct, attr, corp_id))
 
 
-@app.task
-def conc_cache_cleanup(ttl, subdir, dry_run):
-    from plugins.default_conc_cache import CacheMapping
-    cleanup_mod = load_script_module('cleanup', './scripts/plugins/default_conc_cache/cleanup.py')
-    return cleanup_mod.run(root_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'],
-                           corpus_id=None, ttl=ttl, subdir=subdir, dry_run=dry_run,
-                           cache_map_filename=CacheMapping.CACHE_FILENAME,
-                           locking_plugin=plugins.get('locking'))
+custom_tasks = CustomTasks(plugins.get_plugins())

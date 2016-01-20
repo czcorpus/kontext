@@ -101,18 +101,18 @@ class CentralAuth(AbstractRemoteAuth):
 
     UCNK_TOOLBAR_PATTERN = r'cnc-toolbar-data[^{]+(\{.+)</div>'
 
-    def __init__(self, db, sessions, toolbar_conf, conf):
+    def __init__(self, db, sessions, conf):
         """
         arguments:
         db -- a key-value storage plug-in
         sessions -- a sessions plug-in
-        toolbar_conf -- a ToolbarConf instance
-        conf -- a AuthConf instance
+        conf -- a 'settings' module
         """
         super(CentralAuth, self).__init__(conf.anonymous_user_id)
         self._db = db
         self._sessions = sessions
-        self._toolbar_conf = toolbar_conf
+        self._toolbar_conf = ToolbarConf(conf)
+        self._auth_conf = AuthConf(conf)
         self._conf = conf
 
     @staticmethod
@@ -134,8 +134,8 @@ class CentralAuth(AbstractRemoteAuth):
         returns:
         ticket id
         """
-        if self._conf.cookie_name in cookies:
-            ticket_id = cookies[self._conf.cookie_name].value
+        if self._auth_conf.cookie_name in cookies:
+            ticket_id = cookies[self._auth_conf.cookie_name].value
         else:
             ticket_id = None
         return ticket_id
@@ -146,7 +146,7 @@ class CentralAuth(AbstractRemoteAuth):
         curr_lang = curr_lang.split('_')[0]
         ticket_id = self.get_ticket(cookies)
         connection = httplib.HTTPConnection(self._toolbar_conf.server,
-                                            port=self._toolbar_conf.port, timeout=self._conf.toolbar_server_timeout)
+                                            port=self._toolbar_conf.port, timeout=self._auth_conf.toolbar_server_timeout)
         connection.request('GET', self._toolbar_conf.path % {
             'id': ticket_id,
             'lang': curr_lang,
@@ -231,17 +231,26 @@ class CentralAuth(AbstractRemoteAuth):
         return False
 
     def get_login_url(self, return_url):
-        return self._conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._auth_conf.login_url % (urllib.quote(return_url) if return_url is not None else '')
 
     def get_logout_url(self, return_url):
-        return self._conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
+        return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
     @staticmethod
     def get_toolbar_session_key():
         return 'application_bar'
 
+    def export_tasks(self):
+        import syncdb
+
+        def sync_user_db(interval, dry_run, sync_conf, sync_version):
+            with open(sync_conf, 'rb') as f:
+                conf = json.loads(f)
+            return syncdb.run(conf=conf, interval=interval, dry_run=dry_run, version=sync_version)
+        return sync_user_db,
+
 
 @inject('db', 'sessions')
 def create_instance(conf, db_provider, sessions):
-    return CentralAuth(db=db_provider, sessions=sessions, conf=AuthConf(conf), toolbar_conf=ToolbarConf(conf))
+    return CentralAuth(db=db_provider, sessions=sessions, conf=conf)
 

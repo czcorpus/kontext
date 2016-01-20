@@ -113,6 +113,7 @@ class ConcPersistence(AbstractConcPersistence):
         self.db = db
         self._auth = auth
         self._archive = create_engine('sqlite:///%s' % settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+        self._settings = settings
 
     def _mk_key(self, code):
         return 'concordance:%s' % (code, )
@@ -185,6 +186,15 @@ class ConcPersistence(AbstractConcPersistence):
             latest_id = prev_data[ID_KEY]
 
         return latest_id
+
+    def export_tasks(self):
+        def archive_concordance(cron_interval, key_prefix, dry_run):
+            import archive
+            from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
+            ans = archive.run(conf=self._settings, key_prefix=key_prefix, cron_interval=cron_interval,
+                              dry_run=dry_run, persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)
+            return ans
+        return archive_concordance,
 
 
 @inject('db', 'auth')
