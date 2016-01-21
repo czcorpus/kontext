@@ -113,14 +113,26 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         popupBox.bind($('.calc-warning'), layoutModel.conf.messages.calc_warning, {type: 'warning'});
     };
 
+        $('div.treex-view').each(function () {
+            var self = $(this);
+            $(this).bind('click', function (event) {
+                detail.openTreex(this);
+                event.stopPropagation();
+               // event.preventDefault();
+                return false;
+            });
+        });
 
-    $('a.treex-view').bind('click', function () {
+
+/**
+    $('div.treex-view').bind('click', function () {
+        var self = $(this);
          $.ajax('../files/js/tpl/test.json').done(function (data) {
-             $('#treex-view').treexView(data);
+             $("#treex-view").treexView(data);
          });
 
     });
-
+*/
 
      /**
      * Fills in thousands separator ',' (comma) character into a number string

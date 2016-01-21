@@ -2475,6 +2475,25 @@ class Actions(ConcCGI):
 
     audio.access_level = 0
 
+    def view_tree(self, id=''):
+
+        path = '%s/%s/%s' % (settings.get('corpora', 'view_treex_files_path'), self.corpname, id)
+        if os.path.exists(path) and not os.path.isdir(path):
+            with open(path, 'r') as f:
+                file_size = os.path.getsize(path)
+                self._headers['Content-Type'] = 'application/json'
+                self._headers['Content-Length'] = '%s' % file_size
+                self._headers['Accept-Ranges'] = 'none'
+                if self.environ.get('HTTP_RANGE', None):
+                    self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
+                        os.path.getsize(path) - 1, os.path.getsize(path))
+                return f.read()
+        else:
+            self._set_not_found()
+            return None
+
+    view_tree.access_level = 0
+
     def corplist(self):
         """
         Displays information page with the list of available corpora

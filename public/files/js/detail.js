@@ -172,5 +172,25 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
         audioPlayer.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     };
 
+
+    lib.openTreex = function (linkElem) {
+        var treexURL = $(linkElem).attr('data-href');
+        var data_params = $(linkElem).attr('data-params');
+        var render = renderDetailFunc(data_params);
+        $.ajax(treexURL).done(function (data) {
+             var html = "<div class='treex-gui'>...<i class=\"fa fa-spinner fa-spin\"></i></div>";
+             lib.currentDetail = popupBox.open(html, null, {
+                    type : 'plain',
+                 htmlClass: 'treex-view',
+                    domId : 'detail-frame',
+                    calculatePosition : false,
+                    closeIcon : true,
+                    timeout : null
+             });
+            $(".treex-gui").treexView(data);
+        });
+
+    };
+
     return lib;
 });

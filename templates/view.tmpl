@@ -29,7 +29,6 @@ $_("Concordance")#slurp
 #def headers
 <link rel="stylesheet" type="text/css" href="$files_path/css/${css_prefix}jscrollpane.css" />
 <script src="$files_path/js/soundmanager2.min.js" type="text/javascript"></script>
-<script src="$files_path/js/js-treex-view.js" type="text/javascript"></script>
 <script type="text/javascript">
 soundManager.setup({
     url: '../files/misc/soundmanager2/',
@@ -196,10 +195,11 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
 
   #if $corpname == 'syntaxtest_cs_a'
     <td>
-    <a href="" class="treex-view"><img src="../files/img/lindat.pmltq.logo.png" style="width:24px;height:24px;border:0;" title="Tree view"></a>
+    <div data-href="${root_url}view_tree?$ll.treex_view.path" class="treex-view"><img src="../files/img/lindat.pmltq.logo.png" style="width:24px;height:24px;border:0;" title="Tree view">
+        <div id="treex-view"></div>
+    </div>
     </td>
   #end if
-
 #end def
 
 #def oneclick_line($l, $i, $longcorpname)
