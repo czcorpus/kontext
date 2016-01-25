@@ -155,7 +155,7 @@ define(function (require, exports, module) {
                 var data = lib.lineSelectionStore.getLine($(item).attr('data-position'));
 
                 if (data) {
-                    $(item).val(data[2]);
+                    $(item).val(data[1]);
                 }
             }));
         }
