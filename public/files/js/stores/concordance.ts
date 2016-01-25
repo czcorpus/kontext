@@ -210,8 +210,8 @@ export class LineSelectionStore extends util.SimplePageStore {
          this.notifyChangeListeners('STATUS_UPDATED');
      }
 
-     addLine(id:string, lineNum:number, kwiclen:number, category:number):void {
-         return this.clStorage.addLine(id, lineNum, kwiclen, category);
+     addLine(id:string, kwiclen:number, category:number):void {
+         return this.clStorage.addLine(id, kwiclen, category);
      }
 
      removeLine(id):void {

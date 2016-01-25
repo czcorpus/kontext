@@ -1630,7 +1630,7 @@ class Actions(Kontext):
     @exposed(return_type='json', legacy=True)
     def ajax_apply_lines_groups(self, rows='', remove_rest=0):
         data = json.loads(rows)
-        self._lines_groups = [(x[0], x[3]) for x in data]
+        self._lines_groups = [(x[0], x[2]) for x in data]
         if remove_rest:
             self.args.q.append(self._filter_lines(data, 'p'))
         q_id = self._store_conc_params()

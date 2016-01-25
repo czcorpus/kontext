@@ -277,10 +277,9 @@ define(function (require, exports, module) {
         if (mode === 'simple') {
             $(elm).on('click', function (e) {
                 var id = $(e.currentTarget).attr('data-position'),
-                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
-                    lineNum = parseInt($(e.currentTarget).attr('data-linenum'), 10);
+                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
                 if ($(e.currentTarget).is(':checked')) {
-                    lib.lineSelectionStore.addLine(id, lineNum, kwiclen, null);
+                    lib.lineSelectionStore.addLine(id, kwiclen, null);
 
                 } else {
                     lib.lineSelectionStore.removeLine(id);
@@ -292,11 +291,10 @@ define(function (require, exports, module) {
             $(elm).on('change keyup', function (e) {
                 var id = $(e.currentTarget).attr('data-position'),
                     kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
-                    lineNum = parseInt($(e.currentTarget).attr('data-linenum'), 10),
                     groupId = parseInt($(e.currentTarget).val() || 0, 10);
 
                 if ($(e.currentTarget).val() !== '') {
-                    lib.lineSelectionStore.addLine(id, lineNum, kwiclen, groupId);
+                    lib.lineSelectionStore.addLine(id, kwiclen, groupId);
 
                 } else {
                     lib.lineSelectionStore.removeLine(id);
