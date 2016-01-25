@@ -84,7 +84,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                     self.notifyChangeListeners('STATUS_UPDATED');
                     break;
                 case 'LINE_SELECTION_MARK_LINES_REMOVE_OTHERS':
-                    self.markLinesAndRemoveOthers();
+                    self.markLines(true);
                     self.notifyChangeListeners('STATUS_UPDATED');
                     break;
             }
@@ -111,7 +111,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 if (!data.error) {
                     self.clStorage.clear();
                     $(window).off('beforeunload.alert_unsaved'); // TODO
-                    window.location.href = data.next_url; // TODO
+                    window.location.href = data.next_url;
 
                 } else {
                     self.layoutModel.showMessage('error', data.error);
@@ -136,23 +136,20 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.finishAjaxAction(prom);
     }
 
-    private markLines():void {
+    private markLines(removeOthers:boolean=false):void {
         let self = this;
         let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
             'POST',
             'ajax_apply_lines_groups?' + self.layoutModel.getConf('stateParams'),
             {
-                rows : JSON.stringify(self.clStorage.getAll())
+                rows : JSON.stringify(self.clStorage.getAll()),
+                remove_rest: removeOthers ? '1' : '0'
             },
             {
                 contentType : 'application/x-www-form-urlencoded'
             }
         );
         this.finishAjaxAction(prom);
-    }
-
-    private markLinesAndRemoveOthers() {
-        console.log('STORE: mark lines and remove others TODO');
     }
 
     private removeLines(filter:string):void {
