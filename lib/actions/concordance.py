@@ -170,7 +170,7 @@ class Actions(Kontext):
                                   samplesize=corpus_info.sample_size)
         if self._lines_groups:
             for lg in self._lines_groups:
-                conc.set_linegroup(lg[0], lg[1])
+                conc.set_linegroup_at_pos(lg[0], lg[1])
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -1610,6 +1610,16 @@ class Actions(Kontext):
             params['align'] = self.args.align
         return params
 
+    @staticmethod
+    def _filter_lines(data, pnfilter):
+        def expand(x, n):
+            return range(x, x + n)
+
+        sel_lines = []
+        for item in data:
+            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
+        return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
+
     @exposed(return_type='json', legacy=True)
     def ajax_unset_lines_groups(self):
         self._lines_groups = None
@@ -1618,9 +1628,11 @@ class Actions(Kontext):
         return {'id': q_id, 'next_url': self.create_url('view', params)}
 
     @exposed(return_type='json', legacy=True)
-    def ajax_apply_lines_groups(self, rows=''):
+    def ajax_apply_lines_groups(self, rows='', remove_rest=0):
         data = json.loads(rows)
-        self._lines_groups = [(x[1], x[3]) for x in data]
+        self._lines_groups = [(x[0], x[3]) for x in data]
+        if remove_rest:
+            self.args.q.append(self._filter_lines(data, 'p'))
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {
@@ -1631,11 +1643,7 @@ class Actions(Kontext):
     @exposed(return_type='json', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
-        expand = lambda x, n: range(x, x + n)
-        sel_lines = []
-        for item in data:
-            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
-        self.args.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
+        self.args.q.append(self._filter_lines(data, pnfilter))
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {
