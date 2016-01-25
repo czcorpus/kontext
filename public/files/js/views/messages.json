@@ -69,7 +69,11 @@
         "global__failed_store_conclines_quota_exc": "Failed to store selected concordance lines due to exceeded data limit.",
         "global__remove_line_groups": "Remove groups assignment",
         "global__apply_marked_lines": "Apply marked lines and KEEP the rest",
-        "global__apply_marked_lines_remove_rest": "Apply marked lines and REMOVE the rest"
+        "global__apply_marked_lines_remove_rest": "Apply marked lines and REMOVE the rest",
+        "global__ok": "OK",
+        "global__save_selection_heading": "Save unfinished selection",
+        "global__line_selection_saved": "Saved",
+        "global__save_conc_line_selection": "Save unfinished line selection"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -142,6 +146,10 @@
         "global__failed_store_conclines_quota_exc": "Nepodařilo se uložit vybrané konkordanční řádky kvůli překročení kapacity lokálního úložiště.",
         "global__remove_line_groups": "Zrušit přiřazení skupin",
         "global__apply_marked_lines": "Aplikovat označení řádek a ZACHOVAT zbytek",
-        "global__apply_marked_lines_remove_rest": "Aplikovat označení řádek a SMAZAT zbytek"
+        "global__apply_marked_lines_remove_rest": "Aplikovat označení řádek a SMAZAT zbytek",
+        "global__ok": "OK",
+        "global__save_selection_heading": "Uložit nedokončený výběr",
+        "global__line_selection_saved": "Uloženo",
+        "global__save_conc_line_selection": "Uložit nedokončený výběr"
 	}
 }

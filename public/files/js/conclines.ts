@@ -179,12 +179,16 @@ export class ConcLinesStorage {
         }
     }
 
+    getAsJson():string {
+        return JSON.stringify(this.data);
+    }
+
     /**
      * Stores data into a sessionStorage as a JSON object
      */
     serialize():void {
         try {
-            window.sessionStorage[accessKey] = JSON.stringify(this.data);
+            window.sessionStorage[accessKey] = this.getAsJson();
         } catch (e) {
             if (e.name === 'QUOTA_EXCEEDED_ERR') {
                 console.error('Failed to store selected concordance lines due to exceeded data limit.');

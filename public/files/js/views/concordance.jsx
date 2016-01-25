@@ -43,6 +43,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <option value="remove">{this.translate('global__remove_selected_lines')}</option>
                         <option value="remove_inverted">{this.translate('global__remove_all_but_selected_lines')}</option>
                         <option value="clear">{this.translate('global__clear_the_selection')}</option>
+                        <option value="save">{this.translate('global__save_conc_line_selection')}</option>
                     </select>
                 );
             }
@@ -68,9 +69,26 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <option value="apply">{this.translate('global__apply_marked_lines')}</option>
                         <option value="apply_remove_rest">{this.translate('global__apply_marked_lines_remove_rest')}</option>
                         <option value="clear">{this.translate('global__clear_the_selection')}</option>
+                        <option value="save">{this.translate('global__save_conc_line_selection')}</option>
                     </select>
                 );
             }
+        });
+
+        let SaveDialog = React.createClass({
+
+           mixins : mixins,
+
+           render : function () {
+               return (
+                   <div>
+                        <input type="text" onChange={this.props.inputChange} />
+                        <button type="button" value="ok" onClick={this.props.buttonHandler}>{this.translate('global__ok')}</button>
+                        <button type="button" value="cancel" onClick={this.props.buttonHandler}>{this.translate('global__cancel')}</button>
+                   </div>
+               );
+           }
+
         });
 
         let LineSelectionMenu = React.createClass({
@@ -79,12 +97,20 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             _changeHandler : function (store, status) {
                 if (status === 'STATUS_UPDATED') {
-                    this.setState({mode: store.getMode()});
+                    this.setState({mode: store.getMode(), saveDialog: this.state.saveDialog});
                 }
             },
 
-            _buttonClickHandler : function (evt) {
+            _handleSaveDialogButton : function (evt) {
+                if (evt.target.value === 'cancel') {
+                    this.setState(React.addons.update(this.state, {saveDialog: {$set: false}}));
 
+                } else if (evt.target.value === 'ok') {
+                    dispatcher.dispatch({
+                        actionType: 'LINE_SELECTION_SAVE_UNFINISHED',
+                        props: {saveName: this.state.saveName}
+                    });
+                }
             },
 
             _actionChangeHandler : function (evt) {
@@ -103,13 +129,17 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         props: {}
                     });
 
-                } else {
-                    console.log('currently unsupported action ', evt.target.value);
+                } else if (evt.target.value === 'save') {
+                    this.setState(React.addons.update(this.state, {saveDialog: {$set: true}}));
                 }
             },
 
+            _handleSaveDialogNameChange : function (e) {
+                this.setState(React.addons.update(this.state, {saveName: {$set: e.target.value}}));
+            },
+
             getInitialState : function () {
-                return {mode: 'simple'};
+                return {mode: 'simple', saveDialog: false, saveName: null};
             },
 
             componentDidMount : function () {
@@ -140,18 +170,26 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                 } else if (this.state.mode === 'groups') {
                     switchComponent = <GroupsSelectionModelSwitch initialAction="-"
-                                        switchHandler={this._actionChangeHandler}/>;
+                                        switchHandler={this._actionChangeHandler} />;
                 }
 
+                if (this.state.saveDialog) {
+                    return (
+                        <div id="selection-actions">
+                            <h3>...{this.translate('global__save_selection_heading')}</h3>
+                            <SaveDialog buttonHandler={this._handleSaveDialogButton}
+                                inputChange={this._handleSaveDialogNameChange} />
+                        </div>
+                    );
 
-                return (
-                    <div id="selection-actions">
-                        <h3>{this.translate('global__selection_actions')}</h3>
-                        <form action="delete_lines" method="POST">
-                            {switchComponent}
-                        </form>
-                    </div>
-                );
+                } else {
+                    return (
+                        <div id="selection-actions">
+                            <h3>{this.translate('global__selection_actions')}</h3>
+                            <form action="delete_lines" method="POST">{switchComponent}</form>
+                        </div>
+                    );
+                }
             }
         });
 

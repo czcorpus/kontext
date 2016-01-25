@@ -1651,6 +1651,13 @@ class Actions(Kontext):
             'next_url': self.create_url('view', params)
         }
 
+    @exposed(return_type='json', legacy=True)
+    def ajax_store_unfinished_selection(self, data=''):
+        logging.getLogger(__name__).debug('saving selection data: %s' % (data,))
+        # TODO
+        return {'ok': True}
+
+
     @exposed(return_type='json')
     def ajax_get_within_max_hits(self, request):
         import manatee
