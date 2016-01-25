@@ -82,12 +82,11 @@ export class ConcLinesStorage {
      * Adds a selected concordance line.
      *
      * @param id position number of first kwic word
-     * @param lineNum concordance line number (0-based)
      * @param kwiclen number of kwic words
      * @param category category number
      */
-    addLine(id:string, lineNum:number, kwiclen:number, category:number):void {
-        this.data[id] = [lineNum, kwiclen, category];
+    addLine(id:string, kwiclen:number, category:number):void {
+        this.data[id] = [kwiclen, category];
     }
 
     removeLine(id):void {
@@ -152,7 +151,7 @@ export class ConcLinesStorage {
     getMode():string {
         for (let p in this.data) {
             if (this.data.hasOwnProperty(p)) {
-                if (this.data[p][2] != null) {
+                if (this.data[p][1] != null) {
                     return 'groups';
 
                 } else {
@@ -167,14 +166,14 @@ export class ConcLinesStorage {
         if (this.getMode() === 'groups') {
             for (let p in this.data) {
                 if (this.data.hasOwnProperty(p)) {
-                    this.data[p][2] = null;
+                    this.data[p][1] = null;
                 }
             }
 
         } else if (this.getMode() === 'simple') {
             for (let p in this.data) {
                 if (this.data.hasOwnProperty(p)) {
-                    this.data[p][2] = ConcLinesStorage.DEFAULT_GROUP_ID;
+                    this.data[p][1] = ConcLinesStorage.DEFAULT_GROUP_ID;
                 }
             }
         }
