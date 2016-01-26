@@ -148,6 +148,9 @@ class ConcDocument(GeneralDocument):
         Converts a dict to <key>value</key> items and appends
         them to the 'elm' argument
         """
+        if 'linegroup' in data:
+            lng_elm = etree.SubElement(elm, 'line_group')
+            lng_elm.text = data['linegroup']
         ref_elm = etree.SubElement(elm, 'ref')
         ref_elm.text = data.get('ref', '')
         left_context_elm = etree.SubElement(elm, 'left_context')
