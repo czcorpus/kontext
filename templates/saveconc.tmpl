@@ -43,6 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #set $num = $i+1
 $num	#slurp
 #end if
+#if $contains_lines_groups#$l.linegroup#end if# #slurp
 $l.ref	#slurp
 #if $align_kwic
 $l.leftspace #slurp

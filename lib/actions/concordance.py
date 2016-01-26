@@ -17,6 +17,7 @@ import os
 import sys
 import re
 import json
+from collections import defaultdict
 
 from werkzeug.datastructures import MultiDict
 
@@ -168,9 +169,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                   samplesize=corpus_info.sample_size)
-        if self._lines_groups:
-            for lg in self._lines_groups:
-                conc.set_linegroup_at_pos(lg[0], lg[1])
+        self.apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -1465,7 +1464,7 @@ class Actions(Kontext):
                     ans += '%s' % item['str'].strip()
             return ans.strip()
 
-        def process_lang(root, left_key, kwic_key, right_key):
+        def process_lang(root, left_key, kwic_key, right_key, add_linegroup):
             if type(root) is dict:
                 root = (root,)
 
@@ -1474,6 +1473,8 @@ class Actions(Kontext):
                 ans_item = {}
                 if 'ref' in item:
                     ans_item['ref'] = item['ref']
+                if add_linegroup:
+                    ans_item['linegroup'] = item.get('linegroup', '')
                 ans_item['left_context'] = merge_conc_line_parts(item[left_key])
                 ans_item['kwic'] = merge_conc_line_parts(item[kwic_key])
                 ans_item['right_context'] = merge_conc_line_parts(item[right_key])
@@ -1484,6 +1485,7 @@ class Actions(Kontext):
             corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
                                                          corpus_info.sample_size))
+            self.apply_linegroups(conc)
             kwic = Kwic(self._corp(), self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
@@ -1546,9 +1548,12 @@ class Actions(Kontext):
                             row_num = str(i + from_line)
                         else:
                             row_num = None
-                        lang_rows = process_lang(line, left_key, kwic_key, right_key)
+
+                        lang_rows = process_lang(line, left_key, kwic_key, right_key,
+                                                 add_linegroup=bool(self._lines_groups))
                         if 'Align' in line:
-                            lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key)
+                            lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key,
+                                                      add_linegroup=False)
                         writer.writerow(row_num, *lang_rows)
                 if heading:
                     writer.writeheading({
@@ -1657,6 +1662,12 @@ class Actions(Kontext):
         # TODO
         return {'ok': True}
 
+    @exposed(return_type='json', legacy=True)
+    def ajax_get_line_groups_stats(self):
+        ans = defaultdict(lambda: 0)
+        for item in self._lines_groups:
+            ans[item[1]] += 1
+        return ans
 
     @exposed(return_type='json')
     def ajax_get_within_max_hits(self, request):
