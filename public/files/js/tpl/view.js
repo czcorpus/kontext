@@ -162,23 +162,85 @@ define(function (require, exports, module) {
         showNumSelectedItems();
     }
 
+    function showGroupsStats(triggerSelect) {
+        var jqAnchor = $(triggerSelect);
+
+        function render(box, finalize) {
+
+            lib.layoutModel.ajax(
+                'GET',
+                lib.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
+                        + lib.layoutModel.getConf('stateParams'),
+                {},
+                {contentType : 'application/x-www-form-urlencoded'}
+            ).then(
+                function (data) {
+                    $(box.getRootElement()).append(JSON.stringify(data));
+                    finalize();
+                },
+                function (err) {
+                    finalize();
+                    box.close();
+                    lib.layoutModel.message('error', err);
+                }
+            );
+        }
+
+        popupBox.open(
+            render,
+            {
+                top: jqAnchor.offset().top,
+                left: jqAnchor.offset().left,
+                height: jqAnchor.height()
+            },
+            {
+                type : 'plain',
+                domId : 'line-group-stats',
+                calculatePosition: true,
+                closeIcon : true,
+                timeout : null,
+                onClose : function () {
+                    $(triggerSelect).val('');
+                }
+            }
+        );
+    }
+
     /**
      *
      * @param numSelected
      */
     function showNumSelectedItems() {
-        var linesSelection = $('#result-info .lines-selection'),
+        var linesSelectionWrap = $('#result-info .lines-selection'),
             createContent,
             numSelected = lib.lineSelectionStore.size(),
-            removeGroupsLink;
+            viewMenuLink,
+            groupActionsSelect;
+
+        linesSelectionWrap.empty();
 
         if (lib.layoutModel.getConf('containsLinesGroups')) {
-            removeGroupsLink = window.document.createElement('a');
-            $(removeGroupsLink).text(lib.layoutModel.translate('global__remove_line_groups'));
-            $(removeGroupsLink).on('click', function () {
-                lib.lineSelectionStore.resetServerLineGroups();
+            groupActionsSelect = window.document.createElement('select');
+            $(groupActionsSelect)
+                .append($(window.document.createElement('option'))
+                    .attr('value', '')
+                    .text('--'))
+                .append($(window.document.createElement('option'))
+                    .attr('value', 'clear-groups')
+                    .text(lib.layoutModel.translate('global__clear_line_groups')))
+                .append($(window.document.createElement('option'))
+                    .attr('value', 'see-stats')
+                    .text(lib.layoutModel.translate('global__see_groups_stats')));
+
+            $(groupActionsSelect).on('change', function (evt) {
+                if ($(evt.target).val() === 'clear-groups') {
+                    lib.lineSelectionStore.resetServerLineGroups();
+
+                } else if ($(evt.target).val() === 'see-stats') {
+                    showGroupsStats(groupActionsSelect);
+                }
             });
-            linesSelection.append(removeGroupsLink);
+            linesSelectionWrap.append(groupActionsSelect);
 
         } else {
             createContent = function (box, finalize) {
@@ -195,9 +257,11 @@ define(function (require, exports, module) {
                         box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
             };
 
-            linesSelection.text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
-            if (!popupBox.hasAttachedPopupBox(linesSelection)) {
-                popupBox.bind(linesSelection, createContent, {
+            viewMenuLink = window.document.createElement('a');
+
+            $(viewMenuLink).text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
+            if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
+                popupBox.bind(viewMenuLink, createContent, {
                     type : 'plain',
                     closeIcon : true,
                     onClose: function () {
@@ -206,13 +270,12 @@ define(function (require, exports, module) {
                     }
                 });
             }
+            linesSelectionWrap.append(viewMenuLink);
             if (numSelected === 0) {
-                linesSelection.hide();
-                linesSelection.prev('span.separ').hide();
+                $(viewMenuLink).hide();
 
-            } else if (!linesSelection.is(':visible')) {
-                linesSelection.show();
-                linesSelection.prev('span.separ').show();
+            } else if (!linesSelectionWrap.is(':visible')) {
+                $(viewMenuLink).show();
             }
         }
     }
@@ -249,7 +312,7 @@ define(function (require, exports, module) {
                     .attr('data-kwiclen', kwiclen)
                     .attr('data-position', position)
                     .attr('data-linenum', lineNum)
-                    .attr('size', '1');
+                    .css('width', '2em');
                 if ($(this).is(':checked')) {
                     $(inputElm).val(defaultGroupid);
                 }
