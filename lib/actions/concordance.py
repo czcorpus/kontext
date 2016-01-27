@@ -1634,10 +1634,9 @@ class Actions(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def ajax_apply_lines_groups(self, rows='', remove_rest=0):
-        data = json.loads(rows)
-        self._lines_groups = [(x[0], x[2]) for x in data]
+        self._lines_groups = json.loads(rows)
         if remove_rest:
-            self.args.q.append(self._filter_lines(data, 'p'))
+            self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {
@@ -1663,10 +1662,14 @@ class Actions(Kontext):
         return {'ok': True}
 
     @exposed(return_type='json', legacy=True)
+    def ajax_get_line_selection(self):
+        return self._lines_groups if self._lines_groups else []
+
+    @exposed(return_type='json', legacy=True)
     def ajax_get_line_groups_stats(self):
         ans = defaultdict(lambda: 0)
         for item in self._lines_groups:
-            ans[item[1]] += 1
+            ans[item[2]] += 1
         return ans
 
     @exposed(return_type='json')

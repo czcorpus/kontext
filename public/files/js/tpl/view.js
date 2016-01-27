@@ -286,6 +286,23 @@ define(function (require, exports, module) {
         );
     }
 
+    function reEnableLineGroupEditing() {
+        lib.layoutModel.ajax(
+            'GET',
+            lib.layoutModel.createActionUrl('ajax_get_line_selection?')
+                + lib.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        ).then(
+            function (data) {
+                console.log('data: ', data);
+            },
+            function (err) {
+                console.log('err', err);
+            }
+        );
+    }
+
     /**
      *
      * @param numSelected
@@ -306,11 +323,14 @@ define(function (require, exports, module) {
                     .attr('value', '')
                     .text('--'))
                 .append($(window.document.createElement('option'))
+                    .attr('value', 'see-stats')
+                    .text(lib.layoutModel.translate('global__see_groups_stats')))
+                .append($(window.document.createElement('option'))
+                    .attr('value', 'edit-groups')
+                    .text(lib.layoutModel.translate('global__continue_editing_groups')))
+                .append($(window.document.createElement('option'))
                     .attr('value', 'clear-groups')
                     .text(lib.layoutModel.translate('global__clear_line_groups')))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'see-stats')
-                    .text(lib.layoutModel.translate('global__see_groups_stats')));
 
             $(groupActionsSelect).on('change', function (evt) {
                 if ($(evt.target).val() === 'clear-groups') {
@@ -318,6 +338,9 @@ define(function (require, exports, module) {
 
                 } else if ($(evt.target).val() === 'see-stats') {
                     showGroupsStats(groupActionsSelect);
+
+                } else if ($(evt.target).val() === 'edit-groups') {
+                    reEnableLineGroupEditing();
                 }
             });
             linesSelectionWrap.append(groupActionsSelect);

@@ -43,7 +43,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <option value="remove">{this.translate('global__remove_selected_lines')}</option>
                         <option value="remove_inverted">{this.translate('global__remove_all_but_selected_lines')}</option>
                         <option value="clear">{this.translate('global__clear_the_selection')}</option>
-                        <option value="save">{this.translate('global__save_conc_line_selection')}</option>
+                        <option value="save">{this.translate('global__get_line_selection_persitent_link')}</option>
                     </select>
                 );
             }
@@ -69,11 +69,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <option value="apply">{this.translate('global__apply_marked_lines')}</option>
                         <option value="apply_remove_rest">{this.translate('global__apply_marked_lines_remove_rest')}</option>
                         <option value="clear">{this.translate('global__clear_the_selection')}</option>
-                        <option value="save">{this.translate('global__save_conc_line_selection')}</option>
+                        <option value="save">{this.translate('global__get_line_selection_persitent_link')}</option>
                     </select>
                 );
             }
         });
+
+        // ----------------------------- Save dialog ------------------------
 
         let SaveDialog = React.createClass({
 
@@ -82,22 +84,36 @@ define(['vendor/react', 'jquery'], function (React, $) {
            render : function () {
                return (
                    <div>
-                        <input type="text" onChange={this.props.inputChange} />
+                        <input type="text" readOnly="true"
+                            value={this.props.checkpointUrl} style={{width: '30em'}} />
+                        <br />
+                        <input type="checkbox" onChange={this.props.sendByEmailChange} />
                         <button type="button" value="ok" onClick={this.props.buttonHandler}>{this.translate('global__ok')}</button>
                         <button type="button" value="cancel" onClick={this.props.buttonHandler}>{this.translate('global__cancel')}</button>
                    </div>
                );
            }
-
         });
+
+        // ----------------------------- Line selection menu --------------------------
 
         let LineSelectionMenu = React.createClass({
 
             mixins: mixins,
 
             _changeHandler : function (store, status) {
+                console.log('STATUS: ', status);
                 if (status === 'STATUS_UPDATED') {
-                    this.setState({mode: store.getMode(), saveDialog: this.state.saveDialog});
+                    this.setState(React.addons.update(this.state,
+                            {saveDialog: {$set: this.state.saveDialog}}));
+
+                } else if (status === 'STATUS_UPDATED_LINES_SAVED') {
+                    this.setState(React.addons.update(this.state,
+                            {
+                                checkpointUrl: {$set: lineSelectionStore.getLastCheckpoint()},
+                                saveDialog: {$set: true}
+                            }
+                    ));
                 }
             },
 
@@ -108,7 +124,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 } else if (evt.target.value === 'ok') {
                     dispatcher.dispatch({
                         actionType: 'LINE_SELECTION_SAVE_UNFINISHED',
-                        props: {saveName: this.state.saveName}
+                        props: {sendByMail: this.state.sendByMail}
                     });
                 }
             },
@@ -134,12 +150,12 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 }
             },
 
-            _handleSaveDialogNameChange : function (e) {
-                this.setState(React.addons.update(this.state, {saveName: {$set: e.target.value}}));
+            _handleSendByEmailChange : function (e) {
+                this.setState(React.addons.update(this.state, {sendByMail: {$set: e.target.value}}));
             },
 
             getInitialState : function () {
-                return {mode: 'simple', saveDialog: false, saveName: null};
+                return {mode: 'simple', saveDialog: false, sendByMail: null};
             },
 
             componentDidMount : function () {
@@ -178,7 +194,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <div id="selection-actions">
                             <h3>...{this.translate('global__save_selection_heading')}</h3>
                             <SaveDialog buttonHandler={this._handleSaveDialogButton}
-                                inputChange={this._handleSaveDialogNameChange} />
+                                sendByEmailChange={this._handleSendByEmailChange}
+                                checkpointUrl={this.state.checkpointUrl} />
                         </div>
                     );
 

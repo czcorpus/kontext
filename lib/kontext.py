@@ -1258,7 +1258,7 @@ class Kontext(Controller):
     def apply_linegroups(self, conc):
         if self._lines_groups:
             for lg in self._lines_groups:
-                conc.set_linegroup_at_pos(lg[0], lg[1])
+                conc.set_linegroup_at_pos(lg[0], lg[2])
 
 
 class PluginApi(object):
