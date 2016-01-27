@@ -73,7 +73,9 @@
         "global__ok": "OK",
         "global__save_selection_heading": "Save unfinished selection",
         "global__line_selection_saved": "Saved",
-        "global__save_conc_line_selection": "Save unfinished line selection"
+        "global__save_conc_line_selection": "Save unfinished line selection",
+        "global__see_groups_stats": "See line groups proportions",
+        "global__groups_stats_heading": "Line groups proportions"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -150,6 +152,8 @@
         "global__ok": "OK",
         "global__save_selection_heading": "Uložit nedokončený výběr",
         "global__line_selection_saved": "Uloženo",
-        "global__save_conc_line_selection": "Uložit nedokončený výběr"
+        "global__save_conc_line_selection": "Uložit nedokončený výběr",
+        "global__see_groups_stats": "Zobrazit podíly skupin řádků",
+        "global__groups_stats_heading": "Podíly skupin řádků"
 	}
 }
