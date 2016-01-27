@@ -101,7 +101,9 @@ class DefaultSessions(SessionStore):
         return Session(data, session_id)
 
     def save(self, session):
-        self.db.set(self._mk_key(session.sid), dict(session))
+        sess_key = self._mk_key(session.sid)
+        self.db.set(sess_key, dict(session))
+        self._set_ttl(sess_key)
 
     def save_if_modified(self, session):
         if session.should_save:
