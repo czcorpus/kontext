@@ -839,7 +839,7 @@ define(function (require, exports, module) {
         lib.lineSelectionStore.addClearSelectionHandler(refreshSelection);
 
         lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
-                lib.lineSelectionStore);
+                lib.lineSelectionStore, lib.layoutModel.getStores().userInfoStore);
 
         lib.hasLockedGroups = lib.layoutModel.getConf('containsLinesGroups');
 

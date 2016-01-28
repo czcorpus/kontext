@@ -77,7 +77,8 @@
         "global__see_groups_stats": "See line groups proportions",
         "global__groups_stats_heading": "Line groups proportions",
         "global__view_sorted_groups": "View sorted according to the groups",
-        "global__continue_editing_groups": "Continue editing groups"
+        "global__continue_editing_groups": "Continue editing groups",
+        "global__send_the_link_to_mail": "Send selection URL to an e-mail"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -158,6 +159,7 @@
         "global__see_groups_stats": "Zobrazit podíly skupin řádků",
         "global__groups_stats_heading": "Podíly skupin řádků",
         "global__view_sorted_groups": "Zobrazit setříděné podle skupin",
-        "global__continue_editing_groups": "Pokračovat v editaci skupin"
+        "global__continue_editing_groups": "Pokračovat v editaci skupin",
+        "global__send_the_link_to_mail": "Odeslat URL výběru na e-mail"
 	}
 }

@@ -21,7 +21,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     let lib = {};
 
-    lib.init = function (dispatcher, mixins, lineSelectionStore) {
+    lib.init = function (dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
         let SimpleSelectionModeSwitch = React.createClass({
             mixins: mixins,
@@ -79,20 +79,74 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
         let SaveDialog = React.createClass({
 
-           mixins : mixins,
+            mixins : mixins,
 
-           render : function () {
-               return (
-                   <div>
-                        <input type="text" readOnly="true"
-                            value={this.props.checkpointUrl} style={{width: '30em'}} />
-                        <br />
-                        <input type="checkbox" onChange={this.props.sendByEmailChange} />
-                        <button type="button" value="ok" onClick={this.props.buttonHandler}>{this.translate('global__ok')}</button>
-                        <button type="button" value="cancel" onClick={this.props.buttonHandler}>{this.translate('global__cancel')}</button>
-                   </div>
-               );
-           }
+            _emailCheckboxChangeHandler : function (evt) {
+                this.props.sendByEmailChange(evt);
+
+                if (!this.state.predefinedMail) {
+                    dispatcher.dispatch({
+                        actionType: 'USER_INFO_REQUESTED',
+                        props: {}
+                    });
+
+                } else {
+                    this.setState(React.addons.update(this.state, {enterMail: {$set: !this.state.enterMail}}));
+                }
+            },
+
+            _storeChangeListener : function (store, status) {
+                if (status === 'USER_INFO_REFRESHED') {
+                    this.setState(React.addons.update(this.state,
+                        {
+                            predefinedMail: {$set: userInfoStore.getCredentials()['email']},
+                            enterMail: {$set: true}
+                        }
+                    ));
+                }
+            },
+
+            componentDidMount : function () {
+                userInfoStore.addChangeListener(this._storeChangeListener);
+            },
+
+            componentWillUnmount : function () {
+                userInfoStore.removeChangeListener(this._storeChangeListener);
+            },
+
+            getInitialState : function () {
+                return {enterMail: false, predefinedMail: null};
+            },
+
+            render : function () {
+                return (
+                    <div>
+                        <div className="form-item">
+                            <label>
+                                <input type="checkbox" value="1" onChange={this._emailCheckboxChangeHandler} />
+                                {this.translate('global__send_the_link_to_mail')}
+                            </label>
+                        </div>
+                        <div className="form-item">
+                        {this.state.enterMail ?
+                            <input type="text" style={{width: '15em'}} defaultValue={this.state.predefinedMail} /> : null
+                        }
+                        </div>
+                        <div className="form-item">
+                            <button type="button" value="ok" onClick={this.props.buttonHandler}>{this.translate('global__ok')}</button>
+                            <button type="button" value="cancel" onClick={this.props.buttonHandler}>{this.translate('global__cancel')}</button>
+                        </div>
+
+                        {this.props.checkpointUrl ?
+                            (<div className="generated-link">
+                                <input className="conc-link" type="text" readOnly="true"
+                                    value={this.props.checkpointUrl} style={{width: '30em'}} />
+                            </div>)
+                            : null
+                        }
+                    </div>
+                );
+            }
         });
 
         // ----------------------------- Line selection menu --------------------------
@@ -102,7 +156,6 @@ define(['vendor/react', 'jquery'], function (React, $) {
             mixins: mixins,
 
             _changeHandler : function (store, status) {
-                console.log('STATUS: ', status);
                 if (status === 'STATUS_UPDATED') {
                     this.setState(React.addons.update(this.state,
                             {mode: {$set: lineSelectionStore.getMode()}}));
