@@ -263,8 +263,54 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        let LockedLineSelectionMenu = React.createClass({
+
+            mixins: mixins,
+
+            _changeHandler : function (store, status) {
+                if (status === 'STATUS_UPDATED') {
+                    this.setState(React.addons.update(this.state,
+                            {hasData: {$set: true}})); /// TODO set once d3.js stuff is ready etc.
+                }
+            },
+
+            componentDidMount : function () {
+                lineSelectionStore.addChangeListener(this._changeHandler);
+                dispatcher.dispatch({
+                    actionType: 'LINE_SELECTION_STATUS_REQUEST',
+                    props: {}
+                });
+            },
+
+            componentWillUnmount : function () {
+                lineSelectionStore.removeChangeListener(this._changeHandler);
+            },
+
+            componentDidUpdate : function () {
+                // we must inform non-react environment (here popupbox.js) we are ready here
+                if (typeof this.props.doneCallback === 'function') {
+                    this.props.doneCallback();
+                }
+            },
+
+            getInitialState : function () {
+                return {hasData: false};
+            },
+
+            render: function () {
+                return (
+                    <div>
+                        <select>
+                            <option>test</option>
+                        </select>
+                    </div>
+                )
+            }
+        });
+
         return {
-            LineSelectionMenu: LineSelectionMenu
+            LineSelectionMenu: LineSelectionMenu,
+            LockedLineSelectionMenu: LockedLineSelectionMenu
         };
     };
 

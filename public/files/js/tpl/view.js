@@ -328,11 +328,13 @@ define(function (require, exports, module) {
             createContent,
             numSelected = lib.lineSelectionStore.size(),
             viewMenuLink,
-            groupActionsSelect;
+            groupActionsSelect,
+            onClose;
 
         linesSelectionWrap.empty();
 
         if (lib.hasLockedGroups) {
+            /*
             groupActionsSelect = window.document.createElement('select');
             $(groupActionsSelect)
                 .append($(window.document.createElement('option'))
@@ -366,6 +368,24 @@ define(function (require, exports, module) {
                 }
             });
             linesSelectionWrap.append(groupActionsSelect);
+            */
+
+
+            createContent = function (box, finalize) {
+                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                    }
+                });
+                lib.lineSelectionStore.addActionFinishHandler(function () {
+                    box.close();
+                });
+                lib.layoutModel.renderReactComponent(lib.views.LockedLineSelectionMenu,
+                        box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
+            };
+
+
 
         } else {
             createContent = function (box, finalize) {
@@ -381,29 +401,24 @@ define(function (require, exports, module) {
                 lib.layoutModel.renderReactComponent(lib.views.LineSelectionMenu,
                         box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
             };
-
-            viewMenuLink = window.document.createElement('a');
-
-            $(viewMenuLink).text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
-            if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
-                popupBox.bind(viewMenuLink, createContent, {
-                    type : 'plain',
-                    closeIcon : true,
-                    timeout: null,
-                    onClose: function () {
-                        lib.layoutModel.unmountReactComponent(this.getRootElement());
-                        lib.lineSelectionStore.removeAllActionFinishHandlers();
-                    }
-                });
-            }
-            linesSelectionWrap.append(viewMenuLink);
-            if (numSelected === 0) {
-                $(viewMenuLink).hide();
-
-            } else if (!linesSelectionWrap.is(':visible')) {
-                $(viewMenuLink).show();
-            }
         }
+        viewMenuLink = window.document.createElement('a');
+        console.log('creating view items link ', viewMenuLink);
+
+        $(viewMenuLink).text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
+        if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
+            console.log('bind stuff');
+            popupBox.bind(viewMenuLink, createContent, {
+                type : 'plain',
+                closeIcon : true,
+                timeout: null,
+                onClose: function () {
+                    lib.layoutModel.unmountReactComponent(this.getRootElement());
+                    lib.lineSelectionStore.removeAllActionFinishHandlers();
+                }
+            });
+        }
+        linesSelectionWrap.append(viewMenuLink);
     }
 
     // TODO refactor this (redundant code)
