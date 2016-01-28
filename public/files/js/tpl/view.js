@@ -419,40 +419,24 @@ define(function (require, exports, module) {
             }
         }
 
-        if (mode === 'simple') {
-            $('#conclines').find('td.manual-selection > *').each(function (item) {
-                var inputElm = window.document.createElement('input');
-                var kwiclen = $(this).attr('data-kwiclen');
-                var position = $(this).attr('data-position');
-                var lineNum = $(this).attr('data-linenum');
-                $(inputElm)
-                    .attr('type', 'checkbox')
-                    .attr('data-kwiclen', kwiclen)
-                    .attr('data-position', position)
-                    .attr('data-linenum', lineNum);
-                $(this).replaceWith(inputElm);
-                applyStoredValue($(inputElm));
-                rowSelectionEvent(inputElm, 'simple');
-            });
 
-        } else if (mode === 'groups') {
-            $('#conclines').find('td.manual-selection > *').each(function (item) {
-                var inputElm = window.document.createElement('input');
-                var kwiclen = $(this).attr('data-kwiclen');
-                var position = $(this).attr('data-position');
-                var lineNum = $(this).attr('data-linenum');
-                var defaultGroupid = 1;
-                $(inputElm)
-                    .attr('type', 'text')
-                    .attr('data-kwiclen', kwiclen)
-                    .attr('data-position', position)
-                    .attr('data-linenum', lineNum)
-                    .css('width', '2em');
-                $(this).replaceWith(inputElm);
-                applyStoredValue($(inputElm));
-                rowSelectionEvent(inputElm, 'groups');
-            });
-        }
+        $('#conclines').find('td.manual-selection > *').each(function (item) {
+            var inputElm = window.document.createElement('input');
+            var kwiclen = $(this).attr('data-kwiclen');
+            var position = $(this).attr('data-position');
+            var lineNum = $(this).attr('data-linenum');
+            $(inputElm)
+                .attr('type', mode === 'simple' ? 'checkbox' : 'text')
+                .attr('data-kwiclen', kwiclen)
+                .attr('data-position', position)
+                .attr('data-linenum', lineNum);
+            if (mode === 'groups') {
+                $(inputElm).css('width', '2em');
+            }
+            $(this).replaceWith(inputElm);
+            applyStoredValue($(inputElm));
+            rowSelectionEvent(inputElm, mode);
+        });
     }
 
 
