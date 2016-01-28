@@ -387,6 +387,8 @@ class GlobalArgs(GeneralArgs):
     maxsavelines = Parameter(1000)
     fcrit = Parameter([])
 
+    sort_linegroups = Parameter(0)
+
 
 class Args(object):
     """

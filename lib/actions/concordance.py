@@ -136,6 +136,13 @@ class Actions(Kontext):
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
 
+    def apply_linegroups(self, conc):
+        if self._lines_groups:
+            for lg in self._lines_groups:
+                conc.set_linegroup_at_pos(lg[0], lg[2])
+            if self.args.sort_linegroups:
+                conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
+
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
         """
@@ -1679,3 +1686,4 @@ class Actions(Kontext):
         conc = manatee.Concordance(self._corp(), q, 1, -1)
         conc.sync()
         return {'total': conc.fullsize() if conc else None}
+
