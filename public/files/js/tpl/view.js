@@ -111,7 +111,15 @@ define(function (require, exports, module) {
         $('#conclines tr').each(function () {
             var elm = $(this).find('.manual-selection');
             var groupElm = window.document.createElement('span');
+            var inputElm = elm.find('input');
+            var kwiclen = inputElm.attr('data-kwiclen');
+            var position = inputElm.attr('data-position');
+            var lineNum = inputElm.attr('data-linenum');
+
             $(groupElm)
+                .attr('data-kwiclen', kwiclen)
+                .attr('data-position', position)
+                .attr('data-linenum', lineNum)
                 .text($(this).attr('data-linegroup'))
                 .addClass('group-id');
             elm.empty().append(groupElm);
@@ -138,7 +146,7 @@ define(function (require, exports, module) {
         }
         var storeMode = lib.lineSelectionStore.getMode();
         if (getUISelectionMode() !== storeMode) {
-            switchSelectionModeUI(storeMode);
+            switchSelectionModeUI();
         }
         $('#selection-mode-switch').val(storeMode);
         if (storeMode === 'simple') {
@@ -293,12 +301,20 @@ define(function (require, exports, module) {
                 + lib.layoutModel.getConf('stateParams'),
             {},
             {contentType : 'application/x-www-form-urlencoded'}
+
         ).then(
             function (data) {
-                console.log('data: ', data);
+                $('#selection-mode-switch')
+                    .attr('disabled', null);
+                lib.hasLockedGroups = false;
+                lib.lineSelectionStore.importData(data);
+                switchSelectionModeUI();
+                bindSelectionModeSwitch();
+                showNumSelectedItems();
+                window.foo = lib.lineSelectionStore.clStorage;
             },
             function (err) {
-                console.log('err', err);
+                lib.layoutModel.showMessage('error', err);
             }
         );
     }
@@ -316,7 +332,7 @@ define(function (require, exports, module) {
 
         linesSelectionWrap.empty();
 
-        if (lib.layoutModel.getConf('containsLinesGroups')) {
+        if (lib.hasLockedGroups) {
             groupActionsSelect = window.document.createElement('select');
             $(groupActionsSelect)
                 .append($(window.document.createElement('option'))
@@ -328,6 +344,9 @@ define(function (require, exports, module) {
                 .append($(window.document.createElement('option'))
                     .attr('value', 'edit-groups')
                     .text(lib.layoutModel.translate('global__continue_editing_groups')))
+                .append($(window.document.createElement('option'))
+                    .attr('value', 'sort-groups')
+                    .text(lib.layoutModel.translate('global__view_sorted_groups')))
                 .append($(window.document.createElement('option'))
                     .attr('value', 'clear-groups')
                     .text(lib.layoutModel.translate('global__clear_line_groups')))
@@ -341,6 +360,9 @@ define(function (require, exports, module) {
 
                 } else if ($(evt.target).val() === 'edit-groups') {
                     reEnableLineGroupEditing();
+
+                } else {
+                    window.location.href = 'view?' + lib.layoutModel.getConf('stateParams') + '&sort_linegroups=1';
                 }
             });
             linesSelectionWrap.append(groupActionsSelect);
@@ -367,6 +389,7 @@ define(function (require, exports, module) {
                 popupBox.bind(viewMenuLink, createContent, {
                     type : 'plain',
                     closeIcon : true,
+                    timeout: null,
                     onClose: function () {
                         lib.layoutModel.unmountReactComponent(this.getRootElement());
                         lib.lineSelectionStore.removeAllActionFinishHandlers();
@@ -384,9 +407,20 @@ define(function (require, exports, module) {
     }
 
     // TODO refactor this (redundant code)
-    function switchSelectionModeUI(mode) {
+    function switchSelectionModeUI() {
+        var mode = lib.lineSelectionStore.getMode();
+        function applyStoredValue(jqElm) {
+            var line = lib.lineSelectionStore.getLine(jqElm.attr('data-position'));
+            if (line && mode === 'groups') {
+                jqElm.val(line[1]);
+
+            } else if (line && mode === 'simple') {
+                jqElm.prop('checked', true);
+            }
+        }
+
         if (mode === 'simple') {
-            $('#conclines').find('td.manual-selection input[type=\'text\']').each(function (item) {
+            $('#conclines').find('td.manual-selection > *').each(function (item) {
                 var inputElm = window.document.createElement('input');
                 var kwiclen = $(this).attr('data-kwiclen');
                 var position = $(this).attr('data-position');
@@ -396,15 +430,13 @@ define(function (require, exports, module) {
                     .attr('data-kwiclen', kwiclen)
                     .attr('data-position', position)
                     .attr('data-linenum', lineNum);
-                if ($(this).val()) {
-                    $(inputElm).prop('checked', true);
-                }
                 $(this).replaceWith(inputElm);
+                applyStoredValue($(inputElm));
                 rowSelectionEvent(inputElm, 'simple');
             });
 
         } else if (mode === 'groups') {
-            $('#conclines').find('td.manual-selection input[type=\'checkbox\']').each(function (item) {
+            $('#conclines').find('td.manual-selection > *').each(function (item) {
                 var inputElm = window.document.createElement('input');
                 var kwiclen = $(this).attr('data-kwiclen');
                 var position = $(this).attr('data-position');
@@ -416,10 +448,8 @@ define(function (require, exports, module) {
                     .attr('data-position', position)
                     .attr('data-linenum', lineNum)
                     .css('width', '2em');
-                if ($(this).is(':checked')) {
-                    $(inputElm).val(defaultGroupid);
-                }
                 $(this).replaceWith(inputElm);
+                applyStoredValue($(inputElm));
                 rowSelectionEvent(inputElm, 'groups');
             });
         }
@@ -427,12 +457,15 @@ define(function (require, exports, module) {
 
 
     function bindSelectionModeSwitch() {
-        $('#selection-mode-switch').on('change', function (evt) {
-            var mode = $(evt.currentTarget).val();
-            switchSelectionModeUI(mode);
-            lib.lineSelectionStore.setMode(mode);
-            showNumSelectedItems();
-        });
+        $('#selection-mode-switch')
+            .off('change')
+            .on('change', function (evt) {
+                var mode = $(evt.currentTarget).val();
+                lib.lineSelectionStore.setMode(mode);
+                switchSelectionModeUI();
+                showNumSelectedItems();
+            }
+        );
     }
 
 
@@ -824,7 +857,9 @@ define(function (require, exports, module) {
         lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
                 lib.lineSelectionStore);
 
-        if (lib.layoutModel.getConf('containsLinesGroups')) {
+        lib.hasLockedGroups = lib.layoutModel.getConf('containsLinesGroups');
+
+        if (lib.hasLockedGroups) {
             setDefinedGroups();
 
         } else {

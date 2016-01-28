@@ -105,7 +105,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 console.log('STATUS: ', status);
                 if (status === 'STATUS_UPDATED') {
                     this.setState(React.addons.update(this.state,
-                            {saveDialog: {$set: this.state.saveDialog}}));
+                            {mode: {$set: lineSelectionStore.getMode()}}));
 
                 } else if (status === 'STATUS_UPDATED_LINES_SAVED') {
                     this.setState(React.addons.update(this.state,

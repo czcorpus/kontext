@@ -255,10 +255,12 @@ export class LineSelectionStore extends util.SimplePageStore {
      }
 
      importData(data:Array<Array<number>>):void {
+         let self = this;
          this.clear();
          data.forEach((item) => {
-             this.addLine(String(item[0]), item[1], item[2]);
+             self.addLine(String(item[0]), item[1], item[2]);
          });
+         this.mode = this.clStorage.getMode();
          this.notifyChangeListeners('STATUS_UPDATED');
      }
 
