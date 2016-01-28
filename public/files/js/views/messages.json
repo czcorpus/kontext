@@ -71,9 +71,11 @@
         "global__apply_marked_lines": "Apply marked lines and KEEP the rest",
         "global__apply_marked_lines_remove_rest": "Apply marked lines and REMOVE the rest",
         "global__ok": "OK",
-        "global__save_selection_heading": "Save unfinished selection",
+        "global__save_selection_heading": "Get a URL for the current selection",
         "global__line_selection_saved": "Saved",
-        "global__save_conc_line_selection": "Save unfinished line selection"
+        "global__get_line_selection_persitent_link": "Get a persitent URL for the current line selection.",
+        "global__see_groups_stats": "See line groups proportions",
+        "global__groups_stats_heading": "Line groups proportions"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -148,8 +150,10 @@
         "global__apply_marked_lines": "Aplikovat označení řádek a ZACHOVAT zbytek",
         "global__apply_marked_lines_remove_rest": "Aplikovat označení řádek a SMAZAT zbytek",
         "global__ok": "OK",
-        "global__save_selection_heading": "Uložit nedokončený výběr",
+        "global__save_selection_heading": "Získat URL adresu aktuálního výběru řádků",
         "global__line_selection_saved": "Uloženo",
-        "global__save_conc_line_selection": "Uložit nedokončený výběr"
+        "global__get_line_selection_persitent_link": "Získat trvalý odkaz na aktuální výběr řádek",
+        "global__see_groups_stats": "Zobrazit podíly skupin řádků",
+        "global__groups_stats_heading": "Podíly skupin řádků"
 	}
 }

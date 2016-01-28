@@ -33,6 +33,7 @@ define(function (require, exports, module) {
     var concViews = require('views/concordance');
     var concStores = require('stores/concordance');
     var SoundManager = require('SoundManager');
+    var d3 = require('vendor/d3');
     require('vendor/jscrollpane');
 
     var lib = {};
@@ -165,7 +166,75 @@ define(function (require, exports, module) {
     function showGroupsStats(triggerSelect) {
         var jqAnchor = $(triggerSelect);
 
-        function render(box, finalize) {
+        function renderChart(data, rootElm) {
+            var width = 200,
+                height = 200,
+                radius = Math.min(width, height) / 2;
+
+            var color = d3.scale.category20();
+
+            var arc = d3.svg.arc()
+                .outerRadius(radius - 10)
+                .innerRadius(0);
+
+            var labelArc = d3.svg.arc()
+                .outerRadius(radius - 40)
+                .innerRadius(radius - 40);
+
+            var pie = d3.layout.pie()
+                .value(function(d) { return d['count']; });
+
+            data = pie(data);
+
+            var wrapper = d3.select(rootElm).append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
+                    .attr('class', 'chart-wrapper');
+
+            var g = wrapper.selectAll('.arc')
+                .data(data).enter()
+                    .append('g')
+                    .attr('class', 'arc');
+
+            g.append('path')
+                .attr('d', arc)
+                .style('fill', function(d, i) { return color(i);});
+            g.append('text')
+                .attr('transform', function(d) {
+                        return 'translate(' + labelArc.centroid(d) + ')';
+                        }
+                    )
+                .text(function(d) { return d.data['group']; });
+            return color;
+        }
+
+        function renderLabels(data, colors, rootElm) {
+            var wrapper = window.document.createElement('div');
+            var spanElm;
+
+            $(wrapper).addClass('chart-label');
+
+            data.forEach(function (item, i) {
+                spanElm = window.document.createElement('span');
+                $(spanElm)
+                    .css({
+                        'background-color': colors(i)
+                    })
+                    .addClass('color-code')
+                    .text('\u00A0');
+                $(wrapper).append(spanElm);
+                spanElm = window.document.createElement('span');
+                $(spanElm)
+                    .addClass('label-text')
+                    .append('<strong>' + item['group'] + '</strong> (' + item['count'] + 'x)');
+                $(wrapper).append(spanElm);
+            });
+            $(rootElm).append(wrapper);
+        }
+
+        function createChart(box, finalize) {
 
             lib.layoutModel.ajax(
                 'GET',
@@ -175,7 +244,18 @@ define(function (require, exports, module) {
                 {contentType : 'application/x-www-form-urlencoded'}
             ).then(
                 function (data) {
-                    $(box.getRootElement()).append(JSON.stringify(data));
+                    var chartData = [],
+                        p,
+                        colors;
+
+                    for (p in data) {
+                        chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
+                    }
+                    $(box.getRootElement()).append(
+                        '<h3>' + lib.layoutModel.translate('global__groups_stats_heading') + '</h3>'
+                    );
+                    colors = renderChart(chartData, box.getRootElement());
+                    renderLabels(chartData, colors, box.getRootElement());
                     finalize();
                 },
                 function (err) {
@@ -187,7 +267,7 @@ define(function (require, exports, module) {
         }
 
         popupBox.open(
-            render,
+            createChart,
             {
                 top: jqAnchor.offset().top,
                 left: jqAnchor.offset().left,
@@ -202,6 +282,23 @@ define(function (require, exports, module) {
                 onClose : function () {
                     $(triggerSelect).val('');
                 }
+            }
+        );
+    }
+
+    function reEnableLineGroupEditing() {
+        lib.layoutModel.ajax(
+            'GET',
+            lib.layoutModel.createActionUrl('ajax_get_line_selection?')
+                + lib.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        ).then(
+            function (data) {
+                console.log('data: ', data);
+            },
+            function (err) {
+                console.log('err', err);
             }
         );
     }
@@ -226,11 +323,14 @@ define(function (require, exports, module) {
                     .attr('value', '')
                     .text('--'))
                 .append($(window.document.createElement('option'))
+                    .attr('value', 'see-stats')
+                    .text(lib.layoutModel.translate('global__see_groups_stats')))
+                .append($(window.document.createElement('option'))
+                    .attr('value', 'edit-groups')
+                    .text(lib.layoutModel.translate('global__continue_editing_groups')))
+                .append($(window.document.createElement('option'))
                     .attr('value', 'clear-groups')
                     .text(lib.layoutModel.translate('global__clear_line_groups')))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'see-stats')
-                    .text(lib.layoutModel.translate('global__see_groups_stats')));
 
             $(groupActionsSelect).on('change', function (evt) {
                 if ($(evt.target).val() === 'clear-groups') {
@@ -238,6 +338,9 @@ define(function (require, exports, module) {
 
                 } else if ($(evt.target).val() === 'see-stats') {
                     showGroupsStats(groupActionsSelect);
+
+                } else if ($(evt.target).val() === 'edit-groups') {
+                    reEnableLineGroupEditing();
                 }
             });
             linesSelectionWrap.append(groupActionsSelect);

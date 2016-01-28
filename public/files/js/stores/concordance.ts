@@ -28,6 +28,7 @@ import tplDocument = require('tpl/document');
 export interface RedirectingResponse {
     next_url: string;
     id: string;
+    error?:any;
 }
 
 /**
@@ -38,19 +39,21 @@ export interface RedirectingResponse {
  */
 export class LineSelectionStore extends util.SimplePageStore {
 
+    static FILTER_NEGATIVE = 'n';
+
+    static FILTER_POSITIVE = 'p';
+
     private layoutModel:tplDocument.PageModel;
 
     private mode:string;
 
     private clStorage:conclines.ConcLinesStorage;
 
+    private lastCheckpoint:string;
+
     private clearSelectionHandlers:Array<()=>void>;
 
     private actionFinishHandlers:Array<()=>void>;
-
-    static FILTER_NEGATIVE = 'n';
-
-    static FILTER_POSITIVE = 'p';
 
     constructor(layoutModel:tplDocument.PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             clStorage:conclines.ConcLinesStorage, mode:string) {
@@ -61,6 +64,7 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.mode = this.clStorage.getMode();
         this.clearSelectionHandlers = [];
         this.actionFinishHandlers = [];
+        this.lastCheckpoint = null;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -117,7 +121,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 if (!data.error) {
                     self.clStorage.clear();
                     $(window).off('beforeunload.alert_unsaved'); // TODO
-                    window.location.href = data.next_url;
+                    window.location.href = data.next_url; // we're leaving Flux world here so it's ok
 
                 } else {
                     self.layoutModel.showMessage('error', data.error);
@@ -203,35 +207,40 @@ export class LineSelectionStore extends util.SimplePageStore {
         return this.mode;
     }
 
+    getLastCheckpoint() {
+        return this.lastCheckpoint;
+    }
+
     setMode(mode:string):void {
         this.mode = mode;
         if (this.mode !== this.clStorage.getMode()) {
             this.clStorage.switchMode();
             this.notifyChangeListeners('STATUS_UPDATED');
-         }
-     }
+        }
+    }
 
-     switchMode():void {
-         this.clStorage.switchMode();
-         this.notifyChangeListeners('STATUS_UPDATED');
-     }
+    switchMode():void {
+        this.clStorage.switchMode();
+        this.notifyChangeListeners('STATUS_UPDATED');
+    }
 
-     saveUnfinishedStateToServer(saveName:string):RSVP.Promise<any> {
-         let self = this;
-         let prom:RSVP.Promise<any> = this.layoutModel.ajax(
-             'POST',
-             this.layoutModel.createActionUrl('ajax_store_unfinished_selection'),
-             {
-                 data: this.clStorage.getAsJson(),
-                 save_name: saveName
-             },
-             {contentType : 'application/x-www-form-urlencoded'}
-         );
-
-         return prom.then(
+    saveUnfinishedStateToServer(saveName:string):RSVP.Promise<any> {
+        let self = this;
+        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_apply_lines_groups?' + self.layoutModel.getConf('stateParams')),
+            {
+                rows : JSON.stringify(self.clStorage.getAll()),
+                remove_rest: '0'
+            },
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        );
+        return prom.then(
              function (data) {
-                self.performActionFinishHandlers();
                 if (!data.error) {
+                    self.lastCheckpoint = data.next_url;
                     self.layoutModel.showMessage('info',
                             self.layoutModel.translate('global__line_selection_saved'));
 
@@ -240,10 +249,17 @@ export class LineSelectionStore extends util.SimplePageStore {
                 }
             },
             function (err) {
-                self.performActionFinishHandlers();
                 self.layoutModel.showMessage('error', err);
             }
          );
+     }
+
+     importData(data:Array<Array<number>>):void {
+         this.clear();
+         data.forEach((item) => {
+             this.addLine(String(item[0]), item[1], item[2]);
+         });
+         this.notifyChangeListeners('STATUS_UPDATED');
      }
 
      addLine(id:string, kwiclen:number, category:number):void {
