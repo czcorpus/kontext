@@ -1640,10 +1640,18 @@ class Actions(Kontext):
         return {'id': q_id, 'next_url': self.create_url('view', params)}
 
     @exposed(return_type='json', legacy=True)
-    def ajax_apply_lines_groups(self, rows='', remove_rest=0):
+    def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = json.loads(rows)
-        if remove_rest:
-            self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {
+            'id': q_id,
+            'next_url': self.create_url('view', params)
+        }
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_remove_non_group_lines(self):
+        self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {
@@ -1662,11 +1670,13 @@ class Actions(Kontext):
             'next_url': self.create_url('view', params)
         }
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_store_unfinished_selection(self, data=''):
-        logging.getLogger(__name__).debug('saving selection data: %s' % (data,))
-        # TODO
-        return {'ok': True}
+    @exposed(return_type='json', legacy=False)
+    def ajax_send_group_selection_link_to_mail(self, request):
+        import mailing
+        ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
+                                           request.form.get('email'),
+                                           request.form.get('url'))
+        return {'ok': ans}
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_selection(self):

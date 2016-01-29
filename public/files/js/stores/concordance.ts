@@ -75,6 +75,9 @@ export class LineSelectionStore extends util.SimplePageStore {
                     self.clearSelection();
                     self.notifyChangeListeners('STATUS_UPDATED');
                     break;
+                case 'LINE_SELECTION_RESET_ON_SERVER':
+                    self.resetServerLineGroups(); // this redirects...
+                    break;
                 case 'LINE_SELECTION_REMOVE_LINES':
                     self.removeLines(LineSelectionStore.FILTER_NEGATIVE);
                     self.notifyChangeListeners('STATUS_UPDATED');
@@ -87,10 +90,22 @@ export class LineSelectionStore extends util.SimplePageStore {
                     self.markLines();
                     self.notifyChangeListeners('STATUS_UPDATED');
                     break;
-                case 'LINE_SELECTION_MARK_LINES_REMOVE_OTHERS':
-                    self.markLines(true);
-                    self.notifyChangeListeners('STATUS_UPDATED');
+                case 'LINE_SELECTION_REMOVE_NON_GROUP_LINES':
+                    self.removeNonGroupLines(); // this redirects ...
                     break;
+                case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
+                    let prom:RSVP.Promise<any> = self.sendSelectionUrlToEmail(payload.props['email']);
+                    prom.then(
+                        function (data) {
+                            self.notifyChangeListeners('LINE_SELECTION_URL_SENT_TO_EMAIL');
+                        },
+                        function (err) {
+                            self.notifyChangeListeners('LINE_SELECTION_URL_SENT_TO_EMAIL');
+                        }
+                    )
+                    break;
+                case 'LINE_SELECTION_SORT_LINES':
+                    self.sortLines(); // this redirects ...
                 case 'LINE_SELECTION_SAVE_UNFINISHED':
                     self.saveUnfinishedStateToServer(payload.props['saveName']).then(
                         function (data) {
@@ -106,6 +121,39 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.clearSelectionHandlers.forEach(function (item:()=>void) {
             item();
         });
+    }
+
+    private sendSelectionUrlToEmail(email:string):RSVP.Promise<any> {
+        let self = this;
+        let prom:RSVP.Promise<any> = this.layoutModel.ajax<any>(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_send_group_selection_link_to_mail'),
+            {
+                'email': email,
+                'url': window.location.href
+            },
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        );
+
+        return prom.then(
+            function (data) {
+                if (data['ok']) {
+                    self.layoutModel.showMessage('info',
+                        self.layoutModel.translate('linesel__mail_has_been_sent'));
+                    return true;
+
+                } else {
+                    self.layoutModel.showMessage('error',
+                        self.layoutModel.translate('linesel__failed_to_send_the_mail'));
+                    return false;
+                }
+            },
+            function (err) {
+                self.layoutModel.showMessage('error', err);
+            }
+        );
     }
 
     private finishAjaxAction<T>(prom:RSVP.Promise<T>) {
@@ -146,15 +194,27 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.finishAjaxAction(prom);
     }
 
-    private markLines(removeOthers:boolean=false):void {
+    private markLines():void {
         let self = this;
         let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
             'POST',
             this.layoutModel.createActionUrl('ajax_apply_lines_groups?' + self.layoutModel.getConf('stateParams')),
             {
-                rows : JSON.stringify(self.clStorage.getAll()),
-                remove_rest: removeOthers ? '1' : '0'
+                rows : JSON.stringify(self.clStorage.getAll())
             },
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        );
+        this.finishAjaxAction(prom);
+    }
+
+    private removeNonGroupLines():void {
+        let self = this;
+        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_remove_non_group_lines?' + self.layoutModel.getConf('stateParams')),
+            {},
             {
                 contentType : 'application/x-www-form-urlencoded'
             }
@@ -224,6 +284,10 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.notifyChangeListeners('STATUS_UPDATED');
     }
 
+    sortLines():void {
+        window.location.href = 'view?' + this.layoutModel.getConf('stateParams') + '&sort_linegroups=1';
+    }
+
     saveUnfinishedStateToServer(saveName:string):RSVP.Promise<any> {
         let self = this;
         let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
@@ -242,7 +306,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 if (!data.error) {
                     self.lastCheckpoint = data.next_url;
                     self.layoutModel.showMessage('info',
-                            self.layoutModel.translate('global__line_selection_saved'));
+                            self.layoutModel.translate('linesel__line_selection_saved'));
 
                 } else {
                     self.layoutModel.showMessage('error', data.error);

@@ -40,10 +40,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <select name="actions" defaultValue={this.props.initialAction}
                             onChange={this.props.switchHandler}>
                         <option value="-">--</option>
-                        <option value="remove">{this.translate('global__remove_selected_lines')}</option>
-                        <option value="remove_inverted">{this.translate('global__remove_all_but_selected_lines')}</option>
-                        <option value="clear">{this.translate('global__clear_the_selection')}</option>
-                        <option value="save">{this.translate('global__get_line_selection_persitent_link')}</option>
+                        <option value="remove">{this.translate('linesel__remove_selected_lines')}</option>
+                        <option value="remove_inverted">{this.translate('linesel__remove_all_but_selected_lines')}</option>
+                        <option value="clear">{this.translate('linesel__clear_the_selection')}</option>
                     </select>
                 );
             }
@@ -66,85 +65,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <select name="actions" defaultValue={this.props.initialAction}
                             onChange={this.props.switchHandler}>
                         <option value="-">--</option>
-                        <option value="apply">{this.translate('global__apply_marked_lines')}</option>
-                        <option value="apply_remove_rest">{this.translate('global__apply_marked_lines_remove_rest')}</option>
-                        <option value="clear">{this.translate('global__clear_the_selection')}</option>
-                        <option value="save">{this.translate('global__get_line_selection_persitent_link')}</option>
+                        <option value="apply">{this.translate('linesel__apply_marked_lines')}</option>
+                        <option value="clear">{this.translate('linesel__clear_the_selection')}</option>
                     </select>
-                );
-            }
-        });
-
-        // ----------------------------- Save dialog ------------------------
-
-        let SaveDialog = React.createClass({
-
-            mixins : mixins,
-
-            _emailCheckboxChangeHandler : function (evt) {
-                this.props.sendByEmailChange(evt);
-
-                if (!this.state.predefinedMail) {
-                    dispatcher.dispatch({
-                        actionType: 'USER_INFO_REQUESTED',
-                        props: {}
-                    });
-
-                } else {
-                    this.setState(React.addons.update(this.state, {enterMail: {$set: !this.state.enterMail}}));
-                }
-            },
-
-            _storeChangeListener : function (store, status) {
-                if (status === 'USER_INFO_REFRESHED') {
-                    this.setState(React.addons.update(this.state,
-                        {
-                            predefinedMail: {$set: userInfoStore.getCredentials()['email']},
-                            enterMail: {$set: true}
-                        }
-                    ));
-                }
-            },
-
-            componentDidMount : function () {
-                userInfoStore.addChangeListener(this._storeChangeListener);
-            },
-
-            componentWillUnmount : function () {
-                userInfoStore.removeChangeListener(this._storeChangeListener);
-            },
-
-            getInitialState : function () {
-                return {enterMail: false, predefinedMail: null};
-            },
-
-            render : function () {
-                return (
-                    <div>
-                        <div className="form-item">
-                            <label>
-                                <input type="checkbox" value="1" onChange={this._emailCheckboxChangeHandler} />
-                                {this.translate('global__send_the_link_to_mail')}
-                            </label>
-                        </div>
-                        <div className="form-item">
-                        {this.state.enterMail ?
-                            <input type="text" style={{width: '15em'}} defaultValue={this.state.predefinedMail} /> : null
-                        }
-                        </div>
-                        <div className="form-item">
-                            <button type="button" value="ok" onClick={this.props.buttonHandler}>{this.translate('global__ok')}</button>
-                            <button type="button" value="cancel" onClick={this.props.buttonHandler}>{this.translate('global__cancel')}</button>
-                        </div>
-
-                        {this.props.checkpointUrl ?
-                            (<div className="generated-link">
-                                <input className="conc-link" type="text" readOnly="true"
-                                    value={this.props.checkpointUrl} style={{width: '30em'}} />
-                            </div>)
-                            : null
-                        }
-                    </div>
                 );
             }
         });
@@ -163,22 +86,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 } else if (status === 'STATUS_UPDATED_LINES_SAVED') {
                     this.setState(React.addons.update(this.state,
                             {
-                                checkpointUrl: {$set: lineSelectionStore.getLastCheckpoint()},
-                                saveDialog: {$set: true}
+                                checkpointUrl: {$set: lineSelectionStore.getLastCheckpoint()}
                             }
                     ));
-                }
-            },
-
-            _handleSaveDialogButton : function (evt) {
-                if (evt.target.value === 'cancel') {
-                    this.setState(React.addons.update(this.state, {saveDialog: {$set: false}}));
-
-                } else if (evt.target.value === 'ok') {
-                    dispatcher.dispatch({
-                        actionType: 'LINE_SELECTION_SAVE_UNFINISHED',
-                        props: {sendByMail: this.state.sendByMail}
-                    });
                 }
             },
 
@@ -187,8 +97,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     clear: 'LINE_SELECTION_RESET',
                     remove: 'LINE_SELECTION_REMOVE_LINES',
                     remove_inverted: 'LINE_SELECTION_REMOVE_OTHER_LINES',
-                    apply: 'LINE_SELECTION_MARK_LINES',
-                    apply_remove_rest: 'LINE_SELECTION_MARK_LINES_REMOVE_OTHERS'
+                    apply: 'LINE_SELECTION_MARK_LINES'
                 };
                 let eventId = actionMap[evt.target.value] || null;
 
@@ -197,18 +106,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         actionType: eventId,
                         props: {}
                     });
-
-                } else if (evt.target.value === 'save') {
-                    this.setState(React.addons.update(this.state, {saveDialog: {$set: true}}));
                 }
             },
 
-            _handleSendByEmailChange : function (e) {
-                this.setState(React.addons.update(this.state, {sendByMail: {$set: e.target.value}}));
-            },
-
             getInitialState : function () {
-                return {mode: 'simple', saveDialog: false, sendByMail: null};
+                return {mode: 'simple'};
             },
 
             componentDidMount : function () {
@@ -242,28 +144,43 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                         switchHandler={this._actionChangeHandler} />;
                 }
 
-                if (this.state.saveDialog) {
-                    return (
-                        <div id="selection-actions">
-                            <h3>...{this.translate('global__save_selection_heading')}</h3>
-                            <SaveDialog buttonHandler={this._handleSaveDialogButton}
-                                sendByEmailChange={this._handleSendByEmailChange}
-                                checkpointUrl={this.state.checkpointUrl} />
-                        </div>
-                    );
+                let heading;
+                if (this.state.mode === 'simple') {
+                    heading = this.translate('linesel__unsaved_line_selection_heading');
 
-                } else {
-                    return (
-                        <div id="selection-actions">
-                            <h3>{this.translate('global__selection_actions')}</h3>
-                            <form action="delete_lines" method="POST">{switchComponent}</form>
-                        </div>
-                    );
+                } else if (this.state.mode === 'groups') {
+                    heading = this.translate('linesel__unsaved_line_groups_heading');
                 }
+
+                return (
+                    <div id="selection-actions">
+                        <h3>{heading}</h3>
+                        <form action="delete_lines" method="POST">{switchComponent}</form>
+                    </div>
+                );
             }
         });
 
-        let LockedLineSelectionMenu = React.createClass({
+        // --------------------------- Locked line groups ----------------------------
+
+        let EmailDialog = React.createClass({
+
+            mixins: mixins,
+
+            render: function () {
+                return (
+                    <div>
+                        <input type="text" style={{width: '20em'}}
+                               defaultValue={this.props.defaultEmail}
+                               onChange={this.props.emailChangeHandler} />
+                        <button type="button" value="send" onClick={this.props.handleEmailDialogButton}>{this.translate('global__send')}</button>
+                        <button type="button" value="cancel" onClick={this.props.handleEmailDialogButton}>{this.translate('global__cancel')}</button>
+                    </div>
+                );
+            }
+        });
+
+        let LockedLineGroupsMenu = React.createClass({
 
             mixins: mixins,
 
@@ -271,19 +188,93 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 if (status === 'STATUS_UPDATED') {
                     this.setState(React.addons.update(this.state,
                             {hasData: {$set: true}})); /// TODO set once d3.js stuff is ready etc.
+                    if (typeof this.props.chartCallback === 'function') {
+                        this.props.chartCallback();
+                    }
+
+                } else if (status === 'USER_INFO_REFRESHED') {
+                    this.setState(React.addons.update(this.state,
+                        {
+                            email: {$set: userInfoStore.getCredentials()['email']},
+                            emailDialog: {$set: true}
+                        }
+                    ));
+
+                } else if (status === 'LINE_SELECTION_URL_SENT_TO_EMAIL') {
+                    this.setState(React.addons.update(this.state,
+                        {
+                            email: {$set: null},
+                            emailDialog: {$set: false}
+                        }
+                    ));
                 }
+            },
+
+            _actionSwitchHandler : function (evt) {
+                switch (evt.target.value) {
+                    case 'edit-groups':
+                        this.props.reEnableEditCallback();
+                        break;
+                    case 'sort-groups':
+                        dispatcher.dispatch({
+                            actionType: 'LINE_SELECTION_SORT_LINES',
+                            props: {}
+                        })
+                        break;
+                    case 'clear-groups':
+                        dispatcher.dispatch({
+                            actionType: 'LINE_SELECTION_RESET_ON_SERVER',
+                            props: {}
+                        });
+                        break;
+                    case 'remove-other-lines':
+                        dispatcher.dispatch({
+                            actionType: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
+                            props: {}
+                        });
+                        break;
+                }
+            },
+
+            _openEmailDialogButtonHandler : function () {
+                dispatcher.dispatch({
+                    actionType: 'USER_INFO_REQUESTED',
+                    props: {}
+                });
+            },
+
+            _handleEmailDialogButton : function (evt) {
+                if (evt.target.value === 'cancel') {
+                    this.setState(React.addons.update(this.state, {emailDialog: {$set: false}}));
+
+                } else if (evt.target.value === 'send') {
+                    dispatcher.dispatch({
+                        actionType: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+                        props: {
+                            email: this.state.email
+                        }
+                    })
+                }
+            },
+
+            _emailChangeHandler : function (evt) {
+                this.setState(React.addons.update(this.state, {email: {$set: evt.target.value}}));
             },
 
             componentDidMount : function () {
                 lineSelectionStore.addChangeListener(this._changeHandler);
+                userInfoStore.addChangeListener(this._changeHandler);
                 dispatcher.dispatch({
                     actionType: 'LINE_SELECTION_STATUS_REQUEST',
-                    props: {}
+                    props: {
+                        email: this.state.email
+                    }
                 });
             },
 
             componentWillUnmount : function () {
                 lineSelectionStore.removeChangeListener(this._changeHandler);
+                userInfoStore.removeChangeListener(this._changeHandler);
             },
 
             componentDidUpdate : function () {
@@ -294,15 +285,41 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             getInitialState : function () {
-                return {hasData: false};
+                return {hasData: false, emailDialog: false, email: null};
             },
 
             render: function () {
                 return (
-                    <div>
-                        <select>
-                            <option>test</option>
-                        </select>
+                    <div id="selection-actions">
+                        <h3>{this.translate('linesel__saved_line_groups_heading')}</h3>
+
+                        <div className="actions">
+                            {this.translate('global__actions')}:{'\u00A0'}
+                            <select onChange={this._actionSwitchHandler}>
+                                <option value="">--</option>
+                                <option value="edit-groups">{this.translate('linesel__continue_editing_groups')}</option>
+                                <option value="sort-groups">{this.translate('linesel__view_sorted_groups')}</option>
+                                <option value="remove-other-lines">{this.translate('linesel__remove_non_group_lines')}</option>
+                                <option value="clear-groups">{this.translate('linesel__clear_line_groups')}</option>
+                            </select>
+                        </div>
+
+                        <div className="chart-area"></div>
+
+                        <div className="generated-link">
+                            <strong>{this.translate('linesel__line_selection_link_heading')}:</strong><br />
+                            <input className="conc-link" type="text" readOnly="true"
+                                    onClick={(e)=> e.target.select()}
+                                   value={this.props.checkpointUrl} />
+                            {
+                                this.state.emailDialog
+                                ? <EmailDialog
+                                        defaultEmail={this.state.email}
+                                        handleEmailDialogButton={this._handleEmailDialogButton}
+                                        emailChangeHandler={this._emailChangeHandler} />
+                                : <button type="button" onClick={this._openEmailDialogButtonHandler}>{this.translate('linesel__send_the_link_to_mail')}</button>
+                            }
+                        </div>
                     </div>
                 )
             }
@@ -310,7 +327,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
         return {
             LineSelectionMenu: LineSelectionMenu,
-            LockedLineSelectionMenu: LockedLineSelectionMenu
+            LockedLineGroupsMenu: LockedLineGroupsMenu
         };
     };
 

@@ -424,7 +424,7 @@ class Kontext(Controller):
         else:
             tpl_data['q'] = self.urlencode([('q', q) for q in self.args.q])
             tpl_data['Q'] = [{'q': q} for q in self.args.q]
-        tpl_data['contains_lines_groups'] = self._lines_groups is not None
+        tpl_data['num_lines_in_groups'] = len(self._lines_groups) if self._lines_groups else 0
 
     def _scheduled_actions(self, user_settings):
         actions = []

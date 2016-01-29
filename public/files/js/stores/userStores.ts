@@ -22,7 +22,7 @@
 
 import util = require('util');
 import tplDocument = require('tpl/document');
-
+import RSVP = require('vendor/rsvp');
 
 
 /**

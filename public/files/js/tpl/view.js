@@ -168,13 +168,12 @@ define(function (require, exports, module) {
                 }
             }));
         }
-        showNumSelectedItems();
+        reinitSelectionMenuLink();
     }
 
-    function showGroupsStats(triggerSelect) {
-        var jqAnchor = $(triggerSelect);
+    function showGroupsStats(rootElm) {
 
-        function renderChart(data, rootElm) {
+        function renderChart(data) {
             var width = 200,
                 height = 200,
                 radius = Math.min(width, height) / 2;
@@ -221,75 +220,52 @@ define(function (require, exports, module) {
         function renderLabels(data, colors, rootElm) {
             var wrapper = window.document.createElement('div');
             var spanElm;
+            var innerSpanElm;
 
             $(wrapper).addClass('chart-label');
 
             data.forEach(function (item, i) {
                 spanElm = window.document.createElement('span');
                 $(spanElm)
+                    .addClass('label-text')
+                $(wrapper).append(spanElm);
+                innerSpanElm = window.document.createElement('span');
+                $(innerSpanElm)
                     .css({
                         'background-color': colors(i)
                     })
                     .addClass('color-code')
                     .text('\u00A0');
-                $(wrapper).append(spanElm);
-                spanElm = window.document.createElement('span');
+                $(spanElm).append(innerSpanElm);
                 $(spanElm)
-                    .addClass('label-text')
                     .append('<strong>' + item['group'] + '</strong> (' + item['count'] + 'x)');
-                $(wrapper).append(spanElm);
             });
             $(rootElm).append(wrapper);
         }
 
-        function createChart(box, finalize) {
+        lib.layoutModel.ajax(
+            'GET',
+            lib.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
+                    + lib.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        ).then(
+            function (data) {
+                var chartData = [],
+                    p,
+                    colors;
 
-            lib.layoutModel.ajax(
-                'GET',
-                lib.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
-                        + lib.layoutModel.getConf('stateParams'),
-                {},
-                {contentType : 'application/x-www-form-urlencoded'}
-            ).then(
-                function (data) {
-                    var chartData = [],
-                        p,
-                        colors;
-
-                    for (p in data) {
-                        chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
-                    }
-                    $(box.getRootElement()).append(
-                        '<h3>' + lib.layoutModel.translate('global__groups_stats_heading') + '</h3>'
-                    );
-                    colors = renderChart(chartData, box.getRootElement());
-                    renderLabels(chartData, colors, box.getRootElement());
-                    finalize();
-                },
-                function (err) {
-                    finalize();
-                    box.close();
-                    lib.layoutModel.message('error', err);
+                for (p in data) {
+                    chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
                 }
-            );
-        }
-
-        popupBox.open(
-            createChart,
-            {
-                top: jqAnchor.offset().top,
-                left: jqAnchor.offset().left,
-                height: jqAnchor.height()
+                $(rootElm).append(
+                    '<h4>' + lib.layoutModel.translate('linesel__groups_stats_heading') + '</h4>'
+                );
+                colors = renderChart(chartData, rootElm);
+                renderLabels(chartData, colors, rootElm);
             },
-            {
-                type : 'plain',
-                domId : 'line-group-stats',
-                calculatePosition: true,
-                closeIcon : true,
-                timeout : null,
-                onClose : function () {
-                    $(triggerSelect).val('');
-                }
+            function (err) {
+                lib.layoutModel.message('error', err);
             }
         );
     }
@@ -310,8 +286,7 @@ define(function (require, exports, module) {
                 lib.lineSelectionStore.importData(data);
                 switchSelectionModeUI();
                 bindSelectionModeSwitch();
-                showNumSelectedItems();
-                window.foo = lib.lineSelectionStore.clStorage;
+                reinitSelectionMenuLink();
             },
             function (err) {
                 lib.layoutModel.showMessage('error', err);
@@ -319,58 +294,28 @@ define(function (require, exports, module) {
         );
     }
 
+    function getNumSelectedItems() {
+        if (lib.hasLockedGroups) {
+            return lib.layoutModel.getConf('numLinesInGroups');
+
+        } else {
+            return lib.lineSelectionStore.size();
+        }
+    }
+
     /**
      *
      * @param numSelected
      */
-    function showNumSelectedItems() {
+    function reinitSelectionMenuLink() {
         var linesSelectionWrap = $('#result-info .lines-selection'),
             createContent,
-            numSelected = lib.lineSelectionStore.size(),
-            viewMenuLink,
-            groupActionsSelect,
-            onClose;
+            numSelected = getNumSelectedItems(),
+            viewMenuLink;
 
         linesSelectionWrap.empty();
 
         if (lib.hasLockedGroups) {
-            /*
-            groupActionsSelect = window.document.createElement('select');
-            $(groupActionsSelect)
-                .append($(window.document.createElement('option'))
-                    .attr('value', '')
-                    .text('--'))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'see-stats')
-                    .text(lib.layoutModel.translate('global__see_groups_stats')))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'edit-groups')
-                    .text(lib.layoutModel.translate('global__continue_editing_groups')))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'sort-groups')
-                    .text(lib.layoutModel.translate('global__view_sorted_groups')))
-                .append($(window.document.createElement('option'))
-                    .attr('value', 'clear-groups')
-                    .text(lib.layoutModel.translate('global__clear_line_groups')))
-
-            $(groupActionsSelect).on('change', function (evt) {
-                if ($(evt.target).val() === 'clear-groups') {
-                    lib.lineSelectionStore.resetServerLineGroups();
-
-                } else if ($(evt.target).val() === 'see-stats') {
-                    showGroupsStats(groupActionsSelect);
-
-                } else if ($(evt.target).val() === 'edit-groups') {
-                    reEnableLineGroupEditing();
-
-                } else {
-                    window.location.href = 'view?' + lib.layoutModel.getConf('stateParams') + '&sort_linegroups=1';
-                }
-            });
-            linesSelectionWrap.append(groupActionsSelect);
-            */
-
-
             createContent = function (box, finalize) {
                 var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
                     if (payload.actionType === 'ERROR') {
@@ -381,11 +326,25 @@ define(function (require, exports, module) {
                 lib.lineSelectionStore.addActionFinishHandler(function () {
                     box.close();
                 });
-                lib.layoutModel.renderReactComponent(lib.views.LockedLineSelectionMenu,
-                        box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
+                lib.layoutModel.renderReactComponent(
+                    lib.views.LockedLineGroupsMenu,
+                    box.getRootElement(),
+                    {
+                        doneCallback: function () {
+                            finalize.call(lib.layoutModel);
+                        },
+                        chartCallback: function () {
+                            $(box.getRootElement()).find('.chart-area').empty();
+                            showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
+                        },
+                        reEnableEditCallback : function () {
+                            box.close();
+                            reEnableLineGroupEditing();
+                        },
+                        checkpointUrl: window.location.href
+                     }
+                 );
             };
-
-
 
         } else {
             createContent = function (box, finalize) {
@@ -398,16 +357,20 @@ define(function (require, exports, module) {
                 lib.lineSelectionStore.addActionFinishHandler(function () {
                     box.close();
                 });
-                lib.layoutModel.renderReactComponent(lib.views.LineSelectionMenu,
-                        box.getRootElement(), {doneCallback: finalize.bind(lib.layoutModel)});
+                lib.layoutModel.renderReactComponent(
+                    lib.views.LineSelectionMenu,
+                    box.getRootElement(),
+                    {
+                        doneCallback: finalize.bind(lib.layoutModel)
+                    }
+                 );
             };
         }
         viewMenuLink = window.document.createElement('a');
-        console.log('creating view items link ', viewMenuLink);
 
-        $(viewMenuLink).text('(' + numSelected + ' ' + lib.layoutModel.translate('global__selected_lines') + ')');
+        $(viewMenuLink).append('(<span class="value">' + numSelected + '</span> '
+                + lib.layoutModel.translate('global__selected_lines') + ')');
         if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
-            console.log('bind stuff');
             popupBox.bind(viewMenuLink, createContent, {
                 type : 'plain',
                 closeIcon : true,
@@ -462,11 +425,10 @@ define(function (require, exports, module) {
                 var mode = $(evt.currentTarget).val();
                 lib.lineSelectionStore.setMode(mode);
                 switchSelectionModeUI();
-                showNumSelectedItems();
+                reinitSelectionMenuLink();
             }
         );
     }
-
 
     /**
      * Handles clicking on concordance line checkbox
@@ -482,7 +444,7 @@ define(function (require, exports, module) {
                 } else {
                     lib.lineSelectionStore.removeLine(id);
                 }
-                showNumSelectedItems();
+                $('.lines-selection .value').text(getNumSelectedItems());
             });
 
         } else if (mode === 'groups') {
@@ -497,7 +459,7 @@ define(function (require, exports, module) {
                 } else {
                     lib.lineSelectionStore.removeLine(id);
                 }
-                showNumSelectedItems();
+                $('.lines-selection .value').text(getNumSelectedItems());
             });
         }
     }
@@ -856,7 +818,7 @@ define(function (require, exports, module) {
         lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
                 lib.lineSelectionStore, lib.layoutModel.getStores().userInfoStore);
 
-        lib.hasLockedGroups = lib.layoutModel.getConf('containsLinesGroups');
+        lib.hasLockedGroups = lib.layoutModel.getConf('numLinesInGroups') > 0;
 
         if (lib.hasLockedGroups) {
             setDefinedGroups();
@@ -865,7 +827,7 @@ define(function (require, exports, module) {
             bindSelectionModeSwitch();
             refreshSelection();
         }
-        showNumSelectedItems();
+        reinitSelectionMenuLink();
 
         misc();
         addWarnings();
