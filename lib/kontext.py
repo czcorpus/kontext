@@ -21,6 +21,7 @@ import os.path
 import copy
 import re
 import collections
+import hashlib
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -119,6 +120,7 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self.subcpath = []
+        self._lines_groups = None
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
 
         # conc_persistence plugin related attributes
@@ -362,6 +364,7 @@ class Kontext(Controller):
             # will be rewritten by self.args.q !!!
             if self._prev_q_data is not None:
                 self.args.q = self._prev_q_data['q'][:] + url_q[1:]
+                self._lines_groups = self._prev_q_data.get('lines_groups', None)
             else:
                 # !!! we have to reset the invalid query, otherwise _store_conc_params
                 # generates a new key pointing to it
@@ -381,7 +384,8 @@ class Kontext(Controller):
                 'q': self.args.q,
                 'corpname': self.args.corpname,
                 'usesubcorp': self.args.usesubcorp,
-                'align': self.args.align
+                'align': self.args.align,
+                'lines_groups': self._lines_groups
             }
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
                                                          curr_data=query,
@@ -420,6 +424,7 @@ class Kontext(Controller):
         else:
             tpl_data['q'] = self.urlencode([('q', q) for q in self.args.q])
             tpl_data['Q'] = [{'q': q} for q in self.args.q]
+        tpl_data['num_lines_in_groups'] = len(self._lines_groups) if self._lines_groups else 0
 
     def _scheduled_actions(self, user_settings):
         actions = []

@@ -227,9 +227,15 @@ $query_overview_bar()
             <span class="notice-shuffled">
             #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
             </span>
-
-            <span class="separ">|</span>
-            <a class="lines-selection"></a>
+            <br />
+            <div class="line-ops">
+                $_('Line selection'):
+                <select id="selection-mode-switch">
+                    <option value="simple">simple</option>
+                    <option value="groups">groups</option>
+                </select>
+                <span class="lines-selection"></span>
+            </div>
         </div>
 
         #block navigation($navid="navigation_form", $nextid="next")
@@ -298,9 +304,10 @@ $query_overview_bar()
             #end filter
 
             #for $i, $l in $enumerate($Lines)
-            <tr data-toknum="$l.toknum">
-                <td>
-                    <input type="checkbox" value="$l.toknum" data-kwiclen="$l.kwiclen" />
+            <tr data-toknum="$l.toknum" data-linegroup="$l.linegroup">
+                <td class="manual-selection">
+                    <input type="checkbox" value="1" data-linenum="$l.linenum" data-position="$l.toknum"
+                           data-kwiclen="$l.kwiclen" />
                 </td>
                 <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" title="$l.ref">
                     $l.ref

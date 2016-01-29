@@ -56,6 +56,12 @@ table#conclines tr td {
   padding: 2px;
 }
 
+table#conclines .group-id {
+    font-weight: bold;
+    color: @color-logo-pink;
+    padding: 0.3em;
+}
+
 table#conclines tr .attr {
   font-family: @monospace-font-family;
   font-size: 90%;
@@ -437,4 +443,56 @@ table#conclines .concordance-col-heading {
 
 .expand-conc img {
   display: inline-block;
+}
+
+#selection-actions {
+
+    .chart-label {
+        text-align: center;
+    }
+
+    .chart-label .label-text {
+        padding-right: 1em;
+        font-size: 0.8em;
+    }
+
+    .chart-label .color-code {
+        display: inline-block;
+        width: 1em;
+        margin-right: 0.2em;
+        border-color: @color-frame-fieldset;
+        border-width: 1px;
+        border-radius: @input-border-radius;
+    }
+
+    .chart-area {
+        margin-top: 1em;
+    }
+
+    .generated-link {
+        margin-top: 2em;
+        display: block;
+        width: 100%;
+
+        .conc-link {
+            display: block;
+            background-color: @color-light-grey;
+            border: 1px solid @color-light-text;
+            padding: 0.2em 0.5em;
+            margin-bottom: 1em;
+            width: 90%;
+            min-width: 30em;
+        }
+    }
+
+    h4 {
+        font-size: 0.9em;
+        margin-top: 0;
+        text-align: center;
+    }
+
+    .form-item {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 }

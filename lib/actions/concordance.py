@@ -16,6 +16,8 @@ import math
 import os
 import sys
 import re
+import json
+from collections import defaultdict
 
 from werkzeug.datastructures import MultiDict
 
@@ -134,6 +136,13 @@ class Actions(Kontext):
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
 
+    def apply_linegroups(self, conc):
+        if self._lines_groups:
+            for lg in self._lines_groups:
+                conc.set_linegroup_at_pos(lg[0], lg[2])
+            if self.args.sort_linegroups:
+                conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
+
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
         """
@@ -167,6 +176,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                   samplesize=corpus_info.sample_size)
+        self.apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -1461,7 +1471,7 @@ class Actions(Kontext):
                     ans += '%s' % item['str'].strip()
             return ans.strip()
 
-        def process_lang(root, left_key, kwic_key, right_key):
+        def process_lang(root, left_key, kwic_key, right_key, add_linegroup):
             if type(root) is dict:
                 root = (root,)
 
@@ -1470,6 +1480,8 @@ class Actions(Kontext):
                 ans_item = {}
                 if 'ref' in item:
                     ans_item['ref'] = item['ref']
+                if add_linegroup:
+                    ans_item['linegroup'] = item.get('linegroup', '')
                 ans_item['left_context'] = merge_conc_line_parts(item[left_key])
                 ans_item['kwic'] = merge_conc_line_parts(item[kwic_key])
                 ans_item['right_context'] = merge_conc_line_parts(item[right_key])
@@ -1480,6 +1492,7 @@ class Actions(Kontext):
             corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
                                                          corpus_info.sample_size))
+            self.apply_linegroups(conc)
             kwic = Kwic(self._corp(), self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
@@ -1542,9 +1555,12 @@ class Actions(Kontext):
                             row_num = str(i + from_line)
                         else:
                             row_num = None
-                        lang_rows = process_lang(line, left_key, kwic_key, right_key)
+
+                        lang_rows = process_lang(line, left_key, kwic_key, right_key,
+                                                 add_linegroup=bool(self._lines_groups))
                         if 'Align' in line:
-                            lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key)
+                            lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key,
+                                                      add_linegroup=False)
                         writer.writerow(row_num, *lang_rows)
                 if heading:
                     writer.writeheading({
@@ -1588,20 +1604,10 @@ class Actions(Kontext):
             self._set_not_found()
             return None
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
-        import json
-
-        data = json.loads(rows)
-        expand = lambda x, n: range(x, x + n)
-        sel_lines = []
-        for item in data:
-            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
-        self.args.q.append('%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines)))
-        q_id = self._store_conc_params()
+    def _collect_conc_next_url_params(self, query_id):
         params = {
             'corpname': self.args.corpname,
-            'q': '~%s' % q_id,
+            'q': '~%s' % query_id,
             'viewmode': self.args.viewmode,
             'attrs': self.args.attrs,
             'attr_allpos': self.args.attr_allpos,
@@ -1614,10 +1620,74 @@ class Actions(Kontext):
             params['usesubcorp'] = self.args.usesubcorp
         if self.args.align:
             params['align'] = self.args.align
+        return params
+
+    @staticmethod
+    def _filter_lines(data, pnfilter):
+        def expand(x, n):
+            return range(x, x + n)
+
+        sel_lines = []
+        for item in data:
+            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
+        return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_unset_lines_groups(self):
+        self._lines_groups = None
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {'id': q_id, 'next_url': self.create_url('view', params)}
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_apply_lines_groups(self, rows=''):
+        self._lines_groups = json.loads(rows)
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
         return {
             'id': q_id,
             'next_url': self.create_url('view', params)
         }
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_remove_non_group_lines(self):
+        self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {
+            'id': q_id,
+            'next_url': self.create_url('view', params)
+        }
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
+        data = json.loads(rows)
+        self.args.q.append(self._filter_lines(data, pnfilter))
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {
+            'id': q_id,
+            'next_url': self.create_url('view', params)
+        }
+
+    @exposed(return_type='json', legacy=False)
+    def ajax_send_group_selection_link_to_mail(self, request):
+        import mailing
+        ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
+                                           request.form.get('email'),
+                                           request.form.get('url'))
+        return {'ok': ans}
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_get_line_selection(self):
+        return self._lines_groups if self._lines_groups else []
+
+    @exposed(return_type='json', legacy=True)
+    def ajax_get_line_groups_stats(self):
+        ans = defaultdict(lambda: 0)
+        for item in self._lines_groups:
+            ans[item[2]] += 1
+        return ans
 
     @exposed(return_type='json')
     def ajax_get_within_max_hits(self, request):
@@ -1626,3 +1696,4 @@ class Actions(Kontext):
         conc = manatee.Concordance(self._corp(), q, 1, -1)
         conc.sync()
         return {'total': conc.fullsize() if conc else None}
+

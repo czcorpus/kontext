@@ -205,3 +205,11 @@ class User(Kontext):
         html = plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,
                                                            return_url=self.return_url)
         return {'html': html}
+
+    @exposed(return_type='json', skip_corpus_init=True)
+    def ajax_user_info(self, request):
+        user_info = plugins.get('auth').get_user_info(self._session_get('user', 'id'))
+        if not self.user_is_anonymous():
+            return {'user': user_info}
+        else:
+            return {'user': {'username': user_info['username']}}

@@ -25,6 +25,26 @@
  */
 declare module Kontext {
 
+    export interface UserCredentials {
+        context_limit:number;
+        sketches:boolean;
+        never_expire:boolean;
+        firstname:string;
+        country:string;
+        regist:any; // TODO
+        email:string;
+        username:string;
+        affiliation:string;
+        expire:any; // TODO
+        lastname:string;
+        address:string;
+        active:boolean;
+        affiliation_country:string;
+        category:string;
+        id:number;
+        recovery_until:any; // TODO
+    }
+
     /**
      * Specifies a configuration object generated at runtime
      */
@@ -143,6 +163,10 @@ declare module Kontext {
         notifyChangeListeners():void;
     }
 
+    export interface UserInfoStore extends PageStore {
+        getCredentials():UserCredentials;
+    }
+
     /**
      *
      */
@@ -178,7 +202,8 @@ declare module Kontext {
     export interface LayoutStores {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
-        queryHintStore:PageStore
+        queryHintStore:PageStore,
+        userInfoStore:UserInfoStore
     }
 
     export interface AjaxOptions {

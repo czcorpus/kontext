@@ -461,3 +461,12 @@ def fcs_scan(corpname, scan_query, max_ter, start):
         wlpattern = '.*' + value + '.*'
     wl = corplib.wordlist(corp, wlattr=attr, wlpat=wlpattern, wlsort='f')
     return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
+
+
+def sort_line_groups(conc, group_ids):
+    ids = manatee.IntVector()
+    strs = manatee.StrVector()
+    for g in group_ids:
+        ids.append(g)
+        strs.append('%05d' % g)
+    conc.linegroup_sort(ids, strs)

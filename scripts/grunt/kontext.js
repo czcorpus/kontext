@@ -95,6 +95,7 @@
                 'jquery' : 'vendor/jquery.min',
                 'vendor/rsvp' : 'vendor/rsvp.min',
                 'vendor/react': reactModule,
+                'vendor/d3': 'vendor/d3.min',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
             },
@@ -133,6 +134,7 @@
                 'vendor/jscrollpane',
                 'vendor/intl-messageformat',
                 'vendor/virtual-keyboard',
+                'vendor/d3'
         ];
         if (isProduction) {
             modules.push('translations');

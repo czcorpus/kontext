@@ -36,6 +36,7 @@ import RSVP = require('vendor/rsvp');
 import rsvpAjax = require('vendor/rsvp-ajax');
 import util = require('util');
 import docStores = require('./documentStores');
+import userStores = require('stores/userStores');
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
 
@@ -154,6 +155,8 @@ export class PageModel implements Kontext.PluginProvider {
 
     queryHintStore:docStores.QueryHintStore;
 
+    userInfoStore:userStores.UserInfo;
+
     /**
      * A dictionary containing translations for current UI language (conf['uiLang']).
      */
@@ -175,6 +178,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
+        this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
     }
 
@@ -186,7 +190,8 @@ export class PageModel implements Kontext.PluginProvider {
         return {
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
-            queryHintStore: this.queryHintStore
+            queryHintStore: this.queryHintStore,
+            userInfoStore: this.userInfoStore
         };
     }
 

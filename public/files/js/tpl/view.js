@@ -20,13 +20,23 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'popupbox', 'conclines',
-        'SoundManager', 'vendor/jscrollpane'], function (win, $, jqueryPeriodic, documentModule, detail,
-                                                                popupBox, conclines, SoundManager) {
+define(function (require, exports, module) {
     'use strict';
 
-    var lib = {},
-        clStorage = conclines.openStorage();
+    var win = require('win');
+    var $ = require('jquery');
+    var jqueryPeriodic = require('vendor/jquery.periodic');
+    var documentModule = require('tpl/document');
+    var detail = require('detail');
+    var popupBox = require('popupbox');
+    var conclines = require('conclines');
+    var concViews = require('views/concordance');
+    var concStores = require('stores/concordance');
+    var SoundManager = require('SoundManager');
+    var d3 = require('vendor/d3');
+    require('vendor/jscrollpane');
+
+    var lib = {};
 
     lib.layoutModel = null;
 
@@ -82,6 +92,40 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         }
     }
 
+    function getUISelectionMode() {
+        var conclines = $('#conclines');
+        if (conclines.find('td.manual-selection input[type=\'checkbox\']').length > 0) {
+            return 'simple';
+
+        } else if (conclines.find('td.manual-selection input[type=\'text\']').length > 0) {
+            return 'groups';
+        }
+        return null;
+    }
+
+
+    function setDefinedGroups() {
+        $('#selection-mode-switch')
+            .val('groups')
+            .attr('disabled', 'disabled');
+        $('#conclines tr').each(function () {
+            var elm = $(this).find('.manual-selection');
+            var groupElm = window.document.createElement('span');
+            var inputElm = elm.find('input');
+            var kwiclen = inputElm.attr('data-kwiclen');
+            var position = inputElm.attr('data-position');
+            var lineNum = inputElm.attr('data-linenum');
+
+            $(groupElm)
+                .attr('data-kwiclen', kwiclen)
+                .attr('data-position', position)
+                .attr('data-linenum', lineNum)
+                .text($(this).attr('data-linegroup'))
+                .addClass('group-id');
+            elm.empty().append(groupElm);
+        });
+    }
+
 
     /**
      * According to the data found in sessionStorage iterates over current page's
@@ -89,120 +133,343 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      * supported all the checkboxes are disabled.
      */
     function refreshSelection() {
-        $('#conclines tr input[type=\'checkbox\']').each(function () {
-            if (!clStorage.supportsSessionStorage()) {
-                $(this).attr('disabled', 'disabled');
+        function applyOn(currMode, setValFn) {
+            return function (i, item) {
+                rowSelectionEvent(item, currMode);
+                if (!lib.lineSelectionStore.supportsSessionStorage()) {
+                    $(item).attr('disabled', 'disabled');
 
-            } else if (clStorage.containsLine($(this).val())) {
-                this.checked = true;
-
-            } else {
-                this.checked = false;
+                } else {
+                    setValFn(item);
+                }
             }
-        });
+        }
+        var storeMode = lib.lineSelectionStore.getMode();
+        if (getUISelectionMode() !== storeMode) {
+            switchSelectionModeUI();
+        }
+        $('#selection-mode-switch').val(storeMode);
+        if (storeMode === 'simple') {
+            $('#conclines td.manual-selection input[type=\'checkbox\']').each(applyOn(storeMode, function (item) {
+                if (lib.lineSelectionStore.containsLine($(item).attr('data-position'))) {
+                    item.checked = true;
+
+                } else {
+                    item.checked = false;
+                }
+            }));
+
+        } else if (storeMode === 'groups') {
+            $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, function (item) {
+                var data = lib.lineSelectionStore.getLine($(item).attr('data-position'));
+
+                if (data) {
+                    $(item).val(data[1]);
+                }
+            }));
+        }
+        reinitSelectionMenuLink();
+    }
+
+    function showGroupsStats(rootElm) {
+
+        function renderChart(data) {
+            var width = 200,
+                height = 200,
+                radius = Math.min(width, height) / 2;
+
+            var color = d3.scale.category20();
+
+            var arc = d3.svg.arc()
+                .outerRadius(radius - 10)
+                .innerRadius(0);
+
+            var labelArc = d3.svg.arc()
+                .outerRadius(radius - 40)
+                .innerRadius(radius - 40);
+
+            var pie = d3.layout.pie()
+                .value(function(d) { return d['count']; });
+
+            data = pie(data);
+
+            var wrapper = d3.select(rootElm).append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
+                    .attr('class', 'chart-wrapper');
+
+            var g = wrapper.selectAll('.arc')
+                .data(data).enter()
+                    .append('g')
+                    .attr('class', 'arc');
+
+            g.append('path')
+                .attr('d', arc)
+                .style('fill', function(d, i) { return color(i);});
+            g.append('text')
+                .attr('transform', function(d) {
+                        return 'translate(' + labelArc.centroid(d) + ')';
+                        }
+                    )
+                .text(function(d) { return d.data['group']; });
+            return color;
+        }
+
+        function renderLabels(data, colors, rootElm) {
+            var wrapper = window.document.createElement('div');
+            var spanElm;
+            var innerSpanElm;
+
+            $(wrapper).addClass('chart-label');
+
+            data.forEach(function (item, i) {
+                spanElm = window.document.createElement('span');
+                $(spanElm)
+                    .addClass('label-text')
+                $(wrapper).append(spanElm);
+                innerSpanElm = window.document.createElement('span');
+                $(innerSpanElm)
+                    .css({
+                        'background-color': colors(i)
+                    })
+                    .addClass('color-code')
+                    .text('\u00A0');
+                $(spanElm).append(innerSpanElm);
+                $(spanElm)
+                    .append('<strong>' + item['group'] + '</strong> (' + item['count'] + 'x)');
+            });
+            $(rootElm).append(wrapper);
+        }
+
+        lib.layoutModel.ajax(
+            'GET',
+            lib.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
+                    + lib.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        ).then(
+            function (data) {
+                var chartData = [],
+                    p,
+                    colors;
+
+                for (p in data) {
+                    chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
+                }
+                $(rootElm).append(
+                    '<h4>' + lib.layoutModel.translate('linesel__groups_stats_heading') + '</h4>'
+                );
+                colors = renderChart(chartData, rootElm);
+                renderLabels(chartData, colors, rootElm);
+            },
+            function (err) {
+                lib.layoutModel.message('error', err);
+            }
+        );
+    }
+
+    function reEnableLineGroupEditing() {
+        lib.layoutModel.ajax(
+            'GET',
+            lib.layoutModel.createActionUrl('ajax_get_line_selection?')
+                + lib.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+
+        ).then(
+            function (data) {
+                $('#selection-mode-switch')
+                    .attr('disabled', null);
+                lib.hasLockedGroups = false;
+                lib.lineSelectionStore.importData(data);
+                switchSelectionModeUI();
+                bindSelectionModeSwitch();
+                reinitSelectionMenuLink();
+            },
+            function (err) {
+                lib.layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
+    function getNumSelectedItems() {
+        if (lib.hasLockedGroups) {
+            return lib.layoutModel.getConf('numLinesInGroups');
+
+        } else {
+            return lib.lineSelectionStore.size();
+        }
     }
 
     /**
      *
      * @param numSelected
      */
-    function showNumSelectedItems(numSelected) {
-        var linesSelection = $('#result-info .lines-selection'),
-            createContent;
+    function reinitSelectionMenuLink() {
+        var linesSelectionWrap = $('#result-info .lines-selection'),
+            createContent,
+            numSelected = getNumSelectedItems(),
+            viewMenuLink;
 
-        createContent = function (box, finalize) {
-            var formElm = $('#selection-actions'),
-                getAction;
+        linesSelectionWrap.empty();
 
-            getAction = function () {
-                return formElm.find('select[name=\'actions\']').val();
+        if (lib.hasLockedGroups) {
+            createContent = function (box, finalize) {
+                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                    }
+                });
+                lib.lineSelectionStore.addActionFinishHandler(function () {
+                    box.close();
+                });
+                lib.layoutModel.renderReactComponent(
+                    lib.views.LockedLineGroupsMenu,
+                    box.getRootElement(),
+                    {
+                        doneCallback: function () {
+                            finalize.call(lib.layoutModel);
+                        },
+                        chartCallback: function () {
+                            $(box.getRootElement()).find('.chart-area').empty();
+                            showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
+                        },
+                        reEnableEditCallback : function () {
+                            box.close();
+                            reEnableLineGroupEditing();
+                        },
+                        checkpointUrl: window.location.href
+                     }
+                 );
             };
 
-            formElm.find('button.confirm').off('click').on('click', function () {
-                var action = getAction(),
-                    prom,
-                    pnfilter,
-                    filterCodeMapping = {'remove' : 'n', 'remove_inverted' : 'p'};
-
-                if (action === 'clear') {
-                    clStorage.clear();
-                    refreshSelection();
+        } else {
+            createContent = function (box, finalize) {
+                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                    }
+                });
+                lib.lineSelectionStore.addActionFinishHandler(function () {
                     box.close();
+                });
+                lib.layoutModel.renderReactComponent(
+                    lib.views.LineSelectionMenu,
+                    box.getRootElement(),
+                    {
+                        doneCallback: finalize.bind(lib.layoutModel)
+                    }
+                 );
+            };
+        }
+        viewMenuLink = window.document.createElement('a');
 
-                } else {
-                    pnfilter = filterCodeMapping[action];
-                    prom = $.ajax('ajax_remove_selected_lines?pnfilter=' + pnfilter + '&' + lib.layoutModel.conf.stateParams,
-                        {
-                            dataType : 'json',
-                            type : 'POST',
-                            data : { rows : JSON.stringify(clStorage.getAll())}
-                        }).promise();
-
-                    prom.then(
-                        function (data) {
-                            box.close();
-                            if (!data.error) {
-                                clStorage.clear();
-                                $(win).off('beforeunload.alert_unsaved');
-                                win.location = data.next_url;
-
-                            } else {
-                                lib.layoutModel.showMessage('error', data.error);
-                            }
-                        },
-                        function (jqXHR, textStatus) {
-                            box.close();
-                            lib.layoutModel.showMessage('error', textStatus);
-                        }
-                    );
+        $(viewMenuLink).append('(<span class="value">' + numSelected + '</span> '
+                + lib.layoutModel.translate('global__selected_lines') + ')');
+        if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
+            popupBox.bind(viewMenuLink, createContent, {
+                type : 'plain',
+                closeIcon : true,
+                timeout: null,
+                onClose: function () {
+                    lib.layoutModel.unmountReactComponent(this.getRootElement());
+                    lib.lineSelectionStore.removeAllActionFinishHandlers();
                 }
             });
-            box.importElement(formElm);
-            finalize();
-        };
-
-        linesSelection.text(lib.layoutModel.translate('global__selected_lines') + ': ' + numSelected);
-        if (!popupBox.hasAttachedPopupBox(linesSelection)) {
-            popupBox.bind(linesSelection, createContent, {
-                type : 'plain',
-                closeIcon : true
-            });
         }
-        if (numSelected === 0) {
-            linesSelection.hide();
-            linesSelection.prev('span.separ').hide();
-
-        } else if (!linesSelection.is(':visible')) {
-            linesSelection.show();
-            linesSelection.prev('span.separ').show();
-        }
+        linesSelectionWrap.append(viewMenuLink);
     }
 
+    // TODO refactor this (redundant code)
+    function switchSelectionModeUI() {
+        var mode = lib.lineSelectionStore.getMode();
+        function applyStoredValue(jqElm) {
+            var line = lib.lineSelectionStore.getLine(jqElm.attr('data-position'));
+            if (line && mode === 'groups') {
+                jqElm.val(line[1]);
+
+            } else if (line && mode === 'simple') {
+                jqElm.prop('checked', true);
+            }
+        }
+
+
+        $('#conclines').find('td.manual-selection > *').each(function (item) {
+            var inputElm = window.document.createElement('input');
+            var kwiclen = $(this).attr('data-kwiclen');
+            var position = $(this).attr('data-position');
+            var lineNum = $(this).attr('data-linenum');
+            $(inputElm)
+                .attr('type', mode === 'simple' ? 'checkbox' : 'text')
+                .attr('data-kwiclen', kwiclen)
+                .attr('data-position', position)
+                .attr('data-linenum', lineNum);
+            if (mode === 'groups') {
+                $(inputElm).css('width', '2em');
+            }
+            $(this).replaceWith(inputElm);
+            applyStoredValue($(inputElm));
+            rowSelectionEvent(inputElm, mode);
+        });
+    }
+
+
+    function bindSelectionModeSwitch() {
+        $('#selection-mode-switch')
+            .off('change')
+            .on('change', function (evt) {
+                var mode = $(evt.currentTarget).val();
+                lib.lineSelectionStore.setMode(mode);
+                switchSelectionModeUI();
+                reinitSelectionMenuLink();
+            }
+        );
+    }
 
     /**
      * Handles clicking on concordance line checkbox
      */
-    function rowSelectionEvent() {
-        $('#conc-wrapper').on('click', 'input[type=\'checkbox\']', function (e) {
-            var id = $(e.currentTarget).attr('value'),
-                kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
+    function rowSelectionEvent(elm, mode) {
+        if (mode === 'simple') {
+            $(elm).on('click', function (e) {
+                var id = $(e.currentTarget).attr('data-position'),
+                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
+                if ($(e.currentTarget).is(':checked')) {
+                    lib.lineSelectionStore.addLine(id, kwiclen, null);
 
-            if ($(e.currentTarget).is(':checked')) {
-                clStorage.addLine(id, kwiclen);
+                } else {
+                    lib.lineSelectionStore.removeLine(id);
+                }
+                $('.lines-selection .value').text(getNumSelectedItems());
+            });
 
-            } else {
-                clStorage.removeLine(id);
-            }
-            showNumSelectedItems(clStorage.size());
-        });
+        } else if (mode === 'groups') {
+            $(elm).on('change keyup', function (e) {
+                var id = $(e.currentTarget).attr('data-position'),
+                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
+                    groupId = parseInt($(e.currentTarget).val() || 0, 10);
+
+                if ($(e.currentTarget).val() !== '') {
+                    lib.lineSelectionStore.addLine(id, kwiclen, groupId);
+
+                } else {
+                    lib.lineSelectionStore.removeLine(id);
+                }
+                $('.lines-selection .value').text(getNumSelectedItems());
+            });
+        }
     }
 
     /**
      * Ensures that concordance lines are serialized once user leaves the page.
      */
-    function onUloadSerialize() {
+    function onUnloadSerialize() {
         $(win).on('unload', function () {
-            clStorage.serialize();
+            lib.lineSelectionStore.serialize();
         });
     }
 
@@ -212,7 +479,7 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
      */
     function onBeforeUnloadAsk() {
         $(win).on('beforeunload.alert_unsaved', function (event) {
-            if (clStorage.size() > 0) {
+            if (lib.lineSelectionStore.size() > 0) {
                 event.returnValue = lib.layoutModel.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
@@ -543,23 +810,40 @@ define(['win', 'jquery', 'vendor/jquery.periodic', 'tpl/document', 'detail', 'po
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         lib.touchHandler = new TouchHandler();
+        lib.lineSelectionStore = new concStores.LineSelectionStore(lib.layoutModel,
+                lib.layoutModel.dispatcher, conclines.openStorage(), 'simple');
+
+        lib.lineSelectionStore.addClearSelectionHandler(refreshSelection);
+
+        lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
+                lib.lineSelectionStore, lib.layoutModel.getStores().userInfoStore);
+
+        lib.hasLockedGroups = lib.layoutModel.getConf('numLinesInGroups') > 0;
+
+        if (lib.hasLockedGroups) {
+            setDefinedGroups();
+
+        } else {
+            bindSelectionModeSwitch();
+            refreshSelection();
+        }
+        reinitSelectionMenuLink();
+
         misc();
         addWarnings();
         initConcViewScrollbar();
         if (conf.anonymousUser) {
             anonymousUserWarning();
         }
-        rowSelectionEvent();
-        refreshSelection();
-        showNumSelectedItems(clStorage.size());
+
         onBeforeUnloadAsk();
-        onUloadSerialize();
+        onUnloadSerialize();
         grantPaginationPageLeave();
         soundManagerInit();
         makePageReusable(conf);
         attachIpmCalcTrigger(lib.layoutModel);
     };
 
-    return lib;
+    module.exports = lib;
 
 });

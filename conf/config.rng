@@ -108,6 +108,16 @@
                     </interleave>
                 </element>
             </optional>
+            <optional>
+                <element name="mailing">
+                    <element name="smtp_server">
+                        <text />
+                    </element>
+                    <element name="sender">
+                        <text />
+                    </element>
+                </element>
+            </optional>
             <element name="global">
                 <a:documentation>Main configuration section</a:documentation>
                 <interleave>
