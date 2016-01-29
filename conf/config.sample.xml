@@ -59,6 +59,10 @@
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
     </global>
+    <mailing>
+        <smtp_server>acme.localdomain</smtp_server>
+        <sender>acme@localdomain</sender>
+    </mailing>
     <plugins>
         <db>
             <module>default_db</module>
