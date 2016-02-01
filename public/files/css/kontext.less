@@ -14,7 +14,7 @@ body {
   display: block;
   margin: 0;
   overflow: auto;
-  padding: 0 2em 2em 2em;
+  padding: 0.5em 2em 2em 2em;
 }
 
 #content > section {
@@ -50,10 +50,7 @@ section.inner {
 
 header .navig-wrapper {
   display: inline-block;
-  padding: 0.5em;
-  background-color: #F6F3EF;
-  border: 1px solid #EDEAE6;
-  border-radius: @border-radius-default;
+  padding: 1.2em 1em 0.6em 2em;
 }
 
 section.corpus-and-query {
@@ -267,9 +264,6 @@ a#logo-wrapper {
 #logo-wrapper img {
   display: inline-block;
   vertical-align: top;
-  position: relative;
-  top: -4px;
-  left: -3pt;
 }
 
 #add-searched-lang-widget {
@@ -405,14 +399,16 @@ a#logo-wrapper {
 }
 
 #menu-bar {
+  margin: 4px 0 0 1em; // TODO remove once the logo is OK
   display: inline-block;
   vertical-align: top;
   white-space: nowrap;
-  height: 50px;
-  font-size: 11pt;
-  min-width: 680px;
+  background-color: @color-logo-blue;
+  font-size: 1.1em;
   width: auto;
-  margin: 0;
+  line-height: 2.0em;
+  padding-right: 1em;
+  border-radius: @input-border-radius;
 }
 
 #menu-bar a:hover {
@@ -421,10 +417,6 @@ a#logo-wrapper {
 
 #menu-bar ul img {
   vertical-align: middle;
-}
-
-#menu-bar a.trigger {
-  color: inherit;
 }
 
 #menu-bar a.trigger:hover {
@@ -440,7 +432,7 @@ a#logo-wrapper {
 
 #menu-level-1 > li {
   display: inline-block;
-  padding: 3px 6px;
+  padding: 0.2em 0.3em;
   font-weight: bold;
   position: relative;
   border-width: 1px 1px 0 1px;
@@ -453,29 +445,29 @@ a#logo-wrapper {
 }
 
 #menu-level-1 li.disabled a {
-  color: @color-light-text;
-}
-
-#menu-level-1 a:hover {
-  color: #000000;
+  color: @color-light-grey;
 }
 
 #menu-level-1 li.disabled a:hover {
   background-color: transparent;
   border: none;
-  color: @color-light-text !important;
+  color: @color-light-grey !important;
 }
 
 #menu-level-1 > li a {
   display: block;
   text-decoration: none;
-  color: #000000;
+  color: #FFFFFF;;
+}
+
+#menu-level-1 > a:hover {
+  color: #FFFFFF;
 }
 
 #menu-level-1 > li.separator {
-  width: 2px;
+  width: 0.025em;
   padding: 0;
-  background-color: #00A8E8;
+  background-color: @color-light-grey;
 }
 
 #menu-level-1 > li a:hover {
@@ -483,11 +475,11 @@ a#logo-wrapper {
 }
 
 #menu-level-1 > li.active {
-  background-color: @color-light-frame;
+  background-color: @color-logo-blue-shining;
   border-radius: @border-radius-menu;
   border-width: 1px 1px 0 1px;
   border-style: solid;
-  border-color: #C7E7B2;
+  border-color: @color-logo-blue;
   position: relative;
 }
 
@@ -495,7 +487,7 @@ a#logo-wrapper {
   display: none;
   position: absolute;
   left: 0;
-  background-color: @color-light-frame;
+  background-color: @color-logo-blue;
   box-shadow: @portal-box-shadow;
   margin: 3px 0 0 0;
   z-index: 500;
@@ -512,22 +504,22 @@ a#logo-wrapper {
 
   li {
     display: list-item;
-    padding: 1.9pt 10pt;
+    padding: 0.2em 1em;
     margin: 6px 0 6px 0;
   }
 
-  li.disabled a {
-    color: #999999;
+  li:hover {
+    background-color: @color-logo-blue-shining;
   }
 
-  li:not(.disabled) a:hover {
-    color: #009EE0;
+  li.disabled a {
+    color: @color-light-grey;
   }
 
   li.separ {
     border-width: 0;
     border-style: solid;
-    border-color: #00AAEB;
+    border-color: #FFFFFF;
   }
 }
 
@@ -596,9 +588,12 @@ a#logo-wrapper {
 }
 
 #topbar {
-  padding: 28px 20px 0 27px;
+  padding: 0;
   color: #000000;
   white-space: nowrap;
+  border-style: solid;
+  border-color: #e6e3df;
+  border-width: 1pt 0 1pt 0;
 }
 
 #topbar > * {
