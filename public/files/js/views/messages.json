@@ -82,7 +82,10 @@
         "linesel__send_the_link_to_mail": "Send selection URL to an e-mail",
         "linesel__mail_has_been_sent": "The e-mail has been sent.",
         "linesel__failed_to_send_the_mail": "Failed to send the e-mail",
-        "linesel__line_selection_link_heading": "A URL of this line selection"
+        "linesel__line_selection_link_heading": "A URL of this line selection",
+        "linesel__you_have_no_sel_lines": "There are no selected lines to work with",
+        "linesel__you_have_unsaved_line_sel": "You have an unsaved line selection. Click the link to select an operation.",
+        "linesel__you_have_saved_line_groups": "You have a saved line selection. Click the link to see available operations."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -168,6 +171,9 @@
         "linesel__send_the_link_to_mail": "Odeslat URL výběru na e-mail",
         "linesel__mail_has_been_sent": "E-mail byl odeslán",
         "linesel__failed_to_send_the_mail": "Nepodařilo se odeslat e-mail",
-        "linesel__line_selection_link_heading": "URL adresa tohoto výběru řádků"
+        "linesel__line_selection_link_heading": "URL adresa tohoto výběru řádků",
+        "linesel__you_have_no_sel_lines": "Nemáte vybrány žádné řádky",
+        "linesel__you_have_unsaved_line_sel": "Máte neuložený výběr řádek. Klikněte na odkaz pro výběr operace.",
+        "linesel__you_have_saved_line_groups": "Máte uložený výběr řádek. Klikněte na odkaz pro zobrazení dostupných operací."
 	}
 }

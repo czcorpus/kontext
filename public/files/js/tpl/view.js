@@ -303,6 +303,21 @@ define(function (require, exports, module) {
         }
     }
 
+    function toggleWarning(targetElm) {
+        if (lib.hasLockedGroups) {
+            targetElm.addClass('info');
+            targetElm.attr('title', lib.layoutModel.translate('linesel__you_have_saved_line_groups'));
+
+        } else if (getNumSelectedItems() > 0) {
+            targetElm.addClass('warn');
+            targetElm.attr('title', lib.layoutModel.translate('linesel__you_have_unsaved_line_sel'));
+
+        } else {
+            targetElm.removeClass('warn');
+            targetElm.attr('title', null);
+        }
+    }
+
     /**
      *
      * @param numSelected
@@ -310,6 +325,7 @@ define(function (require, exports, module) {
     function reinitSelectionMenuLink() {
         var linesSelectionWrap = $('#result-info .lines-selection'),
             createContent,
+            createContentChecked,
             numSelected = getNumSelectedItems(),
             viewMenuLink;
 
@@ -366,12 +382,22 @@ define(function (require, exports, module) {
                  );
             };
         }
-        viewMenuLink = window.document.createElement('a');
 
-        $(viewMenuLink).append('(<span class="value">' + numSelected + '</span> '
-                + lib.layoutModel.translate('global__selected_lines') + ')');
+        createContentChecked = function (box, finalize) {
+            if (getNumSelectedItems() > 0) {
+                createContent(box, finalize);
+
+            } else {
+                $(box.getRootElement()).append(lib.layoutModel.translate('linesel__you_have_no_sel_lines'));
+                finalize();
+            }
+        }
+
+        viewMenuLink = window.document.createElement('a');
+        $(viewMenuLink).append('<span class="value">' + numSelected + '</span> '
+                + lib.layoutModel.translate('global__selected_lines'));
         if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
-            popupBox.bind(viewMenuLink, createContent, {
+            popupBox.bind(viewMenuLink, createContentChecked, {
                 type : 'plain',
                 closeIcon : true,
                 timeout: null,
@@ -381,7 +407,11 @@ define(function (require, exports, module) {
                 }
             });
         }
-        linesSelectionWrap.append(viewMenuLink);
+        linesSelectionWrap
+            .append('(')
+            .append(viewMenuLink)
+            .append(')');
+        toggleWarning(linesSelectionWrap);
     }
 
     // TODO refactor this (redundant code)
@@ -431,9 +461,11 @@ define(function (require, exports, module) {
     }
 
     /**
-     * Handles clicking on concordance line checkbox
+     * Handles clicking on concordance line checkbox or updating line group
      */
     function rowSelectionEvent(elm, mode) {
+        var jqLineSel = $('.lines-selection');
+
         if (mode === 'simple') {
             $(elm).on('click', function (e) {
                 var id = $(e.currentTarget).attr('data-position'),
@@ -444,7 +476,8 @@ define(function (require, exports, module) {
                 } else {
                     lib.lineSelectionStore.removeLine(id);
                 }
-                $('.lines-selection .value').text(getNumSelectedItems());
+                jqLineSel.find('.value').text(getNumSelectedItems());
+                toggleWarning(jqLineSel);
             });
 
         } else if (mode === 'groups') {
@@ -459,7 +492,8 @@ define(function (require, exports, module) {
                 } else {
                     lib.lineSelectionStore.removeLine(id);
                 }
-                $('.lines-selection .value').text(getNumSelectedItems());
+                jqLineSel.find('.value').text(getNumSelectedItems());
+                toggleWarning(jqLineSel);
             });
         }
     }
