@@ -24,7 +24,6 @@ import settings
 
 
 def send_concordance_url(auth, plugin_api, recipient, url):
-    logging.getLogger(__name__).debug(">>>> %s" % (recipient,))
     user_id = plugin_api.session['user']['id']
     user_info = auth.get_user_info(user_id)
     user_email = user_info['email']
@@ -33,9 +32,11 @@ def send_concordance_url(auth, plugin_api, recipient, url):
     sender = settings.get('mailing', 'sender')
 
     text = _('KonText user %s has sent a concordance link to you') % (username, ) + ':'
-    text += '\n'
-    text += _('Date and time') + ': %s' % time.strftime('%d.%m. %Y %H:%M')
+    text += '\n\n'
+    text += url + '\n\n'
     text += '\n---------------------\n'
+    text += time.strftime('%d.%m. %Y %H:%M')
+    text += '\n'
 
     s = smtplib.SMTP(smtp_server)
 

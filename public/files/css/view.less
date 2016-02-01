@@ -445,6 +445,51 @@ table#conclines .concordance-col-heading {
   display: inline-block;
 }
 
+#result-info #ipm-loader img,
+#result-info #conc-loader img {
+  background-color: white;
+  border-radius: 3px;
+  opacity: 0.7;
+  padding: 3px 20px;
+}
+
+#result-info #conc-loader img {
+  position: absolute;
+}
+
+#result-info #ipm-loader img {
+  position: absolute;
+  //display: inline-block;
+  //vertical-align: middle;
+}
+
+#result-info .ipm {
+  font-weight: bold;
+}
+
+#result-info {
+  margin: 0;
+  float: left;
+  width: 70%;
+}
+
+#result-info .lines-selection {
+  white-space: nowrap;
+  padding-right: 21px;
+}
+
+#result-info .lines-selection.warn {
+  background-image: url(../img/warning-icon.png);
+  background-repeat: no-repeat;
+  background-position: 100% 0;
+}
+
+#result-info .lines-selection.info {
+  background-image: url(../img/info-icon.png);
+  background-repeat: no-repeat;
+  background-position: 100% 0;
+}
+
 #selection-actions {
 
     .chart-label {
@@ -467,6 +512,8 @@ table#conclines .concordance-col-heading {
 
     .chart-area {
         margin-top: 1em;
+        min-width: 200px;
+        min-height: 200px;
     }
 
     .generated-link {
