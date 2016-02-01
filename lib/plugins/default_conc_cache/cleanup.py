@@ -153,25 +153,30 @@ class CacheCleanup(CacheFiles):
             map_path = os.path.normpath('%s/%s' % (base_path, self._cache_map_filename))
             if os.path.isfile(map_path):
                 with self._lock_factory.create(map_path):
-                    cache_map = cPickle.load(open(map_path, 'rb'))
-                    for k, v in cache_map.items():
-                        item_hash = v[0]
-                        if item_hash in to_del:
-                            if not dry_run:
-                                os.unlink(to_del[item_hash])
-                                del cache_map[k]
-                            else:
-                                autoconf.logger.debug('deleted: %s (key: %s)' %
-                                                     (to_del[item_hash], k))
-                            del to_del[item_hash]
-                            num_deleted += 1
-                        elif item_hash not in real_file_hashes:
-                            if not dry_run:
-                                del cache_map[k]
-                            autoconf.logger.warn('deleted stale cache map entry: %s '
-                                                 '(hash: %s)' % (map_path, item_hash))
-                    if not dry_run:
-                        cPickle.dump(cache_map, open(map_path, 'wb'))
+                    try:
+                        cache_map = cPickle.load(open(map_path, 'rb'))
+                        for k, v in cache_map.items():
+                            item_hash = v[0]
+                            if item_hash in to_del:
+                                if not dry_run:
+                                    os.unlink(to_del[item_hash])
+                                    del cache_map[k]
+                                else:
+                                    autoconf.logger.debug('deleted: %s (key: %s)' %
+                                                         (to_del[item_hash], k))
+                                del to_del[item_hash]
+                                num_deleted += 1
+                            elif item_hash not in real_file_hashes:
+                                if not dry_run:
+                                    del cache_map[k]
+                                autoconf.logger.warn('deleted stale cache map entry: %s '
+                                                     '(hash: %s)' % (map_path, item_hash))
+                        if not dry_run:
+                            cPickle.dump(cache_map, open(map_path, 'wb'))
+                    except Exception as ex:
+                        autoconf.logger.warn('Failed to process cache map file (will be deleted): %s' % (ex,))
+                        os.unlink(map_path)
+
             else:
                 autoconf.logger.error('Cache map file %s not found' % map_path)
 
@@ -190,7 +195,7 @@ def run(root_dir, corpus_id, ttl, subdir, dry_run, cache_map_filename, locking_p
 
 
 if __name__ == '__main__':
-    sys.path.insert(0, '%s/../..' % os.path.realpath(os.path.dirname(__file__)))
+    sys.path.insert(0, '%s/../../../scripts' % os.path.realpath(os.path.dirname(__file__)))
     import autoconf
     import plugins
     from plugins import redis_db
