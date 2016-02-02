@@ -439,7 +439,9 @@ define(function (require, exports, module) {
                 .attr('data-position', position)
                 .attr('data-linenum', lineNum);
             if (mode === 'groups') {
-                $(inputElm).css('width', '2em');
+                $(inputElm)
+                    .attr('inputmode', 'numeric')
+                    .css('width', '2em');
             }
             $(this).replaceWith(inputElm);
             applyStoredValue($(inputElm));
@@ -484,12 +486,20 @@ define(function (require, exports, module) {
             $(elm).on('change keyup', function (e) {
                 var id = $(e.currentTarget).attr('data-position'),
                     kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
-                    groupId = parseInt($(e.currentTarget).val() || 0, 10);
+                    groupId = parseInt($(e.currentTarget).val() || 0, 10),
+                    inputValue = $(e.currentTarget).val();
 
-                if ($(e.currentTarget).val() !== '') {
-                    lib.lineSelectionStore.addLine(id, kwiclen, groupId);
+                if (inputValue !== '') {
+                    if (/\d+/.exec(inputValue)) {
+                        $(e.currentTarget).removeClass('error');
+                        lib.lineSelectionStore.addLine(id, kwiclen, groupId);
+
+                    } else {
+                        $(e.currentTarget).addClass('error');
+                    }
 
                 } else {
+                    $(e.currentTarget).removeClass('error');
                     lib.lineSelectionStore.removeLine(id);
                 }
                 jqLineSel.find('.value').text(getNumSelectedItems());
